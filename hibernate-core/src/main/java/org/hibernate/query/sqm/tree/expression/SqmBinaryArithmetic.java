@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -15,22 +16,25 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 /**
  * @author Steve Ebersole
  */
-public class SqmBinaryArithmetic extends AbstractSqmExpression {
-	private final SqmExpression lhsOperand;
+public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
+	private final SqmExpression<?> lhsOperand;
 	private final BinaryArithmeticOperator operator;
-	private final SqmExpression rhsOperand;
+	private final SqmExpression<?> rhsOperand;
 
 	public SqmBinaryArithmetic(
 			BinaryArithmeticOperator operator,
-			SqmExpression lhsOperand,
-			SqmExpression rhsOperand,
-			MetamodelImplementor domainModel) {
+			SqmExpression<?> lhsOperand,
+			SqmExpression<?> rhsOperand,
+			MetamodelImplementor domainModel,
+			NodeBuilder nodeBuilder) {
+		//noinspection unchecked
 		super(
-				domainModel.getTypeConfiguration().resolveArithmeticType(
+				(ExpressableType<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) lhsOperand.getExpressableType(),
 						(BasicValuedExpressableType) rhsOperand.getExpressableType(),
 						operator
-				)
+				),
+				nodeBuilder
 		);
 
 		this.lhsOperand = lhsOperand;
@@ -43,10 +47,11 @@ public class SqmBinaryArithmetic extends AbstractSqmExpression {
 
 	public SqmBinaryArithmetic(
 			BinaryArithmeticOperator operator,
-			SqmExpression lhsOperand,
-			SqmExpression rhsOperand,
-			BasicValuedExpressableType expressableType) {
-		super( expressableType );
+			SqmExpression<?> lhsOperand,
+			SqmExpression<?> rhsOperand,
+			BasicValuedExpressableType<T> expressableType,
+			NodeBuilder nodeBuilder) {
+		super( expressableType, nodeBuilder );
 
 		this.operator = operator;
 
@@ -57,8 +62,8 @@ public class SqmBinaryArithmetic extends AbstractSqmExpression {
 	}
 
 	@Override
-	public BasicValuedExpressableType<?> getExpressableType() {
-		return (BasicValuedExpressableType<?>) super.getExpressableType();
+	public BasicValuedExpressableType<T> getExpressableType() {
+		return (BasicValuedExpressableType<T>) super.getExpressableType();
 	}
 
 	@Override

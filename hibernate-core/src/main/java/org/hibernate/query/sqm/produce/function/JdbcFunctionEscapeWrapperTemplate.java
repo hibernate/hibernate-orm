@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -33,8 +34,13 @@ public class JdbcFunctionEscapeWrapperTemplate
 	@Override
 	protected SqmExpression generateSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
-		final SqmExpression wrappedSqmExpression = wrapped.makeSqmFunctionExpression( arguments, impliedResultType );
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
+		final SqmExpression wrappedSqmExpression = wrapped.makeSqmFunctionExpression(
+				arguments,
+				impliedResultType,
+				queryEngine
+		);
 		if ( !SqmFunction.class.isInstance( wrappedSqmExpression ) ) {
 			throw new SqmProductionException(
 					String.format(
@@ -45,6 +51,9 @@ public class JdbcFunctionEscapeWrapperTemplate
 					)
 			);
 		}
-		return new SqmJdbcFunctionEscapeWrapper( (SqmFunction) wrappedSqmExpression );
+		return new SqmJdbcFunctionEscapeWrapper(
+				(SqmFunction) wrappedSqmExpression,
+				queryEngine.getCriteriaBuilder()
+		);
 	}
 }

@@ -66,7 +66,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testAnticipatedTypeHandling() {
-		final SqmSelectStatement sqm = interpretSelect( "select a.nickName from Person a where a.numberOfToes = ?1" );
+		final SqmSelectStatement<?> sqm = interpretSelect( "select a.nickName from Person a where a.numberOfToes = ?1" );
 		final SqmParameter parameter = sqm.getSqmParameters().iterator().next();
 		assertThat( parameter.getAnticipatedType(), is( instanceOf( SingularPersistentAttributeBasic.class ) ) );
 		assertThat( parameter.allowMultiValuedBinding(), is( false ) );
@@ -74,7 +74,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testAllowMultiValuedBinding() {
-		final SqmSelectStatement sqm = interpretSelect( "select a.nickName from Person a where a.numberOfToes in (?1)" );
+		final SqmSelectStatement<?> sqm = interpretSelect( "select a.nickName from Person a where a.numberOfToes in (?1)" );
 		final SqmParameter parameter = sqm.getSqmParameters().iterator().next();
 
 		assertThat( parameter.getAnticipatedType(), is( instanceOf( SingularPersistentAttributeBasic.class ) ) );

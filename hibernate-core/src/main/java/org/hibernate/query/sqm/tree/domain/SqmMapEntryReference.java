@@ -9,7 +9,9 @@ package org.hibernate.query.sqm.tree.domain;
 import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -21,13 +23,18 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
  * @author Gunnar Morling
  * @author Steve Ebersole
  */
-public class SqmMapEntryReference implements SqmExpression, ExpressableType {
-	private final SqmPath mapPath;
-	private final BasicJavaDescriptor<Map.Entry> mapEntryTypeDescriptor;
+public class SqmMapEntryReference<K,V> extends AbstractSqmExpression<Map.Entry<K,V>> implements SqmExpression<Map.Entry<K,V>>, ExpressableType<Map.Entry<K,V>> {
+	private final SqmPath<?> mapPath;
+	private final BasicJavaDescriptor<Map.Entry<K,V>> mapEntryTypeDescriptor;
 
 	public SqmMapEntryReference(
-			SqmPath mapPath,
-			BasicJavaDescriptor<Map.Entry> mapEntryTypeDescriptor) {
+			SqmPath<?> mapPath,
+			BasicJavaDescriptor<Map.Entry<K,V>> mapEntryTypeDescriptor,
+			NodeBuilder nodeBuilder) {
+		super(
+				mapPath.sqmAs( PluralValuedNavigable.class ).getCollectionDescriptor().getDescribedAttribute(),
+				nodeBuilder
+		);
 		this.mapPath = mapPath;
 		this.mapEntryTypeDescriptor = mapEntryTypeDescriptor;
 	}
@@ -37,21 +44,17 @@ public class SqmMapEntryReference implements SqmExpression, ExpressableType {
 	}
 
 	public PluralValuedNavigable getMapNavigable() {
-		return mapPath.as( PluralValuedNavigable.class );
+		return mapPath.sqmAs( PluralValuedNavigable.class );
 	}
 
 	@Override
-	public BasicJavaDescriptor getJavaTypeDescriptor() {
+	public BasicJavaDescriptor<Map.Entry<K,V>> getJavaTypeDescriptor() {
 		return mapEntryTypeDescriptor;
 	}
 
 	@Override
-	public ExpressableType getExpressableType() {
+	public ExpressableType<Map.Entry<K,V>> getExpressableType() {
 		return this;
-	}
-
-	@Override
-	public void applyInferableType(ExpressableType<?> type) {
 	}
 
 	@Override
@@ -70,7 +73,8 @@ public class SqmMapEntryReference implements SqmExpression, ExpressableType {
 	}
 
 	@Override
-	public Class getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
+	@SuppressWarnings("unchecked")
+	public Class<Map.Entry<K,V>> getJavaType() {
+		return (Class) Map.Entry.class;
 	}
 }

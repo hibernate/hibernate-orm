@@ -261,7 +261,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Long} to JDBC {@link java.sql.Types#BIGINT BIGINT}.
 	 */
-	public static final StandardBasicType<Long> LONG = new StandardBasicTypeImpl(
+	public static final StandardBasicType<Long> LONG = new StandardBasicTypeImpl<>(
 			LongJavaDescriptor.INSTANCE,
 			BigIntSqlDescriptor.INSTANCE
 	);
@@ -720,7 +720,7 @@ public final class StandardSpiBasicTypes {
 	);
 
 
-	public static final StandardBasicType<Object> OBJECT_STANDARD_BASIC_TYPE = new StandardBasicTypeImpl<>(
+	public static final StandardBasicType<Object> OBJECT_TYPE = new StandardBasicTypeImpl<>(
 			ObjectJavaDescriptor.INSTANCE,
 			ObjectSqlTypeDescriptor.INSTANCE
 	);

@@ -24,7 +24,7 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	/**
 	 * The source (think "left hand side") of this path
 	 */
-	<X> JpaPathSource<X> getSource();
+	JpaPath<?> getLhs();
 
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
@@ -36,7 +36,7 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	// Covariant overrides
 
 	@Override
-	default JpaPathSource<?> getParentPath() {
-		return getSource();
+	default JpaPath<?> getParentPath() {
+		return getLhs();
 	}
 }

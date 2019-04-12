@@ -14,7 +14,7 @@ import java.util.Set;
 
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.spi.SimpleFromClauseAccessImpl;
@@ -38,8 +38,8 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	/**
 	 * Holds *explicitly* fetched joins
 	 */
-	private Map<NavigablePath,SqmNavigableJoin> fetchesByPath;
-	private Map<NavigablePath, Map<NavigablePath, SqmNavigableJoin>> fetchesByParentPath;
+	private Map<NavigablePath, SqmAttributeJoin> fetchesByPath;
+	private Map<NavigablePath, Map<NavigablePath, SqmAttributeJoin>> fetchesByParentPath;
 
 	private final Set<String> affectedTableNames = new HashSet<>();
 
@@ -48,7 +48,7 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	}
 
 	public void register(SqmFrom sqmPath, TableGroup tableGroup) {
-		if ( sqmPath instanceof SqmNavigableJoin ) {
+		if ( sqmPath instanceof SqmAttributeJoin ) {
 			throw new IllegalArgumentException(
 					"Passed SqmPath [" + sqmPath + "] is a SqmNavigableJoin - use the form of #register specific to joins"
 			);
@@ -82,7 +82,7 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 		tableGroup.applyAffectedTableNames( affectedTableNames::add );
 	}
 
-	public void register(SqmNavigableJoin join, TableGroupJoin tableGroupJoin) {
+	public void register(SqmAttributeJoin join, TableGroupJoin tableGroupJoin) {
 		performRegistration( join, tableGroupJoin.getJoinedGroup() );
 
 		if ( tableGroupJoinMap == null ) {
@@ -99,7 +99,7 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 			if ( fetchesByParentPath == null ) {
 				fetchesByParentPath = new HashMap<>();
 			}
-			final Map<NavigablePath, SqmNavigableJoin> fetchesForParent = fetchesByParentPath.computeIfAbsent(
+			final Map<NavigablePath, SqmAttributeJoin> fetchesForParent = fetchesByParentPath.computeIfAbsent(
 					join.getNavigablePath().getParent(),
 					navigablePath -> new HashMap<>()
 			);
@@ -111,7 +111,7 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 		return tableGroupJoinMap == null ? null : tableGroupJoinMap.get( navigablePath );
 	}
 
-	public SqmNavigableJoin findFetchedJoinByPath(NavigablePath path) {
+	public SqmAttributeJoin findFetchedJoinByPath(NavigablePath path) {
 		return fetchesByPath == null ? null : fetchesByPath.get( path );
 	}
 }

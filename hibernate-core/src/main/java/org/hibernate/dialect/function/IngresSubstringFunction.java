@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSelfRenderingFunctionTemplate;
@@ -41,7 +42,8 @@ public class IngresSubstringFunction
 	@Override
 	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType resolvedReturnType) {
+			AllowableFunctionReturnType resolvedReturnType,
+			QueryEngine queryEngine) {
 		return this;
 	}
 

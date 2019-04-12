@@ -7,84 +7,13 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedPath implements SqmPathWrapper {
-	private final SqmPath wrappedPath;
-	private final EntityTypeDescriptor<?> treatTarget;
-
-	public SqmTreatedPath(
-			SqmPath wrappedPath,
-			EntityTypeDescriptor<?> treatTarget) {
-		assert wrappedPath.getReferencedNavigable() instanceof EntityValuedNavigable<?>;
-
-		this.wrappedPath = wrappedPath;
-		this.treatTarget = treatTarget;
-	}
+public interface SqmTreatedPath<T, S extends T> extends SqmPathWrapper<T, S> {
+	EntityTypeDescriptor<S> getTreatTarget();
 
 	@Override
-	public SqmPath getWrappedPath() {
-		return wrappedPath;
-	}
-
-	public EntityTypeDescriptor<?> getTreatTarget() {
-		return treatTarget;
-	}
-
-	@Override
-	public Navigable<?> getReferencedNavigable() {
-		return wrappedPath.getReferencedNavigable();
-	}
-
-	@Override
-	public SqmPath getLhs() {
-		return wrappedPath.getLhs();
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return wrappedPath.getNavigablePath();
-	}
-
-	@Override
-	public String getExplicitAlias() {
-		return wrappedPath.getExplicitAlias();
-	}
-
-	@Override
-	public void setExplicitAlias(String explicitAlias) {
-		wrappedPath.setExplicitAlias( explicitAlias );
-	}
-
-	@Override
-	public SemanticPathPart resolvePathPart(
-			String name,
-			String currentContextKey,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		return wrappedPath.resolvePathPart( name, currentContextKey, isTerminal, creationState );
-	}
-
-	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
-			String currentContextKey,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		return wrappedPath.resolveIndexedAccess( selector, currentContextKey, isTerminal, creationState );
-	}
-
-	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitTreatedPath( this );
-	}
+	SqmPath<T> getWrappedPath();
 }

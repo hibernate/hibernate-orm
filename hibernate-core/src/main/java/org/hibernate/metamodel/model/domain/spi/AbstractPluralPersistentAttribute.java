@@ -74,7 +74,7 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractPluralPersistentAttribute.class );
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 
-	private final PersistentCollectionDescriptor collectionDescriptor;
+	private final PersistentCollectionDescriptor<O,C,E> collectionDescriptor;
 	private final FetchStrategy fetchStrategy;
 	private CascadeStyle cascadeStyle;
 	private final boolean isNullable;
@@ -102,13 +102,18 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 	}
 
 	@Override
-	public PersistentCollectionDescriptor getPersistentCollectionDescriptor() {
+	public PersistentCollectionDescriptor<O,C,E> getPersistentCollectionDescriptor() {
 		return collectionDescriptor;
 	}
 
 	@Override
 	public Class getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return getCollectionDescriptor().isCascadeDeleteEnabled();
 	}
 
 	@Override
@@ -465,13 +470,13 @@ public abstract class AbstractPluralPersistentAttribute<O,C,E> extends AbstractP
 	}
 
 	@Override
-	public DomainType getAttributeType() {
-		return null;
+	public DomainType<C> getAttributeType() {
+		return this;
 	}
 
 	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return getPersistentCollectionDescriptor().getForeignKeyDirection();
+		return getCollectionDescriptor().getForeignKeyDirection();
 	}
 
 	@Override

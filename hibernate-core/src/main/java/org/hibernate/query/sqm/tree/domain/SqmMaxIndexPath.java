@@ -8,6 +8,8 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -16,13 +18,14 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 /**
  * @author Steve Ebersole
  */
-public class SqmMaxIndexPath extends AbstractSqmSpecificPluralPartPath {
+public class SqmMaxIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	public static final String NAVIGABLE_NAME = "{max-index}";
 
-	public SqmMaxIndexPath(SqmPath pluralDomainPath) {
+	public SqmMaxIndexPath(SqmPath<?> pluralDomainPath) {
 		super(
 				pluralDomainPath.getNavigablePath().append( NAVIGABLE_NAME ),
-				pluralDomainPath
+				pluralDomainPath,
+				pluralDomainPath.sqmAs( PersistentCollectionDescriptor.class ).getIndexDescriptor()
 		);
 	}
 
@@ -42,12 +45,12 @@ public class SqmMaxIndexPath extends AbstractSqmSpecificPluralPartPath {
 	}
 
 	@Override
-	public Navigable<?> getReferencedNavigable() {
+	public Navigable<T> getReferencedNavigable() {
 		return getCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMaxIndexPath( this );
 	}
 }

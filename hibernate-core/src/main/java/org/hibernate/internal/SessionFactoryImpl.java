@@ -163,8 +163,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private final transient JdbcServices jdbcServices;
 
-	private final transient SqmFunctionRegistry sqmFunctionRegistry;
-
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
 	private final transient TypeConfiguration typeConfiguration;
@@ -295,15 +293,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			prepareEventListeners( metamodel );
 
-			this.sqmFunctionRegistry = new SqmFunctionRegistry();
-			jdbcServices.getDialect().initializeFunctionRegistry( sqmFunctionRegistry );
-			sessionFactoryOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
-
-			this.queryEngine = new QueryEngine(
+			this.queryEngine = QueryEngine.from(
 					this,
-					metadata.buildNamedQueryRepository( this ),
-					sqmFunctionRegistry
+					metadata.buildNamedQueryRepository( this )
 			);
+			// `this.queryEngine` must be set prior to calling `#prepare`
+			this.queryEngine.prepare( this );
 
 			final JdbcConnectionAccess jdbcConnectionAccess = buildLocalConnectionAccess();
 
@@ -937,10 +932,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
-	}
-
-	public SqmFunctionRegistry getSqmFunctionRegistry() {
-		return sqmFunctionRegistry;
 	}
 
 	public FetchProfile getFetchProfile(String name) {

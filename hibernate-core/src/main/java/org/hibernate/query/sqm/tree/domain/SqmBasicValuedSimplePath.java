@@ -8,6 +8,9 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -17,20 +20,22 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class SqmBasicValuedSimplePath extends AbstractSqmSimplePath {
+public class SqmBasicValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
-			BasicValuedNavigable referencedNavigable,
-			SqmPath lhs) {
-		this( navigablePath, referencedNavigable, lhs, null );
+			BasicValuedNavigable<T> referencedNavigable,
+			SqmPath lhs,
+			NodeBuilder nodeBuilder) {
+		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
 	}
 
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
 			BasicValuedNavigable referencedNavigable,
 			SqmPath lhs,
-			String explicitAlias) {
-		super( navigablePath, referencedNavigable, lhs, explicitAlias );
+			String explicitAlias,
+			NodeBuilder nodeBuilder) {
+		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
 	}
 
 	@Override
@@ -43,22 +48,28 @@ public class SqmBasicValuedSimplePath extends AbstractSqmSimplePath {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitBasicValuedPath( this );
 	}
 
 	@Override
-	public BasicValuedNavigable getReferencedNavigable() {
-		return (BasicValuedNavigable) super.getReferencedNavigable();
+	public BasicValuedNavigable<T> getReferencedNavigable() {
+		return (BasicValuedNavigable<T>) super.getReferencedNavigable();
 	}
 
 	@Override
-	public BasicValuedNavigable getExpressableType() {
+	public BasicValuedNavigable<T> getExpressableType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
-	public BasicJavaDescriptor getJavaTypeDescriptor() {
-		return (BasicJavaDescriptor) super.getJavaTypeDescriptor();
+	@SuppressWarnings("unchecked")
+	public BasicJavaDescriptor<T> getJavaTypeDescriptor() {
+		return (BasicJavaDescriptor<T>) super.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType) throws PathException {
+		throw new UnsupportedOperationException( "Basic-value cannot be treated (downcast)" );
 	}
 }

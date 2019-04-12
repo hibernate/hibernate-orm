@@ -6,18 +6,25 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmDmlStatement<E> extends AbstractSqmStatement implements SqmDmlStatement<E> {
+public abstract class AbstractSqmDmlStatement<E>
+		extends AbstractSqmStatement<E>
+		implements SqmDmlStatement<E> {
 	private SqmRoot<E> target;
 
-	public AbstractSqmDmlStatement() {
+	public AbstractSqmDmlStatement(NodeBuilder nodeBuilder) {
+		super( nodeBuilder );
 	}
 
-	public AbstractSqmDmlStatement(SqmRoot<E> target) {
+	public AbstractSqmDmlStatement(SqmRoot<E> target, NodeBuilder nodeBuilder) {
+		this( nodeBuilder );
 		this.target = target;
 	}
 
@@ -29,5 +36,10 @@ public abstract class AbstractSqmDmlStatement<E> extends AbstractSqmStatement im
 	@Override
 	public void setTarget(SqmRoot<E> root) {
 		this.target = root;
+	}
+
+	@Override
+	public <U> SqmSubQuery<U> subquery(Class<U> type) {
+		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 }

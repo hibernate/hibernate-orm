@@ -45,7 +45,7 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 
 	@Override
 	public void register(SqmPath sqmPath) {
-		SqmTreeCreationLogger.LOGGER.tracef( "#register(SqmPath) : %s", sqmPath );
+		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#register(SqmPath) : %s", sqmPath.getNavigablePath().getFullPath() );
 
 		// Generally we:
 		//		1) add the path to the path-by-path map
@@ -108,12 +108,42 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 
 	@Override
 	public SqmPath findPath(NavigablePath path) {
-		return sqmPathByPath.get( path );
+		final SqmPath found = sqmPathByPath.get( path );
+		if ( found != null ) {
+			return found;
+		}
+
+		if ( associatedProcessingState.getParentProcessingState() != null ) {
+			final SqmFrom containingQueryFrom = associatedProcessingState.getParentProcessingState()
+					.getPathRegistry()
+					.findFromByPath( path );
+			if ( containingQueryFrom != null ) {
+				// todo (6.0) create a correlation?
+				return containingQueryFrom;
+			}
+		}
+
+		return null;
 	}
 
 	@Override
 	public SqmFrom findFromByPath(NavigablePath navigablePath) {
-		return sqmFromByPath.get( navigablePath );
+		final SqmFrom found = sqmFromByPath.get( navigablePath );
+		if ( found != null ) {
+			return found;
+		}
+
+		if ( associatedProcessingState.getParentProcessingState() != null ) {
+			final SqmFrom containingQueryFrom = associatedProcessingState.getParentProcessingState()
+					.getPathRegistry()
+					.findFromByPath( navigablePath );
+			if ( containingQueryFrom != null ) {
+				// todo (6.0) create a correlation?
+				return containingQueryFrom;
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -161,7 +191,7 @@ public class SqmProcessingIndex implements SqmPathRegistry {
 
 	@Override
 	public SqmPath resolvePath(NavigablePath navigablePath, Function<NavigablePath, SqmPath> creator) {
-		SqmTreeCreationLogger.LOGGER.tracef( "#resolvePath(NavigablePath) : %s", navigablePath );
+		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(NavigablePath) : %s", navigablePath );
 
 		final SqmPath existing = sqmPathByPath.get( navigablePath );
 		if ( existing != null ) {

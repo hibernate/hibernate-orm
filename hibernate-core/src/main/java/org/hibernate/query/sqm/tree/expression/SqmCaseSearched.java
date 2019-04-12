@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
@@ -17,32 +18,32 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 /**
  * @author Steve Ebersole
  */
-public class SqmCaseSearched extends AbstractSqmExpression {
-	private List<WhenFragment> whenFragments = new ArrayList<>();
-	private SqmExpression otherwise;
+public class SqmCaseSearched<R> extends AbstractSqmExpression<R> {
+	private List<WhenFragment<R>> whenFragments = new ArrayList<>();
+	private SqmExpression<R> otherwise;
 
-	public SqmCaseSearched() {
-		this( null );
+	public SqmCaseSearched(NodeBuilder nodeBuilder) {
+		this( null, nodeBuilder );
 	}
 
-	public SqmCaseSearched(BasicValuedExpressableType inherentType) {
-		super( inherentType );
+	public SqmCaseSearched(BasicValuedExpressableType<R> inherentType, NodeBuilder nodeBuilder) {
+		super( inherentType, nodeBuilder );
 	}
 
-	public List<WhenFragment> getWhenFragments() {
+	public List<WhenFragment<R>> getWhenFragments() {
 		return whenFragments;
 	}
 
-	public SqmExpression getOtherwise() {
+	public SqmExpression<R> getOtherwise() {
 		return otherwise;
 	}
 
-	public void when(SqmPredicate predicate, SqmExpression result) {
-		whenFragments.add( new WhenFragment( predicate, result ) );
+	public void when(SqmPredicate predicate, SqmExpression<R> result) {
+		whenFragments.add( new WhenFragment<>( predicate, result ) );
 		applyInferableType( result.getExpressableType() );
 	}
 
-	public void otherwise(SqmExpression otherwiseExpression) {
+	public void otherwise(SqmExpression<R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
 		applyInferableType( otherwiseExpression.getExpressableType() );
 	}
@@ -72,11 +73,11 @@ public class SqmCaseSearched extends AbstractSqmExpression {
 		return "<searched-case>";
 	}
 
-	public static class WhenFragment {
+	public static class WhenFragment<R> {
 		private final SqmPredicate predicate;
-		private final SqmExpression result;
+		private final SqmExpression<R> result;
 
-		public WhenFragment(SqmPredicate predicate, SqmExpression result) {
+		public WhenFragment(SqmPredicate predicate, SqmExpression<R> result) {
 			this.predicate = predicate;
 			this.result = result;
 		}
@@ -85,7 +86,7 @@ public class SqmCaseSearched extends AbstractSqmExpression {
 			return predicate;
 		}
 
-		public SqmExpression getResult() {
+		public SqmExpression<R> getResult() {
 			return result;
 		}
 	}

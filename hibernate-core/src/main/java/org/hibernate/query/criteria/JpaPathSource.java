@@ -10,7 +10,11 @@ import javax.persistence.metamodel.ManagedType;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated This makes the SQM tree awkward and is not needed for
+ * JPA - JPA has no notion of a "path source" as a tree contract.
  */
+@Deprecated
 public interface JpaPathSource<T> extends JpaPath<T> {
 	ManagedType<T> getManagedType();
 }

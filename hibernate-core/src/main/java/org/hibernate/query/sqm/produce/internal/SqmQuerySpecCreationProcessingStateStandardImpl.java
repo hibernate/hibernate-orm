@@ -6,9 +6,10 @@
  */
 package org.hibernate.query.sqm.produce.internal;
 
-import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
+import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 /**
@@ -26,14 +27,20 @@ public class SqmQuerySpecCreationProcessingStateStandardImpl
 
 	public SqmQuerySpecCreationProcessingStateStandardImpl(
 			SqmCreationProcessingState parentState,
+			SqmSelectQuery<?> processingQuery,
 			SqmCreationState creationState) {
-		super( creationState );
+		super( processingQuery, creationState );
 		this.parentState = parentState;
 	}
 
 	@Override
 	public SqmCreationProcessingState getParentProcessingState() {
 		return parentState;
+	}
+
+	@Override
+	public SqmSelectQuery<?> getProcessingQuery() {
+		return (SqmSelectQuery<?>) super.getProcessingQuery();
 	}
 
 	@Override

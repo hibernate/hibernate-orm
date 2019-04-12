@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.QueryException;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSelfRenderingFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
@@ -64,7 +65,8 @@ public class ConvertFunctionTemplate
 	@Override
 	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		final int argCount = arguments.size();
 		if ( argCount < 2 || argCount > 3 ) {
 			throw new QueryException( "convert() requires two or three arguments" );

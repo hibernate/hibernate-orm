@@ -103,7 +103,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 		assertThat( querySpec.getFromClause().getRoots().size(), is(1) );
 		final SqmRoot root = querySpec.getFromClause().getRoots().get( 0 );
 		assertThat( root.getReferencedNavigable().getEntityName(), endsWith( "Person" ) );
-		assertThat( root.getJoins().size(), is(0) );
+		assertThat( root.getSqmJoins().size(), is( 0) );
 
 		SqmBinaryArithmetic expression = (SqmBinaryArithmetic) selection.getSelectableNode();
 		SqmPath leftHandOperand = (SqmPath) expression.getLeftHandOperand();
@@ -174,10 +174,10 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 				.getSelectableNode();
 
 		assertThat( selectedExpr, instanceOf( SqmNavigableReference.class ) );
-		final SqmNavigableReference selectedPath = (SqmNavigableReference) selectedExpr;
+		final SqmNavigableReference<?> selectedPath = (SqmNavigableReference) selectedExpr;
 
 		final PersistentCollectionDescriptor collectionDescriptor = selectedPath.getLhs()
-				.as( PluralValuedNavigable.class )
+				.sqmAs( PluralValuedNavigable.class )
 				.getCollectionDescriptor();
 
 		assertThat( collectionDescriptor.getCollectionClassification(), is( collectionClassification ) );

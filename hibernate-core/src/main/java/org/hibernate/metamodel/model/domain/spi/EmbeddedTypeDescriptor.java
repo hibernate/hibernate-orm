@@ -15,10 +15,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.EmbeddedDomainType;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -70,23 +66,6 @@ public interface EmbeddedTypeDescriptor<T>
 	@SuppressWarnings("unchecked")
 	default Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	@Override
-	default SqmNavigableJoin createJoin(
-			SqmFrom lhs,
-			SqmJoinType joinType,
-			String alias,
-			boolean fetched,
-			SqmCreationState creationState) {
-		return new SqmNavigableJoin(
-				lhs,
-				this,
-				alias,
-				joinType,
-				fetched,
-				creationState
-		);
 	}
 
 	@Override

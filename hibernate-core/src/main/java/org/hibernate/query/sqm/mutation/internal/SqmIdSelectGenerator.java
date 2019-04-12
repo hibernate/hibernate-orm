@@ -10,9 +10,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
-import org.hibernate.query.sqm.produce.internal.SqmQuerySpecCreationProcessingStateStandardImpl;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
@@ -49,29 +49,38 @@ public class SqmIdSelectGenerator {
 	private final EntityTypeDescriptor entityDescriptor;
 	private final SqmCreationContext creationContext;
 
+	private final NodeBuilder nodeBuilder;
+
 	public SqmIdSelectGenerator(
 			SqmDeleteOrUpdateStatement sourceSqmStatement,
 			SqmCreationContext creationContext) {
 		this.sourceSqmStatement = sourceSqmStatement;
 		this.entityDescriptor = sourceSqmStatement.getTarget().getReferencedNavigable();
 		this.creationContext = creationContext;
+
+		this.nodeBuilder = creationContext.getQueryEngine().getCriteriaBuilder();
 	}
 
 	private SqmQuerySpec process() {
-		final SqmQuerySpec sqmQuerySpec = new SqmQuerySpec();
+		final SqmQuerySpec sqmQuerySpec = new SqmQuerySpec( nodeBuilder );
 
 		final SqmFromClause sqmFromClause = new SqmFromClause();
 		sqmQuerySpec.setFromClause( sqmFromClause );
 
-		final SqmRoot<Object> sqmRoot = new SqmRoot<>( entityDescriptor, toString() );
+		final SqmRoot<Object> sqmRoot = new SqmRoot<>( entityDescriptor, null, nodeBuilder );
 		sqmFromClause.addRoot( sqmRoot );
 
-		final SqmSelectClause sqmSelectClause = new SqmSelectClause( true );
+		final SqmSelectClause sqmSelectClause = new SqmSelectClause( true, nodeBuilder );
 		sqmQuerySpec.setSelectClause( sqmSelectClause );
 		applySelections( sqmSelectClause, sqmRoot );
 
 		if ( sourceSqmStatement.getWhereClause() != null ) {
-			sqmQuerySpec.setWhereClause( new SqmWhereClause( sourceSqmStatement.getWhereClause().getPredicate() ) );
+			sqmQuerySpec.setWhereClause(
+					new SqmWhereClause(
+							sourceSqmStatement.getWhereClause().getPredicate(),
+							nodeBuilder
+					)
+			);
 		}
 
 		return sqmQuerySpec;
@@ -112,14 +121,11 @@ public class SqmIdSelectGenerator {
 			}
 		};
 
-		final SqmQuerySpecCreationProcessingStateStandardImpl processingState = new SqmQuerySpecCreationProcessingStateStandardImpl(
-				null,
-				sqmCreationState
-		);
-		processingStateStack.push( processingState );
-
 		sqmSelectClause.addSelection(
-				new SqmSelection( entityDescriptor.getIdentifierDescriptor().createSqmExpression( sqmRoot, sqmCreationState ) )
+				new SqmSelection(
+						entityDescriptor.getIdentifierDescriptor().createSqmExpression( sqmRoot, sqmCreationState ),
+						nodeBuilder
+				)
 		);
 	}
 

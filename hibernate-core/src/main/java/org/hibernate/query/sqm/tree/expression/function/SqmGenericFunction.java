@@ -9,13 +9,14 @@ package org.hibernate.query.sqm.tree.expression.function;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmGenericFunction extends AbstractSqmFunction implements SqmNonStandardFunction {
+public class SqmGenericFunction<T> extends AbstractSqmFunction<T> implements SqmNonStandardFunction<T> {
 
 	// todo (6.0) : rename this (and friends) using the "non-standard" wording
 
@@ -24,9 +25,10 @@ public class SqmGenericFunction extends AbstractSqmFunction implements SqmNonSta
 
 	public SqmGenericFunction(
 			String functionName,
-			AllowableFunctionReturnType resultType,
-			List<SqmExpression> arguments) {
-		super( resultType );
+			AllowableFunctionReturnType<T> resultType,
+			List<SqmExpression> arguments,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.functionName = functionName;
 		this.arguments = arguments;
 	}
@@ -45,7 +47,7 @@ public class SqmGenericFunction extends AbstractSqmFunction implements SqmNonSta
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitGenericFunction( this );
 	}
 

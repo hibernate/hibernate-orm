@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -14,7 +15,7 @@ import org.hibernate.sql.TrimSpecification;
 /**
  * @author Steve Ebersole
  */
-public class SqmTrimFunction extends AbstractSqmFunction {
+public class SqmTrimFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "trim";
 
 	private final TrimSpecification specification;
@@ -22,11 +23,12 @@ public class SqmTrimFunction extends AbstractSqmFunction {
 	private final SqmExpression source;
 
 	public SqmTrimFunction(
-			BasicValuedExpressableType resultType,
 			TrimSpecification specification,
-			SqmExpression trimCharacter,
-			SqmExpression source) {
-		super( resultType );
+			SqmExpression<?> trimCharacter,
+			SqmExpression<?> source,
+			BasicValuedExpressableType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.specification = specification;
 		this.trimCharacter = trimCharacter;
 		this.source = source;
@@ -59,7 +61,7 @@ public class SqmTrimFunction extends AbstractSqmFunction {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitTrimFunction( this );
 	}
 

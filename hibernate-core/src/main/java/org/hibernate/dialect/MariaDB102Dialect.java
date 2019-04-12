@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import java.sql.Types;
@@ -20,10 +20,10 @@ public class MariaDB102Dialect extends MariaDB10Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerNamed( "json_valid", StandardSpiBasicTypes.NUMERIC_BOOLEAN );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "json_valid", StandardSpiBasicTypes.NUMERIC_BOOLEAN );
 	}
 
 		@Override

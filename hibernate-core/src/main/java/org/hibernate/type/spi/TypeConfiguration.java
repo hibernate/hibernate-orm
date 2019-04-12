@@ -34,6 +34,7 @@ import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.BasicValueMapper;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SqlExpressableType;
@@ -447,9 +448,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	//
 	//		I say related because both deal with custom user types as used in a SQM.
 
-	public BasicValuedExpressableType resolveArithmeticType(
-			BasicValuedExpressableType firstType,
-			BasicValuedExpressableType secondType,
+	/**
+	 * @see QueryHelper#highestPrecedenceType2
+	 */
+	public BasicValuedExpressableType<?> resolveArithmeticType(
+			BasicValuedExpressableType<?> firstType,
+			BasicValuedExpressableType<?> secondType,
 			BinaryArithmeticOperator operator) {
 		return resolveArithmeticType( firstType, secondType, operator == DIVIDE );
 	}
@@ -457,14 +461,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	/**
 	 * Determine the result type of an arithmetic operation as defined by the
 	 * rules in section 6.5.7.1.
-	 * <p/>
 	 *
-	 *
-	 * @return The operation result type
+	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public BasicValuedExpressableType resolveArithmeticType(
-			BasicValuedExpressableType firstType,
-			BasicValuedExpressableType secondType,
+	public BasicValuedExpressableType<?> resolveArithmeticType(
+			BasicValuedExpressableType<?> firstType,
+			BasicValuedExpressableType<?> secondType,
 			boolean isDivision) {
 
 		if ( isDivision ) {

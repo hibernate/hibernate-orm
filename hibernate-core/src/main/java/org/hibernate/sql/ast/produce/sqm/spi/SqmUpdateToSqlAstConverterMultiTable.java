@@ -141,7 +141,6 @@ public class SqmUpdateToSqlAstConverterMultiTable extends BaseSqmToSqlAstConvert
 		final TableGroupMock tableGroup = new TableGroupMock( entityTableGroup );
 		tableGroup.applyAffectedTableNames( getFromClauseIndex().getAffectedTableNames()::add );
 
-		primeStack( getTableGroupStack(), tableGroup );
 		getFromClauseIndex().register( deleteTarget, tableGroup );
 
 		getProcessingStateStack().push(

@@ -6,6 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import java.util.function.Consumer;
+
+import javax.persistence.criteria.Selection;
+
+import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -18,7 +23,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface SqmSelectableNode extends SqmTypedNode, SqmVisitableNode {
+public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode, SqmVisitableNode {
 	/**
 	 * The expectation is that the walking method for SqmSelectableNode
 	 * will return some reference to a
@@ -27,5 +32,15 @@ public interface SqmSelectableNode extends SqmTypedNode, SqmVisitableNode {
 	 * for this selection in the SQM query
 	 */
 	@Override
-	<T> T accept(SemanticQueryWalker<T> walker);
+	<X> X accept(SemanticQueryWalker<X> walker);
+
+	/**
+	 * Visit each of this selectable's direct sub-selectables - used to
+	 * support JPA's {@link Selection} model (which is really a "selectable",
+	 * just poorly named and poorly defined
+	 *
+	 * @see JpaSelection#getSelectionItems()
+	 * @see Selection#getCompoundSelectionItems()
+	 */
+	void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer);
 }

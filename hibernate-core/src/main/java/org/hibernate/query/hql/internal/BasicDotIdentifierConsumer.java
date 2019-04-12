@@ -94,7 +94,11 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				pathSoFar
 		);
 
-		currentPart = currentPart.resolvePathPart(
+		currentPart = resolveSubPart( identifier, isTerminal );
+	}
+
+	protected SemanticPathPart resolveSubPart(String identifier, boolean isTerminal) {
+		return currentPart.resolvePathPart(
 				identifier,
 				pathSoFar,
 				isTerminal,
@@ -147,7 +151,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 					}
 					else {
 						if ( referencedNavigable instanceof Joinable ) {
-							return ( (Joinable) referencedNavigable ).createJoin(
+							return ( (Joinable) referencedNavigable ).createSqmJoin(
 									pathRootByExposedNavigable,
 									SqmJoinType.INNER,
 									null,
@@ -208,7 +212,12 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 										.getTypeConfiguration()
 										.getJavaTypeDescriptorRegistry()
 										.getDescriptor( referencedField.getType() );
-								return new SqmStaticFieldReference( referencedField, (BasicJavaDescriptor) fieldJtd );
+								//noinspection unchecked
+								return new SqmStaticFieldReference(
+										referencedField,
+										(BasicJavaDescriptor) fieldJtd,
+										creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+								);
 							}
 						}
 						catch (Exception ignore) {
@@ -216,14 +225,17 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 
 						if ( namedClass.isEnum() ) {
 							final Enum referencedEnum = Enum.valueOf( (Class) namedClass, terminal );
-							if ( referencedEnum != null ) {
-								final JavaTypeDescriptor<?> enumJtd = creationState.getCreationContext()
-										.getDomainModel()
-										.getTypeConfiguration()
-										.getJavaTypeDescriptorRegistry()
-										.getDescriptor( namedClass );
-								return new SqmStaticEnumReference( referencedEnum, (EnumJavaDescriptor) enumJtd );
-							}
+							final JavaTypeDescriptor<?> enumJtd = creationState.getCreationContext()
+									.getDomainModel()
+									.getTypeConfiguration()
+									.getJavaTypeDescriptorRegistry()
+									.getDescriptor( namedClass );
+							//noinspection unchecked
+							return new SqmStaticEnumReference(
+									referencedEnum,
+									(EnumJavaDescriptor) enumJtd,
+									creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+							);
 						}
 					}
 				}

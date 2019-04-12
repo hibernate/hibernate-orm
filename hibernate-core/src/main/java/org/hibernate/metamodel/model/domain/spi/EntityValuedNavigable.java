@@ -46,10 +46,12 @@ public interface EntityValuedNavigable<J>
 
 	@Override
 	default SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
+		//noinspection unchecked
 		return new SqmEntityValuedSimplePath(
 				lhs.getNavigablePath().append( getNavigableName() ),
 				this,
-				lhs
+				lhs,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 

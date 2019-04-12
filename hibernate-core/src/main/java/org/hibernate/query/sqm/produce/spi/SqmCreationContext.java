@@ -6,11 +6,10 @@
  */
 package org.hibernate.query.sqm.produce.spi;
 
-import java.util.function.Function;
-
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -30,8 +29,9 @@ public interface SqmCreationContext {
 	 */
 	ServiceRegistry getServiceRegistry();
 
-	/**
-	 * Access to function name resolution
-	 */
-	Function<String, SqmFunctionTemplate> getFunctionResolver();
+	QueryEngine getQueryEngine();
+
+	default NodeBuilder getNodeBuilder() {
+		return getQueryEngine().getCriteriaBuilder();
+	}
 }

@@ -9,53 +9,38 @@ package org.hibernate.query.sqm.produce.function.internal;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.query.sqm.tree.expression.function.AbstractSqmFunction;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SelfRenderingSqmFunction implements SqlAstFunctionProducer {
+public class SelfRenderingSqmFunction<T> extends AbstractSqmFunction<T> implements SqlAstFunctionProducer<T> {
 	private final SelfRenderingFunctionSupport renderingSupport;
 	private final List<SqmExpression> sqmArguments;
-
-	private AllowableFunctionReturnType<?> impliedResultType;
 
 	public SelfRenderingSqmFunction(
 			SelfRenderingFunctionSupport renderingSupport,
 			List<SqmExpression> sqmArguments,
-			AllowableFunctionReturnType<?> impliedResultType) {
-		this.renderingSupport = renderingSupport;
+			AllowableFunctionReturnType<T> impliedResultType,
+			NodeBuilder nodeBuilder) {
+		super( impliedResultType, nodeBuilder );
+		this.renderingSupport = null;
 		this.sqmArguments = sqmArguments;
-		this.impliedResultType = impliedResultType;
 	}
 
 	public SelfRenderingSqmFunction(
 			List<SqmExpression> sqmArguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType<T> impliedResultType,
+			NodeBuilder nodeBuilder) {
+		super( impliedResultType, nodeBuilder );
 		this.renderingSupport = null;
 		this.sqmArguments = sqmArguments;
-		this.impliedResultType = impliedResultType;
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getExpressableType().getJavaTypeDescriptor();
-	}
-
-	@Override
-	public AllowableFunctionReturnType getExpressableType() {
-		return impliedResultType;
-	}
-
-	@Override
-	public void applyInferableType(ExpressableType<?> type) {
-		this.impliedResultType = (AllowableFunctionReturnType<?>) type;
 	}
 
 	public SelfRenderingFunctionSupport getRenderingSupport() {

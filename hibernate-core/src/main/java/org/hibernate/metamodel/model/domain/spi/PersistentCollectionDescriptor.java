@@ -27,10 +27,10 @@ import org.hibernate.metamodel.model.domain.CollectionDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -65,7 +65,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public interface PersistentCollectionDescriptor<O,C,E>
 		extends CollectionDomainType<C,E>, PluralValuedNavigable<C>, RootTableGroupProducer, TableGroupJoinProducer,
-		TableReferenceContributor, EmbeddedContainer<C>, Filterable, Joinable<C>, Fetchable<C> {
+		TableReferenceContributor, EmbeddedContainer<C>, Filterable, Fetchable<C> {
 
 	Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
 
@@ -612,4 +612,8 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	 * Return the element class of an array, or null otherwise
 	 */
 	Class getElementClass();
+
+	ForeignKeyDirection getForeignKeyDirection();
+
+	boolean isCascadeDeleteEnabled();
 }

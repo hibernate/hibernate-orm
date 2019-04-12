@@ -146,7 +146,8 @@ public class MappedSuperclassTypeImpl<J>
 		return new SqmBasicValuedSimplePath(
 				new NavigablePath( getNavigableName() + DiscriminatorDescriptor.NAVIGABLE_NAME ),
 				this.getHierarchy().getDiscriminatorDescriptor(),
-				null
+				null,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 

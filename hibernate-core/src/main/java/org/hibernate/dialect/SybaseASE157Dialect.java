@@ -17,7 +17,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -39,15 +39,15 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerPattern( "create_locator", "create_locator(?1, ?2)", StandardSpiBasicTypes.BINARY );
-		registry.registerPattern( "locator_literal", "locator_literal(?1, ?2)", StandardSpiBasicTypes.BINARY );
-		registry.registerPattern( "locator_valid", "locator_valid(?1)", StandardSpiBasicTypes.BOOLEAN );
-		registry.registerPattern( "return_lob", "return_lob(?1, ?2)", StandardSpiBasicTypes.BINARY );
-		registry.registerPattern( "setdata", "setdata(?1, ?2, ?3)", StandardSpiBasicTypes.BOOLEAN );
-		registry.registerPattern( "charindex", "charindex(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "create_locator", "create_locator(?1, ?2)", StandardSpiBasicTypes.BINARY );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "locator_literal", "locator_literal(?1, ?2)", StandardSpiBasicTypes.BINARY );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "locator_valid", "locator_valid(?1)", StandardSpiBasicTypes.BOOLEAN );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "return_lob", "return_lob(?1, ?2)", StandardSpiBasicTypes.BINARY );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "setdata", "setdata(?1, ?2, ?3)", StandardSpiBasicTypes.BOOLEAN );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "charindex", "charindex(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
 	}
 
 	@Override

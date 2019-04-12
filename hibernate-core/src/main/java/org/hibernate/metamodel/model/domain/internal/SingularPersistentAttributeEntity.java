@@ -47,7 +47,6 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
-import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
@@ -63,6 +62,11 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
@@ -103,9 +107,8 @@ import static org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribu
  */
 public class SingularPersistentAttributeEntity<O, J>
 		extends AbstractNonIdSingularPersistentAttribute<O, J>
-		implements JoinablePersistentAttribute<O, J>,
-		EntityValuedNavigable<J>,
-		Joinable<J>,
+		implements EntityValuedNavigable<J>,
+		Joinable<O,J>,
 		Fetchable<J>,
 		AllowableParameterType<J>,
 		TableGroupJoinProducer {
@@ -484,6 +487,23 @@ public class SingularPersistentAttributeEntity<O, J>
 		throw new HibernateException(
 				"Unexpected classification [" + getAttributeTypeClassification() +
 						"] found in entity-valued attribute descriptor"
+		);
+	}
+
+	@Override
+	public SqmAttributeJoin createSqmJoin(
+			SqmFrom lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		return new SqmSingularJoin(
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 
@@ -904,13 +924,13 @@ public class SingularPersistentAttributeEntity<O, J>
 	}
 
 	@Override
-	public boolean areEqual(J x, J y) throws HibernateException {
-		return getEntityDescriptor().areEqual( x, y );
+	public boolean areEqual(Object x, Object y) throws HibernateException {
+		return getEntityDescriptor().areEqual( (J) x, (J) y );
 	}
 
 	@Override
-	public int extractHashCode(J o) {
-		return getEntityDescriptor().extractHashCode( o );
+	public int extractHashCode(Object o) {
+		return getEntityDescriptor().extractHashCode( (J) o );
 	}
 
 	public Object extractFkValue(Object value) {

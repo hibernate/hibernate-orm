@@ -13,6 +13,8 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
@@ -39,7 +41,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface SqmPath extends SqmExpression, SemanticPathPart {
+public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<T> {
 
 	/**
 	 * Returns the NavigablePath.
@@ -49,13 +51,13 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 	/**
 	 * The Navigable represented by this reference.
 	 */
-	Navigable<?> getReferencedNavigable();
+	Navigable<T> getReferencedNavigable();
 
 	/**
 	 * Get the left-hand side of this path - may be null, indicating a
 	 * root, cross-join or entity-join
 	 */
-	SqmPath getLhs();
+	SqmPath<?> getLhs();
 
 	default SqmRoot findRoot() {
 		final SqmPath lhs = getLhs();
@@ -142,13 +144,13 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 	 * @return The "casted" reference
 	 */
 	@SuppressWarnings("unchecked")
-	default <T> T as(Class<T> targetType) {
+	default <X> X sqmAs(Class<X> targetType) {
 		if ( targetType.isInstance( this ) ) {
-			return (T) this;
+			return (X) this;
 		}
 
 		if ( Navigable.class.isAssignableFrom( targetType ) ) {
-			return (T) ( (Navigable) getReferencedNavigable() ).as( targetType );
+			return (X) ( (Navigable) getReferencedNavigable() ).as( targetType );
 		}
 
 		throw new IllegalArgumentException(
@@ -161,9 +163,9 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 		);
 	}
 
-	default <T> T as(Class<T> targetType, Supplier<RuntimeException> exceptionSupplier) {
+	default <X> X sqmAs(Class<X> targetType, Supplier<RuntimeException> exceptionSupplier) {
 		try {
-			return as( targetType );
+			return sqmAs( targetType );
 		}
 		catch (IllegalArgumentException e) {
 			throw exceptionSupplier.get();
@@ -171,7 +173,7 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 	}
 
 	@Override
-	default ExpressableType<?> getExpressableType() {
+	default ExpressableType<T> getExpressableType() {
 		return getReferencedNavigable();
 	}
 
@@ -181,7 +183,10 @@ public interface SqmPath extends SqmExpression, SemanticPathPart {
 	}
 
 	@Override
-	default JavaTypeDescriptor getJavaTypeDescriptor() {
+	default JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
+
+	@Override
+	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType) throws PathException;
 }

@@ -12,13 +12,13 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.BinaryArithmeticOperator;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionRegistryAware;
 import org.hibernate.query.sqm.tree.expression.LiteralHelper;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -42,27 +42,30 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * @author Steve Ebersole
  */
 public class LocateEmulationUsingPositionAndSubstring
-		extends AbstractSqmFunctionTemplate
-		implements SqmFunctionRegistryAware {
+		extends AbstractSqmFunctionTemplate {
 	private final SqmFunctionProducer positionFunctionProducer;
 	private final SqmFunctionProducer substringFunctionProducer;
 
-	private SqmFunctionRegistry registry;
-
 	public LocateEmulationUsingPositionAndSubstring() {
 		this(
-				(registry, type, arguments) -> {
-					final SqmFunctionTemplate template = registry.findFunctionTemplate( "substring" );
+				(type, arguments, queryEngine) -> {
+					final SqmFunctionTemplate template = queryEngine.getSqmFunctionRegistry().findFunctionTemplate( "substring" );
 					if ( template == null ) {
+						//noinspection unchecked
 						return new SqmSubstringFunction(
-								(BasicValuedExpressableType) type,
 								arguments.get( 1 ),
 								arguments.get( 2 ),
-								null
+								null,
+								(BasicValuedExpressableType) type,
+								queryEngine.getCriteriaBuilder()
 						);
 					}
 					else {
-						return template.makeSqmFunctionExpression( arguments, type );
+						return template.makeSqmFunctionExpression(
+								arguments,
+								type,
+								queryEngine
+						);
 					}
 				}
 		);
@@ -70,17 +73,22 @@ public class LocateEmulationUsingPositionAndSubstring
 
 	public LocateEmulationUsingPositionAndSubstring(SqmFunctionProducer substringFunctionProducer) {
 		this(
-				(registry, type, arguments) -> {
-					final SqmFunctionTemplate template = registry.findFunctionTemplate( "substring" );
+				(type, arguments, queryEngine) -> {
+					final SqmFunctionTemplate template = queryEngine.getSqmFunctionRegistry().findFunctionTemplate( "substring" );
 					if ( template == null ) {
 						return new PositionFunction(
 								arguments.get( 0 ),
 								arguments.get( 1 ),
-								type
+								type,
+								queryEngine.getCriteriaBuilder()
 						);
 					}
 					else {
-						return template.makeSqmFunctionExpression( arguments, type );
+						return template.makeSqmFunctionExpression(
+								arguments,
+								type,
+								queryEngine
+						);
 					}
 				},
 				substringFunctionProducer
@@ -99,13 +107,14 @@ public class LocateEmulationUsingPositionAndSubstring
 	@Override
 	protected SqmExpression generateSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 
 		if ( arguments.size() == 2 ) {
-			return build3ArgVariation( arguments, impliedResultType );
+			return build3ArgVariation( arguments, impliedResultType, queryEngine );
 		}
 		else {
-			return build2ArgVariation( arguments, impliedResultType );
+			return build2ArgVariation( arguments, impliedResultType, queryEngine );
 		}
 
 
@@ -113,70 +122,74 @@ public class LocateEmulationUsingPositionAndSubstring
 
 	private SqmExpression build3ArgVariation(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 
-		final SqmExpression pattern = arguments.get( 0 );
-		final SqmExpression string = arguments.get( 1 );
-		final SqmExpression start = arguments.get( 2 );
+		final SqmExpression<?> pattern = arguments.get( 0 );
+		final SqmExpression<?> string = arguments.get( 1 );
+		final SqmExpression<?> start = arguments.get( 2 );
 
 		// (position( $pattern in substring($string, $start) ) + $start-1)
 
 		final SqmExpression substringCall = substringFunctionProducer.produce(
-				registry,
 				StandardSpiBasicTypes.INTEGER,
-				Arrays.asList( string, start )
+				Arrays.asList( string, start ),
+				queryEngine
 		);
 
 
 		final SqmExpression positionCall = positionFunctionProducer.produce(
-				registry,
 				StandardSpiBasicTypes.INTEGER,
-				Arrays.asList( pattern, substringCall )
+				Arrays.asList( pattern, substringCall ),
+				queryEngine
 		);
 
+		//noinspection unchecked
 		final SqmExpression startMinusOne = new SqmBinaryArithmetic(
-				BinaryArithmeticOperator.SUBTRACT, start,
-				LiteralHelper.INTEGER_ONE,
-				StandardSpiBasicTypes.INTEGER
+				BinaryArithmeticOperator.SUBTRACT,
+				start,
+				LiteralHelper.integerLiteral( 1, queryEngine ),
+				StandardSpiBasicTypes.INTEGER,
+				queryEngine.getCriteriaBuilder()
 		);
 
 
+		//noinspection unchecked
 		final SqmExpression positionPluStartMinusOne = new SqmBinaryArithmetic(
 				BinaryArithmeticOperator.ADD,
 				positionCall,
 				startMinusOne,
-				StandardSpiBasicTypes.INTEGER
+				StandardSpiBasicTypes.INTEGER,
+				queryEngine.getCriteriaBuilder()
 		);
 
-		return new SqmTuple( positionPluStartMinusOne );
+		return new SqmTuple( positionPluStartMinusOne, queryEngine.getCriteriaBuilder() );
 	}
 
 	private SqmExpression build2ArgVariation(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		return new PositionFunction(
 				arguments.get( 0 ),
 				arguments.get( 1 ),
-				impliedResultType
+				impliedResultType,
+				queryEngine.getCriteriaBuilder()
 		);
-	}
-
-	@Override
-	public void injectRegistry(SqmFunctionRegistry registry) {
-		this.registry = registry;
 	}
 
 	public static class PositionFunction
 			extends SelfRenderingSqmFunction
 			implements SelfRenderingFunctionSupport, SqlAstFunctionProducer, SqmNonStandardFunction {
 		public PositionFunction(
-				SqmExpression pattern,
-				SqmExpression string,
-				AllowableFunctionReturnType resultType) {
+				SqmExpression<?> pattern,
+				SqmExpression<?> string,
+				AllowableFunctionReturnType resultType,
+				NodeBuilder nodeBuilder) {
 			super(
-					null,
 					Arrays.asList( pattern, string ),
-					resultType == null ? StandardSpiBasicTypes.STRING : resultType
+					resultType == null ? StandardSpiBasicTypes.STRING : resultType,
+					nodeBuilder
 			);
 		}
 

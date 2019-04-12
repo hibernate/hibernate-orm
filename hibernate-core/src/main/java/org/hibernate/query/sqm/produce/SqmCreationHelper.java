@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 
 /**
@@ -33,6 +33,16 @@ public class SqmCreationHelper {
 		return lhs.append( localPath );
 	}
 
+	public static NavigablePath buildSubNavigablePath(SqmPath<?> lhs, Navigable<?> subNavigable, String alias) {
+		if ( lhs == null ) {
+			throw new IllegalArgumentException(
+					"`lhs` cannot be null for a sub navigable reference - " + subNavigable.getNavigableRole().getFullPath()
+			);
+		}
+
+		return buildSubNavigablePath( lhs.getNavigablePath(), subNavigable.getNavigableName(), alias );
+	}
+
 	private SqmCreationHelper() {
 	}
 
@@ -42,6 +52,12 @@ public class SqmCreationHelper {
 			Navigable subNavigable,
 			boolean isSubRefTerminal,
 			SqmCreationState creationState) {
+		SqmTreeCreationLogger.LOGGER.tracef(
+				"`SqmEntityValuedSimplePath#prepareForSubNavigableReference` : %s -> %s",
+				lhs == null ? "[null]" : lhs.getNavigablePath().getFullPath(),
+				subNavigable.getNavigableName()
+		);
+
 		if ( lhs == null ) {
 			// this should mean that `processingPath` is an `SqmRoot` and really does not need resolution.
 			//		- just skip it
@@ -71,16 +87,14 @@ public class SqmCreationHelper {
 
 		final SqmFrom existingJoin = processingState.getPathRegistry().findFromByPath( processingPath.getNavigablePath() );
 		if ( existingJoin == null ) {
-			final SqmNavigableJoin sqmJoin = new SqmNavigableJoin(
+			final SqmAttributeJoin sqmJoin = ( (Joinable) processingPath.getReferencedNavigable() ).createSqmJoin(
 					lhsFrom,
-					(Joinable) processingPath.getReferencedNavigable(),
-					// a non-terminal should never have an alias
-					null,
 					SqmJoinType.INNER,
+					null,
 					false,
 					creationState
 			);
-			lhsFrom.addJoin( sqmJoin );
+			lhsFrom.addSqmJoin( sqmJoin );
 			processingState.getPathRegistry().register( sqmJoin );
 		}
 	}

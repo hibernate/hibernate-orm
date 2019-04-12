@@ -6,6 +6,14 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Collection;
+import java.util.function.Consumer;
+import javax.persistence.criteria.Expression;
+
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
@@ -16,18 +24,64 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
  *
  * @author Steve Ebersole
  */
-public interface SqmExpression extends SqmSelectableNode {
-
+public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T> {
 	/**
 	 * The expression's type.
 	 *
 	 * Can change as a result of calls to {@link #applyInferableType}
 	 */
-	ExpressableType<?> getExpressableType();
+	ExpressableType<T> getExpressableType();
 
 	/**
 	 * Used to apply type information based on the expression's usage
 	 * within the query.
 	 */
 	void applyInferableType(ExpressableType<?> type);
+
+	@Override
+	default void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
+		jpaSelectionConsumer.accept( this );
+	}
+
+	@Override
+	SqmExpression<Long> asLong();
+
+	@Override
+	SqmExpression<Integer> asInteger();
+
+	@Override
+	SqmExpression<Float> asFloat();
+
+	@Override
+	SqmExpression<Double> asDouble();
+
+	@Override
+	SqmExpression<BigDecimal> asBigDecimal();
+
+	@Override
+	SqmExpression<BigInteger> asBigInteger();
+
+	@Override
+	SqmExpression<String> asString();
+
+	@Override
+	<X> SqmExpression<X> as(Class<X> type);
+
+	@Override
+	SqmPredicate isNull();
+
+	@Override
+	SqmPredicate isNotNull();
+
+	@Override
+	SqmPredicate in(Object... values);
+
+	@Override
+	SqmPredicate in(Expression<?>... values);
+
+	@Override
+	SqmPredicate in(Collection<?> values);
+
+	@Override
+	SqmPredicate in(Expression<Collection<?>> values);
 }

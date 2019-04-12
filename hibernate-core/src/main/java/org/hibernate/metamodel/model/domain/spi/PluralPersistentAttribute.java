@@ -8,6 +8,8 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.function.Consumer;
 
+import javax.persistence.metamodel.PluralAttribute;
+
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
@@ -19,8 +21,7 @@ import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
  * @author Steve Ebersole
  */
 public interface PluralPersistentAttribute<O,C,E>
-		extends NonIdPersistentAttribute<O,C>, PluralValuedNavigable<C>,
-		javax.persistence.metamodel.PluralAttribute<O,C,E>, Joinable<C>, Fetchable<C> {
+		extends NonIdPersistentAttribute<O,C>, PluralValuedNavigable<C>, PluralAttribute<O,C,E>, Joinable<O,C>, Fetchable<C> {
 
 	PersistentCollectionDescriptor<O,C,E> getPersistentCollectionDescriptor();
 

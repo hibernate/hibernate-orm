@@ -6,8 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -16,13 +20,14 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 /**
  * @author Steve Ebersole
  */
-public class SqmMinIndexPath extends AbstractSqmSpecificPluralPartPath {
+public class SqmMinIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	public static final String NAVIGABLE_NAME = "{min-index}";
 
-	public SqmMinIndexPath(SqmPath pluralDomainPath) {
+	public SqmMinIndexPath(SqmPath<?> pluralDomainPath) {
 		super(
 				pluralDomainPath.getNavigablePath().append( NAVIGABLE_NAME ),
-				pluralDomainPath
+				pluralDomainPath,
+				pluralDomainPath.sqmAs( PersistentCollectionDescriptor.class ).getIndexDescriptor()
 		);
 	}
 
@@ -42,12 +47,13 @@ public class SqmMinIndexPath extends AbstractSqmSpecificPluralPartPath {
 	}
 
 	@Override
-	public Navigable<?> getReferencedNavigable() {
+	public Navigable<T> getReferencedNavigable() {
 		return getCollectionDescriptor().getIndexDescriptor();
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMinIndexPath( this );
 	}
+
 }

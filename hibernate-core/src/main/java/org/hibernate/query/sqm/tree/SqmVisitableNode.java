@@ -18,5 +18,5 @@ public interface SqmVisitableNode extends SqmNode {
 	/**
 	 * Accept the walker per visitation
 	 */
-	<T> T accept(SemanticQueryWalker<T> walker);
+	<X> X accept(SemanticQueryWalker<X> walker);
 }

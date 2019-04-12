@@ -9,13 +9,13 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.dialect.function.DB2SubstringFunctionTemplate;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
@@ -35,11 +35,11 @@ public class DB297Dialect extends DB2Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
-		registry.register( "substring", new DB2SubstringFunctionTemplate() );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
+		queryEngine.getSqmFunctionRegistry().register( "substring", new DB2SubstringFunctionTemplate() );
 	}
 
 	@Override

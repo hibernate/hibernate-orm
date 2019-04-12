@@ -10,14 +10,23 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.QueryLogger;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
+import org.hibernate.query.internal.DisabledQueryPlanCache;
 import org.hibernate.query.internal.QueryPlanCacheImpl;
+import org.hibernate.query.sqm.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.produce.SemanticQueryProducer;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
+import org.hibernate.query.sqm.produce.internal.SqmCreationOptionsStandard;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses
@@ -27,25 +36,78 @@ import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
  */
 @Incubating
 public class QueryEngine {
-	private final SessionFactoryImplementor sessionFactory;
+	public static QueryEngine from(
+			SessionFactoryImplementor sessionFactory,
+			NamedQueryRepository namedQueryRepository) {
+		return new QueryEngine(
+				sessionFactory.getDomainModel(),
+				sessionFactory.getServiceRegistry(),
+				sessionFactory.getSessionFactoryOptions(),
+				sessionFactory,
+				new SqmCreationOptionsStandard( sessionFactory ),
+				sessionFactory.getProperties(),
+				namedQueryRepository
+		);
+	}
 
 	private final NamedQueryRepository namedQueryRepository;
-	private final CriteriaNodeBuilder criteriaBuilder;
+	private final SqmCriteriaNodeBuilder criteriaBuilder;
 	private final SemanticQueryProducer semanticQueryProducer;
 	private final QueryPlanCache queryPlanCache;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 
 	public QueryEngine(
-			SessionFactoryImplementor sessionFactory,
-			NamedQueryRepository namedQueryRepository,
-			SqmFunctionRegistry sqmFunctionRegistry) {
-		this.sessionFactory = sessionFactory;
+			MetamodelImplementor domainModel,
+			ServiceRegistry serviceRegistry,
+			SessionFactoryOptions runtimeOptions,
+			SqmCreationContext sqmCreationContext,
+			SqmCreationOptions sqmCreationOptions,
+			Map properties,
+			NamedQueryRepository namedQueryRepository) {
 		this.namedQueryRepository = namedQueryRepository;
-		this.semanticQueryProducer = new SemanticQueryProducerImpl( sessionFactory );
-		this.criteriaBuilder = new CriteriaNodeBuilder( sessionFactory );
-		this.queryPlanCache = new QueryPlanCacheImpl( sessionFactory );
-		this.sqmFunctionRegistry = sqmFunctionRegistry;
+		this.semanticQueryProducer = new SemanticQueryProducerImpl( sqmCreationContext, sqmCreationOptions );
+		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
+				this,
+				domainModel,
+				serviceRegistry
+		);
 
+		this.queryPlanCache = buildQueryPlanCache( properties );
+
+		this.sqmFunctionRegistry = new SqmFunctionRegistry();
+		serviceRegistry.getService( JdbcServices.class )
+				.getJdbcEnvironment()
+				.getDialect()
+				.initializeFunctionRegistry( this );
+		runtimeOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
+	}
+
+	private static QueryPlanCache buildQueryPlanCache(Map properties) {
+		final boolean explicitUseCache = ConfigurationHelper.getBoolean(
+				AvailableSettings.QUERY_PLAN_CACHE_ENABLED,
+				properties,
+				false
+		);
+
+		final Integer explicitMaxPlanCount = ConfigurationHelper.getInteger(
+				AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE,
+				properties
+		);
+
+		if ( explicitUseCache || ( explicitMaxPlanCount != null && explicitMaxPlanCount > 0 ) ) {
+			return new QueryPlanCacheImpl(
+					explicitMaxPlanCount != null
+							? explicitMaxPlanCount
+							: QueryPlanCacheImpl.DEFAULT_QUERY_PLAN_MAX_COUNT
+			);
+		}
+		else {
+			// disabled
+			return DisabledQueryPlanCache.INSTANCE;
+		}
+	}
+
+	public void prepare(SessionFactoryImplementor sessionFactory) {
 		//checking for named queries
 		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {
 			final Map<String, HibernateException> errors = namedQueryRepository.checkNamedQueries( this );
@@ -62,15 +124,11 @@ public class QueryEngine {
 		}
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
-
 	public NamedQueryRepository getNamedQueryRepository() {
 		return namedQueryRepository;
 	}
 
-	public HibernateCriteriaBuilder getCriteriaBuilder() {
+	public SqmCriteriaNodeBuilder getCriteriaBuilder() {
 		return criteriaBuilder;
 	}
 

@@ -9,7 +9,7 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -19,5 +19,5 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  * @author Steve Ebersole
  */
 public interface SqmFunctionProducer {
-	SqmExpression produce(SqmFunctionRegistry registry, AllowableFunctionReturnType type, List<SqmExpression> arguments);
+	SqmExpression produce(AllowableFunctionReturnType type, List<SqmExpression> arguments, QueryEngine queryEngine);
 }

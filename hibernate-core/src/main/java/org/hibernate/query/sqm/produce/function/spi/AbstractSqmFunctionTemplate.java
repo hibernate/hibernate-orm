@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.produce.function.spi;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
@@ -50,16 +51,19 @@ public abstract class AbstractSqmFunctionTemplate implements SqmFunctionTemplate
 	@SuppressWarnings("unchecked")
 	public final SqmExpression makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		argumentsValidator.validate( arguments );
 
 		return generateSqmFunctionExpression(
 				arguments,
-				returnTypeResolver.resolveFunctionReturnType( impliedResultType, arguments )
+				returnTypeResolver.resolveFunctionReturnType( impliedResultType, arguments ),
+				queryEngine
 		);
 	}
 
 	protected abstract SqmExpression generateSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType);
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine);
 }

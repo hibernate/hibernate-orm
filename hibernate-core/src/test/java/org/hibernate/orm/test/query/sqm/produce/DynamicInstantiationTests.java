@@ -137,7 +137,7 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 		);
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmDynamicInstantiation instantiation = TestingUtil.cast(
+		final SqmDynamicInstantiation<?> instantiation = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);
@@ -175,10 +175,10 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleDynamicListInstantiation() {
-		SqmSelectStatement statement = interpretSelect( "select new list( e.id, e.theString ) from EntityOfBasics e" );
+		SqmSelectStatement<?> statement = interpretSelect( "select new list( e.id, e.theString ) from EntityOfBasics e" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmDynamicInstantiation instantiation = TestingUtil.cast(
+		final SqmDynamicInstantiation<?> instantiation = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);
@@ -208,10 +208,10 @@ public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testSimpleDynamicMapInstantiation() {
-		SqmSelectStatement statement = interpretSelect( "select new map( e.id as id, e.theString as ts ) from EntityOfBasics e" );
+		SqmSelectStatement<?> statement = interpretSelect( "select new map( e.id as id, e.theString as ts ) from EntityOfBasics e" );
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
-		final SqmDynamicInstantiation instantiation = TestingUtil.cast(
+		final SqmDynamicInstantiation<?> instantiation = TestingUtil.cast(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
 				SqmDynamicInstantiation.class
 		);

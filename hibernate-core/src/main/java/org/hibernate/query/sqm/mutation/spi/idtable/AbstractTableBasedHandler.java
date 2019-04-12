@@ -21,11 +21,9 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.consume.spi.SqlInsertSelectToJdbcInsertSelectConverter;
-import org.hibernate.sql.ast.produce.spi.SqlAstSelectDescriptor;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.tree.expression.LiteralParameter;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -161,11 +159,18 @@ public abstract class AbstractTableBasedHandler extends AbstractMutationHandler 
 		if ( sessionUidSupport.needsSessionUidColumn() ) {
 			// we need to insert the uid into the id-table to properly identify the rows later
 			sqmIdSelectQuerySpec.getSelectClause().addSelection(
-					new SqmSelection( generateSessionUidLiteralExpression( executionContext ) )
+					new SqmSelection(
+							generateSessionUidLiteralExpression( executionContext ),
+							executionContext.getSession().getFactory().getNodeBuilder()
+					)
 			);
 		}
 
-		final SqmSelectStatement sqmIdSelect = new SqmSelectStatement( sqmIdSelectQuerySpec );
+		final SqmSelectStatement sqmIdSelect = new SqmSelectStatement(
+				executionContext.getSession().getFactory().getNodeBuilder()
+		);
+
+		sqmIdSelect.setQuerySpec( sqmIdSelectQuerySpec );
 
 		SqmTreePrinter.logTree( sqmIdSelect );
 
@@ -206,7 +211,8 @@ public abstract class AbstractTableBasedHandler extends AbstractMutationHandler 
 	private SqmLiteral generateSessionUidLiteralExpression(ExecutionContext executionContext) {
 		return new SqmLiteral<>(
 				sessionUidSupport.extractUid( executionContext.getSession() ),
-				StandardSpiBasicTypes.STRING
+				StandardSpiBasicTypes.STRING,
+				executionContext.getSession().getFactory().getNodeBuilder()
 		);
 	}
 

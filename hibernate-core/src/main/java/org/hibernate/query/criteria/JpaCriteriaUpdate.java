@@ -11,5 +11,5 @@ import javax.persistence.criteria.CriteriaUpdate;
 /**
  * @author Steve Ebersole
  */
-public interface JpaCriteriaUpdate<T> extends JpaManipulationCriteria, CriteriaUpdate<T> {
+public interface JpaCriteriaUpdate<T> extends JpaManipulationCriteria<T>, CriteriaUpdate<T> {
 }

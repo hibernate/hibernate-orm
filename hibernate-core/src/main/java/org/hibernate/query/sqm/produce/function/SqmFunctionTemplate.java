@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.produce.function;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.Template;
 
@@ -32,7 +33,8 @@ public interface SqmFunctionTemplate {
 	 */
 	SqmExpression makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType);
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine);
 
 	/**
 	 * Will a call to the described function always include

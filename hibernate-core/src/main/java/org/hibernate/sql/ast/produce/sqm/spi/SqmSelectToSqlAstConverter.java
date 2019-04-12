@@ -22,6 +22,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
@@ -29,13 +30,14 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.consume.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.produce.SyntaxException;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
@@ -45,6 +47,7 @@ import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.internal.SqmSelectInterpretationImpl;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.domain.EmbeddableValuedNavigableReference;
 import org.hibernate.sql.ast.tree.expression.domain.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature;
@@ -122,8 +125,7 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public Void visitSelection(SqmSelection sqmSelection) {
-		// todo (6.0) : this should actually be able to generate multiple SqlSelections
-		final DomainResultProducer resultProducer = (DomainResultProducer) sqmSelection.getSelectableNode().accept( this );
+		final DomainResultProducer resultProducer = consumeDomainResultProducer( sqmSelection );
 
 		if ( getProcessingStateStack().depth() > 1 ) {
 			resultProducer.applySqlSelections( this );
@@ -138,6 +140,41 @@ public class SqmSelectToSqlAstConverter
 		}
 
 		return null;
+	}
+
+	private DomainResultProducer consumeDomainResultProducer(SqmSelection sqmSelection) {
+		final DomainResultProducer resultProducer = (DomainResultProducer) sqmSelection.getSelectableNode().accept( this );
+
+		if ( resultProducer != null ) {
+			return resultProducer;
+		}
+
+		if ( sqmSelection.getSelectableNode() instanceof SqmAttributeJoin ) {
+			final SqmAttributeJoin join = (SqmAttributeJoin) sqmSelection.getSelectableNode();
+
+			if ( join.getReferencedNavigable() instanceof EmbeddedValuedNavigable ) {
+				final EmbeddedValuedNavigable joinedNavigable = (EmbeddedValuedNavigable) join.getReferencedNavigable();
+
+				// the LHS TableGroup ought to be registered already under the join's NavigablePath
+				final TableGroup lhsTableGroup = getFromClauseIndex().findTableGroup( join.getNavigablePath() );
+				if ( lhsTableGroup == null ) {
+					throw new SyntaxException(
+							"Could not resolve LHS TableGroup for embedded join - " + sqmSelection.getSelectableNode()
+					);
+				}
+
+				return new EmbeddableValuedNavigableReference(
+						join.getNavigablePath(),
+						joinedNavigable,
+						determineLockMode( join.getExplicitAlias() ),
+						this
+				);
+			}
+		}
+
+		throw new SyntaxException(
+				"Could not resolve selection as DomainResultProducer - " + sqmSelection.getSelectableNode()
+		);
 	}
 
 	private int fetchDepth = 0;
@@ -194,7 +231,7 @@ public class SqmSelectToSqlAstConverter
 		LockMode lockMode = LockMode.READ;
 		FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 
-		final SqmNavigableJoin fetchedJoin = getFromClauseIndex().findFetchedJoinByPath( fetchablePath );
+		final SqmAttributeJoin fetchedJoin = getFromClauseIndex().findFetchedJoinByPath( fetchablePath );
 		final String alias;
 		boolean joined;
 
@@ -322,7 +359,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public DynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation) {
+	public DynamicInstantiation visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation) {
 		final SqmDynamicInstantiationTarget instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
 		final DynamicInstantiationNature instantiationNature = instantiationTarget.getNature();
 		final JavaTypeDescriptor<Object> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
@@ -395,7 +432,8 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitFullyQualifiedEnum(Enum value) {
 		return new QueryLiteral(
 				value,
-				getTypeConfiguration()
+				getCreationContext().getDomainModel()
+						.getTypeConfiguration()
 						.standardExpressableTypeForJavaType( value.getClass() )
 						.getSqlExpressableType(),
 				getCurrentClauseStack().getCurrent()
@@ -408,7 +446,8 @@ public class SqmSelectToSqlAstConverter
 			final Object value = field.get( null );
 			return new QueryLiteral(
 					value,
-					getTypeConfiguration()
+					getCreationContext().getDomainModel()
+							.getTypeConfiguration()
 							.standardExpressableTypeForJavaType( value.getClass() )
 							.getSqlExpressableType(),
 					getCurrentClauseStack().getCurrent()

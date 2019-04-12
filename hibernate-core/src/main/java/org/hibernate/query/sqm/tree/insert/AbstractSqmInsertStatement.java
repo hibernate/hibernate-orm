@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -20,17 +21,15 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmInsertStatement extends AbstractSqmDmlStatement implements SqmInsertStatement {
+public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatement<T> implements SqmInsertStatement<T> {
 	private List<SqmPath> insertionTargetPaths;
 
-	@SuppressWarnings("WeakerAccess")
-	protected AbstractSqmInsertStatement() {
-		super();
+	protected AbstractSqmInsertStatement(NodeBuilder nodeBuilder) {
+		super( nodeBuilder );
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected AbstractSqmInsertStatement(SqmRoot targetRoot) {
-		super( targetRoot );
+	protected AbstractSqmInsertStatement(SqmRoot targetRoot, NodeBuilder nodeBuilder) {
+		super( targetRoot, nodeBuilder );
 	}
 
 	@Override

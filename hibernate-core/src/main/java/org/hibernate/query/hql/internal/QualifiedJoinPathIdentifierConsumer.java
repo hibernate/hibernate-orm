@@ -137,14 +137,14 @@ public class QualifiedJoinPathIdentifierConsumer implements DotIdentifierConsume
 		final SqmFrom lhs = this.current;
 		final Navigable<Object> joinedNavigable = lhs.getReferencedNavigable().findNavigable( identifier );
 		if ( joinedNavigable instanceof Joinable ) {
-			this.current = ( (Joinable) joinedNavigable ).createJoin(
+			this.current = ( (Joinable) joinedNavigable ).createSqmJoin(
 					lhs,
 					joinType,
 					isTerminal ? alias : null,
 					fetch,
 					processingState.getCreationState()
 			);
-			lhs.addJoin( (SqmJoin) current );
+			lhs.addSqmJoin( (SqmJoin) current );
 		}
 		else {
 			throw new SemanticException( "Joined path is not joinable: " + completePath );

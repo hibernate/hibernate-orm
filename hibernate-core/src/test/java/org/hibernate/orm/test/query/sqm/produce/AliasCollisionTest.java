@@ -100,7 +100,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 
 		final List<SqmRoot> roots = querySpec.getFromClause().getRoots();
 		assertThat( roots, hasSize( 1 ) );
-		assertThat( roots.get( 0 ).getJoins(), isEmpty() );
+		assertThat( roots.get( 0 ).getSqmJoins(), isEmpty() );
 		assertThat( roots.get( 0 ).getExplicitAlias(), is( "a" ) );
 
 		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( SqmInSubQueryPredicate.class ) );
@@ -129,7 +129,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 
 		final List<SqmRoot> roots = querySpec.getFromClause().getRoots();
 		assertThat( roots, hasSize( 1 ) );
-		assertThat( roots.get( 0 ).getJoins(), isEmpty() );
+		assertThat( roots.get( 0 ).getSqmJoins(), isEmpty() );
 		assertThat( roots.get( 0 ).getExplicitAlias(), is( "a" ) );
 
 		assertThat( querySpec.getWhereClause().getPredicate(), instanceOf( SqmInSubQueryPredicate.class ) );

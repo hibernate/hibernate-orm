@@ -6,14 +6,21 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.function.Function;
+
+import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.query.QueryLogger;
 import org.hibernate.query.spi.NonSelectQueryPlan;
+import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.tree.SqmStatement;
+
+import org.jboss.logging.Logger;
 
 /**
  * Standard QueryInterpretations implementation
@@ -21,7 +28,8 @@ import org.hibernate.query.sqm.tree.SqmStatement;
  * @author Steve Ebersole
  */
 public class QueryPlanCacheImpl implements QueryPlanCache {
-	private final SessionFactoryImplementor sessionFactory;
+	private static final Logger log = QueryLogger.subLogger( "plan.cache" );
+
 	/**
 	 * The default strong reference count.
 	 */
@@ -34,60 +42,65 @@ public class QueryPlanCacheImpl implements QueryPlanCache {
 	/**
 	 * the cache of the actual plans...
 	 */
-	private final BoundedConcurrentHashMap queryPlanCache;
-	private final BoundedConcurrentHashMap sqmStatementCache;
+	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;
+	private final BoundedConcurrentHashMap<String,SqmStatement<?>> sqmStatementCache;
 
-	public QueryPlanCacheImpl(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+	public QueryPlanCacheImpl(int maxQueryPlanCount) {
+		log.debugf( "Starting QueryPlanCache(%s)", maxQueryPlanCount );
 
-		Integer maxQueryPlanCount = ConfigurationHelper.getInteger(
-				Environment.QUERY_PLAN_CACHE_MAX_SIZE,
-				sessionFactory.getProperties()
-		);
-		if ( maxQueryPlanCount == null ) {
-			maxQueryPlanCount = ConfigurationHelper.getInt(
-					Environment.QUERY_PLAN_CACHE_MAX_SIZE,
-					sessionFactory.getProperties(),
-					DEFAULT_QUERY_PLAN_MAX_COUNT
-			);
-		}
-
-		queryPlanCache = new BoundedConcurrentHashMap( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		sqmStatementCache = new BoundedConcurrentHashMap( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		sqmStatementCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 	}
 
 	@Override
 	public SelectQueryPlan getSelectQueryPlan(Key key) {
-		// todo (6.0) : Log and stats, see HHH-12855
+		log.tracef( "QueryPlan#getSelectQueryPlan(%s)", key );
 		return (SelectQueryPlan) queryPlanCache.get( key );
 	}
 
 	@Override
 	public void cacheSelectQueryPlan(Key key, SelectQueryPlan plan) {
-		// todo (6.0) : LOG, see HHH-12855
+		log.tracef( "QueryPlan#cacheSelectQueryPlan(%s)", key );
 		queryPlanCache.putIfAbsent( key, plan );
 	}
 
 	@Override
 	public NonSelectQueryPlan getNonSelectQueryPlan(Key key) {
-		// todo (6.0) : implement
+		log.tracef( "QueryPlan#getNonSelectQueryPlan(%s)", key );
 		return null;
 	}
 
 	@Override
 	public void cacheNonSelectQueryPlan(Key key, NonSelectQueryPlan plan) {
-		// todo (6.0) : implement
+		log.tracef( "QueryPlan#cacheNonSelectQueryPlan(%s)", key );
 	}
+
+	@Override
+	public SqmStatement resolveSqmStatement(
+			String queryString,
+			Function<String,SqmStatement<?>> creator) {
+		log.tracef( "QueryPlan#resolveSqmStatement(%s)", queryString );
+		SqmStatement<?> sqmStatement = sqmStatementCache.get( queryString );
+		if ( sqmStatement == null ) {
+			log.debugf( "Creating and caching SqmStatement - %s", queryString );
+			sqmStatement = creator.apply( queryString );
+			sqmStatementCache.put( queryString, sqmStatement );
+		}
+		return sqmStatement;
+	}
+
 
 	@Override
 	public SqmStatement getSqmStatement(String queryString) {
-		return (SqmStatement) sqmStatementCache.get( queryString );
+		log.debugf( "Creating and caching SqmStatement - %s", queryString );
+		return sqmStatementCache.get( queryString );
 	}
 
 	@Override
-	public void cacheSqmStatement(String key, SqmStatement sqmStatement) {
+	public void cacheSqmStatement(String queryString, SqmStatement sqmStatement) {
+		log.debugf( "Creating and caching SqmStatement - %s", queryString );
 		// todo (6.0) : Log and stats, see HHH-12855
-		sqmStatementCache.putIfAbsent( key, sqmStatement );
+		sqmStatementCache.putIfAbsent( queryString, sqmStatement );
 	}
 
 	@Override

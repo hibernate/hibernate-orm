@@ -20,4 +20,9 @@ public interface EntityIdentifierCompositeAggregated<O,J>
 	default int getNumberOfJdbcParametersNeeded() {
 		return getColumns().size();
 	}
+
+	@Override
+	default Class<J> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 }

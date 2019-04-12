@@ -6,7 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
@@ -14,29 +16,34 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  *
  * @author Steve Ebersole
  */
-public class SqmSelection implements SqmAliasedNode, SqmVisitableNode {
+public class SqmSelection extends AbstractSqmNode implements SqmAliasedNode, SqmVisitableNode {
 	private final SqmSelectableNode selectableNode;
-	private final String alias;
 
 	public SqmSelection(
 			SqmSelectableNode selectableNode,
-			String alias) {
+			NodeBuilder nodeBuilder) {
+		super( nodeBuilder );
 		this.selectableNode = selectableNode;
-		this.alias = alias;
 	}
 
-	public SqmSelection(SqmSelectableNode selectableNode) {
-		this( selectableNode, null );
+	public SqmSelection(
+			SqmSelectableNode selectableNode,
+			String alias,
+			NodeBuilder nodeBuilder) {
+		super( nodeBuilder );
+		this.selectableNode = selectableNode;
+		selectableNode.alias( alias );
 	}
 
 	@Override
-	public SqmSelectableNode getSelectableNode() {
+	public SqmSelectableNode<?> getSelectableNode() {
 		return selectableNode;
 	}
 
 	@Override
 	public String getAlias() {
-		return alias;
+		// JPA
+		return selectableNode.getAlias();
 	}
 
 	@Override

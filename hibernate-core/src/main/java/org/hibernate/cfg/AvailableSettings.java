@@ -1188,6 +1188,13 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	// todo (6.0) : decide if/how to allow query plan caching
 
 	/**
+	 * Should query plan caching be enabled at all?  Default is {@code false}
+	 * unless one of {@link #QUERY_PLAN_CACHE_MAX_SIZE} or
+	 * {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE} is specified
+	 */
+	String QUERY_PLAN_CACHE_ENABLED = "hibernate.query.plan_cache_enabled";
+
+	/**
 	 * The maximum number of entries in the Hibernate "Query Plan Cache".  The
 	 * default size is 2048.
 	 *

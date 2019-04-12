@@ -50,6 +50,12 @@ public class SqmGroupByClause {
 		}
 	}
 
+	public void clearGroupings() {
+		if ( groupings != null ) {
+			groupings.clear();
+		}
+	}
+
 	public static class SqmGrouping {
 		private SqmExpression expression;
 		// todo (6.0) : special type besides String?

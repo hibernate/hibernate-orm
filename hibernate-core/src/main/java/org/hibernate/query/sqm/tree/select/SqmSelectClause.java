@@ -11,32 +11,49 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * The semantic select clause.  Defined as a list of individual selections.
  *
  * @author Steve Ebersole
  */
-public class SqmSelectClause implements SqmAliasedExpressionContainer<SqmSelection> {
-	private final boolean distinct;
+public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpressionContainer<SqmSelection>, JpaSelection<Object> {
+	private boolean distinct;
 	private List<SqmSelection> selections;
 
-	public SqmSelectClause(boolean distinct) {
+	public SqmSelectClause(
+			boolean distinct,
+			NodeBuilder nodeBuilder) {
+		super( nodeBuilder );
 		this.distinct = distinct;
 	}
 
-	public SqmSelectClause(boolean distinct, List<SqmSelection> selections) {
-		this.distinct = distinct;
+	public SqmSelectClause(
+			boolean distinct,
+			List<SqmSelection> selections,
+			NodeBuilder nodeBuilder) {
+		this( distinct, nodeBuilder );
 		this.selections = selections;
 	}
 
-	public SqmSelectClause(boolean distinct, SqmSelection... selections) {
-		this( distinct, Arrays.asList( selections ) );
+	public SqmSelectClause(
+			boolean distinct,
+			NodeBuilder nodeBuilder,
+			SqmSelection... selections) {
+		this( distinct, Arrays.asList( selections ), nodeBuilder );
 	}
 
 	public boolean isDistinct() {
 		return distinct;
+	}
+
+	public void makeDistinct(boolean distinct) {
+		this.distinct = distinct;
 	}
 
 	public List<SqmSelection> getSelections() {
@@ -56,8 +73,8 @@ public class SqmSelectClause implements SqmAliasedExpressionContainer<SqmSelecti
 	}
 
 	@Override
-	public SqmSelection add(SqmExpression expression, String alias) {
-		final SqmSelection selection = new SqmSelection( expression, alias );
+	public SqmSelection add(SqmExpression<?> expression, String alias) {
+		final SqmSelection selection = new SqmSelection( expression, alias, nodeBuilder()  );
 		addSelection( selection );
 		return selection;
 	}
@@ -65,5 +82,67 @@ public class SqmSelectClause implements SqmAliasedExpressionContainer<SqmSelecti
 	@Override
 	public void add(SqmSelection aliasExpression) {
 		addSelection( aliasExpression );
+	}
+
+	public void setSelection(SqmSelection sqmSelection) {
+		if ( selections != null ) {
+			selections.clear();
+		}
+
+		addSelection( sqmSelection );
+	}
+
+	public void setSelection(SqmSelectableNode selectableNode) {
+		setSelection( new SqmSelection( selectableNode, selectableNode.getAlias(), nodeBuilder() ) );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA stuff
+
+	public JpaSelection<?> resolveJpaSelection() {
+		// NOTE : JPA's `Selection` contract is really better named `Selectable`
+		if ( selections == null || selections.size() != 1 ) {
+			return this;
+		}
+		else {
+			return selections.get( 0 ).getSelectableNode();
+		}
+	}
+
+	@Override
+	public List<SqmSelectableNode<?>> getSelectionItems() {
+		final List<SqmSelectableNode<?>> subSelections = new ArrayList<>();
+
+		if ( this.selections == null || this.selections.size() != 1 ) {
+			this.selections.get( 0 ).getSelectableNode().visitSubSelectableNodes( subSelections::add );
+		}
+		else {
+			for ( SqmSelection selection : this.selections ) {
+				selection.getSelectableNode().visitSubSelectableNodes( subSelections::add );
+			}
+
+		}
+		return subSelections;
+	}
+
+	@Override
+	public JpaSelection<Object> alias(String name) {
+		return null;
+	}
+
+	@Override
+	public boolean isCompoundSelection() {
+		return false;
+	}
+
+	@Override
+	public JavaTypeDescriptor<Object> getJavaTypeDescriptor() {
+		return null;
+	}
+
+	@Override
+	public String getAlias() {
+		return null;
 	}
 }

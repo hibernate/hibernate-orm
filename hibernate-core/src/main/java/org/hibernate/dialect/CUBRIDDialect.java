@@ -9,7 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.CUBRIDLimitHandler;
@@ -88,135 +88,135 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "bin", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "char_length", StandardSpiBasicTypes.LONG );
-		registry.registerNamed( "character_length", StandardSpiBasicTypes.LONG );
-		registry.registerNamed( "lengthb", StandardSpiBasicTypes.LONG );
-		registry.registerNamed( "lengthh", StandardSpiBasicTypes.LONG );
-		registry.registerNamed( "lcase" );
-		registry.registerNamed( "lower" );
-		registry.registerNamed( "ltrim" );
-		registry.registerNamed( "reverse" );
-		registry.registerNamed( "rtrim" );
-		registry.registerNamed( "trim" );
-		registry.registerNamed( "space", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "ucase" );
-		registry.registerNamed( "upper" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "bin", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "char_length", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "character_length", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthb", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthh", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "lcase" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "lower" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "reverse" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "trim" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "space", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ucase" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "upper" );
 
-		registry.registerNamed( "abs" );
-		registry.registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "abs" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 
-		registry.registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "atan", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "cot", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "exp", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "ln", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "log2", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "log10", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNoArgs( "pi", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNoArgs( "rand", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNoArgs( "random", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "atan", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "cot", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "exp", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ln", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "log2", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "log10", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "pi", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rand", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "random", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
 
-		registry.registerNamed( "radians", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "degrees", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "radians", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "degrees", StandardSpiBasicTypes.DOUBLE );
 
-		registry.registerNamed( "ceil", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "floor", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "round" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ceil", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "floor", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
 
-		registry.registerNamed( "datediff", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "timediff", StandardSpiBasicTypes.TIME );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "datediff", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "timediff", StandardSpiBasicTypes.TIME );
 
-		registry.registerNamed( "date", StandardSpiBasicTypes.DATE );
-		registry.registerNoArgs( "curdate", StandardSpiBasicTypes.DATE );
-		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
-		registry.registerNoArgs( "sys_date", StandardSpiBasicTypes.DATE );
-		registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "date", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curdate", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sys_date", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
 
-		registry.registerNamed( "time", StandardSpiBasicTypes.TIME );
-		registry.registerNoArgs( "curtime", StandardSpiBasicTypes.TIME );
-		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
-		registry.registerNoArgs( "sys_time", StandardSpiBasicTypes.TIME );
-		registry.registerNoArgs( "systime", StandardSpiBasicTypes.TIME );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "time", StandardSpiBasicTypes.TIME );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curtime", StandardSpiBasicTypes.TIME );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sys_time", StandardSpiBasicTypes.TIME );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "systime", StandardSpiBasicTypes.TIME );
 
-		registry.registerNamed( "timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "sys_timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "systimestamp", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "localtime", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sys_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "systimestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
 
-		registry.registerNamed( "day", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "dayofmonth", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "from_days", StandardSpiBasicTypes.DATE );
-		registry.registerNamed( "from_unixtime", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNamed( "last_day", StandardSpiBasicTypes.DATE );
-		registry.registerNamed( "minute", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "month", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "months_between", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNoArgs( "now", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNamed( "quarter", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "second", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "sec_to_time", StandardSpiBasicTypes.TIME );
-		registry.registerNamed( "time_to_sec", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "to_days", StandardSpiBasicTypes.LONG );
-		registry.registerNamed( "unix_timestamp", StandardSpiBasicTypes.LONG );
-		registry.registerNoArgs( "utc_date", StandardSpiBasicTypes.STRING );
-		registry.registerNoArgs( "utc_time", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "week", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "weekday", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "year", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "day", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofmonth", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "from_days", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "from_unixtime", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "last_day", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "minute", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "month", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "months_between", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "now", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "quarter", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "second", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "sec_to_time", StandardSpiBasicTypes.TIME );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "time_to_sec", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "to_days", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "unix_timestamp", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "utc_date", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "utc_time", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "week", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "weekday", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "year", StandardSpiBasicTypes.INTEGER );
 
-		registry.registerNamed( "hex", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "hex", StandardSpiBasicTypes.STRING );
 
-		registry.registerNamed( "octet_length", StandardSpiBasicTypes.LONG );
-		registry.registerNamed( "bit_length", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "octet_length", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_length", StandardSpiBasicTypes.LONG );
 
-		registry.registerNamed( "bit_count", StandardSpiBasicTypes.LONG );
-		registry.registerNamed( "md5", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_count", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "md5", StandardSpiBasicTypes.STRING );
 
-		registry.registerNamed( "concat", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "concat", StandardSpiBasicTypes.STRING );
 
-		registry.registerNamed( "substring", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "substr", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "substring", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "substr", StandardSpiBasicTypes.STRING );
 
-		registry.registerNamed( "length", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "bit_length", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "coalesce" );
-		registry.registerNamed( "nullif" );
-		registry.registerNamed( "mod" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "length", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_length", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "coalesce" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "nullif" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "mod" );
 
-		registry.registerNamed( "power" );
-		registry.registerNamed( "stddev" );
-		registry.registerNamed( "variance" );
-		registry.registerNamed( "trunc" );
-		registry.registerNamed( "nvl" );
-		registry.registerNamed( "nvl2" );
-		registry.registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
-		registry.registerNamed( "to_char", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "to_date", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNamed( "instr", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "instrb", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "lpad", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "replace", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "rpad", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "translate", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "power" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "stddev" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "variance" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "trunc" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl2" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "to_char", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "to_date", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "instr", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "instrb", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "lpad", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "replace", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "rpad", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "translate", StandardSpiBasicTypes.STRING );
 
-		registry.registerNamed( "add_months", StandardSpiBasicTypes.DATE );
-		registry.registerNoArgs( "user", StandardSpiBasicTypes.STRING );
-		registry.registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
-		registry.registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "", "||", "" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "add_months", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "user", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "", "||", "" );
 	}
 
 	@Override

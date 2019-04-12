@@ -9,21 +9,23 @@ package org.hibernate.query.sqm.tree.expression.function;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmSqrtFunction extends AbstractSqmFunction {
+public class SqmSqrtFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "sqrt";
 
 	private final SqmExpression argument;
 
 	public SqmSqrtFunction(
-			SqmExpression argument,
-			AllowableFunctionReturnType resultType) {
-		super( resultType );
+			SqmExpression<?> argument,
+			AllowableFunctionReturnType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.argument = argument;
 	}
 
@@ -38,7 +40,7 @@ public class SqmSqrtFunction extends AbstractSqmFunction {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitSqrtFunction( this );
 	}
 

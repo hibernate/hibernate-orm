@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression.function;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -17,7 +18,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  *
  * @author Steve Ebersole
  */
-public class SqmLocateFunction extends AbstractSqmFunction {
+public class SqmLocateFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "locate";
 
 	private final SqmExpression patternString;
@@ -25,11 +26,12 @@ public class SqmLocateFunction extends AbstractSqmFunction {
 	private final SqmExpression startPosition;
 
 	public SqmLocateFunction(
-			SqmExpression patternString,
-			SqmExpression stringToSearch,
-			SqmExpression startPosition,
-			AllowableFunctionReturnType resultType) {
-		super( resultType );
+			SqmExpression<?> patternString,
+			SqmExpression<?> stringToSearch,
+			SqmExpression<?> startPosition,
+			AllowableFunctionReturnType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.patternString = patternString;
 		this.stringToSearch = stringToSearch;
 		this.startPosition = startPosition;

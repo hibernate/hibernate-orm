@@ -11,17 +11,17 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.query.QueryLogger;
-import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
@@ -41,7 +41,7 @@ public class DomainParameterXref {
 	 * Create a DomainParameterXref for the parameters defined in the passed
 	 * SQM statement
 	 */
-	public static DomainParameterXref from(SqmStatement sqmStatement) {
+	public static DomainParameterXref from(SqmStatement<?> sqmStatement) {
 		final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam = new IdentityHashMap<>();
 		final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>();
 
@@ -65,12 +65,9 @@ public class DomainParameterXref {
 
 						return one.getPosition().compareTo( another.getPosition() );
 					}
-					else if ( o1 instanceof JpaParameterSqmWrapper ) {
+					else if ( o1 instanceof SqmCriteriaParameter ) {
 						if ( o1.getName() != null ) {
 							return o1.getName().compareTo( o2.getName() );
-						}
-						else if ( o1.getPosition() != null ) {
-							return o1.getPosition().compareTo( o2.getPosition() );
 						}
 						else {
 							return Integer.compare( o1.hashCode(), o2.hashCode() );
@@ -85,8 +82,8 @@ public class DomainParameterXref {
 			final QueryParameterImplementor<?> queryParameter = xrefMap.computeIfAbsent(
 					sqmParameter,
 					p -> {
-						if ( sqmParameter instanceof JpaParameterSqmWrapper ) {
-							return ( (JpaParameterSqmWrapper) sqmParameter ).getJpaParameterExpression();
+						if ( sqmParameter instanceof SqmCriteriaParameter ) {
+							return (SqmCriteriaParameter) sqmParameter;
 						}
 						else if ( sqmParameter.getName() != null ) {
 							return QueryParameterNamedImpl.fromSqm( sqmParameter );
@@ -178,7 +175,7 @@ public class DomainParameterXref {
 
 	public void addCriteriaAdjustment(
 			QueryParameterImplementor<?> domainParam,
-			JpaParameterSqmWrapper originalSqmParameter,
+			SqmCriteriaParameter originalSqmParameter,
 			SqmParameter adjustment) {
 		QueryLogger.QUERY_LOGGER.debugf( "Adding JPA-param xref adjustment : %s", originalSqmParameter );
 		sqmParamsByQueryParam.get( domainParam ).add( adjustment );

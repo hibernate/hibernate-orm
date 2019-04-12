@@ -8,64 +8,36 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.query.sqm.NodeBuilder;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmSimplePath implements SqmNavigableReference {
+public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implements SqmNavigableReference<T> {
 	private final NavigablePath navigablePath;
-	private final Navigable referencedNavigable;
-	private final SqmPath lhs;
-
-	private String explicitAlias;
 
 	public AbstractSqmSimplePath(
 			NavigablePath navigablePath,
-			Navigable referencedNavigable,
-			SqmPath lhs) {
-		this( navigablePath, referencedNavigable, lhs, null );
+			Navigable<T> referencedNavigable,
+			SqmPath lhs,
+			NodeBuilder nodeBuilder) {
+		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
 	}
 
 	public AbstractSqmSimplePath(
 			NavigablePath navigablePath,
-			Navigable referencedNavigable,
+			Navigable<T> referencedNavigable,
 			SqmPath lhs,
-			String explicitAlias) {
+			String explicitAlias,
+			NodeBuilder nodeBuilder) {
+		super( referencedNavigable, lhs, nodeBuilder );
 		this.navigablePath = navigablePath;
-		this.referencedNavigable = referencedNavigable;
-		this.lhs = lhs;
-		this.explicitAlias = explicitAlias;
+
+		setExplicitAlias( explicitAlias );
 	}
 
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
-
-	@Override
-	public Navigable getReferencedNavigable() {
-		return referencedNavigable;
-	}
-
-	@Override
-	public SqmPath getLhs() {
-		return lhs;
-	}
-
-	@Override
-	public String getExplicitAlias() {
-		return explicitAlias;
-	}
-
-	@Override
-	public void setExplicitAlias(String explicitAlias) {
-		this.explicitAlias = explicitAlias;
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getReferencedNavigable().getJavaTypeDescriptor();
-	}
-
 }

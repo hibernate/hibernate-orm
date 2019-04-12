@@ -121,10 +121,12 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 			throw new UnsupportedOperationException( "Entity [" + getEntityName() + "] is not inherited" );
 		}
 
+		//noinspection unchecked
 		return new SqmBasicValuedSimplePath(
 				new NavigablePath( getNavigableName() + DiscriminatorDescriptor.NAVIGABLE_NAME ),
 				getHierarchy().getDiscriminatorDescriptor(),
-				null
+				null,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 

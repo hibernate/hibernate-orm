@@ -12,6 +12,8 @@ import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
@@ -45,22 +47,25 @@ public class NvlFunctionTemplate
 	@Override
 	protected SqmExpression generateSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		return new SqmNvlFunction(
 				arguments.get( 0 ),
 				arguments.get( 1 ),
-				impliedResultType
+				impliedResultType,
+				queryEngine.getCriteriaBuilder()
 		);
 	}
 
-	public static class SqmNvlFunction
-			extends SelfRenderingSqmFunction
-			implements SelfRenderingFunctionSupport, SqlAstFunctionProducer, SqmNonStandardFunction {
+	public static class SqmNvlFunction<T>
+			extends SelfRenderingSqmFunction<T>
+			implements SelfRenderingFunctionSupport, SqlAstFunctionProducer<T>, SqmNonStandardFunction<T> {
 		public SqmNvlFunction(
-				SqmExpression arg1,
-				SqmExpression arg2,
-				AllowableFunctionReturnType impliedResultType) {
-			super( Arrays.asList( arg1, arg2 ), impliedResultType );
+				SqmExpression<?> arg1,
+				SqmExpression<?> arg2,
+				AllowableFunctionReturnType<T> impliedResultType,
+				NodeBuilder nodeBuilder) {
+			super( Arrays.asList( arg1, arg2 ), impliedResultType, nodeBuilder );
 		}
 
 		@Override

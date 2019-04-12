@@ -40,6 +40,7 @@ import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.ResultSetMappingDescriptor;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
@@ -83,11 +84,6 @@ public interface SessionFactoryImplementor
 	@Override
 	default MetamodelImplementor getDomainModel() {
 		return getMetamodel();
-	}
-
-	@Override
-	default Function<String, SqmFunctionTemplate> getFunctionResolver() {
-		return getQueryEngine().getSqmFunctionRegistry()::findFunctionTemplate;
 	}
 
 	@Override

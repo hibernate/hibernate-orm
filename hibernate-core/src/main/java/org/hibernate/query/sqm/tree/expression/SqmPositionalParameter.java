@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
 /**
@@ -14,15 +15,22 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
  *
  * @author Steve Ebersole
  */
-public class SqmPositionalParameter extends AbstractSqmParameter {
+public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	private final int position;
 
-	public SqmPositionalParameter(int position, boolean canBeMultiValued) {
-		this( position, canBeMultiValued, null );
+	public SqmPositionalParameter(
+			int position,
+			boolean canBeMultiValued,
+			NodeBuilder nodeBuilder) {
+		this( position, canBeMultiValued, null, nodeBuilder );
 	}
 
-	public SqmPositionalParameter(int position, boolean canBeMultiValued, AllowableParameterType expressableType) {
-		super( canBeMultiValued, expressableType );
+	public SqmPositionalParameter(
+			int position,
+			boolean canBeMultiValued,
+			AllowableParameterType<T> expressableType,
+			NodeBuilder nodeBuilder) {
+		super( canBeMultiValued, expressableType, nodeBuilder );
 		this.position = position;
 	}
 
@@ -32,12 +40,12 @@ public class SqmPositionalParameter extends AbstractSqmParameter {
 	}
 
 	@Override
-	public SqmParameter copy() {
-		return new SqmPositionalParameter( getPosition(), allowMultiValuedBinding() );
+	public SqmParameter<T> copy() {
+		return new SqmPositionalParameter<>( getPosition(), allowMultiValuedBinding(), getExpressableType(), nodeBuilder() );
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitPositionalParameterExpression( this );
 	}
 

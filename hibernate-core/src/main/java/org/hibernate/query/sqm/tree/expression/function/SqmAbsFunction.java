@@ -9,19 +9,23 @@ package org.hibernate.query.sqm.tree.expression.function;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmAbsFunction extends AbstractSqmFunction {
+public class SqmAbsFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "abs";
 
-	private final SqmExpression argument;
+	private final SqmExpression<?> argument;
 
-	public SqmAbsFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {
-		super( resultType );
+	public SqmAbsFunction(
+			SqmExpression<?> argument,
+			AllowableFunctionReturnType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.argument = argument;
 	}
 
@@ -35,12 +39,17 @@ public class SqmAbsFunction extends AbstractSqmFunction {
 	}
 
 	@Override
+	public boolean isAggregator() {
+		return false;
+	}
+
+	@Override
 	public boolean hasArguments() {
 		return true;
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitAbsFunction( this );
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -13,7 +14,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmSubstringFunction extends AbstractSqmFunction {
+public class SqmSubstringFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "substring";
 	public static final String ALT_NAME = "substr";
 
@@ -22,11 +23,12 @@ public class SqmSubstringFunction extends AbstractSqmFunction {
 	private final SqmExpression length;
 
 	public SqmSubstringFunction(
-			BasicValuedExpressableType resultType,
-			SqmExpression source,
-			SqmExpression startPosition,
-			SqmExpression length) {
-		super( resultType );
+			SqmExpression<?> source,
+			SqmExpression<?> startPosition,
+			SqmExpression<?> length,
+			BasicValuedExpressableType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.source = source;
 		this.startPosition = startPosition;
 		this.length = length;
@@ -42,20 +44,20 @@ public class SqmSubstringFunction extends AbstractSqmFunction {
 		return true;
 	}
 
-	public SqmExpression getSource() {
+	public SqmExpression<?> getSource() {
 		return source;
 	}
 
-	public SqmExpression getStartPosition() {
+	public SqmExpression<?> getStartPosition() {
 		return startPosition;
 	}
 
-	public SqmExpression getLength() {
+	public SqmExpression<?> getLength() {
 		return length;
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitSubstringFunction( this );
 	}
 

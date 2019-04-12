@@ -18,11 +18,17 @@ import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
  */
-public class MapAttributeImpl<X, K, V> extends AbstractPluralPersistentAttribute<X, Map<K, V>, V>
+public class MapAttributeImpl<X, K, V>
+		extends AbstractPluralPersistentAttribute<X, Map<K, V>, V>
 		implements MapPersistentAttribute<X, K, V> {
 
 	public MapAttributeImpl(
@@ -68,5 +74,23 @@ public class MapAttributeImpl<X, K, V> extends AbstractPluralPersistentAttribute
 		}
 
 		return targetValue;
+	}
+
+	@Override
+	public SqmAttributeJoin createSqmJoin(
+			SqmFrom lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		//noinspection unchecked
+		return new SqmMapJoin(
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+		);
 	}
 }

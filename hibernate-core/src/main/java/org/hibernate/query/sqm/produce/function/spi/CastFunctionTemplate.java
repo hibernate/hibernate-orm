@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.produce.function.spi;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
@@ -24,7 +25,7 @@ public class CastFunctionTemplate implements SqmFunctionTemplate {
 	@Override
 	public SqmFunction makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType, QueryEngine queryEngine) {
 		assert arguments.size() == 1;
 		return new SqmCastFunction(
 				arguments.get( 0 ),

@@ -67,6 +67,17 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		this.domainParameterXref = domainParameterXref;
 
 		this.rowTransformer = determineRowTransformer( sqm, resultType, queryOptions );
+
+		// todo (6.0) : we should do as much of the building as we can here
+		//  	since this is the thing cached, all the work we do here will
+		//  	be cached as well.
+		// NOTE : this statement ^^ is not affected by load-query-influencers,
+		//		multi-valued parameter expansion, etc - because those all
+		//		cause the plan to not be cached.
+		// NOTE2 (regarding NOTE) : not sure multi-valued parameter expansion, in
+		//		particular, should veto caching of the plan.  The expansion happens
+		//		for each execution - see creation of `JdbcParameterBindings` in
+		//		`#performList` and `#performScroll`.
 	}
 
 	@SuppressWarnings("unchecked")

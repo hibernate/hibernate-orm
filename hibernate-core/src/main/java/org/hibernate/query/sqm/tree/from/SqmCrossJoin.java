@@ -7,9 +7,12 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import static org.hibernate.query.sqm.produce.SqmCreationHelper.buildRootNavigablePath;
@@ -17,16 +20,19 @@ import static org.hibernate.query.sqm.produce.SqmCreationHelper.buildRootNavigab
 /**
  * @author Steve Ebersole
  */
-public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
+public class SqmCrossJoin<T> extends AbstractSqmFrom<T,T> implements SqmJoin<T,T> {
 	private final SqmRoot sqmRoot;
 
 	public SqmCrossJoin(
-			EntityTypeDescriptor joinedEntityDescriptor, String alias,
+			EntityTypeDescriptor<T> joinedEntityDescriptor,
+			String alias,
 			SqmRoot sqmRoot) {
 		super(
 				buildRootNavigablePath( alias, joinedEntityDescriptor.getEntityName() ),
 				joinedEntityDescriptor,
-				alias
+				sqmRoot,
+				alias,
+				sqmRoot.nodeBuilder()
 		);
 		this.sqmRoot = sqmRoot;
 	}
@@ -42,8 +48,8 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 	}
 
 	@Override
-	public EntityTypeDescriptor<?> getReferencedNavigable() {
-		return (EntityTypeDescriptor<?>) super.getReferencedNavigable();
+	public EntityTypeDescriptor<T> getReferencedNavigable() {
+		return (EntityTypeDescriptor<T>) super.getReferencedNavigable();
 	}
 
 	public String getEntityName() {
@@ -51,22 +57,32 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 	}
 
 	@Override
-	public SqmJoinType getJoinType() {
+	public SqmJoinType getSqmJoinType() {
 		return SqmJoinType.CROSS;
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitCrossJoinedFromElement( this );
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitCrossJoin( this );
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
 	@Override
 	public SqmRoot findRoot() {
 		return getRoot();
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA
+
+	@Override
+	public <S extends T> SqmTreatedCrossJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
+		final EntityTypeDescriptor<S> treatTarget = nodeBuilder().getDomainModel().entity( treatJavaType );
+		return new SqmTreatedCrossJoin<>( this, null, treatTarget );
 	}
 }

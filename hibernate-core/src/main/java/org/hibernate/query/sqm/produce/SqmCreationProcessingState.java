@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.produce;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmQuery;
 
 /**
  * State related to SQM creation, like {@link SqmCreationState}, but specific
@@ -25,6 +26,8 @@ public interface SqmCreationProcessingState {
 	 * state of the context in which the sub-query occurs.
 	 */
 	SqmCreationProcessingState getParentProcessingState();
+
+	SqmQuery<?> getProcessingQuery();
 
 	/**
 	 * The overall SQM creation state

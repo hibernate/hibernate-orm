@@ -13,12 +13,6 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
-import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.DerbyConcatFunctionTemplate;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -27,6 +21,12 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.DerbyConcatFunctionTemplate;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
@@ -79,10 +79,10 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
-		registry.register( "concat", new DerbyConcatFunctionTemplate() );
-		registry.register( "trim", AnsiTrimFunctionTemplate.INSTANCE );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatFunctionTemplate() );
+		queryEngine.getSqmFunctionRegistry().register( "trim", AnsiTrimFunctionTemplate.INSTANCE );
 	}
 
 	private void determineDriverVersion() {

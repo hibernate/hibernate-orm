@@ -9,8 +9,8 @@ package org.hibernate.query.criteria;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
-import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,6 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SortOrder;
-import org.hibernate.query.criteria.spi.ExpressionImplementor;
 
 /**
  * Hibernate extensions to the JPA CriteriaBuilder.
@@ -41,15 +40,6 @@ import org.hibernate.query.criteria.spi.ExpressionImplementor;
  */
 
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
-
-	// todo (6.0) consider:
-	//		* operator corresponding to the new "matches" HQL operator
-	//		* match for our expanded dynamic-instantiation support - actually this may already be supported,
-	// 				outside of checks done in #checkMultiSelect
-	//		* ?generic support for SQL restrictions? - ala Restrictions.sqlRestriction
-	//		* port query-by-example support - org.hibernate.criterion.Example
-
-	SessionFactory getSessionFactory();
 
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
 
@@ -76,6 +66,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<T> JpaCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity);
+
+	<T> JpaCriteriaInsertSelect<T> createCriteriaInsertSelect(Class<T> targetEntity);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -232,9 +224,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<T> JpaExpression<T> literal(T value);
 
-	<T> List<? extends ExpressionImplementor<T>> literals(T[] values);
+	<T> List<? extends JpaExpression<T>> literals(T[] values);
 
-	<T> List<? extends ExpressionImplementor<T>> literals(List<T> values);
+	<T> List<? extends JpaExpression<T>> literals(List<T> values);
 
 	@Override
 	<T> JpaExpression<T> nullLiteral(Class<T> resultClass);
@@ -319,8 +311,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	JpaFunction<Timestamp> currentTimestamp();
 
-	@Override
-	JpaFunction<Time> currentTime();
+	JpaFunction<Instant> currentInstant();
 
 	@Override
 	<T> JpaFunction<T> function(String name, Class<T> type, Expression<?>[] args);

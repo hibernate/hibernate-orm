@@ -11,10 +11,6 @@ import java.lang.reflect.Member;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.criteria.spi.CriteriaNodeBuilder;
-import org.hibernate.query.criteria.spi.ExpressionImplementor;
-import org.hibernate.query.criteria.spi.PathImplementor;
-import org.hibernate.query.criteria.spi.PathSourceImplementor;
 
 /**
  * Models a persistent (mapped) attribute in Hibernate's "runtime model".

@@ -7,19 +7,20 @@
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmSumFunction
-		extends AbstractSqmAggregateFunction
-		implements SqmAggregateFunction {
+public class SqmSumFunction<T>
+		extends AbstractSqmAggregateFunction<T>
+		implements SqmAggregateFunction<T> {
 	public static final String NAME = "sum";
 
-	public SqmSumFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {
-		super( argument, resultType );
+	public SqmSumFunction(SqmExpression<?> argument, AllowableFunctionReturnType<T> resultType, NodeBuilder nodeBuilder) {
+		super( argument, resultType, nodeBuilder );
 	}
 
 	@Override
@@ -28,7 +29,7 @@ public class SqmSumFunction
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitSumFunction( this );
 	}
 

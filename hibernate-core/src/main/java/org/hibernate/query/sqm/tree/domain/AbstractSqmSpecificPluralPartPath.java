@@ -6,30 +6,45 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.criteria.PathException;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmSpecificPluralPartPath implements SqmPath {
+public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPath<T> implements SqmPath<T> {
 	private final NavigablePath navigablePath;
 	private final SqmPath pluralDomainPath;
-	private final PersistentCollectionDescriptor collectionDescriptor;
+	private final PersistentCollectionDescriptor<?,?,T> collectionDescriptor;
 
 	private String alias;
 
-	public AbstractSqmSpecificPluralPartPath(NavigablePath navigablePath, SqmPath pluralDomainPath) {
+	public AbstractSqmSpecificPluralPartPath(
+			NavigablePath navigablePath,
+			SqmPath<?> pluralDomainPath,
+			Navigable<T> referencedNavigable) {
+		super(
+				navigablePath,
+				referencedNavigable,
+				pluralDomainPath,
+				pluralDomainPath.nodeBuilder()
+		);
 		this.navigablePath = navigablePath;
 		this.pluralDomainPath = pluralDomainPath;
-		this.collectionDescriptor = pluralDomainPath.getReferencedNavigable().as( PersistentCollectionDescriptor.class );
+
+		//noinspection unchecked
+		this.collectionDescriptor = pluralDomainPath.sqmAs( PersistentCollectionDescriptor.class );
 	}
 
 	public SqmPath getPluralDomainPath() {
 		return pluralDomainPath;
 	}
 
-	public PersistentCollectionDescriptor getCollectionDescriptor() {
+	public PersistentCollectionDescriptor<?,?,T> getCollectionDescriptor() {
 		return collectionDescriptor;
 	}
 
@@ -51,5 +66,14 @@ public abstract class AbstractSqmSpecificPluralPartPath implements SqmPath {
 	@Override
 	public void setExplicitAlias(String explicitAlias) {
 		this.alias = explicitAlias;
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
+		if ( getReferencedNavigable() instanceof EntityValuedNavigable ) {
+			throw new NotYetImplementedFor6Exception();
+		}
+
+		throw new UnsupportedOperationException(  );
 	}
 }

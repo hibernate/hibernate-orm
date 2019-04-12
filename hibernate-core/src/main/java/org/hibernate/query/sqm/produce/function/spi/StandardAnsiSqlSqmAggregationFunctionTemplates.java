@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -47,14 +49,14 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		@Override
 		protected SqmExpression generateSqmFunctionExpression(
 				List<SqmExpression> arguments,
-				AllowableFunctionReturnType impliedResultType) {
+				AllowableFunctionReturnType impliedResultType, QueryEngine queryEngine) {
 
 			assert !arguments.isEmpty();
 			if ( arguments.get( 0 ) == SqmCountStarFunction.STAR ) {
-				return new SqmCountStarFunction( impliedResultType );
+				return new SqmCountStarFunction( impliedResultType, queryEngine.getCriteriaBuilder() );
 			}
 			else {
-				return new SqmCountFunction( arguments.get( 0 ), impliedResultType );
+				return new SqmCountFunction( arguments.get( 0 ), impliedResultType, queryEngine.getCriteriaBuilder() );
 			}
 		}
 	}
@@ -78,7 +80,8 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		@Override
 		protected SqmExpression generateSqmFunctionExpression(
 				List<SqmExpression> arguments,
-				AllowableFunctionReturnType impliedResultType) {
+				AllowableFunctionReturnType impliedResultType,
+				QueryEngine queryEngine) {
 			final SqmExpression argument = arguments.get( 0 );
 
 			final Class argumentJavaType = argument.getExpressableType().getJavaType();
@@ -89,7 +92,7 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 					? cast( argument, sqlCastTypeForFloatingPointArgTypes )
 					: argument;
 
-			return new SqmAvgFunction( argumentToPass );
+			return new SqmAvgFunction( argumentToPass, queryEngine.getCriteriaBuilder() );
 		}
 	}
 
@@ -109,8 +112,9 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		@Override
 		protected SqmExpression generateSqmFunctionExpression(
 				List<SqmExpression> arguments,
-				AllowableFunctionReturnType impliedResultType) {
-			return new SqmMaxFunction( arguments.get( 0 ) );
+				AllowableFunctionReturnType impliedResultType,
+				QueryEngine queryEngine) {
+			return new SqmMaxFunction( arguments.get( 0 ), queryEngine.getCriteriaBuilder() );
 		}
 	}
 
@@ -130,8 +134,8 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		@Override
 		protected SqmExpression generateSqmFunctionExpression(
 				List<SqmExpression> arguments,
-				AllowableFunctionReturnType impliedResultType) {
-			return new SqmMinFunction( arguments.get( 0 ) );
+				AllowableFunctionReturnType impliedResultType, QueryEngine queryEngine) {
+			return new SqmMinFunction( arguments.get( 0 ), queryEngine.getCriteriaBuilder() );
 		}
 	}
 
@@ -152,11 +156,12 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		@Override
 		protected SqmExpression generateSqmFunctionExpression(
 				List<SqmExpression> arguments,
-				AllowableFunctionReturnType impliedResultType) {
+				AllowableFunctionReturnType impliedResultType, QueryEngine queryEngine) {
 			final SqmExpression argument = arguments.get( 0 );
 			return new SqmSumFunction(
 					argument,
-					deduceReturnType( argument.getExpressableType() )
+					deduceReturnType( argument.getExpressableType() ),
+					queryEngine.getCriteriaBuilder()
 			);
 		}
 

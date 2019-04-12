@@ -35,6 +35,8 @@ public class SqmInterpretationsKey implements QueryPlanCache.Key {
 	@SuppressWarnings("WeakerAccess")
 	public static QueryPlanCache.Key generateNonSelectKey(QuerySqmImpl query) {
 		// todo (6.0) : do we want to cache non-select plans?  If so, what requirements?
+		//		- very minimum is that it be a "simple" (non-multi-table) statement
+		//
 		// for now... no caching of non-select plans
 		return null;
 	}
@@ -47,8 +49,11 @@ public class SqmInterpretationsKey implements QueryPlanCache.Key {
 			return false;
 		}
 
-		if ( query.getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding ) ) {
-			// cannot cache query plans if there is are multi-valued param bindings
+		if ( query.getQueryParameterBindings().hasAnyMultiValuedBindings()
+				|| query.getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding ) ) {
+			// cannot cache query plans if there are multi-valued param bindings
+			// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling
+			//		- the expansion is done per-execution based on the "static" SQM
 			return false;
 		}
 
@@ -59,10 +64,6 @@ public class SqmInterpretationsKey implements QueryPlanCache.Key {
 
 		if ( definesLocking( query.getQueryOptions().getLockOptions() ) ) {
 			// cannot cache query plans if it defines locking
-			return false;
-		}
-
-		if ( query.getQueryParameterBindings().hasAnyMultiValuedBindings() ) {
 			return false;
 		}
 

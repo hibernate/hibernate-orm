@@ -12,7 +12,7 @@ import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -48,24 +48,24 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 	@Test
 	public void testIsNotNullPredicate() {
 		SqmSelectStatement statement = interpretSelect( "select l from Person l where l.nickName is not null" );
-		assertThat( statement.getQuerySpec().getWhereClause().getPredicate(), instanceOf( NullnessSqmPredicate.class ) );
-		NullnessSqmPredicate predicate = (NullnessSqmPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
+		assertThat( statement.getQuerySpec().getWhereClause().getPredicate(), instanceOf( SqmNullnessPredicate.class ) );
+		SqmNullnessPredicate predicate = (SqmNullnessPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		assertThat( predicate.isNegated(), is(true) );
 	}
 
 	@Test
 	public void testNotIsNullPredicate() {
 		SqmSelectStatement statement = interpretSelect( "select l from Person l where not l.nickName is null" );
-		assertThat( statement.getQuerySpec().getWhereClause().getPredicate(), instanceOf( NullnessSqmPredicate.class ) );
-		NullnessSqmPredicate predicate = (NullnessSqmPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
+		assertThat( statement.getQuerySpec().getWhereClause().getPredicate(), instanceOf( SqmNullnessPredicate.class ) );
+		SqmNullnessPredicate predicate = (SqmNullnessPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		assertThat( predicate.isNegated(), is(true) );
 	}
 
 	@Test
 	public void testNotIsNotNullPredicate() {
 		SqmSelectStatement statement = interpretSelect( "select l from Person l where not l.nickName is not null" );
-		assertThat( statement.getQuerySpec().getWhereClause().getPredicate(), instanceOf( NullnessSqmPredicate.class ) );
-		NullnessSqmPredicate predicate = (NullnessSqmPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
+		assertThat( statement.getQuerySpec().getWhereClause().getPredicate(), instanceOf( SqmNullnessPredicate.class ) );
+		SqmNullnessPredicate predicate = (SqmNullnessPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		assertThat( predicate.isNegated(), is(false) );
 	}
 
@@ -77,7 +77,7 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 		assertThat( predicate, instanceOf( SqmComparisonPredicate.class ) );
 		SqmComparisonPredicate relationalPredicate = ( (SqmComparisonPredicate) predicate );
 
-		assertThat( relationalPredicate.getOperator(), is( ComparisonOperator.EQUAL ) );
+		assertThat( relationalPredicate.getSqmOperator(), is( ComparisonOperator.EQUAL ) );
 
 		assertThat( relationalPredicate.getRightHandExpression(), instanceOf( SqmLiteral.class ) );
 		assertThat( ( (SqmLiteral) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( 311 ) );
@@ -97,7 +97,7 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 		assertThat( predicate, instanceOf( SqmComparisonPredicate.class ) );
 		SqmComparisonPredicate relationalPredicate = ( (SqmComparisonPredicate) predicate );
 
-		assertThat( relationalPredicate.getOperator(), is( ComparisonOperator.GREATER_THAN ) );
+		assertThat( relationalPredicate.getSqmOperator(), is( ComparisonOperator.GREATER_THAN ) );
 
 		assertThat( relationalPredicate.getRightHandExpression(), instanceOf( SqmLiteral.class ) );
 		assertThat( ( (SqmLiteral) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( 2 ) );

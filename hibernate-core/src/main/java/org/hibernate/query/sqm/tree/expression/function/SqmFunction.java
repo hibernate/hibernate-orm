@@ -7,16 +7,17 @@
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmFunction extends SqmExpression {
+public interface SqmFunction<T> extends SqmExpression<T>, JpaFunction<T> {
 	String getFunctionName();
 
 	@Override
-	AllowableFunctionReturnType getExpressableType();
+	AllowableFunctionReturnType<T> getExpressableType();
 
 	boolean hasArguments();
 }

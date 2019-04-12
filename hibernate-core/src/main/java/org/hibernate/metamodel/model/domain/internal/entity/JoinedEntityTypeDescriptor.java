@@ -79,10 +79,12 @@ public class JoinedEntityTypeDescriptor<J> extends AbstractEntityTypeDescriptor<
 
 	@Override
 	public SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState) {
+		//noinspection unchecked
 		return new SqmBasicValuedSimplePath(
 				new NavigablePath( getNavigableName() + DiscriminatorDescriptor.NAVIGABLE_NAME ),
 				this.getHierarchy().getDiscriminatorDescriptor(),
-				null
+				null,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 

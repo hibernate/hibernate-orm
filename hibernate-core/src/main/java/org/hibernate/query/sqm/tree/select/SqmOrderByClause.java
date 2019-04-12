@@ -23,13 +23,13 @@ public class SqmOrderByClause {
 
 	public SqmOrderByClause addSortSpecification(SqmSortSpecification sortSpecification) {
 		if ( sortSpecifications == null ) {
-			sortSpecifications = new ArrayList<SqmSortSpecification>();
+			sortSpecifications = new ArrayList<>();
 		}
 		sortSpecifications.add( sortSpecification );
 		return this;
 	}
 
-	public SqmOrderByClause addSortSpecification(SqmExpression expression) {
+	public SqmOrderByClause addSortSpecification(SqmExpression<?> expression) {
 		addSortSpecification( new SqmSortSpecification( expression ) );
 		return this;
 	}
@@ -41,5 +41,10 @@ public class SqmOrderByClause {
 		else {
 			return Collections.unmodifiableList( sortSpecifications );
 		}
+	}
+
+	public void setSortSpecifications(List<SqmSortSpecification> sortSpecifications) {
+		this.sortSpecifications = new ArrayList<>();
+		this.sortSpecifications.addAll( sortSpecifications );
 	}
 }

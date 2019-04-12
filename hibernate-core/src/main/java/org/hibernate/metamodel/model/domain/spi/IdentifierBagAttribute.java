@@ -6,12 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.Collection;
-
 /**
  * @author Andrea Boriero
  */
-public interface IdentifierBagAttribute<O, E>
-		extends PluralPersistentAttribute<O, Collection<E>, E>, javax.persistence.metamodel.CollectionAttribute<O, E> {
+public interface IdentifierBagAttribute<O, E> extends BagPersistentAttribute<O, E> {
 }
 

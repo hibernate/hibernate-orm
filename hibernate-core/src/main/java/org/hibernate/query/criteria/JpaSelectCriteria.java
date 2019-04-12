@@ -18,11 +18,11 @@ import javax.persistence.metamodel.EntityType;
  *
  * @author Steve Ebersole
  */
-public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaNode {
+public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase {
 	/**
 	 * The query structure.  See {@link JpaQueryStructure} for details
 	 */
-	JpaQueryStructure<T> getQueryStructure();
+	JpaQueryStructure<T> getQuerySpec();
 
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);

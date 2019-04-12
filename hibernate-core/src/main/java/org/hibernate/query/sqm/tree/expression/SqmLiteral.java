@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
@@ -19,11 +20,11 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
  * </ul>
  * @author Steve Ebersole
  */
-public class SqmLiteral<T> extends AbstractSqmExpression implements SqmExpression {
+public class SqmLiteral<T> extends AbstractSqmExpression<T> implements SqmExpression<T> {
 	private T value;
 
-	public SqmLiteral(T value, BasicValuedExpressableType inherentType) {
-		super( inherentType );
+	public SqmLiteral(T value, BasicValuedExpressableType<T> inherentType, NodeBuilder nodeBuilder) {
+		super( inherentType, nodeBuilder );
 		this.value = value;
 	}
 
@@ -32,8 +33,8 @@ public class SqmLiteral<T> extends AbstractSqmExpression implements SqmExpressio
 	}
 
 	@Override
-	public BasicValuedExpressableType<?> getExpressableType() {
-		return (BasicValuedExpressableType) super.getExpressableType();
+	public BasicValuedExpressableType<T> getExpressableType() {
+		return (BasicValuedExpressableType<T>) super.getExpressableType();
 	}
 
 	@Override

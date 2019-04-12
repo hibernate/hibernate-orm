@@ -6,13 +6,13 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -37,16 +37,16 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
 		// full-text search functions
-		registry.registerNamed( "score", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "snippets" );
-		registry.registerNamed( "highlighted" );
-		registry.registerVarArgs( "contains", StandardSpiBasicTypes.BOOLEAN, "contains(", ",", ") /*" );
-		registry.registerPattern( "contains_rhs", "*/", StandardSpiBasicTypes.BOOLEAN );
-		registry.registerVarArgs( "not_contains", StandardSpiBasicTypes.BOOLEAN, "not_contains(", ",", ") /*" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "score", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "snippets" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "highlighted" );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "contains", StandardSpiBasicTypes.BOOLEAN, "contains(", ",", ") /*" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "contains_rhs", "*/", StandardSpiBasicTypes.BOOLEAN );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "not_contains", StandardSpiBasicTypes.BOOLEAN, "not_contains(", ",", ") /*" );
 	}
 
 	@Override

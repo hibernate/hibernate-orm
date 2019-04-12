@@ -40,9 +40,13 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
@@ -62,9 +66,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class SingularPersistentAttributeEmbedded<O,J>
+public class  SingularPersistentAttributeEmbedded<O,J>
 		extends AbstractNonIdSingularPersistentAttribute<O,J>
-		implements EmbeddedValuedNavigable<J>, Joinable<J>, Fetchable<J> {
+		implements EmbeddedValuedNavigable<J>, Joinable<O,J>, Fetchable<J> {
 
 	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
 	private CascadeStyle cascadeStyle;
@@ -169,6 +173,23 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
+	public SqmAttributeJoin createSqmJoin(
+			SqmFrom lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		return new SqmSingularJoin(
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState.getCreationContext().getNodeBuilder()
+		);
+	}
+
+	@Override
 	public SqmNavigableReference createSqmExpression(
 			SqmPath lhs,
 			SqmCreationState creationState) {
@@ -179,7 +200,8 @@ public class SingularPersistentAttributeEmbedded<O,J>
 				np -> new SqmEmbeddedValuedSimplePath(
 						navigablePath,
 						this,
-						lhs
+						lhs,
+						creationState.getCreationContext().getNodeBuilder()
 				)
 		);
 	}
@@ -398,13 +420,13 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
-	public boolean areEqual(J x, J y) throws HibernateException {
-		return getEmbeddedDescriptor().areEqual( x,y );
+	public boolean areEqual(Object x, Object y) throws HibernateException {
+		return getEmbeddedDescriptor().areEqual( (J) x, (J) y );
 	}
 
 	@Override
-	public int extractHashCode(J o) {
-		return getEmbeddedDescriptor().extractHashCode( o );
+	public int extractHashCode(Object o) {
+		return getEmbeddedDescriptor().extractHashCode( (J) o );
 	}
 
 	@Override

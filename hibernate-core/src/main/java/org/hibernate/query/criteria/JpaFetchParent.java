@@ -16,7 +16,7 @@ import javax.persistence.metamodel.SingularAttribute;
 /**
  * @author Steve Ebersole
  */
-public interface JpaFetchParent<O,T> extends JpaPathSource<T>, FetchParent<O,T> {
+public interface JpaFetchParent<O,T> extends FetchParent<O,T> {
 	@Override
 	Set<Fetch<T, ?>> getFetches();
 

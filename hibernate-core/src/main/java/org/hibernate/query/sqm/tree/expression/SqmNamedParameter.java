@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
 /**
@@ -14,20 +15,24 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
  *
  * @author Steve Ebersole
  */
-public class SqmNamedParameter extends AbstractSqmParameter {
+public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	private final String name;
 
-	public SqmNamedParameter(String name, boolean canBeMultiValued) {
-		this( name, canBeMultiValued, null );
+	public SqmNamedParameter(String name, boolean canBeMultiValued, NodeBuilder nodeBuilder) {
+		this( name, canBeMultiValued, null, nodeBuilder );
 	}
 
-	public SqmNamedParameter(String name, boolean canBeMultiValued, AllowableParameterType inherentType) {
-		super( canBeMultiValued, inherentType );
+	public SqmNamedParameter(
+			String name,
+			boolean canBeMultiValued,
+			AllowableParameterType<T> inherentType,
+			NodeBuilder nodeBuilder) {
+		super( canBeMultiValued, inherentType, nodeBuilder );
 		this.name = name;
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitNamedParameterExpression( this );
 	}
 
@@ -42,7 +47,7 @@ public class SqmNamedParameter extends AbstractSqmParameter {
 	}
 
 	@Override
-	public SqmParameter copy() {
-		return new SqmNamedParameter( getName(), allowMultiValuedBinding() );
+	public SqmParameter<T> copy() {
+		return new SqmNamedParameter<>( getName(), allowMultiValuedBinding(), getExpressableType(), nodeBuilder() );
 	}
 }

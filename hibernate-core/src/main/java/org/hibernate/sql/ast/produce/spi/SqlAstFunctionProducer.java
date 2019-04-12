@@ -9,7 +9,6 @@ package org.hibernate.sql.ast.produce.spi;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.spi.DomainResultProducer;
@@ -24,7 +23,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface SqlAstFunctionProducer extends SqmFunction {
+public interface SqlAstFunctionProducer<T> extends SqmFunction<T> {
 	/**
 	 * Generate the SQL AST form of the function as an expression.
 	 *
@@ -36,7 +35,7 @@ public interface SqlAstFunctionProducer extends SqmFunction {
 	Expression convertToSqlAst(SqmToSqlAstConverter walker);
 
 	@Override
-	default <T> T accept(SemanticQueryWalker<T> walker) {
+	default <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitSqlAstFunctionProducer( this );
 	}
 
@@ -54,7 +53,7 @@ public interface SqlAstFunctionProducer extends SqmFunction {
 	}
 
 	@Override
-	default AllowableFunctionReturnType getExpressableType() {
+	default AllowableFunctionReturnType<T> getExpressableType() {
 		return null;
 	}
 

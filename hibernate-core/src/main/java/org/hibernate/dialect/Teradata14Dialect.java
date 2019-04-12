@@ -24,8 +24,8 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.metamodel.model.relational.spi.Index;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.naming.QualifiedNameImpl;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -54,9 +54,9 @@ public class Teradata14Dialect extends TeradataDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		registry.registerNamed( "current_time" );
-		registry.registerNamed( "current_date" );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerNamed( "current_time" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "current_date" );
 
 	}
 

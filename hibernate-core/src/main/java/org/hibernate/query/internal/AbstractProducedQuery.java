@@ -1511,7 +1511,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
+			throw getExceptionConverter().convert( he, getLockOptions() );
 		}
 		finally {
 			afterQuery();
@@ -1557,7 +1557,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			return uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
-			throw getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e, getLockOptions() );
 		}
 	}
 

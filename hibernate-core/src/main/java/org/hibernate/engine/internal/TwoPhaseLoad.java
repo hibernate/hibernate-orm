@@ -143,7 +143,7 @@ public final class TwoPhaseLoad {
 		final boolean debugEnabled = LOG.isDebugEnabled();
 		if ( debugEnabled ) {
 			LOG.debugf(
-					"Resolving associations for %s",
+					"Resolving attributes for %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )
 			);
 		}
@@ -153,8 +153,15 @@ public final class TwoPhaseLoad {
 		final Type[] types = persister.getPropertyTypes();
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
+			LOG.debugf(
+					"Processing attribute `%s` : value = %s",
+					propertyNames[i],
+					value == LazyPropertyInitializer.UNFETCHED_PROPERTY ? "<un-fetched>" : value == PropertyAccessStrategyBackRefImpl.UNKNOWN ? "<unknown>" : value
+			);
+
 			Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
 			if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				LOG.debugf( "Resolving <un-fetched> attribute : `%s`", propertyNames[i] );
 				// IMPLEMENTATION NOTE: This is a lazy property on a bytecode-enhanced entity.
 				// hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY so that
 				// setPropertyValues() below (ultimately AbstractEntityTuplizer#setPropertyValues) works properly
@@ -168,8 +175,18 @@ public final class TwoPhaseLoad {
 				}
 			}
 			else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				final boolean isLazyEnhanced = persister.getInstrumentationMetadata()
+						.getLazyAttributesMetadata()
+						.getLazyAttributeNames()
+						.contains( propertyNames[i] );
+
+				LOG.debugf( "Attribute (`%s`)  - enhanced for lazy-loading? - %s", propertyNames[i], isLazyEnhanced );
+
 				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
 				hydratedState[i] = types[i].resolve( value, session, entity, overridingEager );
+			}
+			else {
+				LOG.debugf( "Skipping <unknown> attribute : `%s`", propertyNames[i] );
 			}
 		}
 

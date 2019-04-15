@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
@@ -14,6 +15,7 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Represents the {@code SIZE()} function.
@@ -21,11 +23,15 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-public class SqmCollectionSize extends AbstractSqmExpression implements DomainResultProducer {
+public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements DomainResultProducer {
 	private final SqmPath pluralPath;
 
-	public SqmCollectionSize(SqmPath pluralPath, BasicValuedExpressableType sizeType) {
-		super( sizeType );
+	public SqmCollectionSize(SqmPath<?> pluralPath, NodeBuilder nodeBuilder) {
+		this( pluralPath, StandardSpiBasicTypes.INTEGER, nodeBuilder );
+	}
+
+	public SqmCollectionSize(SqmPath<?> pluralPath, BasicValuedExpressableType<Integer> sizeType, NodeBuilder nodeBuilder) {
+		super( sizeType, nodeBuilder );
 		this.pluralPath = pluralPath;
 	}
 
@@ -34,8 +40,8 @@ public class SqmCollectionSize extends AbstractSqmExpression implements DomainRe
 	}
 
 	@Override
-	public BasicValuedExpressableType<?> getExpressableType() {
-		return (BasicValuedExpressableType<?>) super.getExpressableType();
+	public BasicValuedExpressableType<Integer> getExpressableType() {
+		return (BasicValuedExpressableType<Integer>) super.getExpressableType();
 	}
 
 	@Override

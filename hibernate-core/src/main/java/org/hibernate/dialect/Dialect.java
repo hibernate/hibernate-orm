@@ -84,13 +84,13 @@ import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableExporterImpl;
 import org.hibernate.query.sqm.mutation.spi.idtable.PersistentTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.inline.InlineMutationStrategy;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
@@ -279,29 +279,30 @@ public abstract class Dialect implements ConversionContext {
 	 * 		* year			- defined as `extract(year from ?1)`
 	 * 		* str 			- defined as `cast(?1 as CHAR )`
 	 *
+	 * @param queryEngine
 	 */
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		registry.namedTemplateBuilder( "bit_length" )
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_length" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		registry.namedTemplateBuilder( "coalesce" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "coalesce" )
 				.setArgumentsValidator( StandardArgumentsValidators.min( 2 ) )
 				.register();
-		registry.namedTemplateBuilder( "nullif" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nullif" )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.register( "cast", new CastFunctionTemplate() );
+		queryEngine.getSqmFunctionRegistry().register( "cast", new CastFunctionTemplate() );
 
-		registry.registerPattern( "extract", "extract(?1 from ?2)" );
-		registry.registerPattern( "second", "extract(second from ?1)" );
-		registry.registerPattern( "minute", "extract(minute from ?1)" );
-		registry.registerPattern( "hour", "extract(hour from ?1)" );
-		registry.registerPattern( "day", "extract(day from ?1)" );
-		registry.registerPattern( "month", "extract(month from ?1)" );
-		registry.registerPattern( "year", "extract(year from ?1)" );
-		registry.registerPattern( "str", "cast(?1 as char)" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "extract(?1 from ?2)" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "second", "extract(second from ?1)" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "minute", "extract(minute from ?1)" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "hour", "extract(hour from ?1)" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "day", "extract(day from ?1)" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "month", "extract(month from ?1)" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "year", "extract(year from ?1)" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as char)" );
 
 	}
 

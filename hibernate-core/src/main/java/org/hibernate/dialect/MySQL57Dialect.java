@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -38,8 +38,8 @@ public class MySQL57Dialect extends MySQL55Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 		// MySQL also supports fractional seconds precision for time values
 		// (time(fsp)). According to SQL 1992, the default for <time precision>
 		// is 0. The MySQL default is time(0), there's no need to override
@@ -51,10 +51,10 @@ public class MySQL57Dialect extends MySQL55Dialect {
 		// The following are synonyms for now(fsp), where fsp defaults to 0 on MySQL 5.7:
 		// current_timestamp([fsp]), localtime(fsp), localtimestamp(fsp).
 		// Register the same StaticPrecisionFspTimestampFunction for all 4 functions.
-		registry.registerNoArgs( "now", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "current_timestamp", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "localtime", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "localtimestamp", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "now", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", "now(6)", StandardSpiBasicTypes.TIMESTAMP );
 
 		// sysdate is different from now():
 		// "SYSDATE() returns the time at which it executes. This differs
@@ -62,7 +62,7 @@ public class MySQL57Dialect extends MySQL55Dialect {
 		// indicates the time at which the statement began to execute.
 		// (Within a stored function or trigger, NOW() returns the time at
 		// which the function or triggering statement began to execute.)
-		registry.registerNoArgs( "sysdate", "sysdate(6)", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", "sysdate(6)", StandardSpiBasicTypes.TIMESTAMP );
 
 		// from_unixtime(), timestamp() are functions that return TIMESTAMP that do not support a
 		// fractional seconds precision argument (so there's no need to override them here):

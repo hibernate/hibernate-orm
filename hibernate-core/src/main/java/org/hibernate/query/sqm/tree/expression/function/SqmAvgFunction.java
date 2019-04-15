@@ -7,23 +7,25 @@
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmAvgFunction
-		extends AbstractSqmAggregateFunction
-		implements SqmAggregateFunction {
+public class SqmAvgFunction<T>
+		extends AbstractSqmAggregateFunction<T>
+		implements SqmAggregateFunction<T> {
 	public static final String NAME = "avg";
 
-	public SqmAvgFunction(SqmExpression argument) {
-		super( argument, (AllowableFunctionReturnType) argument.getExpressableType() );
+	@SuppressWarnings("unchecked")
+	public SqmAvgFunction(SqmExpression<?> argument, NodeBuilder nodeBuilder) {
+		super( argument, (AllowableFunctionReturnType) argument.getExpressableType(), nodeBuilder );
 	}
 
-	public SqmAvgFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {
-		super( argument, resultType );
+	public SqmAvgFunction(SqmExpression<?> argument, AllowableFunctionReturnType<T> resultType, NodeBuilder nodeBuilder) {
+		super( argument, resultType, nodeBuilder );
 	}
 
 	@Override
@@ -32,7 +34,7 @@ public class SqmAvgFunction
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitAvgFunction( this );
 	}
 

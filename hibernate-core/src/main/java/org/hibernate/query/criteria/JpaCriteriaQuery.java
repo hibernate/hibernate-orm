@@ -21,7 +21,7 @@ import javax.persistence.metamodel.EntityType;
  *
  * @author Steve Ebersole
  */
-public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, QueryableCriteria, JpaSelectCriteria<T> {
+public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCriteria<T>, JpaSelectCriteria<T> {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Accessors
@@ -29,7 +29,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, QueryableCriteria
 	@Override
 	@SuppressWarnings("unchecked")
 	default List<Order> getOrderList() {
-		return (List) getQueryStructure().getSortSpecifications();
+		return (List) getQuerySpec().getSortSpecifications();
 	}
 
 	/**

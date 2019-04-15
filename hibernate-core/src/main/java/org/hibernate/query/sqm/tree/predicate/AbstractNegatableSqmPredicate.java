@@ -6,17 +6,20 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.hibernate.query.sqm.NodeBuilder;
+
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractNegatableSqmPredicate implements NegatableSqmPredicate {
+public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate implements SqmNegatablePredicate {
 	private boolean negated;
 
-	public AbstractNegatableSqmPredicate() {
-		this( false );
+	public AbstractNegatableSqmPredicate(NodeBuilder nodeBuilder) {
+		this( false, nodeBuilder );
 	}
 
-	public AbstractNegatableSqmPredicate(boolean negated) {
+	public AbstractNegatableSqmPredicate(boolean negated, NodeBuilder nodeBuilder) {
+		super( nodeBuilder );
 		this.negated = negated;
 	}
 
@@ -29,4 +32,13 @@ public abstract class AbstractNegatableSqmPredicate implements NegatableSqmPredi
 	public void negate() {
 		this.negated = !this.negated;
 	}
+
+	@Override
+	public SqmNegatablePredicate not() {
+		// in certain cases JPA required that this always return
+		// a new instance.  we may need to allow for that here (compliance?)
+		negate();
+		return this;
+	}
+
 }

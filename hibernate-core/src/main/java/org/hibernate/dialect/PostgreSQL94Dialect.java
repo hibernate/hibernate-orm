@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -22,26 +22,26 @@ public class PostgreSQL94Dialect extends PostgreSQL93Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.namedTemplateBuilder( "make_interval" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_interval" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setArgumentCountBetween( 1, 7 )
 				.register();
-		registry.namedTemplateBuilder( "make_timestamp" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamp" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 6 )
 				.register();
-		registry.namedTemplateBuilder( "make_timestamptz" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamptz" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setArgumentCountBetween( 6, 7 )
 				.register();
-		registry.namedTemplateBuilder( "make_date" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_date" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 3 )
 				.register();
-		registry.namedTemplateBuilder( "make_time" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_time" )
 				.setInvariantType( StandardSpiBasicTypes.TIME )
 				.setExactArgumentCount( 3 )
 				.register();

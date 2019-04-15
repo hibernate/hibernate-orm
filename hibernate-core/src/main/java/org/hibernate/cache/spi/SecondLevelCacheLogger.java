@@ -24,10 +24,24 @@ import static org.jboss.logging.Logger.Level.WARN;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90001001, max = 90002000 )
 public interface SecondLevelCacheLogger extends BasicLogger {
+	String NAME = "org.hibernate.orm.cache";
+
 	SecondLevelCacheLogger INSTANCE = Logger.getMessageLogger(
 			SecondLevelCacheLogger.class,
 			"org.hibernate.orm.cache"
 	);
+
+	default BasicLogger subLogger(String subName) {
+		return Logger.getLogger( NAME + '.' + subName );
+	}
+
+	default <T> T subMessageLogger(String subName, Class<T> loggerJavaType) {
+		return Logger.getMessageLogger( loggerJavaType, NAME + '.' + subName );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// MessageLLogger
 
 	int NAMESPACE = 90001000;
 

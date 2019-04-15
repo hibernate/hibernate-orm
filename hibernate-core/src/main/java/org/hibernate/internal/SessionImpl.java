@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
-
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityGraph;
@@ -37,7 +36,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockScope;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TransactionRequiredException;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
@@ -144,10 +142,13 @@ import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
-import org.hibernate.query.criteria.spi.RootQuery;
 import org.hibernate.query.named.spi.NamedCallableQueryMemento;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -3146,9 +3147,10 @@ public final class SessionImpl
 		checkOpen();
 
 		try {
+			//noinspection unchecked
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					getSessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( (RootQuery<T>) criteriaQuery ),
+					(SqmStatement) criteriaQuery,
 					criteriaQuery.getResultType(),
 					this
 			);
@@ -3164,7 +3166,7 @@ public final class SessionImpl
 		try {
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					getSessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( criteriaUpdate ),
+					(SqmUpdateStatement) criteriaUpdate,
 					null,
 					this
 			);
@@ -3180,7 +3182,7 @@ public final class SessionImpl
 		try {
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					getSessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( criteriaDelete ),
+					(SqmDeleteStatement) criteriaDelete,
 					null,
 					this
 			);
@@ -3308,7 +3310,7 @@ public final class SessionImpl
 	}
 
 	@Override
-	public CriteriaBuilder getCriteriaBuilder() {
+	public NodeBuilder getCriteriaBuilder() {
 		checkOpen();
 		return getFactory().getCriteriaBuilder();
 	}

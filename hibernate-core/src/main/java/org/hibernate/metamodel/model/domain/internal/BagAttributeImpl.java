@@ -14,11 +14,17 @@ import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribut
 import org.hibernate.metamodel.model.domain.spi.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
  */
-public class BagAttributeImpl<X, E> extends AbstractPluralPersistentAttribute<X, Collection<E>, E>
+public class BagAttributeImpl<X, E>
+		extends AbstractPluralPersistentAttribute<X, Collection<E>, E>
 		implements BagPersistentAttribute<X, E> {
 
 	public BagAttributeImpl(
@@ -32,5 +38,23 @@ public class BagAttributeImpl<X, E> extends AbstractPluralPersistentAttribute<X,
 	@Override
 	public CollectionType getCollectionType() {
 		return CollectionType.COLLECTION;
+	}
+
+	@Override
+	public SqmAttributeJoin createSqmJoin(
+			SqmFrom lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		//noinspection unchecked
+		return new SqmBagJoin(
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+		);
 	}
 }

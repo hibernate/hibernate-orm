@@ -9,6 +9,7 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
@@ -47,7 +48,8 @@ public class VarArgsSQLFunction implements SqmFunctionTemplate {
 	@Override
 	public SqmExpression makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		return new SelfRenderingSqmFunction(
 				(sqlAppender, sqlAstArguments, walker, sessionFactory) -> {
 					sqlAppender.appendSql( begin );
@@ -58,7 +60,8 @@ public class VarArgsSQLFunction implements SqmFunctionTemplate {
 					sqlAppender.appendSql( end );
 				},
 				arguments,
-				impliedResultType
+				impliedResultType,
+				queryEngine.getCriteriaBuilder()
 		);
 	}
 

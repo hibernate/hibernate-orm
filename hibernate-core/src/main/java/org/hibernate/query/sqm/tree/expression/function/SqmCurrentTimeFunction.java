@@ -6,22 +6,25 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
+import java.sql.Time;
+
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmCurrentTimeFunction extends AbstractSqmFunction {
+public class SqmCurrentTimeFunction extends AbstractSqmFunction<Time> {
 	public static final String NAME = "current_time";
 
-	public SqmCurrentTimeFunction() {
-		super( StandardSpiBasicTypes.TIME );
+	public SqmCurrentTimeFunction(NodeBuilder nodeBuilder) {
+		super( (AllowableFunctionReturnType) StandardSpiBasicTypes.TIME, nodeBuilder );
 	}
 
-	public SqmCurrentTimeFunction(AllowableFunctionReturnType resultType) {
-		super( resultType );
+	public SqmCurrentTimeFunction(AllowableFunctionReturnType<Time> resultType, NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 	}
 
 	@Override

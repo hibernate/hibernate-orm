@@ -6,24 +6,16 @@
  */
 package org.hibernate.query.sqm.produce.internal;
 
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaUpdate;
-
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.criteria.spi.RootQuery;
-import org.hibernate.query.criteria.sqm.CriteriaQueryToSqmTransformer;
 import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
 import org.hibernate.query.hql.internal.HqlParseTreePrinter;
 import org.hibernate.query.hql.internal.HqlParser;
 import org.hibernate.query.hql.internal.SemanticQueryBuilder;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.produce.SemanticQueryProducer;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
+import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
  * Standard implementation of SemanticQueryInterpreter
@@ -31,10 +23,14 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
  * @author Steve Ebersole
  */
 public class SemanticQueryProducerImpl implements SemanticQueryProducer {
-	private final SessionFactoryImplementor sessionFactory;
+	private final SqmCreationContext sqmCreationContext;
+	private final SqmCreationOptions sqmCreationOptions;
 
-	public SemanticQueryProducerImpl(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+	public SemanticQueryProducerImpl(
+			SqmCreationContext sqmCreationContext,
+			SqmCreationOptions sqmCreationOptions) {
+		this.sqmCreationContext = sqmCreationContext;
+		this.sqmCreationOptions = sqmCreationOptions;
 	}
 
 	@Override
@@ -51,8 +47,8 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 		try {
 			final SqmStatement sqmStatement = SemanticQueryBuilder.buildSemanticModel(
 					parser.statement(),
-					new SqmCreationOptionsStandard( sessionFactory ),
-					sessionFactory
+					sqmCreationOptions,
+					sqmCreationContext
 			);
 
 			SqmTreePrinter.logTree( sqmStatement );
@@ -65,20 +61,5 @@ public class SemanticQueryProducerImpl implements SemanticQueryProducer {
 		catch (Exception e) {
 			throw new InterpretationException( query, e );
 		}
-	}
-
-	@Override
-	public <R> SqmSelectStatement interpret(RootQuery<R> query) {
-		return CriteriaQueryToSqmTransformer.transform( query, sessionFactory );
-	}
-
-	@Override
-	public <E> SqmDeleteStatement<E> interpret(CriteriaDelete<E> criteria) {
-		throw new NotYetImplementedFor6Exception(  );
-	}
-
-	@Override
-	public SqmUpdateStatement interpret(CriteriaUpdate criteria) {
-		throw new NotYetImplementedFor6Exception(  );
 	}
 }

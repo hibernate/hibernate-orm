@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -15,12 +16,15 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 /**
  * @author Steve Ebersole
  */
-public class SqmConcat extends AbstractSqmExpression {
-	private final SqmExpression lhsOperand;
-	private final SqmExpression rhsOperand;
+public class SqmConcat<T> extends AbstractSqmExpression<T> {
+	private final SqmExpression<?> lhsOperand;
+	private final SqmExpression<?> rhsOperand;
 
-	public SqmConcat(SqmExpression lhsOperand, SqmExpression rhsOperand) {
-		super( null );
+	public SqmConcat(
+			SqmExpression lhsOperand,
+			SqmExpression rhsOperand,
+			NodeBuilder nodeBuilder) {
+		super( null, nodeBuilder );
 
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
@@ -28,8 +32,12 @@ public class SqmConcat extends AbstractSqmExpression {
 		applyInferableType( StandardSpiBasicTypes.STRING );
 	}
 
-	public SqmConcat(SqmExpression lhsOperand, SqmExpression rhsOperand, BasicValuedExpressableType<?> resultType) {
-		super( resultType );
+	public SqmConcat(
+			SqmExpression<?> lhsOperand,
+			SqmExpression<?> rhsOperand,
+			BasicValuedExpressableType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
@@ -47,8 +55,8 @@ public class SqmConcat extends AbstractSqmExpression {
 	}
 
 	@Override
-	public BasicValuedExpressableType<?> getExpressableType() {
-		return (BasicValuedExpressableType<?>) super.getExpressableType();
+	public BasicValuedExpressableType<T> getExpressableType() {
+		return (BasicValuedExpressableType<T>) super.getExpressableType();
 	}
 
 	@Override

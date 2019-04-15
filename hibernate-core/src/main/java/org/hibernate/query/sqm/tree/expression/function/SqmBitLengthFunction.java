@@ -9,25 +9,33 @@ package org.hibernate.query.sqm.tree.expression.function;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmBitLengthFunction extends AbstractSqmFunction {
+public class SqmBitLengthFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "bit_length";
 
 	private final SqmExpression argument;
 
-	public SqmBitLengthFunction(SqmExpression argument) {
-		this( argument, (AllowableFunctionReturnType) argument.getExpressableType() );
+	public SqmBitLengthFunction(SqmExpression<T> argument, NodeBuilder nodeBuilder) {
+		//noinspection unchecked
+		this(
+				argument,
+				(AllowableFunctionReturnType<T>) StandardSpiBasicTypes.LONG,
+				nodeBuilder
+		);
 	}
 
 	public SqmBitLengthFunction(
 			SqmExpression argument,
-			AllowableFunctionReturnType resultType) {
-		super( resultType );
+			AllowableFunctionReturnType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.argument = argument;
 	}
 
@@ -46,7 +54,7 @@ public class SqmBitLengthFunction extends AbstractSqmFunction {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitBitLengthFunction( this );
 	}
 

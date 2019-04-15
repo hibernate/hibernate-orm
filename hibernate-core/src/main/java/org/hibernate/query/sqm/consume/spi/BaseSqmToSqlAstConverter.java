@@ -15,10 +15,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.annotations.Remove;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.util.collections.Stack;
@@ -29,7 +27,6 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.UnaryArithmeticOperator;
-import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
@@ -46,12 +43,12 @@ import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
+import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
@@ -79,28 +76,29 @@ import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
-import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
-import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
@@ -108,7 +106,6 @@ import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.ordering.internal.SqmColumnReference;
 import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
@@ -131,7 +128,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastFunction;
 import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.expression.CountFunction;
 import org.hibernate.sql.ast.tree.expression.CountStarFunction;
@@ -197,8 +193,8 @@ import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
  * @author Steve Ebersole
  */
 public abstract class BaseSqmToSqlAstConverter
-		extends BaseSemanticQueryWalker
-		implements SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
+		extends BaseSemanticQueryWalker<Object>
+		implements SqmToSqlAstConverter<Object>, JdbcParameterBySqmParameterAccess {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
@@ -225,12 +221,6 @@ public abstract class BaseSqmToSqlAstConverter
 	private final Stack<Clause> currentClauseStack = new StandardStack<>();
 	private final Stack<SqmSelectToSqlAstConverter.Shallowness> shallownessStack = new StandardStack<>( SqmSelectToSqlAstConverter.Shallowness.NONE );
 
-
-	@Remove
-	private final Stack<TableGroup> tableGroupStack = new StandardStack<>();
-	@Remove
-	private final Stack<NavigableReference> navigableReferenceStack = new StandardStack<>();
-
 	public BaseSqmToSqlAstConverter(
 			SqlAstCreationContext creationContext,
 			QueryOptions queryOptions,
@@ -238,7 +228,7 @@ public abstract class BaseSqmToSqlAstConverter
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
 			Callback callback) {
-		super( creationContext.getDomainModel().getTypeConfiguration(), creationContext.getServiceRegistry() );
+		super( creationContext.getServiceRegistry() );
 		this.creationContext = creationContext;
 		this.queryOptions = queryOptions;
 		this.domainParameterXref = domainParameterXref;
@@ -304,14 +294,6 @@ public abstract class BaseSqmToSqlAstConverter
 
 	public Stack<Clause> getCurrentClauseStack() {
 		return currentClauseStack;
-	}
-
-	public Stack<TableGroup> getTableGroupStack() {
-		return tableGroupStack;
-	}
-
-	public Stack<NavigableReference> getNavigableReferenceStack() {
-		return navigableReferenceStack;
 	}
 
 	protected <T> void primeStack(Stack<T> stack, T initialValue) {
@@ -480,7 +462,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 
 	@Override
-	public NavigableReference visitRootPath(SqmRoot sqmRoot) {
+	public NavigableReference visitRootPath(SqmRoot<?> sqmRoot) {
 		log.tracef( "Starting resolution of SqmRoot [%s] to TableGroup", sqmRoot );
 
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
@@ -502,7 +484,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
 
-		sqmRoot.visitJoins(
+		sqmRoot.visitSqmJoins(
 				sqmJoin -> {
 					final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoin.accept( this );
 					if ( tableGroupJoin != null ) {
@@ -515,34 +497,16 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public TableGroupJoin visitQualifiedAttributeJoinFromElement(SqmNavigableJoin sqmJoin) {
-		final NavigableContainer<?> joinedNavigable = sqmJoin.as( NavigableContainer.class );
-
-		final TableGroupJoin tableJoinJoin = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
-		if ( tableJoinJoin != null ) {
-			return tableJoinJoin;
-		}
-
+	public TableGroupJoin visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin) {
 		final TableGroup lhsTableGroup = fromClauseIndex.findTableGroup( sqmJoin.getLhs().getNavigablePath() );
 
+		final NavigableContainer<?> joinedNavigable = sqmJoin.sqmAs( NavigableContainer.class );
 		if ( joinedNavigable instanceof EmbeddedValuedNavigable ) {
-			// we need some special handling for embeddables...
-
-			// Above we checked for a TableGroupJoin associated with the `sqmJoin` path - but for
-			// an embeddable, check for its LHS too
-			final TableGroupJoin lhsTableGroupJoin = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
-			if ( lhsTableGroupJoin != null ) {
-				fromClauseIndex.register( sqmJoin, lhsTableGroupJoin );
-				return lhsTableGroupJoin;
-			}
-
-			// Next, although we don't want an actual TableGroup/TableGroupJoin created just for the
-			// embeddable, we do need to register a TableGroup against its NavigablePath.
-			// Specifically the TableGroup associated with the embeddable's LHS
+			// register the LHS TableGroup as the embedded's TableGroup
 			fromClauseIndex.registerTableGroup( sqmJoin.getNavigablePath(), lhsTableGroup );
 
 			// we also still want to process its joins, adding them to the LHS TableGroup
-			sqmJoin.visitJoins(
+			sqmJoin.visitSqmJoins(
 					sqmJoinJoin -> {
 						final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoinJoin.accept( this );
 						if ( tableGroupJoin != null ) {
@@ -551,10 +515,13 @@ public abstract class BaseSqmToSqlAstConverter
 					}
 			);
 
-			// return null - there is no TableGroupJoin that needs to be added
 			return null;
 		}
 
+		final TableGroupJoin tableJoinJoin = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
+		if ( tableJoinJoin != null ) {
+			return tableJoinJoin;
+		}
 
 		final TableGroupJoinProducer joinProducer = joinedNavigable.as( TableGroupJoinProducer.class );
 
@@ -562,7 +529,7 @@ public abstract class BaseSqmToSqlAstConverter
 				sqmJoin.getNavigablePath(),
 				fromClauseIndex.getTableGroup( sqmJoin.getLhs().getNavigablePath() ),
 				sqmJoin.getExplicitAlias(),
-				sqmJoin.getJoinType().getCorrespondingSqlJoinType(),
+				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 				LockMode.NONE,
 				this
 		);
@@ -582,7 +549,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public TableGroup visitCrossJoinedFromElement(SqmCrossJoin sqmJoin) {
+	public TableGroup visitCrossJoin(SqmCrossJoin<?> sqmJoin) {
 		final EntityTypeDescriptor entityMetadata = sqmJoin.getReferencedNavigable().getEntityDescriptor();
 		final TableGroup group = entityMetadata.createRootTableGroup(
 				sqmJoin.getNavigablePath(),
@@ -594,7 +561,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		fromClauseIndex.register( sqmJoin, group );
 
-		sqmJoin.visitJoins(
+		sqmJoin.visitSqmJoins(
 				sqmJoinJoin -> {
 					final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoinJoin.accept( this );
 					if ( tableGroupJoin != null ) {
@@ -607,7 +574,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitQualifiedEntityJoinFromElement(SqmEntityJoin joinedFromElement) {
+	public Object visitQualifiedEntityJoin(SqmEntityJoin<?> joinedFromElement) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
@@ -669,7 +636,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitLiteral(SqmLiteral literal) {
 		return new QueryLiteral(
 				literal.getLiteralValue(),
-				literal.getExpressableType().getSqlExpressableType( getTypeConfiguration() ),
+				literal.getExpressableType().getSqlExpressableType( creationContext.getDomainModel().getTypeConfiguration() ),
 				getCurrentClauseStack().getCurrent()
 		);
 	}
@@ -703,11 +670,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 		if ( jdbcParamsBySqmParam.containsKey( sqmParameter ) ) {
 			// this is a "correction" in the case where a Criteria
-			assert sqmParameter instanceof JpaParameterSqmWrapper;
+			assert sqmParameter instanceof SqmCriteriaParameter;
 			final SqmParameter copy = sqmParameter.copy();
 			domainParameterXref.addCriteriaAdjustment(
 					domainParameterXref.getQueryParameter( sqmParameter ),
-					(JpaParameterSqmWrapper) sqmParameter,
+					(SqmCriteriaParameter) sqmParameter,
 					copy
 			);
 
@@ -733,11 +700,11 @@ public abstract class BaseSqmToSqlAstConverter
 		if ( expressableType == null ) {
 			final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( expression );
 			final QueryParameterBinding binding = domainParameterBindings.getBinding( queryParameter );
-			expressableType = QueryHelper.determineParameterType( binding, queryParameter, getTypeConfiguration() );
+			expressableType = QueryHelper.determineParameterType( binding, queryParameter, creationContext.getDomainModel().getTypeConfiguration() );
 
 			if ( expressableType == null ) {
 				log.debugf( "Could not determine ExpressableType for parameter [%s], falling back to Object-handling", expression );
-				expressableType = StandardSpiBasicTypes.OBJECT_STANDARD_BASIC_TYPE;
+				expressableType = StandardSpiBasicTypes.OBJECT_TYPE;
 			}
 
 			expression.applyInferableType( expressableType );
@@ -764,7 +731,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitJpaParameterWrapper(JpaParameterSqmWrapper expression) {
+	public Object visitCriteriaParameter(SqmCriteriaParameter expression) {
 		return consumeSqmParameter( expression );
 	}
 
@@ -773,7 +740,7 @@ public abstract class BaseSqmToSqlAstConverter
 	// non-standard functions
 
 	@Override
-	public Object visitGenericFunction(SqmGenericFunction expression) {
+	public Object visitGenericFunction(SqmGenericFunction<?> expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
 			return new NonStandardFunction(
@@ -864,7 +831,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		try {
 			return new CastFunction(
-					(Expression) function.getExpressionToCast().accept( this ),
+					( (BasicValuedNavigableReference) function.getExpressionToCast().accept( this ) ).toSqlExpression( this ),
 					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType(),
 					function.getExplicitSqlCastTarget()
 			);
@@ -1213,7 +1180,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public CoalesceFunction visitCoalesceFunction(SqmCoalesceFunction expression) {
+	public CoalesceFunction visitCoalesceFunction(SqmCoalesceFunction<?> expression) {
 		final CoalesceFunction result = new CoalesceFunction();
 		for ( SqmExpression value : expression.getArguments() ) {
 			result.value( (Expression) value.accept( this ) );
@@ -1231,14 +1198,14 @@ public abstract class BaseSqmToSqlAstConverter
 		return new SubQuery(
 				subQuerySpec,
 				expressableType instanceof BasicValuedExpressableType<?>
-						? ( (BasicValuedExpressableType) expressableType ).getSqlExpressableType( getTypeConfiguration() )
+						? ( (BasicValuedExpressableType) expressableType ).getSqlExpressableType( getCreationContext().getDomainModel().getTypeConfiguration() )
 						: null,
 				expressableType
 		);
 	}
 
 	@Override
-	public CaseSimpleExpression visitSimpleCaseExpression(SqmCaseSimple expression) {
+	public CaseSimpleExpression visitSimpleCaseExpression(SqmCaseSimple<?,?> expression) {
 		final CaseSimpleExpression result = new CaseSimpleExpression(
 				expression.getExpressableType().getSqlExpressableType(),
 				(Expression) expression.getFixture().accept( this )
@@ -1257,7 +1224,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public CaseSearchedExpression visitSearchedCaseExpression(SqmCaseSearched expression) {
+	public CaseSearchedExpression visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
 		final CaseSearchedExpression result = new CaseSearchedExpression(
 				( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType()
 		);
@@ -1303,7 +1270,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public ConcatFunction visitConcatExpression(SqmConcat expression) {
+	public ConcatFunction visitConcatExpression(SqmConcat<?> expression) {
 		return new ConcatFunction(
 				Arrays.asList(
 						(Expression) expression.getLeftHandOperand().accept( this ),
@@ -1324,33 +1291,18 @@ public abstract class BaseSqmToSqlAstConverter
 //		);
 //	}
 
-	@Override
-	public ColumnReference visitExplicitColumnReference(SqmColumnReference sqmColumnReference) {
-		final TableGroup tableGroup = fromClauseIndex.findTableGroup(
-				sqmColumnReference.getSqmFromBase().getNavigablePath()
-		);
-
-		final ColumnReference columnReference = tableGroup.locateColumnReferenceByName( sqmColumnReference.getColumnName() );
-
-		if ( columnReference == null ) {
-			throw new HibernateException( "Could not resolve ColumnReference" );
-		}
-
-		return columnReference;
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Predicates
 
 
 	@Override
-	public GroupedPredicate visitGroupedPredicate(GroupedSqmPredicate predicate) {
+	public GroupedPredicate visitGroupedPredicate(SqmGroupedPredicate predicate) {
 		return new GroupedPredicate ( (Predicate ) predicate.getSubPredicate().accept( this ) );
 	}
 
 	@Override
-	public Junction visitAndPredicate(AndSqmPredicate predicate) {
+	public Junction visitAndPredicate(SqmAndPredicate predicate) {
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
 		conjunction.add( (Predicate) predicate.getLeftHandPredicate().accept( this ) );
 		conjunction.add( (Predicate) predicate.getRightHandPredicate().accept( this ) );
@@ -1358,7 +1310,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Junction visitOrPredicate(OrSqmPredicate predicate) {
+	public Junction visitOrPredicate(SqmOrPredicate predicate) {
 		final Junction disjunction = new Junction( Junction.Nature.DISJUNCTION );
 		disjunction.add( (Predicate) predicate.getLeftHandPredicate().accept( this ) );
 		disjunction.add( (Predicate) predicate.getRightHandPredicate().accept( this ) );
@@ -1366,7 +1318,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public NegatedPredicate visitNegatedPredicate(NegatedSqmPredicate predicate) {
+	public NegatedPredicate visitNegatedPredicate(SqmNegatedPredicate predicate) {
 		return new NegatedPredicate(
 				(Predicate) predicate.getWrappedPredicate().accept( this )
 		);
@@ -1379,7 +1331,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		return new ComparisonPredicate(
 				lhs,
-				interpret( predicate.getOperator() ),
+				interpret( predicate.getSqmOperator() ),
 				rhs
 		);
 	}
@@ -1434,7 +1386,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public LikePredicate visitLikePredicate(LikeSqmPredicate predicate) {
+	public LikePredicate visitLikePredicate(SqmLikePredicate predicate) {
 		final Expression escapeExpression = predicate.getEscapeCharacter() == null
 				? null
 				: (Expression) predicate.getEscapeCharacter().accept( this );
@@ -1448,7 +1400,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public NullnessPredicate visitIsNullPredicate(NullnessSqmPredicate predicate) {
+	public NullnessPredicate visitIsNullPredicate(SqmNullnessPredicate predicate) {
 		return new NullnessPredicate(
 				toSqlExpression( predicate.getExpression().accept( this ) ),
 				predicate.isNegated()
@@ -1456,13 +1408,13 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public InListPredicate visitInListPredicate(SqmInListPredicate predicate) {
+	public InListPredicate visitInListPredicate(SqmInListPredicate<?> predicate) {
 		// special case:
 		//		if there is just a single element and it is an SqmParameter
 		//		and the corresponding QueryParameter binding is multi-valued...
 		//		lets expand the SQL AST for each bind value
 		if ( predicate.getListExpressions().size() == 1 ) {
-			final SqmExpression sqmExpression = predicate.getListExpressions().get( 0 );
+			final SqmExpression<?> sqmExpression = predicate.getListExpressions().get( 0 );
 			if ( sqmExpression instanceof SqmParameter ) {
 				final SqmParameter sqmParameter = (SqmParameter) sqmExpression;
 				final QueryParameterImplementor<?> domainParam = domainParameterXref.getQueryParameter( sqmParameter );

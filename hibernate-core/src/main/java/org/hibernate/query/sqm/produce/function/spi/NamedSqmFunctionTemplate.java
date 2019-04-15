@@ -11,6 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -54,7 +55,8 @@ public class NamedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTempl
 	@Override
 	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		return new RenderingSupport();
 	}
 

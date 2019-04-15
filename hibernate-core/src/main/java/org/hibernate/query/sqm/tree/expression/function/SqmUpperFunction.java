@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.expression.function;
 
 import java.util.Locale;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -15,13 +16,16 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmUpperFunction extends AbstractSqmFunction {
+public class SqmUpperFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "upper";
 
 	private SqmExpression argument;
 
-	public SqmUpperFunction(BasicValuedExpressableType resultType, SqmExpression argument) {
-		super( resultType );
+	public SqmUpperFunction(
+			SqmExpression<T> argument,
+			BasicValuedExpressableType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.argument = argument;
 
 		assert argument != null;

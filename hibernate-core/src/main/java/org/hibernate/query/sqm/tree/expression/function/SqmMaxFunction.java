@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -14,17 +15,17 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmMaxFunction
-		extends AbstractSqmAggregateFunction
-		implements SqmAggregateFunction {
+public class SqmMaxFunction<T>
+		extends AbstractSqmAggregateFunction<T>
+		implements SqmAggregateFunction<T> {
 	public static final String NAME = "max";
 
-	public SqmMaxFunction(SqmExpression argument) {
-		super( argument, (AllowableFunctionReturnType) argument.getExpressableType() );
+	public SqmMaxFunction(SqmExpression<T> argument, NodeBuilder nodeBuilder) {
+		super( argument, (AllowableFunctionReturnType<T>) argument.getExpressableType(), nodeBuilder );
 	}
 
-	public SqmMaxFunction(SqmExpression argument, BasicValuedExpressableType resultType) {
-		super( argument, resultType );
+	public SqmMaxFunction(SqmExpression argument, BasicValuedExpressableType<T> resultType, NodeBuilder nodeBuilder) {
+		super( argument, resultType, nodeBuilder );
 	}
 
 	@Override

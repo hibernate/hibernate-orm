@@ -7,17 +7,18 @@
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmCountFunction extends AbstractSqmAggregateFunction {
+public class SqmCountFunction<T> extends AbstractSqmAggregateFunction<T> {
 	public static final String NAME = "count";
 
-	public SqmCountFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {
-		super( argument, resultType );
+	public SqmCountFunction(SqmExpression<?> argument, AllowableFunctionReturnType<T> resultType, NodeBuilder nodeBuilder) {
+		super( argument, resultType, nodeBuilder );
 	}
 
 	@Override
@@ -26,7 +27,7 @@ public class SqmCountFunction extends AbstractSqmAggregateFunction {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCountFunction( this );
 	}
 

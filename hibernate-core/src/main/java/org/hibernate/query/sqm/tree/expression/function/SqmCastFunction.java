@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmCastFunction extends AbstractSqmFunction implements SqmFunction {
+public class SqmCastFunction<T> extends AbstractSqmFunction<T> implements SqmFunction<T> {
 	public static final String NAME = "cast";
 
 	private final SqmExpression expressionToCast;
@@ -21,15 +21,15 @@ public class SqmCastFunction extends AbstractSqmFunction implements SqmFunction 
 
 	public SqmCastFunction(
 			SqmExpression expressionToCast,
-			AllowableFunctionReturnType castTargetType) {
+			AllowableFunctionReturnType<T> castTargetType) {
 		this( expressionToCast, castTargetType, null );
 	}
 
 	public SqmCastFunction(
 			SqmExpression expressionToCast,
-			AllowableFunctionReturnType castTargetType,
+			AllowableFunctionReturnType<T> castTargetType,
 			String explicitSqlCastTarget) {
-		super( castTargetType );
+		super( castTargetType, expressionToCast.nodeBuilder() );
 		this.expressionToCast = expressionToCast;
 		this.explicitSqlCastTarget = explicitSqlCastTarget;
 	}
@@ -53,7 +53,7 @@ public class SqmCastFunction extends AbstractSqmFunction implements SqmFunction 
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCastFunction( this );
 	}
 

@@ -25,7 +25,7 @@ import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
-import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmJunctivePredicate;
@@ -161,8 +161,8 @@ public class SqmMutationStrategyHelper {
 	 */
 	@SuppressWarnings("WeakerAccess")
 	public static boolean hasNonIdReferences(SqmPredicate predicate) {
-		if ( predicate instanceof GroupedSqmPredicate ) {
-			return hasNonIdReferences( ( (GroupedSqmPredicate) predicate ).getSubPredicate() );
+		if ( predicate instanceof SqmGroupedPredicate ) {
+			return hasNonIdReferences( ( (SqmGroupedPredicate) predicate ).getSubPredicate() );
 		}
 
 		if ( predicate instanceof SqmJunctivePredicate ) {
@@ -178,7 +178,7 @@ public class SqmMutationStrategyHelper {
 		}
 
 		if ( predicate instanceof SqmInListPredicate ) {
-			final SqmInListPredicate inPredicate = (SqmInListPredicate) predicate;
+			final SqmInListPredicate<?> inPredicate = (SqmInListPredicate) predicate;
 			if ( isNonIdentifierReference( inPredicate.getTestExpression() ) ) {
 				return true;
 			}
@@ -240,7 +240,11 @@ public class SqmMutationStrategyHelper {
 				executionContext.getSession().getSessionFactory()
 		);
 
-		final SqmSelectStatement sqmIdSelect = new SqmSelectStatement( sqmIdSelectQuerySpec );
+		final SqmSelectStatement sqmIdSelect = new SqmSelectStatement(
+				executionContext.getSession().getFactory().getQueryEngine().getCriteriaBuilder()
+		);
+
+		sqmIdSelect.setQuerySpec( sqmIdSelectQuerySpec );
 
 		final SqmSelectInterpretation sqmSelectInterpretation = sqmConverter.interpret( sqmIdSelect );
 

@@ -7,23 +7,24 @@
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmMinFunction
-		extends AbstractSqmAggregateFunction
-		implements SqmAggregateFunction {
+public class SqmMinFunction<T>
+		extends AbstractSqmAggregateFunction<T>
+		implements SqmAggregateFunction<T> {
 	public static final String NAME = "min";
 
-	public SqmMinFunction(SqmExpression argument) {
-		super( argument, (AllowableFunctionReturnType) argument.getExpressableType() );
+	public SqmMinFunction(SqmExpression<T> argument, NodeBuilder nodeBuilder) {
+		super( argument, (AllowableFunctionReturnType<T>) argument.getExpressableType(), nodeBuilder );
 	}
 
-	public SqmMinFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {
-		super( argument, resultType );
+	public SqmMinFunction(SqmExpression argument, AllowableFunctionReturnType<T> resultType, NodeBuilder nodeBuilder) {
+		super( argument, resultType, nodeBuilder );
 	}
 
 	@Override
@@ -32,7 +33,7 @@ public class SqmMinFunction
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMinFunction( this );
 	}
 

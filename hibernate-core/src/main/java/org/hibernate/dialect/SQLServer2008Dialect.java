@@ -9,7 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.NullPrecedence;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -32,10 +32,10 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
 	}
 	
 	@Override

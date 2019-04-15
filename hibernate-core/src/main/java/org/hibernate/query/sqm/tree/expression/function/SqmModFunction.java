@@ -9,23 +9,25 @@ package org.hibernate.query.sqm.tree.expression.function;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmModFunction extends AbstractSqmFunction {
+public class SqmModFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "mod";
 
 	private final SqmExpression dividend;
 	private final SqmExpression divisor;
 
 	public SqmModFunction(
-			SqmExpression dividend,
-			SqmExpression divisor,
-			AllowableFunctionReturnType resultType) {
-		super( resultType );
+			SqmExpression<?> dividend,
+			SqmExpression<?> divisor,
+			AllowableFunctionReturnType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.dividend = dividend;
 		this.divisor = divisor;
 	}

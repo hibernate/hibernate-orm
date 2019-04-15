@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.tree.from;
 import java.util.Collection;
 import java.util.EnumSet;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 

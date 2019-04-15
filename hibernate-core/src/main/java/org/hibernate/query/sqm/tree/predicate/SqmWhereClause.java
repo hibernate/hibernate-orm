@@ -6,16 +6,24 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import java.util.Collection;
+
+import org.hibernate.query.sqm.NodeBuilder;
+
 /**
  * @author Steve Ebersole
  */
 public class SqmWhereClause {
+	private final NodeBuilder nodeBuilder;
+
 	private SqmPredicate predicate;
 
-	public SqmWhereClause() {
+	public SqmWhereClause(NodeBuilder nodeBuilder) {
+		this.nodeBuilder = nodeBuilder;
 	}
 
-	public SqmWhereClause(SqmPredicate predicate) {
+	public SqmWhereClause(SqmPredicate predicate, NodeBuilder nodeBuilder) {
+		this.nodeBuilder = nodeBuilder;
 		this.predicate = predicate;
 	}
 
@@ -25,6 +33,27 @@ public class SqmWhereClause {
 
 	public void setPredicate(SqmPredicate predicate) {
 		this.predicate = predicate;
+	}
+
+	public void applyPredicate(SqmPredicate predicate) {
+		if ( this.predicate == null ) {
+			this.predicate = predicate;
+		}
+		else {
+			this.predicate = nodeBuilder.and( this.predicate, predicate );
+		}
+	}
+
+	public void applyPredicates(SqmPredicate... predicates) {
+		for ( SqmPredicate sqmPredicate : predicates ) {
+			applyPredicate( sqmPredicate );
+		}
+	}
+
+	public void applyPredicates(Collection<SqmPredicate> predicates) {
+		for ( SqmPredicate sqmPredicate : predicates ) {
+			applyPredicate( sqmPredicate );
+		}
 	}
 
 	@Override

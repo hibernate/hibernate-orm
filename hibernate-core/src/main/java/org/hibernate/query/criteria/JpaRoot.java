@@ -13,10 +13,9 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 /**
  * @author Steve Ebersole
  */
-public interface JpaRoot<T> extends JpaFrom<T,T>, JpaPathSource<T>, Root<T> {
+public interface JpaRoot<T> extends JpaFrom<T,T>, Root<T> {
 	@Override
 	EntityDomainType<T> getModel();
 
-	@Override
 	EntityDomainType<T> getManagedType();
 }

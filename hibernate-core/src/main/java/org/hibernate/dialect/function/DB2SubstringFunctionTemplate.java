@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
@@ -54,12 +56,16 @@ public class DB2SubstringFunctionTemplate implements SqmFunctionTemplate {
 
 	@Override
 	public SqmExpression makeSqmFunctionExpression(
-			List<SqmExpression> arguments, AllowableFunctionReturnType impliedResultType) {
+			List<SqmExpression> arguments,
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		return new DB2SubstringFunction(
 				getRenderedName( arguments ),
-				StandardSpiBasicTypes.STRING, arguments.get( 1 ),
+				StandardSpiBasicTypes.STRING,
+				arguments.get( 1 ),
 				arguments.get( 2 ),
-				null
+				null,
+				queryEngine.getCriteriaBuilder()
 		);
 	}
 
@@ -69,9 +75,12 @@ public class DB2SubstringFunctionTemplate implements SqmFunctionTemplate {
 
 		public DB2SubstringFunction(
 				String functionName,
-				BasicValuedExpressableType resultType,
-				SqmExpression source, SqmExpression startPosition, SqmExpression length) {
-			super( resultType, source, startPosition, length );
+				BasicValuedExpressableType<?> resultType,
+				SqmExpression source,
+				SqmExpression startPosition,
+				SqmExpression length,
+				NodeBuilder nodeBuilder) {
+			super( source, startPosition, length, resultType, nodeBuilder );
 			this.functionName = functionName;
 		}
 

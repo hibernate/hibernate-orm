@@ -36,9 +36,13 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
@@ -279,7 +283,8 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 		return new SqmEmbeddedValuedSimplePath(
 				navigablePath,
 				this,
-				lhs
+				lhs,
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 
@@ -324,5 +329,23 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	@Override
 	public int extractHashCode(J o) {
 		return getEmbeddedDescriptor().extractHashCode( o );
+	}
+
+	@Override
+	public SqmAttributeJoin createSqmJoin(
+			SqmFrom lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		//noinspection unchecked
+		return new SqmSingularJoin(
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+		);
 	}
 }

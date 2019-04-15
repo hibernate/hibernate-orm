@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.produce.internal;
 
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmQuery;
 
 /**
  * QuerySpecProcessingState implementation for DML statements
@@ -15,7 +16,9 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
  */
 public class SqmDmlCreationProcessingState extends SqmCreationProcessingStateImpl {
 
-	public SqmDmlCreationProcessingState(SqmCreationState creationState) {
-		super( creationState );
+	public SqmDmlCreationProcessingState(
+			SqmQuery<?> processingQuery,
+			SqmCreationState creationState) {
+		super( processingQuery, creationState );
 	}
 }

@@ -6,17 +6,24 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.internal.BooleanJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmPredicate extends SqmVisitableNode, SqmTypedNode {
+public interface SqmPredicate extends SqmVisitableNode, SqmTypedNode, JpaPredicate, SqmExpression<Boolean> {
 	@Override
 	default JavaTypeDescriptor<Boolean> getJavaTypeDescriptor(){
 		return BooleanJavaDescriptor.INSTANCE;
 	}
+
+	@Override
+	SqmPredicate not();
+
+
 }

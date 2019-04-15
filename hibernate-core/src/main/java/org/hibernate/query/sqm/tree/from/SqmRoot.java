@@ -8,26 +8,28 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmRoot<E> extends AbstractSqmFrom {
-	public SqmRoot(EntityTypeDescriptor entityTypeDescriptor, String alias) {
-		super(
-				alias == null
-						? new NavigablePath( entityTypeDescriptor.getEntityName() )
-						: new NavigablePath( entityTypeDescriptor.getEntityName() + '(' + alias + ')' ),
-				entityTypeDescriptor,
-				alias
-		);
+public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
+	public SqmRoot(
+			EntityTypeDescriptor<E> entityTypeDescriptor,
+			String alias,
+			NodeBuilder nodeBuilder) {
+		super( entityTypeDescriptor, alias, nodeBuilder );
 	}
 
 	@Override
-	public SqmPath getLhs() {
+	public SqmPath<?> getLhs() {
 		// a root has no LHS
 		return null;
 	}
@@ -38,8 +40,8 @@ public class SqmRoot<E> extends AbstractSqmFrom {
 	}
 
 	@Override
-	public EntityTypeDescriptor<?> getReferencedNavigable() {
-		return (EntityTypeDescriptor<?>) super.getReferencedNavigable();
+	public EntityTypeDescriptor<E> getReferencedNavigable() {
+		return (EntityTypeDescriptor<E>) super.getReferencedNavigable();
 	}
 
 	public String getEntityName() {
@@ -47,7 +49,7 @@ public class SqmRoot<E> extends AbstractSqmFrom {
 	}
 
 	@Override
-	public EntityJavaDescriptor getJavaTypeDescriptor() {
+	public EntityJavaDescriptor<E> getJavaTypeDescriptor() {
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
@@ -59,7 +61,27 @@ public class SqmRoot<E> extends AbstractSqmFrom {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitRootPath( this );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA
+
+	@Override
+	public EntityTypeDescriptor<E> getManagedType() {
+		return getReferencedNavigable();
+	}
+
+	@Override
+	public EntityTypeDescriptor<E> getModel() {
+		return getReferencedNavigable();
+	}
+
+	@Override
+	public <S extends E> SqmTreatedRoot<E, S> treatAs(Class<S> treatJavaType) throws PathException {
+		final EntityTypeDescriptor<S> typeDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
+		return new SqmTreatedRoot<>( this, typeDescriptor, nodeBuilder() );
 	}
 }

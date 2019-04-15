@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
@@ -32,13 +33,14 @@ public class SqmJdbcFunctionEscapeWrapper
 
 	public SqmJdbcFunctionEscapeWrapper(
 			SqmFunction wrappedSqmFunction,
-			AllowableFunctionReturnType impliedResultType) {
-		super( null, Collections.singletonList( wrappedSqmFunction ), impliedResultType );
+			AllowableFunctionReturnType impliedResultType,
+			NodeBuilder nodeBuilder) {
+		super( null, Collections.singletonList( wrappedSqmFunction ), impliedResultType, nodeBuilder );
 		this.wrappedSqmFunction = wrappedSqmFunction;
 	}
 
-	public SqmJdbcFunctionEscapeWrapper(SqmFunction wrappedSqmFunction) {
-		super( null, Collections.singletonList( wrappedSqmFunction ), wrappedSqmFunction.getExpressableType() );
+	public SqmJdbcFunctionEscapeWrapper(SqmFunction wrappedSqmFunction, NodeBuilder nodeBuilder) {
+		super( null, Collections.singletonList( wrappedSqmFunction ), wrappedSqmFunction.getExpressableType(), nodeBuilder );
 		this.wrappedSqmFunction = wrappedSqmFunction;
 	}
 

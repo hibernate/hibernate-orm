@@ -14,21 +14,31 @@ import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
+import org.hibernate.metamodel.model.domain.RepresentationMode;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.property.access.internal.PropertyAccessMapImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -42,14 +52,29 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 
 	private final EntityHierarchy runtimeModelHierarchy;
 	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
+	private final PropertyAccess propertyAccess;
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("WeakerAccess")
 	public EntityIdentifierCompositeNonAggregatedImpl(
 			EntityHierarchy runtimeModelHierarchy,
 			EmbeddedTypeDescriptor<J> embeddedDescriptor,
-			EmbeddedValueMapping bootMapping) {
+			@SuppressWarnings("unused") EmbeddedValueMapping bootMapping) {
 		this.runtimeModelHierarchy = runtimeModelHierarchy;
 		this.embeddedDescriptor = embeddedDescriptor;
+
+		if ( embeddedDescriptor.getRepresentationStrategy() instanceof PropertyAccessStrategyMapImpl ) {
+			assert embeddedDescriptor.getRepresentationStrategy().getMode() == RepresentationMode.MAP;
+			this.propertyAccess = new PropertyAccessMapImpl(
+					(PropertyAccessStrategyMapImpl) embeddedDescriptor.getRepresentationStrategy(),
+					embeddedDescriptor.getNavigableName()
+			);
+		}
+		else {
+			this.propertyAccess = PropertyAccessStrategyEmbeddedImpl.INSTANCE.buildPropertyAccess(
+					embeddedDescriptor.getJavaType(),
+					embeddedDescriptor.getNavigableName()
+			);
+		}
 	}
 
 	@Override
@@ -58,8 +83,9 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	}
 
 	@Override
-	public EmbeddedContainer getContainer() {
-		return runtimeModelHierarchy.getRootEntityType();
+	public EmbeddedTypeDescriptor<O> getContainer() {
+		//noinspection unchecked
+		return (EmbeddedTypeDescriptor<O>) runtimeModelHierarchy.getRootEntityType();
 	}
 
 	@Override
@@ -150,12 +176,14 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 			SqmCreationState creationState) {
 		final NavigablePath navigablePath = lhs.getNavigablePath().append( getNavigableName() );
 		final SqmPathRegistry pathRegistry = creationState.getProcessingStateStack().getCurrent().getPathRegistry();
+		//noinspection unchecked
 		return (SqmNavigableReference) pathRegistry.resolvePath(
 				navigablePath,
 				np -> new SqmEmbeddedValuedSimplePath(
 						navigablePath,
 						this,
-						lhs
+						lhs,
+						creationState.getCreationContext().getNodeBuilder()
 				)
 		);
 	}
@@ -163,5 +191,63 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	@Override
 	public IdentifierValue getUnsavedValue() {
 		return null;
+	}
+
+	@Override
+	public SqmAttributeJoin createSqmJoin(
+			SqmFrom lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		//noinspection unchecked
+		return new SqmSingularJoin(
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+		);
+	}
+
+	@Override
+	public DomainType<J> getAttributeType() {
+		return embeddedDescriptor;
+	}
+
+	@Override
+	public SimpleTypeDescriptor<?> getKeyGraphType() {
+		return null;
+	}
+
+	@Override
+	public SimpleTypeDescriptor<?> getValueGraphType() {
+		return embeddedDescriptor;
+	}
+
+	@Override
+	public PropertyAccess getPropertyAccess() {
+		return propertyAccess;
+	}
+
+	@Override
+	public boolean isIncludedInOptimisticLocking() {
+		return false;
+	}
+
+	@Override
+	public PersistentAttributeType getPersistentAttributeType() {
+		return PersistentAttributeType.EMBEDDED;
+	}
+
+	@Override
+	public boolean isAssociation() {
+		return false;
+	}
+
+	@Override
+	public boolean isCollection() {
+		return false;
 	}
 }

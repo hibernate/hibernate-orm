@@ -14,6 +14,7 @@ import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -71,26 +72,26 @@ public class Ingres9Dialect extends IngresDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
-		registerDateTimeFunctions(registry);
-		registerDateTimeColumnTypes(registry);
-		registry.registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+		registerDateTimeFunctions( queryEngine );
+		registerDateTimeColumnTypes( queryEngine );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 	}
 
 	/**
 	 * Register functions current_time, current_timestamp, current_date
 	 */
-	protected void registerDateTimeFunctions(SqmFunctionRegistry registry) {
-		registry.registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
-		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+	protected void registerDateTimeFunctions(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
 	}
 
 	/**
 	 * Register column types date, time, timestamp
 	 */
-	protected void registerDateTimeColumnTypes(SqmFunctionRegistry registry) {
+	protected void registerDateTimeColumnTypes(QueryEngine queryEngine) {
 		registerColumnType( Types.DATE, "ansidate" );
 		registerColumnType( Types.TIMESTAMP, "timestamp(9) with time zone" );
 	}

@@ -21,11 +21,11 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -78,16 +78,16 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
-		registry.registerPattern( "substring", "substring(?1 FROM ?2 FOR ?3)", StandardSpiBasicTypes.STRING );
-		registry.registerPattern( "substr", "substr(?1, ?2, ?3)", StandardSpiBasicTypes.STRING );
-		registry.register( "coalesce", new NvlFunctionTemplate() );
-		registry.register( "nvl", new NvlFunctionTemplate() );
-		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "substring", "substring(?1 FROM ?2 FOR ?3)", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "substr", "substr(?1, ?2, ?3)", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlFunctionTemplate() );
+		queryEngine.getSqmFunctionRegistry().register( "nvl", new NvlFunctionTemplate() );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
 	}
 
 	@Override

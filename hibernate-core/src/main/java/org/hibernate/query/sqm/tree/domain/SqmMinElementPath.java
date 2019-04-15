@@ -8,23 +8,23 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmMinElementPath extends AbstractSqmSpecificPluralPartPath {
+public class SqmMinElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	public static final String NAVIGABLE_NAME = "{min-element}";
 
-	public SqmMinElementPath(SqmPath pluralDomainPath) {
+	public SqmMinElementPath(SqmPath<?> pluralDomainPath) {
 		super(
 				pluralDomainPath.getNavigablePath().append( NAVIGABLE_NAME ),
-				pluralDomainPath
+				pluralDomainPath,
+				pluralDomainPath.sqmAs( PersistentCollectionDescriptor.class ).getElementDescriptor()
 		);
 	}
 
@@ -44,12 +44,12 @@ public class SqmMinElementPath extends AbstractSqmSpecificPluralPartPath {
 	}
 
 	@Override
-	public Navigable<?> getReferencedNavigable() {
+	public Navigable<T> getReferencedNavigable() {
 		return getCollectionDescriptor().getElementDescriptor();
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMinElementPath( this );
 	}
 }

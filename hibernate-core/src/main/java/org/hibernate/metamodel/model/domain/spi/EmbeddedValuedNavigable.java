@@ -10,14 +10,10 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 import org.hibernate.sql.results.internal.domain.embedded.CompositeResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -28,7 +24,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedValuedNavigable<J> extends EmbeddedValuedExpressableType<J>, Joinable<J> {
+public interface EmbeddedValuedNavigable<J> extends EmbeddedValuedExpressableType<J>, NavigableContainer<J> {
 	@Override
 	EmbeddedContainer getContainer();
 
@@ -47,7 +43,8 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValuedExpressableTyp
 		return new SqmEmbeddedValuedSimplePath(
 				lhs.getNavigablePath().append( getNavigableName() ),
 				this,
-				lhs
+				lhs,
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 
@@ -72,16 +69,6 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValuedExpressableTyp
 	@Override
 	default int getNumberOfJdbcParametersNeeded() {
 		return getEmbeddedDescriptor().getNumberOfJdbcParametersNeeded();
-	}
-
-	@Override
-	default SqmNavigableJoin createJoin(
-			SqmFrom lhs,
-			SqmJoinType joinType,
-			String alias,
-			boolean fetched,
-			SqmCreationState creationState) {
-		return getEmbeddedDescriptor().createJoin( lhs, joinType, alias, fetched, creationState );
 	}
 
 	@Override

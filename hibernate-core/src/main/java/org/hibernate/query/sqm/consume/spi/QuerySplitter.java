@@ -30,6 +30,7 @@ import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -37,7 +38,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.Distinctable;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
@@ -49,24 +49,23 @@ import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
-import org.hibernate.query.sqm.tree.predicate.EmptinessSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
-import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.MemberOfSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -81,6 +80,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -139,7 +139,7 @@ public class QuerySplitter {
 				SqmRoot unmappedPolymorphicFromElement,
 				EntityTypeDescriptor mappedDescriptor,
 				SessionFactoryImplementor sessionFactory) {
-			super( sessionFactory.getTypeConfiguration(), sessionFactory.getServiceRegistry() );
+			super( sessionFactory.getServiceRegistry() );
 			this.unmappedPolymorphicFromElement = unmappedPolymorphicFromElement;
 			this.mappedDescriptor = mappedDescriptor;
 		}
@@ -166,7 +166,7 @@ public class QuerySplitter {
 
 		@Override
 		public SqmSelectStatement visitSelectStatement(SqmSelectStatement statement) {
-			final SqmSelectStatement copy = new SqmSelectStatement();
+			final SqmSelectStatement copy = new SqmSelectStatement( statement.nodeBuilder() );
 			copy.setQuerySpec( visitQuerySpec( statement.getQuerySpec() ) );
 			return copy;
 		}
@@ -177,7 +177,7 @@ public class QuerySplitter {
 			// 		fromElementCopyMap gets built before other parts of the queryspec
 			// 		are visited
 
-			final SqmQuerySpec sqmQuerySpec = new SqmQuerySpec();
+			final SqmQuerySpec sqmQuerySpec = new SqmQuerySpec( querySpec.nodeBuilder() );
 			sqmQuerySpec.setFromClause( visitFromClause( querySpec.getFromClause() ) );
 			sqmQuerySpec.setSelectClause( visitSelectClause( querySpec.getSelectClause() ) );
 			sqmQuerySpec.setWhereClause( visitWhereClause( querySpec.getWhereClause() ) );
@@ -237,10 +237,18 @@ public class QuerySplitter {
 					navigablePath -> {
 						final SqmRoot copy;
 						if ( sqmRoot == unmappedPolymorphicFromElement ) {
-							copy = new SqmRoot( mappedDescriptor, sqmRoot.getExplicitAlias() );
+							copy = new SqmRoot(
+									mappedDescriptor,
+									sqmRoot.getExplicitAlias(),
+									sqmRoot.nodeBuilder()
+							);
 						}
 						else {
-							copy = new SqmRoot( sqmRoot.getReferencedNavigable().getEntityDescriptor(), sqmRoot.getExplicitAlias() );
+							copy = new SqmRoot(
+									sqmRoot.getReferencedNavigable().getEntityDescriptor(),
+									sqmRoot.getExplicitAlias(),
+									sqmRoot.nodeBuilder()
+							);
 						}
 						sqmFromCopyMap.put( sqmRoot, copy );
 						sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
@@ -250,7 +258,7 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmCrossJoin visitCrossJoinedFromElement(SqmCrossJoin join) {
+		public SqmCrossJoin visitCrossJoin(SqmCrossJoin join) {
 			return (SqmCrossJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
 					navigablePath -> {
@@ -267,13 +275,13 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmEntityJoin visitQualifiedEntityJoinFromElement(SqmEntityJoin join) {
+		public SqmEntityJoin visitQualifiedEntityJoin(SqmEntityJoin join) {
 			return (SqmEntityJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
 					navigablePath -> {
 						final SqmEntityJoin copy = new SqmEntityJoin(
 								join.getReferencedNavigable().getEntityDescriptor(), join.getExplicitAlias(),
-								join.getJoinType(),
+								join.getSqmJoinType(),
 								(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
 						);
 						sqmFromCopyMap.put( join, copy );
@@ -284,19 +292,19 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmNavigableJoin visitQualifiedAttributeJoinFromElement(SqmNavigableJoin join) {
-			return (SqmNavigableJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
+		public SqmAttributeJoin visitQualifiedAttributeJoin(SqmAttributeJoin join) {
+			return (SqmAttributeJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
 					navigablePath -> {
-						final SqmNavigableJoin copy = new SqmNavigableJoin(
+						final SqmAttributeJoin copy = new SqmSingularJoin(
 								getProcessingStateStack().getCurrent()
 										.getPathRegistry()
 										.findFromByPath( join.getLhs().getNavigablePath() ),
 								join.getReferencedNavigable(),
 								join.getExplicitAlias(),
-								join.getJoinType(),
+								join.getSqmJoinType(),
 								join.isFetched(),
-								this
+								join.nodeBuilder()
 						);
 						sqmFromCopyMap.put( join, copy );
 						sqmPathCopyMap.put( join.getNavigablePath(), copy );
@@ -315,7 +323,8 @@ public class QuerySplitter {
 						final SqmBasicValuedSimplePath copy = new SqmBasicValuedSimplePath(
 								navigablePath,
 								path.getReferencedNavigable(),
-								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
+								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() ),
+								path.nodeBuilder()
 						);
 						sqmPathCopyMap.put( path.getNavigablePath(), copy );
 						return copy;
@@ -333,7 +342,8 @@ public class QuerySplitter {
 						final SqmEmbeddedValuedSimplePath copy = new SqmEmbeddedValuedSimplePath(
 								navigablePath,
 								path.getReferencedNavigable(),
-								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
+								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() ),
+								path.nodeBuilder()
 						);
 						sqmPathCopyMap.put( path.getNavigablePath(), copy );
 						return copy;
@@ -351,7 +361,8 @@ public class QuerySplitter {
 						final SqmEntityValuedSimplePath copy = new SqmEntityValuedSimplePath(
 								navigablePath,
 								path.getReferencedNavigable(),
-								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
+								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() ),
+								path.nodeBuilder()
 						);
 						sqmPathCopyMap.put( path.getNavigablePath(), copy );
 						return copy;
@@ -369,7 +380,8 @@ public class QuerySplitter {
 						final SqmPluralValuedSimplePath copy = new SqmPluralValuedSimplePath(
 								navigablePath,
 								path.getReferencedNavigable(),
-								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() )
+								pathRegistry.findFromByPath( path.getLhs().getNavigablePath() ),
+								path.nodeBuilder()
 						);
 						sqmPathCopyMap.put( path.getNavigablePath(), copy );
 						return copy;
@@ -379,12 +391,13 @@ public class QuerySplitter {
 
 		@Override
 		public SqmSelectClause visitSelectClause(SqmSelectClause selectClause) {
-			SqmSelectClause copy = new SqmSelectClause( selectClause.isDistinct() );
+			SqmSelectClause copy = new SqmSelectClause( selectClause.isDistinct(), selectClause.nodeBuilder() );
 			for ( SqmSelection selection : selectClause.getSelections() ) {
 				copy.addSelection(
 						new SqmSelection(
 								(SqmExpression) selection.getSelectableNode().accept( this ),
-								selection.getAlias()
+								selection.getAlias(),
+								selectClause.nodeBuilder()
 						)
 				);
 			}
@@ -398,23 +411,33 @@ public class QuerySplitter {
 
 			switch ( instantiationTarget.getNature() ) {
 				case MAP: {
-					copy = SqmDynamicInstantiation.forMapInstantiation( instantiationTarget.getTargetTypeDescriptor() );
+					copy = SqmDynamicInstantiation.forMapInstantiation(
+							instantiationTarget.getTargetTypeDescriptor(),
+							getCreationContext().getNodeBuilder()
+					);
 					break;
 				}
 				case LIST: {
-					copy = SqmDynamicInstantiation.forListInstantiation( instantiationTarget.getTargetTypeDescriptor() );
+					copy = SqmDynamicInstantiation.forListInstantiation(
+							instantiationTarget.getTargetTypeDescriptor(),
+							getCreationContext().getNodeBuilder()
+					);
 					break;
 				}
 				default: {
-					copy = SqmDynamicInstantiation.forClassInstantiation( instantiationTarget.getTargetTypeDescriptor() );
+					copy = SqmDynamicInstantiation.forClassInstantiation(
+							instantiationTarget.getTargetTypeDescriptor(),
+							getCreationContext().getNodeBuilder()
+					);
 				}
 			}
 
-			for ( SqmDynamicInstantiationArgument originalArgument : original.getArguments() ) {
+			for ( SqmDynamicInstantiationArgument originalArgument : ( (SqmDynamicInstantiation<?>) original ).getArguments() ) {
 				copy.addArgument(
 						new SqmDynamicInstantiationArgument(
 								( SqmSelectableNode) originalArgument.getSelectableNode().accept( this ),
-								originalArgument.getAlias()
+								originalArgument.getAlias(),
+								getCreationContext().getNodeBuilder()
 						)
 				);
 			}
@@ -427,51 +450,62 @@ public class QuerySplitter {
 			if ( whereClause == null ) {
 				return null;
 			}
-			return new SqmWhereClause( (SqmPredicate) whereClause.getPredicate().accept( this ) );
-		}
-
-		@Override
-		public GroupedSqmPredicate visitGroupedPredicate(GroupedSqmPredicate predicate) {
-			return new GroupedSqmPredicate( (SqmPredicate) predicate.accept( this ) );
-		}
-
-		@Override
-		public AndSqmPredicate visitAndPredicate(AndSqmPredicate predicate) {
-			return new AndSqmPredicate(
-					(SqmPredicate) predicate.getLeftHandPredicate().accept( this ),
-					(SqmPredicate) predicate.getRightHandPredicate().accept( this )
+			return new SqmWhereClause(
+					(SqmPredicate) whereClause.getPredicate().accept( this ),
+					getCreationContext().getNodeBuilder()
 			);
 		}
 
 		@Override
-		public OrSqmPredicate visitOrPredicate(OrSqmPredicate predicate) {
-			return new OrSqmPredicate(
+		public SqmGroupedPredicate visitGroupedPredicate(SqmGroupedPredicate predicate) {
+			return new SqmGroupedPredicate(
+					(SqmPredicate) predicate.accept( this ),
+					getCreationContext().getNodeBuilder()
+			);
+		}
+
+		@Override
+		public SqmAndPredicate visitAndPredicate(SqmAndPredicate predicate) {
+			return new SqmAndPredicate(
 					(SqmPredicate) predicate.getLeftHandPredicate().accept( this ),
-					(SqmPredicate) predicate.getRightHandPredicate().accept( this )
+					(SqmPredicate) predicate.getRightHandPredicate().accept( this ),
+					getCreationContext().getNodeBuilder()
+			);
+		}
+
+		@Override
+		public SqmOrPredicate visitOrPredicate(SqmOrPredicate predicate) {
+			return new SqmOrPredicate(
+					(SqmPredicate) predicate.getLeftHandPredicate().accept( this ),
+					(SqmPredicate) predicate.getRightHandPredicate().accept( this ),
+					getCreationContext().getNodeBuilder()
 			);
 		}
 
 		@Override
 		public SqmComparisonPredicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
 			return new SqmComparisonPredicate(
-					(SqmExpression) predicate.getLeftHandExpression().accept( this ), predicate.getOperator(),
-					(SqmExpression) predicate.getRightHandExpression().accept( this )
+					(SqmExpression) predicate.getLeftHandExpression().accept( this ), predicate.getSqmOperator(),
+					(SqmExpression) predicate.getRightHandExpression().accept( this ),
+					getCreationContext().getNodeBuilder()
 			);
 		}
 
 		@Override
-		public EmptinessSqmPredicate visitIsEmptyPredicate(EmptinessSqmPredicate predicate) {
-			return new EmptinessSqmPredicate(
+		public SqmEmptinessPredicate visitIsEmptyPredicate(SqmEmptinessPredicate predicate) {
+			return new SqmEmptinessPredicate(
 					(SqmPath) predicate.getPluralPath().accept( this ),
-					predicate.isNegated()
+					predicate.isNegated(),
+					predicate.nodeBuilder()
 			);
 		}
 
 		@Override
-		public NullnessSqmPredicate visitIsNullPredicate(NullnessSqmPredicate predicate) {
-			return new NullnessSqmPredicate(
+		public SqmNullnessPredicate visitIsNullPredicate(SqmNullnessPredicate predicate) {
+			return new SqmNullnessPredicate(
 					(SqmExpression) predicate.getExpression().accept( this ),
-					predicate.isNegated()
+					predicate.isNegated(),
+					predicate.nodeBuilder()
 			);
 		}
 
@@ -481,48 +515,41 @@ public class QuerySplitter {
 					(SqmExpression) predicate.getExpression().accept( this ),
 					(SqmExpression) predicate.getLowerBound().accept( this ),
 					(SqmExpression) predicate.getUpperBound().accept( this ),
-					predicate.isNegated()
+					predicate.isNegated(),
+					predicate.nodeBuilder()
 			);
 		}
 
 		@Override
-		public LikeSqmPredicate visitLikePredicate(LikeSqmPredicate predicate) {
-			return new LikeSqmPredicate(
+		public SqmLikePredicate visitLikePredicate(SqmLikePredicate predicate) {
+			return new SqmLikePredicate(
 					(SqmExpression) predicate.getMatchExpression().accept( this ),
 					(SqmExpression) predicate.getPattern().accept( this ),
-					(SqmExpression) predicate.getEscapeCharacter().accept( this )
+					(SqmExpression) predicate.getEscapeCharacter().accept( this ),
+					predicate.nodeBuilder()
 			);
 		}
 
 		@Override
-		public MemberOfSqmPredicate visitMemberOfPredicate(MemberOfSqmPredicate predicate) {
+		public SqmMemberOfPredicate visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
 			final SqmPath pathCopy = sqmPathCopyMap.get( predicate.getPluralPath().getNavigablePath() );
-			return new MemberOfSqmPredicate( pathCopy );
+			return new SqmMemberOfPredicate( pathCopy, predicate.nodeBuilder() );
 		}
 
 		@Override
-		public NegatedSqmPredicate visitNegatedPredicate(NegatedSqmPredicate predicate) {
-			return new NegatedSqmPredicate(
-					(SqmPredicate) predicate.getWrappedPredicate().accept( this )
+		public SqmNegatedPredicate visitNegatedPredicate(SqmNegatedPredicate predicate) {
+			return new SqmNegatedPredicate(
+					(SqmPredicate) predicate.getWrappedPredicate().accept( this ),
+					predicate.nodeBuilder()
 			);
-		}
-
-		@Override
-		public SqmInListPredicate visitInListPredicate(SqmInListPredicate predicate) {
-			SqmInListPredicate copy = new SqmInListPredicate(
-					(SqmExpression) predicate.getTestExpression().accept( this )
-			);
-			for ( SqmExpression expression : predicate.getListExpressions() ) {
-				copy.addExpression( (SqmExpression) expression.accept( this ) );
-			}
-			return copy;
 		}
 
 		@Override
 		public SqmInSubQueryPredicate visitInSubQueryPredicate(SqmInSubQueryPredicate predicate) {
 			return new SqmInSubQueryPredicate(
 					(SqmExpression) predicate.getTestExpression().accept( this ),
-					visitSubQueryExpression( predicate.getSubQueryExpression() )
+					visitSubQueryExpression( predicate.getSubQueryExpression() ),
+					predicate.nodeBuilder()
 			);
 		}
 
@@ -544,7 +571,8 @@ public class QuerySplitter {
 			return new SqmSortSpecification(
 					(SqmExpression) sortSpecification.getSortExpression().accept( this ),
 					sortSpecification.getCollation(),
-					sortSpecification.getSortOrder()
+					sortSpecification.getSortOrder(),
+					sortSpecification.getNullPrecedence()
 			);
 		}
 
@@ -552,17 +580,25 @@ public class QuerySplitter {
 
 		@Override
 		public SqmPositionalParameter visitPositionalParameterExpression(SqmPositionalParameter expression) {
-			return new SqmPositionalParameter( expression.getPosition(), expression.allowMultiValuedBinding() );
+			return new SqmPositionalParameter(
+					expression.getPosition(),
+					expression.allowMultiValuedBinding(),
+					expression.nodeBuilder()
+			);
 		}
 
 		@Override
 		public SqmNamedParameter visitNamedParameterExpression(SqmNamedParameter expression) {
-			return new SqmNamedParameter( expression.getName(), expression.allowMultiValuedBinding() );
+			return new SqmNamedParameter(
+					expression.getName(),
+					expression.allowMultiValuedBinding(),
+					expression.nodeBuilder()
+			);
 		}
 
 		@Override
 		public SqmLiteralEntityType visitEntityTypeLiteralExpression(SqmLiteralEntityType expression) {
-			return new SqmLiteralEntityType( expression.getExpressableType() );
+			return new SqmLiteralEntityType( expression.getExpressableType(), expression.nodeBuilder() );
 		}
 
 		@Override
@@ -576,13 +612,14 @@ public class QuerySplitter {
 		@Override
 		public SqmGenericFunction visitGenericFunction(SqmGenericFunction expression) {
 			List<SqmExpression> argumentsCopy = new ArrayList<>();
-			for ( SqmExpression argument : expression.getArguments() ) {
+			for ( SqmExpression argument : ( (SqmGenericFunction<?>) expression ).getArguments() ) {
 				argumentsCopy.add( (SqmExpression) argument.accept( this ) );
 			}
 			return new SqmGenericFunction(
 					expression.getFunctionName(),
 					expression.getExpressableType(),
-					argumentsCopy
+					argumentsCopy,
+					expression.nodeBuilder()
 			);
 		}
 
@@ -599,7 +636,8 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmAvgFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType()
+							expression.getExpressableType(),
+							expression.nodeBuilder()
 					),
 					expression.isDistinct()
 			);
@@ -617,7 +655,7 @@ public class QuerySplitter {
 		@Override
 		public SqmCountStarFunction visitCountStarFunction(SqmCountStarFunction expression) {
 			return handleDistinct(
-					new SqmCountStarFunction( expression.getExpressableType() ),
+					new SqmCountStarFunction( expression.getExpressableType(), expression.nodeBuilder() ),
 					expression.isDistinct()
 			);
 
@@ -628,7 +666,8 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmCountFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType()
+							expression.getExpressableType(),
+							expression.nodeBuilder()
 					),
 					expression.isDistinct()
 			);
@@ -639,7 +678,8 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmMaxFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType()
+							expression.getExpressableType(),
+							expression.nodeBuilder()
 					),
 					expression.isDistinct()
 			);
@@ -650,7 +690,8 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmMinFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType()
+							expression.getExpressableType(),
+							expression.nodeBuilder()
 					),
 					expression.isDistinct()
 			);
@@ -661,7 +702,8 @@ public class QuerySplitter {
 			return handleDistinct(
 					new SqmSumFunction(
 							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType()
+							expression.getExpressableType(),
+							expression.nodeBuilder()
 					),
 					expression.isDistinct()
 			);
@@ -669,27 +711,34 @@ public class QuerySplitter {
 
 		@Override
 		public SqmLiteral visitLiteral(SqmLiteral literal) {
-			return new SqmLiteral( literal.getLiteralValue(), literal.getExpressableType() );
+			return new SqmLiteral(
+					literal.getLiteralValue(),
+					literal.getExpressableType(),
+					literal.nodeBuilder()
+			);
 		}
 
 		@Override
 		public SqmConcat visitConcatExpression(SqmConcat expression) {
 			return new SqmConcat(
 					(SqmExpression) expression.getLeftHandOperand().accept( this ),
-					(SqmExpression) expression.getRightHandOperand().accept( this )
+					(SqmExpression) expression.getRightHandOperand().accept( this ),
+					expression.nodeBuilder()
 			);
 		}
 
 		@Override
 		public SqmConcatFunction visitConcatFunction(SqmConcatFunction expression) {
-			final List<SqmExpression> arguments = new ArrayList<>();
-			for ( SqmExpression argument : expression.getExpressions() ) {
+			final List<SqmExpression<?>> arguments = new ArrayList<>();
+			// generics ftw!
+			for ( SqmExpression argument : ( (SqmConcatFunction<?>) expression ).getExpressions() ) {
 				arguments.add( (SqmExpression) argument.accept( this ) );
 			}
 
 			return new SqmConcatFunction(
 					(BasicValuedExpressableType) expression.getExpressableType(),
-					arguments
+					arguments,
+					expression.nodeBuilder()
 			);
 		}
 
@@ -698,7 +747,8 @@ public class QuerySplitter {
 			return new SqmBinaryArithmetic(
 					expression.getOperator(), (SqmExpression) expression.getLeftHandOperand().accept( this ),
 					(SqmExpression) expression.getRightHandOperand().accept( this ),
-					expression.getExpressableType()
+					expression.getExpressableType(),
+					expression.nodeBuilder()
 			);
 		}
 
@@ -707,9 +757,10 @@ public class QuerySplitter {
 			// its not supported for a SubQuery to define a dynamic instantiation, so
 			//		any "selectable node" will only ever be an SqmExpression
 			return new SqmSubQuery(
+					// todo (6.0) : current?  or previous at this point?
+					getProcessingStateStack().getCurrent().getProcessingQuery(),
 					visitQuerySpec( expression.getQuerySpec() ),
-					// assume already validated
-					( (SqmExpression) expression.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode() ).getExpressableType()
+					expression.nodeBuilder()
 			);
 		}
 

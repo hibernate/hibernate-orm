@@ -120,7 +120,7 @@ public class JpaStandardSqmInferenceTests extends SessionFactoryBasedFunctionalT
 		checkParameterTypes( sqmStatement, expecteds );
 	}
 
-	private void checkParameterTypes(SqmStatement sqmStatement, Class<?>[] expectedParameterTypes) {
+	private void checkParameterTypes(SqmStatement<?> sqmStatement, Class<?>[] expectedParameterTypes) {
 		assertEquals( expectedParameterTypes.length, sqmStatement.getSqmParameters().size() );
 
 		int count = 0;

@@ -9,31 +9,39 @@ package org.hibernate.query.sqm.tree.expression.function;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmNullifFunction extends AbstractSqmFunction {
+public class SqmNullifFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "nullif";
 
-	private final SqmExpression first;
-	private final SqmExpression second;
+	private final SqmExpression<T> first;
+	private final SqmExpression<T> second;
 
 	public SqmNullifFunction(
-			SqmExpression first,
-			SqmExpression second) {
-		super( (AllowableFunctionReturnType) (first == null ? second.getExpressableType() : first.getExpressableType()) );
-		this.first = first;
-		this.second = second;
+			SqmExpression<T> first,
+			SqmExpression<T> second,
+			NodeBuilder nodeBuilder) {
+		this(
+				first,
+				second,
+				(AllowableFunctionReturnType<T>) coalesce( first.getExpressableType(), second.getExpressableType() ),
+				nodeBuilder
+		);
 	}
 
 	public SqmNullifFunction(
-			SqmExpression first,
-			SqmExpression second,
-			AllowableFunctionReturnType resultType) {
-		super( resultType );
+			SqmExpression<T> first,
+			SqmExpression<T> second,
+			AllowableFunctionReturnType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.first = first;
 		this.second = second;
 	}
@@ -47,7 +55,7 @@ public class SqmNullifFunction extends AbstractSqmFunction {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitNullifFunction( this );
 	}
 

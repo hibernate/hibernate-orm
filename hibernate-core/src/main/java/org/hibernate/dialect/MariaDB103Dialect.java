@@ -7,7 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -24,10 +24,10 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
 	}
 
 	@Override

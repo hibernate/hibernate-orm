@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -15,7 +16,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface SqmDynamicInstantiationTarget<T> {
+public interface SqmDynamicInstantiationTarget<T> extends ExpressableType<T> {
 
 	/**
 	 * Retrieves the enum describing the nature of this target.

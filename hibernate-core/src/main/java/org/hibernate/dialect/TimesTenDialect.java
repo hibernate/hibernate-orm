@@ -23,13 +23,13 @@ import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTimesTenDatabaseImpl;
@@ -83,19 +83,19 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerNamed( "lower" );
-		registry.registerNamed( "upper" );
-		registry.registerNamed( "rtrim" );
-		registry.registerNamed( "concat", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "mod" );
-		registry.registerNamed( "to_char", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "to_date", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNoArgs( "getdate", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerNamed( "nvl" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "lower" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "upper" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "concat", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "mod" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "to_char", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "to_date", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "getdate", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl" );
 	}
 
 	@Override

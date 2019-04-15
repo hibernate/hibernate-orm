@@ -7,21 +7,25 @@
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmAggregateFunction
-		extends AbstractSqmFunction
-		implements SqmAggregateFunction {
+public abstract class AbstractSqmAggregateFunction<T>
+		extends AbstractSqmFunction<T>
+		implements SqmAggregateFunction<T> {
 	private final SqmExpression argument;
 
 	private boolean distinct;
 
-	protected AbstractSqmAggregateFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {
-		super( resultType );
+	protected AbstractSqmAggregateFunction(
+			SqmExpression<?> argument,
+			AllowableFunctionReturnType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.argument = argument;
 	}
 
@@ -31,8 +35,8 @@ public abstract class AbstractSqmAggregateFunction
 	}
 
 	@Override
-	public BasicValuedExpressableType getExpressableType() {
-		return (BasicValuedExpressableType) super.getExpressableType();
+	public BasicValuedExpressableType<T> getExpressableType() {
+		return (BasicValuedExpressableType<T>) super.getExpressableType();
 	}
 
 	@Override
@@ -48,5 +52,10 @@ public abstract class AbstractSqmAggregateFunction
 	@Override
 	public boolean isDistinct() {
 		return distinct;
+	}
+
+	@Override
+	public boolean isAggregator() {
+		return true;
 	}
 }

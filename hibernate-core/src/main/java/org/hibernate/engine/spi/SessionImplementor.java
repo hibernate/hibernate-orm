@@ -20,8 +20,10 @@ import org.hibernate.Session;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.Type;
@@ -144,6 +146,9 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 
 	@Override
 	QueryImplementor createQuery(CriteriaDelete deleteQuery);
+
+	@Override
+	NodeBuilder getCriteriaBuilder();
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe; Gail?

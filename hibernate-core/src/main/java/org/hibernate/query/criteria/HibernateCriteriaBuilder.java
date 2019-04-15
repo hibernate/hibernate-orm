@@ -9,8 +9,8 @@ package org.hibernate.query.criteria;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
-import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,8 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SortOrder;
-import org.hibernate.query.criteria.spi.ExpressionImplementor;
+import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.JpaTuple;
 
 /**
  * Hibernate extensions to the JPA CriteriaBuilder.
@@ -41,15 +42,6 @@ import org.hibernate.query.criteria.spi.ExpressionImplementor;
  */
 
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
-
-	// todo (6.0) consider:
-	//		* operator corresponding to the new "matches" HQL operator
-	//		* match for our expanded dynamic-instantiation support - actually this may already be supported,
-	// 				outside of checks done in #checkMultiSelect
-	//		* ?generic support for SQL restrictions? - ala Restrictions.sqlRestriction
-	//		* port query-by-example support - org.hibernate.criterion.Example
-
-	SessionFactory getSessionFactory();
 
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
 
@@ -76,6 +68,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<T> JpaCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity);
+
+	<T> JpaCriteriaInsertSelect<T> createCriteriaInsertSelect(Class<T> targetEntity);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -232,9 +226,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<T> JpaExpression<T> literal(T value);
 
-	<T> List<? extends ExpressionImplementor<T>> literals(T[] values);
+	<T> List<? extends JpaExpression<T>> literals(T[] values);
 
-	<T> List<? extends ExpressionImplementor<T>> literals(List<T> values);
+	<T> List<? extends JpaExpression<T>> literals(List<T> values);
 
 	@Override
 	<T> JpaExpression<T> nullLiteral(Class<T> resultClass);
@@ -319,8 +313,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	JpaFunction<Timestamp> currentTimestamp();
 
-	@Override
-	JpaFunction<Time> currentTime();
+	JpaFunction<Instant> currentInstant();
 
 	@Override
 	<T> JpaFunction<T> function(String name, Class<T> type, Expression<?>[] args);
@@ -371,6 +364,65 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<R> JpaSearchedCase<R> selectCase();
 
+	/**
+	 * Create a tuple, as in a composite value, usable in any
+	 * part of the query.
+	 *
+	 * @apiNote This is different from the purely JPA form
+	 * {@link CriteriaBuilder#tuple} which is intended only for use as
+	 * the selection in a root query.
+	 *
+	 * @param tupleType The Java type
+	 * @param expressions The individual expressions making up the tuple
+	 */
+	<R> JpaCompoundSelection<R> tuple(
+			Class<R> tupleType,
+			JpaExpression<?>... expressions);
+
+	/**
+	 * Create a tuple, as in a composite value, usable in any
+	 * part of the query.
+	 *
+	 * @apiNote This is different from the purely JPA form
+	 * {@link CriteriaBuilder#tuple} which is intended only for use as
+	 * the selection in a root query.
+	 *
+	 * @param tupleType The Java type
+	 * @param expressions The individual expressions making up the tuple
+	 */
+	<R> JpaCompoundSelection<R> tuple(
+			Class<R> tupleType,
+			List<JpaExpression<?>> expressions);
+
+	/**
+	 * Create a tuple, as in a composite value, usable in any
+	 * part of the query.
+	 *
+	 * @apiNote This is different from the purely JPA form
+	 * {@link CriteriaBuilder#tuple} which is intended only for use as
+	 * the selection in a root query.
+	 *
+	 * @param tupleType The metamodel DomainType descriptor to apply to the tuple
+	 * @param expressions The individual expressions making up the tuple
+	 */
+	<R> JpaCompoundSelection<R> tuple(
+			DomainType<R> tupleType,
+			JpaExpression<?>... expressions);
+
+	/**
+	 * Create a tuple, as in a composite value, usable in any
+	 * part of the query.
+	 *
+	 * @apiNote This is different from the purely JPA form
+	 * {@link CriteriaBuilder#tuple} which is intended only for use as
+	 * the selection in a root query.
+	 *
+	 * @param tupleType The metamodel DomainType descriptor to apply to the tuple
+	 * @param expressions The individual expressions making up the tuple
+	 */
+	<R> JpaCompoundSelection<R> tuple(
+			DomainType<R> tupleType,
+			List<JpaExpression<?>> expressions);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

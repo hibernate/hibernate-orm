@@ -10,22 +10,32 @@ import org.hibernate.query.hql.internal.SqmProcessingIndex;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmQuery;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmCreationProcessingStateImpl implements SqmCreationProcessingState {
 	private final SqmCreationState creationState;
+	private final SqmQuery<?> processingQuery;
 
 	private final SqmProcessingIndex processingIndex = new SqmProcessingIndex( this );
 
-	public SqmCreationProcessingStateImpl(SqmCreationState creationState) {
+	public SqmCreationProcessingStateImpl(
+			SqmQuery<?> processingQuery,
+			SqmCreationState creationState) {
+		this.processingQuery = processingQuery;
 		this.creationState = creationState;
 	}
 
 	@Override
 	public SqmCreationProcessingState getParentProcessingState() {
 		return null;
+	}
+
+	@Override
+	public SqmQuery<?> getProcessingQuery() {
+		return processingQuery;
 	}
 
 	protected SqmProcessingIndex getProcessingIndex() {

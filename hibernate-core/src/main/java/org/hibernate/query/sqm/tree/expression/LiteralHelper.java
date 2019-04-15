@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.type.descriptor.java.internal.JdbcDateJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.JdbcTimeJavaDescriptor;
@@ -23,9 +24,6 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * @author Steve Ebersole
  */
 public class LiteralHelper {
-	public static final SqmLiteral<Integer> INTEGER_ZERO = new SqmLiteral<>( 0, StandardSpiBasicTypes.INTEGER );
-	public static final SqmLiteral<Integer> INTEGER_ONE = new SqmLiteral<>( 1, StandardSpiBasicTypes.INTEGER );
-
 	public static SqmLiteral<Timestamp> timestampLiteralFrom(String literalText, SqmCreationState creationState) {
 		final Timestamp literal = Timestamp.valueOf(
 				LocalDateTime.from( JdbcTimestampJavaDescriptor.FORMATTER.parse( literalText ) )
@@ -33,7 +31,24 @@ public class LiteralHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getDomainModel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Timestamp.class )
+				creationState.getCreationContext().getDomainModel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Timestamp.class ),
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+		);
+	}
+
+	public static SqmLiteral<Integer> integerLiteral(String literalText, SqmCreationState creationState) {
+		return integerLiteral( literalText, creationState.getCreationContext().getQueryEngine() );
+	}
+
+	public static SqmLiteral<Integer> integerLiteral(String literalText, QueryEngine queryEngine) {
+		return integerLiteral( Integer.parseInt( literalText ), queryEngine );
+	}
+
+	public static SqmLiteral<Integer> integerLiteral(int value, QueryEngine queryEngine) {
+		return new SqmLiteral<>(
+				value,
+				StandardSpiBasicTypes.INTEGER,
+				queryEngine.getCriteriaBuilder()
 		);
 	}
 
@@ -43,7 +58,8 @@ public class LiteralHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getDomainModel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Date.class )
+				creationState.getCreationContext().getDomainModel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Date.class ),
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 
@@ -53,7 +69,8 @@ public class LiteralHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getDomainModel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Time.class )
+				creationState.getCreationContext().getDomainModel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Time.class ),
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 }

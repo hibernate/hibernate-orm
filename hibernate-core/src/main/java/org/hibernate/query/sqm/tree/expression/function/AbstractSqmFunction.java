@@ -7,24 +7,30 @@
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmFunction extends AbstractSqmExpression implements SqmFunction {
-	public AbstractSqmFunction(AllowableFunctionReturnType resultType) {
-		super( resultType );
+public abstract class AbstractSqmFunction<T> extends AbstractSqmExpression<T> implements SqmFunction<T> {
+	public AbstractSqmFunction(AllowableFunctionReturnType<T> resultType, NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 	}
 
 	@Override
-	public AllowableFunctionReturnType<?> getExpressableType() {
-		return (AllowableFunctionReturnType<?>) super.getExpressableType();
+	public AllowableFunctionReturnType<T> getExpressableType() {
+		return (AllowableFunctionReturnType<T>) super.getExpressableType();
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getExpressableType().getJavaTypeDescriptor();
+	}
+
+	@Override
+	public boolean isAggregator() {
+		return false;
 	}
 }

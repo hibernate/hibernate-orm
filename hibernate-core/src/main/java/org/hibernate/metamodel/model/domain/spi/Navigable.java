@@ -98,7 +98,7 @@ public interface Navigable<T> extends DomainTypeDescriptor<T> {
 		return true;
 	}
 
-	SqmNavigableReference createSqmExpression(SqmPath lhs, SqmCreationState creationState);
+	SqmNavigableReference<?> createSqmExpression(SqmPath<?> lhs, SqmCreationState creationState);
 
 	/**
 	 * Create a QueryResult for a specific reference to this Navigable.

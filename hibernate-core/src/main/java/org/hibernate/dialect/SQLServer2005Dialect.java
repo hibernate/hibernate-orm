@@ -18,7 +18,7 @@ import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -56,10 +56,10 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.noArgsBuilder( "row_number" )
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "row_number" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();

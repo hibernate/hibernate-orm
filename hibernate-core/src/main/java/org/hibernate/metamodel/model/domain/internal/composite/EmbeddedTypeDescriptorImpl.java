@@ -252,7 +252,8 @@ public class EmbeddedTypeDescriptorImpl<J>
 				np -> new SqmEmbeddedValuedSimplePath(
 						navigablePath,
 						this,
-						lhs
+						lhs,
+						creationState.getCreationContext().getNodeBuilder()
 				)
 		);
 	}

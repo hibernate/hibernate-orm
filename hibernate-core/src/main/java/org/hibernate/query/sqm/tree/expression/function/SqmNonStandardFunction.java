@@ -9,5 +9,5 @@ package org.hibernate.query.sqm.tree.expression.function;
 /**
  * @author Steve Ebersole
  */
-public interface SqmNonStandardFunction extends SqmFunction {
+public interface SqmNonStandardFunction<T> extends SqmFunction<T> {
 }

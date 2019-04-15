@@ -17,7 +17,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.StoredProcedureQuery;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
@@ -55,6 +54,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
@@ -428,7 +428,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public CriteriaBuilder getCriteriaBuilder() {
+	public NodeBuilder getCriteriaBuilder() {
 		return delegate.getCriteriaBuilder();
 	}
 

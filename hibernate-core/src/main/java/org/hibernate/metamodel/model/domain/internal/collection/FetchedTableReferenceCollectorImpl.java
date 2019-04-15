@@ -110,7 +110,7 @@ public class FetchedTableReferenceCollectorImpl extends AbstractTableReferenceCo
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
 
 		final ForeignKey joinForeignKey = collectionDescriptor.getCollectionKeyDescriptor().getJoinForeignKey();
-		final ForeignKeyDirection keyDirection = collectionDescriptor.getForeignKeyDirection();
+		final ForeignKeyDirection keyDirection = collectionDescriptor.getDescribedAttribute().getForeignKeyDirection();
 
 		final List<ForeignKey.ColumnMappings.ColumnMapping> columnMappings = joinForeignKey.getColumnMappings().getColumnMappings();
 

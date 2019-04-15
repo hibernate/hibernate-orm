@@ -10,14 +10,19 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.internal.ParameterCollector;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmStatement implements SqmStatement, ParameterCollector {
-	private Set<SqmParameter> parameters;
+public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements SqmStatement<T>, ParameterCollector {
+	public AbstractSqmStatement(NodeBuilder builder) {
+		super( builder );
+	}
+
+	private Set<SqmParameter<?>> parameters;
 
 	@Override
 	public void addParameter(SqmParameter parameter) {
@@ -29,7 +34,7 @@ public abstract class AbstractSqmStatement implements SqmStatement, ParameterCol
 	}
 
 	@Override
-	public Set<SqmParameter> getSqmParameters() {
+	public Set<SqmParameter<?>> getSqmParameters() {
 		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
 	}
 }

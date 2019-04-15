@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -19,25 +20,30 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqmParameterizedEntityType implements SqmExpression, DomainResultProducer {
+public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> implements DomainResultProducer {
 	private final SqmParameter parameterExpression;
 
-	public SqmParameterizedEntityType(SqmParameter parameterExpression) {
+	public SqmParameterizedEntityType(SqmParameter<T> parameterExpression, NodeBuilder nodeBuilder) {
+		super( parameterExpression.getAnticipatedType(), nodeBuilder );
 		this.parameterExpression = parameterExpression;
 	}
 
 	@Override
-	public EntityValuedExpressableType<?> getExpressableType() {
-		return (EntityValuedExpressableType) parameterExpression.getExpressableType();
+	public EntityValuedExpressableType<T> getExpressableType() {
+		//noinspection unchecked
+		return (EntityValuedExpressableType<T>) parameterExpression.getExpressableType();
 	}
 
 	@Override
-	public void applyInferableType(ExpressableType<?> type) {
+	public void internalApplyInferableType(ExpressableType<?> type) {
+		setExpressableType( type );
 
+		//noinspection unchecked
+		parameterExpression.applyInferableType( type );
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitParameterizedEntityTypeExpression( this );
 	}
 
@@ -55,7 +61,7 @@ public class SqmParameterizedEntityType implements SqmExpression, DomainResultPr
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getExpressableType().getJavaTypeDescriptor();
 	}
 }

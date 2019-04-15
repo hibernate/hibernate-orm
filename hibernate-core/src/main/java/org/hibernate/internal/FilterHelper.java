@@ -58,8 +58,8 @@ public class FilterHelper {
 							Template.renderWhereStringTemplate(
 							filter.getCondition(),
 							FilterImpl.MARKER,
-							factory.getDialect(),
-							factory.getSqmFunctionRegistry()
+							factory.getJdbcServices().getJdbcEnvironment().getDialect(),
+							factory.getQueryEngine().getSqmFunctionRegistry()
 					)
 				);
 				filterAutoAliasFlags[filterCount] = true;

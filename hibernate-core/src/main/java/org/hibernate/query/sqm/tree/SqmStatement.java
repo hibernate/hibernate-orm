@@ -8,13 +8,16 @@ package org.hibernate.query.sqm.tree;
 
 import java.util.Set;
 
+import org.hibernate.query.criteria.JpaQueryableCriteria;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 /**
- * The basic SQM statement contract.
+ * The basic SQM statement contract for top-level statements
  *
  * @author Steve Ebersole
  */
-public interface SqmStatement extends SqmNode {
-	Set<SqmParameter> getSqmParameters();
+public interface SqmStatement<T> extends SqmQuery<T>, JpaQueryableCriteria<T>, SqmVisitableNode {
+	SqmQuerySource getQuerySource();
+	Set<SqmParameter<?>> getSqmParameters();
 }

@@ -24,34 +24,39 @@ public enum SqmJoinType {
 	/**
 	 * Represents an inner join.
 	 */
-	INNER( "inner", JoinType.INNER ),
+	INNER( "inner", JoinType.INNER, javax.persistence.criteria.JoinType.INNER ),
 
 	/**
 	 * Represents a left outer join.
 	 */
-	LEFT( "left outer", JoinType.LEFT ),
+	LEFT( "left outer", JoinType.LEFT, javax.persistence.criteria.JoinType.LEFT ),
 
 	/**
 	 * Represents a right outer join.
 	 */
-	RIGHT( "right outer", JoinType.RIGHT ),
+	RIGHT( "right outer", JoinType.RIGHT, javax.persistence.criteria.JoinType.RIGHT ),
 
 	/**
 	 * Represents a cross join (aka a cartesian product).
 	 */
-	CROSS( "cross", JoinType.CROSS ),
+	CROSS( "cross", JoinType.CROSS, null ),
 
 	/**
 	 * Represents a full join.
 	 */
-	FULL( "full", JoinType.FULL );
+	FULL( "full", JoinType.FULL, null );
 
 	private final String text;
 	private final JoinType correspondingSqlJoinType;
+	private final javax.persistence.criteria.JoinType correspondingJpaJoinType;
 
-	SqmJoinType(String text, JoinType correspondingSqlJoinType) {
+	SqmJoinType(
+			String text,
+			JoinType correspondingSqlJoinType,
+			javax.persistence.criteria.JoinType correspondingJpaJoinType) {
 		this.text = text;
 		this.correspondingSqlJoinType = correspondingSqlJoinType;
+		this.correspondingJpaJoinType = correspondingJpaJoinType;
 	}
 
 	@Override
@@ -65,5 +70,28 @@ public enum SqmJoinType {
 
 	public JoinType getCorrespondingSqlJoinType() {
 		return correspondingSqlJoinType;
+	}
+
+	public javax.persistence.criteria.JoinType getCorrespondingJpaJoinType() {
+		return correspondingJpaJoinType;
+	}
+
+	@SuppressWarnings("DuplicateBranchesInSwitch")
+	public static SqmJoinType from(javax.persistence.criteria.JoinType jpaJoinType) {
+		switch ( jpaJoinType ) {
+			case INNER: {
+				return INNER;
+			}
+			case LEFT: {
+				return LEFT;
+			}
+			case RIGHT: {
+				return RIGHT;
+			}
+			default: {
+				// generally speaking, the default for JPA JoinType is INNER
+				return INNER;
+			}
+		}
 	}
 }

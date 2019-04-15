@@ -100,11 +100,10 @@ import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -162,8 +161,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private final transient JdbcServices jdbcServices;
-
-	private final transient SqmFunctionRegistry sqmFunctionRegistry;
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
@@ -295,15 +292,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			prepareEventListeners( metamodel );
 
-			this.sqmFunctionRegistry = new SqmFunctionRegistry();
-			jdbcServices.getDialect().initializeFunctionRegistry( sqmFunctionRegistry );
-			sessionFactoryOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
-
-			this.queryEngine = new QueryEngine(
+			this.queryEngine = QueryEngine.from(
 					this,
-					metadata.buildNamedQueryRepository( this ),
-					sqmFunctionRegistry
+					metadata.buildNamedQueryRepository( this )
 			);
+			// `this.queryEngine` must be set prior to calling `#prepare`
+			this.queryEngine.prepare( this );
 
 			final JdbcConnectionAccess jdbcConnectionAccess = buildLocalConnectionAccess();
 
@@ -630,7 +624,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public HibernateCriteriaBuilder getCriteriaBuilder() {
+	public NodeBuilder getCriteriaBuilder() {
 		validateNotClosed();
 		return queryEngine.getCriteriaBuilder();
 	}
@@ -937,10 +931,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
-	}
-
-	public SqmFunctionRegistry getSqmFunctionRegistry() {
-		return sqmFunctionRegistry;
 	}
 
 	public FetchProfile getFetchProfile(String name) {

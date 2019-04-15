@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.hibernate.query.criteria.JpaCriteriaNode;
+import org.hibernate.query.sqm.NodeBuilder;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -13,11 +16,13 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public interface SqmNode {
+public interface SqmNode extends JpaCriteriaNode {
 	Logger log = Logger.getLogger( SqmNode.class );
 
 	default String asLoggableText() {
-		log.warnf( "#asLoggableText not defined for %s - using #toString", getClass().getName() );
+		log.debugf( "#asLoggableText not defined for %s - using #toString", getClass().getName() );
 		return toString();
 	}
+
+	NodeBuilder nodeBuilder();
 }

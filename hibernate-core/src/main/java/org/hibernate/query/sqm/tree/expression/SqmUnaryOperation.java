@@ -13,16 +13,21 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 /**
  * @author Steve Ebersole
  */
-public class SqmUnaryOperation extends AbstractSqmExpression {
+public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> {
 	private final UnaryArithmeticOperator operation;
 	private final SqmExpression operand;
 
-	public SqmUnaryOperation(UnaryArithmeticOperator operation, SqmExpression operand) {
-		this( operation, operand, (BasicValuedExpressableType) operand.getExpressableType() );
+	public SqmUnaryOperation(
+			UnaryArithmeticOperator operation,
+			SqmExpression<T> operand) {
+		this( operation, operand, (BasicValuedExpressableType<T>) operand.getExpressableType() );
 	}
 
-	public SqmUnaryOperation(UnaryArithmeticOperator operation, SqmExpression operand, BasicValuedExpressableType inherentType) {
-		super( inherentType );
+	public SqmUnaryOperation(
+			UnaryArithmeticOperator operation,
+			SqmExpression<T> operand,
+			BasicValuedExpressableType<T> inherentType) {
+		super( inherentType, operand.nodeBuilder() );
 		this.operation = operation;
 		this.operand = operand;
 	}
@@ -36,12 +41,12 @@ public class SqmUnaryOperation extends AbstractSqmExpression {
 	}
 
 	@Override
-	public BasicValuedExpressableType<?> getExpressableType() {
-		return (BasicValuedExpressableType) super.getExpressableType();
+	public BasicValuedExpressableType<T> getExpressableType() {
+		return (BasicValuedExpressableType<T>) super.getExpressableType();
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitUnaryOperationExpression( this );
 	}
 

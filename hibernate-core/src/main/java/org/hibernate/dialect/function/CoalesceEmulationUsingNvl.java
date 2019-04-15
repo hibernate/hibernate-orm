@@ -9,6 +9,8 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -34,26 +36,29 @@ public class CoalesceEmulationUsingNvl
 	@Override
 	protected SqmExpression generateSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		SqmExpression nvl = nvl(
 				arguments.get( arguments.size() - 1 ),
-				arguments.get( arguments.size() - 2 )
+				arguments.get( arguments.size() - 2 ),
+				queryEngine.getCriteriaBuilder()
 		);
 
 		for ( int i = arguments.size() - 3; i >= 0 ; i-- ) {
-			nvl = nvl( arguments.get( i ), nvl );
+			nvl = nvl( arguments.get( i ), nvl, queryEngine.getCriteriaBuilder() );
 		}
 
 		return nvl;
 	}
 
-	protected SqmExpression nvl(SqmExpression arg1, SqmExpression arg2) {
+	protected SqmExpression nvl(SqmExpression arg1, SqmExpression arg2, NodeBuilder nodeBuilder) {
 		return new NvlFunctionTemplate.SqmNvlFunction(
 				arg1,
 				arg2,
 				(AllowableFunctionReturnType) (arg1.getExpressableType() == null
 						? arg2.getExpressableType()
-						: arg1.getExpressableType())
+						: arg1.getExpressableType()),
+				nodeBuilder
 		);
 	}
 }

@@ -6,29 +6,44 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmSortSpecification {
-	private final SqmExpression sortExpression;
-	private final String collation;
-	private final SortOrder sortOrder;
+public class SqmSortSpecification implements JpaOrder {
+	private SqmExpression sortExpression;
+	private String collation;
+	private SortOrder sortOrder;
+	private final NullPrecedence nullPrecedence;
 
-	public SqmSortSpecification(SqmExpression sortExpression, String collation, SortOrder sortOrder) {
+	private NullPrecedence precedence;
+
+	public SqmSortSpecification(
+			SqmExpression sortExpression,
+			String collation,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
 		this.sortExpression = sortExpression;
 		this.collation = collation;
 		this.sortOrder = sortOrder;
+		this.nullPrecedence = nullPrecedence;
 	}
 
 	public SqmSortSpecification(SqmExpression sortExpression) {
-		this( sortExpression, null, null );
+		this( sortExpression, null, SortOrder.ASCENDING, null );
 	}
 
 	public SqmSortSpecification(SqmExpression sortExpression, SortOrder sortOrder) {
-		this( sortExpression, null, sortOrder );
+		this( sortExpression, null, sortOrder, null );
+	}
+
+	public SqmSortSpecification(SqmExpression sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+		this( sortExpression, null, sortOrder, nullPrecedence );
 	}
 
 	public SqmExpression getSortExpression() {
@@ -41,5 +56,36 @@ public class SqmSortSpecification {
 
 	public SortOrder getSortOrder() {
 		return sortOrder;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA
+
+	@Override
+	public JpaOrder nullPrecedence(NullPrecedence precedence) {
+		this.precedence = precedence;
+		return this;
+	}
+
+	@Override
+	public NullPrecedence getNullPrecedence() {
+		return precedence;
+	}
+
+	@Override
+	public JpaOrder reverse() {
+		this.sortOrder = this.sortOrder == null ? SortOrder.DESCENDING : sortOrder.reverse();
+		return this;
+	}
+
+	@Override
+	public JpaExpression<?> getExpression() {
+		return getSortExpression();
+	}
+
+	@Override
+	public boolean isAscending() {
+		return sortOrder == SortOrder.ASCENDING;
 	}
 }

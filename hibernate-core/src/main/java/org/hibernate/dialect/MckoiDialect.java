@@ -11,7 +11,7 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -57,20 +57,20 @@ public class MckoiDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerNamed( "upper" );
-		registry.registerNamed( "lower" );
-		registry.registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
-		registry.registerNamed( "abs" );
-		registry.registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "round", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "mod", StandardSpiBasicTypes.INTEGER );
-		registry.registerNamed( "least" );
-		registry.registerNamed( "greatest" );
-		registry.registerNamed( "user", StandardSpiBasicTypes.STRING );
-		registry.registerNamed( "concat", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "upper" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "lower" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "abs" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "round", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "mod", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "user", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "concat", StandardSpiBasicTypes.STRING );
 	}
 
 	@Override

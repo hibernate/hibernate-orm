@@ -10,7 +10,7 @@ import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -51,9 +51,9 @@ public class FirebirdDialect extends InterbaseDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
-		registry.registerNamed( "replace", StandardSpiBasicTypes.STRING );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "replace", StandardSpiBasicTypes.STRING );
 	}
 	
 	@Override

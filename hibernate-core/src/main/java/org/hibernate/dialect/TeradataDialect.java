@@ -10,11 +10,11 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -76,31 +76,31 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		registry.registerPattern( "year", "extract(year from ?1)", StandardSpiBasicTypes.INTEGER );
-		registry.registerPattern( "length", "character_length(?1)", StandardSpiBasicTypes.INTEGER );
-		registry.registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
-		registry.registerPattern( "substring", "substring(?1 from ?2 for ?3)", StandardSpiBasicTypes.STRING );
-		registry.registerPattern( "locate", "position(?1 in ?2)", StandardSpiBasicTypes.STRING );
-		registry.registerPattern( "mod", "?1 mod ?2", StandardSpiBasicTypes.STRING );
-		registry.registerPattern( "str", "cast(?1 as varchar(255))", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "year", "extract(year from ?1)", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "length", "character_length(?1)", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "substring", "substring(?1 from ?2 for ?3)", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "locate", "position(?1 in ?2)", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "?1 mod ?2", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar(255))", StandardSpiBasicTypes.STRING );
 
 		// bit_length feels a bit broken to me. We have to cast to char in order to
 		// pass when a numeric value is supplied. But of course the answers given will
 		// be wildly different for these two datatypes. 1234.5678 will be 9 bytes as
 		// a char string but will be 8 or 16 bytes as a true numeric.
 		// Jay Nance 2006-09-22
-		registry.registerPattern( "bit_length", "octet_length(cast(?1 as char))*4", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "octet_length(cast(?1 as char))*4", StandardSpiBasicTypes.INTEGER );
 
 		// The preference here would be
 		//   SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp(?1)", false)
 		// but this appears not to work.
 		// Jay Nance 2006-09-22
-		registry.registerPattern( "current_timestamp", "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerPattern( "current_time", "current_time", StandardSpiBasicTypes.TIMESTAMP );
-		registry.registerPattern( "current_date", "current_date", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "current_timestamp", "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "current_time", "current_time", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "current_date", "current_date", StandardSpiBasicTypes.TIMESTAMP );
 	}
 
 	/**

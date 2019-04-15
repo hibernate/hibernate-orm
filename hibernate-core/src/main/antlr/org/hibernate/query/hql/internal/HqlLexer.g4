@@ -131,6 +131,7 @@ COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
 CONCAT				: [cC] [oO] [nN] [cC] [aA] [tT];
 COUNT				: [cC] [oO] [uU] [nN] [tT];
 CURRENT_DATE		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE];
+CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [aA] [nN] [tT];
 CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE];
 CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
 CROSS				: [cC] [rR] [oO] [sS] [sS];

@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.ComparisonOperator;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -15,16 +16,17 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 /**
  * @author Steve Ebersole
  */
-public class SqmComparisonPredicate implements SqmPredicate, NegatableSqmPredicate {
-
-	private final SqmExpression leftHandExpression;
+public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
+	private final SqmExpression<?> leftHandExpression;
 	private ComparisonOperator operator;
-	private final SqmExpression rightHandExpression;
+	private final SqmExpression<?> rightHandExpression;
 
 	public SqmComparisonPredicate(
-			SqmExpression leftHandExpression,
+			SqmExpression<?> leftHandExpression,
 			ComparisonOperator operator,
-			SqmExpression rightHandExpression) {
+			SqmExpression<?> rightHandExpression,
+			NodeBuilder nodeBuilder) {
+		super( nodeBuilder );
 		this.leftHandExpression = leftHandExpression;
 		this.rightHandExpression = rightHandExpression;
 		this.operator = operator;
@@ -38,15 +40,15 @@ public class SqmComparisonPredicate implements SqmPredicate, NegatableSqmPredica
 		rightHandExpression.applyInferableType( expressableType );
 	}
 
-	public SqmExpression getLeftHandExpression() {
+	public SqmExpression<?> getLeftHandExpression() {
 		return leftHandExpression;
 	}
 
-	public SqmExpression getRightHandExpression() {
+	public SqmExpression<?> getRightHandExpression() {
 		return rightHandExpression;
 	}
 
-	public ComparisonOperator getOperator() {
+	public ComparisonOperator getSqmOperator() {
 		return operator;
 	}
 

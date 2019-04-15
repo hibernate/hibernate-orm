@@ -47,7 +47,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		assertThat( statement.getQuerySpec().getFromClause().getRoots().size(), is(1) );
 		final SqmRoot sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
 
-		assertThat( sqmRoot.getJoins().size(), is(1) );
+		assertThat( sqmRoot.getSqmJoins().size(), is( 1) );
 
 		// from-clause paths
 //		assertPropertyPath( space.getRoot(), "com.acme.Something(s)" );
@@ -62,8 +62,8 @@ public class AttributePathTests extends BaseSqmUnitTest {
 	}
 
 	private void assertPropertyPath(SqmExpression expression, String expectedFullPath) {
-		assertThat( expression, instanceOf( SqmNavigableReference.class ) );
-		final SqmNavigableReference domainReferenceBinding = (SqmNavigableReference) expression;
+		assertThat( expression, instanceOf( SqmPath.class ) );
+		final SqmPath domainReferenceBinding = (SqmPath) expression;
 		assertThat( domainReferenceBinding.getNavigablePath().getFullPath(), is( expectedFullPath) );
 	}
 
@@ -74,13 +74,14 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		assertThat( statement.getQuerySpec().getFromClause().getRoots().size(), is(1) );
 		final SqmRoot sqmRoot = statement.getQuerySpec().getFromClause().getRoots().get( 0 );
 
-		assertThat( sqmRoot.getJoins().size(), is(1) );
+		assertThat( sqmRoot.getSqmJoins().size(), is( 1) );
 
 		final SqmSelection selection = statement.getQuerySpec().getSelectClause().getSelections().get( 0 );
-		assertThat( selection.getSelectableNode(), instanceOf( SqmEntityValuedSimplePath.class ) );
+		assertThat( selection.getSelectableNode(), instanceOf( SqmPath.class ) );
+		assertThat( ( (SqmPath) selection.getSelectableNode() ).getReferencedNavigable(), instanceOf( EntityValuedNavigable.class ) );
 
 		final SqmPath selectExpression = (SqmPath) selection.getSelectableNode();
-		selectExpression.as( EntityValuedNavigable.class );
+		selectExpression.sqmAs( EntityValuedNavigable.class );
 
 		final SqmComparisonPredicate predicate = (SqmComparisonPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		final SqmPath predicateLhs = (SqmPath) predicate.getLeftHandExpression();

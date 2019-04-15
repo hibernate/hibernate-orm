@@ -7,10 +7,12 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.QueryException;
+import org.hibernate.query.criteria.JpaCompoundSelection;
+import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -20,36 +22,49 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * Models a tuple of values, generally defined as a series of values
  * wrapped in parentheses, e.g. `(value1, value2, ..., valueN)`
  *
+ * todo (6.0) : possibly a place to centralize how a tuple is handled via a
+ * 		special EmbeddedValuedExpressableType as the tuple's `#getExpressableType`
+ * 		+
+ * 		it should honor `#
+ *
+ * it could implement EmbeddedValuedExpressableType
  * @author Steve Ebersole
  */
-public class SqmTuple extends AbstractSqmExpression {
-	private final List<SqmExpression> groupedExpressions;
+public class SqmTuple<T> extends AbstractSqmExpression<T> implements JpaCompoundSelection<T> {
+	private final List<SqmExpression<?>> groupedExpressions;
 
-	public SqmTuple(SqmExpression groupedExpression) {
-		this( Collections.singletonList( groupedExpression ) );
+	public SqmTuple(NodeBuilder nodeBuilder, SqmExpression<?>... groupedExpressions) {
+		this( Arrays.asList( groupedExpressions ), nodeBuilder );
 	}
 
-	public SqmTuple(SqmExpression... groupedExpressions) {
-		this( Arrays.asList( groupedExpressions ));
+	public SqmTuple(NodeBuilder nodeBuilder, ExpressableType<T> type, SqmExpression<?>... groupedExpressions) {
+		this( Arrays.asList( groupedExpressions ), nodeBuilder );
+		applyInferableType( type );
 	}
 
-	public SqmTuple(List<SqmExpression> groupedExpressions) {
-		super( null );
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, NodeBuilder nodeBuilder) {
+		super( null, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
 			throw new QueryException( "tuple grouping cannot be constructed over zero expressions" );
 		}
 		this.groupedExpressions = groupedExpressions;
 	}
 
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, ExpressableType<T> type, NodeBuilder nodeBuilder) {
+		this( groupedExpressions, nodeBuilder );
+		applyInferableType( type );
+	}
+
 	@Override
-	public ExpressableType getExpressableType() {
-		final ExpressableType<?> expressableType = super.getExpressableType();
+	public ExpressableType<T> getExpressableType() {
+		final ExpressableType<T> expressableType = super.getExpressableType();
 		if ( expressableType != null ) {
 			return expressableType;
 		}
 
 		for ( SqmExpression groupedExpression : groupedExpressions ) {
-			final ExpressableType<?> groupedExpressionExpressableType = groupedExpression.getExpressableType();
+			//noinspection unchecked
+			final ExpressableType<T> groupedExpressionExpressableType = groupedExpression.getExpressableType();
 			if ( groupedExpressionExpressableType != null ) {
 				return groupedExpressionExpressableType;
 			}
@@ -59,21 +74,31 @@ public class SqmTuple extends AbstractSqmExpression {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitTuple( this );
 	}
 
 	@Override
 	public String asLoggableText() {
-		return null;
+		return toString();
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getExpressableType().getJavaTypeDescriptor();
 	}
 
-//	@Override
+	@Override
+	public boolean isCompoundSelection() {
+		return true;
+	}
+
+	@Override
+	public List<? extends JpaSelection<?>> getSelectionItems() {
+		return groupedExpressions;
+	}
+
+	//	@Override
 //	public QueryResult createDomainResult(
 //			SemanticQueryWalker walker,
 //			String resultVariable,

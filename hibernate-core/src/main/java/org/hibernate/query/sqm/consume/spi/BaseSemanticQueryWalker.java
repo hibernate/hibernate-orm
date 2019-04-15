@@ -9,9 +9,9 @@ package org.hibernate.query.sqm.consume.spi;
 import java.lang.reflect.Field;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
@@ -28,13 +28,14 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmConcat;
+import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmSubQuery;
+import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
@@ -46,6 +47,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
@@ -63,25 +65,26 @@ import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmNavigableJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
-import org.hibernate.query.sqm.tree.predicate.BooleanExpressionSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.EmptinessSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
-import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.MemberOfSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmGroupByClause;
@@ -92,31 +95,22 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.produce.ordering.internal.SqmColumnReference;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings({"unchecked", "WeakerAccess"})
+@SuppressWarnings("unchecked")
 public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
-	private final TypeConfiguration typeConfiguration;
 	private final ServiceRegistry serviceRegistry;
 
-	public BaseSemanticQueryWalker(
-			TypeConfiguration typeConfiguration,
-			ServiceRegistry serviceRegistry) {
-		this.typeConfiguration = typeConfiguration;
+	public BaseSemanticQueryWalker(ServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
-	}
-
-	public TypeConfiguration getTypeConfiguration() {
-		return typeConfiguration;
 	}
 
 	public ServiceRegistry getServiceRegistry() {
@@ -124,13 +118,13 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitSelectStatement(SqmSelectStatement statement) {
+	public T visitSelectStatement(SqmSelectStatement<?> statement) {
 		visitQuerySpec( statement.getQuerySpec() );
 		return (T) statement;
 	}
 
 	@Override
-	public T visitUpdateStatement(SqmUpdateStatement statement) {
+	public T visitUpdateStatement(SqmUpdateStatement<?> statement) {
 		visitRootPath( statement.getTarget() );
 		visitSetClause( statement.getSetClause() );
 		visitWhereClause( statement.getWhereClause() );
@@ -153,9 +147,9 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitInsertSelectStatement(SqmInsertSelectStatement statement) {
+	public T visitInsertSelectStatement(SqmInsertSelectStatement<?> statement) {
 		visitRootPath( statement.getTarget() );
-		for ( SqmPath stateField : statement.getInsertionTargetPaths() ) {
+		for ( SqmPath<?> stateField : statement.getInsertionTargetPaths() ) {
 			stateField.accept( this );
 		}
 		visitQuerySpec( statement.getSelectQuerySpec() );
@@ -163,7 +157,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitDeleteStatement(SqmDeleteStatement statement) {
+	public T visitDeleteStatement(SqmDeleteStatement<?> statement) {
 		visitRootPath( statement.getTarget() );
 		visitWhereClause( statement.getWhereClause() );
 		return (T) statement;
@@ -187,27 +181,27 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitRootPath(SqmRoot sqmRoot) {
-		sqmRoot.visitJoins( sqmJoin -> sqmJoin.accept( this ) );
+	public T visitRootPath(SqmRoot<?> sqmRoot) {
+		sqmRoot.visitSqmJoins( sqmJoin -> ( (SqmJoin) sqmJoin ).accept( this ) );
 		return (T) sqmRoot;
 	}
 
 
 	@Override
-	public T visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
-		joinedFromElement.visitJoins( sqmJoin -> sqmJoin.accept( this ) );
+	public T visitCrossJoin(SqmCrossJoin<?> joinedFromElement) {
+		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return (T) joinedFromElement;
 	}
 
 	@Override
-	public T visitQualifiedEntityJoinFromElement(SqmEntityJoin joinedFromElement) {
-		joinedFromElement.visitJoins( sqmJoin -> sqmJoin.accept( this ) );
+	public T visitQualifiedEntityJoin(SqmEntityJoin<?> joinedFromElement) {
+		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return (T) joinedFromElement;
 	}
 
 	@Override
-	public T visitQualifiedAttributeJoinFromElement(SqmNavigableJoin joinedFromElement) {
-		joinedFromElement.visitJoins( sqmJoin -> sqmJoin.accept( this ) );
+	public T visitQualifiedAttributeJoin(SqmAttributeJoin<?,?> joinedFromElement) {
+		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return (T) joinedFromElement;
 	}
 
@@ -257,6 +251,11 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
+	public T visitCorrelation(SqmCorrelation correlation) {
+		return (T) correlation;
+	}
+
+	@Override
 	public T visitSelectClause(SqmSelectClause selectClause) {
 		for ( SqmSelection selection : selectClause.getSelections() ) {
 			// todo (6.0) : add the ability for certain SqlSelections to be sort of "implicit"...
@@ -279,25 +278,29 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitWhereClause(SqmWhereClause whereClause) {
+		if ( whereClause == null ) {
+			return null;
+		}
+
 		whereClause.getPredicate().accept( this );
 		return (T) whereClause;
 	}
 
 	@Override
-	public T visitGroupedPredicate(GroupedSqmPredicate predicate) {
+	public T visitGroupedPredicate(SqmGroupedPredicate predicate) {
 		predicate.getSubPredicate().accept( this );
 		return (T) predicate;
 	}
 
 	@Override
-	public T visitAndPredicate(AndSqmPredicate predicate) {
+	public T visitAndPredicate(SqmAndPredicate predicate) {
 		predicate.getLeftHandPredicate().accept( this );
 		predicate.getRightHandPredicate().accept( this );
 		return (T) predicate;
 	}
 
 	@Override
-	public T visitOrPredicate(OrSqmPredicate predicate) {
+	public T visitOrPredicate(SqmOrPredicate predicate) {
 		predicate.getLeftHandPredicate().accept( this );
 		predicate.getRightHandPredicate().accept( this );
 		return (T) predicate;
@@ -311,13 +314,13 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitIsEmptyPredicate(EmptinessSqmPredicate predicate) {
+	public T visitIsEmptyPredicate(SqmEmptinessPredicate predicate) {
 		predicate.getPluralPath().accept( this );
 		return (T) predicate;
 	}
 
 	@Override
-	public T visitIsNullPredicate(NullnessSqmPredicate predicate) {
+	public T visitIsNullPredicate(SqmNullnessPredicate predicate) {
 		predicate.getExpression().accept( this );
 		return (T) predicate;
 	}
@@ -331,7 +334,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitLikePredicate(LikeSqmPredicate predicate) {
+	public T visitLikePredicate(SqmLikePredicate predicate) {
 		predicate.getMatchExpression().accept( this );
 		predicate.getPattern().accept( this );
 		predicate.getEscapeCharacter().accept( this );
@@ -339,19 +342,19 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitMemberOfPredicate(MemberOfSqmPredicate predicate) {
+	public T visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
 		predicate.getPluralPath().accept( this );
 		return (T) predicate;
 	}
 
 	@Override
-	public T visitNegatedPredicate(NegatedSqmPredicate predicate) {
+	public T visitNegatedPredicate(SqmNegatedPredicate predicate) {
 		predicate.getWrappedPredicate().accept( this );
 		return (T) predicate;
 	}
 
 	@Override
-	public T visitInListPredicate(SqmInListPredicate predicate) {
+	public T visitInListPredicate(SqmInListPredicate<?> predicate) {
 		predicate.getTestExpression().accept( this );
 		for ( SqmExpression expression : predicate.getListExpressions() ) {
 			expression.accept( this );
@@ -360,20 +363,24 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitInSubQueryPredicate(SqmInSubQueryPredicate predicate) {
+	public T visitInSubQueryPredicate(SqmInSubQueryPredicate<?> predicate) {
 		predicate.getTestExpression().accept( this );
 		predicate.getSubQueryExpression().accept( this );
 		return (T) predicate;
 	}
 
 	@Override
-	public T visitBooleanExpressionPredicate(BooleanExpressionSqmPredicate predicate) {
+	public T visitBooleanExpressionPredicate(SqmBooleanExpressionPredicate predicate) {
 		predicate.getBooleanExpression().accept( this );
 		return (T) predicate;
 	}
 
 	@Override
 	public T visitOrderByClause(SqmOrderByClause orderByClause) {
+		if ( orderByClause == null ) {
+			return null;
+		}
+
 		if ( orderByClause.getSortSpecifications() != null ) {
 			for ( SqmSortSpecification sortSpecification : orderByClause.getSortSpecifications() ) {
 				visitSortSpecification( sortSpecification );
@@ -389,7 +396,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitOffsetExpression(SqmExpression expression) {
+	public T visitOffsetExpression(SqmExpression<?> expression) {
 		if ( expression == null ) {
 			return null;
 		}
@@ -416,7 +423,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitLimitExpression(SqmExpression expression) {
+	public T visitLimitExpression(SqmExpression<?> expression) {
 		if ( expression == null ) {
 			return null;
 		}
@@ -435,7 +442,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitJpaParameterWrapper(JpaParameterSqmWrapper expression) {
+	public T visitCriteriaParameter(SqmCriteriaParameter expression) {
 		return (T) expression;
 	}
 
@@ -456,7 +463,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitGenericFunction(SqmGenericFunction function) {
+	public T visitGenericFunction(SqmGenericFunction<?> function) {
 		return (T) function;
 	}
 
@@ -486,11 +493,16 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitConcatFunction(SqmConcatFunction expression) {
+	public T visitConcatFunction(SqmConcatFunction<?> expression) {
 		for ( SqmExpression argument : expression.getExpressions() ) {
 			argument.accept( this );
 		}
 		return (T) expression;
+	}
+
+	@Override
+	public T visitRestrictedSubQueryExpression(SqmRestrictedSubQueryExpression<?> sqmRestrictedSubQueryExpression) {
+		return sqmRestrictedSubQueryExpression.getSubQuery().accept( this );
 	}
 
 	@Override
@@ -515,6 +527,11 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitCurrentTimestampFunction(SqmCurrentTimestampFunction function) {
+		return (T) function;
+	}
+
+	@Override
+	public T visitCurrentInstantFunction(SqmCurrentInstantFunction function) {
 		return (T) function;
 	}
 
@@ -619,7 +636,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitConcatExpression(SqmConcat expression) {
+	public T visitConcatExpression(SqmConcat<?> expression) {
 		expression.getLeftHandOperand().accept( this );
 		expression.getRightHandOperand().accept( this );
 		return (T) expression;
@@ -636,22 +653,17 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitSimpleCaseExpression(SqmCaseSimple expression) {
+	public T visitSimpleCaseExpression(SqmCaseSimple<?,?> expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitSearchedCaseExpression(SqmCaseSearched expression) {
+	public T visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
 		return (T) expression;
 	}
 
 	@Override
-	public T visitExplicitColumnReference(SqmColumnReference sqmColumnReference) {
-		return (T) sqmColumnReference;
-	}
-
-	@Override
-	public T visitDynamicInstantiation(SqmDynamicInstantiation sqmDynamicInstantiation) {
+	public T visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation) {
 		return (T) sqmDynamicInstantiation;
 	}
 
@@ -672,7 +684,7 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitCoalesceFunction(SqmCoalesceFunction expression) {
+	public T visitCoalesceFunction(SqmCoalesceFunction<?> expression) {
 		return (T) expression;
 	}
 }

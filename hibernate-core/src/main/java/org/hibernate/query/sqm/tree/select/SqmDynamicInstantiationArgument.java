@@ -6,28 +6,38 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import org.hibernate.query.sqm.NodeBuilder;
+
 /**
  * Represents an individual argument to a dynamic instantiation.
  *
  * @author Steve Ebersole
  */
-public class SqmDynamicInstantiationArgument implements SqmAliasedNode {
-	private final SqmSelectableNode selectableNode;
+public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode {
+	private final SqmSelectableNode<T> selectableNode;
 	private final String alias;
+	private final NodeBuilder nodeBuilder;
 
 	public SqmDynamicInstantiationArgument(
-			SqmSelectableNode selectableNode,
-			String alias) {
+			SqmSelectableNode<T> selectableNode,
+			String alias,
+			NodeBuilder nodeBuilder) {
 		this.selectableNode = selectableNode;
 		this.alias = alias;
+		this.nodeBuilder = nodeBuilder;
 	}
 
 	@Override
-	public SqmSelectableNode getSelectableNode() {
+	public SqmSelectableNode<T> getSelectableNode() {
 		return selectableNode;
 	}
 
 	public String getAlias() {
 		return alias;
+	}
+
+	@Override
+	public NodeBuilder nodeBuilder() {
+		return nodeBuilder;
 	}
 }

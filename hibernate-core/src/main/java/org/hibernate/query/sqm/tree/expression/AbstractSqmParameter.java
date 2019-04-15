@@ -7,17 +7,22 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
 /**
  * Common support for SqmParameter impls
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmParameter extends AbstractSqmExpression implements SqmParameter {
+public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> implements SqmParameter<T> {
 	private final boolean canBeMultiValued;
 
-	public AbstractSqmParameter(boolean canBeMultiValued, AllowableParameterType inherentType) {
-		super( inherentType );
+	public AbstractSqmParameter(
+			boolean canBeMultiValued,
+			AllowableParameterType<T> inherentType,
+			NodeBuilder nodeBuilder) {
+		super( inherentType, nodeBuilder );
 		this.canBeMultiValued = canBeMultiValued;
 	}
 
@@ -37,12 +42,17 @@ public abstract class AbstractSqmParameter extends AbstractSqmExpression impleme
 	}
 
 	@Override
-	public AllowableParameterType<?> getExpressableType() {
-		return (AllowableParameterType) super.getExpressableType();
+	public AllowableParameterType<T> getExpressableType() {
+		return (AllowableParameterType<T>) super.getExpressableType();
 	}
 
 	@Override
-	public AllowableParameterType getAnticipatedType() {
+	public AllowableParameterType<T> getAnticipatedType() {
 		return getExpressableType();
+	}
+
+	@Override
+	public Class<T> getParameterType() {
+		return getExpressableType().getJavaType();
 	}
 }

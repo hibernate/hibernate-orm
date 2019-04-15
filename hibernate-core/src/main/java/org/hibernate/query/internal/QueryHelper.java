@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
@@ -52,14 +53,16 @@ public class QueryHelper {
 			return types[0];
 		}
 
-		ExpressableType<?> highest = highestPrecedenceType( types[0], types[1] );
+		//noinspection unchecked
+		ExpressableType highest = highestPrecedenceType2( (ExpressableType) types[0], types[1] );
 		for ( int i = 2; i < types.length; i++ ) {
-			highest = highestPrecedenceType( highest, types[i] );
+			//noinspection unchecked
+			highest = highestPrecedenceType2( highest, types[i] );
 		}
 		return highest;
 	}
 
-	public static ExpressableType<?> highestPrecedenceType(ExpressableType<?> type1, ExpressableType<?> type2) {
+	public static <X> ExpressableType<X> highestPrecedenceType2(ExpressableType<X> type1, ExpressableType<X> type2) {
 		if ( type1 == null && type2 == null ) {
 			return null;
 		}
@@ -81,6 +84,25 @@ public class QueryHelper {
 		// any other precedence rules?
 
 		return type1;
+	}
+
+	/**
+	 * @see TypeConfiguration#resolveArithmeticType
+	 */
+	public static <X> ExpressableType<X> highestPrecedenceType(Supplier<ExpressableType<X>>... typeSuppliers) {
+		if ( typeSuppliers == null || typeSuppliers.length == 0 ) {
+			return null;
+		}
+
+		if ( typeSuppliers.length == 1 ) {
+			return typeSuppliers[0].get();
+		}
+
+		ExpressableType<X> highest = highestPrecedenceType2( typeSuppliers[0].get(), typeSuppliers[1].get() );
+		for ( int i = 2; i < typeSuppliers.length; i++ ) {
+			highest = highestPrecedenceType2( highest, typeSuppliers[i].get() );
+		}
+		return highest;
 	}
 
 	public static JdbcParameterBindings buildJdbcParameterBindings(

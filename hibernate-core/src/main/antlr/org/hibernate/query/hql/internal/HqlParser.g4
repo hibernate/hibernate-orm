@@ -31,6 +31,10 @@ selectStatement
 	: querySpec
 	;
 
+subQuery
+	: querySpec
+	;
+
 deleteStatement
 	: DELETE FROM? entityName identificationVariableDef? whereClause?
 	;
@@ -216,7 +220,7 @@ path
 	;
 
 pathContinuation
-	: DOT dotIdentifierSequence (DOT pathContinuation)?
+	: DOT dotIdentifierSequence
 	;
 
 /**
@@ -397,7 +401,7 @@ expression
 	| entityTypeReference						# EntityTypeExpression
 	| path										# PathExpression
 	| function									# FunctionExpression
-	| LEFT_PAREN querySpec RIGHT_PAREN		    # SubQueryExpression
+	| LEFT_PAREN subQuery RIGHT_PAREN		    # SubQueryExpression
 	;
 
 entityTypeReference
@@ -575,6 +579,7 @@ standardFunction
 	|	currentDateFunction
 	|	currentTimeFunction
 	|	currentTimestampFunction
+	|	currentInstantFunction
 	|	extractFunction
 	|	positionFunction
 	|	charLengthFunction
@@ -690,6 +695,10 @@ currentTimeFunction
 
 currentTimestampFunction
 	: CURRENT_TIMESTAMP (LEFT_PAREN RIGHT_PAREN)?
+	;
+
+currentInstantFunction
+	: CURRENT_INSTANT (LEFT_PAREN RIGHT_PAREN)?
 	;
 
 extractFunction

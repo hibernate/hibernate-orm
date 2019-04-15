@@ -6,11 +6,14 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -19,20 +22,23 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmIndexedCollectionAccessPath implements SqmPath {
-	private final SqmPath pluralDomainPath;
-	private final SqmExpression selectorExpression;
-	private final PersistentCollectionDescriptor collectionDescriptor;
+public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implements SqmPath<T> {
+	private final SqmExpression<?> selectorExpression;
+	private final PersistentCollectionDescriptor<?,?,T> collectionDescriptor;
 
-	private String explicitAlias;
 
 	public SqmIndexedCollectionAccessPath(
-			SqmPath pluralDomainPath,
-			SqmExpression selectorExpression) {
-		this.pluralDomainPath = pluralDomainPath;
+			SqmPath<?> pluralDomainPath,
+			SqmExpression<?> selectorExpression) {
+		super(
+				pluralDomainPath.getNavigablePath().append( "[]" ),
+				pluralDomainPath.sqmAs( PluralValuedNavigable.class ).getCollectionDescriptor().getElementDescriptor(),
+				pluralDomainPath,
+				pluralDomainPath.nodeBuilder()
+		);
 		this.selectorExpression = selectorExpression;
 
-		this.collectionDescriptor = pluralDomainPath.as( PluralValuedNavigable.class ).getCollectionDescriptor();
+		this.collectionDescriptor = pluralDomainPath.sqmAs( PluralValuedNavigable.class ).getCollectionDescriptor();
 	}
 
 	public SqmExpression getSelectorExpression() {
@@ -43,26 +49,6 @@ public class SqmIndexedCollectionAccessPath implements SqmPath {
 	public NavigablePath getNavigablePath() {
 		// todo (6.0) : this would require some String-ified form of the selector
 		return null;
-	}
-
-	@Override
-	public Navigable<?> getReferencedNavigable() {
-		return collectionDescriptor.getElementDescriptor();
-	}
-
-	@Override
-	public SqmPath getLhs() {
-		return pluralDomainPath;
-	}
-
-	@Override
-	public String getExplicitAlias() {
-		return explicitAlias;
-	}
-
-	@Override
-	public void setExplicitAlias(String explicitAlias) {
-		this.explicitAlias = explicitAlias;
 	}
 
 	@Override
@@ -78,7 +64,16 @@ public class SqmIndexedCollectionAccessPath implements SqmPath {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitIndexedPluralAccessPath( this );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
+		if ( getReferencedNavigable() instanceof EntityValuedNavigable ) {
+			throw new NotYetImplementedFor6Exception();
+		}
+
+		throw new UnsupportedOperationException(  );
 	}
 }

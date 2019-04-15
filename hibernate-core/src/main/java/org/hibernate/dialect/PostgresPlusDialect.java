@@ -12,7 +12,7 @@ import java.sql.Types;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.NvlFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -30,35 +30,35 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.soundex( registry );
-		registry.registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
-		registry.registerNoArgs( "rowid", StandardSpiBasicTypes.LONG );
-		registry.registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
-		registry.namedTemplateBuilder( "instr" )
+		CommonFunctionFactory.soundex( queryEngine );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rowid", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "instr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 4 )
 				.register();
-		registry.register( "coalesce", new NvlFunctionTemplate() );
-		registry.namedTemplateBuilder( "nvl" )
+		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlFunctionTemplate() );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "nvl2" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl2" )
 				.setExactArgumentCount( 3 )
 				.register();
 
 		// Multi-param date dialect functions...
-		registry.namedTemplateBuilder( "add_months" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_months" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "months_between" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "months_between" )
 				.setInvariantType( StandardSpiBasicTypes.FLOAT )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "next_day" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "next_day" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 2 )
 				.register();

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.produce;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 /**
@@ -19,4 +20,7 @@ public interface SqmQuerySpecCreationProcessingState extends SqmCreationProcessi
 	void registerSelection(SqmSelection selection);
 	SqmSelection findSelectionByAlias(String alias);
 	SqmSelection findSelectionByPosition(int position);
+
+	@Override
+	SqmSelectQuery<?> getProcessingQuery();
 }

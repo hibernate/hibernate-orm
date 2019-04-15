@@ -9,21 +9,23 @@ package org.hibernate.query.sqm.tree.expression.function;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmLengthFunction extends AbstractSqmFunction {
+public class SqmLengthFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "length";
 
 	private final SqmExpression argument;
 
 	public SqmLengthFunction(
-			SqmExpression argument,
-			AllowableFunctionReturnType resultType) {
-		super( resultType );
+			SqmExpression<?> argument,
+			AllowableFunctionReturnType<T> resultType,
+			NodeBuilder nodeBuilder) {
+		super( resultType, nodeBuilder );
 		this.argument = argument;
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
@@ -24,29 +25,30 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqmLiteralEntityType implements SqmExpression, DomainResultProducer {
-	private final EntityValuedExpressableType entityType;
+public class SqmLiteralEntityType<T> extends AbstractSqmExpression<T> implements DomainResultProducer {
+	private final EntityValuedExpressableType<T> entityType;
 
-	public SqmLiteralEntityType(EntityValuedExpressableType entityType) {
+	public SqmLiteralEntityType(EntityValuedExpressableType<T> entityType, NodeBuilder nodeBuilder) {
+		super( entityType, nodeBuilder );
 		this.entityType = entityType;
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getExpressableType().getJavaTypeDescriptor();
 	}
 
 	@Override
-	public EntityValuedExpressableType<?> getExpressableType() {
+	public EntityValuedExpressableType<T> getExpressableType() {
 		return entityType;
 	}
 
 	@Override
-	public void applyInferableType(ExpressableType<?> type) {
+	public void internalApplyInferableType(ExpressableType<?> type) {
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitEntityTypeLiteralExpression( this );
 	}
 

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.internal.QueryHelper;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -15,16 +16,17 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
  * @author Steve Ebersole
  */
 public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
-	private final SqmExpression expression;
-	private final SqmExpression lowerBound;
-	private final SqmExpression upperBound;
+	private final SqmExpression<?> expression;
+	private final SqmExpression<?> lowerBound;
+	private final SqmExpression<?> upperBound;
 
 	public SqmBetweenPredicate(
-			SqmExpression expression,
-			SqmExpression lowerBound,
-			SqmExpression upperBound,
-			boolean negated) {
-		super( negated );
+			SqmExpression<?> expression,
+			SqmExpression<?> lowerBound,
+			SqmExpression<?> upperBound,
+			boolean negated,
+			NodeBuilder nodeBuilder) {
+		super( negated, nodeBuilder );
 		this.expression = expression;
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
@@ -40,15 +42,15 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		upperBound.applyInferableType( expressableType );
 	}
 
-	public SqmExpression getExpression() {
+	public SqmExpression<?> getExpression() {
 		return expression;
 	}
 
-	public SqmExpression getLowerBound() {
+	public SqmExpression<?> getLowerBound() {
 		return lowerBound;
 	}
 
-	public SqmExpression getUpperBound() {
+	public SqmExpression<?> getUpperBound() {
 		return upperBound;
 	}
 

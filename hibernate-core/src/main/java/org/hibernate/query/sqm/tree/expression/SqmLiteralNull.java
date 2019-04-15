@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
@@ -14,13 +15,20 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class SqmLiteralNull extends SqmLiteral<Void> {
-	public SqmLiteralNull() {
-		super( null, NULL_TYPE );
+public class SqmLiteralNull<T> extends SqmLiteral<T> {
+	public SqmLiteralNull(NodeBuilder nodeBuilder) {
+		//noinspection unchecked
+		this( NULL_TYPE, nodeBuilder );
+	}
+
+	public SqmLiteralNull(
+			BasicValuedExpressableType<T> expressableType,
+			NodeBuilder nodeBuilder) {
+		super( null, expressableType, nodeBuilder );
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitLiteral( this );
 	}
 
@@ -29,7 +37,7 @@ public class SqmLiteralNull extends SqmLiteral<Void> {
 		return "<literal-null>";
 	}
 
-	private static BasicValuedExpressableType NULL_TYPE = new BasicValuedExpressableType<Object>() {
+	private static BasicValuedExpressableType NULL_TYPE = new BasicValuedExpressableType() {
 		@Override
 		public int getNumberOfJdbcParametersNeeded() {
 			return 0;

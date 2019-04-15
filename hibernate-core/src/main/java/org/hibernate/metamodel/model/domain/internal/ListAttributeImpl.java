@@ -14,6 +14,11 @@ import org.hibernate.metamodel.model.domain.spi.AbstractPluralPersistentAttribut
 import org.hibernate.metamodel.model.domain.spi.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.SqmListJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
@@ -32,5 +37,23 @@ public class ListAttributeImpl<X, E> extends AbstractPluralPersistentAttribute<X
 	@Override
 	public CollectionType getCollectionType() {
 		return CollectionType.LIST;
+	}
+
+	@Override
+	public SqmAttributeJoin createSqmJoin(
+			SqmFrom lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		//noinspection unchecked
+		return new SqmListJoin(
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+		);
 	}
 }

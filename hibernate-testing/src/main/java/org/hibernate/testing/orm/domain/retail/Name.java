@@ -20,6 +20,9 @@ public class Name {
 	private String prefix;
 	private String suffix;
 
+	public Name() {
+	}
+
 	public Name(String familyName, String familiarName) {
 		this.familyName = familyName;
 		this.familiarName = familiarName;

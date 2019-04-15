@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -56,7 +57,8 @@ public class PatternBasedSqmFunctionTemplate extends AbstractSelfRenderingFuncti
 	@Override
 	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		return this;
 	}
 

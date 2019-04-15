@@ -10,10 +10,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.sql.TrimSpecification;
@@ -79,7 +80,8 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 	@Override
 	public SqmFunction makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType impliedResultType,
+			QueryEngine queryEngine) {
 		final TrimSpecification specification = ( (TrimSpecificationExpressionWrapper) arguments.get( 0 ) ).getSpecification();
 		//noinspection unchecked
 		final SqmLiteral<Character> trimCharacterExpr = (SqmLiteral<Character>) arguments.get( 1 );
@@ -90,35 +92,39 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 
 		switch ( specification ) {
 			case LEADING: {
-				return trimLeading( trimCharacterExpr, sourceExpr );
+				return trimLeading( trimCharacterExpr, sourceExpr, queryEngine );
 			}
 			case TRAILING: {
-				return trimTrailing( trimCharacterExpr, sourceExpr );
+				return trimTrailing( trimCharacterExpr, sourceExpr, queryEngine );
 			}
 			default: {
-				return trimBoth( trimCharacterExpr, sourceExpr );
+				return trimBoth( trimCharacterExpr, sourceExpr, queryEngine );
 			}
 		}
 	}
 
 	private SqmFunction trimLeading(
 			SqmLiteral<Character> trimChar,
-			SqmExpression source) {
+			SqmExpression source,
+			QueryEngine queryEngine) {
 		if ( trimChar.getLiteralValue() == ' ' ) {
-			return trimLeadingSpaces( source );
+			return trimLeadingSpaces( source, queryEngine );
 		}
 		else {
-			return trimLeadingNonSpaces( trimChar, source );
+			return trimLeadingNonSpaces( trimChar, source, queryEngine );
 		}
 	}
 
-	private SqmFunction trimLeadingSpaces(SqmExpression source) {
-		return ltrim( source );
+	private SqmFunction trimLeadingSpaces(SqmExpression source, QueryEngine queryEngine) {
+		return ltrim( source, queryEngine );
 	}
 
-	private SqmFunction trimLeadingNonSpaces(SqmLiteral<Character> trimChar, SqmExpression source) {
-		final SqmLiteral<Character> space = charExpr( ' ' );
-		final SqmLiteral<String> placeholder = placeholder();
+	private SqmFunction trimLeadingNonSpaces(
+			SqmLiteral<Character> trimChar,
+			SqmExpression source,
+			QueryEngine queryEngine) {
+		final SqmLiteral<Character> space = charExpr( ' ', queryEngine );
+		final SqmLiteral<String> placeholder = placeholder( queryEngine );
 
 		// replace all the '${space}$' text with space chars
 		return replace(
@@ -132,40 +138,47 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 										replace(
 												source,
 												space,
-												placeholder
+												placeholder,
+												queryEngine
 										),
 										space,
-										placeholder
-								)
+										placeholder,
+										queryEngine
+								),
+								queryEngine
 						),
 						space,
-						trimChar
+						trimChar,
+						queryEngine
 				),
 				placeholder,
-				space
+				space,
+				queryEngine
 		);
 	}
 
 	private SqmFunction trimTrailing(
 			SqmLiteral<Character> trimChar,
-			SqmExpression source) {
+			SqmExpression source,
+			QueryEngine queryEngine) {
 		if ( trimChar.getLiteralValue() == ' ' ) {
-			return trimTrailingSpaces( source );
+			return trimTrailingSpaces( source, queryEngine );
 		}
 		else {
-			return trimTrailingNonSpaces( trimChar, source );
+			return trimTrailingNonSpaces( trimChar, source, queryEngine );
 		}
 	}
 
-	private SqmFunction trimTrailingSpaces(SqmExpression sourceExpr) {
-		return rtrim( sourceExpr );
+	private SqmFunction trimTrailingSpaces(SqmExpression sourceExpr, QueryEngine queryEngine) {
+		return rtrim( sourceExpr, queryEngine );
 	}
 
 	private SqmFunction trimTrailingNonSpaces(
 			SqmLiteral<Character> trimChar,
-			SqmExpression source) {
-		final SqmLiteral<Character> space = charExpr( ' ' );
-		final SqmLiteral<String> placeholder = placeholder();
+			SqmExpression source,
+			QueryEngine queryEngine) {
+		final SqmLiteral<Character> space = charExpr( ' ', queryEngine );
+		final SqmLiteral<String> placeholder = placeholder( queryEngine );
 
 		// replace all the '${space}$' text with space chars
 		return replace(
@@ -179,39 +192,45 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 										replace(
 												source,
 												space,
-												placeholder
+												placeholder,
+												queryEngine
 										),
 										space,
-										placeholder
-								)
+										placeholder,
+										queryEngine
+								),
+								queryEngine
 						),
 						space,
-						trimChar
+						trimChar,
+						queryEngine
 				),
 				placeholder,
-				space
+				space,
+				queryEngine
 		);
 	}
 
 	private SqmFunction trimBoth(
 			SqmLiteral<Character> trimCharacterExpr,
-			SqmExpression sourceExpr) {
+			SqmExpression sourceExpr,
+			QueryEngine queryEngine) {
 		// BOTH
 		if ( trimCharacterExpr.getLiteralValue() == ' ' ) {
-			return trimBothSpaces( sourceExpr );
+			return trimBothSpaces( sourceExpr, queryEngine );
 		}
 		else {
-			return trimBothNonSpaces( trimCharacterExpr, sourceExpr );
+			return trimBothNonSpaces( trimCharacterExpr, sourceExpr, queryEngine );
 		}
 	}
 
-	private SqmFunction trimBothSpaces(SqmExpression sourceExpr) {
-		return ltrim( rtrim( sourceExpr ) );
+	private SqmFunction trimBothSpaces(SqmExpression sourceExpr, QueryEngine queryEngine) {
+		return ltrim( rtrim( sourceExpr, queryEngine ), queryEngine );
 	}
 
-	private SqmFunction trimBothNonSpaces(SqmLiteral<Character> trimChar, SqmExpression source) {
-		final SqmLiteral<Character> space = charExpr( ' ' );
-		final SqmLiteral<String> placeholder = placeholder();
+	private SqmFunction trimBothNonSpaces(SqmLiteral<Character> trimChar, SqmExpression source, QueryEngine queryEngine) {
+		final SqmLiteral<Character> space = charExpr( ' ', queryEngine );
+		final SqmLiteral<String> placeholder = placeholder( queryEngine );
 
 		// replace all the '${space}$' text with space chars
 		return replace(
@@ -227,52 +246,67 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 												replace(
 														source,
 														space,
-														placeholder
+														placeholder,
+														queryEngine
 												),
 												space,
-												placeholder
-										)
-								)
+												placeholder,
+												queryEngine
+										),
+										queryEngine
+								),
+								queryEngine
 						),
 						space,
-						trimChar
+						trimChar,
+						queryEngine
 				),
 				placeholder,
-				space
+				space,
+				queryEngine
 		);
 	}
 
-	protected SqmFunction replace(SqmExpression source, SqmExpression searchPattern, SqmExpression replacement) {
+	protected SqmFunction replace(
+			SqmExpression source,
+			SqmExpression searchPattern,
+			SqmExpression replacement,
+			QueryEngine queryEngine) {
 		return function(
 				replaceFunctionName,
+				queryEngine,
 				source,
 				searchPattern,
 				replacement
 		);
 	}
 
-	protected SqmFunction rtrim(SqmExpression source) {
-		return function( rtrimFunctionName, source );
+	protected SqmFunction rtrim(SqmExpression source, QueryEngine queryEngine) {
+		return function( rtrimFunctionName, queryEngine, source );
 	}
 
-	protected SqmFunction ltrim(SqmExpression source) {
-		return function( ltrimFunctionName, source );
+	protected SqmFunction ltrim(SqmExpression source, QueryEngine queryEngine) {
+		return function( ltrimFunctionName, queryEngine, source );
 	}
 
-	private static SqmGenericFunction function(String name, SqmExpression... arguments) {
+	private static SqmGenericFunction function(
+			String name,
+			QueryEngine queryEngine,
+			SqmExpression... arguments) {
 		return new SqmGenericFunction(
 				name,
 				StandardSpiBasicTypes.STRING,
-				Arrays.asList( arguments )
+				Arrays.asList( arguments ),
+				queryEngine.getCriteriaBuilder()
 		);
 	}
 
-	protected final SqmLiteral<String> placeholder() {
-		return new SqmLiteral<>( TRIM_CHAR_PLACEHOLDER, StandardSpiBasicTypes.STRING );
+	protected final SqmLiteral<String> placeholder(QueryEngine queryEngine) {
+		return new SqmLiteral<>( TRIM_CHAR_PLACEHOLDER, StandardSpiBasicTypes.STRING, queryEngine.getCriteriaBuilder() );
 	}
 
-	protected SqmLiteral<Character> charExpr(char trimChar) {
-		return new SqmLiteral<>( trimChar, StandardSpiBasicTypes.CHARACTER );
+	protected SqmLiteral<Character> charExpr(char trimChar, QueryEngine queryEngine) {
+		return new SqmLiteral<>( trimChar, StandardSpiBasicTypes.CHARACTER, queryEngine.getCriteriaBuilder() );
 	}
 
 

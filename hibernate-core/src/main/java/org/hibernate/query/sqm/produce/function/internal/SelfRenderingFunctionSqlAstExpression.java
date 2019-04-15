@@ -21,7 +21,6 @@ import org.hibernate.sql.ast.produce.spi.SqlExpressable;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmExpressionInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -73,7 +72,7 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return ( (BasicValuedExpressableType) getType() ).getSqlExpressableType();
+		return getType();
 	}
 
 	@Override
@@ -90,7 +89,7 @@ public class SelfRenderingFunctionSqlAstExpression
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
-				null,
+				this,
 				getExpressableType()
 		);
 	}

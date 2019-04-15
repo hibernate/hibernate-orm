@@ -13,17 +13,17 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
  * @author Steve Ebersole
  */
 public class ExtractFunction extends AbstractStandardFunction {
-	private final Expression unitToExtract;
+	private final ExtractUnit unitToExtract;
 	private final Expression extractionSource;
 	private final SqlExpressableType returnType;
 
-	public ExtractFunction(Expression unitToExtract, Expression extractionSource, SqlExpressableType returnType) {
+	public ExtractFunction(ExtractUnit unitToExtract, Expression extractionSource, SqlExpressableType returnType) {
 		this.unitToExtract = unitToExtract;
 		this.extractionSource = extractionSource;
 		this.returnType = returnType;
 	}
 
-	public Expression getUnitToExtract() {
+	public ExtractUnit getUnitToExtract() {
 		return unitToExtract;
 	}
 

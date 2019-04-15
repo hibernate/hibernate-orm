@@ -6,14 +6,14 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.List;
-
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.Type;
+
+import java.util.List;
 
 /**
  * Represents HQL functions that can have different representations in different SQL dialects where that

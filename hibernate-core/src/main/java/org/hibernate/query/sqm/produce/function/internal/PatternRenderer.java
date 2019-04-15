@@ -14,7 +14,9 @@ import java.util.Set;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.consume.spi.SqlAppender;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
  * Delegate for handling function "templates".
@@ -104,30 +106,33 @@ public class PatternRenderer {
 	 * The rendering code.
 	 *
 	 * @param args The arguments to inject into the template
-	 * @param factory The SessionFactory
-	 *
-	 * @return The rendered template with replacements
+	 * @param sqlAppender
+	 *@param factory The SessionFactory
+	 *  @return The rendered template with replacements
 	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
-	public String render(List<Expression> args, SessionFactoryImplementor factory) {
+	public void render(
+			SqlAppender sqlAppender,
+			List<SqlAstNode> args,
+			SqlAstWalker walker,
+			SessionFactoryImplementor factory) {
 		final int numberOfArguments = args.size();
 		if ( getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments() ) {
 			LOG.missingArguments( getAnticipatedNumberOfArguments(), numberOfArguments );
 		}
 
-		final StringBuilder buf = new StringBuilder();
 		for ( int i = 0; i < chunks.length; ++i ) {
 			if ( i < paramIndexes.length ) {
 				final int index = paramIndexes[i] - 1;
-				final Object arg =  index < numberOfArguments ? args.get( index ) : null;
+				final SqlAstNode arg =  index < numberOfArguments ? args.get( index ) : null;
 				if ( arg != null ) {
-					buf.append( chunks[i] ).append( arg );
+					sqlAppender.appendSql( chunks[i] );
+					arg.accept( walker );
 				}
 			}
 			else {
-				buf.append( chunks[i] );
+				sqlAppender.appendSql( chunks[i] );
 			}
 		}
-		return buf.toString();
 	}
 }

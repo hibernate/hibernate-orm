@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmNonStandardFunction;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -93,12 +94,12 @@ public class NvlFunctionTemplate
 		@SuppressWarnings("unchecked")
 		public void render(
 				SqlAppender sqlAppender,
-				List<Expression> sqlAstArguments,
+				List<SqlAstNode> sqlAstArguments,
 				SqlAstWalker walker,
 				SessionFactoryImplementor sessionFactory) {
 			sqlAppender.appendSql( "nvl(" );
 			boolean firstPass = true;
-			for ( Expression sqlAstArgument : sqlAstArguments ) {
+			for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
 				if ( !firstPass ) {
 					sqlAppender.appendSql( "," );
 				}

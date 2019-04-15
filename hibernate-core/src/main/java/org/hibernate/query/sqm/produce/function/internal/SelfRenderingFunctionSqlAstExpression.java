@@ -18,8 +18,9 @@ import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmExpressionInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -39,7 +40,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class SelfRenderingFunctionSqlAstExpression
 		implements SelfRenderingExpression, Selectable, SqlExpressable, DomainResultProducer {
 	private final SelfRenderingSqmFunction sqmExpression;
-	private final List<Expression> sqlAstArguments;
+	private final List<SqlAstNode> sqlAstArguments;
 	private final TypeConfiguration typeConfiguration;
 
 	public SelfRenderingFunctionSqlAstExpression(
@@ -50,21 +51,28 @@ public class SelfRenderingFunctionSqlAstExpression
 		this.typeConfiguration = walker.getCreationContext().getDomainModel().getTypeConfiguration();
 	}
 
-	private static List<Expression> resolveSqlAstArguments(List<SqmExpression> sqmArguments, SqmToSqlAstConverter walker) {
+	private static List<SqlAstNode> resolveSqlAstArguments(List<SqmExpression> sqmArguments, SqmToSqlAstConverter walker) {
 		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
 			return Collections.emptyList();
 		}
 
-		final ArrayList<Expression> sqlAstArguments = new ArrayList<>();
+		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>();
 		for ( SqmExpression sqmArgument : sqmArguments ) {
-			sqlAstArguments.add( (Expression) sqmArgument.accept( walker ) );
+			sqlAstArguments.add( toSqlAstNode( sqmArgument.accept( walker ), walker ) );
 		}
 		return sqlAstArguments;
 	}
 
+	private static SqlAstNode toSqlAstNode(Object arg, SqmToSqlAstConverter walker) {
+		if (arg instanceof SqmExpressionInterpretation) {
+			return ((SqmExpressionInterpretation) arg).toSqlExpression(walker);
+		}
+		return (SqlAstNode) arg;
+	}
+
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return ( (BasicValuedExpressableType) getType() ).getSqlExpressableType();
+		return getType();
 	}
 
 	@Override
@@ -81,7 +89,7 @@ public class SelfRenderingFunctionSqlAstExpression
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
-				null,
+				this,
 				getExpressableType()
 		);
 	}
@@ -107,6 +115,6 @@ public class SelfRenderingFunctionSqlAstExpression
 			SqlAppender sqlAppender,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
-		sqmExpression.getRenderingSupport().render( sqlAppender, sqlAstArguments,walker, sessionFactory );
+		sqmExpression.getRenderingSupport().render( sqlAppender, sqlAstArguments, walker, sessionFactory );
 	}
 }

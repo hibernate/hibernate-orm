@@ -23,6 +23,7 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
+import org.hibernate.sql.ast.tree.expression.*;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.expression.AbsFunction;
 import org.hibernate.sql.ast.tree.expression.AvgFunction;
@@ -566,6 +567,11 @@ public abstract class AbstractSqlAstWalker
 		appendSql( FROM_KEYWORD );
 		extractFunction.getExtractionSource().accept( this );
 		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	public void visitExtractUnit(ExtractUnit unit) {
+		appendSql(unit.getName());
 	}
 
 	@Override

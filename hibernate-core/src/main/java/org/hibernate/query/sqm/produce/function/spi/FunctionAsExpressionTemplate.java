@@ -70,7 +70,7 @@ public class FunctionAsExpressionTemplate
 	@SuppressWarnings("unchecked")
 	public void render(
 			SqlAppender sqlAppender,
-			List<Expression> sqlAstArguments,
+			List<SqlAstNode> sqlAstArguments,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
 		sqlAppender.appendSql( expressionStart );
@@ -103,7 +103,7 @@ public class FunctionAsExpressionTemplate
 	 */
 	protected void renderArgument(
 			SqlAppender sqlAppender,
-			Expression sqlAstArgument,
+			SqlAstNode sqlAstArgument,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
 		sqlAstArgument.accept( walker );

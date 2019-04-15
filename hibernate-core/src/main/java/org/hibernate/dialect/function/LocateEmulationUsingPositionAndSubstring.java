@@ -29,6 +29,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -189,7 +190,7 @@ public class LocateEmulationUsingPositionAndSubstring
 		@SuppressWarnings("unchecked")
 		public void render(
 				SqlAppender sqlAppender,
-				List<Expression> sqlAstArguments,
+				List<SqlAstNode> sqlAstArguments,
 				SqlAstWalker walker,
 				SessionFactoryImplementor sessionFactory) {
 			// position( $pattern in $string )

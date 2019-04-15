@@ -33,6 +33,7 @@ import org.hibernate.sql.ast.tree.expression.CurrentDateFunction;
 import org.hibernate.sql.ast.tree.expression.CurrentTimeFunction;
 import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractFunction;
+import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
 import org.hibernate.sql.ast.tree.expression.LengthFunction;
 import org.hibernate.sql.ast.tree.expression.LocateFunction;
@@ -77,6 +78,8 @@ import org.hibernate.sql.ast.tree.sort.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.results.spi.SqlSelection;
+
+import java.util.Locale;
 
 /**
  * @author Steve Ebersole
@@ -642,6 +645,11 @@ public class SqlAstPrinter implements SqlAstWalker {
 
 	@Override
 	public void visitExtractFunction(ExtractFunction extractFunction) {
+
+	}
+
+	@Override
+	public void visitExtractUnit(ExtractUnit unit) {
 
 	}
 

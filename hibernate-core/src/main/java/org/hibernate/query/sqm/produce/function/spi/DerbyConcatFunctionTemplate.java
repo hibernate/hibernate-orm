@@ -6,13 +6,13 @@
  */
 package org.hibernate.query.sqm.produce.function.spi;
 
-import java.util.List;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
+
+import java.util.List;
 
 /**
  * A specialized concat() function definition in which:<ol>
@@ -36,7 +36,7 @@ public class DerbyConcatFunctionTemplate extends ConcatFunctionTemplate {
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<Expression> sqlAstArguments,
+			List<SqlAstNode> sqlAstArguments,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
 		// check if all arguments are parameters...
@@ -45,7 +45,7 @@ public class DerbyConcatFunctionTemplate extends ConcatFunctionTemplate {
 		//				entire expression in Derby's `varchar` function (specialized
 		// 				`cast` function)
 		boolean areAllArgumentsDynamic = true;
-		for ( Expression argument : sqlAstArguments ) {
+		for ( SqlAstNode argument : sqlAstArguments ) {
 			if ( GenericParameter.class.isInstance( argument ) ) {
 				areAllArgumentsDynamic = false;
 				break;
@@ -65,7 +65,7 @@ public class DerbyConcatFunctionTemplate extends ConcatFunctionTemplate {
 	@Override
 	protected void renderArgument(
 			SqlAppender sqlAppender,
-			Expression sqlAstArgument,
+			SqlAstNode sqlAstArgument,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
 		sqlAppender.appendSql( "varchar(" );

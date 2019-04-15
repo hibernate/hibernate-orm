@@ -17,6 +17,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -66,7 +67,7 @@ public class SqmJdbcFunctionEscapeWrapper
 	@SuppressWarnings("unchecked")
 	public void render(
 			SqlAppender sqlAppender,
-			List<Expression> sqlAstArguments,
+			List<SqlAstNode> sqlAstArguments,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
 		// the SQL AST form of wrapped function ought to have exactly one argument,

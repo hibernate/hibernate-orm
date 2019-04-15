@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.produce.function.spi;
 
-import java.util.List;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -17,7 +15,9 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+
+import java.util.List;
 
 /**
  * Represents HQL functions that can have different representations in different SQL dialects where that
@@ -63,10 +63,10 @@ public class PatternBasedSqmFunctionTemplate extends AbstractSelfRenderingFuncti
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<Expression> sqlAstArguments,
+			List<SqlAstNode> sqlAstArguments,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
-		sqlAppender.appendSql( renderer.render( sqlAstArguments, sessionFactory ) );
+		renderer.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
 	}
 
 }

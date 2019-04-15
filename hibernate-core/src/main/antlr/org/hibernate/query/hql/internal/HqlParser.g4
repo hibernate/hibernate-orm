@@ -702,16 +702,12 @@ extractField
 	;
 
 datetimeField
-	: nonSecondDatetimeField
-	| SECOND
-	;
-
-nonSecondDatetimeField
 	: YEAR
 	| MONTH
 	| DAY
 	| HOUR
 	| MINUTE
+	| SECOND
 	;
 
 timeZoneField

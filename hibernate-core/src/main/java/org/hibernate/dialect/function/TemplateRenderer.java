@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 
 import org.jboss.logging.Logger;
 
@@ -98,8 +98,9 @@ public class TemplateRenderer {
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void render(
 			SqlAppender sqlAppender,
-			List<Expression> args,
-			SqlAstWalker walker, SessionFactoryImplementor factory) {
+			List<SqlAstNode> args,
+			SqlAstWalker walker,
+			SessionFactoryImplementor factory) {
 		final int numberOfArguments = args.size();
 
 		if ( getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments() ) {
@@ -109,7 +110,7 @@ public class TemplateRenderer {
 		for ( int i = 0; i < chunks.length; ++i ) {
 			if ( i < paramIndexes.length ) {
 				final int index = paramIndexes[i] - 1;
-				final Expression arg =  index < numberOfArguments ? args.get( index ) : null;
+				final SqlAstNode arg = index < numberOfArguments ? args.get( index ) : null;
 				if ( arg != null ) {
 					arg.accept( walker );
 				}

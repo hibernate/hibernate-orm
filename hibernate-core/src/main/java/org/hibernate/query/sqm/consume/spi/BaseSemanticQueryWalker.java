@@ -49,6 +49,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLocateFunction;
@@ -521,6 +522,11 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	@Override
 	public T visitExtractFunction(SqmExtractFunction function) {
 		return (T) function;
+	}
+
+	@Override
+	public T visitExtractUnit(SqmExtractUnit extractUnit) {
+		return (T) extractUnit;
 	}
 
 	@Override

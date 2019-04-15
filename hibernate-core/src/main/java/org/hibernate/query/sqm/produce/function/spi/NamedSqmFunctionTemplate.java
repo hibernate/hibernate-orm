@@ -6,9 +6,6 @@
  */
 package org.hibernate.query.sqm.produce.function.spi;
 
-import java.util.List;
-import java.util.Locale;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
@@ -17,7 +14,10 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Provides a standard implementation that supports the majority of the HQL
@@ -68,7 +68,7 @@ public class NamedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTempl
 		@Override
 		public void render(
 				SqlAppender sqlAppender,
-				List<Expression> sqlAstArguments,
+				List<SqlAstNode> sqlAstArguments,
 				SqlAstWalker walker,
 				SessionFactoryImplementor sessionFactory) {
 			final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
@@ -79,7 +79,7 @@ public class NamedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTempl
 			}
 
 			boolean firstPass = true;
-			for ( Expression sqlAstArgument : sqlAstArguments ) {
+			for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
 				if ( !firstPass ) {
 					sqlAppender.appendSql( ", " );
 				}

@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.consume.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
+import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.expression.AbsFunction;
@@ -208,4 +209,6 @@ public interface SqlAstWalker {
 
 
 	void visitEntityTypeLiteral(EntityTypeLiteral expression);
+
+	void visitExtractUnit(ExtractUnit unit);
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.produce.function.internal;
 
-import java.util.List;
-
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
@@ -16,6 +14,8 @@ import org.hibernate.query.sqm.tree.expression.function.AbstractSqmFunction;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.expression.Expression;
+
+import java.util.List;
 
 /**
  * @author Steve Ebersole

@@ -6,16 +6,16 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.List;
-
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.Type;
+
+import java.util.List;
 
 /**
  * Support for slightly more general templating than {@link NamedSqmFunctionTemplate}, with an unlimited number of arguments.
@@ -53,7 +53,7 @@ public class VarArgsSQLFunction implements SqmFunctionTemplate {
 		return new SelfRenderingSqmFunction(
 				(sqlAppender, sqlAstArguments, walker, sessionFactory) -> {
 					sqlAppender.appendSql( begin );
-					for ( Expression sqlAstArgument : sqlAstArguments ) {
+					for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
 						sqlAstArgument.accept( walker );
 						sqlAppender.appendSql( ", " );
 					}

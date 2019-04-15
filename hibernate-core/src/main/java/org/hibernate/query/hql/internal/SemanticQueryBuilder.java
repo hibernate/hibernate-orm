@@ -113,6 +113,8 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
@@ -1871,6 +1873,62 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public Object visitDatetimeField(HqlParser.DatetimeFieldContext ctx) {
+		if (ctx.DAY()!=null) {
+			return new SqmExtractUnit("day");
+		}
+		if (ctx.MONTH()!=null) {
+			return new SqmExtractUnit("month");
+		}
+		if (ctx.YEAR()!=null) {
+			return new SqmExtractUnit("year");
+		}
+		if (ctx.HOUR()!=null) {
+			return new SqmExtractUnit("hour");
+		}
+		if (ctx.MINUTE()!=null) {
+			return new SqmExtractUnit("minute");
+		}
+		if (ctx.SECOND()!=null) {
+			return new SqmExtractUnit("second", StandardSpiBasicTypes.FLOAT);
+		}
+		return super.visitDatetimeField(ctx);
+	}
+
+	@Override
+	public Object visitTimeZoneField(HqlParser.TimeZoneFieldContext ctx) {
+		if (ctx.TIMEZONE_HOUR()!=null) {
+			return new SqmExtractUnit("timezone_hour");
+		}
+		if (ctx.TIMEZONE_MINUTE()!=null) {
+			return new SqmExtractUnit("timezone_minute");
+		}
+		return super.visitTimeZoneField(ctx);
+	}
+
+	@Override
+	public Object visitExtractFunction(HqlParser.ExtractFunctionContext ctx) {
+		final SqmFunctionTemplate template = creationContext.getFunctionResolver().apply( SqmExtractFunction.NAME );
+		final SqmExpression expressionToExtract = (SqmExpression) ctx.expression().accept( this );
+		final SqmExpression extractFieldExpression = (SqmExpression) ctx.extractField().accept( this );
+
+		if ( template == null ) {
+			// use the standard EXTRACT support
+			return new SqmExtractFunction(
+					extractFieldExpression,
+					expressionToExtract,
+					(AllowableFunctionReturnType) extractFieldExpression.getExpressableType()
+			);
+		}
+		else {
+			return template.makeSqmFunctionExpression(
+					Arrays.asList( extractFieldExpression, expressionToExtract ),
+					(AllowableFunctionReturnType) extractFieldExpression.getExpressableType()
+			);
+		}
+	}
+
+	@Override
 	public SqmExpression visitCastFunction(HqlParser.CastFunctionContext ctx) {
 		final SqmFunctionTemplate template = creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate( SqmCastFunction.NAME );
 
@@ -1888,7 +1946,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			//noinspection unchecked
 			return new SqmCastFunction(
 					expressionToCast,
-					(AllowableFunctionReturnType) castTargetExpression,
+					(AllowableFunctionReturnType) castTargetExpression.getExpressableType(),
 					castTargetExpression.getExpressableType().toString()
 			);
 		}

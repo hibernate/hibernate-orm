@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.BasicType;
 
@@ -53,7 +54,7 @@ public class SybaseLocateEmulationFunctionTemplate
 	@SuppressWarnings("unchecked")
 	public void render(
 			SqlAppender sqlAppender,
-			List<Expression> sqlAstArguments,
+			List<SqlAstNode> sqlAstArguments,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
 		final int argCount = sqlAstArguments.size();

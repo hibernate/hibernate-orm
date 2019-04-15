@@ -43,4 +43,16 @@ public class ParameterTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 	}
+
+	@Test
+	public void testSelectNamedParam() {
+		inTransaction(
+				session -> {
+					session.createQuery( "select :name from SalesAssociate p" )
+							.setParameter( "name", "a name" )
+							.list();
+				}
+		);
+	}
+
 }

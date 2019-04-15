@@ -27,8 +27,8 @@ import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Sequence;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -86,388 +86,388 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
-		super.initializeFunctionRegistry( registry );
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
 		// Aggregate Functions
-		registry.namedTemplateBuilder( "ANY_VALUE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ANY_VALUE" )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "ARRAY_AGG" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ARRAY_AGG" )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "BIT_AND" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "BIT_AND" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "BIT_OR" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "BIT_OR" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "BIT_XOR" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "BIT_XOR" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "COUNTIF" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "COUNTIF" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "LOGICAL_AND" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "LOGICAL_AND" )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "LOGICAL_OR" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "LOGICAL_OR" )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "STRING_AGG" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "STRING_AGG" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 
 		// Mathematical Functions
-		CommonFunctionFactory.abs( registry );
-		CommonFunctionFactory.sign( registry );
-		CommonFunctionFactory.cos( registry );
-		CommonFunctionFactory.cosh( registry );
-		CommonFunctionFactory.acos( registry );
-		registry.namedTemplateBuilder( "ACOSH" )
+		CommonFunctionFactory.abs( queryEngine );
+		CommonFunctionFactory.sign( queryEngine );
+		CommonFunctionFactory.cos( queryEngine );
+		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.acos( queryEngine );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ACOSH" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.sin( registry );
-		CommonFunctionFactory.sinh( registry );
-		CommonFunctionFactory.asin( registry );
-		registry.namedTemplateBuilder( "ASINH" )
+		CommonFunctionFactory.sin( queryEngine );
+		CommonFunctionFactory.sinh( queryEngine );
+		CommonFunctionFactory.asin( queryEngine );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ASINH" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.tan( registry );
-		CommonFunctionFactory.tanh( registry );
-		CommonFunctionFactory.atan( registry );
-		registry.namedTemplateBuilder( "ATANH" )
+		CommonFunctionFactory.tan( queryEngine );
+		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory.atan( queryEngine );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ATANH" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "ATAN2" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ATAN2" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )
 				.register();
-		CommonFunctionFactory.exp( registry );
-		CommonFunctionFactory.ln( registry );
-		CommonFunctionFactory.sqrt( registry );
+		CommonFunctionFactory.exp( queryEngine );
+		CommonFunctionFactory.ln( queryEngine );
+		CommonFunctionFactory.sqrt( queryEngine );
 
-		registry.namedTemplateBuilder( "IS_INF" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "IS_INF" )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "IS_NAN" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "IS_NAN" )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "IEEE_DIVIDE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "IEEE_DIVIDE" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "POW" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "POW" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.registerAlternateKey( "POWER", "POW" );
-		registry.namedTemplateBuilder( "LOG" )
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "POWER", "POW" );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "LOG" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		registry.namedTemplateBuilder( "LOG10" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "LOG10" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "GREATEST" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "GREATEST" )
 				.register();
-		registry.namedTemplateBuilder( "LEAST" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "LEAST" )
 				.register();
-		registry.namedTemplateBuilder( "DIV" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "DIV" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "MOD" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "MOD" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "ROUND" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ROUND" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		registry.namedTemplateBuilder( "TRUNC" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TRUNC" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		registry.namedTemplateBuilder( "CEIL" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "CEIL" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.registerAlternateKey( "CEILING", "CEIL" );
-		registry.namedTemplateBuilder( "FLOOR" )
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "CEILING", "CEIL" );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "FLOOR" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		// Hash Functions
-		registry.namedTemplateBuilder( "FARM_FINGERPRINT" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "FARM_FINGERPRINT" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "SHA1" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "SHA1" )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "SHA256" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "SHA256" )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "SHA512" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "SHA512" )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		// String Functions
-		registry.registerPattern( "str", "cast(?1 as string)" );
-		registry.namedTemplateBuilder( "BYTE_LENGTH" )
+		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as string)" );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "BYTE_LENGTH" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "CHAR_LENGTH" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "CHAR_LENGTH" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.registerAlternateKey( "CHARACTER_LENGTH", "CHAR_LENGTH" );
-		registry.namedTemplateBuilder( "CODE_POINTS_TO_BYTES" )
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "CHARACTER_LENGTH", "CHAR_LENGTH" );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "CODE_POINTS_TO_BYTES" )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "CODE_POINTS_TO_STRING" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "CODE_POINTS_TO_STRING" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "ENDS_WITH" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ENDS_WITH" )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "FORMAT" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "FORMAT" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
-		registry.namedTemplateBuilder( "FROM_BASE64" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "FROM_BASE64" )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "FROM_HEX" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "FROM_HEX" )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "LENGTH" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "LENGTH" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "LPAD" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "LPAD" )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		registry.namedTemplateBuilder( "LOWER" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "LOWER" )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "LTRIM" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "LTRIM" )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "REGEXP_CONTAINS" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "REGEXP_CONTAINS" )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "REGEXP_EXTRACT" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "REGEXP_EXTRACT" )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "REGEXP_EXTRACT_ALL" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "REGEXP_EXTRACT_ALL" )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "REGEXP_REPLACE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "REGEXP_REPLACE" )
 				.setExactArgumentCount( 3 )
 				.register();
-		registry.namedTemplateBuilder( "REPLACE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "REPLACE" )
 				.setExactArgumentCount( 3 )
 				.register();
-		registry.namedTemplateBuilder( "REPEAT" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "REPEAT" )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "REVERSE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "REVERSE" )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "RPAD" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "RPAD" )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		registry.namedTemplateBuilder( "RTRIM" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "RTRIM" )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		registry.namedTemplateBuilder( "SAFE_CONVERT_BYTES_TO_STRING" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "SAFE_CONVERT_BYTES_TO_STRING" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "SPLIT" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "SPLIT" )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		registry.namedTemplateBuilder( "STARTS_WITH" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "STARTS_WITH" )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "STRPOS" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "STRPOS" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "SUBSTR" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "SUBSTR" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		registry.registerAlternateKey( "SUBSTRING", "SUBSTR" );
-		registry.namedTemplateBuilder( "TO_BASE64" )
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "SUBSTRING", "SUBSTR" );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TO_BASE64" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "TO_CODE_POINTS" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TO_CODE_POINTS" )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "TO_HEX" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TO_HEX" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "TRIM" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TRIM" )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		registry.namedTemplateBuilder( "UPPER" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "UPPER" )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		// JSON Functions
-		registry.namedTemplateBuilder( "JSON_QUERY" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "JSON_QUERY" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "JSON_VALUE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "JSON_VALUE" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
 				.register();
 
 		// Array Functions
-		registry.namedTemplateBuilder( "ARRAY" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ARRAY" )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "ARRAY_CONCAT" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ARRAY_CONCAT" )
 				.register();
-		registry.namedTemplateBuilder( "ARRAY_LENGTH" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ARRAY_LENGTH" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "ARRAY_TO_STRING" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ARRAY_TO_STRING" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		registry.namedTemplateBuilder( "ARRAY_REVERSE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ARRAY_REVERSE" )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		// Date functions
-		registry.namedTemplateBuilder( "CURRENT_DATE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "CURRENT_DATE" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setArgumentCountBetween( 0, 1 )
 				.register();
-		registry.namedTemplateBuilder( "DATE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "DATE" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setArgumentCountBetween( 1, 3 )
 				.register();
-		registry.namedTemplateBuilder( "DATE_ADD" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "DATE_ADD" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "DATE_SUB" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "DATE_SUB" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "DATE_DIFF" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "DATE_DIFF" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 3 )
 				.register();
-		registry.namedTemplateBuilder( "DATE_TRUNC" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "DATE_TRUNC" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "DATE_FROM_UNIX_DATE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "DATE_FROM_UNIX_DATE" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "FORMAT_DATE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "FORMAT_DATE" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "PARSE_DATE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "PARSE_DATE" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "UNIX_DATE" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "UNIX_DATE" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		// Timestamp functions
-		registry.registerNoArgs( "CURRENT_TIMESTAMP", StandardSpiBasicTypes.TIMESTAMP );
-		registry.namedTemplateBuilder( "STRING" )
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "CURRENT_TIMESTAMP", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "STRING" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		registry.namedTemplateBuilder( "TIMESTAMP" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TIMESTAMP" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		registry.namedTemplateBuilder( "TIMESTAMP_ADD" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TIMESTAMP_ADD" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "TIMESTAMP_SUB" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TIMESTAMP_SUB" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 2 )
 				.register();
-		registry.namedTemplateBuilder( "TIMESTAMP_DIFF" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TIMESTAMP_DIFF" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 3 )
 				.register();
-		registry.namedTemplateBuilder( "TIMESTAMP_TRUNC" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TIMESTAMP_TRUNC" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		registry.namedTemplateBuilder( "FORMAT_TIMESTAMP" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "FORMAT_TIMESTAMP" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		registry.namedTemplateBuilder( "PARSE_TIMESTAMP" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "PARSE_TIMESTAMP" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		registry.namedTemplateBuilder( "TIMESTAMP_SECONDS" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TIMESTAMP_SECONDS" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "TIMESTAMP_MILLIS" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TIMESTAMP_MILLIS" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "TIMESTAMP_MICROS" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "TIMESTAMP_MICROS" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "UNIX_SECONDS" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "UNIX_SECONDS" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "UNIX_MILLIS" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "UNIX_MILLIS" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		registry.namedTemplateBuilder( "UNIX_MICROS" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "UNIX_MICROS" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();

@@ -102,7 +102,7 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 			connectionProvider.clear();
 		} );
 
-		assertEquals( 17, connectionProvider.getPreparedStatements().size() );
+		assertEquals( 10, connectionProvider.getPreparedStatements().size() );
 	}
 
 	@Override

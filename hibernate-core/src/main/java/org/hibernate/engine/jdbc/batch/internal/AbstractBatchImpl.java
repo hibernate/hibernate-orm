@@ -133,7 +133,11 @@ public abstract class AbstractBatchImpl implements Batch {
 	}
 
 	private PreparedStatement buildBatchStatement(String sql, boolean callable) {
-		return jdbcCoordinator.getStatementPreparer().prepareStatement( sql, callable );
+		if (statements.isEmpty()) {
+			return jdbcCoordinator.getStatementPreparer().prepareStatement(sql, callable);
+		}
+
+		return jdbcCoordinator.getStatementPreparer().prepareSecondaryBatchStatement(sql, callable);
 	}
 
 	@Override

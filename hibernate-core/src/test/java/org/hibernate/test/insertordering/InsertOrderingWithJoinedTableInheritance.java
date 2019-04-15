@@ -101,7 +101,7 @@ public class InsertOrderingWithJoinedTableInheritance
 			connectionProvider.clear();
 		} );
 
-		assertEquals( 26, connectionProvider.getPreparedStatements().size() );
+		assertEquals( 4, connectionProvider.getPreparedStatements().size() );
 	}
 
 	@Override

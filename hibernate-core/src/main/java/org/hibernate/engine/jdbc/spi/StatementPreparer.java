@@ -85,4 +85,14 @@ public interface StatementPreparer {
 	 * @return the prepared statement
 	 */
 	public PreparedStatement prepareQueryStatement(String sql, boolean isCallable, ScrollMode scrollMode);
+
+	/**
+	 * Prepare a second statement for an active batch (e.g. when performing inserts on entities using joined table inheritance).
+	 *
+	 * @param sql The SQL the statement to be prepared
+	 * @param isCallable Whether to prepare as a callable statement.
+	 *
+	 * @return the prepared statement
+	 */
+	public PreparedStatement prepareSecondaryBatchStatement(String sql, boolean isCallable);
 }

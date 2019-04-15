@@ -78,6 +78,12 @@ class StatementPreparerImpl implements StatementPreparer {
 		return buildPreparedStatementPreparationTemplate( sql, isCallable ).prepareStatement();
 	}
 
+	@Override
+	public PreparedStatement prepareSecondaryBatchStatement(String sql, final boolean isCallable) {
+		//do not execute batch here
+		return buildPreparedStatementPreparationTemplate( sql, isCallable ).prepareStatement();
+	}
+
 	private StatementPreparationTemplate buildPreparedStatementPreparationTemplate(String sql, final boolean isCallable) {
 		return new StatementPreparationTemplate( sql ) {
 			@Override

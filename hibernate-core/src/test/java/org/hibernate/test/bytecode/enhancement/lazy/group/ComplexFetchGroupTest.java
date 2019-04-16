@@ -28,12 +28,12 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,7 +47,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @TestForIssue( jiraKey = "HHH-11223" )
 @RunWith( BytecodeEnhancerRunner.class )
 @CustomEnhancementContext( EnhancerTestContext.class )
-@FailureExpected( jiraKey = "HHH-11223" )
 public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
@@ -88,7 +87,8 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 					final SessionStatistics sessionStats = session.getStatistics();
 
 					final EEntity entityE = session.load( EEntity.class, 17L );
-					assertThat( stats.getPrepareStatementCount(), is( 1L ) );
+					assertThat( stats.getPrepareStatementCount(), is( 2L ) );
+					assertThat( Hibernate.isPropertyInitialized( entityE, "d" ), is( true )  );
 
 //					final DEntity d1 = entityE.getD();
 //					assertThat( stats.getPrepareStatementCount(), is( 1 ) );
@@ -171,6 +171,23 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.save(c);
 					session.save(d);
 					session.save(e);
+				}
+		);
+	}
+
+	@After
+	public void cleanupTestData() {
+		inTransaction(
+				session -> {
+					DEntity d = session.get( DEntity.class, 1L );
+					for( BEntity b : d.getBs() ) {
+						session.delete( b );
+					}
+					d.getBs().clear();
+					session.delete( d.getE() );
+					session.delete( d );
+					session.delete( d.a );
+					session.delete( d.c );
 				}
 		);
 	}

@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.instrument.domain">
+    <class name="AEntity" table="A">
+        <id name="oid"/>
+        <property name="a"/>
+    </class>
+
+    <class name="BEntity" table="B">
+        <id name="oid"/>
+        <property name="b1"/>
+        <property name="b2"/>
+    </class>
+
+    <class name="CEntity" table="C">
+        <id name="oid"/>
+        <property name="c1"/>
+        <property name="c2"/>
+        <property name="c3"/>
+        <property name="c4"/>
+    </class>
+
+    <class name="DEntity" table="D">
+        <id name="oid"/>
+        <property name="d"/>
+        <property name="blob" lazy="true"/>
+        <many-to-one name="a" lazy="no-proxy"/>
+        <many-to-one name="c" lazy="no-proxy"/>
+        <set name="bs" lazy="true">
+            <key column="b_oid"/>
+            <many-to-many class="BEntity"/>
+        </set>
+        <one-to-one name="e" lazy="no-proxy" property-ref="d"/>
+    </class>
+
+    <class name="EEntity" table="E">
+        <id name="oid"/>
+        <property name="e1"/>
+        <property name="e2"/>
+        <many-to-one name="d" lazy="no-proxy" unique="true"/>
+    </class>
+</hibernate-mapping>

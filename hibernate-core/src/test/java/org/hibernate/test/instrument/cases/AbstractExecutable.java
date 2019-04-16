@@ -16,14 +16,30 @@ public abstract class AbstractExecutable implements Executable {
     @Override
 	public final void prepare() {
 		Configuration cfg = new Configuration().setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		String[] resources = getResources();
+
+		configure( cfg );
+
+		final String[] resources = getResources();
 		for ( String resource : resources ) {
 			cfg.addResource( resource );
 		}
+		applyMappings( cfg );
+		applyAnnotatedClasses( cfg );
+
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 		factory = cfg.buildSessionFactory( serviceRegistry );
 	}
-    @Override
+
+	protected void configure(Configuration cfg) {
+	}
+
+	protected void applyMappings(Configuration cfg) {
+	}
+
+	protected void applyAnnotatedClasses(Configuration cfg) {
+	}
+
+	@Override
 	public final void complete() {
 		try {
 			cleanup();

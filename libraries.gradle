@@ -3,7 +3,7 @@
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 ext {
 slf4jVersion = '1.6.1'
-junitVersion = '4.10'
+junitVersion = '4.12'
 h2Version = '1.2.145'
 bytemanVersion = '2.1.2'
 infinispanVersion = '5.2.0.Beta3'

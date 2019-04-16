@@ -24,6 +24,7 @@
  */
 package org.hibernate.internal.util;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -377,4 +378,11 @@ public final class ReflectHelper {
 		}
 	}
 
+	public static void ensureAccessibility(AccessibleObject accessibleObject) {
+		if ( accessibleObject.isAccessible() ) {
+			return;
+		}
+
+		accessibleObject.setAccessible( true );
+	}
 }

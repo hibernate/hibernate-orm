@@ -21,7 +21,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -63,7 +62,6 @@ public class RuntimeFetchFromManagedTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "", message = "The entity is returned directly from the PC" )
 	public void testFetchingFromManagedEntityEntityGraphLoad() {
 		inTransaction(
 				session -> {

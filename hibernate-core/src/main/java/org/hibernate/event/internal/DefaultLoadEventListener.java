@@ -18,11 +18,13 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
@@ -430,7 +432,19 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		Object entity = persistenceContextEntry.getEntity();
 
 		if ( entity != null ) {
-			return persistenceContextEntry.isManaged() ? entity : null;
+			if ( persistenceContextEntry.isManaged() ) {
+				final LoadQueryInfluencers influencers = event.getSession().getLoadQueryInfluencers();
+				final boolean hasActiveInfluencers = influencers.getEffectiveEntityGraph().getSemantic() != null
+						|| influencers.hasEnabledFetchProfiles();
+				if ( hasActiveInfluencers ) {
+					// we may need to force initialization of some of the entity's attributes
+					persister.initializeLazyProperties( entity, event.getSession() );
+				}
+				return entity;
+			}
+			else {
+				return null;
+			}
 		}
 
 		entity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( event, persister, keyToLoad );

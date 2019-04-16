@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -22,9 +23,13 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
@@ -32,6 +37,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
@@ -818,5 +824,11 @@ public interface EntityPersister extends EntityDefinition {
 	@Deprecated
 	default boolean canIdentityInsertBeDelayed() {
 		return false;
+	}
+
+	default void initializeLazyProperties(Object entity, EventSource session) {
+		// todo : here is where we'd need to still walk the EntityGraph (and fetch profiles?) even though the entity is MANAGED
+
+		// do nothing.  the default is here for backwards compatibilty for previous impls
 	}
 }

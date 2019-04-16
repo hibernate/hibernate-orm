@@ -136,6 +136,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		return storedSnapshot;
 	}
 
+	public boolean isInitializing() {
+		return initializing;
+	}
+
 	//Careful: these methods do not initialize the collection.
 
 	@Override

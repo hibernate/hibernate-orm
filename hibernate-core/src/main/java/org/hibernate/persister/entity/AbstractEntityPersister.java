@@ -51,6 +51,7 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -4400,7 +4401,14 @@ public abstract class AbstractEntityPersister
 			EventSource session) {
 		final Object propertyValue = getPropertyValue( entity, propertyName );
 		// should never be null
-		( (PersistentCollection) propertyValue ).forceInitialization();
+		if ( propertyValue instanceof AbstractPersistentCollection ) {
+			// calling `#forceInitialization` on a collection that is initializing throws an exception
+			//		- unfortunately that means casting to AbstractPersistentCollection to make that determination
+			final AbstractPersistentCollection collection = (AbstractPersistentCollection) propertyValue;
+			if ( !collection.isInitializing() ) {
+				collection.forceInitialization();
+			}
+		}
 	}
 
 

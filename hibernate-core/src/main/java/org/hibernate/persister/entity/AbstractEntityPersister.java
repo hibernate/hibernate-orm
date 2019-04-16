@@ -4340,6 +4340,8 @@ public abstract class AbstractEntityPersister
 				}
 			}
 		}
+
+		// todo - fetch profiles?
 	}
 
 	private void triggerLazyPropertyInitialization(

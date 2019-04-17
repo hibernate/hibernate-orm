@@ -23,7 +23,19 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     }
 
     @Test
-    public void testTimestampLiteral() {
+    public void testCastFunction() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select cast(e.theDate as string) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select cast(e.id as string) from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+    @Test
+    public void testExtractFunction() {
         inTransaction(
                 session -> {
                     session.createQuery("select extract(year from e.theDate) from EntityOfBasics e")

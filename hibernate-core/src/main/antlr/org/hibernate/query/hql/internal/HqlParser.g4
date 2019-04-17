@@ -595,7 +595,7 @@ castTarget
 	//			- "pass through"
 	//		- coded cast (INTEGER_LITERAL)
 	//			- SqlTypeDescriptorRegistry key
-	: IDENTIFIER
+	: identifier
 	;
 
 concatFunction
@@ -728,7 +728,7 @@ positionStringArgument
 	;
 
 charLengthFunction
-	: CAST LEFT_PAREN expression RIGHT_PAREN
+	: CHARACTER_LENGTH LEFT_PAREN expression RIGHT_PAREN
 	;
 
 octetLengthFunction
@@ -763,6 +763,7 @@ identifier
 	| BIT_LENGTH
 	| BOTH
 	| CAST
+	| CHARACTER_LENGTH
 	| COALESCE
 	| COLLATE
 	| CONCAT

@@ -12,6 +12,7 @@ import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 
 /**
@@ -28,7 +29,7 @@ public class CastFunctionTemplate implements SqmFunctionTemplate {
 		assert arguments.size() == 1;
 		return new SqmCastFunction(
 				arguments.get( 0 ),
-				impliedResultType
+				new SqmCastTarget( impliedResultType )
 		);
 	}
 }

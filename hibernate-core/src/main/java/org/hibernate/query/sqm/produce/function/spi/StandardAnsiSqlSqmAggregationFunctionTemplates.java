@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
@@ -228,8 +229,7 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 	static SqmExpression cast(SqmExpression argument, String sqlCastTypeForFloatingPointArgTypes) {
 		return new SqmCastFunction(
 				argument,
-				StandardSpiBasicTypes.DOUBLE,
-				sqlCastTypeForFloatingPointArgTypes
+				new SqmCastTarget( StandardSpiBasicTypes.DOUBLE )
 		);
 	}
 

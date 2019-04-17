@@ -17,29 +17,22 @@ public class SqmCastFunction extends AbstractSqmFunction implements SqmFunction 
 	public static final String NAME = "cast";
 
 	private final SqmExpression expressionToCast;
-	private final String explicitSqlCastTarget;
+	private final SqmCastTarget castTarget;
 
 	public SqmCastFunction(
 			SqmExpression expressionToCast,
-			AllowableFunctionReturnType castTargetType) {
-		this( expressionToCast, castTargetType, null );
-	}
-
-	public SqmCastFunction(
-			SqmExpression expressionToCast,
-			AllowableFunctionReturnType castTargetType,
-			String explicitSqlCastTarget) {
-		super( castTargetType );
+			SqmCastTarget castTarget) {
+		super( castTarget.getExpressableType() );
 		this.expressionToCast = expressionToCast;
-		this.explicitSqlCastTarget = explicitSqlCastTarget;
+		this.castTarget = castTarget;
 	}
 
 	public SqmExpression getExpressionToCast() {
 		return expressionToCast;
 	}
 
-	public String getExplicitSqlCastTarget() {
-		return explicitSqlCastTarget;
+	public SqmCastTarget getCastTarget() {
+		return castTarget;
 	}
 
 	@Override

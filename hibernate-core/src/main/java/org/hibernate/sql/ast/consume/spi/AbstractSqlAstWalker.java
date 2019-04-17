@@ -449,27 +449,8 @@ public abstract class AbstractSqlAstWalker
 		sqlAppender.appendSql( "cast(" );
 		function.getExpressionToCast().accept( this );
 		sqlAppender.appendSql( " as " );
-		sqlAppender.appendSql( determineCastTargetTypeSqlExpression( function ) );
+		function.getCastTarget().accept( this );
 		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-	}
-
-	private String determineCastTargetTypeSqlExpression(CastFunction castFunction) {
-		if ( castFunction.getExplicitCastTargetTypeSqlExpression() != null ) {
-			return castFunction.getExplicitCastTargetTypeSqlExpression();
-		}
-
-		final SqlExpressableType castResultType = castFunction.getCastResultType();
-
-		if ( castResultType == null ) {
-			throw new SqlTreeException(
-					"CastFunction did not define an explicit cast target SQL expression and its return type was null"
-			);
-		}
-
-		final BasicJavaDescriptor javaTypeDescriptor = castResultType.getJavaTypeDescriptor();
-		return getJdbcServices()
-				.getDialect()
-				.getCastTypeName( javaTypeDescriptor.getJdbcRecommendedSqlType( this ).getJdbcTypeCode() );
 	}
 
 	@Override
@@ -572,6 +553,13 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitExtractUnit(ExtractUnit unit) {
 		appendSql(unit.getName());
+	}
+
+	@Override
+	public void visitCastTarget(CastTarget target) {
+		int typecode = target.getExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
+		String type = sessionFactory.getJdbcServices().getDialect().getCastTypeName( typecode );
+		appendSql(type);
 	}
 
 	@Override

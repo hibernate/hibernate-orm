@@ -58,6 +58,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
@@ -131,6 +132,7 @@ import org.hibernate.sql.ast.tree.expression.BitLengthFunction;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastFunction;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.ConcatFunction;
@@ -188,6 +190,7 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.singletonList;
 import static org.hibernate.query.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
 import static org.hibernate.query.BinaryArithmeticOperator.MODULO;
@@ -780,7 +783,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new NonStandardFunction(
 					expression.getFunctionName(),
-					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType(),
+					expression.getExpressableType().getSqlExpressableType(),
 					visitArguments( expression.getArguments() )
 			);
 		}
@@ -852,7 +855,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new BitLengthFunction(
 					toSqlExpression( function.getArgument().accept( this ) ),
-					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+					function.getExpressableType().getSqlExpressableType()
 			);
 		}
 		finally {
@@ -867,8 +870,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new CastFunction(
 					toSqlExpression( function.getExpressionToCast().accept( this ) ),
-					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType(),
-					function.getExplicitSqlCastTarget()
+					(CastTarget) function.getCastTarget().accept( this )
 			);
 		}
 		finally {
@@ -912,7 +914,7 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 
 		if ( sqmExpressions.size() == 1 ) {
-			return Collections.singletonList( toSqlExpression( sqmExpressions.get( 0 ).accept( this ) ) );
+			return singletonList( toSqlExpression( sqmExpressions.get( 0 ).accept( this ) ) );
 		}
 
 		final List<Expression> results = new ArrayList<>();
@@ -939,21 +941,21 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public CurrentDateFunction visitCurrentDateFunction(SqmCurrentDateFunction function) {
 		return new CurrentDateFunction(
-				( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+				function.getExpressableType().getSqlExpressableType()
 		);
 	}
 
 	@Override
 	public CurrentTimeFunction visitCurrentTimeFunction(SqmCurrentTimeFunction function) {
 		return new CurrentTimeFunction(
-				( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+				function.getExpressableType().getSqlExpressableType()
 		);
 	}
 
 	@Override
 	public CurrentTimestampFunction visitCurrentTimestampFunction(SqmCurrentTimestampFunction function) {
 		return new CurrentTimestampFunction(
-				( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+				function.getExpressableType().getSqlExpressableType()
 		);
 	}
 
@@ -963,7 +965,22 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new ExtractUnit(
 					unit.getUnitName(),
-					((BasicValuedExpressableType) unit.getExpressableType()).getSqlExpressableType()
+					unit.getExpressableType().getSqlExpressableType()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
+	public Object visitCastTarget(SqmCastTarget target) {
+		shallownessStack.push( Shallowness.FUNCTION );
+		try {
+			return new CastTarget(
+					target.getExpressableType().getSqlExpressableType(
+							getCreationContext().getDomainModel().getTypeConfiguration()
+					)
 			);
 		}
 		finally {
@@ -978,8 +995,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new ExtractFunction(
 					(ExtractUnit) function.getUnitToExtract().accept( this ),
-					toSqlExpression( function.getExtractionSource().accept( this ) ),
-					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+					toSqlExpression( function.getExtractionSource().accept( this ) )
 			);
 		}
 		finally {
@@ -994,10 +1010,9 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new CountStarFunction(
 					expression.isDistinct(),
-					getCreationContext().getDomainModel().getTypeConfiguration()
-							.getBasicTypeRegistry()
-							.getBasicType( Long.class )
-							.getSqlExpressableType( getCreationContext().getDomainModel().getTypeConfiguration() )
+					StandardSpiBasicTypes.LONG.getSqlExpressableType(
+							getCreationContext().getDomainModel().getTypeConfiguration()
+					)
 			);
 		}
 		finally {
@@ -1012,11 +1027,9 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new LengthFunction(
 					toSqlExpression( function.getArgument().accept( this ) ),
-					getCreationContext().getDomainModel().getTypeConfiguration()
-							.getBasicTypeRegistry()
-							.getBasicType( Long.class )
-							.getSqlExpressableType( getCreationContext().getDomainModel().getTypeConfiguration() )
-
+					StandardSpiBasicTypes.LONG.getSqlExpressableType(
+							getCreationContext().getDomainModel().getTypeConfiguration()
+					)
 			);
 		}
 		finally {
@@ -1049,7 +1062,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new LowerFunction(
 					toSqlExpression( function.getArgument().accept( this ) ),
-					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+					function.getExpressableType().getSqlExpressableType()
 			);
 		}
 		finally {
@@ -1099,7 +1112,7 @@ public abstract class BaseSqmToSqlAstConverter
 			return new ModFunction(
 					dividend,
 					divisor,
-					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+					function.getExpressableType().getSqlExpressableType()
 			);
 		}
 		finally {
@@ -1120,7 +1133,7 @@ public abstract class BaseSqmToSqlAstConverter
 			return new SubstrFunction(
 					expression.getFunctionName(),
 					expressionList,
-					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType()
+					expression.getExpressableType().getSqlExpressableType()
 			);
 		}
 		finally {
@@ -1135,8 +1148,7 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new CastFunction(
 					toSqlExpression( expression.getArgument().accept( this ) ),
-					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType(),
-					null
+					new CastTarget( StandardSpiBasicTypes.STRING.getSqlExpressableType() )
 			);
 		}
 		finally {
@@ -1296,7 +1308,7 @@ public abstract class BaseSqmToSqlAstConverter
 		return new NullifFunction(
 				toSqlExpression( expression.getFirstArgument().accept( this ) ),
 				toSqlExpression( expression.getSecondArgument().accept( this ) ),
-				( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType()
+				expression.getExpressableType().getSqlExpressableType()
 		);
 	}
 
@@ -1314,7 +1326,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitUpperFunction(SqmUpperFunction sqmFunction) {
 		return new UpperFunction(
 				toSqlExpression( sqmFunction.getArgument().accept( this ) ),
-				( (BasicValuedExpressableType) sqmFunction.getExpressableType() ).getSqlExpressableType()
+				sqmFunction.getExpressableType().getSqlExpressableType()
 		);
 
 	}

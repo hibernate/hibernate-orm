@@ -18,11 +18,11 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class SqmExtractFunction extends AbstractSqmFunction {
 	public static final String NAME = "extract";
 
-	private final SqmExpression unitToExtract;
+	private final SqmExtractUnit unitToExtract;
 	private final SqmExpression extractionSource;
 
 	public SqmExtractFunction(
-			SqmExpression unitToExtract,
+			SqmExtractUnit unitToExtract,
 			SqmExpression extractionSource,
 			AllowableFunctionReturnType resultType) {
 		super( resultType );
@@ -30,7 +30,7 @@ public class SqmExtractFunction extends AbstractSqmFunction {
 		this.extractionSource = extractionSource;
 	}
 
-	public SqmExpression getUnitToExtract() {
+	public SqmExtractUnit getUnitToExtract() {
 		return unitToExtract;
 	}
 

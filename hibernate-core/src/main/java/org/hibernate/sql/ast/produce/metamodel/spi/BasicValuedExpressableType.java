@@ -32,9 +32,6 @@ public interface BasicValuedExpressableType<J>
 		return getSqlExpressableType().getSqlTypeDescriptor();
 	}
 
-	@Remove
-	SqlExpressableType getSqlExpressableType();
-
 	default SqlExpressableType getSqlExpressableType(TypeConfiguration typeConfiguration) {
 		return getSqlTypeDescriptor().getSqlExpressableType( getJavaTypeDescriptor(), typeConfiguration );
 	}

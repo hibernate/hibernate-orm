@@ -36,10 +36,6 @@ plugins {
 allprojects {
 	repositories {
 		mavenCentral()
-		maven {
-			name "jboss-snapshots"
-			url "http://repository.jboss.org/nexus/content/repositories/snapshots/"
-		}
 		//Allow loading additional dependencies from a local path;
 		//useful to load JDBC drivers which can not be distributed in public.
 		if (System.env['ADDITIONAL_REPO'] != null) {

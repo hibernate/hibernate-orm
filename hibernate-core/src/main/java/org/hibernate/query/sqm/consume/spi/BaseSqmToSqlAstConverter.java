@@ -1047,7 +1047,10 @@ public abstract class BaseSqmToSqlAstConverter
 					toSqlExpression( function.getStringToSearch().accept( this ) ),
 					function.getStartPosition() == null
 							? null
-							: toSqlExpression( function.getStartPosition().accept( this ) )
+							: toSqlExpression( function.getStartPosition().accept( this ) ),
+					function.getExpressableType().getSqlExpressableType(
+							getCreationContext().getDomainModel().getTypeConfiguration()
+					)
 			);
 		}
 		finally {

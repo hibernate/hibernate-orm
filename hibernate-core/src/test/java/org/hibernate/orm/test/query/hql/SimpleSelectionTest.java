@@ -122,6 +122,42 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testLowerFunctionSelection() {
+		inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select lower(s.someString) from SimpleEntity s ORDER BY lower(s.someString)" )
+							.list();
+					assertThat( results.size(), is( 2 ) );
+					assertThat( results.get( 0 ), is( "a" ) );
+				} );
+	}
+
+	@Test
+	public void testUpperFunctionSelection() {
+		inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select upper(s.someString) from SimpleEntity s ORDER BY upper(s.someString)" )
+							.list();
+					assertThat( results.size(), is( 2 ) );
+					assertThat( results.get( 0 ), is( "A" ) );
+				} );
+	}
+
+	@Test
+	public void testLocateFunctionSelection() {
+		inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select locate('a', s.someString, 0) from SimpleEntity s ORDER BY s.someString" )
+							.list();
+					assertThat( results.size(), is( 2 ) );
+					assertThat( results.get( 0 ), is( 1 ) );
+				} );
+	}
+
+	@Test
 	public void testSelectAnIntegerConstant() {
 		inTransaction(
 				session -> {

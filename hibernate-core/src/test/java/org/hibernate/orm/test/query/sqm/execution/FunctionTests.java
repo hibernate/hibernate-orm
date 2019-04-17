@@ -23,6 +23,18 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     }
 
     @Test
+    public void testLocateFunction() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select locate('hello', e.theString) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select locate('hello', e.theString, e.theInteger) from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+    @Test
     public void testCastFunction() {
         inTransaction(
                 session -> {

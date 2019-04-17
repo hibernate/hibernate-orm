@@ -89,6 +89,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmLocateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
@@ -147,13 +148,13 @@ import org.jboss.logging.Logger;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 /**
@@ -1787,6 +1788,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public Object visitExtractFunction(HqlParser.ExtractFunctionContext ctx) {
 		final SqmFunctionTemplate template = creationContext.getFunctionResolver().apply( SqmExtractFunction.NAME );
+
 		final SqmExpression expressionToExtract = (SqmExpression) ctx.expression().accept( this );
 		final SqmExtractUnit extractFieldExpression = (SqmExtractUnit) ctx.extractField().accept( this );
 
@@ -1800,7 +1802,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 		else {
 			return template.makeSqmFunctionExpression(
-					Arrays.asList( extractFieldExpression, expressionToExtract ),
+					asList( extractFieldExpression, expressionToExtract ),
 					extractFieldExpression.getExpressableType()
 			);
 		}
@@ -1899,7 +1901,31 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public Object visitLocateFunction(HqlParser.LocateFunctionContext ctx) {
-		return super.visitLocateFunction( ctx );
+		final SqmFunctionTemplate template = creationContext.getFunctionResolver().apply( SqmLocateFunction.NAME );
+
+		final SqmExpression string = (SqmExpression) ctx.locateFunctionStringArgument().accept( this );
+		final SqmExpression pattern = (SqmExpression) ctx.locateFunctionSubstrArgument().accept( this );
+		final SqmExpression start = ctx.locateFunctionStartArgument() == null
+				? null
+				: (SqmExpression) ctx.locateFunctionStartArgument().accept( this );
+
+		if (template==null) {
+			//use the standard LOCATE support
+			return new SqmLocateFunction(
+					pattern,
+					string,
+					start,
+					StandardSpiBasicTypes.INTEGER
+			);
+		}
+		else {
+			return template.makeSqmFunctionExpression(
+					start == null
+							? asList( pattern, string)
+							: asList( pattern, string, start ),
+					StandardSpiBasicTypes.INTEGER
+			);
+		}
 	}
 
 	@Override
@@ -2027,7 +2053,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		if ( trimFunctionTemplate != null ) {
 			return trimFunctionTemplate.makeSqmFunctionExpression(
-					Arrays.asList(
+					asList(
 							TrimSpecificationExpressionWrapper.wrap( visitTrimSpecification( ctx.trimSpecification() ) ),
 							visitTrimCharacter( ctx.trimCharacter() ),
 							source

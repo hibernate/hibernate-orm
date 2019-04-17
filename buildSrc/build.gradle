@@ -7,14 +7,6 @@
 repositories {
 	mavenCentral()
 	jcenter()
-	maven {
-		name 'jboss-releases'
-		url 'http://repository.jboss.org/nexus/content/repositories/releases/'
-	}
-	maven {
-		name 'jboss-snapshots'
-		url 'http://repository.jboss.org/nexus/content/repositories/snapshots/'
-	}
 }
 
 apply plugin: "groovy"

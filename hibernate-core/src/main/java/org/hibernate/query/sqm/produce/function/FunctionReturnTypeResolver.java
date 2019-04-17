@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.produce.function;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 
 /**
  * Pluggable strategy for resolving a function return type for a specific call.
@@ -33,5 +33,5 @@ public interface FunctionReturnTypeResolver {
 	 */
 	<T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
 			AllowableFunctionReturnType<T> impliedType,
-			List<SqmExpression> arguments);
+			List<SqmTypedNode> arguments);
 }

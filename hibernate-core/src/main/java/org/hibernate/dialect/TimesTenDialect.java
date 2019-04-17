@@ -86,11 +86,8 @@ public class TimesTenDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lower" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "upper" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "concat", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "mod" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_char", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_date", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );

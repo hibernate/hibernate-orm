@@ -18,14 +18,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class AbsFunction extends AbstractStandardFunction {
 	private final Expression argument;
+	private SqlExpressableType type;
 
-	public AbsFunction(Expression argument) {
+	public AbsFunction(Expression argument, SqlExpressableType type) {
 		this.argument = argument;
+		this.type = type;
 	}
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return argument.getType();
+		return type;
 	}
 
 	public Expression getArgument() {
@@ -39,7 +41,7 @@ public class AbsFunction extends AbstractStandardFunction {
 
 	@Override
 	public SqlExpressableType getType() {
-		return getExpressableType();
+		return type;
 	}
 
 	@Override

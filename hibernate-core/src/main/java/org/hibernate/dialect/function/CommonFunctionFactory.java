@@ -128,12 +128,6 @@ public class CommonFunctionFactory {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// basic math functions
 
-	public static void abs(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "abs" )
-				.setExactArgumentCount( 1 )
-				.register();
-	}
-
 	public static void ceiling(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceiling" )
 				.setExactArgumentCount( 1 )
@@ -190,20 +184,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void sqrt(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sqrt" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
-	}
-
-	public static void mod(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "mod" )
-				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
-	}
-
 	public static void rand(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rand" )
 				.setArgumentCountBetween( 0, 1 )
@@ -237,24 +217,4 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void position(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "position" )
-				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
-	}
-
-	public static void lower(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "lower" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-	}
-
-	public static void upper(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-	}
 }

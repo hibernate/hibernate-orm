@@ -22,14 +22,17 @@ public class LocateFunction extends AbstractStandardFunction implements Standard
 	private final Expression patternString;
 	private final Expression stringToSearch;
 	private final Expression startPosition;
+	private final SqlExpressableType sqlExpressableType;
 
 	public LocateFunction(
 			Expression patternString,
 			Expression stringToSearch,
-			Expression startPosition) {
+			Expression startPosition,
+			SqlExpressableType sqlExpressableType) {
 		this.patternString = patternString;
 		this.stringToSearch = stringToSearch;
 		this.startPosition = startPosition;
+		this.sqlExpressableType = sqlExpressableType;
 	}
 
 	public Expression getPatternString() {
@@ -51,7 +54,7 @@ public class LocateFunction extends AbstractStandardFunction implements Standard
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return stringToSearch.getType();
+		return sqlExpressableType;
 	}
 
 	@Override

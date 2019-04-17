@@ -36,7 +36,7 @@ import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -139,8 +139,9 @@ public class MySQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "char_length" );
-		queryEngine.getSqmFunctionRegistry().register( "concat", new ConcatFunctionTemplate( "concat(", ", ", ")"));
-		CommonFunctionFactory.lower( queryEngine );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "concat" )
+				.setArgumentsValidator( StandardArgumentsValidators.min(2) )
+				.setInvariantType( StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "lcase", "lower" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -169,14 +170,12 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.upper( queryEngine );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ucase", "upper" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "unhex" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		CommonFunctionFactory.abs( queryEngine );
 		CommonFunctionFactory.sign( queryEngine );
 		CommonFunctionFactory.acos( queryEngine );
 		CommonFunctionFactory.asin( queryEngine );
@@ -199,7 +198,6 @@ public class MySQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "pi", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rand", StandardSpiBasicTypes.DOUBLE );
 		CommonFunctionFactory.sin( queryEngine );
-		CommonFunctionFactory.sqrt( queryEngine );
 		CommonFunctionFactory.tan( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "stddev", "std" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
@@ -228,9 +226,7 @@ public class MySQLDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curdate", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curtime", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "date" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 1 )
@@ -358,10 +354,6 @@ public class MySQLDialect extends Dialect {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "octet_length" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_length" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();

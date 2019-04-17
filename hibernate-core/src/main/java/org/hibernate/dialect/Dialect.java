@@ -92,7 +92,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.IdTableExporterImpl;
 import org.hibernate.query.sqm.mutation.spi.idtable.PersistentTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.inline.InlineMutationStrategy;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
@@ -233,10 +232,13 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Initialize the given registry with any dialect-specific functions.
-	 * Note that standard JPA functions which the underlying database
-	 * supports as defined in JPA do not need to be registered here :
-	 * Hibernate has an inherent understanding of how to handle these
-	 * functions.  These include:
+	 *
+	 * Note that support for certain functions is required, and if the
+	 * database does not support a required function, then the dialect
+	 * must define a way to emulate it.
+	 *
+	 * These required functions include the functions defined by the JPA
+	 * query language specification:
 	 *
 	 * 		* avg
 	 * 		* count
@@ -245,11 +247,11 @@ public abstract class Dialect implements ConversionContext {
 	 * 		* sum
 	 *
 	 * 		* concat
+	 * 		* locate
 	 * 		* substring
 	 * 		* trim
 	 * 		* lower
 	 * 		* upper
-	 * 		* locate
 	 * 		* length
 	 *
 	 * 		* abs
@@ -260,17 +262,18 @@ public abstract class Dialect implements ConversionContext {
 	 * 		* current_time
 	 * 		* current_timestamp
 	 *
-	 * Hibernate defines the additional set of "standard" functions
-	 * that it agrees to support against any database.  Dialects *must*
-	 * implement support for these if the underlying database
-	 * does not support them, generally through registering custom
-	 * templates for emulating those functions.  These include:
+	 * Along with an additional set of functions defined by ANSI SQL:
 	 *
-	 * 		* bit_length
 	 * 		* coalesce
 	 * 		* nullif
 	 * 		* cast
 	 * 		* extract
+	 * 	    * position
+	 * 		* bit_length
+	 *
+	 * And several additional "standard" functions:
+	 *
+	 * 	    * current_instant
 	 * 		* second		- defined as `extract(second from ?1)`
 	 * 		* minute		- defined as `extract(minute from ?1)`
 	 * 		* hour			- defined as `extract(hour from ?1)`
@@ -282,20 +285,15 @@ public abstract class Dialect implements ConversionContext {
 	 * @param queryEngine
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		//this is now redundant:
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_length" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "coalesce" )
-				.setArgumentsValidator( StandardArgumentsValidators.min( 2 ) )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nullif" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().register( "cast", new CastFunctionTemplate() );
-
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "extract(?1 from ?2)" );
+		//TODO: re-express these in terms of registered extract() and cast()
+		//      functions, so that they don't need to be redefined by the
+		//      concrete dialect subclasses
 		queryEngine.getSqmFunctionRegistry().registerPattern( "second", "extract(second from ?1)" );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "minute", "extract(minute from ?1)" );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "hour", "extract(hour from ?1)" );

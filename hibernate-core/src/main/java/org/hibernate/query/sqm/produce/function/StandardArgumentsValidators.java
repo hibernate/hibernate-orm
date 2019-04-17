@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.QueryException;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
@@ -99,16 +100,19 @@ public final class StandardArgumentsValidators {
 
 	public static ArgumentsValidator of(Class javaType) {
 		return arguments -> arguments.forEach(
-				sqmExpression -> {
-					if ( !javaType.isInstance( sqmExpression.getExpressableType().getJavaType() ) ) {
-						throw new QueryException(
-								String.format(
-										Locale.ROOT,
-										"Function expects arguments to be of type %s, but %s found",
-										javaType.getName(),
-										sqmExpression.getExpressableType().getJavaType()
-								)
-						);
+				arg -> {
+					if (arg instanceof SqmExpression) {
+						SqmExpression expression = (SqmExpression) arg;
+						if (!javaType.isInstance(expression.getExpressableType().getJavaType())) {
+							throw new QueryException(
+									String.format(
+											Locale.ROOT,
+											"Function expects arguments to be of type %s, but %s found",
+											javaType.getName(),
+											expression.getExpressableType().getJavaType()
+									)
+							);
+						}
 					}
 				}
 		);

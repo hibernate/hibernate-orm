@@ -11,6 +11,7 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -105,11 +106,6 @@ public class UserTypeAdapter<J> implements BasicType<J> {
 	@Override
 	public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
 		return jtd;
-	}
-
-	@Override
-	public SqlTypeDescriptor getSqlTypeDescriptor() {
-		return getSqlExpressableType().getSqlTypeDescriptor();
 	}
 
 	@Override

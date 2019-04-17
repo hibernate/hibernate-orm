@@ -39,7 +39,6 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
@@ -238,8 +237,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean queryParametersValidationEnabled;
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
-
-	private Map<String, SQLFunctionTemplate> sqlFunctions;
 
 	private JpaCompliance jpaCompliance;
 

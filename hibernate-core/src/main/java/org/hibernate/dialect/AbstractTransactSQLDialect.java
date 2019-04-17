@@ -17,7 +17,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.SybaseLocateEmulationFunctionTemplate;
+import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.naming.Identifier;
@@ -25,7 +25,6 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
-import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -73,8 +72,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.lower( queryEngine );
-		CommonFunctionFactory.upper( queryEngine );
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "str" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 3 )
@@ -96,11 +94,12 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "user", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charindex" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "user", StandardSpiBasicTypes.STRING );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "getdate" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
@@ -127,7 +126,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		CommonFunctionFactory.abs( queryEngine );
 		CommonFunctionFactory.sign( queryEngine );
 
 		CommonFunctionFactory.acos( queryEngine );
@@ -139,7 +137,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.sin( queryEngine );
-		CommonFunctionFactory.sqrt( queryEngine );
 		CommonFunctionFactory.tan( queryEngine );
 		CommonFunctionFactory.sin( queryEngine );
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "pi" )
@@ -162,11 +159,12 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", new ConcatFunctionTemplate( "(", "+", ")" ) );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "+", ")" );
+
 
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "length", "len" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "trim", "ltrim(rtrim(?1))", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().register( "locate", new SybaseLocateEmulationFunctionTemplate() );
+
+		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 	}
 
 	@Override

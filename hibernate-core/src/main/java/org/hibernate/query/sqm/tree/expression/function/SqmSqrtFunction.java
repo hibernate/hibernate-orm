@@ -29,6 +29,10 @@ public class SqmSqrtFunction<T> extends AbstractSqmFunction<T> {
 		this.argument = argument;
 	}
 
+	public SqmExpression getArgument() {
+		return argument;
+	}
+
 	@Override
 	public String getFunctionName() {
 		return NAME;

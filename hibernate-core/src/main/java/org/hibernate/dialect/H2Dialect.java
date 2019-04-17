@@ -36,8 +36,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.IdTableManagementTransaction
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates.AvgFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -144,10 +142,6 @@ public class H2Dialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
-
-		// Aggregations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		queryEngine.getSqmFunctionRegistry().register( "avg", new AvgFunctionTemplate( "double" ) );
-
 
 		// Numeric Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		CommonFunctionFactory.acos( queryEngine );
@@ -259,7 +253,7 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", ConcatFunctionTemplate.INSTANCE );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "difference" )
 				.setExactArgumentCount( 2 )
@@ -297,8 +291,6 @@ public class H2Dialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
-
-		CommonFunctionFactory.position( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rawtohex" )
 				.setExactArgumentCount( 1 )
@@ -356,10 +348,6 @@ public class H2Dialect extends Dialect {
 
 
 		// Time and Date Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "curdate", "current_date" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "curtime", "current_time" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "curtimestamp", "current_timestamp" );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datediff" )
 				.setExactArgumentCount( 3 )

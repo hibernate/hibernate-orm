@@ -54,6 +54,7 @@ import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
@@ -195,7 +196,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	@Override
 	public 	<X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
 		//noinspection unchecked
-		return new SqmCastFunction(
+		return new SqmCastFunction<>(
 				(SqmExpression) expression,
 				getTypeConfiguration().standardExpressableTypeForJavaType( castTargetJavaType )
 		);
@@ -895,7 +896,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 				.getSqmFunctionRegistry()
 				.findFunctionTemplate( SqmTrimFunction.NAME );
 		if ( functionTemplate != null ) {
-			final ArrayList<SqmExpression> arguments = new ArrayList<>();
+			final ArrayList<SqmTypedNode> arguments = new ArrayList<>();
 			if ( trimSpecification != null ) {
 				arguments.add(
 						TrimSpecificationExpressionWrapper.from( trimSpecification )
@@ -1076,7 +1077,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		final SqmFunctionTemplate functionTemplate = queryEngine.getSqmFunctionRegistry().findFunctionTemplate( SqmLocateFunction.NAME );
 
 		if ( functionTemplate != null ) {
-			final List<SqmExpression> arguments;
+			final List<SqmTypedNode> arguments;
 			if ( startPosition == null ) {
 				arguments = Arrays.asList(
 						source,
@@ -1138,22 +1139,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 	@Override
 	public SqmFunction<Date> currentDate() {
-		return new SqmCurrentDateFunction( this );
+		return new SqmCurrentDateFunction( (AllowableFunctionReturnType) StandardSpiBasicTypes.DATE, this );
 	}
 
 	@Override
 	public SqmFunction<Timestamp> currentTimestamp() {
-		return new SqmCurrentTimestampFunction( this );
+		return new SqmCurrentTimestampFunction( (AllowableFunctionReturnType) StandardSpiBasicTypes.TIMESTAMP, this );
 	}
 
 	@Override
 	public SqmFunction<Time> currentTime() {
-		return new SqmCurrentTimeFunction( this );
+		return new SqmCurrentTimeFunction( (AllowableFunctionReturnType) StandardSpiBasicTypes.TIME, this );
 	}
 
 	@Override
 	public SqmFunction<Instant> currentInstant() {
-		return new SqmCurrentInstantFunction( this );
+		return new SqmCurrentInstantFunction( (AllowableFunctionReturnType) StandardSpiBasicTypes.INSTANT, this );
 	}
 
 	@Override

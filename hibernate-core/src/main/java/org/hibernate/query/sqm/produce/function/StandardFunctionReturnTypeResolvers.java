@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.QueryException;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
@@ -40,7 +41,7 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public <T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
 					AllowableFunctionReturnType<T> impliedType,
-					List<SqmExpression> arguments) {
+					List<SqmTypedNode> arguments) {
 				return useImpliedTypeIfPossible( invariantType, impliedType );
 			}
 		};
@@ -51,7 +52,7 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public <T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
 					AllowableFunctionReturnType<T> impliedType,
-					List<SqmExpression> arguments) {
+					List<SqmTypedNode> arguments) {
 				final AllowableFunctionReturnType specifiedArgType = extractArgumentType( arguments, argPosition );
 				return useImpliedTypeIfPossible( specifiedArgType, impliedType );
 			}
@@ -63,15 +64,17 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public <T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
 					AllowableFunctionReturnType<T> impliedType,
-					List<SqmExpression> arguments) {
-				final Optional<SqmExpression> firstNonNull = arguments.stream()
+					List<SqmTypedNode> arguments) {
+				final Optional<SqmTypedNode> firstNonNull = arguments.stream()
 						.filter(
-								sqmExpression -> sqmExpression.getExpressableType() != null
-										&& sqmExpression.getExpressableType() instanceof AllowableFunctionReturnType
+								arg -> arg instanceof SqmExpression
+										&& ((SqmExpression) arg).getExpressableType() instanceof AllowableFunctionReturnType
 						)
 						.findFirst();
 				if ( firstNonNull.isPresent() ) {
-					return useImpliedTypeIfPossible( (AllowableFunctionReturnType) firstNonNull.get().getExpressableType(), impliedType );
+					SqmExpression arg = (SqmExpression) firstNonNull.get();
+					AllowableFunctionReturnType argType = (AllowableFunctionReturnType) arg.getExpressableType();
+					return useImpliedTypeIfPossible( argType, impliedType );
 				}
 				else {
 					return impliedType;
@@ -89,9 +92,7 @@ public class StandardFunctionReturnTypeResolvers {
 	private static <T> AllowableFunctionReturnType<T> useImpliedTypeIfPossible(
 			AllowableFunctionReturnType found,
 			AllowableFunctionReturnType implied) {
-		return areCompatible( found, implied )
-				? implied
-				: found;
+		return areCompatible( found, implied ) ? implied : found;
 	}
 
 	@SuppressWarnings({"unchecked", "SimplifiableIfStatement"})
@@ -103,10 +104,10 @@ public class StandardFunctionReturnTypeResolvers {
 		return expected.getJavaType().isAssignableFrom( found.getJavaType() );
 	}
 
-	private static AllowableFunctionReturnType extractArgumentType(List<SqmExpression> arguments, int position) {
-		final SqmExpression specifiedArgument = arguments.get( position-1 );
+	private static AllowableFunctionReturnType extractArgumentType(List<SqmTypedNode> arguments, int position) {
+		final SqmExpression specifiedArgument = (SqmExpression) arguments.get( position-1 );
 		final ExpressableType specifiedArgType = specifiedArgument.getExpressableType();
-		if ( !AllowableFunctionReturnType.class.isInstance( specifiedArgType ) ) {
+		if ( !(specifiedArgType instanceof AllowableFunctionReturnType) ) {
 			throw new QueryException(
 					String.format(
 							Locale.ROOT,

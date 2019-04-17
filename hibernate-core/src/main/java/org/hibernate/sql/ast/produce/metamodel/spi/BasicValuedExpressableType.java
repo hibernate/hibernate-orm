@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.annotations.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
@@ -29,13 +28,12 @@ public interface BasicValuedExpressableType<J>
 	BasicJavaDescriptor<J> getJavaTypeDescriptor();
 
 	default SqlTypeDescriptor getSqlTypeDescriptor() {
+		if ( getSqlExpressableType() == null ) return null;
 		return getSqlExpressableType().getSqlTypeDescriptor();
 	}
 
-	@Remove
-	SqlExpressableType getSqlExpressableType();
-
 	default SqlExpressableType getSqlExpressableType(TypeConfiguration typeConfiguration) {
+		if ( getSqlExpressableType() == null ) return null;
 		return getSqlTypeDescriptor().getSqlExpressableType( getJavaTypeDescriptor(), typeConfiguration );
 	}
 

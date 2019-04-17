@@ -15,12 +15,10 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 public class ExtractFunction extends AbstractStandardFunction {
 	private final ExtractUnit unitToExtract;
 	private final Expression extractionSource;
-	private final SqlExpressableType returnType;
 
-	public ExtractFunction(ExtractUnit unitToExtract, Expression extractionSource, SqlExpressableType returnType) {
+	public ExtractFunction(ExtractUnit unitToExtract, Expression extractionSource) {
 		this.unitToExtract = unitToExtract;
 		this.extractionSource = extractionSource;
-		this.returnType = returnType;
 	}
 
 	public ExtractUnit getUnitToExtract() {
@@ -38,11 +36,11 @@ public class ExtractFunction extends AbstractStandardFunction {
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return returnType;
+		return getType();
 	}
 
 	@Override
 	public SqlExpressableType getType() {
-		return returnType;
+		return unitToExtract.getExpressableType();
 	}
 }

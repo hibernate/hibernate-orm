@@ -19,12 +19,8 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 public class SqmCurrentDateFunction extends AbstractSqmFunction<Date> {
 	public static final String NAME = "current_date";
 
-	public SqmCurrentDateFunction(NodeBuilder nodeBuilder) {
-		super( (AllowableFunctionReturnType) StandardSpiBasicTypes.DATE, nodeBuilder );
-	}
-
-	public SqmCurrentDateFunction(AllowableFunctionReturnType<Date> resultType, NodeBuilder nodeBuilder) {
-		super( resultType, nodeBuilder );
+	public SqmCurrentDateFunction(AllowableFunctionReturnType<Date> type, NodeBuilder nodeBuilder) {
+		super( type, nodeBuilder );
 	}
 
 	@Override

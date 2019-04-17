@@ -25,8 +25,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.DerbyConcatFunctionTemplate;
+import org.hibernate.dialect.function.DerbyConcatEmulation;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
@@ -81,8 +80,7 @@ public class DerbyDialect extends DB2Dialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
-		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatFunctionTemplate() );
-		queryEngine.getSqmFunctionRegistry().register( "trim", AnsiTrimFunctionTemplate.INSTANCE );
+		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
 	}
 
 	private void determineDriverVersion() {

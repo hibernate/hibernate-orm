@@ -13,6 +13,7 @@ import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmJdbcFunctionEscapeWrapper;
@@ -33,7 +34,7 @@ public class JdbcFunctionEscapeWrapperTemplate
 
 	@Override
 	protected SqmExpression generateSqmFunctionExpression(
-			List<SqmExpression> arguments,
+			List<SqmTypedNode> arguments,
 			AllowableFunctionReturnType impliedResultType,
 			QueryEngine queryEngine) {
 		final SqmExpression wrappedSqmExpression = wrapped.makeSqmFunctionExpression(

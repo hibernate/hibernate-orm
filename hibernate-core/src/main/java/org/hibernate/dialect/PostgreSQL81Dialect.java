@@ -20,8 +20,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.LocateEmulationUsingPositionAndSubstring;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.dialect.function.LocateEmulation;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
@@ -39,8 +39,6 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
@@ -110,7 +108,6 @@ public class PostgreSQL81Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.abs( queryEngine );
 		CommonFunctionFactory.sign( queryEngine );
 
 		CommonFunctionFactory.acos( queryEngine );
@@ -121,11 +118,12 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.exp( queryEngine );
 		CommonFunctionFactory.ln( queryEngine );
 		CommonFunctionFactory.sin( queryEngine );
-		CommonFunctionFactory.sqrt( queryEngine );
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
+
 		CommonFunctionFactory.tan( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
@@ -152,12 +150,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "chr" )
 				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.setExactArgumentCount( 1 )
-				.register();
-		CommonFunctionFactory.lower( queryEngine );
-		CommonFunctionFactory.upper( queryEngine );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substr" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "initcap" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -187,10 +179,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_length" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setExactArgumentCount( 1 )
-				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "octet_length" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
@@ -199,9 +187,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "age" )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "date_trunc" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 2 )
@@ -246,7 +231,7 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", ConcatFunctionTemplate.INSTANCE );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "lpad" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
@@ -264,11 +249,27 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setExactArgumentCount( 3 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "substring", "substr" );
-		queryEngine.getSqmFunctionRegistry().register( "locate", new LocateEmulationUsingPositionAndSubstring() );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "coalesce" )
-				.setArgumentsValidator( StandardArgumentsValidators.min( 2 ) )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substr" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
 				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "substring", "substr" );
+
+		queryEngine.getSqmFunctionRegistry().register(
+				"locate",
+				new LocateEmulation(
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/2", "position(?1 in ?2)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/3", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar)", StandardSpiBasicTypes.STRING );
 
@@ -278,7 +279,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.mod( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "power" )
 				.setInvariantType( StandardSpiBasicTypes.FLOAT )
 				.setExactArgumentCount( 2 )
@@ -747,4 +747,5 @@ public class PostgreSQL81Dialect extends Dialect {
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
 	}
+
 }

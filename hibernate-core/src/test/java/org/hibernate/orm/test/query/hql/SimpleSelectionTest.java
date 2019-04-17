@@ -77,7 +77,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					List<Object> results = session.createQuery(
 							"select s.someString from SimpleEntity s where length(s.someString) > :p1 ORDER BY s.someString" )
-							.setParameter( "p1", 0L )
+							.setParameter( "p1", 0 )
 							.list();
 					assertThat( results.size(), is( 2 ) );
 					assertThat( results.get( 0 ), is( "a" ) );
@@ -92,7 +92,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 							"select length(s.someString) from SimpleEntity s" )
 							.list();
 					assertThat( results.size(), is( 2 ) );
-					results.forEach( value -> assertThat( value, is( 1L ) ) );
+					results.forEach( value -> assertThat( value, is( 1 ) ) );
 				} );
 	}
 
@@ -118,6 +118,42 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 							.list();
 					assertThat( results.size(), is( 2 ) );
 					assertThat( results.get( 0 ), is( "a" ) );
+				} );
+	}
+
+	@Test
+	public void testLowerFunctionSelection() {
+		inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select lower(s.someString) from SimpleEntity s ORDER BY lower(s.someString)" )
+							.list();
+					assertThat( results.size(), is( 2 ) );
+					assertThat( results.get( 0 ), is( "a" ) );
+				} );
+	}
+
+	@Test
+	public void testUpperFunctionSelection() {
+		inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select upper(s.someString) from SimpleEntity s ORDER BY upper(s.someString)" )
+							.list();
+					assertThat( results.size(), is( 2 ) );
+					assertThat( results.get( 0 ), is( "A" ) );
+				} );
+	}
+
+	@Test
+	public void testLocateFunctionSelection() {
+		inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select locate('a', s.someString, 0) from SimpleEntity s ORDER BY s.someString" )
+							.list();
+					assertThat( results.size(), is( 2 ) );
+					assertThat( results.get( 0 ), is( 1 ) );
 				} );
 	}
 

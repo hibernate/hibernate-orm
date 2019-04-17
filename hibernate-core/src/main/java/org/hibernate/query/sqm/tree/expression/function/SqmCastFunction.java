@@ -16,30 +16,32 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class SqmCastFunction<T> extends AbstractSqmFunction<T> implements SqmFunction<T> {
 	public static final String NAME = "cast";
 
-	private final SqmExpression expressionToCast;
-	private final String explicitSqlCastTarget;
+	private final SqmExpression<?> expressionToCast;
+	private final SqmCastTarget<T> castTarget;
 
 	public SqmCastFunction(
-			SqmExpression expressionToCast,
-			AllowableFunctionReturnType<T> castTargetType) {
-		this( expressionToCast, castTargetType, null );
-	}
-
-	public SqmCastFunction(
-			SqmExpression expressionToCast,
-			AllowableFunctionReturnType<T> castTargetType,
-			String explicitSqlCastTarget) {
-		super( castTargetType, expressionToCast.nodeBuilder() );
+			SqmExpression<?> expressionToCast,
+			SqmCastTarget<T> castTarget) {
+		super( castTarget.getType(), expressionToCast.nodeBuilder() );
 		this.expressionToCast = expressionToCast;
-		this.explicitSqlCastTarget = explicitSqlCastTarget;
+		this.castTarget = castTarget;
 	}
 
-	public SqmExpression getExpressionToCast() {
+	public SqmCastFunction(
+			SqmExpression<?> expressionToCast,
+			AllowableFunctionReturnType<T> resultType) {
+		this(
+				expressionToCast,
+				new SqmCastTarget<>( resultType, expressionToCast.nodeBuilder() )
+		);
+	}
+
+	public SqmExpression<?> getExpressionToCast() {
 		return expressionToCast;
 	}
 
-	public String getExplicitSqlCastTarget() {
-		return explicitSqlCastTarget;
+	public SqmCastTarget<T> getCastTarget() {
+		return castTarget;
 	}
 
 	@Override

@@ -4,13 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce.function.spi;
+package org.hibernate.dialect.function;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import java.util.List;
 
@@ -29,9 +34,15 @@ import java.util.List;
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class DerbyConcatFunctionTemplate extends ConcatFunctionTemplate {
+public class DerbyConcatEmulation extends FunctionAsExpressionTemplate {
 
-	public static final DerbyConcatFunctionTemplate INSTANCE = new DerbyConcatFunctionTemplate();
+	public DerbyConcatEmulation() {
+		super(
+				"(", "||", ")",
+				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING ),
+				StandardArgumentsValidators.min( 2 )
+		);
+	}
 
 	@Override
 	public void render(

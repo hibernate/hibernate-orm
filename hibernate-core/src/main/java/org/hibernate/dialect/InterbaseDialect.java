@@ -71,7 +71,6 @@ public class InterbaseDialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
 	}
 
 	@Override

@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
+import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -169,7 +170,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		 * SQLFunctionTemplate(...) is used, the return type and a template
 		 * string is provided, plus an optional hasParenthesesIfNoArgs flag.
 		 */
-		queryEngine.getSqmFunctionRegistry().registerNamed( "abs" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
@@ -185,17 +185,16 @@ public class RDMSOS2200Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "substr", StandardSpiBasicTypes.STRING );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lcase" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lower" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "reverse" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim" );
 
 		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
-		queryEngine.getSqmFunctionRegistry().registerPattern( "trim", "ltrim(rtrim(?1))", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
+
 		queryEngine.getSqmFunctionRegistry().registerNamed( "soundex" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "space", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ucase" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "upper" );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
@@ -211,7 +210,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rand", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sinh", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tanh", StandardSpiBasicTypes.DOUBLE );
 
@@ -225,9 +223,6 @@ public class RDMSOS2200Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "user", StandardSpiBasicTypes.STRING );
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curdate", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curtime", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "days", StandardSpiBasicTypes.INTEGER );
@@ -250,7 +245,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "year", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "atan2", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "mod", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "power", StandardSpiBasicTypes.DOUBLE );
 	}

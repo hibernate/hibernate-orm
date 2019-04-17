@@ -51,9 +51,9 @@ public class SqmCoalesceFunction<T> extends AbstractSqmFunction<T> implements Sq
 	public void value(SqmExpression<T> expression) {
 		arguments.add( expression );
 
-		if ( getExpressableType() == null ) {
-			applyInferableType( expression.getExpressableType() );
-		}
+//		if ( getExpressableType() == null ) {
+			setExpressableType( expression.getExpressableType() );
+//		}
 	}
 
 	@Override

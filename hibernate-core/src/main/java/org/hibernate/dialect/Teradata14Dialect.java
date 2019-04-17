@@ -54,13 +54,6 @@ public class Teradata14Dialect extends TeradataDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().registerNamed( "current_time" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "current_date" );
-
-	}
-
-	@Override
 	public String getAddColumnString() {
 		return "Add";
 	}

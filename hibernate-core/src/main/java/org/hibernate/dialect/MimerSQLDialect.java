@@ -67,7 +67,6 @@ public class MimerSQLDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "abs" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ceiling" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "floor" );
@@ -99,7 +98,6 @@ public class MimerSQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "soundex", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dsqrt", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dtan", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dpower" );
@@ -124,10 +122,7 @@ public class MimerSQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii_code", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode_char", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode_code", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "upper" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lower" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "char_length", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_length", StandardSpiBasicTypes.STRING );
 	}
 
 

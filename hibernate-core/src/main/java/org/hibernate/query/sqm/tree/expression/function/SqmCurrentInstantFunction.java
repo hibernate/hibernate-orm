@@ -20,14 +20,8 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 public class SqmCurrentInstantFunction extends AbstractSqmFunction<Instant> {
 	public static final String NAME = "current_timestamp";
 
-	public SqmCurrentInstantFunction(NodeBuilder nodeBuilder) {
-		super( StandardSpiBasicTypes.INSTANT, nodeBuilder );
-	}
-
-	public SqmCurrentInstantFunction(
-			AllowableFunctionReturnType<Instant> resultType,
-			NodeBuilder nodeBuilder) {
-		super( resultType, nodeBuilder );
+	public SqmCurrentInstantFunction(AllowableFunctionReturnType<Instant> type, NodeBuilder nodeBuilder) {
+		super( type, nodeBuilder );
 	}
 
 	@Override

@@ -37,3 +37,4 @@ public class ExtractUnit implements SqlExpressable, SqlAstNode {
 		sqlTreeWalker.visitExtractUnit(this);
 	}
 }
+

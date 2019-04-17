@@ -42,6 +42,7 @@ import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.function.LocateEmulation;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -80,8 +81,6 @@ import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
-import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.AbstractJdbcValueBinder;
 import org.hibernate.sql.AbstractJdbcValueExtractor;
@@ -280,9 +279,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_time", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_timestamp", StandardSpiBasicTypes.TIMESTAMP );
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_utcdate", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_utctime", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_utctimestamp", StandardSpiBasicTypes.TIMESTAMP );
@@ -324,7 +320,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_smallint", StandardSpiBasicTypes.SHORT );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_tinyint", StandardSpiBasicTypes.BYTE );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "abs" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2", "atan" )
@@ -348,13 +343,12 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "log", "ln" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
+
 		queryEngine.getSqmFunctionRegistry().registerNamed( "power" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "mod", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sinh", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tanh", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "uminus" );
@@ -363,13 +357,12 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_nvarchar", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_varchar", StandardSpiBasicTypes.STRING );
 
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "char", StandardSpiBasicTypes.CHARACTER );
-		queryEngine.getSqmFunctionRegistry().register( "concat", ConcatFunctionTemplate.INSTANCE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lcase", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "left", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "length", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "locate", "locate(?2, ?1, ?3)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lpad", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "nchar", StandardSpiBasicTypes.STRING );
@@ -379,24 +372,36 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "substr_after", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "substr_before", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "substring", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().register( "trim", AnsiTrimFunctionTemplate.INSTANCE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ucase", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "length(to_binary(?1))*8", StandardSpiBasicTypes.INTEGER );
+
+		queryEngine.getSqmFunctionRegistry().register(
+				"locate",
+				new LocateEmulation(
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/2", "locate(?2, ?1)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/3", "locate(?2, ?1, ?3)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_blob", StandardSpiBasicTypes.BLOB );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_clob", StandardSpiBasicTypes.CLOB );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_nclob", StandardSpiBasicTypes.NCLOB );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "coalesce" );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_connection", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_schema", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_user", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "grouping_id", StandardSpiBasicTypes.INTEGER, "(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "grouping_id", StandardSpiBasicTypes.INTEGER);
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ifnull" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "map" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "nullif" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "session_context" );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "session_user", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysuuid", StandardSpiBasicTypes.STRING );

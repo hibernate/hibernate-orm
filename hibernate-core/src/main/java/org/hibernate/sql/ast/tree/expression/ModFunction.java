@@ -17,10 +17,6 @@ public class ModFunction extends AbstractStandardFunction implements StandardFun
 	private final Expression divisor;
 	private final SqlExpressableType type;
 
-	public ModFunction(Expression dividend, Expression divisor) {
-		this( dividend, divisor, dividend.getType() );
-	}
-
 	public ModFunction(
 			Expression dividend,
 			Expression divisor,

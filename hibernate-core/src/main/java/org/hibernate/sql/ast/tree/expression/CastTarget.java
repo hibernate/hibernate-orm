@@ -6,43 +6,28 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
- * @author Steve Ebersole
+ * @author Gavin King
  */
-public class CoalesceFunction extends AbstractStandardFunction {
-	private List<Expression> values = new ArrayList<>();
+public class CastTarget implements SqlExpressable, SqlAstNode {
 	private SqlExpressableType type;
 
-	public CoalesceFunction(SqlExpressableType type) {
+	public CastTarget(SqlExpressableType type) {
 		this.type = type;
-	}
-
-	public List<Expression> getValues() {
-		return values;
-	}
-
-	public void value(Expression expression) {
-		values.add( expression );
 	}
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return getType();
-	}
-
-	@Override
-	public SqlExpressableType getType() {
 		return type;
 	}
 
 	@Override
-	public void accept(SqlAstWalker  walker) {
-		walker.visitCoalesceFunction( this );
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		sqlTreeWalker.visitCastTarget(this);
 	}
 }

@@ -13,8 +13,9 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.NvlFunctionTemplate;
+import org.hibernate.dialect.function.LocateEmulation;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
@@ -27,7 +28,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
-import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -94,7 +94,6 @@ public class Oracle9Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.abs( queryEngine );
 		CommonFunctionFactory.sign( queryEngine );
 
 		CommonFunctionFactory.acos( queryEngine );
@@ -108,7 +107,6 @@ public class Oracle9Dialect extends Dialect {
 		CommonFunctionFactory.sin( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.sqrt( queryEngine );
 		CommonFunctionFactory.tan( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
@@ -126,7 +124,6 @@ public class Oracle9Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.lower( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
@@ -136,7 +133,6 @@ public class Oracle9Dialect extends Dialect {
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.upper( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ascii" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
@@ -151,8 +147,6 @@ public class Oracle9Dialect extends Dialect {
 				.setArgumentCountBetween( 1, 3 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "current_timestamp" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setArgumentCountBetween( 0, 1 )
@@ -171,7 +165,7 @@ public class Oracle9Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
 
 		// Multi-param string dialect functions...
-		queryEngine.getSqmFunctionRegistry().register( "concat", new ConcatFunctionTemplate( "", "||", "" ) );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "", "||", "" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "instr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 4 )
@@ -206,9 +200,31 @@ public class Oracle9Dialect extends Dialect {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "substring", "substr" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "locate", "instr(?2,?1)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "vsize(?1)*8", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlFunctionTemplate() );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl2" )
+				.setExactArgumentCount( 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+
+		queryEngine.getSqmFunctionRegistry().register(
+				"locate",
+				new LocateEmulation(
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/2", "instr(?2, ?1)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/3", "instr(?2, ?1, ?3)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
 
 		// Multi-param numeric dialect functions...
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2" )
@@ -216,13 +232,6 @@ public class Oracle9Dialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.mod( queryEngine );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl2" )
-				.setExactArgumentCount( 3 )
-				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "power" )
 				.setInvariantType( StandardSpiBasicTypes.FLOAT )
 				.setExactArgumentCount( 2 )

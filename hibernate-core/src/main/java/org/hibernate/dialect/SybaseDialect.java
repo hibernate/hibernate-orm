@@ -8,9 +8,12 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.dialect.function.LocateEmulation;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 
 /**
@@ -38,7 +41,29 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
 	}
-	
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		queryEngine.getSqmFunctionRegistry().register(
+				"locate",
+				new LocateEmulation(
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/2", "locate(?2, ?1)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/3", "locate(?2, ?1, ?3)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
+
+	}
+
 	@Override
 	public String getNullColumnString() {
 		return " null";

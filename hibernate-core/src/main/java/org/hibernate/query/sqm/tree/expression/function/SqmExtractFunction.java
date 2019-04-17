@@ -8,8 +8,6 @@ package org.hibernate.query.sqm.tree.expression.function;
 
 import java.util.Locale;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -19,20 +17,18 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class SqmExtractFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "extract";
 
-	private final SqmExpression unitToExtract;
-	private final SqmExpression extractionSource;
+	private final SqmExtractUnit<T> unitToExtract;
+	private final SqmExpression<?> extractionSource;
 
 	public SqmExtractFunction(
-			SqmExpression<?> unitToExtract,
-			SqmExpression<?> extractionSource,
-			AllowableFunctionReturnType<T> resultType,
-			NodeBuilder nodeBuilder) {
-		super( resultType, nodeBuilder );
+			SqmExtractUnit<T> unitToExtract,
+			SqmExpression<?> extractionSource) {
+		super( unitToExtract.getType(), extractionSource.nodeBuilder() );
 		this.unitToExtract = unitToExtract;
 		this.extractionSource = extractionSource;
 	}
 
-	public SqmExpression<?> getUnitToExtract() {
+	public SqmExtractUnit<T> getUnitToExtract() {
 		return unitToExtract;
 	}
 

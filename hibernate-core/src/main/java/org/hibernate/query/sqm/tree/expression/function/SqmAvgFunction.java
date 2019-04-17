@@ -19,11 +19,6 @@ public class SqmAvgFunction<T>
 		implements SqmAggregateFunction<T> {
 	public static final String NAME = "avg";
 
-	@SuppressWarnings("unchecked")
-	public SqmAvgFunction(SqmExpression<?> argument, NodeBuilder nodeBuilder) {
-		super( argument, (AllowableFunctionReturnType) argument.getExpressableType(), nodeBuilder );
-	}
-
 	public SqmAvgFunction(SqmExpression<?> argument, AllowableFunctionReturnType<T> resultType, NodeBuilder nodeBuilder) {
 		super( argument, resultType, nodeBuilder );
 	}

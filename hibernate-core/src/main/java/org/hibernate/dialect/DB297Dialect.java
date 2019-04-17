@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.DB2SubstringFunctionTemplate;
+import org.hibernate.dialect.function.DB2SubstringEmulation;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -39,7 +39,7 @@ public class DB297Dialect extends DB2Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
-		queryEngine.getSqmFunctionRegistry().register( "substring", new DB2SubstringFunctionTemplate() );
+		queryEngine.getSqmFunctionRegistry().register( "substring", new DB2SubstringEmulation() );
 	}
 
 	@Override

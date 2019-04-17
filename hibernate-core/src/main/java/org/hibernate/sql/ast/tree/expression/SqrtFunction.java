@@ -16,10 +16,6 @@ public class SqrtFunction extends AbstractStandardFunction {
 	private final Expression argument;
 	private final SqlExpressableType type;
 
-	public SqrtFunction(Expression argument) {
-		this( argument, argument.getType() );
-	}
-
 	public SqrtFunction(Expression argument, SqlExpressableType type) {
 		this.argument = argument;
 		this.type = type;

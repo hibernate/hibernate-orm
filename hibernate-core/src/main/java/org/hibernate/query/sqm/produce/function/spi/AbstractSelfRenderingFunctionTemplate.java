@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -26,20 +27,13 @@ public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmF
 		super( argumentsValidator, returnTypeResolver );
 	}
 
-	public AbstractSelfRenderingFunctionTemplate() {
-	}
-
 	public AbstractSelfRenderingFunctionTemplate(ArgumentsValidator argumentsValidator) {
 		super( argumentsValidator );
 	}
 
-	public AbstractSelfRenderingFunctionTemplate(FunctionReturnTypeResolver returnTypeResolver) {
-		super( returnTypeResolver );
-	}
-
 	@Override
 	protected SqmExpression generateSqmFunctionExpression(
-			List<SqmExpression> arguments,
+			List<SqmTypedNode> arguments,
 			AllowableFunctionReturnType resolvedReturnType,
 			QueryEngine queryEngine) {
 		//noinspection unchecked
@@ -52,7 +46,7 @@ public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmF
 	}
 
 	protected abstract SelfRenderingFunctionSupport getRenderingFunctionSupport(
-			List<SqmExpression> arguments,
+			List<SqmTypedNode> arguments,
 			AllowableFunctionReturnType resolvedReturnType,
 			QueryEngine queryEngine);
 }

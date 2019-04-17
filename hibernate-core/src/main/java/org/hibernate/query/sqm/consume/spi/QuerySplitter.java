@@ -723,6 +723,7 @@ public class QuerySplitter {
 			return new SqmConcat(
 					(SqmExpression) expression.getLeftHandOperand().accept( this ),
 					(SqmExpression) expression.getRightHandOperand().accept( this ),
+					expression.getExpressableType(),
 					expression.nodeBuilder()
 			);
 		}

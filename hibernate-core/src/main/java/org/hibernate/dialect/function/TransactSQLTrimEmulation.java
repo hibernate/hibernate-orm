@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce.function.spi;
+package org.hibernate.dialect.function;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +13,7 @@ import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
@@ -29,7 +30,7 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  *
  * @author Steve Ebersole
  */
-public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
+public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 	/**
 	 * The default {@code ltrim} function name
 	 */
@@ -58,9 +59,9 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 	 * Constructs a new AnsiTrimEmulationFunction using {@link #LTRIM}, {@link #RTRIM}, and {@link #REPLACE}
 	 * respectively.
 	 *
-	 * @see #AnsiTrimEmulationFunctionTemplate(String,String,String)
+	 * @see #TransactSQLTrimEmulation(String,String,String)
 	 */
-	public AnsiTrimEmulationFunctionTemplate() {
+	public TransactSQLTrimEmulation() {
 		this( LTRIM, RTRIM, REPLACE );
 	}
 
@@ -71,7 +72,7 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 	 * @param rtrimFunctionName The <tt>right trim</tt> function to use.
 	 * @param replaceFunctionName The <tt>replace</tt> function to use.
 	 */
-	public AnsiTrimEmulationFunctionTemplate(String ltrimFunctionName, String rtrimFunctionName, String replaceFunctionName) {
+	public TransactSQLTrimEmulation(String ltrimFunctionName, String rtrimFunctionName, String replaceFunctionName) {
 		this.ltrimFunctionName = ltrimFunctionName;
 		this.rtrimFunctionName = rtrimFunctionName;
 		this.replaceFunctionName = replaceFunctionName;
@@ -79,13 +80,13 @@ public class AnsiTrimEmulationFunctionTemplate implements SqmFunctionTemplate {
 
 	@Override
 	public SqmFunction makeSqmFunctionExpression(
-			List<SqmExpression> arguments,
+			List<SqmTypedNode> arguments,
 			AllowableFunctionReturnType impliedResultType,
 			QueryEngine queryEngine) {
 		final TrimSpecification specification = ( (TrimSpecificationExpressionWrapper) arguments.get( 0 ) ).getSpecification();
 		//noinspection unchecked
 		final SqmLiteral<Character> trimCharacterExpr = (SqmLiteral<Character>) arguments.get( 1 );
-		final SqmExpression sourceExpr = arguments.get( 1 );
+		final SqmExpression sourceExpr = (SqmExpression) arguments.get( 1 );
 
 		// NOTE we assume here that the specific ltrim/rtrim/replace function names do not need additional resolution
 		//		against the registry!

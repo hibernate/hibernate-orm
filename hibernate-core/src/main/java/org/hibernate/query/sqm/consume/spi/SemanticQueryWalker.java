@@ -9,8 +9,6 @@ package org.hibernate.query.sqm.consume.spi;
 import java.lang.reflect.Field;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.criteria.sqm.JpaParameterSqmWrapper;
-import org.hibernate.query.hql.internal.SemanticQueryBuilder;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
@@ -43,6 +41,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
@@ -336,4 +335,6 @@ public interface SemanticQueryWalker<T> {
 	T visitFullyQualifiedField(Field field);
 
 	T visitExtractUnit(SqmExtractUnit extractUnit);
+
+	T visitCastTarget(SqmCastTarget sqmCastTarget);
 }

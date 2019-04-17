@@ -41,6 +41,12 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
+	protected void setExpressableType(ExpressableType expressableType) {
+		super.setExpressableType(expressableType);
+		this.type = expressableType;
+	}
+
+	@Override
 	public final void applyInferableType(ExpressableType<?> type) {
 		if ( type == null ) {
 			return;
@@ -114,7 +120,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	protected <X> SqmExpression<X> castAs(AllowableFunctionReturnType<X> type) {
-		return new SqmCastFunction<>( this, type, null );
+		return new SqmCastFunction<>( this, type );
 	}
 
 	@Override

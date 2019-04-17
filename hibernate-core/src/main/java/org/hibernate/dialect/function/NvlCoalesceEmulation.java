@@ -10,10 +10,14 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static java.util.Arrays.asList;
 
 /**
  * Emulation `coalesce` using `nvl` on versions Oracle not supporting `coalesce`
@@ -22,43 +26,34 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  *
  * @author Steve Ebersole
  */
-public class CoalesceEmulationUsingNvl
+public class NvlCoalesceEmulation
 		extends AbstractSqmFunctionTemplate {
-	/**
-	 * Singleton access
-	 */
-	public static final CoalesceEmulationUsingNvl INSTANCE = new CoalesceEmulationUsingNvl();
 
-	public CoalesceEmulationUsingNvl() {
-		super( StandardArgumentsValidators.min( 2 ) );
+	public NvlCoalesceEmulation() {
+		super(
+				StandardArgumentsValidators.min( 2 ),
+				StandardFunctionReturnTypeResolvers.useFirstNonNull()
+		);
 	}
 
 	@Override
 	protected SqmExpression generateSqmFunctionExpression(
-			List<SqmExpression> arguments,
+			List<SqmTypedNode> arguments,
 			AllowableFunctionReturnType impliedResultType,
 			QueryEngine queryEngine) {
-		SqmExpression nvl = nvl(
-				arguments.get( arguments.size() - 1 ),
-				arguments.get( arguments.size() - 2 ),
-				queryEngine.getCriteriaBuilder()
-		);
 
-		for ( int i = arguments.size() - 3; i >= 0 ; i-- ) {
-			nvl = nvl( arguments.get( i ), nvl, queryEngine.getCriteriaBuilder() );
+		SqmFunctionTemplate nvl = queryEngine.getSqmFunctionRegistry().findFunctionTemplate("nvl");
+
+		int pos = arguments.size();
+		SqmExpression result = (SqmExpression) arguments.get( --pos );
+		AllowableFunctionReturnType type = (AllowableFunctionReturnType) result.getExpressableType();
+
+		while (pos>0) {
+			SqmExpression next = (SqmExpression) arguments.get( --pos );
+			result = nvl.makeSqmFunctionExpression( asList( next, result ), type, queryEngine );
 		}
 
-		return nvl;
+		return result;
 	}
 
-	protected SqmExpression nvl(SqmExpression arg1, SqmExpression arg2, NodeBuilder nodeBuilder) {
-		return new NvlFunctionTemplate.SqmNvlFunction(
-				arg1,
-				arg2,
-				(AllowableFunctionReturnType) (arg1.getExpressableType() == null
-						? arg2.getExpressableType()
-						: arg1.getExpressableType()),
-				nodeBuilder
-		);
-	}
 }

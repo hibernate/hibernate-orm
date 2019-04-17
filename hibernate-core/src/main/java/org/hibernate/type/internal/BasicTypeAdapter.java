@@ -74,11 +74,6 @@ public class BasicTypeAdapter<J> implements org.hibernate.type.spi.BasicType<J> 
 	}
 
 	@Override
-	public SqlTypeDescriptor getSqlTypeDescriptor() {
-		return getSqlExpressableType().getSqlTypeDescriptor();
-	}
-
-	@Override
 	public SqlExpressableType getSqlExpressableType() {
 		return sqlExpressableType;
 	}

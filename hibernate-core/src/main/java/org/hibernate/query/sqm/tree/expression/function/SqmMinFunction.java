@@ -19,10 +19,6 @@ public class SqmMinFunction<T>
 		implements SqmAggregateFunction<T> {
 	public static final String NAME = "min";
 
-	public SqmMinFunction(SqmExpression<T> argument, NodeBuilder nodeBuilder) {
-		super( argument, (AllowableFunctionReturnType<T>) argument.getExpressableType(), nodeBuilder );
-	}
-
 	public SqmMinFunction(SqmExpression argument, AllowableFunctionReturnType<T> resultType, NodeBuilder nodeBuilder) {
 		super( argument, resultType, nodeBuilder );
 	}

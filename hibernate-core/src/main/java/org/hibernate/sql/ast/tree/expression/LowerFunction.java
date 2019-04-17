@@ -16,10 +16,6 @@ public class LowerFunction extends AbstractStandardFunction implements StandardF
 	private final Expression argument;
 	private final SqlExpressableType type;
 
-	public LowerFunction(Expression argument) {
-		this( argument, argument.getType() );
-	}
-
 	public LowerFunction(Expression argument, SqlExpressableType type) {
 		this.argument = argument;
 		this.type = type;

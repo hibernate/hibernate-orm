@@ -27,13 +27,6 @@ public class NamedFunctionTemplateBuilder {
 
 	private boolean useParenthesesWhenNoArgs;
 
-	public NamedFunctionTemplateBuilder(SqmFunctionRegistry registry, String functionName) {
-		this.registry = registry;
-		this.registrationKey = functionName;
-		this.functionName = functionName;
-
-	}
-
 	public NamedFunctionTemplateBuilder(SqmFunctionRegistry registry, String registrationKey, String functionName) {
 		this.registry = registry;
 		this.registrationKey = registrationKey;

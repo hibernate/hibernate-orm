@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.Template;
 
@@ -32,7 +33,7 @@ public interface SqmFunctionTemplate {
 	 * "expressable form".
 	 */
 	SqmExpression makeSqmFunctionExpression(
-			List<SqmExpression> arguments,
+			List<SqmTypedNode> arguments,
 			AllowableFunctionReturnType impliedResultType,
 			QueryEngine queryEngine);
 

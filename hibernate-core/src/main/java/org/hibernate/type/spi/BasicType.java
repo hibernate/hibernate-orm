@@ -30,11 +30,6 @@ public interface BasicType<T>
 	@Override
 	BasicJavaDescriptor<T> getJavaTypeDescriptor();
 
-	/**
-	 * The descriptor of the SQL type part of this basic-type
-	 */
-	SqlTypeDescriptor getSqlTypeDescriptor();
-
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;

@@ -39,9 +39,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates.AvgFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -140,15 +137,11 @@ public class DB2Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().register( "avg", new AvgFunctionTemplate( "double" ) );
-
-		CommonFunctionFactory.abs( queryEngine );
 		CommonFunctionFactory.sign( queryEngine );
 		CommonFunctionFactory.ceiling( queryEngine );
 		CommonFunctionFactory.ceil( queryEngine );
 		CommonFunctionFactory.floor( queryEngine );
 		CommonFunctionFactory.round( queryEngine );
-		CommonFunctionFactory.sqrt( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "absval" )
 				.setExactArgumentCount( 1 )
@@ -220,7 +213,6 @@ public class DB2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "date" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 1 )
@@ -249,12 +241,10 @@ public class DB2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "time" )
 				.setInvariantType( StandardSpiBasicTypes.TIME )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "timestamp" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setArgumentCountBetween( 1, 2 )
@@ -342,10 +332,10 @@ public class DB2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 4 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "length(?1)*8", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().register( "trim", AnsiTrimFunctionTemplate.INSTANCE );
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", ConcatFunctionTemplate.INSTANCE );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "length(?1)*8", StandardSpiBasicTypes.INTEGER );
+
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "rtrim(char(?1))", StandardSpiBasicTypes.STRING );
 	}

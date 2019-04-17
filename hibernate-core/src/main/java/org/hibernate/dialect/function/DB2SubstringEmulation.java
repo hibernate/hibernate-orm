@@ -15,6 +15,7 @@ import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
@@ -36,44 +37,41 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  *
  * @author Gail Badner
  */
-public class DB2SubstringFunctionTemplate implements SqmFunctionTemplate {
+public class DB2SubstringEmulation implements SqmFunctionTemplate {
 	private static final Set<String> possibleStringUnits = new HashSet<>(
 			Arrays.asList( "CODEUNITS16", "CODEUNITS32", "OCTETS" )
 	);
 
-	public DB2SubstringFunctionTemplate() {
+	public DB2SubstringEmulation() {
 	}
 
-	protected String getRenderedName(List arguments) {
+	private boolean hasStringUnits(List arguments) {
 		final String lastArgument = (String) arguments.get( arguments.size() - 1 );
-		if ( lastArgument != null && possibleStringUnits.contains( lastArgument.toUpperCase() ) ) {
-			return "substring";
-		}
-		else {
-			return "substr";
-		}
+		return lastArgument != null
+				&& possibleStringUnits.contains( lastArgument.toUpperCase() );
 	}
 
 	@Override
 	public SqmExpression makeSqmFunctionExpression(
-			List<SqmExpression> arguments,
+			List<SqmTypedNode> arguments,
 			AllowableFunctionReturnType impliedResultType,
 			QueryEngine queryEngine) {
+		boolean units = hasStringUnits(arguments);
 		return new DB2SubstringFunction(
-				getRenderedName( arguments ),
+				units ? "substring" : "substr",
 				StandardSpiBasicTypes.STRING,
-				arguments.get( 1 ),
-				arguments.get( 2 ),
-				null,
+				(SqmExpression) arguments.get( 0 ),
+				(SqmExpression) arguments.get( 1 ),
+				arguments.size() > (units ? 3 : 2) ? (SqmExpression) arguments.get( 2 ) : null,
 				queryEngine.getCriteriaBuilder()
 		);
 	}
 
-	public static class DB2SubstringFunction extends SqmSubstringFunction {
+	private static class DB2SubstringFunction extends SqmSubstringFunction {
 
 		String functionName;
 
-		public DB2SubstringFunction(
+		private DB2SubstringFunction(
 				String functionName,
 				BasicValuedExpressableType<?> resultType,
 				SqmExpression source,

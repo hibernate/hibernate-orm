@@ -13,38 +13,30 @@ import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Gavin King
  */
-public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode, SqmVisitableNode {
-	private String name;
-	private AllowableFunctionReturnType type;
+public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode, SqmVisitableNode {
+	private AllowableFunctionReturnType<T> type;
 
-	public SqmExtractUnit(String name, AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
+	public SqmCastTarget(AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.type = type;
-		this.name = name;
 	}
 
-	public AllowableFunctionReturnType getType() {
+	public AllowableFunctionReturnType<T> getType() {
 		return type;
-	}
-
-	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitExtractUnit(this);
-	}
-
-	public String getUnitName() {
-		return name;
 	}
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return null;
 	}
+
+	@Override
+	public <T> T accept(SemanticQueryWalker<T> walker) {
+		return walker.visitCastTarget(this);
+	}
+
 }
-
-

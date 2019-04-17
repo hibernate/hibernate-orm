@@ -20,10 +20,6 @@ public class SqmMaxFunction<T>
 		implements SqmAggregateFunction<T> {
 	public static final String NAME = "max";
 
-	public SqmMaxFunction(SqmExpression<T> argument, NodeBuilder nodeBuilder) {
-		super( argument, (AllowableFunctionReturnType<T>) argument.getExpressableType(), nodeBuilder );
-	}
-
 	public SqmMaxFunction(SqmExpression argument, BasicValuedExpressableType<T> resultType, NodeBuilder nodeBuilder) {
 		super( argument, resultType, nodeBuilder );
 	}

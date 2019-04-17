@@ -21,18 +21,6 @@ public class SqmConcat<T> extends AbstractSqmExpression<T> {
 	private final SqmExpression<?> rhsOperand;
 
 	public SqmConcat(
-			SqmExpression lhsOperand,
-			SqmExpression rhsOperand,
-			NodeBuilder nodeBuilder) {
-		super( null, nodeBuilder );
-
-		this.lhsOperand = lhsOperand;
-		this.rhsOperand = rhsOperand;
-
-		applyInferableType( StandardSpiBasicTypes.STRING );
-	}
-
-	public SqmConcat(
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
 			BasicValuedExpressableType<T> resultType,
@@ -42,8 +30,6 @@ public class SqmConcat<T> extends AbstractSqmExpression<T> {
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
 
-		this.lhsOperand.applyInferableType( resultType );
-		this.rhsOperand.applyInferableType( resultType );
 	}
 
 	public SqmExpression getLeftHandOperand() {

@@ -14,38 +14,29 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
  */
 public class CastFunction extends AbstractStandardFunction {
 	private final Expression expressionToCast;
-	private final SqlExpressableType castResultType;
-	private final String explicitCastTargetTypeSqlExpression;
+	private final CastTarget castTarget;
 
-	public CastFunction(
-			Expression expressionToCast,
-			SqlExpressableType castResultType,
-			String explicitCastTargetTypeSqlExpression) {
+	public CastFunction(Expression expressionToCast, CastTarget castTarget) {
 		this.expressionToCast = expressionToCast;
-		this.castResultType = castResultType;
-		this.explicitCastTargetTypeSqlExpression = explicitCastTargetTypeSqlExpression;
+		this.castTarget = castTarget;
 	}
 
 	public Expression getExpressionToCast() {
 		return expressionToCast;
 	}
 
-	public SqlExpressableType getCastResultType() {
-		return castResultType;
+	public CastTarget getCastTarget() {
+		return castTarget;
 	}
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return getCastResultType();
+		return getType();
 	}
 
 	@Override
 	public SqlExpressableType getType() {
-		return getCastResultType();
-	}
-
-	public String getExplicitCastTargetTypeSqlExpression() {
-		return explicitCastTargetTypeSqlExpression;
+		return castTarget.getExpressableType();
 	}
 
 	@Override

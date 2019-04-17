@@ -17,7 +17,7 @@ import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.produce.function.spi.AnsiTrimEmulationFunctionTemplate;
+import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -56,6 +56,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "second", "datepart(second, ?1)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "minute", "datepart(minute, ?1)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "hour", "datepart(hour, ?1)", StandardSpiBasicTypes.INTEGER );
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "locate", "charindex" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 3 )
@@ -65,7 +66,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "?1 % ?2", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "datalength(?1) * 8", StandardSpiBasicTypes.INTEGER );
 
-		queryEngine.getSqmFunctionRegistry().register( "trim", new AnsiTrimEmulationFunctionTemplate() );
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return "default values";
 	}
 
-	static int getAfterSelectInsertPoint(String sql) {
+	private static int getAfterSelectInsertPoint(String sql) {
 		final int selectIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select" );
 		final int selectDistinctIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select distinct" );
 		return selectIndex + (selectDistinctIndex == selectIndex ? 15 : 6);

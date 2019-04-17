@@ -14,9 +14,6 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.ConvertFunctionTemplate;
-import org.hibernate.dialect.function.NvlFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.Chache71IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -278,11 +275,6 @@ public class Cache71Dialect extends Dialect {
 						.register()
 		);
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_length" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "character_length" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
@@ -297,17 +289,17 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "", "||", "" ) );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "", "||", "" );
 
-		queryEngine.getSqmFunctionRegistry().register( "convert", new ConvertFunctionTemplate() );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "convert" );
 
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "curdate", queryEngine.getSqmFunctionRegistry().registerNamed( "curdate", StandardSpiBasicTypes.DATE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "curtime", queryEngine.getSqmFunctionRegistry().registerNamed( "curtime", StandardSpiBasicTypes.TIME ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "database", queryEngine.getSqmFunctionRegistry().registerNamed( "database", StandardSpiBasicTypes.STRING ) );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "dateadd", StandardSpiBasicTypes.TIMESTAMP, "dateadd(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "datediff", StandardSpiBasicTypes.INTEGER, "datediff(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "datename", StandardSpiBasicTypes.STRING, "datename(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "datepart", StandardSpiBasicTypes.INTEGER, "datepart(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dateadd", StandardSpiBasicTypes.TIMESTAMP);
+		queryEngine.getSqmFunctionRegistry().registerNamed( "datediff", StandardSpiBasicTypes.INTEGER);
+		queryEngine.getSqmFunctionRegistry().registerNamed( "datename", StandardSpiBasicTypes.STRING);
+		queryEngine.getSqmFunctionRegistry().registerNamed( "datepart", StandardSpiBasicTypes.INTEGER);
 		queryEngine.getSqmFunctionRegistry().registerNamed( "day", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "dayname", queryEngine.getSqmFunctionRegistry().registerNamed( "dayname", StandardSpiBasicTypes.STRING ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "dayofmonth", queryEngine.getSqmFunctionRegistry().registerNamed( "dayofmonth", StandardSpiBasicTypes.INTEGER ) );
@@ -317,74 +309,70 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%exact", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "exp", queryEngine.getSqmFunctionRegistry().registerNamed( "exp", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%external", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "$extract", StandardSpiBasicTypes.INTEGER, "$extract(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "$find", StandardSpiBasicTypes.INTEGER, "$find(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "$extract", StandardSpiBasicTypes.INTEGER);
+		queryEngine.getSqmFunctionRegistry().registerNamed( "$find", StandardSpiBasicTypes.INTEGER);
 		queryEngine.getSqmFunctionRegistry().registerNamed( "floor", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "getdate", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "hour", queryEngine.getSqmFunctionRegistry().registerNamed( "hour", StandardSpiBasicTypes.INTEGER ) );
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "ifnull", "ifnull(", ",", ")" ).register();
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ifnull" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%internal" );
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "isnull", "isnull(", ",", ")" ).register();
+		queryEngine.getSqmFunctionRegistry().registerNamed( "isnull" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "isnumeric", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "lcase", queryEngine.getSqmFunctionRegistry().registerNamed( "lcase", StandardSpiBasicTypes.STRING ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "left", queryEngine.getSqmFunctionRegistry().registerNamed( "left", StandardSpiBasicTypes.STRING ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "len", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "$length", "$length(", ",", ")" ).register();
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "$list", "$list(", ",", ")" ).register();
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "$listdata", "$listdata(", ",", ")" ).register();
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "$listfind", "$listfind(", ",", ")" ).register();
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "$listget", "$listget(", ",", ")" ).register();
+		queryEngine.getSqmFunctionRegistry().registerNamed( "$length" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "$list" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "$listdata" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "$listfind" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "$listget" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "$listlength", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "locate", "$FIND" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "log", queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "log10", queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE ) );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lower" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim" );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "minute", queryEngine.getSqmFunctionRegistry().registerNamed( "minute", StandardSpiBasicTypes.INTEGER ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "mod", queryEngine.getSqmFunctionRegistry().registerNamed( "mod", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "month", queryEngine.getSqmFunctionRegistry().registerNamed( "month", StandardSpiBasicTypes.INTEGER ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "monthname", queryEngine.getSqmFunctionRegistry().registerNamed( "monthname", StandardSpiBasicTypes.STRING ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "now", queryEngine.getSqmFunctionRegistry().registerNamed( "monthname", StandardSpiBasicTypes.TIMESTAMP ) );
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "nullif", "nullif(", ",", ")" ).register();
-		queryEngine.getSqmFunctionRegistry().register( "nvl", new NvlFunctionTemplate() );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%odbcin" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%odbcout" );
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "%pattern", StandardSpiBasicTypes.STRING, "", "%pattern", "" );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "pi", queryEngine.getSqmFunctionRegistry().registerNamed( "pi", StandardSpiBasicTypes.DOUBLE ) );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "$piece", StandardSpiBasicTypes.STRING, "$piece(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "position", StandardSpiBasicTypes.INTEGER, "position(", " in ", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "power", StandardSpiBasicTypes.STRING, "power(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "$piece", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "power", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "quarter", queryEngine.getSqmFunctionRegistry().registerNamed( "quarter", StandardSpiBasicTypes.INTEGER ) );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "repeat", StandardSpiBasicTypes.STRING, "repeat(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "replicate", StandardSpiBasicTypes.STRING, "replicate(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "repeat", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "replicate", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "right", queryEngine.getSqmFunctionRegistry().registerNamed( "right", StandardSpiBasicTypes.STRING ) );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "round", StandardSpiBasicTypes.FLOAT, "round(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "round", StandardSpiBasicTypes.FLOAT );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "second", queryEngine.getSqmFunctionRegistry().registerNamed( "second", StandardSpiBasicTypes.INTEGER ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "sin", queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "space", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "%sqlstring", StandardSpiBasicTypes.STRING, "%sqlstring(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "%sqlupper", StandardSpiBasicTypes.STRING, "%sqlupper(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "%sqlstring", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "%sqlupper", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "sqrt", queryEngine.getSqmFunctionRegistry().registerNamed( "SQRT", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "%startswith", StandardSpiBasicTypes.STRING, "", "%startswith", "" );
 		// below is for Cache' that don't have str in 2007.1 there is str and we register str directly
 		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as char varying)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "string", StandardSpiBasicTypes.STRING, "string(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "string", StandardSpiBasicTypes.STRING );
 		// note that %string is deprecated
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "%string", StandardSpiBasicTypes.STRING, "%string(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "substr", StandardSpiBasicTypes.STRING, "substr(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "substring", StandardSpiBasicTypes.STRING, "substring(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "%string", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "substr", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "tan", queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "timestampadd", queryEngine.getSqmFunctionRegistry().registerNamed( "timestampadd", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "timestampdiff", queryEngine.getSqmFunctionRegistry().registerNamed( "timestampdiff", StandardSpiBasicTypes.DOUBLE ) );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "tochar", StandardSpiBasicTypes.STRING, "tochar(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "to_char", StandardSpiBasicTypes.STRING, "to_char(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "todate", StandardSpiBasicTypes.STRING, "todate(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "to_date", StandardSpiBasicTypes.STRING, "todate(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "tochar", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "to_char", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "todate", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "to_date", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tonumber" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "to_number", "tonumber" );
 		// TRIM(end_keyword string-expression-1 FROM string-expression-2)
@@ -392,19 +380,18 @@ public class Cache71Dialect extends Dialect {
 		//registerFunction( "trim", new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?1 ?2 from ?3)") );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "truncate", queryEngine.getSqmFunctionRegistry().registerNamed( "truncate", StandardSpiBasicTypes.STRING ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "ucase", queryEngine.getSqmFunctionRegistry().registerNamed( "ucase", StandardSpiBasicTypes.STRING ) );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "upper" );
 		// %upper is deprecated
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%upper" );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "user", queryEngine.getSqmFunctionRegistry().registerNamed( "user", StandardSpiBasicTypes.STRING ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "week", queryEngine.getSqmFunctionRegistry().registerNamed( "week", StandardSpiBasicTypes.INTEGER ) );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "xmlconcat", StandardSpiBasicTypes.STRING, "xmlconcat(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "xmlelement", StandardSpiBasicTypes.STRING, "xmlelement(", ",", ")" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "xmlconcat", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "xmlelement", StandardSpiBasicTypes.STRING );
 		// xmlforest requires a new kind of function constructor
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "year", queryEngine.getSqmFunctionRegistry().registerNamed( "year", StandardSpiBasicTypes.INTEGER ) );
 	}
 
 	protected void register71Functions(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().register( "str", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "str(", ",", ")" ) );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "str", StandardSpiBasicTypes.STRING );
 	}
 
 

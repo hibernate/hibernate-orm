@@ -98,16 +98,12 @@ public class CUBRIDDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthb", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthh", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lcase" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lower" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "reverse" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "trim" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "space", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ucase" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "upper" );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "abs" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
@@ -123,7 +119,6 @@ public class CUBRIDDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rand", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "random", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "sqrt", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "radians", StandardSpiBasicTypes.DOUBLE );
@@ -138,18 +133,15 @@ public class CUBRIDDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "date", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curdate", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sys_date", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "time", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curtime", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sys_time", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "systime", StandardSpiBasicTypes.TIME );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sys_timestamp", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "systimestamp", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIMESTAMP );
@@ -181,21 +173,13 @@ public class CUBRIDDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "hex", StandardSpiBasicTypes.STRING );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "octet_length", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_length", StandardSpiBasicTypes.LONG );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_count", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "md5", StandardSpiBasicTypes.STRING );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "concat", StandardSpiBasicTypes.STRING );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "substring", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "substr", StandardSpiBasicTypes.STRING );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "length", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_length", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "coalesce" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "nullif" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "mod" );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "power" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "stddev" );

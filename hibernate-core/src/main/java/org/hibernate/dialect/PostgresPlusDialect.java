@@ -10,8 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.NvlFunctionTemplate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -41,13 +41,14 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 4 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlFunctionTemplate() );
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl2" )
 				.setExactArgumentCount( 3 )
 				.register();
+//		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 
 		// Multi-param date dialect functions...
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_months" )

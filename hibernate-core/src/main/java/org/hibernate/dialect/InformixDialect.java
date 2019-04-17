@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
-import org.hibernate.dialect.function.NvlFunctionTemplate;
+import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -83,11 +83,11 @@ public class InformixDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "substring", "substring(?1 FROM ?2 FOR ?3)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "substr", "substr(?1, ?2, ?3)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlFunctionTemplate() );
-		queryEngine.getSqmFunctionRegistry().register( "nvl", new NvlFunctionTemplate() );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "substr", StandardSpiBasicTypes.STRING );
+
+		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl" );
+		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+
 	}
 
 	@Override

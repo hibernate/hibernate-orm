@@ -21,10 +21,6 @@ public class LengthFunction extends AbstractStandardFunction implements Standard
 		this.type = type;
 	}
 
-	public LengthFunction(Expression argument) {
-		this( argument, null );
-	}
-
 	public Expression getArgument() {
 		return argument;
 	}

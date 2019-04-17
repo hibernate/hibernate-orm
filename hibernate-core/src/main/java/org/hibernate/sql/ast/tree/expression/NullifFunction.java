@@ -17,7 +17,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class NullifFunction extends AbstractFunction {
+public class NullifFunction extends AbstractStandardFunction {
 	private final Expression first;
 	private final Expression second;
 	private final SqlExpressableType type;
@@ -52,20 +52,6 @@ public class NullifFunction extends AbstractFunction {
 	@Override
 	public void accept(SqlAstWalker  walker) {
 		walker.visitNullifFunction( this );
-	}
-
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			BasicJavaDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				getExpressableType()
-		);
 	}
 
 }

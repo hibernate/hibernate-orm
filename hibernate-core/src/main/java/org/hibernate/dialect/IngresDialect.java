@@ -10,8 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.IngresSubstringFunction;
-import org.hibernate.dialect.function.LocateEmulationUsingPositionAndSubstring;
+import org.hibernate.dialect.function.LocateEmulation;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -23,8 +22,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -112,15 +109,7 @@ public class IngresDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "octet_length(hex(?1))*4", StandardSpiBasicTypes.INTEGER );
 
-		queryEngine.getSqmFunctionRegistry().register(
-				"concat",
-				new FunctionAsExpressionTemplate(
-						"(",
-						"+",
-						")",
-						StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
-				)
-		);
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "+", ")" );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "day" )
 				.setExactArgumentCount( 1 )
@@ -135,13 +124,34 @@ public class IngresDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1', ?2)", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().register(
+				"substring",
+				new LocateEmulation(
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "substring/2", "substring(?1 from ?2)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "substring/3", "substring(?1 from ?2 for ?3)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
+
+		queryEngine.getSqmFunctionRegistry().register(
 				"locate",
-				new LocateEmulationUsingPositionAndSubstring(
-						(type, arguments, qe) -> qe.getSqmFunctionRegistry().findFunctionTemplate( "substring" ).makeSqmFunctionExpression(
-								arguments,
-								type,
-								queryEngine
-						)
+				new LocateEmulation(
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/2", "position(?1 in ?2)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/3", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
 				)
 		);
 
@@ -159,8 +169,6 @@ public class IngresDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
-
-		queryEngine.getSqmFunctionRegistry().register( "substring", IngresSubstringFunction.INSTANCE );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "year" )
 				.setExactArgumentCount( 1 )
@@ -181,7 +189,6 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.exp( queryEngine );
 		CommonFunctionFactory.ln( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.sin( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
 

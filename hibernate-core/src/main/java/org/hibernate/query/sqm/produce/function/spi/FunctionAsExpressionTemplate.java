@@ -13,6 +13,7 @@ import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
@@ -33,10 +34,6 @@ public class FunctionAsExpressionTemplate
 	private final String expressionStart;
 	private final String argumentSeparator;
 	private final String expressionEnd;
-
-	public FunctionAsExpressionTemplate(String expressionStart, String argumentSeparator, String expressionEnd) {
-		this( expressionStart, argumentSeparator, expressionEnd, null );
-	}
 
 	public FunctionAsExpressionTemplate(
 			String expressionStart,
@@ -60,7 +57,7 @@ public class FunctionAsExpressionTemplate
 
 	@Override
 	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
-			List<SqmExpression> arguments,
+			List<SqmTypedNode> arguments,
 			AllowableFunctionReturnType resolvedReturnType,
 			QueryEngine queryEngine) {
 		return this;

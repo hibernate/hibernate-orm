@@ -42,7 +42,7 @@ public class HqlExecutionSmokeTest extends SessionFactoryBasedFunctionalTest {
 								final Statement statement = connection.createStatement();
 								try {
 									statement.execute(
-											"insert into EntityOfBasics( id, gender, theInt ) values ( 1, 'M', -1 )" );
+											"insert into EntityOfBasics( id, gender, theInt, theDouble ) values ( 1, 'M', -1, 1.0 )" );
 								}
 								finally {
 									try {

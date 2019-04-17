@@ -9,7 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.produce.function.spi.AnsiTrimEmulationFunctionTemplate;
+import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
@@ -50,9 +50,11 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "datepart(?1, ?3)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "?1 % ?2", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "datalength(?1) * 8", StandardSpiBasicTypes.INTEGER );
+
+		//TODO: is this really necessary:
 		queryEngine.getSqmFunctionRegistry().register(
-				"trim", new AnsiTrimEmulationFunctionTemplate(
-						AnsiTrimEmulationFunctionTemplate.LTRIM, AnsiTrimEmulationFunctionTemplate.RTRIM, "str_replace"
+				"trim", new TransactSQLTrimEmulation(
+						TransactSQLTrimEmulation.LTRIM, TransactSQLTrimEmulation.RTRIM, "str_replace"
 				)
 		);
 
@@ -62,13 +64,23 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "biginttohex", "biginttohext(?1)", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "char_length", "char_length(?1)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "charindex", "charindex(?1, ?2)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "coalesce", "coalesce(", ",", ")" ).register();
 		queryEngine.getSqmFunctionRegistry().registerPattern( "col_length", "col_length(?1, ?2)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "col_name", "col_name(?1, ?2)", StandardSpiBasicTypes.STRING );
-		// Sybase has created current_date and current_time inplace of getdate()
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_time", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_date", StandardSpiBasicTypes.DATE );
 
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "current_date", "current date")
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 0 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "current_time", "current time")
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 0 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "current_timestamp", "current timestamp")
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 0 )
+				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "data_pages", "data_pages(?1, ?2)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "data_pages", "data_pages(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
@@ -118,7 +130,6 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "stddev_pop", "stddev_pop", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "stddev_samp", "stddev_samp", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "stuff", "stuff", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "substring", StandardSpiBasicTypes.STRING, "substring(", ",", ")" );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "suser_id", "suser_id", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "suser_name", "suser_name", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "tempdb_id", "tempdb_id", StandardSpiBasicTypes.INTEGER );

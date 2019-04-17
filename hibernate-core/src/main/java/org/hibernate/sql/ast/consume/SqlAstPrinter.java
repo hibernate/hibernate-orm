@@ -24,6 +24,7 @@ import org.hibernate.sql.ast.tree.expression.BitLengthFunction;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastFunction;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.ConcatFunction;
@@ -650,6 +651,11 @@ public class SqlAstPrinter implements SqlAstWalker {
 
 	@Override
 	public void visitExtractUnit(ExtractUnit unit) {
+
+	}
+
+	@Override
+	public void visitCastTarget(CastTarget castTarget) {
 
 	}
 

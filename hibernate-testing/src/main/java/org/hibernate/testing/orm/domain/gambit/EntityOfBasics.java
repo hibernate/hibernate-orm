@@ -35,6 +35,7 @@ public class EntityOfBasics {
 	private String theString;
 	private Integer theInteger;
 	private int theInt;
+	private double theDouble;
 	private URL theUrl;
 	private Clob theClob;
 	private Date theDate;
@@ -76,6 +77,14 @@ public class EntityOfBasics {
 
 	public void setTheInt(int theInt) {
 		this.theInt = theInt;
+	}
+
+	public double getTheDouble() {
+		return theDouble;
+	}
+
+	public void setTheDouble(double theDouble) {
+		this.theDouble = theDouble;
 	}
 
 	public URL getTheUrl() {

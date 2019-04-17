@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -18,5 +19,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 public interface AllowableFunctionReturnType<T> extends ExpressableType<T> {
 
 	SqlExpressableType getSqlExpressableType(TypeConfiguration typeConfiguration);
+
+	@Remove
+	SqlExpressableType getSqlExpressableType();
 
 }

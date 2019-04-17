@@ -19,12 +19,8 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 public class SqmCurrentTimeFunction extends AbstractSqmFunction<Time> {
 	public static final String NAME = "current_time";
 
-	public SqmCurrentTimeFunction(NodeBuilder nodeBuilder) {
-		super( (AllowableFunctionReturnType) StandardSpiBasicTypes.TIME, nodeBuilder );
-	}
-
-	public SqmCurrentTimeFunction(AllowableFunctionReturnType<Time> resultType, NodeBuilder nodeBuilder) {
-		super( resultType, nodeBuilder );
+	public SqmCurrentTimeFunction(AllowableFunctionReturnType<Time> type, NodeBuilder nodeBuilder) {
+		super( type, nodeBuilder );
 	}
 
 	@Override

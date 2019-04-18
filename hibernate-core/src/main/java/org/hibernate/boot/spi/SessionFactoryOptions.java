@@ -308,4 +308,8 @@ public interface SessionFactoryOptions {
 		return true;
 	}
 
+	/**
+	 * Can bytecode-enhanced entity classes be used as a "proxy"?
+	 */
+	boolean isEnhancementAsProxyEnabled();
 }

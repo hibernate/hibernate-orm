@@ -290,4 +290,10 @@ public interface SessionFactoryOptions {
 	default boolean nativeExceptionHandling51Compliance() {
 		return false;
 	}
+
+	/**
+	 * Can bytecode-enhanced entity classes be used as a "proxy"?
+	 */
+	boolean isEnhancementAsProxyEnabled();
+
 }

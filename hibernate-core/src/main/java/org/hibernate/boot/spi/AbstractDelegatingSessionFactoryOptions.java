@@ -432,4 +432,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public boolean nativeExceptionHandling51Compliance() {
 		return delegate.nativeExceptionHandling51Compliance();
 	}
+
+	@Override
+	public boolean isEnhancementAsProxyEnabled() {
+		return delegate.isEnhancementAsProxyEnabled();
+	}
 }

@@ -8,6 +8,7 @@ package org.hibernate;
 
 import java.util.Iterator;
 
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
@@ -63,6 +64,18 @@ public final class Hibernate {
 		else if ( proxy instanceof PersistentCollection ) {
 			( (PersistentCollection) proxy ).forceInitialization();
 		}
+
+		// todo : consider bytecode enhancement handling
+//		else if ( proxy instanceof PersistentAttributeInterceptable ) {
+//			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) proxy;
+//			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+//			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+//				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( proxy, null );
+//			}
+//			else if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
+//				( (LazyAttributeLoadingInterceptor) interceptor ).fetchAttribute()
+//			}
+//		}
 	}
 
 	/**
@@ -75,6 +88,13 @@ public final class Hibernate {
 	public static boolean isInitialized(Object proxy) {
 		if ( proxy instanceof HibernateProxy ) {
 			return !( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUninitialized();
+		}
+		else if ( proxy instanceof PersistentAttributeInterceptable ) {
+			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) proxy ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				return false;
+			}
+			return true;
 		}
 		else if ( proxy instanceof PersistentCollection ) {
 			return ( (PersistentCollection) proxy ).wasInitialized();
@@ -187,7 +207,10 @@ public final class Hibernate {
 
 		if ( entity instanceof PersistentAttributeInterceptable ) {
 			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
-			if ( interceptor != null && interceptor instanceof LazyAttributeLoadingInterceptor ) {
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				return false;
+			}
+			if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
 				return ( (LazyAttributeLoadingInterceptor) interceptor ).isAttributeLoaded( propertyName );
 			}
 		}

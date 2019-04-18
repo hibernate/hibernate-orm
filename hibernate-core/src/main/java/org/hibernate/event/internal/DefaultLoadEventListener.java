@@ -260,21 +260,67 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			);
 		}
 
-		// this class has no proxies (so do a shortcut)
-		if ( !persister.hasProxy() ) {
-			return load( event, persister, keyToLoad, options );
-		}
-
 		final PersistenceContext persistenceContext = event.getSession().getPersistenceContext();
 
-		// look for a proxy
-		Object proxy = persistenceContext.getProxy( keyToLoad );
-		if ( proxy != null ) {
-			return returnNarrowedProxy( event, persister, keyToLoad, options, persistenceContext, proxy );
+		// check for the case where we can use the entity itself as a proxy - it must be bytecode
+		// 		enhanced for laziness and not be versioned (versioned would require loading the
+		// 		version column from the table)
+		if ( options.isAllowProxyCreation()
+				&& persister.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+				&& event.getSession().getFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled() ) {
+			// in this logic branch, if there is already a managed entity instance
+			// associated with the PC, return it
+			final Object managed = persistenceContext.getEntity( keyToLoad );
+			if ( managed != null ) {
+				return managed;
+			}
+
+			// we won't create proxies, but if there is already one associated with
+			// the PC we should use it
+			final Object proxy = persistenceContext.getProxy( keyToLoad );
+			if ( proxy != null ) {
+				return proxy;
+			}
+
+			if ( ! persister.isVersioned() ) {
+				// create the (uninitialized) entity instance - has only id set
+				final Object entity = persister.getEntityTuplizer().instantiate(
+						keyToLoad.getIdentifier(),
+						event.getSession()
+				);
+
+				// add the entity instance to the persistence context
+				persistenceContext.addEntity(
+						entity,
+						Status.MANAGED,
+						new Object[persister.getPropertyTypes().length],
+						keyToLoad,
+						null,
+						LockMode.NONE,
+						true,
+						persister,
+						true
+				);
+
+				persister.getEntityMetamodel()
+						.getBytecodeEnhancementMetadata()
+						.injectEnhancedEntityAsProxyInterceptor( entity, keyToLoad, event.getSession() );
+
+				return entity;
+			}
 		}
 
-		if ( options.isAllowProxyCreation() ) {
-			return createProxyIfNecessary( event, persister, keyToLoad, options, persistenceContext );
+
+		if ( persister.hasProxy() ) {
+			// look for a proxy
+			Object proxy = persistenceContext.getProxy( keyToLoad );
+			if ( proxy != null ) {
+				return returnNarrowedProxy( event, persister, keyToLoad, options, persistenceContext, proxy );
+			}
+
+			if ( options.isAllowProxyCreation() ) {
+				return createProxyIfNecessary( event, persister, keyToLoad, options, persistenceContext );
+			}
 		}
 
 		// return a newly loaded object

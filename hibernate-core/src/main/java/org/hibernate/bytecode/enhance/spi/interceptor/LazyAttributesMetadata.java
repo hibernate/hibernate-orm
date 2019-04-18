@@ -29,12 +29,11 @@ public class LazyAttributesMetadata implements Serializable {
 	/**
 	 * Build a LazyFetchGroupMetadata based on the attributes defined for the
 	 * PersistentClass
-	 *
-	 * @param mappedEntity The entity definition
-	 *
-	 * @return The built LazyFetchGroupMetadata
 	 */
-	public static LazyAttributesMetadata from(PersistentClass mappedEntity) {
+	public static LazyAttributesMetadata from(
+			PersistentClass mappedEntity,
+			boolean isEnhanced,
+			boolean allowEnhancementAsProxy) {
 		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
@@ -44,7 +43,8 @@ public class LazyAttributesMetadata implements Serializable {
 		while ( itr.hasNext() ) {
 			i++;
 			final Property property = (Property) itr.next();
-			if ( property.isLazy() ) {
+			final boolean lazy = ! Helper.includeInBaseFetchGroup( property, isEnhanced, allowEnhancementAsProxy );
+			if ( lazy ) {
 				final LazyAttributeDescriptor lazyAttributeDescriptor = LazyAttributeDescriptor.from( property, i, x++ );
 				lazyAttributeDescriptorMap.put( lazyAttributeDescriptor.getName(), lazyAttributeDescriptor );
 

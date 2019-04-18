@@ -94,7 +94,7 @@ public final class Cascade {
 				final String propertyName = propertyNames[ i ];
 				final boolean isUninitializedProperty =
 						hasUninitializedLazyProperties &&
-						!persister.getInstrumentationMetadata().isAttributeLoaded( parent, propertyName );
+						!persister.getBytecodeEnhancementMetadata().isAttributeLoaded( parent, propertyName );
 
 				if ( style.doCascade( action ) ) {
 					final Object child;
@@ -133,7 +133,7 @@ public final class Cascade {
 						else if ( action.performOnLazyProperty() && types[ i ].isEntityType() ) {
 							// Only need to initialize a lazy entity attribute when action.performOnLazyProperty()
 							// returns true.
-							LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata()
+							LazyAttributeLoadingInterceptor interceptor = persister.getBytecodeEnhancementMetadata()
 									.extractInterceptor( parent );
 							child = interceptor.fetchAttribute( parent, propertyName );
 

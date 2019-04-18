@@ -860,6 +860,27 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String ENFORCE_LEGACY_PROXY_CLASSNAMES = "hibernate.bytecode.enforce_legacy_proxy_classnames";
 
 	/**
+	 * Should Hibernate use enhanced entities "as a proxy"?
+	 *
+	 * E.g., when an application uses {@link org.hibernate.Session#load} against an enhanced
+	 * class, enabling this will allow Hibernate to create an "empty" instance of the enhanced
+	 * class to act as the proxy - it contains just the identifier which is later used to
+	 * trigger the base initialization but no other data is loaded
+	 *
+	 * Not enabling this (the legacy default behavior) would cause the "base" attributes to
+	 * be loaded.  Any lazy-group attributes would not be initialized.
+	 *
+	 * Applications using bytecode enhancement and switching to allowing this should be careful
+	 * in use of the various {@link org.hibernate.Hibernate} methods such as
+	 * {@link org.hibernate.Hibernate#isInitialized},
+	 * {@link org.hibernate.Hibernate#isPropertyInitialized}, etc - enabling this setting changes
+	 * the results of those methods
+	 *
+	 * @implSpec See {@link org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor}
+	 */
+	String ALLOW_ENHANCEMENT_AS_PPROXY = "hibernate.bytecode.allow_enhancement_as_proxy";
+
+	/**
 	 * The classname of the HQL query parser factory
 	 */
 	String QUERY_TRANSLATOR = "hibernate.query.factory_class";

@@ -21,17 +21,20 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class FlushVisitor extends AbstractVisitor {
-	
 	private Object owner;
 
-	Object processCollection(Object collection, CollectionType type)
-	throws HibernateException {
+	FlushVisitor(EventSource session, Object owner) {
+		super(session);
+		this.owner = owner;
+	}
+
+	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		
-		if (collection==CollectionType.UNFETCHED_COLLECTION) {
+		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
 			return null;
 		}
 
-		if (collection!=null) {
+		if ( collection != null ) {
 			final PersistentCollection coll;
 			if ( type.hasHolder() ) {
 				coll = getSession().getPersistenceContext().getCollectionHolder(collection);
@@ -53,11 +56,6 @@ public class FlushVisitor extends AbstractVisitor {
 	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
 		return true;
-	}
-
-	FlushVisitor(EventSource session, Object owner) {
-		super(session);
-		this.owner = owner;
 	}
 
 }

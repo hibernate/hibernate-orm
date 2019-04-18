@@ -31,6 +31,8 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -494,6 +496,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final boolean existsInDatabase,
 			final EntityPersister persister,
 			final boolean disableVersionIncrement) {
+		assert lockMode != null;
+
 		final EntityEntry e;
 
 		/*
@@ -570,15 +574,29 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean reassociateIfUninitializedProxy(Object value) throws MappingException {
-		if ( !Hibernate.isInitialized( value ) ) {
-			final HibernateProxy proxy = (HibernateProxy) value;
-			final LazyInitializer li = proxy.getHibernateLazyInitializer();
-			reassociateProxy( li, proxy );
-			return true;
+		if ( ! Hibernate.isInitialized( value ) ) {
+
+			// could be a proxy....
+			if ( value instanceof HibernateProxy ) {
+				final HibernateProxy proxy = (HibernateProxy) value;
+				final LazyInitializer li = proxy.getHibernateLazyInitializer();
+				reassociateProxy( li, proxy );
+				return true;
+			}
+
+			// or an uninitialized enhanced entity ("bytecode proxy")...
+			if ( value instanceof PersistentAttributeInterceptable ) {
+				final PersistentAttributeInterceptable bytecodeProxy = (PersistentAttributeInterceptable) value;
+				final BytecodeLazyAttributeInterceptor interceptor = (BytecodeLazyAttributeInterceptor) bytecodeProxy.$$_hibernate_getInterceptor();
+				if ( interceptor != null ) {
+					interceptor.setSession( getSession() );
+				}
+				return true;
+			}
+
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
@@ -634,6 +652,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			reassociateProxy( li, proxy );
 			//initialize + unwrap the object and return it
 			return li.getImplementation();
+		}
+		else if ( maybeProxy instanceof PersistentAttributeInterceptable ) {
+			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) maybeProxy;
+			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( maybeProxy, null );
+			}
+			return maybeProxy;
 		}
 		else {
 			return maybeProxy;

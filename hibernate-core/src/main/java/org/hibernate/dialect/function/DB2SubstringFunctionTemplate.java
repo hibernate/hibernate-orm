@@ -57,7 +57,8 @@ public class DB2SubstringFunctionTemplate implements SqmFunctionTemplate {
 			List<SqmExpression> arguments, AllowableFunctionReturnType impliedResultType) {
 		return new DB2SubstringFunction(
 				getRenderedName( arguments ),
-				StandardSpiBasicTypes.STRING, arguments.get( 1 ),
+				StandardSpiBasicTypes.STRING,
+				arguments.get( 1 ),
 				arguments.get( 2 ),
 				null
 		);

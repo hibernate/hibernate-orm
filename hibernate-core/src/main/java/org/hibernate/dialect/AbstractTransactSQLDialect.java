@@ -17,7 +17,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.SybaseLocateEmulationFunctionTemplate;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.naming.Identifier;
@@ -96,6 +95,11 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
+		registry.namedTemplateBuilder( "charindex" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register();
+
 		registry.registerNoArgs( "user", StandardSpiBasicTypes.STRING );
 
 		registry.registerNoArgs( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
@@ -166,7 +170,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		registry.registerAlternateKey( "length", "len" );
 		registry.registerPattern( "trim", "ltrim(rtrim(?1))", StandardSpiBasicTypes.STRING );
-		registry.register( "locate", new SybaseLocateEmulationFunctionTemplate() );
 	}
 
 	@Override

@@ -10,8 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.IngresSubstringFunction;
-import org.hibernate.dialect.function.LocateEmulationUsingPositionAndSubstring;
+import org.hibernate.dialect.function.LocateEmulationFunction;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -23,6 +22,7 @@ import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
@@ -135,12 +135,30 @@ public class IngresDialect extends Dialect {
 		registry.registerPattern( "extract", "date_part('?1', ?2)", StandardSpiBasicTypes.INTEGER );
 
 		registry.register(
+				"substring",
+				new LocateEmulationFunction(
+						registry.patternTemplateBuilder( "substring/2", "substring(?1 from ?2)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						registry.patternTemplateBuilder( "substring/3", "substring(?1 from ?2 for ?3)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
+
+		registry.register(
 				"locate",
-				new LocateEmulationUsingPositionAndSubstring(
-						(reg, type, arguments) -> reg.findFunctionTemplate( "substring" ).makeSqmFunctionExpression(
-								arguments,
-								type
-						)
+				new LocateEmulationFunction(
+						registry.patternTemplateBuilder( "locate/2", "position(?1 in ?2)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						registry.patternTemplateBuilder( "locate/3", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
 				)
 		);
 
@@ -158,8 +176,6 @@ public class IngresDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
-
-		registry.register( "substring", IngresSubstringFunction.INSTANCE );
 
 		registry.namedTemplateBuilder( "year" )
 				.setExactArgumentCount( 1 )
@@ -180,7 +196,6 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.exp( registry );
 		CommonFunctionFactory.ln( registry );
 		CommonFunctionFactory.log( registry );
-		CommonFunctionFactory.position( registry );
 		CommonFunctionFactory.sin( registry );
 		CommonFunctionFactory.soundex( registry );
 

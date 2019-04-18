@@ -20,7 +20,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.LocateEmulationUsingPositionAndSubstring;
+import org.hibernate.dialect.function.LocateEmulationFunction;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
@@ -39,6 +39,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.spi.ConcatFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -155,10 +156,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				.register();
 		CommonFunctionFactory.lower( registry );
 		CommonFunctionFactory.upper( registry );
-		registry.namedTemplateBuilder( "substr" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
 		registry.namedTemplateBuilder( "initcap" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
@@ -264,8 +261,26 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setExactArgumentCount( 3 )
 				.register();
 
+		registry.namedTemplateBuilder( "substr" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
 		registry.registerAlternateKey( "substring", "substr" );
-		registry.register( "locate", new LocateEmulationUsingPositionAndSubstring() );
+
+		registry.register(
+				"locate",
+				new LocateEmulationFunction(
+						registry.patternTemplateBuilder( "locate/2", "position(?1 in ?2)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						registry.patternTemplateBuilder( "locate/3", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
+
 		registry.namedTemplateBuilder( "coalesce" )
 				.setArgumentsValidator( StandardArgumentsValidators.min( 2 ) )
 				.register();
@@ -747,4 +762,5 @@ public class PostgreSQL81Dialect extends Dialect {
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
 	}
+
 }

@@ -298,8 +298,6 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
 
-		CommonFunctionFactory.position( registry );
-
 		registry.namedTemplateBuilder( "rawtohex" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

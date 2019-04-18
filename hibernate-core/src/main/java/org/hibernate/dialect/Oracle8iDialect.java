@@ -18,6 +18,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.LocateEmulationFunction;
 import org.hibernate.dialect.function.NvlFunctionTemplate;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -257,9 +258,22 @@ public class Oracle8iDialect extends Dialect {
 				.register();
 
 		registry.registerAlternateKey( "substring", "substr" );
-		registry.registerPattern( "locate",  "instr(?2,?1)", StandardSpiBasicTypes.INTEGER );
 		registry.registerPattern( "bit_length", "vsize(?1)*8", StandardSpiBasicTypes.INTEGER );
 		registry.register( "coalesce", new NvlFunctionTemplate() );
+
+		registry.register(
+				"locate",
+				new LocateEmulationFunction(
+						registry.patternTemplateBuilder( "locate/2", "instr(?2, ?1)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						registry.patternTemplateBuilder( "locate/3", "instr(?2, ?1, ?3)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
 
 		// Multi-param numeric dialect functions...
 		registry.namedTemplateBuilder( "atan2" )

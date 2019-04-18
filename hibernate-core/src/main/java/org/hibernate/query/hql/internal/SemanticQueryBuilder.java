@@ -1900,6 +1900,30 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public Object visitPositionFunction(HqlParser.PositionFunctionContext ctx) {
+		final SqmFunctionTemplate template = creationContext.getFunctionResolver().apply( SqmLocateFunction.NAME );
+
+		final SqmExpression string = (SqmExpression) ctx.positionStringArgument().accept( this );
+		final SqmExpression pattern = (SqmExpression) ctx.positionSubstrArgument().accept( this );
+
+		if (template==null) {
+			//use the standard LOCATE support
+			return new SqmLocateFunction(
+					pattern,
+					string,
+					null,
+					StandardSpiBasicTypes.INTEGER
+			);
+		}
+		else {
+			return template.makeSqmFunctionExpression(
+					asList(pattern, string),
+					StandardSpiBasicTypes.INTEGER
+			);
+		}
+	}
+
+	@Override
 	public Object visitLocateFunction(HqlParser.LocateFunctionContext ctx) {
 		final SqmFunctionTemplate template = creationContext.getFunctionResolver().apply( SqmLocateFunction.NAME );
 
@@ -1921,7 +1945,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		else {
 			return template.makeSqmFunctionExpression(
 					start == null
-							? asList( pattern, string)
+							? asList( pattern, string )
 							: asList( pattern, string, start ),
 					StandardSpiBasicTypes.INTEGER
 			);

@@ -342,6 +342,7 @@ public class DB2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 4 )
 				.register();
+
 		registry.registerPattern( "bit_length", "length(?1)*8", StandardSpiBasicTypes.INTEGER );
 		registry.register( "trim", AnsiTrimFunctionTemplate.INSTANCE );
 

@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -234,13 +235,6 @@ public class CommonFunctionFactory {
 		registry.namedTemplateBuilder( "soundex" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.register();
-	}
-
-	public static void position(SqmFunctionRegistry registry) {
-		registry.namedTemplateBuilder( "position" )
-				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
 	}
 

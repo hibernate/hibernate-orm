@@ -42,6 +42,7 @@ import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.function.LocateEmulationFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -369,7 +370,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		registry.registerNamed( "lcase", StandardSpiBasicTypes.STRING );
 		registry.registerNamed( "left", StandardSpiBasicTypes.STRING );
 		registry.registerNamed( "length", StandardSpiBasicTypes.INTEGER );
-		registry.registerPattern( "locate", "locate(?2, ?1, ?3)",StandardSpiBasicTypes.INTEGER );
 		registry.registerNamed( "lpad", StandardSpiBasicTypes.STRING );
 		registry.registerNamed( "ltrim", StandardSpiBasicTypes.STRING );
 		registry.registerNamed( "nchar", StandardSpiBasicTypes.STRING );
@@ -384,6 +384,20 @@ public abstract class AbstractHANADialect extends Dialect {
 		registry.registerNamed( "ucase", StandardSpiBasicTypes.STRING );
 		registry.registerNamed( "unicode", StandardSpiBasicTypes.INTEGER );
 		registry.registerPattern( "bit_length", "length(to_binary(?1))*8", StandardSpiBasicTypes.INTEGER );
+
+		registry.register(
+				"locate",
+				new LocateEmulationFunction(
+						registry.patternTemplateBuilder( "locate/2", "locate(?2, ?1)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						registry.patternTemplateBuilder( "locate/3", "locate(?2, ?1, ?3)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
 
 		registry.registerNamed( "to_blob", StandardSpiBasicTypes.BLOB );
 		registry.registerNamed( "to_clob", StandardSpiBasicTypes.CLOB );

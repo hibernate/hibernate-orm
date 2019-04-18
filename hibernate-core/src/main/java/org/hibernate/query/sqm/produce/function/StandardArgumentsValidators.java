@@ -38,7 +38,7 @@ public final class StandardArgumentsValidators {
 
 	public static ArgumentsValidator min(int minNumOfArgs) {
 		return arguments -> {
-			if ( arguments.size() > minNumOfArgs ) {
+			if ( arguments.size() < minNumOfArgs ) {
 				throw new QueryException(
 						String.format(
 								Locale.ROOT,
@@ -68,7 +68,7 @@ public final class StandardArgumentsValidators {
 
 	public static ArgumentsValidator max(int maxNumOfArgs) {
 		return arguments -> {
-			if ( arguments.size() < maxNumOfArgs ) {
+			if ( arguments.size() > maxNumOfArgs ) {
 				throw new QueryException(
 						String.format(
 								Locale.ROOT,
@@ -83,7 +83,7 @@ public final class StandardArgumentsValidators {
 
 	public static ArgumentsValidator between(int minNumOfArgs, int maxNumOfArgs) {
 		return arguments -> {
-			if ( arguments.size() < maxNumOfArgs ) {
+			if ( arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs ) {
 				throw new QueryException(
 						String.format(
 								Locale.ROOT,

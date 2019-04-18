@@ -33,13 +33,19 @@ plugins {
 
 allprojects {
     repositories {
+        if (System.env['DIALECT_VERSION'] == null) {
+            println("DIALECT_VERSION environment variable must be set to 20.0.0 or later")
+            System.exit(-1);
+        }
+
         // Set SONATYPE_VERSION to pull our Jar from there
         if (System.env['SONATYPE_VERSION'] != null) {
+            println "using https://oss.sonatype.org/content/repositories/comnuodb-${System.env.SONATYPE_VERSION}/com/nuodb/hibernate/nuodb-hibernate/${System.env.DIALECT_VERSION}-hib5/"
             ivy {
                 url "https://oss.sonatype.org/content/repositories/comnuodb-${System.env.SONATYPE_VERSION}/"
 
                 layout 'pattern', {
-                    artifact '/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5/nuodb-hibernate-20.0.0-hib5.[ext]'
+                    artifact '/com/nuodb/hibernate/nuodb-hibernate/${System.env.DIALECT_VERSION}-hib5/nuodb-hibernate-${System.env.DIALECT_VERSION}-hib5.[ext]'
                 }
             }
         }
@@ -58,7 +64,7 @@ allprojects {
         // NuoDB: Default to adding our dialect explicitly
         else {
             flatDir {
-                dirs "${System.env.HOME}/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5"
+                dirs "${System.env.HOME}/.m2/repository/com/nuodb/hibernate/nuodb-hibernate/${System.env.DIALECT_VERSION}-hib5"
             }
         }
     }

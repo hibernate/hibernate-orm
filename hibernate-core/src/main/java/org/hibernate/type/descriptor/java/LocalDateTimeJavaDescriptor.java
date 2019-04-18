@@ -110,8 +110,18 @@ public class LocalDateTimeJavaDescriptor extends AbstractTypeDescriptor<LocalDat
 			 * but on top of being more complex than the line below, it won't always work.
 			 * ts.toInstant() assumes the number of milliseconds since the epoch
 			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 *
+			 * Also workaround for not yet numbered JDK bug with BCE years.
 			 */
-			return ts.toLocalDateTime();
+			LocalDateTime result = ts.toLocalDateTime();
+			Calendar cal = Calendar.getInstance();
+			cal.setTime( ts );
+			// 0 is BC/BCE, 1 ia AD/CE. These constants will never change in JDK.
+			// In case the bug is fixed in JDK, then era will be 0, but year will be negative.
+			if ( cal.get( Calendar.ERA ) == 1 || result.getYear() < 0 ) {
+				return result;
+			}
+			return result.withYear( 1 - result.getYear() );
 		}
 
 		if ( Long.class.isInstance( value ) ) {

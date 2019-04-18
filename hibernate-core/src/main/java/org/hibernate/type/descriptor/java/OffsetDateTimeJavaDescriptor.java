@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Calendar;
@@ -104,8 +105,18 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 			 * Ideally we'd want to use OffsetDateTime.ofInstant( ts.toInstant(), ... ), but this won't always work.
 			 * ts.toInstant() assumes the number of milliseconds since the epoch
 			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
+			 *
+			 * Also workaround for not yet numbered JDK bug with BCE years.
 			 */
-			return ts.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
+			Calendar cal = Calendar.getInstance();
+			cal.setTime( ts );
+			LocalDateTime result = ts.toLocalDateTime();
+			// 0 is BC/BCE, 1 ia AD/CE. These constants will never change in JDK.
+			// In case the bug is fixed in JDK, then era will be 0, but year will be negative.
+			if ( cal.get( Calendar.ERA ) == 1 || result.getYear() < 0 ) {
+				return result.atZone( ZoneId.systemDefault() ).toOffsetDateTime();
+			}
+			return result.withYear( 1 - result.getYear() ).atZone( ZoneId.systemDefault() ).toOffsetDateTime();
 		}
 
 		if ( Date.class.isInstance( value ) ) {

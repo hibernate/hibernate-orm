@@ -66,6 +66,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
+import static org.hibernate.cfg.AvailableSettings.ALLOW_ENHANCEMENT_AS_PPROXY;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
@@ -193,6 +194,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private NullPrecedence defaultNullPrecedence;
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
+	private boolean enhancementAsProxyEnabled;
 
 
 	// multi-tenancy
@@ -243,6 +245,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean inClauseParameterPaddingEnabled;
 
 	private boolean nativeExceptionHandling51Compliance;
+
 
 	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
@@ -340,6 +343,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.defaultNullPrecedence = NullPrecedence.parse( defaultNullPrecedence );
 		this.orderUpdatesEnabled = ConfigurationHelper.getBoolean( ORDER_UPDATES, configurationSettings );
 		this.orderInsertsEnabled = ConfigurationHelper.getBoolean( ORDER_INSERTS, configurationSettings );
+		this.enhancementAsProxyEnabled = ConfigurationHelper.getBoolean( ALLOW_ENHANCEMENT_AS_PPROXY, configurationSettings );
 
 		this.jtaTrackByThread = cfgService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 
@@ -1029,6 +1033,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean nativeExceptionHandling51Compliance() {
 		return nativeExceptionHandling51Compliance;
+	}
+
+	@Override
+	public boolean isEnhancementAsProxyEnabled() {
+		return enhancementAsProxyEnabled;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

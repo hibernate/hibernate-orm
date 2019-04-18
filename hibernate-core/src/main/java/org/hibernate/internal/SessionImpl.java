@@ -1125,23 +1125,46 @@ public final class SessionImpl
 	}
 
 	@Override
-	public final Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
-			throws HibernateException {
-		// todo : remove
-		LoadEventListener.LoadType type = nullable
-				? LoadEventListener.INTERNAL_LOAD_NULLABLE
-				: eager
-				? LoadEventListener.INTERNAL_LOAD_EAGER
-				: LoadEventListener.INTERNAL_LOAD_LAZY;
+	public final Object internalLoad(
+			String entityName,
+			Serializable id,
+			boolean eager,
+			boolean nullable) throws HibernateException {
+		return internalLoad( entityName, id, eager, nullable, null );
+
+	}
+
+	@Override
+	public final Object internalLoad(
+			String entityName,
+			Serializable id,
+			boolean eager,
+			boolean nullable,
+			Boolean unwrapProxy) {
+			final LoadEventListener.LoadType type;
+		if ( nullable ) {
+			type = LoadEventListener.INTERNAL_LOAD_NULLABLE;
+		}
+		else {
+			type = eager
+					? LoadEventListener.INTERNAL_LOAD_EAGER
+					: LoadEventListener.INTERNAL_LOAD_LAZY;
+		}
 
 		LoadEvent event = loadEvent;
 		loadEvent = null;
+
 		event = recycleEventInstance( event, id, entityName );
+		event.setShouldUnwrapProxy( unwrapProxy );
+
 		fireLoad( event, type );
+
 		Object result = event.getResult();
+
 		if ( !nullable ) {
 			UnresolvableObjectException.throwIfNull( result, id, entityName );
 		}
+
 		if ( loadEvent == null ) {
 			event.setEntityClassName( null );
 			event.setEntityId( null );
@@ -1166,6 +1189,7 @@ public final class SessionImpl
 			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
 			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
 			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
+			event.setShouldUnwrapProxy( null );
 			return event;
 		}
 	}

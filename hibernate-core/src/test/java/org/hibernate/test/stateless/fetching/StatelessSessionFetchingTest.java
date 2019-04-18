@@ -10,6 +10,9 @@ import java.util.Date;
 import java.util.Locale;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Query;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.model.naming.Identifier;
@@ -20,8 +23,6 @@ import org.hibernate.internal.util.StringHelper;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -34,6 +35,11 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "stateless/fetching/Mappings.hbm.xml" };
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Producer.class, Product.class, Vendor.class };
 	}
 
 	@Override
@@ -91,12 +97,161 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		cleanup();
 	}
 
+	@Test
+	public void testDynamicFetchScroll() {
+		Session s = openSession();
+		s.beginTransaction();
+		Date now = new Date();
+
+		User me = new User( "me" );
+		User you = new User( "you" );
+		Resource yourClock = new Resource( "clock", you );
+		Task task = new Task( me, "clean", yourClock, now ); // :)
+
+		s.save( me );
+		s.save( you );
+		s.save( yourClock );
+		s.save( task );
+
+		User u3 = new User( "U3" );
+		User u4 = new User( "U4" );
+		Resource it = new Resource( "it", u4 );
+		Task task2 = new Task( u3, "beat", it, now ); // :))
+
+		s.save( u3 );
+		s.save( u4 );
+		s.save( it );
+		s.save( task2 );
+
+		s.getTransaction().commit();
+		s.close();
+
+		StatelessSession ss = sessionFactory().openStatelessSession();
+		ss.beginTransaction();
+
+		final Query query = ss.createQuery( "from Task t join fetch t.resource join fetch t.user");
+		final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY);
+		while ( scrollableResults.next() ) {
+			Task taskRef = (Task) scrollableResults.get( 0 );
+			assertTrue( Hibernate.isInitialized( taskRef ) );
+			assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
+			assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
+			assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+		}
+
+		ss.getTransaction().commit();
+		ss.close();
+
+		cleanup();
+	}
+
+	@Test
+	public void testDynamicFetchScrollSession() {
+		Session s = openSession();
+		s.beginTransaction();
+		Date now = new Date();
+
+		User me = new User( "me" );
+		User you = new User( "you" );
+		Resource yourClock = new Resource( "clock", you );
+		Task task = new Task( me, "clean", yourClock, now ); // :)
+
+		s.save( me );
+		s.save( you );
+		s.save( yourClock );
+		s.save( task );
+
+		User u3 = new User( "U3" );
+		User u4 = new User( "U4" );
+		Resource it = new Resource( "it", u4 );
+		Task task2 = new Task( u3, "beat", it, now ); // :))
+
+		s.save( u3 );
+		s.save( u4 );
+		s.save( it );
+		s.save( task2 );
+
+		s.getTransaction().commit();
+		s.close();
+
+		inTransaction(
+				session -> {
+					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user");
+					final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
+					while ( scrollableResults.next() ) {
+						Task taskRef = (Task) scrollableResults.get( 0 );
+						assertTrue( Hibernate.isInitialized( taskRef ) );
+						assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
+						assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
+						assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+					}
+
+				}
+		);
+
+		cleanup();
+	}
+
+	@Test
+	public void testDynamicFetchCollectionScroll() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		Producer p1 = new Producer( 1, "Acme" );
+		Producer p2 = new Producer( 2, "ABC" );
+
+		session.save( p1 );
+		session.save( p2 );
+
+		Vendor v1 = new Vendor( 1, "v1" );
+		Vendor v2 = new Vendor( 2, "v2" );
+
+		session.save( v1 );
+		session.save( v2 );
+
+		final Product product1 = new Product(1, "123", v1, p1);
+		final Product product2 = new Product(2, "456", v1, p1);
+		final Product product3 = new Product(3, "789", v1, p2);
+
+		session.save( product1 );
+		session.save( product2 );
+		session.save( product3 );
+
+		s.getTransaction().commit();
+		s.close();
+
+		StatelessSession ss = sessionFactory().openStatelessSession();
+		ss.beginTransaction();
+
+		final Query query = ss.createQuery( "select p from Producer p join fetch p.products" );
+		final ScrollableResults scrollableResults = query.scroll(ScrollMode.FORWARD_ONLY);
+		while ( scrollableResults.next() ) {
+			Producer producer = (Producer) scrollableResults.get( 0 );
+			assertTrue( Hibernate.isInitialized( producer ) );
+			assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
+
+			for (Product product : producer.getProducts()) {
+				assertTrue( Hibernate.isInitialized( product ) );
+				assertFalse( Hibernate.isInitialized( product.getVendor() ) );
+			}
+		}
+
+		ss.getTransaction().commit();
+		ss.close();
+
+		cleanup();
+	}
+
 	private void cleanup() {
 		Session s = openSession();
 		s.beginTransaction();
 		s.createQuery( "delete Task" ).executeUpdate();
 		s.createQuery( "delete Resource" ).executeUpdate();
 		s.createQuery( "delete User" ).executeUpdate();
+
+		s.createQuery( "delete Product" ).executeUpdate();
+		s.createQuery( "delete Producer" ).executeUpdate();
+		s.createQuery( "delete Vendor" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
 	}

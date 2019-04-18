@@ -459,6 +459,11 @@ public class EnhancerImpl implements Enhancer {
 			return getAnnotations().isAnnotationPresent( annotationType );
 		}
 
+		@Override
+		public String toString() {
+			return fieldDescription.toString();
+		}
+
 		<T extends Annotation> AnnotationDescription.Loadable<T> getAnnotation(Class<T> annotationType) {
 			return getAnnotations().ofType( annotationType );
 		}

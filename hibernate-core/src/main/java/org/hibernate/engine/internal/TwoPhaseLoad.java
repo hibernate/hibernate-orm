@@ -168,6 +168,13 @@ public final class TwoPhaseLoad {
 				}
 			}
 			else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				final boolean isLazyEnhanced = persister.getBytecodeEnhancementMetadata()
+						.getLazyAttributesMetadata()
+						.getLazyAttributeNames()
+						.contains( propertyNames[i] );
+
+				LOG.debugf( "Attribute (`%s`)  - enhanced for lazy-loading? - %s", propertyNames[i], isLazyEnhanced );
+
 				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
 				hydratedState[i] = types[i].resolve( value, session, entity, overridingEager );
 			}

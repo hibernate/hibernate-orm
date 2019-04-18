@@ -706,6 +706,7 @@ literal
 	| NUM_BIG_INTEGER { processNumericLiteral( #literal ); }
 	| NUM_BIG_DECIMAL { processNumericLiteral( #literal ); }
 	| QUOTED_STRING
+	| JDBC_DATETIMELITERAL
 	;
 
 identifier

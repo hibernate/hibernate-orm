@@ -64,10 +64,13 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
@@ -81,8 +84,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -4332,22 +4339,48 @@ public abstract class AbstractEntityPersister
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
 		// Entity Graph
-		final RootGraphImplementor<?> graph = loadQueryInfluencers.getEffectiveEntityGraph().getGraph();
+		final GraphImplementor<?> graph = loadQueryInfluencers.getEffectiveEntityGraph().getGraph();
 		if ( graph != null ) {
 			if ( graph.appliesTo( getEntityName() ) ) {
 				for ( String propertyName : getPropertyNames() ) {
-					// see if it needs initialization
-					triggerLazyPropertyInitialization( entity, propertyName, session );
+					final AttributeNodeImplementor<?> attributeNode = graph.findAttributeNode( propertyName );
+					if ( attributeNode != null ) {
+						triggerLazyPropertyInitialization( entity, propertyName, attributeNode, session );
+					}
 				}
 			}
 		}
 
-		// todo - fetch profiles?
+		// fetch profiles
+		for ( String attribute : findAllFetchedAttributes( loadQueryInfluencers ) ) {
+			triggerLazyPropertyInitialization( entity, attribute, null, session );
+		}
+
+	}
+
+	private List<String> findAllFetchedAttributes(LoadQueryInfluencers loadQueryInfluencers) {
+		if ( ! loadQueryInfluencers.hasEnabledFetchProfiles() ) {
+			return Collections.emptyList();
+		}
+
+		final ArrayList<String> names = new ArrayList<>();
+
+		for ( String profileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
+			final FetchProfile fetchProfile = factory.getFetchProfile( profileName );
+			for ( Fetch fetch : fetchProfile.getFetches().values() ) {
+				if ( fetch.getAssociation().getOwner() == this ) {
+					names.add( fetch.getAssociation().getAssociationPath() );
+				}
+			}
+		}
+
+		return names;
 	}
 
 	private void triggerLazyPropertyInitialization(
 			Object entity,
 			String propertyName,
+			AttributeNodeImplementor<?> attributeNode,
 			EventSource session) {
 		if ( getInstrumentationMetadata().isEnhancedForLazyLoading() ) {
 			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
@@ -4361,7 +4394,7 @@ public abstract class AbstractEntityPersister
 		else {
 			final Type propertyType = getPropertyType( propertyName );
 			if ( propertyType instanceof EntityType ) {
-				triggerLazyToOnePropertyInitialization( entity, propertyName, (EntityType) propertyType, session );
+				triggerLazyToOnePropertyInitialization( entity, propertyName, (EntityType) propertyType, attributeNode, session );
 			}
 			else if ( propertyType instanceof CollectionType ) {
 				triggerLazyPluralPropertyInitialization( entity, propertyName, (CollectionType) propertyType, session );
@@ -4373,22 +4406,50 @@ public abstract class AbstractEntityPersister
 			Object entity,
 			String propertyName,
 			EntityType entityType,
+			AttributeNodeImplementor<?> attributeNode,
 			EventSource session) {
 		final EntityPersister associatedPersister = getFactory().getMetamodel().entityPersister(
 				entityType.getAssociatedEntityName()
 		);
-		final Object propertyValue = getPropertyValue( entity, propertyName );
+
+		Object propertyValue = getPropertyValue( entity, propertyName );
 
 		if ( propertyValue != null ) {
 			if ( propertyValue instanceof HibernateProxy ) {
 				final LazyInitializer li = ( (HibernateProxy) propertyValue ).getHibernateLazyInitializer();
 				if ( li.isUninitialized() ) {
-					session.internalLoad(
+					propertyValue = session.internalLoad(
 							associatedPersister.getEntityName(),
 							associatedPersister.getIdentifier( propertyValue, session ),
 							true,
 							false
 					);
+				}
+			}
+			else {
+				// todo (HHH-11147) : if we have the case of the propertyValue being an "enhanced entity as proxy",
+				//  	trigger it to load here
+			}
+		}
+
+		if ( attributeNode != null && propertyValue != null ) {
+			final Class subGraphKey = propertyValue instanceof HibernateProxy
+					? ( (HibernateProxy) propertyValue ).getHibernateLazyInitializer().getPersistentClass()
+					: propertyValue.getClass();
+
+			final SubGraphImplementor<?> subGraph = attributeNode.getSubGraphMap().get( subGraphKey );
+			if ( subGraph != null ) {
+				final EffectiveEntityGraph effectiveEntityGraph = session.getLoadQueryInfluencers().getEffectiveEntityGraph();
+				final GraphImplementor<?> originalGraph = effectiveEntityGraph.getGraph();
+				final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
+				effectiveEntityGraph.clear();
+				effectiveEntityGraph.applyGraph( subGraph, semantic );
+				try {
+					associatedPersister.initializeLazyProperties( propertyValue, session );
+				}
+				finally {
+					effectiveEntityGraph.clear();
+					effectiveEntityGraph.applyGraph( originalGraph, semantic );
 				}
 			}
 		}

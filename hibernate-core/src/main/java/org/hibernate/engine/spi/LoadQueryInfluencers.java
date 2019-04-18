@@ -205,7 +205,11 @@ public class LoadQueryInfluencers implements Serializable {
 			return null;
 		}
 
-		return effectiveEntityGraph.getGraph();
+		if ( effectiveEntityGraph.getGraph() instanceof RootGraphImplementor ) {
+			return (RootGraphImplementor) effectiveEntityGraph.getGraph();
+		}
+
+		throw new UnsupportedOperationException( "Current effective graph is not a root graph" );
 	}
 
 	/**
@@ -235,7 +239,11 @@ public class LoadQueryInfluencers implements Serializable {
 			return null;
 		}
 
-		return effectiveEntityGraph.getGraph();
+		if ( effectiveEntityGraph.getGraph() instanceof RootGraphImplementor ) {
+			return (RootGraphImplementor) effectiveEntityGraph.getGraph();
+		}
+
+		throw new UnsupportedOperationException( "Current effective graph is not a root graph" );
 	}
 
 	/**

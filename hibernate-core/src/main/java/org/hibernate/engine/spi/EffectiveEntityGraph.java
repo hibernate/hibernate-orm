@@ -12,19 +12,22 @@ import java.util.Map;
 import org.hibernate.Incubating;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 
 import org.jboss.logging.Logger;
 
 /**
- * Think of this as the composite modeling of a graph
- * and the semantic.
+ * Think of this as the composite modeling both the graph and the semantic.
  *
- * Its graph and semantic can be obtained by {@link #getGraph()} and
- * {@link #getSemantic()}
+ * Its graph and semantic can be obtained by {@link #getGraph()} and {@link #getSemantic()}
  *
  * They can be managed by calls to {@link #applyGraph}, {@link #applyConfiguredGraph}
  * and {@link #clear}
+ *
+ * @implNote The graph here is defined as {@link GraphImplementor} rather than
+ * {@link RootGraphImplementor} because the effective graph may be a sub graph
+ * as we walk a graph tree
  *
  * @author Steve Ebersole
  */
@@ -34,7 +37,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	private final boolean allowOverwrite;
 
 	private GraphSemantic semantic;
-	private RootGraphImplementor<?> graph;
+	private GraphImplementor<?> graph;
 
 	/**
 	 * @implSpec I explicitly made this constructor package protected
@@ -65,7 +68,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	}
 
 	@Override
-	public RootGraphImplementor<?> getGraph() {
+	public GraphImplementor<?> getGraph() {
 		return graph;
 	}
 
@@ -76,7 +79,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @throws IllegalArgumentException Thrown if the semantic is null
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
-	public void applyGraph(RootGraphImplementor<?> graph, GraphSemantic semantic) {
+	public void applyGraph(GraphImplementor<?> graph, GraphSemantic semantic) {
 		if ( semantic == null ) {
 			throw new IllegalArgumentException( "Graph semantic cannot be null" );
 		}

@@ -14,7 +14,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 
 /**
@@ -23,7 +23,7 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
  * @author Strong Liu <stliu@hibernate.org>
  */
 public class LoadGraphLoadPlanBuildingStrategy extends AbstractEntityGraphVisitationStrategy {
-	private final RootGraphImplementor<?> rootEntityGraph;
+	private final GraphImplementor<?> loadGraph;
 
 	public LoadGraphLoadPlanBuildingStrategy(
 			final SessionFactoryImplementor sessionFactory,
@@ -35,16 +35,16 @@ public class LoadGraphLoadPlanBuildingStrategy extends AbstractEntityGraphVisita
 
 	public LoadGraphLoadPlanBuildingStrategy(
 			SessionFactoryImplementor factory,
-			RootGraphImplementor<?> graph,
+			GraphImplementor<?> graph,
 			LoadQueryInfluencers queryInfluencers,
 			LockMode lockMode) {
 		super( factory, queryInfluencers, lockMode );
-		this.rootEntityGraph = graph;
+		this.loadGraph = graph;
 	}
 
 	@Override
-	protected RootGraphImplementor getRootEntityGraph() {
-		return rootEntityGraph;
+	protected GraphImplementor getEntityGraph() {
+		return loadGraph;
 	}
 
 	@Override

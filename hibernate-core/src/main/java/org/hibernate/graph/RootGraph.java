@@ -22,10 +22,6 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 
 	// todo (6.0) : do we want to consolidate this functionality on AttributeNodeContainer?
 
-	boolean appliesTo(String entityName);
-
-	boolean appliesTo(Class entityType);
-
 	@Override
 	RootGraph<J> makeRootGraph(String name, boolean mutable);
 

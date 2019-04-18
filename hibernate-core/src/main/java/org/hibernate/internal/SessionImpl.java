@@ -140,6 +140,7 @@ import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
@@ -1137,7 +1138,7 @@ public final class SessionImpl
 
 		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
-		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
+		final GraphImplementor<?> graph = effectiveEntityGraph.getGraph();
 		boolean clearedEffectiveGraph = false;
 		if ( semantic != null ) {
 			if ( ! graph.appliesTo( entityName ) ) {

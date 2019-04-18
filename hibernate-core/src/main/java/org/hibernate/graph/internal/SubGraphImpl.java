@@ -75,4 +75,9 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	public boolean appliesTo(Class<? super J> javaType) {
 		return appliesTo( sessionFactory().getMetamodel().managedType( javaType ) );
 	}
+
+	@Override
+	public boolean appliesTo(String entityName) {
+		return appliesTo( sessionFactory().getMetamodel().entity( entityName ) );
+	}
 }

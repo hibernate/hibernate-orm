@@ -1133,7 +1133,17 @@ public final class SessionImpl
 			Serializable id,
 			boolean eager,
 			boolean nullable) throws HibernateException {
+		return internalLoad( entityName, id, eager, nullable, null );
 
+	}
+
+	@Override
+	public final Object internalLoad(
+			String entityName,
+			Serializable id,
+			boolean eager,
+			boolean nullable,
+			Boolean unwrapProxy) {
 		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
 		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
@@ -1159,12 +1169,18 @@ public final class SessionImpl
 
 			LoadEvent event = loadEvent;
 			loadEvent = null;
+
 			event = recycleEventInstance( event, id, entityName );
+			event.setShouldUnwrapProxy( unwrapProxy );
+
 			fireLoad( event, type );
+
 			Object result = event.getResult();
+
 			if ( !nullable ) {
 				UnresolvableObjectException.throwIfNull( result, id, entityName );
 			}
+
 			if ( loadEvent == null ) {
 				event.setEntityClassName( null );
 				event.setEntityId( null );
@@ -1195,6 +1211,7 @@ public final class SessionImpl
 			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
 			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
 			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
+			event.setShouldUnwrapProxy( null );
 			return event;
 		}
 	}

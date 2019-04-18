@@ -14,6 +14,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
@@ -233,29 +234,31 @@ public class Property implements Serializable, MetaAttributable {
 	public void setLazy(boolean lazy) {
 		this.lazy=lazy;
 	}
-	
+
+	/**
+	 * Is this property lazy in the "bytecode" sense?
+	 *
+	 * Lazy here means whether we should push *something* to the entity
+	 * instance for this field in its "base fetch group".  Mainly it affects
+	 * whether we should list this property's columns in the SQL select
+	 * for the owning entity when we load its "base fetch group".
+	 *
+	 * The "something" we push varies based on the nature (basic, etc) of
+	 * the property.
+	 *
+	 * @apiNote This form reports whether the property is considered part of the
+	 * base fetch group based solely on the mapping information.  However,
+	 * {@link EnhancementHelper#includeInBaseFetchGroup} is used internally to make that
+	 * decision to account for {@link org.hibernate.cfg.AvailableSettings#ALLOW_ENHANCEMENT_AS_PROXY}
+	 */
 	public boolean isLazy() {
 		if ( value instanceof ToOne ) {
-			// both many-to-one and one-to-one are represented as a
-			// Property.  EntityPersister is relying on this value to
-			// determine "lazy fetch groups" in terms of field-level
-			// interception.  So we need to make sure that we return
-			// true here for the case of many-to-one and one-to-one
-			// with lazy="no-proxy"
-			//
-			// * impl note - lazy="no-proxy" currently forces both
-			// lazy and unwrap to be set to true.  The other case we
-			// are extremely interested in here is that of lazy="proxy"
-			// where lazy is set to true, but unwrap is set to false.
-			// thus we use both here under the assumption that this
-			// return is really only ever used during persister
-			// construction to determine the lazy property/field fetch
-			// groupings.  If that assertion changes then this check
-			// needs to change as well.  Partially, this is an issue with
-			// the overloading of the term "lazy" here...
-			ToOne toOneValue = ( ToOne ) value;
-			return toOneValue.isLazy() && toOneValue.isUnwrapProxy();
+			// For a many-to-one, this is always false.  Whether the
+			// association is EAGER, PROXY or NO-PROXY we want the fk
+			// selected
+			return false;
 		}
+
 		return lazy;
 	}
 

@@ -15,7 +15,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -131,6 +133,20 @@ public interface EntityPersister extends EntityDefinition {
 	 *@return The metamodel
 	 */
 	EntityMetamodel getEntityMetamodel();
+
+	/**
+	 * Called from {@link EnhancementAsProxyLazinessInterceptor} to trigger load of
+	 * the entity's non-lazy state as well as the named attribute we are accessing
+	 * if it is still uninitialized after fetching non-lazy state
+	 */
+	default Object initializeEnhancedEntityUsedAsProxy(
+			Object entity,
+			String nameOfAttributeBeingAccessed,
+			SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException(
+				"Initialization of entity enhancement used to act like a proxy is not supported by this EntityPersister : " + getClass().getName()
+		);
+	}
 
 	/**
 	 * Determine whether the given name represents a subclass entity
@@ -798,7 +814,11 @@ public interface EntityPersister extends EntityDefinition {
 	EntityTuplizer getEntityTuplizer();
 
 	BytecodeEnhancementMetadata getInstrumentationMetadata();
-	
+
+	default BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
+		return getInstrumentationMetadata();
+	}
+
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
 	/**

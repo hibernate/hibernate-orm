@@ -174,7 +174,7 @@ public final class TwoPhaseLoad {
 				}
 			}
 			else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				final boolean isLazyEnhanced = persister.getInstrumentationMetadata()
+				final boolean isLazyEnhanced = persister.getBytecodeEnhancementMetadata()
 						.getLazyAttributesMetadata()
 						.getLazyAttributeNames()
 						.contains( propertyNames[i] );

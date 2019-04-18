@@ -688,7 +688,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				getAssociatedEntityName(),
 				id,
 				eager,
-				isNullable()
+				isNullable(),
+				unwrapProxy
 		);
 
 		if ( proxyOrEntity instanceof HibernateProxy ) {

@@ -14,12 +14,15 @@ import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -98,10 +101,25 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				if ( li.isUninitialized() ) {
 					LOG.trace( "Ignoring uninitialized proxy" );
 					event.setResult( source.load( li.getEntityName(), li.getIdentifier() ) );
-					return; //EARLY EXIT!
+					//EARLY EXIT!
+					return;
 				}
 				else {
 					entity = li.getImplementation();
+				}
+			}
+			else if ( original instanceof PersistentAttributeInterceptable ) {
+				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) original;
+				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+					final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
+					LOG.trace( "Ignoring uninitialized proxy" );
+					event.setResult( source.load( proxyInterceptor.getEntityName(), (Serializable) proxyInterceptor.getIdentifier() ) );
+					//EARLY EXIT!
+					return;
+				}
+				else {
+					entity = original;
 				}
 			}
 			else {
@@ -191,36 +209,50 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		LOG.trace( "Merging transient instance" );
 
 		final Object entity = event.getEntity();
-		final EventSource source = event.getSession();
+		final EventSource session = event.getSession();
 
 		final String entityName = event.getEntityName();
-		final EntityPersister persister = source.getEntityPersister( entityName, entity );
+		final EntityPersister persister = session.getEntityPersister( entityName, entity );
 
-		final Serializable id = persister.hasIdentifierProperty() ?
-				persister.getIdentifier( entity, source ) :
-				null;
-		if ( copyCache.containsKey( entity ) ) {
-			persister.setIdentifier( copyCache.get( entity ), id, source );
+		final Serializable id = persister.hasIdentifierProperty()
+				? persister.getIdentifier( entity, session )
+				: null;
+
+		final Object copy;
+		final Object existingCopy = copyCache.get( entity );
+		if ( existingCopy != null ) {
+			persister.setIdentifier( copyCache.get( entity ), id, session );
+			copy = existingCopy;
 		}
 		else {
-			( (MergeContext) copyCache ).put( entity, source.instantiate( persister, id ), true ); //before cascade!
+			copy = session.instantiate( persister, id );
+
+			//before cascade!
+			( (MergeContext) copyCache ).put( entity, copy, true );
 		}
-		final Object copy = copyCache.get( entity );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
-		super.cascadeBeforeSave( source, persister, entity, copyCache );
-		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.FROM_PARENT );
+		super.cascadeBeforeSave( session, persister, entity, copyCache );
+		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.FROM_PARENT );
 
-		saveTransientEntity( copy, entityName, event.getRequestedId(), source, copyCache );
+		saveTransientEntity( copy, entityName, event.getRequestedId(), session, copyCache );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
-		super.cascadeAfterSave( source, persister, entity, copyCache );
-		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.TO_PARENT );
+		super.cascadeAfterSave( session, persister, entity, copyCache );
+		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.TO_PARENT );
 
 		event.setResult( copy );
+
+		if ( copy instanceof PersistentAttributeInterceptable ) {
+			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) copy;
+			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			if ( interceptor == null ) {
+				persister.getBytecodeEnhancementMetadata().injectInterceptor( copy, id, session );
+			}
+		}
 	}
 
 	private void saveTransientEntity(

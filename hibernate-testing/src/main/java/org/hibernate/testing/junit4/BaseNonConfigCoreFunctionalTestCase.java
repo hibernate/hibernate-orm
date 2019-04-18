@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -555,8 +556,18 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		TransactionUtil2.inSession( sessionFactory(), action );
 	}
 
+	public <R> R fromSession(Function<SessionImplementor,R> action) {
+		log.trace( "#inSession(action)" );
+		return TransactionUtil2.fromSession( sessionFactory(), action );
+	}
+
 	public void inTransaction(Consumer<SessionImplementor> action) {
 		log.trace( "#inTransaction(action)" );
 		TransactionUtil2.inTransaction( sessionFactory(), action );
+	}
+
+	public <R> R fromTransaction(Function<SessionImplementor,R> action) {
+		log.trace( "#inTransaction(action)" );
+		return TransactionUtil2.fromTransaction( sessionFactory(), action );
 	}
 }

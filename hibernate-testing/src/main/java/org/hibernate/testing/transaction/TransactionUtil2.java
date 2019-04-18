@@ -7,6 +7,7 @@
 package org.hibernate.testing.transaction;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -34,15 +35,35 @@ public class TransactionUtil2 {
 		}
 	}
 
+	public static <R> R fromSession(SessionFactoryImplementor sfi, Function<SessionImplementor,R> action) {
+		log.trace( "#inSession(SF,action)" );
+
+		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
+			log.trace( "Session opened, calling action" );
+			return action.apply( session );
+		}
+		finally {
+			log.trace( "Session closed (AutoCloseable)" );
+		}
+	}
+
 
 	public static void inTransaction(SessionFactoryImplementor factory, Consumer<SessionImplementor> action) {
 		log.trace( "#inTransaction(factory, action)");
 
 		inSession(
 				factory,
-				session -> {
-					inTransaction( session, action );
-				}
+				session -> inTransaction( session, action )
+		);
+	}
+
+
+	public static <R> R fromTransaction(SessionFactoryImplementor factory, Function<SessionImplementor,R> action) {
+		log.trace( "#inTransaction(factory, action)");
+
+		return fromSession(
+				factory,
+				session -> fromTransaction( session, action )
 		);
 	}
 
@@ -93,6 +114,60 @@ public class TransactionUtil2 {
 			log.trace( "Committing transaction after successful action execution - failure" );
 			throw e;
 		}
+	}
+
+	public static <R> R fromTransaction(SessionImplementor session, Function<SessionImplementor,R> action) {
+		log.trace( "inTransaction(session,action)" );
+
+		final Transaction txn = session.beginTransaction();
+		log.trace( "Started transaction" );
+
+		final R result;
+		try {
+			log.trace( "Calling action in txn" );
+			result = action.apply( session );
+			log.trace( "Called action - in txn" );
+
+			if ( !txn.isActive() ) {
+				throw new TransactionManagementException( ACTION_COMPLETED_TXN );
+			}
+		}
+		catch (Exception e) {
+			// an error happened in the action
+			if ( ! txn.isActive() ) {
+				log.warn( ACTION_COMPLETED_TXN, e );
+			}
+			else {
+				log.trace( "Rolling back transaction due to action error" );
+				try {
+					txn.rollback();
+					log.trace( "Rolled back transaction due to action error" );
+				}
+				catch (Exception inner) {
+					log.trace( "Rolling back transaction due to action error failed; throwing original error" );
+				}
+			}
+
+			throw e;
+		}
+
+		assert result != null;
+
+		// action completed with no errors - attempt to commit the transaction allowing
+		// 		any RollbackException to propagate.  Note that when we get here we know the
+		//		txn is active
+
+		log.trace( "Committing transaction after successful action execution" );
+		try {
+			txn.commit();
+			log.trace( "Committing transaction after successful action execution - success" );
+		}
+		catch (Exception e) {
+			log.trace( "Committing transaction after successful action execution - failure" );
+			throw e;
+		}
+
+		return result;
 	}
 
 	private static class TransactionManagementException extends RuntimeException {

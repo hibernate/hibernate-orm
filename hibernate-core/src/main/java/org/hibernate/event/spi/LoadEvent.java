@@ -47,6 +47,8 @@ public class LoadEvent extends AbstractEvent {
 	private Object result;
 	private PostLoadEvent postLoadEvent;
 
+	private Boolean shouldUnwrapProxy;
+
 	public LoadEvent(Serializable entityId, Object instanceToLoad, EventSource source) {
 		this( entityId, null, instanceToLoad, DEFAULT_LOCK_OPTIONS, false, source );
 	}
@@ -189,5 +191,20 @@ public class LoadEvent extends AbstractEvent {
 
 	public void setPostLoadEvent(PostLoadEvent postLoadEvent) {
 		this.postLoadEvent = postLoadEvent;
+	}
+
+	public Boolean getShouldUnwrapProxy() {
+		if ( shouldUnwrapProxy == null ) {
+			final boolean enabled = getSession().getFactory()
+					.getSessionFactoryOptions()
+					.isEnhancementAsProxyEnabled();
+			return enabled;
+		}
+
+		return shouldUnwrapProxy;
+	}
+
+	public void setShouldUnwrapProxy(Boolean shouldUnwrapProxy) {
+		this.shouldUnwrapProxy = shouldUnwrapProxy;
 	}
 }

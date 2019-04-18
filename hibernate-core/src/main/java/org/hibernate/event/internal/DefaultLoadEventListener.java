@@ -260,26 +260,126 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			);
 		}
 
-		// this class has no proxies (so do a shortcut)
-		if ( !persister.hasProxy() ) {
-			return load( event, persister, keyToLoad, options );
-		}
-
 		final PersistenceContext persistenceContext = event.getSession().getPersistenceContext();
 
-		// look for a proxy
-		Object proxy = persistenceContext.getProxy( keyToLoad );
-		if ( proxy != null ) {
-			return returnNarrowedProxy( event, persister, keyToLoad, options, persistenceContext, proxy );
-		}
+		final boolean allowBytecodeProxy = event.getSession()
+				.getFactory()
+				.getSessionFactoryOptions()
+				.isEnhancementAsProxyEnabled();
 
-		if ( options.isAllowProxyCreation() ) {
-			return createProxyIfNecessary( event, persister, keyToLoad, options, persistenceContext );
+		// Check for the case where we can use the entity itself as a proxy
+		if ( options.isAllowProxyCreation()
+				&& allowBytecodeProxy
+				&& persister.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+			// if there is already a managed entity instance associated with the PC, return it
+			final Object managed = persistenceContext.getEntity( keyToLoad );
+			if ( managed != null ) {
+				if ( options.isCheckDeleted() ) {
+					final EntityEntry entry = persistenceContext.getEntry( managed );
+					final Status status = entry.getStatus();
+					if ( status == Status.DELETED || status == Status.GONE ) {
+						return null;
+					}
+
+					return managed;
+				}
+			}
+
+			// if the entity defines a HibernateProxy factory, see if there is an
+			// existing proxy associated with the PC - and if so, use it
+			if ( persister.hasProxy() ) {
+				final Object proxy = persistenceContext.getProxy( keyToLoad );
+
+				if ( proxy != null ) {
+					if ( traceEnabled ) {
+						LOG.trace( "Entity proxy found in session cache" );
+					}
+
+					LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
+
+					if ( li.isUnwrap() || event.getShouldUnwrapProxy() ) {
+						return li.getImplementation();
+					}
+
+
+					return persistenceContext.narrowProxy( proxy, persister, keyToLoad, null );
+				}
+
+				// specialized handling for entities with subclasses with a HibernateProxy factory
+				if ( persister.getEntityMetamodel().hasSubclasses() ) {
+					// entities with subclasses that define a ProxyFactory can create
+					// a HibernateProxy so long as NO_PROXY was not specified.
+					//noinspection StatementWithEmptyBody
+					if ( event.getShouldUnwrapProxy() != null && event.getShouldUnwrapProxy() ) {
+						// NO_PROXY was explicitly set.  Do not create the proxy.  This will
+						// ultimately fall though to the "load" call below
+					}
+					else {
+						return createProxyIfNecessary( event, persister, keyToLoad, options, persistenceContext );
+					}
+				}
+			}
+
+			if ( persister.getEntityMetamodel().hasSubclasses() ) {
+				if ( persister.hasProxy() ) {
+					if ( event.getShouldUnwrapProxy() != null && event.getShouldUnwrapProxy() ) {
+						// NO_PROXY was explicitly set.  Do not create the proxy.  This will
+						// ultimately fall though to the "load" call below
+						LOG.debugf( "Ignoring NO_PROXY for to-one association with subclasses to honor laziness" );
+					}
+					return createProxyIfNecessary( event, persister, keyToLoad, options, persistenceContext );
+				}
+				else {
+					// no proxy and cannot use bytecode proxy - return a newly loaded instance
+					return load( event, persister, keyToLoad, options );
+				}
+			}
+			else {
+				// This is the crux of HHH-11147
+				// create the (uninitialized) entity instance - has only id set
+				final Object entity = persister.getEntityTuplizer().instantiate(
+						keyToLoad.getIdentifier(),
+						event.getSession()
+				);
+
+				// add the entity instance to the persistence context
+				persistenceContext.addEntity(
+						entity,
+						Status.MANAGED,
+						new Object[persister.getPropertyTypes().length],
+						keyToLoad,
+						null,
+						LockMode.NONE,
+						true,
+						persister,
+						true
+				);
+
+				persister.getEntityMetamodel()
+						.getBytecodeEnhancementMetadata()
+						.injectEnhancedEntityAsProxyInterceptor( entity, keyToLoad, event.getSession() );
+
+				return entity;
+			}
+		}
+		else {
+			if ( persister.hasProxy() ) {
+				// look for a proxy
+				Object proxy = persistenceContext.getProxy( keyToLoad );
+				if ( proxy != null ) {
+					return returnNarrowedProxy( event, persister, keyToLoad, options, persistenceContext, proxy );
+				}
+
+				if ( options.isAllowProxyCreation() ) {
+					return createProxyIfNecessary( event, persister, keyToLoad, options, persistenceContext );
+				}
+			}
 		}
 
 		// return a newly loaded object
 		return load( event, persister, keyToLoad, options );
 	}
+
 
 	/**
 	 * Given a proxy, initialize it and/or narrow it provided either
@@ -304,10 +404,13 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		if ( traceEnabled ) {
 			LOG.trace( "Entity proxy found in session cache" );
 		}
+
 		LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
+
 		if ( li.isUnwrap() ) {
 			return li.getImplementation();
 		}
+
 		Object impl = null;
 		if ( !options.isAllowProxyCreation() ) {
 			impl = load( event, persister, keyToLoad, options );
@@ -318,6 +421,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 						.handleEntityNotFound( persister.getEntityName(), keyToLoad.getIdentifier() );
 			}
 		}
+
 		return persistenceContext.narrowProxy( proxy, persister, keyToLoad, impl );
 	}
 

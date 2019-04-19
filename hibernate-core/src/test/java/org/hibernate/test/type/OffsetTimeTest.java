@@ -18,6 +18,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,6 +31,7 @@ import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipLog;
 import org.junit.Test;
 import org.junit.runners.Parameterized;
 
@@ -183,9 +185,31 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 
 	@Override
 	@Test
+	public void nativeWriteThenRead() {
+		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) &&
+				!ZONE_GMT.equals( getDefaultJvmTimeZone() ) ) {
+			SkipLog.reportSkip( "OffsetTimeType remapped as timestamp only works reliably with GMT default JVM for nativeWriteThenRead; see HHH-13357" );
+			return;
+		}
+		super.nativeWriteThenRead();
+	}
+
+	@Override
+	@Test
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA seems to return a java.sql.Timestamp instead of a java.sql.Time")
 	public void writeThenNativeRead() {
 		super.writeThenNativeRead();
+	}
+
+	@Override
+	@Test
+	public void writeThenRead() {
+		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) &&
+				!ZONE_GMT.equals( getDefaultJvmTimeZone() ) ) {
+			SkipLog.reportSkip( "OffsetTimeType remapped as timestamp only works reliably with GMT default JVM for writeThenRead; see HHH-13357" );
+			return;
+		}
+		super.writeThenRead();
 	}
 
 	@Entity(name = ENTITY_NAME)

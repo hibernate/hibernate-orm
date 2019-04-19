@@ -4,6 +4,27 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.10.final (April 19th, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31759/tab/release-report-done
+
+** Bug
+    * [HHH-12939] - Database name not quoted at schema update
+    * [HHH-13138] - Work around class loading issues so that bytecode enhanced tests can run as expected
+    * [HHH-13241] - Constraint violation when deleting entites in bi-directional, lazy OneToMany association with bytecode enhancement
+    * [HHH-13266] - LocalDateTime values are wrong around 1900 (caused by JDK-8061577)
+    * [HHH-13277] - HibernateMethodLookupDispatcher - Issue with Security Manager
+    * [HHH-13300] - query.getSingleResult() throws org.hibernate.NonUniqueResultException instead of javax.persistence.NonUniqueResultException
+    * [HHH-13326] - Transaction passed to Hibernate Interceptor methods is null when JTA is used
+    * [HHH-13343] - Bytecode enhancement using ByteBuddy fails when the class is not available from the provided ClassLoader
+    * [HHH-13364] - Query.getSingleResult and getResultList() throw PessimisticLockException when pessimistic lock fails with timeout
+
+** Task
+    * [HHH-13376] - Upgrade Javassist dependency to 3.23.2-GA
+
+
+
 Changes in 5.3.9.final (February 25th, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

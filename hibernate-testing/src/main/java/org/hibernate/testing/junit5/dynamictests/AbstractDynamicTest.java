@@ -19,6 +19,8 @@ import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.TestFactory;
 import org.opentest4j.TestAbortedException;
 
+import org.hibernate.testing.orm.junit.FailureExpected;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
@@ -156,17 +158,23 @@ public abstract class AbstractDynamicTest<T extends DynamicExecutionContext> {
 											);
 										}
 										catch ( InvocationTargetException t ) {
-											// only throw if the exception was not expected.
-											if ( !expectedException.isInstance( t.getTargetException() ) ) {
-												if ( t.getTargetException() != null ) {
-													// in this use case, we only really care about the cause
-													// we can safely ignore the wrapper exception here.
-													exception = t.getTargetException();
-													throw t.getTargetException();
-												}
-												else {
-													exception = t;
-													throw t;
+											// Check if FailureExpected annotation is present.
+											if ( method.isAnnotationPresent( FailureExpected.class ) ) {
+												// We do nothing
+											}
+											else {
+												// only throw if the exception was not expected.
+												if ( !expectedException.isInstance( t.getTargetException() ) ) {
+													if ( t.getTargetException() != null ) {
+														// in this use case, we only really care about the cause
+														// we can safely ignore the wrapper exception here.
+														exception = t.getTargetException();
+														throw t.getTargetException();
+													}
+													else {
+														exception = t;
+														throw t;
+													}
 												}
 											}
 										}

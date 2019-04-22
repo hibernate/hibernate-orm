@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.contains;
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-@Disabled("Specifying explicit-type as enum in HBM no longer works, e.g. type='blah.blah.MyEnum'")
+@Disabled("Attempts to instantiate E1 or E2 enum via ManagedBeanRegistry throwing unable to locate no-arg constructor for bean.")
 public class EnumSetTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer sse1_id;
 

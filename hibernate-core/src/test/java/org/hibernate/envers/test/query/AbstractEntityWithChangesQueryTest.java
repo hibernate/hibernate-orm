@@ -4,12 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.query;
+package org.hibernate.envers.test.query;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,21 +21,22 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.tools.TestTools;
-import org.junit.Test;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.hamcrest.CollectionMatchers;
+import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
+import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.equalTo;
 
 /**
  * @author Chris Cranford
  */
 @TestForIssue( jiraKey = "HHH-8058" )
-public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFunctionalTestCase {
+public abstract class AbstractEntityWithChangesQueryTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private Integer simpleId;
 
 	@Override
@@ -41,74 +44,82 @@ public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFu
 		return new Class<?>[] { Simple.class };
 	}
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	@DynamicBeforeAll
+	public void prepareAuditData() {
 		// Revision 1
-		simpleId = doInJPA( this::entityManagerFactory, entityManager -> {
-			final Simple simple = new Simple();
-			simple.setName( "Name" );
-			simple.setValue( 25 );
-			entityManager.persist( simple );
-			return simple.getId();
-		} );
+		simpleId = inTransaction(
+				entityManager -> {
+					final Simple simple = new Simple();
+					simple.setName( "Name" );
+					simple.setValue( 25 );
+					entityManager.persist( simple );
+					return simple.getId();
+				} );
 
 		// Revision 2
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final Simple simple = entityManager.find( Simple.class, simpleId );
-			simple.setName( "Name-Modified2" );
-			entityManager.merge( simple );
-		} );
+		inTransaction(
+				entityManager -> {
+					final Simple simple = entityManager.find( Simple.class, simpleId );
+					simple.setName( "Name-Modified2" );
+					entityManager.merge( simple );
+				}
+		);
 
 		// Revision 3
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final Simple simple = entityManager.find( Simple.class, simpleId );
-			simple.setName( "Name-Modified3" );
-			simple.setValue( 100 );
-			entityManager.merge( simple );
-		} );
+		inTransaction(
+				entityManager -> {
+					final Simple simple = entityManager.find( Simple.class, simpleId );
+					simple.setName( "Name-Modified3" );
+					simple.setValue( 100 );
+					entityManager.merge( simple );
+				}
+		);
 
 		// Revision 4
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final Simple simple = entityManager.find( Simple.class, simpleId );
-			entityManager.remove( simple );
-		} );
+		inTransaction(
+				entityManager -> {
+					final Simple simple = entityManager.find( Simple.class, simpleId );
+					entityManager.remove( simple );
+				}
+		);
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevisionCount() {
-		assertEquals( Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions( Simple.class, simpleId ) );
+		assertThat( getAuditReader().getRevisions( Simple.class, simpleId ), contains( 1, 2, 3, 4 ) );
 	}
 
-	@Test
+	@DynamicTest
 	public void testEntityRevisionsWithChangesQueryNoDeletions() {
 		List results = getAuditReader().createQuery()
 				.forRevisionsOfEntityWithChanges( Simple.class, false )
 				.add( AuditEntity.id().eq( simpleId ) )
 				.getResultList();
-		compareResults( getExpectedResults( false ), results );
+		assertResults( getExpectedResults( false ), results );
 	}
 
-	@Test
+	@DynamicTest
 	public void testEntityRevisionsWithChangesQuery() {
 		List results = getAuditReader().createQuery()
 				.forRevisionsOfEntityWithChanges( Simple.class, true )
 				.add( AuditEntity.id().eq( simpleId ) )
 				.getResultList();
-		compareResults( getExpectedResults( true ), results );
+		assertResults( getExpectedResults( true ), results );
 	}
 
-	private void compareResults(List<Object[]> expectedResults, List results) {
-		assertEquals( expectedResults.size(), results.size() );
+	private void assertResults(List<Object[]> expected, List results) {
+		assertThat( results, CollectionMatchers.hasSize( expected.size() ) );
 		for ( int i = 0; i < results.size(); ++i ) {
 			final Object[] row = (Object[]) results.get( i );
-			final Object[] expectedRow = expectedResults.get( i );
+			final Object[] expectedRow = expected.get( i );
 			// the query returns 4, index 1 has the revision entity which we don't test here
-			assertEquals( 4, row.length );
-			// because we don't test the revision entity, we adjust indexes between the two arrays
-			assertEquals( expectedRow[ 0 ], row[ 0 ] );
-			assertEquals( expectedRow[ 1 ], row[ 2 ] );
-			assertEquals( expectedRow[ 2 ], row[ 3 ] );
+			assertThat( row.length, equalTo( 4 ) );
+			for ( int j = 0; j < 4; ++j ) {
+				// Skip index 1 because thats the revision entity and we aren't concerned with it.
+				if ( j != 1 ) {
+					assertThat( row[ j ], equalTo( expectedRow[ j ] ) );
+				}
+			}
 		}
 	}
 
@@ -116,7 +127,8 @@ public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFu
 
 		String deleteName = null;
 		Integer deleteValue = null;
-		if ( getConfig().get( EnversSettings.STORE_DATA_AT_DELETE ) == Boolean.TRUE ) {
+		final Map<String, Object> properties = entityManagerFactoryScope().getEntityManagerFactory().getProperties();
+		if ( "true".equals( properties.get( EnversSettings.STORE_DATA_AT_DELETE ) ) ) {
 			deleteName = "Name-Modified3";
 			deleteValue = 100;
 		}
@@ -126,6 +138,7 @@ public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFu
 		results.add(
 				new Object[] {
 						new Simple( simpleId, "Name", 25 ),
+						null,
 						RevisionType.ADD,
 						Collections.emptySet()
 				}
@@ -134,16 +147,18 @@ public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFu
 		results.add(
 				new Object[] {
 						new Simple( simpleId, "Name-Modified2", 25 ),
+						null,
 						RevisionType.MOD,
-						TestTools.makeSet( "name" )
+						new HashSet<>( Arrays.asList( "name" ) )
 				}
 		);
 
 		results.add(
 				new Object[] {
 						new Simple( simpleId, "Name-Modified3", 100 ),
+						null,
 						RevisionType.MOD,
-						TestTools.makeSet( "name", "value" )
+						new HashSet<>( Arrays.asList( "name", "value" ) )
 				}
 		);
 
@@ -151,13 +166,13 @@ public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFu
 			results.add(
 					new Object[] {
 							new Simple( simpleId, deleteName, deleteValue ),
+							null,
 							RevisionType.DEL,
 							Collections.emptySet()
 					}
 			);
 		}
 
-		System.out.println( "Generated " + results.size() + " results." );
 		return results;
 	}
 

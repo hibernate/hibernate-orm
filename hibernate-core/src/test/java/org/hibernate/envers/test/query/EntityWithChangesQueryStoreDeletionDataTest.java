@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.query;
+package org.hibernate.envers.test.query;
 
 import java.util.Map;
 
@@ -18,9 +18,9 @@ import org.hibernate.testing.TestForIssue;
 @TestForIssue( jiraKey = "HHH-8058" )
 public class EntityWithChangesQueryStoreDeletionDataTest extends AbstractEntityWithChangesQueryTest {
 	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, Boolean.TRUE );
-		options.put( EnversSettings.STORE_DATA_AT_DELETE, Boolean.TRUE );
-		super.addConfigOptions( options );
+	protected void addSettings(Map<String, Object> settings) {
+		super.addSettings( settings );
+		settings.put( EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, "true" );
+		settings.put( EnversSettings.STORE_DATA_AT_DELETE, "true" );
 	}
 }

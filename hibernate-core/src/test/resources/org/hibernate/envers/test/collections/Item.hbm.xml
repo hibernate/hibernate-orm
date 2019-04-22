@@ -7,7 +7,7 @@
   -->
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-access="field">
-    <class name="org.hibernate.envers.test.integration.collection.EntityMapCompositeElementTest$Item" table="item">
+    <class name="org.hibernate.envers.test.collections.EntityMapCompositeElementTest$Item" table="item">
         <id name="id" column="id" type="long">
             <generator class="sequence">
                 <param name="sequence_name">item_id_seq</param>

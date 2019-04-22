@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.junit.jupiter.api.Disabled;
@@ -61,10 +62,7 @@ public abstract class AbstractDynamicTest<T extends DynamicExecutionContext> {
 				method -> method.isAnnotationPresent( DynamicAfterEach.class )
 		);
 
-		final List<Method> testMethods = findMethods(
-				testClass,
-				method -> method.isAnnotationPresent( DynamicTest.class )
-		);
+		final List<Method> testMethods = resolveTestMethods( testClass );
 
 		for ( final T context : getExecutionContexts() ) {
 			if ( testClass.isAnnotationPresent( Disabled.class ) || !context.isExecutionAllowed( testClass ) ) {
@@ -238,5 +236,42 @@ public abstract class AbstractDynamicTest<T extends DynamicExecutionContext> {
 	@SuppressWarnings("unchecked")
 	protected Collection<T> getExecutionContexts() {
 		return Collections.singletonList( (T) new DynamicExecutionContext() {} );
+	}
+
+	private List<Method> resolveTestMethods(Class<?> testClass) {
+		final List<Method> testMethods = new ArrayList<>(
+				findMethods(
+						testClass,
+						method -> method.isAnnotationPresent( DynamicTest.class )
+				)
+		);
+		testMethods.sort( new DynamicOrderAnnotationComparator() );
+		return testMethods;
+	}
+
+	private class DynamicOrderAnnotationComparator implements Comparator<Method> {
+		@Override
+		public int compare(Method method1, Method method2) {
+			final DynamicOrder order1 = method1.getAnnotation( DynamicOrder.class );
+			final DynamicOrder order2 = method2.getAnnotation( DynamicOrder.class );
+			if ( order1 != null && order2 != null ) {
+				if ( order1.value() < order2.value() ) {
+					return -1;
+				}
+				else if ( order1.value() > order2.value() ) {
+					return 1;
+				}
+				else {
+					return 0;
+				}
+			}
+			else if ( order1 != null ) {
+				return -1;
+			}
+			else if ( order2 != null ) {
+				return 1;
+			}
+			return 0;
+		}
 	}
 }

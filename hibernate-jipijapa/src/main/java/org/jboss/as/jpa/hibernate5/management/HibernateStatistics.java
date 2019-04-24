@@ -75,123 +75,123 @@ public class HibernateStatistics extends HibernateAbstractStatistics {
 		/**
 		 * specify the different operations
 		 */
-		getOperations().put( PROVIDER_LABEL, label );
-		getTypes().put( PROVIDER_LABEL, String.class );
+		operations.put( PROVIDER_LABEL, label );
+		types.put( PROVIDER_LABEL, String.class );
 
-		getOperations().put( OPERATION_CLEAR, clear );
-		getTypes().put( OPERATION_CLEAR, Operation.class );
+		operations.put( OPERATION_CLEAR, clear );
+		types.put( OPERATION_CLEAR, Operation.class );
 
-		getOperations().put( OPERATION_EVICTALL, evictAll );
-		getTypes().put( OPERATION_EVICTALL, Operation.class );
+		operations.put( OPERATION_EVICTALL, evictAll );
+		types.put( OPERATION_EVICTALL, Operation.class );
 
-		getOperations().put( OPERATION_SUMMARY, summary );
-		getTypes().put( OPERATION_SUMMARY, Operation.class );
+		operations.put( OPERATION_SUMMARY, summary );
+		types.put( OPERATION_SUMMARY, Operation.class );
 
-		getOperations().put( OPERATION_STATISTICS_ENABLED, statisticsEnabled );
-		getTypes().put( OPERATION_STATISTICS_ENABLED, Boolean.class );
-		getWriteableNames().add( OPERATION_STATISTICS_ENABLED );   // make 'enabled' writeable
+		operations.put( OPERATION_STATISTICS_ENABLED, statisticsEnabled );
+		types.put( OPERATION_STATISTICS_ENABLED, Boolean.class );
+		writeableNames.add( OPERATION_STATISTICS_ENABLED );   // make 'enabled' writeable
 
-		getOperations().put( OPERATION_STATISTICS_ENABLED_DEPRECATED, statisticsEnabled );
-		getTypes().put( OPERATION_STATISTICS_ENABLED_DEPRECATED, Boolean.class );
-		getWriteableNames().add( OPERATION_STATISTICS_ENABLED_DEPRECATED );   // make 'enabled' writeable
+		operations.put( OPERATION_STATISTICS_ENABLED_DEPRECATED, statisticsEnabled );
+		types.put( OPERATION_STATISTICS_ENABLED_DEPRECATED, Boolean.class );
+		writeableNames.add( OPERATION_STATISTICS_ENABLED_DEPRECATED );   // make 'enabled' writeable
 
-		getOperations().put( OPERATION_ENTITY_DELETE_COUNT, entityDeleteCount );
-		getTypes().put( OPERATION_ENTITY_DELETE_COUNT, Long.class );
+		operations.put( OPERATION_ENTITY_DELETE_COUNT, entityDeleteCount );
+		types.put( OPERATION_ENTITY_DELETE_COUNT, Long.class );
 
-		getOperations().put( OPERATION_COLLECTION_FETCH_COUNT, collectionFetchCount );
-		getTypes().put( OPERATION_COLLECTION_FETCH_COUNT, Long.class );
+		operations.put( OPERATION_COLLECTION_FETCH_COUNT, collectionFetchCount );
+		types.put( OPERATION_COLLECTION_FETCH_COUNT, Long.class );
 
-		getOperations().put( OPERATION_COLLECTION_LOAD_COUNT, collectionLoadCount );
-		getTypes().put( OPERATION_COLLECTION_LOAD_COUNT, Long.class );
+		operations.put( OPERATION_COLLECTION_LOAD_COUNT, collectionLoadCount );
+		types.put( OPERATION_COLLECTION_LOAD_COUNT, Long.class );
 
-		getOperations().put( OPERATION_COLLECTION_RECREATED_COUNT, collectionRecreatedCount );
-		getTypes().put( OPERATION_COLLECTION_RECREATED_COUNT, Long.class );
+		operations.put( OPERATION_COLLECTION_RECREATED_COUNT, collectionRecreatedCount );
+		types.put( OPERATION_COLLECTION_RECREATED_COUNT, Long.class );
 
-		getOperations().put( OPERATION_COLLECTION_REMOVE_COUNT, collectionRemoveCount );
-		getTypes().put( OPERATION_COLLECTION_REMOVE_COUNT, Long.class );
+		operations.put( OPERATION_COLLECTION_REMOVE_COUNT, collectionRemoveCount );
+		types.put( OPERATION_COLLECTION_REMOVE_COUNT, Long.class );
 
-		getOperations().put( OPERATION_COLLECTION_UPDATE_COUNT, collectionUpdateCount );
-		getTypes().put( OPERATION_COLLECTION_UPDATE_COUNT, Long.class );
+		operations.put( OPERATION_COLLECTION_UPDATE_COUNT, collectionUpdateCount );
+		types.put( OPERATION_COLLECTION_UPDATE_COUNT, Long.class );
 
-		getOperations().put( OPERATION_QUERYCACHE_HIT_COUNT, queryCacheHitCount );
-		getTypes().put( OPERATION_QUERYCACHE_HIT_COUNT, Long.class );
+		operations.put( OPERATION_QUERYCACHE_HIT_COUNT, queryCacheHitCount );
+		types.put( OPERATION_QUERYCACHE_HIT_COUNT, Long.class );
 
-		getOperations().put( OPERATION_QUERYCACHE_MISS_COUNT, queryCacheMissCount );
-		getTypes().put( OPERATION_QUERYCACHE_MISS_COUNT, Long.class );
+		operations.put( OPERATION_QUERYCACHE_MISS_COUNT, queryCacheMissCount );
+		types.put( OPERATION_QUERYCACHE_MISS_COUNT, Long.class );
 
-		getOperations().put( OPERATION_QUERYQUERYCACHE_PUT_COUNT, queryCachePutCount );
-		getTypes().put( OPERATION_QUERYQUERYCACHE_PUT_COUNT, Long.class );
+		operations.put( OPERATION_QUERYQUERYCACHE_PUT_COUNT, queryCachePutCount );
+		types.put( OPERATION_QUERYQUERYCACHE_PUT_COUNT, Long.class );
 
-		getOperations().put( OPERATION_QUERYEXECUTION_COUNT, queryExecutionCount );
-		getTypes().put( OPERATION_QUERYEXECUTION_COUNT, Long.class );
+		operations.put( OPERATION_QUERYEXECUTION_COUNT, queryExecutionCount );
+		types.put( OPERATION_QUERYEXECUTION_COUNT, Long.class );
 
-		getOperations().put( OPERATION_QUERYEXECUTION_MAX_TIME, queryExecutionMaxTime );
-		getTypes().put( OPERATION_QUERYEXECUTION_MAX_TIME, Long.class );
+		operations.put( OPERATION_QUERYEXECUTION_MAX_TIME, queryExecutionMaxTime );
+		types.put( OPERATION_QUERYEXECUTION_MAX_TIME, Long.class );
 
-		getOperations().put( OPERATION_QUERYEXECUTION_MAX_TIME_STRING, queryExecutionMaxTimeString );
-		getTypes().put( OPERATION_QUERYEXECUTION_MAX_TIME_STRING, String.class );
+		operations.put( OPERATION_QUERYEXECUTION_MAX_TIME_STRING, queryExecutionMaxTimeString );
+		types.put( OPERATION_QUERYEXECUTION_MAX_TIME_STRING, String.class );
 
-		getOperations().put( OPERATION_ENTITY_INSERT_COUNT, entityInsertCount );
-		getTypes().put( OPERATION_ENTITY_INSERT_COUNT, Long.class );
+		operations.put( OPERATION_ENTITY_INSERT_COUNT, entityInsertCount );
+		types.put( OPERATION_ENTITY_INSERT_COUNT, Long.class );
 
-		getOperations().put( OPERATION_ENTITY_LOAD_COUNT, entityLoadCount );
-		getTypes().put( OPERATION_ENTITY_LOAD_COUNT, Long.class );
+		operations.put( OPERATION_ENTITY_LOAD_COUNT, entityLoadCount );
+		types.put( OPERATION_ENTITY_LOAD_COUNT, Long.class );
 
-		getOperations().put( OPERATION_ENTITY_FETCH_COUNT, entityFetchCount );
-		getTypes().put( OPERATION_ENTITY_FETCH_COUNT, Long.class );
+		operations.put( OPERATION_ENTITY_FETCH_COUNT, entityFetchCount );
+		types.put( OPERATION_ENTITY_FETCH_COUNT, Long.class );
 
-		getOperations().put( OPERATION_ENTITY_UPDATE_COUNT, entityUpdateCount );
-		getTypes().put( OPERATION_ENTITY_UPDATE_COUNT, Long.class );
+		operations.put( OPERATION_ENTITY_UPDATE_COUNT, entityUpdateCount );
+		types.put( OPERATION_ENTITY_UPDATE_COUNT, Long.class );
 
-		getOperations().put( OPERATION_FLUSH_COUNT, flushCount );
-		getTypes().put( OPERATION_FLUSH_COUNT, Long.class );
+		operations.put( OPERATION_FLUSH_COUNT, flushCount );
+		types.put( OPERATION_FLUSH_COUNT, Long.class );
 
-		getOperations().put( OPERATION_CONNECT_COUNT, connectCount );
-		getTypes().put( OPERATION_CONNECT_COUNT, Long.class );
+		operations.put( OPERATION_CONNECT_COUNT, connectCount );
+		types.put( OPERATION_CONNECT_COUNT, Long.class );
 
-		getOperations().put( OPERATION_SESSION_CLOSE_COUNT, sessionCloseCount );
-		getTypes().put( OPERATION_SESSION_CLOSE_COUNT, Long.class );
+		operations.put( OPERATION_SESSION_CLOSE_COUNT, sessionCloseCount );
+		types.put( OPERATION_SESSION_CLOSE_COUNT, Long.class );
 
-		getOperations().put( OPERATION_SESSION_OPEN_COUNT, sessionOpenCount );
-		getTypes().put( OPERATION_SESSION_OPEN_COUNT, Long.class );
+		operations.put( OPERATION_SESSION_OPEN_COUNT, sessionOpenCount );
+		types.put( OPERATION_SESSION_OPEN_COUNT, Long.class );
 
-		getOperations().put( OPERATION_SUCCESSFUL_TRANSACTION_COUNT, transactionCount );
-		getTypes().put( OPERATION_SUCCESSFUL_TRANSACTION_COUNT, Long.class );
+		operations.put( OPERATION_SUCCESSFUL_TRANSACTION_COUNT, transactionCount );
+		types.put( OPERATION_SUCCESSFUL_TRANSACTION_COUNT, Long.class );
 
-		getOperations().put( OPERATION_COMPLETED_TRANSACTION_COUNT, transactionCompletedCount );
-		getTypes().put( OPERATION_COMPLETED_TRANSACTION_COUNT, Long.class );
+		operations.put( OPERATION_COMPLETED_TRANSACTION_COUNT, transactionCompletedCount );
+		types.put( OPERATION_COMPLETED_TRANSACTION_COUNT, Long.class );
 
-		getOperations().put( OPERATION_PREPARED_STATEMENT_COUNT, preparedStatementCount );
-		getTypes().put( OPERATION_PREPARED_STATEMENT_COUNT, Long.class );
+		operations.put( OPERATION_PREPARED_STATEMENT_COUNT, preparedStatementCount );
+		types.put( OPERATION_PREPARED_STATEMENT_COUNT, Long.class );
 
-		getOperations().put( OPERATION_CLOSE_STATEMENT_COUNT, closedStatementCount );
-		getTypes().put( OPERATION_CLOSE_STATEMENT_COUNT, Long.class );
+		operations.put( OPERATION_CLOSE_STATEMENT_COUNT, closedStatementCount );
+		types.put( OPERATION_CLOSE_STATEMENT_COUNT, Long.class );
 
-		getOperations().put( OPERATION_OPTIMISTIC_FAILURE_COUNT, optimisticFailureCount );
-		getTypes().put( OPERATION_OPTIMISTIC_FAILURE_COUNT, Long.class );
+		operations.put( OPERATION_OPTIMISTIC_FAILURE_COUNT, optimisticFailureCount );
+		types.put( OPERATION_OPTIMISTIC_FAILURE_COUNT, Long.class );
 
-		getOperations().put( OPERATION_SECONDLEVELCACHE_HIT_COUNT, secondLevelCacheHitCount );
-		getTypes().put( OPERATION_SECONDLEVELCACHE_HIT_COUNT, Long.class );
+		operations.put( OPERATION_SECONDLEVELCACHE_HIT_COUNT, secondLevelCacheHitCount );
+		types.put( OPERATION_SECONDLEVELCACHE_HIT_COUNT, Long.class );
 
-		getOperations().put( OPERATION_SECONDLEVELCACHE_MISS_COUNT, secondLevelCacheMissCount );
-		getTypes().put( OPERATION_SECONDLEVELCACHE_MISS_COUNT, Long.class );
+		operations.put( OPERATION_SECONDLEVELCACHE_MISS_COUNT, secondLevelCacheMissCount );
+		types.put( OPERATION_SECONDLEVELCACHE_MISS_COUNT, Long.class );
 
-		getOperations().put( OPERATION_SECONDLEVELCACHE_PUT_COUNT, secondLevelCachePutCount );
-		getTypes().put( OPERATION_SECONDLEVELCACHE_PUT_COUNT, Long.class );
+		operations.put( OPERATION_SECONDLEVELCACHE_PUT_COUNT, secondLevelCachePutCount );
+		types.put( OPERATION_SECONDLEVELCACHE_PUT_COUNT, Long.class );
 
 		/**
 		 * Specify the children statistics
 		 */
-		getChildrenNames().add( ENTITY );
+		childrenNames.add( ENTITY );
 		childrenStatistics.put( ENTITY, new HibernateEntityStatistics() );
 
-		getChildrenNames().add( ENTITYCACHE );
+		childrenNames.add( ENTITYCACHE );
 		childrenStatistics.put( ENTITYCACHE, new HibernateEntityCacheStatistics() );
 
-		getChildrenNames().add( COLLECTION );
+		childrenNames.add( COLLECTION );
 		childrenStatistics.put( COLLECTION, new HibernateCollectionStatistics() );
 
-		getChildrenNames().add( QUERYCACHE );
+		childrenNames.add( QUERYCACHE );
 		childrenStatistics.put( QUERYCACHE, new HibernateQueryCacheStatistics() );
 
 	}

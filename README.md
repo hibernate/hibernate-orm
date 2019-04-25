@@ -27,7 +27,9 @@ To run the matrix tests for NuoDB:
 
    set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate/20.x.x-hib5  (Windows)
    ```
-   
+
+1. Set the Hibernate dialect: `SET DIALECT_VERSION=20.x.x-hib5`
+
 1. Compile the code: `./gradlew clean compile` 
 
 1. Tell the tests about your NuoDB database:
@@ -71,6 +73,18 @@ To run the matrix tests for NuoDB:
    ```
 
 Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail, and 801 are skipped. So 880 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
+
+## Upgrade Hibernate Dialect
+
+If the Hibernate dialect has a new vewrsion number:
+
+1. Update the environment variable: `SET DIALECT_VERSION=20.x.x-hib5`
+
+2. Edit `databases/nuodb/matrix.gradle` and change the reference in that file
+
+3. Edit `hibernate-core/hibernate-core.gradle` ands update the 3 references in this file - DO NOT update the JDBC Driver dependency by mistake.
+
+Unfortunately the files referenced in stepos (2) and (3) do not currently pick up the version from `DIALECT_VERSION`.
 
 ## Changes Made to Project
 

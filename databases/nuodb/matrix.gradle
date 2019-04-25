@@ -5,4 +5,4 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 jdbcDependency 'com.nuodb.jdbc:nuodb-jdbc:20.0.0'
-jdbcDependency 'com.nuodb.hibernate:nuodb-hibernate:20.0.0-hib5'
+jdbcDependency 'com.nuodb.hibernate:nuodb-hibernate:20.0.1-hib5'

@@ -13,6 +13,9 @@ To run the matrix tests for NuoDB:
 
    * clone https://github.com/nuodb/HibernateDialect5
    * Run `mvn install` - see [project README](https://github.com/nuodb/HibernateDialect5/blob/master/README.md)
+   * Check the version in the POM - it will be of the form `20.x.x-hib5`
+      * Anywhere in the following, replace `20.x.x-hib5` by that version number.
+      * We need some way to automate it
 
 1. This project's gradle build file assumes you have your maven repository in
    the default location (`.m2` in your home directory). If so, skip this step.
@@ -20,9 +23,9 @@ To run the matrix tests for NuoDB:
    Otherwise you must tell gradle where this dependency can be found. For example
    suppose you use `m2` instead of `.m2`:
    ```
-   export ADDITIONAL_REPO=~/m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5               (Linux/MacOS)
+   export ADDITIONAL_REPO=~/m2/repository/com/nuodb/hibernate/nuodb-hibernate/20.x.x-hib5               (Linux/MacOS)
 
-   set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate/20.0.0-hib5  (Windows)
+   set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate/20.x.x-hib5  (Windows)
    ```
    
 1. Compile the code: `./gradlew clean compile` 
@@ -57,7 +60,7 @@ To run the matrix tests for NuoDB:
    ```
 
 1. Pull Jar from Sonatype
-   Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-1047/com/nuodb/hibernate/nuodb-hibernate/20.0.0-hib5/nuodb-hibernate-20.0.0-hib5.jar.
+   Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-1047/com/nuodb/hibernate/nuodb-hibernate/20.x.x-hib5/nuodb-hibernate-20.x.x-hib5.jar.
    Note the build number - 1047. To use this dependency run as follows:
 
    ```
@@ -73,7 +76,7 @@ Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail,
 
 To use NuoDB
 
-1. Added `compile('com.nuodb.hibernate:nuodb-hibernate:20.0.0-hib5')` to `hibernate-core/hibernate-core.gradle` to pick up the NuoDB dialect under test.
+1. Added `compile('com.nuodb.hibernate:nuodb-hibernate:20.x.x-hib5')` to `hibernate-core/hibernate-core.gradle` to pick up the NuoDB dialect under test.
 2. Added `databases/nuodb` to define dependencies and configuration required to use NuoDB.
 
 To configure NuoDB

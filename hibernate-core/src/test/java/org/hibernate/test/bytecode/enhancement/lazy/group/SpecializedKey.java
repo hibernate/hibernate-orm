@@ -33,7 +33,7 @@ import org.hibernate.annotations.LazyToOneOption;
 public class SpecializedKey extends GenericKey implements Serializable
 {
 
-	@OneToMany(targetEntity= SpecializedEntity.class, mappedBy="SpecializedKey", fetch=FetchType.LAZY)
+	@OneToMany(targetEntity= SpecializedEntity.class, mappedBy="specializedKey", fetch=FetchType.LAZY)
 	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("PZ")
 	protected Set<SpecializedEntity> specializedEntities = new LinkedHashSet();

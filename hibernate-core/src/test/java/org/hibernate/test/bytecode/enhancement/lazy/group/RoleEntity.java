@@ -41,7 +41,7 @@ public class RoleEntity extends ModelEntity implements Serializable {
 	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("Key")
 	@JoinColumn
-	protected AbstractKey Key = null;
+	protected AbstractKey key = null;
 
 	public Short getValue() {
 		return value;
@@ -52,12 +52,10 @@ public class RoleEntity extends ModelEntity implements Serializable {
 	}
 
 	public AbstractKey getKey() {
-		return Key;
+		return key;
 	}
 
-	public void setKey(AbstractKey pKey) {
-		if ( Key != pKey ) {
-			Key = pKey;
-		}
+	public void setKey(AbstractKey key) {
+		this.key = key;
 	}
 }

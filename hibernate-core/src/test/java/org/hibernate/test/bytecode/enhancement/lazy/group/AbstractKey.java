@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -29,6 +30,7 @@ import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 
+@Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Table(name = "PP_DCKey")
 public abstract class AbstractKey extends ModelEntity
@@ -37,7 +39,7 @@ public abstract class AbstractKey extends ModelEntity
 	@Column(name = "Name")
 	String name;
 
-	@OneToMany(targetEntity = RoleEntity.class, mappedBy = "Key", fetch = FetchType.LAZY)
+	@OneToMany(targetEntity = RoleEntity.class, mappedBy = "key", fetch = FetchType.LAZY)
 	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("R")
 	protected Set<RoleEntity> roles = new LinkedHashSet<>();

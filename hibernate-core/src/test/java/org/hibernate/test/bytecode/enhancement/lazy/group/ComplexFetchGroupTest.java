@@ -306,10 +306,10 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 		sources.addAnnotatedClass( Activity.class );
 		sources.addAnnotatedClass( Instruction.class );
 
+		sources.addAnnotatedClass( SpecializedKey.class );
 		sources.addAnnotatedClass( RoleEntity.class );
 		sources.addAnnotatedClass( AbstractKey.class );
 		sources.addAnnotatedClass( GenericKey.class );
-		sources.addAnnotatedClass( SpecializedKey.class );
 		sources.addAnnotatedClass( SpecializedEntity.class );
 	}
 
@@ -419,11 +419,11 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.createQuery( "delete from Activity" ).executeUpdate();
 					session.createQuery( "delete from Instruction" ).executeUpdate();
 
-					session.createQuery( "delete from AbstractKey" ).executeUpdate();
-					session.createQuery( "delete from GenericKey" ).executeUpdate();
 					session.createQuery( "delete from SpecializedEntity" ).executeUpdate();
 					session.createQuery( "delete from RoleEntity" ).executeUpdate();
 					session.createQuery( "delete from SpecializedKey" ).executeUpdate();
+					session.createQuery( "delete from GenericKey" ).executeUpdate();
+					session.createQuery( "delete from AbstractKey" ).executeUpdate();
 				}
 		);
 	}

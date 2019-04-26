@@ -8,6 +8,7 @@ package org.hibernate.test.bytecode.enhancement.lazy.group;
 
 import java.sql.Blob;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.Basic;
@@ -33,7 +34,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
@@ -251,6 +251,35 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
+	@Test
+	public void testAbstractClassAssociation() {
+		final StatisticsImplementor stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		inTransaction(
+				session -> {
+					final String qry = "select e from RoleEntity e";
+					final List<RoleEntity> keyRolleEntitys = session.createQuery( qry, RoleEntity.class ).list();
+
+					assertThat( stats.getPrepareStatementCount(), is( 2L ) );
+
+					for ( RoleEntity keyRolleEntity : keyRolleEntitys ) {
+						Set<SpecializedEntity> specializedEntities = ( (SpecializedKey) keyRolleEntity.getKey() )
+								.getSpecializedEntities();
+						assertThat( stats.getPrepareStatementCount(), is( 3L ) );
+
+						Iterator<SpecializedEntity> iterator = specializedEntities.iterator();
+						while ( iterator.hasNext() ) {
+							iterator.next().getId();
+						}
+
+						// but regardless there should not be an additional query
+						assertThat( stats.getPrepareStatementCount(), is( 3L ) );
+					}
+				}
+		);
+	}
+
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
@@ -276,6 +305,12 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		sources.addAnnotatedClass( Activity.class );
 		sources.addAnnotatedClass( Instruction.class );
+
+		sources.addAnnotatedClass( RoleEntity.class );
+		sources.addAnnotatedClass( AbstractKey.class );
+		sources.addAnnotatedClass( GenericKey.class );
+		sources.addAnnotatedClass( SpecializedKey.class );
+		sources.addAnnotatedClass( SpecializedEntity.class );
 	}
 
 	@Before
@@ -349,6 +384,24 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 						final Activity activity = new Activity( i, "Activity #" + i, instr );
 						session.save( activity );
 					}
+
+					RoleEntity roleEntity = new RoleEntity();
+					roleEntity.setOid( 1L );
+
+					SpecializedKey specializedKey = new SpecializedKey();
+					specializedKey.setOid(1L);
+
+					SpecializedEntity specializedEntity = new SpecializedEntity();
+					specializedEntity.setId( 2L );
+					specializedKey.addSpecializedEntity( specializedEntity );
+					specializedEntity.setSpecializedKey( specializedKey);
+
+					specializedKey.addRole( roleEntity );
+					roleEntity.setKey( specializedKey );
+
+					session.save( specializedEntity );
+					session.save( roleEntity );
+					session.save( specializedKey );
 				}
 		);
 	}
@@ -365,6 +418,12 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					session.createQuery( "delete from Activity" ).executeUpdate();
 					session.createQuery( "delete from Instruction" ).executeUpdate();
+
+					session.createQuery( "delete from AbstractKey" ).executeUpdate();
+					session.createQuery( "delete from GenericKey" ).executeUpdate();
+					session.createQuery( "delete from SpecializedEntity" ).executeUpdate();
+					session.createQuery( "delete from RoleEntity" ).executeUpdate();
+					session.createQuery( "delete from SpecializedKey" ).executeUpdate();
 				}
 		);
 	}

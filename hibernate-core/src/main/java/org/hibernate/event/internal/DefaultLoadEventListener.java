@@ -9,6 +9,7 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.InstantiationException;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
@@ -282,12 +283,37 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				return proxy;
 			}
 
-			if ( ! persister.isVersioned() ) {
+			if ( ! persister.isVersioned()  ) {
 				// create the (uninitialized) entity instance - has only id set
-				final Object entity = persister.getEntityTuplizer().instantiate(
-						keyToLoad.getIdentifier(),
-						event.getSession()
-				);
+				final Object entity;
+				try {
+					entity = persister.getEntityTuplizer().instantiate(
+							keyToLoad.getIdentifier(),
+							event.getSession()
+					);
+				}
+				catch (InstantiationException e) {
+					if ( persister.hasProxy() ) {
+						// look for a proxy
+						if ( proxy != null ) {
+							return returnNarrowedProxy(
+									event,
+									persister,
+									keyToLoad,
+									options,
+									persistenceContext,
+									proxy
+							);
+						}
+
+						if ( options.isAllowProxyCreation() ) {
+							return createProxyIfNecessary( event, persister, keyToLoad, options, persistenceContext );
+						}
+					}
+
+					// return a newly loaded object
+					return load( event, persister, keyToLoad, options );
+				}
 
 				// add the entity instance to the persistence context
 				persistenceContext.addEntity(

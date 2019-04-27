@@ -280,6 +280,28 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
+	@Test
+	public void testNonAbstractAssociationWithSubclassValue() {
+		final StatisticsImplementor stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		inTransaction(
+				session -> {
+					final String qry = "select e from RoleEntity e";
+					final List<RoleEntity> keyRolleEntitys = session.createQuery( qry, RoleEntity.class ).list();
+
+					assertThat( stats.getPrepareStatementCount(), is( 2L ) );
+
+					assertThat( keyRolleEntitys.size(), is( 1 ) );
+					assertThat( keyRolleEntitys.get( 0 ).getKey().getClass().getName(), is( SpecializedKey.class.getName() ) );
+					assertThat(
+							keyRolleEntitys.get( 0 ).getSpecializedKey().getClass().getName(),
+							is( MoreSpecializedKey.class.getName() )
+					);
+				}
+		);
+	}
+
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
@@ -307,6 +329,7 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 		sources.addAnnotatedClass( Instruction.class );
 
 		sources.addAnnotatedClass( SpecializedKey.class );
+		sources.addAnnotatedClass( MoreSpecializedKey.class );
 		sources.addAnnotatedClass( RoleEntity.class );
 		sources.addAnnotatedClass( AbstractKey.class );
 		sources.addAnnotatedClass( GenericKey.class );
@@ -391,6 +414,9 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 					SpecializedKey specializedKey = new SpecializedKey();
 					specializedKey.setOid(1L);
 
+					MoreSpecializedKey moreSpecializedKey = new MoreSpecializedKey();
+					moreSpecializedKey.setOid( 3L );
+
 					SpecializedEntity specializedEntity = new SpecializedEntity();
 					specializedEntity.setId( 2L );
 					specializedKey.addSpecializedEntity( specializedEntity );
@@ -398,10 +424,12 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					specializedKey.addRole( roleEntity );
 					roleEntity.setKey( specializedKey );
+					roleEntity.setSpecializedKey( moreSpecializedKey );
 
 					session.save( specializedEntity );
 					session.save( roleEntity );
 					session.save( specializedKey );
+					session.save( moreSpecializedKey );
 				}
 		);
 	}
@@ -421,6 +449,7 @@ public class ComplexFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					session.createQuery( "delete from SpecializedEntity" ).executeUpdate();
 					session.createQuery( "delete from RoleEntity" ).executeUpdate();
+					session.createQuery( "delete from MoreSpecializedKey" ).executeUpdate();
 					session.createQuery( "delete from SpecializedKey" ).executeUpdate();
 					session.createQuery( "delete from GenericKey" ).executeUpdate();
 					session.createQuery( "delete from AbstractKey" ).executeUpdate();

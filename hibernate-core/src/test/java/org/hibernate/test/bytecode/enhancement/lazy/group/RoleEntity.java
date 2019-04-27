@@ -43,6 +43,12 @@ public class RoleEntity extends ModelEntity implements Serializable {
 	@JoinColumn
 	protected AbstractKey key = null;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@LazyToOne(LazyToOneOption.NO_PROXY)
+	@LazyGroup("Key")
+	@JoinColumn
+	protected SpecializedKey specializedKey = null;
+
 	public Short getValue() {
 		return value;
 	}
@@ -57,5 +63,13 @@ public class RoleEntity extends ModelEntity implements Serializable {
 
 	public void setKey(AbstractKey key) {
 		this.key = key;
+	}
+
+	public SpecializedKey getSpecializedKey() {
+		return specializedKey;
+	}
+
+	public void setSpecializedKey(SpecializedKey specializedKey) {
+		this.specializedKey = specializedKey;
 	}
 }

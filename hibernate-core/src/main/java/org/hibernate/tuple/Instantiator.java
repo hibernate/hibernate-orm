@@ -5,6 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.tuple;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 import java.io.Serializable;
 
 /**
@@ -20,16 +22,17 @@ public interface Instantiator extends Serializable {
 	 * This form is never called for component instantiation, only entity instantiation.
 	 *
 	 * @param id The id of the entity to be instantiated.
+	 * @param session The Session
 	 * @return An appropriately instantiated entity.
 	 */
-	public Object instantiate(Serializable id);
+	public Object instantiate(Serializable id, SharedSessionContractImplementor session);
 
 	/**
 	 * Perform the requested instantiation.
-	 *
+	 * @param session The Session
 	 * @return The instantiated data structure. 
 	 */
-	public Object instantiate();
+	public Object instantiate(SharedSessionContractImplementor session);
 
 	/**
 	 * Performs check to see if the given object is an instance of the entity

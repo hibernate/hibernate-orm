@@ -9,6 +9,7 @@ package org.hibernate.test.dynamicentity.tuplizer2;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.test.dynamicentity.Address;
 import org.hibernate.test.dynamicentity.Company;
@@ -27,7 +28,7 @@ public class MyEntityInstantiator implements Instantiator {
 		this.entityName = entityName;
 	}
 
-	public Object instantiate(Serializable id) {
+	public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
 		if ( Person.class.getName().equals( entityName ) ) {
 			return ProxyHelper.newPersonProxy( id );
 		}
@@ -45,8 +46,8 @@ public class MyEntityInstantiator implements Instantiator {
 		}
 	}
 
-	public Object instantiate() {
-		return instantiate( null );
+	public Object instantiate(SharedSessionContractImplementor session) {
+		return instantiate( null, session );
 	}
 
 	public boolean isInstance(Object object) {

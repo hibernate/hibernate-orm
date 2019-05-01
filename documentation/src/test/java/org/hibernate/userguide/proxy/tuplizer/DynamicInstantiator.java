@@ -11,6 +11,7 @@ package org.hibernate.userguide.proxy.tuplizer;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.tuple.Instantiator;
 
 /**
@@ -32,12 +33,12 @@ public class DynamicInstantiator
         }
     }
 
-    public Object instantiate(Serializable id) {
+    public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
         return ProxyHelper.newProxy( targetClass, id );
     }
 
-    public Object instantiate() {
-        return instantiate( null );
+    public Object instantiate(SharedSessionContractImplementor session) {
+        return instantiate( null, session );
     }
 
     public boolean isInstance(Object object) {

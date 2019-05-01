@@ -670,7 +670,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public final Object instantiate(Serializable id, SharedSessionContractImplementor session) {
-		Object result = getInstantiator().instantiate( id );
+		Object result = getInstantiator().instantiate( id, session );
 		if ( id != null ) {
 			setIdentifier( result, id, session );
 		}

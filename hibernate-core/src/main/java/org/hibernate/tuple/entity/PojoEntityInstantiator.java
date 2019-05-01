@@ -11,6 +11,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.PojoInstantiator;
@@ -39,7 +40,7 @@ public class PojoEntityInstantiator extends PojoInstantiator {
 	}
 
 	@Override
-	protected Object applyInterception(Object entity) {
+	protected Object applyInterception(Object entity, SharedSessionContractImplementor session) {
 		if ( !applyBytecodeInterception ) {
 			return entity;
 		}
@@ -49,7 +50,7 @@ public class PojoEntityInstantiator extends PojoInstantiator {
 				entityMetamodel.getBytecodeEnhancementMetadata()
 						.getLazyAttributesMetadata()
 						.getLazyAttributeNames(),
-				null
+				session
 		);
 		( (PersistentAttributeInterceptable) entity ).$$_hibernate_setInterceptor( interceptor );
 		return entity;

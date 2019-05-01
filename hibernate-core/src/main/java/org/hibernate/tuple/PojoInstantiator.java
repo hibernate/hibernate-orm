@@ -13,6 +13,7 @@ import java.lang.reflect.Constructor;
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -74,7 +75,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		constructor = ReflectHelper.getDefaultConstructor( mappedClass );
 	}
 
-	public Object instantiate() {
+	public Object instantiate(SharedSessionContractImplementor session) {
 		if ( isAbstract ) {
 			throw new InstantiationException( "Cannot instantiate abstract class or interface: ", mappedClass );
 		}
@@ -86,7 +87,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		}
 		else {
 			try {
-				return applyInterception( constructor.newInstance( (Object[]) null ) );
+				return applyInterception( constructor.newInstance( (Object[]) null ), session );
 			}
 			catch ( Exception e ) {
 				throw new InstantiationException( "Could not instantiate entity: ", mappedClass, e );
@@ -94,15 +95,15 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		}
 	}
 
-	protected Object applyInterception(Object entity) {
+	protected Object applyInterception(Object entity, SharedSessionContractImplementor session) {
 		return entity;
 	}
 
-	public Object instantiate(Serializable id) {
+	public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
 		final boolean useEmbeddedIdentifierInstanceAsEntity = embeddedIdentifier &&
 				id != null &&
 				id.getClass().equals(mappedClass);
-		return useEmbeddedIdentifierInstanceAsEntity ? id : instantiate();
+		return useEmbeddedIdentifierInstanceAsEntity ? id : instantiate(session);
 	}
 
 	public boolean isInstance(Object object) {

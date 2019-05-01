@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.PersistentClass;
 
 public class DynamicMapInstantiator implements Instantiator {
@@ -36,11 +37,11 @@ public class DynamicMapInstantiator implements Instantiator {
 		}
 	}
 
-	public final Object instantiate(Serializable id) {
-		return instantiate();
+	public final Object instantiate(Serializable id, SharedSessionContractImplementor session) {
+		return instantiate(session);
 	}
 
-	public final Object instantiate() {
+	public final Object instantiate(SharedSessionContractImplementor session) {
 		Map map = generateMap();
 		if ( entityName!=null ) {
 			map.put( KEY, entityName );

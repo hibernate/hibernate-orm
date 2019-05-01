@@ -81,7 +81,7 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 	* This method does not populate the component parent
 	*/
 	public Object instantiate() throws HibernateException {
-		return instantiator.instantiate();
+		return instantiator.instantiate(null);
 	}
 
 	public Object getParent(Object component) {

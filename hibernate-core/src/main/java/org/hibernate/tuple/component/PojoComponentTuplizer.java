@@ -14,6 +14,7 @@ import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -165,11 +166,11 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			}
 		}
 
-		public Object instantiate(Serializable id) {
+		public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
 			throw new AssertionFailure( "ProxiedInstantiator can only be used to instantiate component" );
 		}
 
-		public Object instantiate() {
+		public Object instantiate(SharedSessionContractImplementor session) {
 			return factory.getProxy();
 		}
 

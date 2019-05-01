@@ -82,7 +82,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			StatefulPersistenceContext.class.getName()
 	);
 
-	private static final boolean TRACE_ENABLED = LOG.isTraceEnabled();
 	private static final int INIT_COLL_SIZE = 8;
 
 	private SharedSessionContractImplementor session;
@@ -913,7 +912,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void initializeNonLazyCollections() throws HibernateException {
 		if ( loadCounter == 0 ) {
-			if ( TRACE_ENABLED ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Initializing non-lazy collections" );
 			}
 
@@ -1436,8 +1435,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @throws IOException serialization errors.
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		final boolean tracing = LOG.isTraceEnabled();
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Serializing persistence-context" );
 		}
 
@@ -1445,7 +1443,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		oos.writeBoolean( hasNonReadOnlyEntities );
 
 		oos.writeInt( entitiesByKey.size() );
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Starting serialization of [" + entitiesByKey.size() + "] entitiesByKey entries" );
 		}
 		for ( Map.Entry<EntityKey,Object> entry : entitiesByKey.entrySet() ) {
@@ -1454,7 +1452,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( entitiesByUniqueKey.size() );
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Starting serialization of [" + entitiesByUniqueKey.size() + "] entitiesByUniqueKey entries" );
 		}
 		for ( Map.Entry<EntityUniqueKey,Object> entry : entitiesByUniqueKey.entrySet() ) {
@@ -1463,7 +1461,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( proxiesByKey.size() );
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Starting serialization of [" + proxiesByKey.size() + "] proxiesByKey entries" );
 		}
 		for ( Map.Entry<EntityKey,Object> entry : proxiesByKey.entrySet() ) {
@@ -1472,7 +1470,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( entitySnapshotsByKey.size() );
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Starting serialization of [" + entitySnapshotsByKey.size() + "] entitySnapshotsByKey entries" );
 		}
 		for ( Map.Entry<EntityKey,Object> entry : entitySnapshotsByKey.entrySet() ) {
@@ -1483,7 +1481,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entityEntryContext.serialize( oos );
 
 		oos.writeInt( collectionsByKey.size() );
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Starting serialization of [" + collectionsByKey.size() + "] collectionsByKey entries" );
 		}
 		for ( Map.Entry<CollectionKey,PersistentCollection> entry : collectionsByKey.entrySet() ) {
@@ -1492,7 +1490,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( collectionEntries.size() );
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Starting serialization of [" + collectionEntries.size() + "] collectionEntries entries" );
 		}
 		for ( Map.Entry<PersistentCollection,CollectionEntry> entry : collectionEntries.entrySet() ) {
@@ -1501,7 +1499,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( arrayHolders.size() );
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Starting serialization of [" + arrayHolders.size() + "] arrayHolders entries" );
 		}
 		for ( Map.Entry<Object,PersistentCollection> entry : arrayHolders.entrySet() ) {
@@ -1510,7 +1508,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( nullifiableEntityKeys.size() );
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Starting serialization of [" + nullifiableEntityKeys.size() + "] nullifiableEntityKey entries" );
 		}
 		for ( EntityKey entry : nullifiableEntityKeys ) {
@@ -1532,8 +1530,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public static StatefulPersistenceContext deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-		final boolean tracing = LOG.isTraceEnabled();
-		if ( tracing ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Deserializing persistence-context" );
 		}
 		final StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
@@ -1550,7 +1547,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			rtn.hasNonReadOnlyEntities = ois.readBoolean();
 
 			int count = ois.readInt();
-			if ( tracing ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
 			}
 			rtn.entitiesByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
@@ -1559,7 +1556,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( tracing ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
 			}
 			rtn.entitiesByUniqueKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
@@ -1568,7 +1565,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( tracing ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] proxiesByKey entries" );
 			}
 			//noinspection unchecked
@@ -1589,14 +1586,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				}
 				else {
 					// otherwise, the proxy was pruned during the serialization process
-					if ( tracing ) {
+					if ( LOG.isTraceEnabled() ) {
 						LOG.trace( "Encountered pruned proxy" );
 					}
 				}
 			}
 
 			count = ois.readInt();
-			if ( tracing ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
 			}
 			rtn.entitySnapshotsByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
@@ -1607,7 +1604,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			rtn.entityEntryContext = EntityEntryContext.deserialize( ois, rtn );
 
 			count = ois.readInt();
-			if ( tracing ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
 			}
 			rtn.collectionsByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
@@ -1616,7 +1613,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( tracing ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionEntries entries" );
 			}
 			rtn.collectionEntries = IdentityMap.instantiateSequenced( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
@@ -1628,7 +1625,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( tracing ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] arrayHolders entries" );
 			}
 			rtn.arrayHolders = new IdentityHashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
@@ -1637,7 +1634,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( tracing ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] nullifiableEntityKey entries" );
 			}
 			rtn.nullifiableEntityKeys = new HashSet<>();

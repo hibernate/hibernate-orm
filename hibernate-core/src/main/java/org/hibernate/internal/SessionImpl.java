@@ -213,7 +213,6 @@ public final class SessionImpl
 		extends AbstractSessionImpl
 		implements EventSource, SessionImplementor, HibernateEntityManagerImplementor {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
-	private static final boolean TRACE_ENABLED = log.isTraceEnabled();
 
 
 	private static final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
@@ -288,7 +287,7 @@ public final class SessionImpl
 		setDefaultProperties();
 		applyProperties();
 
-		if ( TRACE_ENABLED ) {
+		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );
 		}
 	}
@@ -423,7 +422,7 @@ public final class SessionImpl
 	}
 
 	public void closeWithoutOpenChecks() throws HibernateException {
-		if ( TRACE_ENABLED ) {
+		if ( log.isTraceEnabled() ) {
 			log.tracef( "Closing session [%s]", getSessionIdentifier() );
 		}
 
@@ -961,7 +960,7 @@ public final class SessionImpl
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, Set transientEntities)
 			throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		if ( TRACE_ENABLED && persistenceContext.isRemovingOrphanBeforeUpates() ) {
+		if ( log.isTraceEnabled() && persistenceContext.isRemovingOrphanBeforeUpates() ) {
 			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
 		}
 		fireDelete(
@@ -974,7 +973,7 @@ public final class SessionImpl
 				),
 				transientEntities
 		);
-		if ( TRACE_ENABLED && persistenceContext.isRemovingOrphanBeforeUpates() ) {
+		if ( log.isTraceEnabled() && persistenceContext.isRemovingOrphanBeforeUpates() ) {
 			logRemoveOrphanBeforeUpdates( "after continuing", entityName, object );
 		}
 	}
@@ -983,7 +982,7 @@ public final class SessionImpl
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
 		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
 		// ordering is improved.
-		if ( TRACE_ENABLED ) {
+		if ( log.isTraceEnabled() ) {
 			logRemoveOrphanBeforeUpdates( "begin", entityName, child );
 		}
 		persistenceContext.beginRemoveOrphanBeforeUpdates();
@@ -993,7 +992,7 @@ public final class SessionImpl
 		}
 		finally {
 			persistenceContext.endRemoveOrphanBeforeUpdates();
-			if ( TRACE_ENABLED ) {
+			if ( log.isTraceEnabled() ) {
 				logRemoveOrphanBeforeUpdates( "end", entityName, child );
 			}
 		}
@@ -2356,7 +2355,7 @@ public final class SessionImpl
 		StringBuilder buf = new StringBuilder( 500 )
 				.append( "SessionImpl(" ).append( System.identityHashCode( this ) );
 		if ( !isClosed() ) {
-			if ( TRACE_ENABLED ) {
+			if ( log.isTraceEnabled() ) {
 				buf.append( persistenceContext )
 					.append( ";" )
 					.append( actionQueue );
@@ -3147,7 +3146,6 @@ public final class SessionImpl
 				return;
 			}
 
-			final boolean debugEnabled = log.isDebugEnabled();
 			for ( Serializable pk : getPersistenceContext().getNaturalIdHelper()
 					.getCachedPkResolutions( entityPersister ) ) {
 				final EntityKey entityKey = generateEntityKey( pk, entityPersister );
@@ -3155,7 +3153,7 @@ public final class SessionImpl
 				final EntityEntry entry = getPersistenceContext().getEntry( entity );
 
 				if ( entry == null ) {
-					if ( debugEnabled ) {
+					if ( log.isDebugEnabled() ) {
 						log.debug(
 								"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : "
 										+ MessageHelper.infoString( entityPersister, pk, getFactory() )
@@ -3975,7 +3973,7 @@ public final class SessionImpl
 	 * @throws IOException Indicates a general IO stream exception
 	 */
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		if ( TRACE_ENABLED ) {
+		if ( log.isTraceEnabled() ) {
 			log.tracef( "Serializing Session [%s]", getSessionIdentifier() );
 		}
 
@@ -3996,7 +3994,7 @@ public final class SessionImpl
 	 * @throws ClassNotFoundException Indicates a class resolution issue
 	 */
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
-		if ( TRACE_ENABLED ) {
+		if ( log.isTraceEnabled() ) {
 			log.tracef( "Deserializing Session [%s]", getSessionIdentifier() );
 		}
 

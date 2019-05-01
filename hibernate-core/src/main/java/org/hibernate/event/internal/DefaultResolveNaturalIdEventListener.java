@@ -54,8 +54,7 @@ public class DefaultResolveNaturalIdEventListener
 	protected Serializable resolveNaturalId(final ResolveNaturalIdEvent event) {
 		final EntityPersister persister = event.getEntityPersister();
 
-		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Attempting to resolve: {0}#{1}",
 					MessageHelper.infoString( persister ),
@@ -65,7 +64,7 @@ public class DefaultResolveNaturalIdEventListener
 
 		Serializable entityId = resolveFromCache( event );
 		if ( entityId != null ) {
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Resolved object in cache: {0}#{1}",
 						MessageHelper.infoString( persister ),
@@ -75,7 +74,7 @@ public class DefaultResolveNaturalIdEventListener
 			return entityId;
 		}
 
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Object not resolved in any cache: {0}#{1}",
 					MessageHelper.infoString( persister ),

@@ -140,8 +140,7 @@ public final class TwoPhaseLoad {
 		final Serializable id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
 
-		final boolean debugEnabled = LOG.isDebugEnabled();
-		if ( debugEnabled ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Resolving attributes for %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )
@@ -209,7 +208,7 @@ public final class TwoPhaseLoad {
 		final SessionFactoryImplementor factory = session.getFactory();
 		if ( persister.canWriteToCache() && session.getCacheMode().isPutEnabled() ) {
 
-			if ( debugEnabled ) {
+			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
 						"Adding entity to second-level cache: %s",
 						MessageHelper.infoString( persister, id, session.getFactory() )
@@ -301,7 +300,7 @@ public final class TwoPhaseLoad {
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}
 
-		if ( debugEnabled ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Done materializing entity %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )

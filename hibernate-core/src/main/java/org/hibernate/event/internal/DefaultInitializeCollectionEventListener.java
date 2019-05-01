@@ -42,8 +42,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			throw new HibernateException( "collection was evicted" );
 		}
 		if ( !collection.wasInitialized() ) {
-			final boolean traceEnabled = LOG.isTraceEnabled();
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Initializing collection {0}",
 						MessageHelper.collectionInfoString(
@@ -64,16 +63,16 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			);
 
 			if ( foundInCache ) {
-				if ( traceEnabled ) {
+				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection initialized from cache" );
 				}
 			}
 			else {
-				if ( traceEnabled ) {
+				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection not cached" );
 				}
 				ce.getLoadedPersister().initialize( ce.getLoadedKey(), source );
-				if ( traceEnabled ) {
+				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection initialized" );
 				}
 

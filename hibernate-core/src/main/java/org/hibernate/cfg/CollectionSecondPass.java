@@ -46,15 +46,14 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	public void doSecondPass(java.util.Map persistentClasses)
 			throws MappingException {
-		final boolean debugEnabled = LOG.isDebugEnabled();
-		if ( debugEnabled ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Second pass for collection: %s", collection.getRole() );
 		}
 
 		secondPass( persistentClasses, localInheritedMetas ); // using local since the inheritedMetas at this point is not the correct map since it is always the empty map
 		collection.createAllKeys();
 
-		if ( debugEnabled ) {
+		if ( LOG.isDebugEnabled() ) {
 			String msg = "Mapped collection key: " + columns( collection.getKey() );
 			if ( collection.isIndexed() )
 				msg += ", index: " + columns( ( (IndexedCollection) collection ).getIndex() );

@@ -159,7 +159,6 @@ import org.hibernate.type.TypeResolver;
  */
 public class ModelBinder {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ModelBinder.class );
-	private static final boolean debugEnabled = log.isDebugEnabled();
 
 	private final MetadataBuildingContext metadataBuildingContext;
 
@@ -3139,7 +3138,7 @@ public class ModelBinder {
 
 			collectionBinding.createAllKeys();
 
-			if ( debugEnabled ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf( "Mapped collection : " + getPluralAttributeSource().getAttributeRole().getFullPath() );
 				log.debugf( "   + table -> " + getCollectionBinding().getTable().getName() );
 				log.debugf( "   + key -> " + columns( getCollectionBinding().getKey() ) );
@@ -3264,7 +3263,7 @@ public class ModelBinder {
 			}
 
 
-			if ( debugEnabled ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf( "Mapping collection: %s -> %s", collectionBinding.getRole(), collectionBinding.getCollectionTable().getName() );
 			}
 
@@ -3603,7 +3602,7 @@ public class ModelBinder {
 						);
 					}
 
-					if ( debugEnabled ) {
+					if ( log.isDebugEnabled() ) {
 						log.debugf(
 								"Applying many-to-many filter [%s] as [%s] to collection [%s]",
 								filterSource.getName(),

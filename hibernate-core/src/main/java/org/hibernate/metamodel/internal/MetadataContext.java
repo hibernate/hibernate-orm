@@ -200,8 +200,7 @@ class MetadataContext {
 
 	@SuppressWarnings({"unchecked"})
 	public void wrapUp() {
-		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Wrapping up metadata context..." );
 		}
 
@@ -213,7 +212,7 @@ class MetadataContext {
 			if ( PersistentClass.class.isAssignableFrom( mapping.getClass() ) ) {
 				@SuppressWarnings("unchecked")
 				final PersistentClass safeMapping = (PersistentClass) mapping;
-				if ( traceEnabled ) {
+				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
 				}
 				try {
@@ -248,7 +247,7 @@ class MetadataContext {
 					}
 				}
 				finally {
-					if ( traceEnabled ) {
+					if ( LOG.isTraceEnabled() ) {
 						LOG.trace( "Completed entity [" + safeMapping.getEntityName() + ']' );
 					}
 				}
@@ -256,7 +255,7 @@ class MetadataContext {
 			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
 				@SuppressWarnings("unchecked")
 				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
-				if ( traceEnabled ) {
+				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
 				}
 				try {
@@ -284,7 +283,7 @@ class MetadataContext {
 					}
 				}
 				finally {
-					if ( traceEnabled ) {
+					if ( LOG.isTraceEnabled() ) {
 						LOG.trace( "Completed mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
 					}
 				}

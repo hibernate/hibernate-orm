@@ -26,7 +26,6 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAccess {
 	private static final Logger log = Logger.getLogger( AbstractReadWriteAccess.class );
-	private static final boolean DEBUG_ENABLED = log.isDebugEnabled();
 
 	private final UUID uuid = UUID.randomUUID();
 	private final AtomicLong nextLockId = new AtomicLong();
@@ -259,7 +258,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 		@Override
 		public boolean isReadable(long txTimestamp) {
-			if ( DEBUG_ENABLED ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Checking readability of read-write cache item [timestamp=`%s`, version=`%s`] : txTimestamp=`%s`",
 						(Object) timestamp,
@@ -273,7 +272,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
-			if ( DEBUG_ENABLED ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Checking writeability of read-write cache item [timestamp=`%s`, version=`%s`] : txTimestamp=`%s`, newVersion=`%s`",
 						timestamp,
@@ -346,7 +345,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
-			if ( DEBUG_ENABLED ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Checking writeability of read-write cache lock [timeout=`%s`, lockId=`%s`, version=`%s`, sourceUuid=%s, multiplicity=`%s`, unlockTimestamp=`%s`] : txTimestamp=`%s`, newVersion=`%s`",
 						timeout,

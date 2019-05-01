@@ -3423,8 +3423,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Deleting entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
 			if ( useVersion ) {
 				LOG.tracev( "Version: {0}", version );
@@ -3432,7 +3431,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( isTableCascadeDeleteEnabled( j ) ) {
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Delete handled by foreign key constraint: {0}", getTableName( j ) );
 			}
 			return; //EARLY EXIT!

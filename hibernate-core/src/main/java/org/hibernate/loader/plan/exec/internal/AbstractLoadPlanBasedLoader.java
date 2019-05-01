@@ -377,7 +377,6 @@ public abstract class AbstractLoadPlanBasedLoader {
 		if ( namedParams != null ) {
 			// assumes that types are all of span 1
 			final Iterator itr = namedParams.entrySet().iterator();
-			final boolean debugEnabled = log.isDebugEnabled();
 			int result = 0;
 			while ( itr.hasNext() ) {
 				final Map.Entry e = (Map.Entry) itr.next();
@@ -385,7 +384,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 				final TypedValue typedval = (TypedValue) e.getValue();
 				final int[] locs = getNamedParameterLocs( name );
 				for ( int loc : locs ) {
-					if ( debugEnabled ) {
+					if ( log.isDebugEnabled() ) {
 						log.debugf(
 								"bindNamedParameters() %s -> %s [%s]",
 								typedval.getValue(),

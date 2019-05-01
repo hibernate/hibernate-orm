@@ -101,7 +101,6 @@ public abstract class Loader {
 	public static final String SELECT_DISTINCT = "select distinct";
 
 	protected static final CoreMessageLogger LOG = CoreLogging.messageLogger( Loader.class );
-	protected static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
 
 	private final SessionFactoryImplementor factory;
 	private volatile ColumnNameCache columnNameCache;
@@ -984,7 +983,7 @@ public abstract class Loader {
 		int count;
 
 		for ( count = 0; count < maxRows && rs.next(); count++ ) {
-			if ( DEBUG_ENABLED ) {
+			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Result set row: %s", count );
 			}
 			Object result = getRowFromResultSet(
@@ -1412,7 +1411,6 @@ public abstract class Loader {
 			final SharedSessionContractImplementor session) {
 
 		if ( keys != null ) {
-			final boolean debugEnabled = LOG.isDebugEnabled();
 			// this is a collection initializer, so we must create a collection
 			// for each of the passed-in keys, to account for the possibility
 			// that the collection is empty and has no rows in the result set
@@ -1420,7 +1418,7 @@ public abstract class Loader {
 			for ( CollectionPersister collectionPersister : collectionPersisters ) {
 				for ( Serializable key : keys ) {
 					//handle empty collections
-					if ( debugEnabled ) {
+					if ( LOG.isDebugEnabled() ) {
 						LOG.debugf(
 								"Result set contains (possibly empty) collection: %s",
 								MessageHelper.collectionInfoString( collectionPersister, key, getFactory() )
@@ -2140,7 +2138,7 @@ public abstract class Loader {
 			int columnSpan = typedValue.getType().getColumnSpan( getFactory() );
 			int[] locs = getNamedParameterLocs( name );
 			for ( int loc : locs ) {
-				if ( DEBUG_ENABLED ) {
+				if ( LOG.isDebugEnabled() ) {
 					LOG.debugf(
 							"bindNamedParameters() %s -> %s [%s]",
 							typedValue.getValue(),

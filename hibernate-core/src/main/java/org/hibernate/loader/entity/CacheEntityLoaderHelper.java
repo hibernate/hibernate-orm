@@ -52,8 +52,6 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CacheEntityLoaderHelper.class );
 
-	private static final boolean traceEnabled = LOG.isTraceEnabled();
-
 	public enum EntityStatus {
 		MANAGED,
 		REMOVED_ENTITY_MARKER,
@@ -274,7 +272,7 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final EntityPersister subclassPersister;
 
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Converting second-level cache entry [%s] into entity : %s",
 					entry,

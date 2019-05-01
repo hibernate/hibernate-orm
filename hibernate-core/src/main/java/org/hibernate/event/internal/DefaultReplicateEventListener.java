@@ -82,9 +82,8 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			oldVersion = persister.getCurrentVersion( id, source );
 		}
 
-		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( oldVersion != null ) {
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Found existing row for {0}", MessageHelper.infoString(
 						persister,
@@ -109,7 +108,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			if ( canReplicate ) {
 				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
 			}
-			else if ( traceEnabled ) {
+			else if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "No need to replicate" );
 			}
 
@@ -117,7 +116,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		}
 		else {
 			// no existing row - do an insert
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"No existing row, replicating new instance {0}",
 						MessageHelper.infoString( persister, id, source.getFactory() )

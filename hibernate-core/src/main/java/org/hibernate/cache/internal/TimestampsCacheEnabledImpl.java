@@ -23,7 +23,6 @@ import org.jboss.logging.Logger;
  */
 public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	private static final Logger log = Logger.getLogger( TimestampsCacheEnabledImpl.class );
-	private static final boolean DEBUG_ENABLED = log.isDebugEnabled();
 
 	private final TimestampsRegion timestampsRegion;
 
@@ -48,7 +47,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final Long ts = regionFactory.nextTimestamp() + regionFactory.getTimeout();
 
 		for ( Serializable space : spaces ) {
-			if ( DEBUG_ENABLED ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
 
@@ -78,7 +77,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final Long ts = session.getFactory().getCache().getRegionFactory().nextTimestamp();
 
 		for (Serializable space : spaces) {
-			if ( DEBUG_ENABLED ) {
+			if ( log.isDebugEnabled() ) {
 				log.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
 			}
 
@@ -113,7 +112,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 				}
 			}
 			else {
-				if ( DEBUG_ENABLED ) {
+				if ( log.isDebugEnabled() ) {
 					log.debugf(
 							"[%s] last update timestamp: %s",
 							space,

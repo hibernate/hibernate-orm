@@ -35,9 +35,6 @@ import org.hibernate.type.TypeHelper;
 public class QueryResultsCacheImpl implements QueryResultsCache {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QueryResultsCacheImpl.class );
 
-	private static final boolean DEBUGGING = LOG.isDebugEnabled();
-	private static final boolean TRACING = LOG.isTraceEnabled();
-
 	private final QueryResultsRegion cacheRegion;
 	private final TimestampsCache timestampsCache;
 
@@ -60,7 +57,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final List results,
 			final Type[] returnTypes,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		if ( DEBUGGING ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), session.getTransactionStartTimestamp() );
 		}
 
@@ -76,12 +73,12 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 				resultRowForCache = TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null );
 			}
 			resultsCopy.add( resultRowForCache );
-			if ( TRACING ) {
+			if ( LOG.isTraceEnabled() ) {
 				logCachedResultRowDetails( returnTypes, aResult );
 			}
 		}
 
-		if ( TRACING ) {
+		if ( LOG.isTraceEnabled() ) {
 			logCachedResultDetails( key, null, returnTypes, resultsCopy );
 		}
 
@@ -102,7 +99,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	private static void logCachedResultDetails(QueryKey key, Set querySpaces, Type[] returnTypes, List result) {
-		if ( !TRACING ) {
+		if ( !LOG.isTraceEnabled() ) {
 			return;
 		}
 		LOG.trace( "key.hashCode=" + key.hashCode() );
@@ -148,26 +145,26 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final String[] spaces,
 			final Type[] returnTypes,
 			final SharedSessionContractImplementor session) {
-		if ( DEBUGGING ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
 		}
 
 		final CacheItem cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
-			if ( DEBUGGING ) {
+			if ( LOG.isDebugEnabled() ) {
 				LOG.debug( "Query results were not found in cache" );
 			}
 			return null;
 		}
 
 		if ( !timestampsCache.isUpToDate( spaces, cacheItem.timestamp, session ) ) {
-			if ( DEBUGGING ) {
+			if ( LOG.isDebugEnabled() ) {
 				LOG.debug( "Cached query results were not up-to-date" );
 			}
 			return null;
 		}
 
-		if ( DEBUGGING ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Returning cached query results" );
 		}
 
@@ -215,7 +212,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 				result.add(
 						TypeHelper.assemble( (Serializable[]) cached.get( i ), returnTypes, session, null )
 				);
-				if ( TRACING ) {
+				if ( LOG.isTraceEnabled() ) {
 					logCachedResultRowDetails( returnTypes, result.get( i ) );
 				}
 			}
@@ -231,7 +228,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	private static void logCachedResultRowDetails(Type[] returnTypes, Object[] tuple) {
-		if ( !TRACING ) {
+		if ( !LOG.isTraceEnabled() ) {
 			return;
 		}
 		if ( tuple == null ) {

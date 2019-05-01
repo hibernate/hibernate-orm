@@ -44,8 +44,6 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultLoadEventListener.class );
 
-	private static final boolean traceEnabled = LOG.isTraceEnabled();
-
 	/**
 	 * Handle the given load event.
 	 *
@@ -234,7 +232,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Loading entity: {0}",
 					MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
@@ -282,7 +280,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEventListener.LoadType options,
 			final PersistenceContext persistenceContext,
 			final Object proxy) {
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Entity proxy found in session cache" );
 		}
 		LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
@@ -324,7 +322,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		Object existing = persistenceContext.getEntity( keyToLoad );
 		if ( existing != null ) {
 			// return existing object or initialized proxy (unless deleted)
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Entity found in session cache" );
 			}
 			if ( options.isCheckDeleted() ) {
@@ -336,7 +334,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			}
 			return existing;
 		}
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Creating new proxy for entity" );
 		}
 		// return new uninitialized proxy
@@ -415,7 +413,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Attempting to resolve: {0}",
 					MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
@@ -435,7 +433,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 		entity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( event, persister, keyToLoad );
 		if ( entity != null ) {
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Resolved object in second-level cache: {0}",
 						MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
@@ -443,7 +441,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			}
 		}
 		else {
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Object not resolved in any cache: {0}",
 						MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )

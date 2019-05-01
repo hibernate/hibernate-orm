@@ -121,7 +121,6 @@ public class ParameterBinder {
 			final NamedParameterSource source,
 			final SessionImplementor session) throws SQLException, HibernateException {
 		if ( namedParams != null ) {
-			final boolean debugEnabled = LOG.isDebugEnabled();
 			// assumes that types are all of span 1
 			final Iterator iter = namedParams.entrySet().iterator();
 			int result = 0;
@@ -131,7 +130,7 @@ public class ParameterBinder {
 				final TypedValue typedVal = (TypedValue) e.getValue();
 				final int[] locations = source.getNamedParameterLocations( name );
 				for ( int location : locations ) {
-					if ( debugEnabled ) {
+					if ( LOG.isDebugEnabled() ) {
 						LOG.debugf(
 								"bindNamedParameters() %s -> %s [%s]",
 								typedVal.getValue(),

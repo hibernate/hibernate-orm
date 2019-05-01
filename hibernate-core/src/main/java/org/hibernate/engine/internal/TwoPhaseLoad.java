@@ -13,6 +13,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.profile.Fetch;
@@ -172,6 +173,11 @@ public final class TwoPhaseLoad {
 					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
 					// so do not assign the resolved, unitialized PersistentCollection back to hydratedState[i].
 					types[i].resolve( value, session, entity, overridingEager );
+				}
+				// HHH-13377
+				LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor(entity);
+				if (interceptor != null) {
+					interceptor.attributeUninitialized(propertyNames[i]);
 				}
 			}
 			else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {

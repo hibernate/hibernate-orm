@@ -35,6 +35,7 @@ public interface LazyPropertyInitializer {
 	interface InterceptorImplementor {
 		Set<String> getInitializedLazyAttributeNames();
 		void attributeInitialized(String name);
+		void attributeUninitialized(String name);
 	}
 
 	/**

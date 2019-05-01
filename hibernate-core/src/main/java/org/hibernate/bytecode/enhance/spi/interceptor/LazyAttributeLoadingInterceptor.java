@@ -331,6 +331,16 @@ public class LazyAttributeLoadingInterceptor
 	}
 
 	@Override
+	public void attributeUninitialized(String name) {
+		if ( initializedLazyFields != null ) {
+			initializedLazyFields.remove(name);
+			if ( initializedLazyFields.isEmpty() ) {
+				initializedLazyFields = null;
+			}
+		}
+	}
+
+	@Override
 	public Set<String> getInitializedLazyAttributeNames() {
 		return initializedLazyFields == null ? Collections.<String>emptySet() : initializedLazyFields;
 	}

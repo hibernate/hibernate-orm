@@ -218,6 +218,10 @@ public class BasicEnhancementTest {
         @Override
         public void attributeInitialized(String name) {
         }
+
+        @Override
+        public void attributeUninitialized(String name) {
+        }
     }
 
     // --- //

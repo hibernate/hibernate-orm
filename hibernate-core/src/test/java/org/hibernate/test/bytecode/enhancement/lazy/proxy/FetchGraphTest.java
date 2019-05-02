@@ -42,12 +42,6 @@ import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.bytecode.enhancement.lazy.group.AbstractKey;
-import org.hibernate.test.bytecode.enhancement.lazy.group.GenericKey;
-import org.hibernate.test.bytecode.enhancement.lazy.group.MoreSpecializedKey;
-import org.hibernate.test.bytecode.enhancement.lazy.group.RoleEntity;
-import org.hibernate.test.bytecode.enhancement.lazy.group.SpecializedEntity;
-import org.hibernate.test.bytecode.enhancement.lazy.group.SpecializedKey;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -280,6 +274,11 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
 
+		assert sessionFactory().getMetamodel()
+				.entityPersister( RoleEntity.class )
+				.getInstrumentationMetadata()
+				.isEnhancedForLazyLoading();
+
 		inTransaction(
 				session -> {
 					final String qry = "select e from RoleEntity e";
@@ -474,7 +473,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					specializedKey.addRole( roleEntity );
 					roleEntity.setKey( specializedKey );
 					roleEntity.setSpecializedKey( moreSpecializedKey );
-
+					moreSpecializedKey.addRole( roleEntity );
 					session.save( specializedEntity );
 					session.save( roleEntity );
 					session.save( specializedKey );

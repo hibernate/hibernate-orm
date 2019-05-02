@@ -5535,6 +5535,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
+		return getBytecodeEnhancementMetadata();
+	}
+
+	@Override
+	public BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return entityMetamodel.getBytecodeEnhancementMetadata();
 	}
 

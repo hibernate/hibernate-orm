@@ -208,10 +208,6 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		LOG.trace( "Merging transient instance" );
 
 		final Object entity = event.getEntity();
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-
-		}
-
 		final EventSource session = event.getSession();
 
 		final String entityName = event.getEntityName();
@@ -253,7 +249,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) copy;
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 			if ( interceptor == null ) {
-				persister.getInstrumentationMetadata().injectInterceptor( copy, id, session );
+				persister.getBytecodeEnhancementMetadata().injectInterceptor( copy, id, session );
 			}
 		}
 	}

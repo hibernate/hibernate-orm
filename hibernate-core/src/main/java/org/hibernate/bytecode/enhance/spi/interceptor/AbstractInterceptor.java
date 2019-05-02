@@ -6,13 +6,12 @@
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractInterceptor implements PersistentAttributeInterceptor, SessionAssociableInterceptor {
+public abstract class AbstractInterceptor implements SessionAssociableInterceptor {
 	private final String entityName;
 
 	private transient SharedSessionContractImplementor session;

@@ -9,13 +9,12 @@ package org.hibernate.bytecode.enhance.spi.interceptor;
 import java.util.Set;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
 /**
  * @author Steve Ebersole
  */
 @Incubating
-public interface BytecodeLazyAttributeInterceptor extends PersistentAttributeInterceptor, SessionAssociableInterceptor {
+public interface BytecodeLazyAttributeInterceptor extends SessionAssociableInterceptor {
 	/**
 	 * The name of the entity this interceptor is meant to intercept
 	 */

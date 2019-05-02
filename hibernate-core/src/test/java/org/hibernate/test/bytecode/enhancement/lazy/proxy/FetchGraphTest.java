@@ -40,6 +40,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -57,7 +58,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SuppressWarnings({"unused", "WeakerAccess","ResultOfMethodCallIgnored"})
 @TestForIssue( jiraKey = "HHH-11147" )
 @RunWith( BytecodeEnhancerRunner.class )
-@CustomEnhancementContext( EnhancerTestContext.class )
+@EnhancementOptions( lazyLoading = true )
 public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 
 

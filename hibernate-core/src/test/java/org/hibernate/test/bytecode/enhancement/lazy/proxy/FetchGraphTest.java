@@ -126,6 +126,30 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 
 
 	@Test
+	public void testLazyAssociationSameAsNonLazyInPC() {
+
+		assert sessionFactory().getMetamodel()
+				.entityPersister( DEntity.class )
+				.getInstrumentationMetadata()
+				.isEnhancedForLazyLoading();
+
+		inSession(
+				session -> {
+					final AEntity entityA = session.get( AEntity.class, 1L );
+
+					final DEntity entityD = session.load( DEntity.class, 1L );
+					assert !Hibernate.isInitialized( entityD );
+					Hibernate.initialize( entityD );
+					assert Hibernate.isPropertyInitialized( entityD, "a" );
+					assert entityA.getOid() == entityD.getA().getOid();
+					assert session.getPersistenceContext().getEntry( entityA ) ==
+							session.getPersistenceContext().getEntry( entityD.getA() );
+					assert entityA == entityD.getA();
+				}
+		);
+	}
+
+	@Test
 	public void testRandomAccess() {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();

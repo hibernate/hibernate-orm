@@ -18,6 +18,7 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.bytecode.enhancement.lazy.group.BidirectionalLazyGroupsInEmbeddableTest;
@@ -34,10 +35,7 @@ import static org.junit.Assert.assertEquals;
 
 @TestForIssue(jiraKey = "HHH-11147")
 @RunWith(BytecodeEnhancerRunner.class)
-@CustomEnhancementContext({
-		EnhancerTestContext.class,
-		BidirectionalLazyGroupsInEmbeddableTest.NoDirtyCheckEnhancementContext.class
-})
+@EnhancementOptions( lazyLoading = true )
 public class LazyGroupWithInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void queryEntityWithAssociationToAbstract() {

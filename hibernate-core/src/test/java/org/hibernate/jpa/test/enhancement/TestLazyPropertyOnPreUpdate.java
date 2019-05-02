@@ -51,7 +51,7 @@ public class TestLazyPropertyOnPreUpdate extends BaseEntityManagerFunctionalTest
     @Before
     public void prepare() throws Exception {
         EntityPersister ep = entityManagerFactory().getMetamodel().entityPersister( EntityWithLazyProperty.class.getName() );
-        assertTrue( ep.getInstrumentationMetadata().isEnhancedForLazyLoading() );
+        assertTrue( ep.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() );
 
         byte[] testArray = new byte[]{0x2A};
 

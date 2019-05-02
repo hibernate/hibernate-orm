@@ -178,7 +178,7 @@ public final class ForeignKeys {
 				//       It is unclear if a more complicated check would impact performance
 				//       more than just initializing the associated entity.
 				return persister
-						.getInstrumentationMetadata()
+						.getBytecodeEnhancementMetadata()
 						.extractInterceptor( self )
 						.fetchAttribute( self, propertyName );
 			}

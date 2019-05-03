@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
@@ -107,20 +108,20 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 					entity = li.getImplementation();
 				}
 			}
-//			else if ( original instanceof PersistentAttributeInterceptable ) {
-//				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) original;
-//				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-//				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-//					final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
-//					LOG.trace( "Ignoring uninitialized proxy" );
-//					event.setResult( source.load( proxyInterceptor.getEntityName(), (Serializable) proxyInterceptor.getIdentifier() ) );
-//					//EARLY EXIT!
-//					return;
-//				}
-//				else {
-//					entity = original;
-//				}
-//			}
+			else if ( original instanceof PersistentAttributeInterceptable ) {
+				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) original;
+				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+					final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
+					LOG.trace( "Ignoring uninitialized proxy" );
+					event.setResult( source.load( proxyInterceptor.getEntityName(), (Serializable) proxyInterceptor.getIdentifier() ) );
+					//EARLY EXIT!
+					return;
+				}
+				else {
+					entity = original;
+				}
+			}
 			else {
 				entity = original;
 			}

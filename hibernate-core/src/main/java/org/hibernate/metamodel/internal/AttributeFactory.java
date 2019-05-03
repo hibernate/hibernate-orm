@@ -34,12 +34,13 @@ import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MapMember;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
+import org.hibernate.metamodel.model.domain.internal.NoopMember;
 import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
 import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
@@ -471,7 +472,7 @@ public class AttributeFactory {
 						attributeContext.getPropertyMapping(),
 						attributeContext.getOwnerType(),
 						member,
-						determineSingularAssociationAttributeType( member )
+						determineSingularAssociationAttributeType( member, (EntityType) type )
 				);
 			}
 			// collection
@@ -586,7 +587,7 @@ public class AttributeFactory {
 		throw new UnsupportedOperationException( "oops, we are missing something: " + attributeContext.getPropertyMapping() );
 	}
 
-	public static Attribute.PersistentAttributeType determineSingularAssociationAttributeType(Member member) {
+	public static Attribute.PersistentAttributeType determineSingularAssociationAttributeType(Member member, EntityType type) {
 		if ( Field.class.isInstance( member ) ) {
 			return ( (Field) member ).getAnnotation( OneToOne.class ) != null
 					? Attribute.PersistentAttributeType.ONE_TO_ONE
@@ -595,10 +596,19 @@ public class AttributeFactory {
 		else if ( MapMember.class.isInstance( member ) ) {
 			return Attribute.PersistentAttributeType.MANY_TO_ONE; // curious to see how this works for non-annotated methods
 		}
-		else {
+		else if ( NoopMember.class.isInstance( member ) ) {
+			// No member exists; derive association from entity type
+			return type.isOneToOne()
+					? Attribute.PersistentAttributeType.ONE_TO_ONE
+					: Attribute.PersistentAttributeType.MANY_TO_ONE;
+		}
+		else if ( member != null ) {
 			return ( (Method) member ).getAnnotation( OneToOne.class ) != null
 					? Attribute.PersistentAttributeType.ONE_TO_ONE
 					: Attribute.PersistentAttributeType.MANY_TO_ONE;
+		}
+		else {
+			throw new IllegalArgumentException( "Cannot determine singular association type from given member [" + member + "] and type [" + type + "]" );
 		}
 	}
 
@@ -624,6 +634,9 @@ public class AttributeFactory {
 
 			if ( member == null ) {
 				// assume we have a MAP entity-mode "class"
+				declaredType = propertyMapping.getType().getReturnedClass();
+			}
+			else if ( NoopMember.class.isInstance( member ) ) {
 				declaredType = propertyMapping.getType().getReturnedClass();
 			}
 			else if ( Field.class.isInstance( member ) ) {
@@ -906,8 +919,14 @@ public class AttributeFactory {
 		else if ( Method.class.isInstance( member ) ) {
 			type = ( (Method) member ).getGenericReturnType();
 		}
-		else {
+		else if ( MapMember.class.isInstance( member ) ){
 			type = ( (MapMember) member ).getType();
+		}
+		else if ( NoopMember.class.isInstance( member ) ) {
+			type = null;
+		}
+		else {
+			throw new IllegalArgumentException( "Unexpected member type [" + member.getClass().getName() + "] for member [" + member.getName() + "] in class [" + member.getDeclaringClass() + "]" );
 		}
 		//this is a raw type
 		if ( type instanceof Class ) {

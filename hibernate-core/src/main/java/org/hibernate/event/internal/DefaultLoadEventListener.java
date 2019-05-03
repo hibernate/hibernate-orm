@@ -261,9 +261,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 					if ( status == Status.DELETED || status == Status.GONE ) {
 						return null;
 					}
-
-					return managed;
 				}
+				return managed;
 			}
 
 			// if the entity defines a HibernateProxy factory, see if there is an

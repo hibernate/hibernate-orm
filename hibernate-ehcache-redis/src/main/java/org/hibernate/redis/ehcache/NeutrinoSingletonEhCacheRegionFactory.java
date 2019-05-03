@@ -6,9 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +17,8 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.util.HibernateEhcacheUtils;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.redis.ehcache.exceptions.SystemException;
+import org.hibernate.redis.ehcache.redis.RedisClientMode;
 import org.jboss.logging.Logger;
 import org.redisson.Redisson;
 import org.redisson.api.BatchOptions;
@@ -32,9 +32,6 @@ import org.redisson.config.ReadMode;
 import org.redisson.config.SubscriptionMode;
 import org.redisson.connection.balancer.LoadBalancer;
 import org.redisson.connection.balancer.RoundRobinLoadBalancer;
-
-import org.hibernate.redis.ehcache.exceptions.SystemException;
-import org.hibernate.redis.ehcache.redis.RedisClientMode;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.Configuration;
@@ -51,9 +48,8 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 
 	private static final String HIBERNATE_CACHE_REDIS_CONFIGURATION_RESOURCE_NAME = "hibernate.cache.redis.cfg";
 	private static final String HIBERNATE_CACHE_DEFAULT_REDIS_CONFIGURATION_FILE = "config-properties/redis-ehcache-config.properties";
-	private static final String ACTIVE_PROFILES_PROPERTY_NAME = "spring.profiles.active";
-	private static final String COMMA_SEPARATOR = ",";
-
+	private static final String REDIS_CACHE_MODE = "hib.redis.cache.mode";
+	
 	private static final String REDIS_SERVER_IDLE_CONNECTION_TIMEOUT = "hib.redis.server.idle.connection.timeout";
 	private static final String REDIS_SERVER_PING_INTERVAL = "hib.redis.server.ping.interval";
 	private static final String REDIS_SERVER_PING_TIMEOUT = "hib.redis.server.ping.timeout";
@@ -66,7 +62,7 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 	private static final String REDIS_SERVER_SUBS_CONN_MIN_IDLE_SIZE = "hib.redis.server.subscription.connection.min.idle.size";
 	private static final String REDIS_SERVER_SUBS_CONN_POOL_SIZE = "hib.redis.server.subscription.connection.min.idle.size";
 	private static final String REDIS_SERVER_DATABASE_ID = "hib.redis.server.database.id";
-	private static final String REDIS_SERVER_PASSWORD = "hib.redis.server.password";
+	private static final String REDIS_SERVER_PASSWORD_KEY = "hib.redis.server.password";
 
 	private static final String REDIS_SINGLE_SERVER_ADDRESS = "hib.redis.server.address";
 	private static final String REDIS_SINGLE_SERVER_CLIENT_NAME = "hib.redis.server.client.name";
@@ -112,20 +108,13 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 		try {
 			String configurationResourceName = null;
 			String redisConfigurationResourceName = null;
-			RedisClientMode redisClientMode = null;
 
 			if (properties != null) {
 				configurationResourceName = (String) properties.get(NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME);
-
-				redisClientMode = getRedisClientMode((String) properties.get(ACTIVE_PROFILES_PROPERTY_NAME));
-				if (redisClientMode.isRedisEnabled()) {
-					redisConfigurationResourceName = (String) properties
-							.get(HIBERNATE_CACHE_REDIS_CONFIGURATION_RESOURCE_NAME);
-					if (redisConfigurationResourceName == null || redisConfigurationResourceName.length() > 0) {
-						redisConfigurationResourceName = HIBERNATE_CACHE_DEFAULT_REDIS_CONFIGURATION_FILE;
-					}
-				} else {
-					throw new SystemException("REDIS profile not found in " + ACTIVE_PROFILES_PROPERTY_NAME);
+				redisConfigurationResourceName = (String) properties
+						.get(HIBERNATE_CACHE_REDIS_CONFIGURATION_RESOURCE_NAME);
+				if (redisConfigurationResourceName == null || redisConfigurationResourceName.length() > 0) {
+					redisConfigurationResourceName = HIBERNATE_CACHE_DEFAULT_REDIS_CONFIGURATION_FILE;
 				}
 			} else {
 				throw new SystemException("System Properties Not Found");
@@ -142,10 +131,17 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 			if (redisson == null && redisConfigurationResourceName != null
 					&& redisConfigurationResourceName.length() > 0) {
 				URL url = createURL(redisConfigurationResourceName);
+				Properties prop = loadPropertiesFromURL(url);
+				RedisClientMode redisClientMode = getRedisClientMode(prop);
+				if(!redisClientMode.isRedisEnabled()) {
+					throw new SystemException("Wrong Redis Client Mode. Allowed values for property '"
+							+ REDIS_CACHE_MODE + "' are either '" + RedisClientMode.REDIS_SINGLE + "' or '"
+							+ RedisClientMode.REDIS_SENTINEL + "'");
+				}
 				if (redisClientMode.equals(RedisClientMode.SENTINEL)) {
-					initRedissonSentinelClient(loadPropertiesFromURL(url));
+					initRedissonSentinelClient(prop);
 				} else {
-					initRedissonSingleServerClient(loadPropertiesFromURL(url));
+					initRedissonSingleServerClient(prop);
 				}
 
 			}
@@ -168,28 +164,21 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 			throw new CacheException(e);
 		}
 	}
-
-	private RedisClientMode getRedisClientMode(String profiles) {
-
-		if (profiles != null && profiles.length() > 0) {
-			String[] activeProfiles = profiles.split(COMMA_SEPARATOR);
-			boolean redisEnabled = false;
-			boolean redisSentinel = false;
-			for (String profile : activeProfiles) {
-				if (profile.equals(RedisClientMode.CACHE_MODE_REDIS)) {
-					redisEnabled = true;
-				} else if (profile.equals(RedisClientMode.REDIS_SENTINEL)) {
-					redisSentinel = true;
-				}
-			}
-			if (redisEnabled) {
-				if (redisSentinel) {
-					return RedisClientMode.SENTINEL;
-				}
+	
+	private RedisClientMode getRedisClientMode(Properties prop) {
+		String redisMode = getProperty(prop, REDIS_CACHE_MODE);
+		if (redisMode != null) {
+			if (redisMode.equalsIgnoreCase(RedisClientMode.REDIS_SENTINEL)) {
+				return RedisClientMode.SENTINEL;
+			} else if (redisMode.equalsIgnoreCase(RedisClientMode.REDIS_SINGLE)) {
 				return RedisClientMode.SINGLE_SERVER;
+			} else {
+				LOG.error("Invalid property found for " + REDIS_CACHE_MODE);
+				return RedisClientMode.LOCAL;
 			}
+		} else {
+			return RedisClientMode.SINGLE_SERVER;
 		}
-		return RedisClientMode.LOCAL;
 	}
 
 	private URL createURL(String configurationResourceName) {
@@ -215,7 +204,7 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 				prop = new Properties();
 				prop.load(reader);
 			} catch (IOException e) {
-				e.printStackTrace();
+				LOG.error(e);				
 			}
 		}
 		return prop;
@@ -248,11 +237,11 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 				.setMasterConnectionPoolSize(getIntProperty(prop, REDIS_SENTINEL_MASTER_CONNECTION_POOL_SIZE))
 				.setMasterName(getProperty(prop, REDIS_SENTINEL_SERVER_MASTER_NAME)).setReadMode(ReadMode.SLAVE)
 				.setSubscriptionMode(SubscriptionMode.SLAVE).setDatabase(getIntProperty(prop, REDIS_SERVER_DATABASE_ID))
-				.setPassword(getProperty(prop, REDIS_SERVER_PASSWORD)).addSentinelAddress(getSentinelAddress(prop));
+				.setPassword(getProperty(prop, REDIS_SERVER_PASSWORD_KEY)).addSentinelAddress(getSentinelAddress(prop));
 
 		redisson = Redisson.create(redissonConfig);
 		batchOptions = getDefaultBatchOptions(prop);
-		localCachedMapOptions = getDefaultLocalCachedMapOptions(prop);
+		localCachedMapOptions = getDefaultLocalCachedMapOptions();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -278,11 +267,11 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 				.setConnectionMinimumIdleSize(getIntProperty(prop, REDIS_SINGLE_SERVER_CONNECTION_MIN_IDLE_SIZE))
 				.setConnectionPoolSize(getIntProperty(prop, REDIS_SINGLE_SERVER_CONNECTION_POOL_SIZE))
 				.setDatabase(getIntProperty(prop, REDIS_SERVER_DATABASE_ID))
-				.setPassword(getProperty(prop, REDIS_SERVER_PASSWORD));
+				.setPassword(getProperty(prop, REDIS_SERVER_PASSWORD_KEY));
 
 		redisson = Redisson.create(redissonConfig);
 		batchOptions = getDefaultBatchOptions(prop);
-		localCachedMapOptions = getDefaultLocalCachedMapOptions(prop);
+		localCachedMapOptions = getDefaultLocalCachedMapOptions();
 
 	}
 
@@ -300,15 +289,23 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 
 	private String[] getSentinelAddress(Properties prop) {
 		Set<String> strSet = new HashSet<>();
-		strSet = addToStringSet(getProperty(prop, REDIS_SENTINEL_SERVER_ADDRESS_A),strSet);
-		strSet = addToStringSet(getProperty(prop, REDIS_SENTINEL_SERVER_ADDRESS_B),strSet);
-		strSet = addToStringSet(getProperty(prop, REDIS_SENTINEL_SERVER_ADDRESS_C),strSet);
-		strSet = addToStringSet(getProperty(prop, REDIS_SENTINEL_SERVER_ADDRESS_D),strSet);
-		return strSet.toArray(new String[0]);
+		strSet = addToStringSet(getProperty(prop, REDIS_SENTINEL_SERVER_ADDRESS_A), strSet);
+		strSet = addToStringSet(getProperty(prop, REDIS_SENTINEL_SERVER_ADDRESS_B), strSet);
+		strSet = addToStringSet(getProperty(prop, REDIS_SENTINEL_SERVER_ADDRESS_C), strSet);
+		strSet = addToStringSet(getProperty(prop, REDIS_SENTINEL_SERVER_ADDRESS_D), strSet);
+
+		int index = -1;
+		String[] ret = new String[strSet.size()];
+
+		for (String str : strSet) {
+			index++;
+			ret[index] = str;
+		}
+		return ret;
 	}
 	
 	private Set<String> addToStringSet(String temp, Set<String> strSet) {
-		if(temp!=null) {
+		if (temp != null && temp.length() > 0) {
 			strSet.add(temp);
 		}
 		return strSet;
@@ -322,7 +319,7 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 				.executionMode(ExecutionMode.IN_MEMORY_ATOMIC);
 	}
 
-	private LocalCachedMapOptions<Object, Object> getDefaultLocalCachedMapOptions(Properties prop) {
+	private LocalCachedMapOptions<Object, Object> getDefaultLocalCachedMapOptions() {
 		return LocalCachedMapOptions.defaults().syncStrategy(SyncStrategy.UPDATE)
 				.reconnectionStrategy(ReconnectionStrategy.CLEAR);
 	}

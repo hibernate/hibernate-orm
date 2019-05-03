@@ -398,6 +398,11 @@ public class HQLTest extends QueryTranslatorTestCase {
 			// parser does not; so the outputs do not match here...
 			return;
 		}
+		if ( getDialect() instanceof H2Dialect ) {
+			// H2 does not have a float type. Instead, H2 aliases float to double
+			assertTranslation( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" );
+			return;
+		}
 		assertTranslation("from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0");
 	}
 

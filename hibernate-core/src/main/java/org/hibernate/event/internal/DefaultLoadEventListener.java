@@ -280,9 +280,8 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 					if ( status == Status.DELETED || status == Status.GONE ) {
 						return null;
 					}
-
-					return managed;
 				}
+				return managed;
 			}
 
 			// if the entity defines a HibernateProxy factory, see if there is an

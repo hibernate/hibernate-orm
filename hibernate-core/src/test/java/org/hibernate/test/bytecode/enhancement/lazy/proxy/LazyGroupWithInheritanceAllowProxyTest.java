@@ -87,16 +87,7 @@ public class LazyGroupWithInheritanceAllowProxyTest extends BaseNonConfigCoreFun
 				session -> {
 					final List<Order> orders = session.createQuery( "select o from Order o", Order.class ).list();
 
-					// todo (HHH-11147) : this is a regression from 4.x
-					//		- the condition is that the association from Order to Customer points to the non-root
-					//			entity (Customer) rather than one of its concrete sub-types (DomesticCustomer,
-					//			ForeignCustomer).  We'd have to read the "other table" to be able to resolve the
-					// 			concrete type.  The same holds true for associations to versioned entities as well.
-					//			The only viable solution I see would be to join to the "other side" and read the
-					//			version/discriminator[1].  But of course that means doing the join which is generally
-					//			what the application is trying to avoid in the first place
-					//expectedQueryCount.set( 1 );
-					expectedQueryCount.set( 3 );
+					expectedQueryCount.set( 1 );
 
 					assertEquals( expectedQueryCount.get(), stats.getPrepareStatementCount() );
 

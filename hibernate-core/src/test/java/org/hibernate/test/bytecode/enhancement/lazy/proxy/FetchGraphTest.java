@@ -248,8 +248,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertThat( stats.getPrepareStatementCount(), is( 3L ) );
 
 					Set<BEntity> bs = entityD.getBs();
-					assertThat( stats.getPrepareStatementCount(), is( 4L ) );
+					assertThat( stats.getPrepareStatementCount(), is( 3L ) );
 					assertThat( bs.size(), is( 2 ) );
+					assertThat( stats.getPrepareStatementCount(), is( 4L ) );
 
 					entityD.getG().getOid();
 					assertThat( stats.getPrepareStatementCount(), is( 4L ) );

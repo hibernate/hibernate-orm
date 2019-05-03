@@ -726,7 +726,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		return instantiator;
 	}
 
-	protected final ProxyFactory getProxyFactory() {
+	@Override
+	public final ProxyFactory getProxyFactory() {
 		return proxyFactory;
 	}
 

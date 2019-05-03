@@ -23,7 +23,8 @@ import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 @Entity(name="SpecializedKey")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -32,7 +33,7 @@ public class SpecializedKey extends GenericKey implements Serializable
 {
 
 	@OneToMany(targetEntity= SpecializedEntity.class, mappedBy="specializedKey", fetch=FetchType.LAZY)
-	@LazyGroup("PZ")
+//	@LazyCollection( LazyCollectionOption.EXTRA )
 	protected Set<SpecializedEntity> specializedEntities = new LinkedHashSet();
 
 	public Set<SpecializedEntity> getSpecializedEntities() {

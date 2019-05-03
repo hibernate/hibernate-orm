@@ -5,8 +5,8 @@ public enum RedisClientMode {
 	SENTINEL,
 	SINGLE_SERVER;
 	
-	public static final String CACHE_MODE_REDIS = "cache-mode-redis";
-	public static final String REDIS_SENTINEL = "redis-sentinel";
+	public static final String REDIS_SINGLE = "single";
+	public static final String REDIS_SENTINEL = "sentinel";
 	
 	public boolean isRedisEnabled() {
 	      return this != LOCAL;

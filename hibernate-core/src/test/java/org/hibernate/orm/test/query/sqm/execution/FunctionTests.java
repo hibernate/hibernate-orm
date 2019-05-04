@@ -110,6 +110,10 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                             .list();
                     session.createQuery("select substring(e.theString, 0, e.theInt) from EntityOfBasics e")
                             .list();
+                    session.createQuery("select substring(e.theString from e.theInt) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select substring(e.theString from 0 for e.theInt) from EntityOfBasics e")
+                            .list();
                 }
         );
     }

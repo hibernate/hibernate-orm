@@ -44,8 +44,8 @@ To run the matrix tests for NuoDB:
 
 1. Run tests:
 
-   * Execute `./gradlew clean hibernate-core:matrix_nuodb`. On Windows run `./gradlew.bat`.
-     To setup gradle, see below.  The expected output is:
+   * Execute `./gradlew clean hibernate-core:matrix_nuodb`. On Windows run `gradlew` (which will invoke `gradlew.bat`).
+     To setup gradle, see original readme content below.  The expected output is:
 
    ```
    6935 tests completed, 114 failed, 822 skipped

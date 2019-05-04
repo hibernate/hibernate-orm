@@ -108,6 +108,7 @@ import org.hibernate.query.sqm.tree.expression.function.Distinctable;
 import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAggregateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
@@ -2063,12 +2064,46 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public Object visitLengthFunction(HqlParser.LengthFunctionContext ctx) {
+		final SqmFunctionTemplate template = creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate( SqmLengthFunction.NAME );
+
 		final SqmExpression sqmExpression = (SqmExpression) ctx.expression().accept( this );
-		return new SqmLengthFunction<>(
-				sqmExpression,
-				resolveExpressableTypeBasic( Integer.class ),
-				creationContext.getNodeBuilder()
-		);
+
+		if (template==null) {
+			return new SqmLengthFunction<>(
+					sqmExpression,
+					resolveExpressableTypeBasic(Integer.class),
+					creationContext.getNodeBuilder()
+			);
+		}
+		else {
+			return template.makeSqmFunctionExpression(
+					singletonList(sqmExpression),
+					resolveExpressableTypeBasic( Integer.class ),
+					creationContext.getQueryEngine()
+			);
+		}
+	}
+
+	@Override
+	public Object visitBitLengthFunction(HqlParser.BitLengthFunctionContext ctx) {
+		final SqmFunctionTemplate template = creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate( SqmBitLengthFunction.NAME );
+
+		final SqmExpression sqmExpression = (SqmExpression) ctx.expression().accept( this );
+
+		if (template==null) {
+			return new SqmBitLengthFunction<>(
+					sqmExpression,
+					resolveExpressableTypeBasic(Integer.class),
+					creationContext.getNodeBuilder()
+			);
+		}
+		else {
+			return template.makeSqmFunctionExpression(
+					singletonList(sqmExpression),
+					resolveExpressableTypeBasic( Integer.class ),
+					creationContext.getQueryEngine()
+			);
+		}
 	}
 
 	@Override

@@ -285,11 +285,6 @@ public abstract class Dialect implements ConversionContext {
 	 * @param queryEngine
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		//this is now redundant:
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_length" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
 
 		//TODO: re-express these in terms of registered extract() and cast()
 		//      functions, so that they don't need to be redefined by the

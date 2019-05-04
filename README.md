@@ -87,13 +87,13 @@ If the Hibernate dialect has a new vewrsion number:
 
 This variable is used in three places and should get picked up by all of them:
 
-     * `build.gradle`
-     * `databases/nuodb/matrix.gradle`
-     * `hibernate-core/hibernate-core.gradle`
+* `build.gradle`
+* `databases/nuodb/matrix.gradle`
+* `hibernate-core/hibernate-core.gradle`
 
 ## Upgrade NuoDB JDBC Driver
 
-This mist be changed manually in two places:
+This must be changed manually in two places:
 
 1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:20.0.0"`
 2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:20.0.0" )`

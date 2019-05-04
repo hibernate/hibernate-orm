@@ -4,5 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-jdbcDependency 'com.nuodb.jdbc:nuodb-jdbc:20.0.0'
-jdbcDependency 'com.nuodb.hibernate:nuodb-hibernate:20.0.1-hib5'
+
+if (System.env['DIALECT_VERSION'] == null) {
+    println("DIALECT_VERSION environment variable must be set to 20.0.0 or later")
+    System.exit(-1);
+}
+
+// Setting a variable here, but using it didn't work in jdbcDependency below
+ext.hibernateDialect = System.env['DIALECT_VERSION'];
+println "Matrix build using NuoDB Dialect V${hibernateDialect}"
+
+jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:20.0.0"
+jdbcDependency "com.nuodb.hibernate:nuodb-hibernate:${System.env['DIALECT_VERSION']}-hib5"

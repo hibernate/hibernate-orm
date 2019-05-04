@@ -36,6 +36,13 @@ sourceSets {
         }
     }
 }
+if (System.env['DIALECT_VERSION'] == null) {
+    println("DIALECT_VERSION environment variable must be set to 20.0.0 or later")
+    System.exit(-1);
+}
+
+ext.hibernateDialect = System.env['DIALECT_VERSION'];
+println "hibernate-core: Using NuoDB Dialect V${hibernateDialect}"
 
 configurations {
     tests {
@@ -61,7 +68,7 @@ dependencies {
     compile( libraries.classmate )
     compile( libraries.activation )
 
-compile('com.nuodb.hibernate:nuodb-hibernate:20.0.1-hib5')
+compile("com.nuodb.hibernate:nuodb-hibernate:${hibernateDialect}-hib5")
 
     // We need dom4j for a number of things temporarily:
     //      1) (unsupported) EntityMode.DOM4J support
@@ -112,7 +119,7 @@ compile('com.nuodb.hibernate:nuodb-hibernate:20.0.1-hib5')
 
     testRuntime( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final" )
     testRuntime( libraries.expression_language )
-    testRuntime( 'jaxen:jaxen:1.1' )
+    testRuntime( "jaxen:jaxen:1.1" )
     testRuntime( libraries.javassist )
     testRuntime( libraries.byteBuddy )
     testRuntime( libraries.weld )
@@ -120,7 +127,7 @@ compile('com.nuodb.hibernate:nuodb-hibernate:20.0.1-hib5')
     testRuntime( libraries.atomikos_jta )
     testRuntime( libraries.wildfly_transaction_client )
 
-    testRuntime( "com.nuodb.hibernate:nuodb-hibernate:20.0.1-hib5" )
+    testRuntime( "com.nuodb.hibernate:nuodb-hibernate:${hibernateDialect}-hib5" )
     testRuntime( "com.nuodb.jdbc:nuodb-jdbc:20.0.0" )
 
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
@@ -137,7 +144,7 @@ compile('com.nuodb.hibernate:nuodb-hibernate:20.0.1-hib5')
     // Additional tests requiring Javassist
     // folder in src/javassist/java
     testJavassistCompile libraries.javassist
-    testCompile "com.nuodb.hibernate:nuodb-hibernate:20.0.1-hib5"
+    testCompile "com.nuodb.hibernate:nuodb-hibernate:${hibernateDialect}-hib5"
 }
 
 jar {

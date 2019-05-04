@@ -14,12 +14,11 @@ To run the matrix tests for NuoDB:
    * clone https://github.com/nuodb/HibernateDialect5
    * Run `mvn install` - see [project README](https://github.com/nuodb/HibernateDialect5/blob/master/README.md)
    * Check the version in the POM - it will be of the form `20.x.x-hib5`
-      * Anywhere in the following, replace `20.x.x-hib5` by that version number.
-      * We need some way to automate it
+      * You will need to set `DIALECT_VERSION` to that value - see below
 
 1. This project's gradle build file assumes you have your maven repository in
    the default location (`.m2` in your home directory). If so, skip this step.
- 
+
    Otherwise you must tell gradle where this dependency can be found. For example
    suppose you use `m2` instead of `.m2`:
    ```
@@ -28,9 +27,10 @@ To run the matrix tests for NuoDB:
    set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate/20.x.x-hib5  (Windows)
    ```
 
-1. Set the Hibernate dialect: `SET DIALECT_VERSION=20.x.x-hib5`
+1. Set the Hibernate dialect: `SET DIALECT_VERSION=20.x.x` - this must match the Hibernate 5 dialect you installed earlier.
+   Note the value you set _does not_ have `-hib5` in the end.
 
-1. Compile the code: `./gradlew clean compile` 
+1. Compile the code: `./gradlew clean compile`
 
 1. Tell the tests about your NuoDB database:
     1. `cp databases/nuodb/resources/hibernate.properties hibernate-core/target/resources/test`.  
@@ -78,20 +78,31 @@ Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail,
 
 If the Hibernate dialect has a new vewrsion number:
 
-1. Update the environment variable: `SET DIALECT_VERSION=20.x.x-hib5`
+1. Update the environment variable: `SET DIALECT_VERSION=20.x.x`
 
-2. Edit `databases/nuodb/matrix.gradle` and change the reference in that file
+This variable is used in three places and should get picked up by all of them:
 
-3. Edit `hibernate-core/hibernate-core.gradle` ands update the 3 references in this file - DO NOT update the JDBC Driver dependency by mistake.
+     * `build.gradle`
+     * `databases/nuodb/matrix.gradle`
+     * `hibernate-core/hibernate-core.gradle`
 
-Unfortunately the files referenced in stepos (2) and (3) do not currently pick up the version from `DIALECT_VERSION`.
+## Upgrade NuoDB JDBC Driver
+
+This mist be changed manually in two places:
+
+1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:20.0.0"`
+2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:20.0.0" )`
 
 ## Changes Made to Project
 
 To use NuoDB
 
-1. Added `compile('com.nuodb.hibernate:nuodb-hibernate:20.x.x-hib5')` to `hibernate-core/hibernate-core.gradle` to pick up the NuoDB dialect under test.
-2. Added `databases/nuodb` to define dependencies and configuration required to use NuoDB.
+1. Added `databases/nuodb` to define dependencies and configuration required to use NuoDB.
+
+1. Added references to the NuoDB dialect and/or NuoDB JDBC jars to:
+     * `build.gradle`
+     * `databases/nuodb/matrix.gradle`
+     * `hibernate-core/hibernate-core.gradle`
 
 To configure NuoDB
 

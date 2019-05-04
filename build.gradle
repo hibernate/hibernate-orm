@@ -38,9 +38,11 @@ allprojects {
             System.exit(-1);
         }
 
+        ext.hibernateDialect = System.env['DIALECT_VERSION'];
+
         // Set SONATYPE_VERSION to pull our Jar from there
         if (System.env['SONATYPE_VERSION'] != null) {
-            println "using https://oss.sonatype.org/content/repositories/comnuodb-${System.env.SONATYPE_VERSION}/com/nuodb/hibernate/nuodb-hibernate/${System.env.DIALECT_VERSION}-hib5/"
+            println "hibernate-orm: Using https://oss.sonatype.org/content/repositories/comnuodb-${System.env.SONATYPE_VERSION}/com/nuodb/hibernate/nuodb-hibernate/${System.env.DIALECT_VERSION}-hib5/"
             ivy {
                 url "https://oss.sonatype.org/content/repositories/comnuodb-${System.env.SONATYPE_VERSION}/"
 

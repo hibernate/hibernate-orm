@@ -608,7 +608,7 @@ concatFunction
 	;
 
 substringFunction
-	: (SUBSTRING | SUBSTR) LEFT_PAREN expression COMMA substringFunctionStartArgument (COMMA substringFunctionLengthArgument)? RIGHT_PAREN
+	: SUBSTRING LEFT_PAREN expression (COMMA | FROM) substringFunctionStartArgument ((COMMA | FOR) substringFunctionLengthArgument)? RIGHT_PAREN
 	;
 
 substringFunctionStartArgument

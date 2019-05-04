@@ -28,12 +28,16 @@ public interface BasicValuedExpressableType<J>
 	BasicJavaDescriptor<J> getJavaTypeDescriptor();
 
 	default SqlTypeDescriptor getSqlTypeDescriptor() {
-		if ( getSqlExpressableType() == null ) return null;
+		if ( getSqlExpressableType() == null ) {
+			return null;
+		}
 		return getSqlExpressableType().getSqlTypeDescriptor();
 	}
 
 	default SqlExpressableType getSqlExpressableType(TypeConfiguration typeConfiguration) {
-		if ( getSqlExpressableType() == null ) return null;
+		if ( getSqlExpressableType() == null ) {
+			return null;
+		}
 		return getSqlTypeDescriptor().getSqlExpressableType( getJavaTypeDescriptor(), typeConfiguration );
 	}
 

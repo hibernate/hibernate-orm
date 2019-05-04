@@ -14,7 +14,7 @@ To run the matrix tests for NuoDB:
    * clone https://github.com/nuodb/HibernateDialect5
    * Run `mvn install` - see [project README](https://github.com/nuodb/HibernateDialect5/blob/master/README.md)
    * Check the version in the POM - it will be of the form `20.x.x-hib5`
-      * You will need to set `DIALECT_VERSION` to that value - see below
+      * You will need to set `DIALECT_VERSION` to `20.x.x``to match - see below
 
 1. This project's gradle build file assumes you have your maven repository in
    the default location (`.m2` in your home directory). If so, skip this step.
@@ -27,8 +27,13 @@ To run the matrix tests for NuoDB:
    set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate/20.x.x-hib5  (Windows)
    ```
 
-1. Set the Hibernate dialect: `SET DIALECT_VERSION=20.x.x` - this must match the Hibernate 5 dialect you installed earlier.
-   Note the value you set _does not_ have `-hib5` in the end.
+1. Set the Hibernate dialect - this must match the Hibernate 5 dialect you installed earlier.
+   Note the value you set _does not_ have `-hib5` in the end:
+   ```
+   export DIALECT_VERSION=20.x.x      (Linux/MacOS)
+   set DIALECT_VERSION=20.x.x         (Windows)
+   ```
+   Alternatively, non-Windows user may prepend it to any command: `DIALECT_VERSION=20.x.x ./gradlew ...`
 
 1. Compile the code: `./gradlew clean compile`
 
@@ -62,13 +67,13 @@ To run the matrix tests for NuoDB:
    ```
 
 1. Pull Jar from Sonatype
-   Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-1047/com/nuodb/hibernate/nuodb-hibernate/20.x.x-hib5/nuodb-hibernate-20.x.x-hib5.jar.
-   Note the build number - 1047. To use this dependency run as follows:
+   Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-NNNN/com/nuodb/hibernate/nuodb-hibernate/20.x.x-hib5/nuodb-hibernate-20.x.x-hib5.jar.
+   Note the build number - NNNN (a 4 digit number such as 1050). To use this dependency run as follows:
 
    ```
-   SONATYPE_VERSION=1047 gradle clean ...   (Linux)
+   SONATYPE_VERSION=NNNN gradle clean ...   (Linux)
 
-   set SONATYPE_VERSION=1047                (Windows)
+   set SONATYPE_VERSION=NNNN                (Windows)
    gradle clean ...
    ```
 

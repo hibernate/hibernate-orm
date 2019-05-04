@@ -262,8 +262,6 @@ public class IngresDialect extends Dialect {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// String functions
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "length" );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charextract" )
 				.setExactArgumentCount( 2 )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

@@ -565,13 +565,17 @@ countFunction
 
 standardFunction
 	:	castFunction
+	|	extractFunction
 	|	concatFunction
 	|	substringFunction
 	|	trimFunction
 	|	upperFunction
 	|	lowerFunction
-	|	lengthFunction
 	|	locateFunction
+	|	positionFunction
+	|	lengthFunction
+	|	octetLengthFunction
+	|	bitLengthFunction
 	|	absFunction
 	|	sqrtFunction
 	|	modFunction
@@ -580,11 +584,6 @@ standardFunction
 	|	currentTimeFunction
 	|	currentTimestampFunction
 	|	currentInstantFunction
-	|	extractFunction
-	|	positionFunction
-	|	charLengthFunction
-	|	octetLengthFunction
-	|	bitLengthFunction
 	;
 
 
@@ -641,10 +640,6 @@ lowerFunction
 	: LOWER LEFT_PAREN expression RIGHT_PAREN
 	;
 
-lengthFunction
-	: LENGTH LEFT_PAREN expression RIGHT_PAREN
-	;
-
 locateFunction
 	: LOCATE LEFT_PAREN locateFunctionSubstrArgument COMMA locateFunctionStringArgument (COMMA locateFunctionStartArgument)? RIGHT_PAREN
 	;
@@ -659,6 +654,18 @@ locateFunctionStringArgument
 
 locateFunctionStartArgument
 	: expression
+	;
+
+lengthFunction
+	: (CHARACTER_LENGTH | LENGTH) LEFT_PAREN expression RIGHT_PAREN
+	;
+
+octetLengthFunction
+	: OCTET_LENGTH LEFT_PAREN expression RIGHT_PAREN
+	;
+
+bitLengthFunction
+	: BIT_LENGTH LEFT_PAREN expression RIGHT_PAREN
 	;
 
 absFunction
@@ -734,18 +741,6 @@ positionSubstrArgument
 
 positionStringArgument
 	: expression
-	;
-
-charLengthFunction
-	: CHARACTER_LENGTH LEFT_PAREN expression RIGHT_PAREN
-	;
-
-octetLengthFunction
-	: OCTET_LENGTH LEFT_PAREN expression RIGHT_PAREN
-	;
-
-bitLengthFunction
-	: BIT_LENGTH LEFT_PAREN expression RIGHT_PAREN
 	;
 
 /**

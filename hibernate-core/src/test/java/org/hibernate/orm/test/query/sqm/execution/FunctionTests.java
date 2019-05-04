@@ -81,12 +81,22 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     }
 
     @Test
-    public void testStringFunctions() {
+    public void testLowerUpperFunctions() {
         inTransaction(
                 session -> {
                     session.createQuery("select lower(e.theString), upper(e.theString) from EntityOfBasics e")
                             .list();
+                }
+        );
+    }
+
+    @Test
+    public void testLengthFunctions() {
+        inTransaction(
+                session -> {
                     session.createQuery("select length(e.theString) from EntityOfBasics e where length(e.theString) > 1")
+                            .list();
+                    session.createQuery("select bit_length(e.theString), character_length(e.theString) from EntityOfBasics e")
                             .list();
                 }
         );

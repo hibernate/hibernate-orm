@@ -74,6 +74,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmReplaceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
@@ -151,6 +152,7 @@ import org.hibernate.sql.ast.tree.expression.ModFunction;
 import org.hibernate.sql.ast.tree.expression.NonStandardFunction;
 import org.hibernate.sql.ast.tree.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqrtFunction;
 import org.hibernate.sql.ast.tree.expression.SubQuery;
@@ -1031,6 +1033,23 @@ public abstract class BaseSqmToSqlAstConverter
 					function.getStartPosition() == null
 							? null
 							: toSqlExpression( function.getStartPosition().accept( this ) ),
+					function.getExpressableType().getSqlExpressableType()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
+	public ReplaceFunction visitReplaceFunction(SqmReplaceFunction function) {
+		shallownessStack.push( Shallowness.FUNCTION );
+
+		try {
+			return new ReplaceFunction(
+					toSqlExpression( function.getPatternString().accept( this ) ),
+					toSqlExpression( function.getStringToSearch().accept( this ) ),
+					toSqlExpression( function.getReplacementString().accept( this ) ),
 					function.getExpressableType().getSqlExpressableType()
 			);
 		}

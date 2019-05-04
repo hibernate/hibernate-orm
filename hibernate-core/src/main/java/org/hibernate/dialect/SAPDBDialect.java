@@ -114,7 +114,6 @@ public class SAPDBDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "weekofyear", StandardSpiBasicTypes.INTEGER );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "replace", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "translate", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lpad", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rpad", StandardSpiBasicTypes.STRING );

@@ -568,6 +568,7 @@ standardFunction
 	|	extractFunction
 	|	concatFunction
 	|	substringFunction
+	|   replaceFunction
 	|	trimFunction
 	|	upperFunction
 	|	lowerFunction
@@ -655,6 +656,22 @@ locateFunctionStringArgument
 locateFunctionStartArgument
 	: expression
 	;
+
+replaceFunction
+    : REPLACE LEFT_PAREN replaceFunctionStringArgument COMMA replaceFunctionPatternArgument COMMA replaceFunctionReplacementArgument RIGHT_PAREN
+    ;
+
+replaceFunctionStringArgument
+    : expression
+    ;
+
+replaceFunctionPatternArgument
+    : expression
+    ;
+
+replaceFunctionReplacementArgument
+    : expression
+    ;
 
 lengthFunction
 	: (CHARACTER_LENGTH | LENGTH) LEFT_PAREN expression RIGHT_PAREN
@@ -810,6 +827,7 @@ identifier
 	| ORDER
 	| OUTER
 	| POSITION
+	| REPLACE
 	| RIGHT
 	| SELECT
 	| SECOND

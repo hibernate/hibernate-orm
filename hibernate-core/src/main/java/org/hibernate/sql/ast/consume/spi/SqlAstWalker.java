@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.expression.AbsFunction;
@@ -188,6 +189,8 @@ public interface SqlAstWalker {
 
 	void visitLocateFunction(LocateFunction function);
 
+	void visitReplaceFunction(ReplaceFunction function);
+
 	void visitLowerFunction(LowerFunction function);
 
 	void visitMaxFunction(MaxFunction function);
@@ -214,4 +217,5 @@ public interface SqlAstWalker {
 	void visitExtractUnit(ExtractUnit unit);
 
 	void visitCastTarget(CastTarget castTarget);
+
 }

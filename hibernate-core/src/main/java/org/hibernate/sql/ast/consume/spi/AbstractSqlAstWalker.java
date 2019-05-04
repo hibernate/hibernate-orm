@@ -586,6 +586,18 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	@SuppressWarnings("unchecked")
+	public void visitReplaceFunction(ReplaceFunction function) {
+		appendSql( "replace(" );
+		function.getStringToSearch().accept( this );
+		appendSql( COMA_SEPARATOR );
+		function.getPatternString().accept( this );
+		appendSql( COMA_SEPARATOR );
+		function.getReplacementString().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public void visitLowerFunction(LowerFunction function) {
 		appendSql( "lower(" );
 		function.getArgument().accept( this );

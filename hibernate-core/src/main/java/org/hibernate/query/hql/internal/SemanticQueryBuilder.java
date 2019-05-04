@@ -2164,6 +2164,33 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public Object visitReplaceFunction(HqlParser.ReplaceFunctionContext ctx) {
+		final SqmFunctionTemplate template = creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate( SqmLocateFunction.NAME );
+
+		final SqmExpression<?> string = (SqmExpression) ctx.replaceFunctionStringArgument().accept( this );
+		final SqmExpression<?> pattern = (SqmExpression) ctx.replaceFunctionPatternArgument().accept( this );
+		final SqmExpression<?> replacement = (SqmExpression) ctx.replaceFunctionReplacementArgument().accept( this );
+
+		if (template==null) {
+			//use the standard LOCATE support
+			return new SqmLocateFunction<>(
+					string,
+					pattern,
+					replacement,
+					resolveExpressableTypeBasic( String.class ),
+					string.nodeBuilder()
+			);
+		}
+		else {
+			return template.makeSqmFunctionExpression(
+					asList( string, pattern, replacement ),
+					resolveExpressableTypeBasic( String.class ),
+					creationContext.getQueryEngine()
+			);
+		}
+	}
+
+	@Override
 	public SqmExpression visitMaxFunction(HqlParser.MaxFunctionContext ctx) {
 		//noinspection unchecked
 		return generateAggregateFunction(

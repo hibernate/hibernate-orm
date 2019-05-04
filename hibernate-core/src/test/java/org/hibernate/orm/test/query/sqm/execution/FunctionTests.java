@@ -137,6 +137,16 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     }
 
     @Test
+    public void testReplaceFunction() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select replace(e.theString, 'hello', 'goodbye') from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+    @Test
     public void testTrimFunction() {
         inTransaction(
                 session -> {

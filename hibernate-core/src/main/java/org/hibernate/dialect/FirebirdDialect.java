@@ -51,12 +51,6 @@ public class FirebirdDialect extends InterbaseDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "replace", StandardSpiBasicTypes.STRING );
-	}
-	
-	@Override
 	public String getDropSequenceString(String sequenceName) {
 		return "drop generator " + sequenceName;
 	}

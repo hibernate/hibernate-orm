@@ -236,10 +236,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "replace" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rpad" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )

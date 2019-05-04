@@ -2047,8 +2047,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				(sqmFunctionTemplate, sqmArgument) -> {
 					return sqmFunctionTemplate.makeSqmFunctionExpression(
 							isCountStar
-                                    ? singletonList( SqmCountStarFunction.STAR )
-                                    : singletonList( sqmArgument ),
+									? singletonList( SqmCountStarFunction.STAR )
+									: singletonList( sqmArgument ),
 							longType,
 							creationContext.getQueryEngine()
 					);

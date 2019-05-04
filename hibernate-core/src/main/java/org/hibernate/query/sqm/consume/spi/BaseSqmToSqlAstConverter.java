@@ -1112,7 +1112,9 @@ public abstract class BaseSqmToSqlAstConverter
 			List<Expression> expressionList = new ArrayList<>();
 			expressionList.add( toSqlExpression( expression.getSource().accept( this ) ) );
 			expressionList.add( toSqlExpression( expression.getStartPosition().accept( this ) ) );
-			if ( expression.getLength()!=null ) expressionList.add( toSqlExpression( expression.getLength().accept( this ) ) );
+			if ( expression.getLength()!=null ) {
+				expressionList.add( toSqlExpression( expression.getLength().accept( this ) ) );
+			}
 
 			return new SubstrFunction(
 					expression.getFunctionName(),

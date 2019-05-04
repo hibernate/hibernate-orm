@@ -60,6 +60,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmReplaceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
@@ -250,6 +251,8 @@ public interface SemanticQueryWalker<T> {
 
 	T visitLocateFunction(SqmLocateFunction<?> function);
 
+	T visitReplaceFunction(SqmReplaceFunction<?> tSqmReplaceFunction);
+
 	T visitLowerFunction(SqmLowerFunction<?> expression);
 
 	T visitMaxFunction(SqmMaxFunction<?> expression);
@@ -337,4 +340,5 @@ public interface SemanticQueryWalker<T> {
 	T visitExtractUnit(SqmExtractUnit extractUnit);
 
 	T visitCastTarget(SqmCastTarget sqmCastTarget);
+
 }

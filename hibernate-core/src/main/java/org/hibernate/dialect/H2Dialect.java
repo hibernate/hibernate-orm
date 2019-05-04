@@ -302,11 +302,6 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "replace" )
-				.setArgumentCountBetween( 2, 3 )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "right" )
 				.setArgumentCountBetween( 2, 3 )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

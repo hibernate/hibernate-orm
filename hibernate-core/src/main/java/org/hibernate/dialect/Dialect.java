@@ -273,6 +273,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * And several additional "standard" functions:
 	 *
+	 *      * replace
 	 * 	    * current_instant
 	 * 		* second		- defined as `extract(second from ?1)`
 	 * 		* minute		- defined as `extract(minute from ?1)`

@@ -68,13 +68,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void ln(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ln" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
-	}
-
 	public static void log(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "log" )
 				.setArgumentCountBetween( 1, 2 )
@@ -137,13 +130,6 @@ public class CommonFunctionFactory {
 
 	public static void ceil(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceil" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
-	}
-
-	public static void exp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "exp" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();

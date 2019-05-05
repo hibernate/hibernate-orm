@@ -188,8 +188,6 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
 
-		CommonFunctionFactory.exp( queryEngine );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "expand" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )

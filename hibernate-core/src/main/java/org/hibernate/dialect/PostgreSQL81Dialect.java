@@ -115,8 +115,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.atan( queryEngine );
 		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.exp( queryEngine );
-		CommonFunctionFactory.ln( queryEngine );
 		CommonFunctionFactory.sin( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )

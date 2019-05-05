@@ -87,7 +87,6 @@ public class MimerSQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ddegrees", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "degrees", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dexp", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "exp", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dlog", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dlog10", StandardSpiBasicTypes.DOUBLE );

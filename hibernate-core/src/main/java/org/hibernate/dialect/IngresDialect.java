@@ -186,8 +186,6 @@ public class IngresDialect extends Dialect {
 
 		CommonFunctionFactory.atan( queryEngine );
 		CommonFunctionFactory.cos( queryEngine );
-		CommonFunctionFactory.exp( queryEngine );
-		CommonFunctionFactory.ln( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.sin( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );

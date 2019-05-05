@@ -270,6 +270,9 @@ public abstract class Dialect implements ConversionContext {
 	 * 		* extract
 	 * 	    * position
 	 * 		* bit_length
+	 * 	    * character_length
+	 *      * ln
+	 *      * exp
 	 *
 	 * And several additional "standard" functions:
 	 *

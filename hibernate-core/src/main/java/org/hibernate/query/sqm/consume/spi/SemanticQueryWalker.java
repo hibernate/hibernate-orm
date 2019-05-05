@@ -50,10 +50,12 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmExpFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmLnFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLocateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
@@ -341,4 +343,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitCastTarget(SqmCastTarget sqmCastTarget);
 
+	T visitExpFunction(SqmExpFunction<?> tSqmExpFunction);
+
+	T visitLnFunction(SqmLnFunction<?> tSqmLnFunction);
 }

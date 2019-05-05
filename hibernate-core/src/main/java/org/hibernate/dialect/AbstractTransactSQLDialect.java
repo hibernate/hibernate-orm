@@ -133,7 +133,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.atan( queryEngine );
 		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.exp( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.sin( queryEngine );
@@ -161,6 +160,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "+", ")" );
 
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ln", "log" );
 
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "length", "len" );
 

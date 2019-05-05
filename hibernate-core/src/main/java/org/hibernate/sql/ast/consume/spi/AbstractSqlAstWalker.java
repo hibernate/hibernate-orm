@@ -19,9 +19,7 @@ import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
-import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.*;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -86,7 +84,6 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.results.internal.EmptySqlSelection;
 import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -640,6 +637,22 @@ public abstract class AbstractSqlAstWalker
 	@SuppressWarnings("unchecked")
 	public void visitSqrtFunction(SqrtFunction function) {
 		appendSql( "sqrt(" );
+		function.getArgument().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void visitLnFunction(LnFunction function) {
+		appendSql( "ln(" );
+		function.getArgument().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void visitExpFunction(ExpFunction function) {
+		appendSql( "exp(" );
 		function.getArgument().accept( this );
 		appendSql( CLOSE_PARENTHESIS );
 	}

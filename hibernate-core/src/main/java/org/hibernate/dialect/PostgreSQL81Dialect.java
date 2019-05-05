@@ -273,10 +273,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 		CommonFunctionFactory.log( queryEngine );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "power" )
-				.setInvariantType( StandardSpiBasicTypes.FLOAT )
-				.setExactArgumentCount( 2 )
-				.register();
 	}
 
 	@Override

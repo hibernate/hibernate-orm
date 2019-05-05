@@ -635,6 +635,16 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	@SuppressWarnings("unchecked")
+	public void visitPowerFunction(PowerFunction function) {
+		sqlAppender.appendSql( "power(" );
+		function.getBase().accept( this );
+		sqlAppender.appendSql( COMA_SEPARATOR );
+		function.getPower().accept( this );
+		sqlAppender.appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public void visitSqrtFunction(SqrtFunction function) {
 		appendSql( "sqrt(" );
 		function.getArgument().accept( this );

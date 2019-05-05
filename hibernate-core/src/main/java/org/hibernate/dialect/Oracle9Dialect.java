@@ -226,10 +226,6 @@ public class Oracle9Dialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 		CommonFunctionFactory.log( queryEngine );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "power" )
-				.setInvariantType( StandardSpiBasicTypes.FLOAT )
-				.setExactArgumentCount( 2 )
-				.register();
 
 		// Multi-param date dialect functions...
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_months" )

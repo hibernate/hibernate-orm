@@ -286,11 +286,6 @@ public class IngresDialect extends Dialect {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Numeric functions
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "power" )
-				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "random" )
 				.setUseParenthesesWhenNoArgs( true )
 				.setInvariantType( StandardSpiBasicTypes.LONG )

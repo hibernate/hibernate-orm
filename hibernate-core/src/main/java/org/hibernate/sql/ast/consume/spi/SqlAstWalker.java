@@ -9,7 +9,9 @@ package org.hibernate.sql.ast.consume.spi;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.ExpFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.LnFunction;
 import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
@@ -218,4 +220,7 @@ public interface SqlAstWalker {
 
 	void visitCastTarget(CastTarget castTarget);
 
+	void visitLnFunction(LnFunction lnFunction);
+
+	void visitExpFunction(ExpFunction expFunction);
 }

@@ -102,8 +102,6 @@ public class Oracle9Dialect extends Dialect {
 
 		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.exp( queryEngine );
-		CommonFunctionFactory.ln( queryEngine );
 		CommonFunctionFactory.sin( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );

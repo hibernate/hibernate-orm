@@ -579,6 +579,8 @@ standardFunction
 	|	bitLengthFunction
 	|	absFunction
 	|	sqrtFunction
+	|   lnFunction
+	|   expFunction
 	|	modFunction
 	|   strFunction
 	|	currentDateFunction
@@ -693,6 +695,14 @@ sqrtFunction
 	:	SQRT LEFT_PAREN expression RIGHT_PAREN
 	;
 
+lnFunction
+	:	LN LEFT_PAREN expression RIGHT_PAREN
+	;
+
+expFunction
+	:	EXP LEFT_PAREN expression RIGHT_PAREN
+	;
+
 modFunction
 	:	MOD LEFT_PAREN modDividendArgument COMMA modDivisorArgument RIGHT_PAREN
 	;
@@ -796,7 +806,9 @@ identifier
 	| DISTINCT
 	| ELEMENTS
 	| ENTRY
+	| EXP
 	| FROM
+	| FOR
 	| FULL
 	| FUNCTION
 	| GROUP
@@ -813,6 +825,7 @@ identifier
 	| LIKE
 	| LIMIT
 	| LIST
+	| LN
 	| LOWER
 	| MAP
 	| MAX

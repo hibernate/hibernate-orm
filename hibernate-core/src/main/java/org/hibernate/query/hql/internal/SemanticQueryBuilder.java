@@ -119,10 +119,12 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmExpFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmLnFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLocateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
@@ -1885,6 +1887,36 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 						creationContext.getQueryEngine()
 				),
 				arg -> new SqmSqrtFunction( arg, (AllowableFunctionReturnType) arg.getExpressableType(), creationContext.getNodeBuilder() ),
+				ctx.expression()
+		);
+	}
+
+	@Override
+	public SqmExpression visitLnFunction(HqlParser.LnFunctionContext ctx) {
+		//noinspection unchecked
+		return generateSingleArgFunction(
+				SqmLnFunction.NAME,
+				(sqmFunctionTemplate, arg) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						singletonList( arg ),
+						(AllowableFunctionReturnType) arg.getExpressableType(),
+						creationContext.getQueryEngine()
+				),
+				arg -> new SqmLnFunction( arg, (AllowableFunctionReturnType) arg.getExpressableType(), creationContext.getNodeBuilder() ),
+				ctx.expression()
+		);
+	}
+
+	@Override
+	public SqmExpression visitExpFunction(HqlParser.ExpFunctionContext ctx) {
+		//noinspection unchecked
+		return generateSingleArgFunction(
+				SqmExpFunction.NAME,
+				(sqmFunctionTemplate, arg) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						singletonList( arg ),
+						(AllowableFunctionReturnType) arg.getExpressableType(),
+						creationContext.getQueryEngine()
+				),
+				arg -> new SqmExpFunction( arg, (AllowableFunctionReturnType) arg.getExpressableType(), creationContext.getNodeBuilder() ),
 				ctx.expression()
 		);
 	}

@@ -33,10 +33,12 @@ import org.hibernate.sql.ast.tree.expression.CountStarFunction;
 import org.hibernate.sql.ast.tree.expression.CurrentDateFunction;
 import org.hibernate.sql.ast.tree.expression.CurrentTimeFunction;
 import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
+import org.hibernate.sql.ast.tree.expression.ExpFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
 import org.hibernate.sql.ast.tree.expression.LengthFunction;
+import org.hibernate.sql.ast.tree.expression.LnFunction;
 import org.hibernate.sql.ast.tree.expression.LocateFunction;
 import org.hibernate.sql.ast.tree.expression.LowerFunction;
 import org.hibernate.sql.ast.tree.expression.MaxFunction;
@@ -702,6 +704,16 @@ public class SqlAstPrinter implements SqlAstWalker {
 
 	@Override
 	public void visitSqrtFunction(SqrtFunction function) {
+
+	}
+
+	@Override
+	public void visitLnFunction(LnFunction function) {
+
+	}
+
+	@Override
+	public void visitExpFunction(ExpFunction function) {
 
 	}
 

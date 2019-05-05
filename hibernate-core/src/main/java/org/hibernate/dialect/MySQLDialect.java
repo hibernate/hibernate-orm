@@ -187,8 +187,6 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.exp( queryEngine );
-		CommonFunctionFactory.ln( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "log2" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )

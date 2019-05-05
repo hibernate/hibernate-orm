@@ -153,8 +153,6 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.exp( queryEngine );
-		CommonFunctionFactory.ln( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );

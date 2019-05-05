@@ -76,6 +76,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                             .list();
                     session.createQuery("select abs(e.theDouble), sqrt(e.theDouble) from EntityOfBasics e")
                             .list();
+                    session.createQuery("select exp(e.theDouble), ln(e.theDouble) from EntityOfBasics e")
+                            .list();
                 }
         );
     }

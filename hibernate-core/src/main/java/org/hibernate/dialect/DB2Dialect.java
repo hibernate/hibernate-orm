@@ -138,9 +138,6 @@ public class DB2Dialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		CommonFunctionFactory.sign( queryEngine );
-		CommonFunctionFactory.ceiling( queryEngine );
-		CommonFunctionFactory.ceil( queryEngine );
-		CommonFunctionFactory.floor( queryEngine );
 		CommonFunctionFactory.round( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "absval" )
@@ -309,26 +306,19 @@ public class DB2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 3 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ucase", "upper" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "lcase", "lower" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rtrim" )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substr" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 1, 3 )
+				.setArgumentCountBetween( 2, 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "posstr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 4 )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "length(?1)*8", StandardSpiBasicTypes.INTEGER );

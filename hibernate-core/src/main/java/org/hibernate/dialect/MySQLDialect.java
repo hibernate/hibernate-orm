@@ -134,15 +134,6 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char_length" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "char_length" );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "concat" )
-				.setArgumentsValidator( StandardArgumentsValidators.min(2) )
-				.setInvariantType( StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "lcase", "lower" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
@@ -170,7 +161,6 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ucase", "upper" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "unhex" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
@@ -204,9 +194,6 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
 
-		CommonFunctionFactory.ceiling( queryEngine );
-		CommonFunctionFactory.ceil( queryEngine );
-		CommonFunctionFactory.floor( queryEngine );
 		CommonFunctionFactory.round( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datediff" )

@@ -111,6 +111,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.function.SqmCeilingFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
@@ -122,6 +123,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunct
 import org.hibernate.query.sqm.tree.expression.function.SqmExpFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.function.SqmFloorFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLnFunction;
@@ -1843,6 +1845,36 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmAggregateFunction visitAggregateFunction(HqlParser.AggregateFunctionContext ctx) {
 		return (SqmAggregateFunction) super.visitAggregateFunction( ctx );
+	}
+
+	@Override
+	public SqmExpression visitCeilingFunction(HqlParser.CeilingFunctionContext ctx) {
+		//noinspection unchecked
+		return generateSingleArgFunction(
+				SqmCeilingFunction.NAME,
+				(sqmFunctionTemplate, arg) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						singletonList( arg ),
+						resolveExpressableTypeBasic( Long.class ),
+						creationContext.getQueryEngine()
+				),
+				arg -> new SqmCeilingFunction( arg, resolveExpressableTypeBasic( Long.class ), creationContext.getNodeBuilder() ),
+				ctx.expression()
+		);
+	}
+
+	@Override
+	public SqmExpression visitFloorFunction(HqlParser.FloorFunctionContext ctx) {
+		//noinspection unchecked
+		return generateSingleArgFunction(
+				SqmFloorFunction.NAME,
+				(sqmFunctionTemplate, arg) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						singletonList( arg ),
+						resolveExpressableTypeBasic( Long.class ),
+						creationContext.getQueryEngine()
+				),
+				arg -> new SqmFloorFunction( arg, resolveExpressableTypeBasic( Long.class ), creationContext.getNodeBuilder() ),
+				ctx.expression()
+		);
 	}
 
 	@Override

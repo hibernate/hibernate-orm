@@ -151,8 +151,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.degrees( queryEngine );
 
 		CommonFunctionFactory.round( queryEngine );
-		CommonFunctionFactory.ceiling( queryEngine );
-		CommonFunctionFactory.floor( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "isnull" )
 				.setExactArgumentCount( 2 )

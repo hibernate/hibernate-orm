@@ -583,6 +583,8 @@ standardFunction
 	|   expFunction
 	|	modFunction
 	|   powerFunction
+	|   ceilingFunction
+	|   floorFunction
 	|   strFunction
 	|	currentDateFunction
 	|	currentTimeFunction
@@ -728,6 +730,14 @@ modDivisorArgument
 	: expression
 	;
 
+ceilingFunction
+	:	CEILING LEFT_PAREN expression RIGHT_PAREN
+	;
+
+floorFunction
+	:	FLOOR LEFT_PAREN expression RIGHT_PAREN
+	;
+
 strFunction
     :   STR LEFT_PAREN expression RIGHT_PAREN
     ;
@@ -807,6 +817,7 @@ identifier
 	| BIT_LENGTH
 	| BOTH
 	| CAST
+	| CEILING
 	| CHARACTER_LENGTH
 	| COALESCE
 	| COLLATE
@@ -820,6 +831,7 @@ identifier
 	| ELEMENTS
 	| ENTRY
 	| EXP
+	| FLOOR
 	| FROM
 	| FOR
 	| FULL

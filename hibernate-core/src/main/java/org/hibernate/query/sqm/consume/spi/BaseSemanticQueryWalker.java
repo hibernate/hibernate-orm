@@ -43,6 +43,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.function.SqmCeilingFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
@@ -54,6 +55,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunct
 import org.hibernate.query.sqm.tree.expression.function.SqmExpFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.function.SqmFloorFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLnFunction;
@@ -480,6 +482,16 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitAbsFunction(SqmAbsFunction function) {
+		return (T) function;
+	}
+
+	@Override
+	public T visitCeilingFunction(SqmCeilingFunction<?> function) {
+		return (T) function;
+	}
+
+	@Override
+	public T visitFloorFunction(SqmFloorFunction<?> function) {
 		return (T) function;
 	}
 

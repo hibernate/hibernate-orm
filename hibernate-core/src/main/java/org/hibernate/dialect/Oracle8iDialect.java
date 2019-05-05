@@ -162,8 +162,6 @@ public class Oracle8iDialect extends Dialect {
 
 		CommonFunctionFactory.round( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.ceil( queryEngine );
-		CommonFunctionFactory.floor( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "chr" )
 				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
@@ -231,7 +229,7 @@ public class Oracle8iDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substr" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
@@ -244,7 +242,6 @@ public class Oracle8iDialect extends Dialect {
 				.setExactArgumentCount( 3 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "substring", "substr" );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "vsize(?1)*8", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
@@ -270,6 +267,11 @@ public class Oracle8iDialect extends Dialect {
 								.register()
 				)
 		);
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceiling", "ceil" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
 
 		// Multi-param numeric dialect functions...
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2" )

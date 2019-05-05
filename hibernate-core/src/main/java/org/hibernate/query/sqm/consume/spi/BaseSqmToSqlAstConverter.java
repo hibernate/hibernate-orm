@@ -56,6 +56,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.function.SqmCeilingFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
@@ -67,6 +68,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunct
 import org.hibernate.query.sqm.tree.expression.function.SqmExpFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.function.SqmFloorFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLnFunction;
@@ -136,6 +138,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastFunction;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.CeilingFunction;
 import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.expression.CountFunction;
@@ -146,6 +149,7 @@ import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.FloorFunction;
 import org.hibernate.sql.ast.tree.expression.LengthFunction;
 import org.hibernate.sql.ast.tree.expression.LocateFunction;
 import org.hibernate.sql.ast.tree.expression.LowerFunction;
@@ -795,6 +799,36 @@ public abstract class BaseSqmToSqlAstConverter
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// standard functions
+
+	@Override
+	public Object visitCeilingFunction(SqmCeilingFunction function) {
+		shallownessStack.push( Shallowness.FUNCTION );
+
+		try {
+			return new CeilingFunction(
+					toSqlExpression( function.getArgument().accept( this ) ),
+					function.getExpressableType().getSqlExpressableType()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
+	public Object visitFloorFunction(SqmFloorFunction function) {
+		shallownessStack.push( Shallowness.FUNCTION );
+
+		try {
+			return new FloorFunction(
+					toSqlExpression( function.getArgument().accept( this ) ),
+					function.getExpressableType().getSqlExpressableType()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
 
 	@Override
 	public Object visitAbsFunction(SqmAbsFunction function) {

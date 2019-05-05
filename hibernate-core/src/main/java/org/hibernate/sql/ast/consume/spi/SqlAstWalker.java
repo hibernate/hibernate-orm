@@ -9,8 +9,10 @@ package org.hibernate.sql.ast.consume.spi;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.CeilingFunction;
 import org.hibernate.sql.ast.tree.expression.ExpFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.FloorFunction;
 import org.hibernate.sql.ast.tree.expression.LnFunction;
 import org.hibernate.sql.ast.tree.expression.PowerFunction;
 import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
@@ -156,6 +158,12 @@ public interface SqlAstWalker {
 
 	void visitSelfRenderingExpression(SelfRenderingExpression expression);
 
+	void visitSqlSelectionExpression(SqlSelectionExpression expression);
+
+	void visitEntityTypeLiteral(EntityTypeLiteral expression);
+
+	void visitTuple(SqlTuple tuple);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// functions
@@ -184,9 +192,7 @@ public interface SqlAstWalker {
 
 	void visitCurrentTimestampFunction(CurrentTimestampFunction function);
 
-	void visitTuple(SqlTuple tuple);
-
-	void visitExtractFunction(ExtractFunction extractFunction);
+	void visitExtractFunction(ExtractFunction function);
 
 	void visitLengthFunction(LengthFunction function);
 
@@ -212,18 +218,19 @@ public interface SqlAstWalker {
 
 	void visitUpperFunction(UpperFunction function);
 
-	void visitSqlSelectionExpression(SqlSelectionExpression expression);
+	void visitLnFunction(LnFunction function);
 
+	void visitExpFunction(ExpFunction function);
 
-	void visitEntityTypeLiteral(EntityTypeLiteral expression);
+	void visitPowerFunction(PowerFunction function);
+
+	void visitFloorFunction(FloorFunction function);
+
+	void visitCeilingFunction(CeilingFunction function);
+
 
 	void visitExtractUnit(ExtractUnit unit);
 
 	void visitCastTarget(CastTarget castTarget);
 
-	void visitLnFunction(LnFunction lnFunction);
-
-	void visitExpFunction(ExpFunction expFunction);
-
-	void visitPowerFunction(PowerFunction powerFunction);
 }

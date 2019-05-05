@@ -418,6 +418,22 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	@SuppressWarnings("unchecked")
+	public void visitFloorFunction(FloorFunction function) {
+		appendSql( "floor(" );
+		function.getArgument().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void visitCeilingFunction(CeilingFunction function) {
+		appendSql( "ceiling(" );
+		function.getArgument().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public void visitAbsFunction(AbsFunction function) {
 		appendSql( "abs(" );
 		function.getArgument().accept( this );

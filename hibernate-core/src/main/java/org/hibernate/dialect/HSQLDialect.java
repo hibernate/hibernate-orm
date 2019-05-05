@@ -176,8 +176,6 @@ public class HSQLDialect extends Dialect {
 		// string functions
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "char", StandardSpiBasicTypes.CHARACTER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lcase" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ucase" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "soundex", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim" );
@@ -235,9 +233,6 @@ public class HSQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "roundmagic" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "truncate" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "trunc" );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ceiling" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "floor" );
 
 		// special functions
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM

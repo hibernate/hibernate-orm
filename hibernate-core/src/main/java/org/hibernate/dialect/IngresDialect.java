@@ -265,11 +265,6 @@ public class IngresDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "lowercase", "lower" );
-
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "uppercase", "upper" );
-
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Date functions
 

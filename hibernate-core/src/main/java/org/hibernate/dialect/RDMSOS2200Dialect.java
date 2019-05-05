@@ -181,19 +181,21 @@ public class RDMSOS2200Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "instr", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lpad", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rpad", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "substr", StandardSpiBasicTypes.STRING );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lcase" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "reverse" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim" );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
 
 		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "soundex" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "space", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ucase" );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
@@ -212,8 +214,11 @@ public class RDMSOS2200Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "trunc" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ceil" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "floor" );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceiling", "ceil" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "initcap" );

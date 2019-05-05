@@ -134,8 +134,6 @@ public class PostgreSQL81Dialect extends Dialect {
 
 		CommonFunctionFactory.round( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.ceil( queryEngine );
-		CommonFunctionFactory.floor( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -243,11 +241,10 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setExactArgumentCount( 3 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substr" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "substring", "substr" );
 
 		queryEngine.getSqmFunctionRegistry().register(
 				"locate",

@@ -42,6 +42,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.function.SqmCeilingFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
@@ -53,6 +54,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunct
 import org.hibernate.query.sqm.tree.expression.function.SqmExpFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.function.SqmFloorFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmLnFunction;
@@ -228,17 +230,17 @@ public interface SemanticQueryWalker<T> {
 
 	T visitAbsFunction(SqmAbsFunction<?> function);
 
-	T visitAvgFunction(SqmAvgFunction<?> expression);
+	T visitAvgFunction(SqmAvgFunction<?> function);
 
-	T visitBitLengthFunction(SqmBitLengthFunction<?> sqmBitLengthFunction);
+	T visitBitLengthFunction(SqmBitLengthFunction<?> function);
 
-	T visitCastFunction(SqmCastFunction<?> expression);
+	T visitCastFunction(SqmCastFunction<?> function);
 
-	T visitCoalesceFunction(SqmCoalesceFunction<?> expression);
+	T visitCoalesceFunction(SqmCoalesceFunction<?> function);
 
-	T visitCountFunction(SqmCountFunction<?> expression);
+	T visitCountFunction(SqmCountFunction<?> function);
 
-	T visitCountStarFunction(SqmCountStarFunction<?> expression);
+	T visitCountStarFunction(SqmCountStarFunction<?> function);
 
 	T visitCurrentDateFunction(SqmCurrentDateFunction function);
 
@@ -250,34 +252,43 @@ public interface SemanticQueryWalker<T> {
 
 	T visitExtractFunction(SqmExtractFunction<?> function);
 
-	T visitLengthFunction(SqmLengthFunction<?> sqmLengthFunction);
+	T visitLengthFunction(SqmLengthFunction<?> function);
 
 	T visitLocateFunction(SqmLocateFunction<?> function);
 
-	T visitReplaceFunction(SqmReplaceFunction<?> tSqmReplaceFunction);
+	T visitReplaceFunction(SqmReplaceFunction<?> function);
 
-	T visitLowerFunction(SqmLowerFunction<?> expression);
+	T visitLowerFunction(SqmLowerFunction<?> function);
 
-	T visitMaxFunction(SqmMaxFunction<?> expression);
+	T visitMaxFunction(SqmMaxFunction<?> function);
 
-	T visitMinFunction(SqmMinFunction<?> expression);
+	T visitMinFunction(SqmMinFunction<?> function);
 
-	T visitModFunction(SqmModFunction<?> sqmModFunction);
+	T visitModFunction(SqmModFunction<?> function);
 
-	T visitNullifFunction(SqmNullifFunction<?> expression);
+	T visitNullifFunction(SqmNullifFunction<?> function);
 
-	T visitSqrtFunction(SqmSqrtFunction<?> sqmSqrtFunction);
+	T visitSqrtFunction(SqmSqrtFunction<?> function);
 
-	T visitStrFunction(SqmStrFunction<?> sqmStrFunction);
+	T visitStrFunction(SqmStrFunction<?> function);
 
-	T visitSubstringFunction(SqmSubstringFunction<?> expression);
+	T visitSubstringFunction(SqmSubstringFunction<?> function);
 
-	T visitSumFunction(SqmSumFunction<?> expression);
+	T visitSumFunction(SqmSumFunction<?> function);
 
-	T visitTrimFunction(SqmTrimFunction<?> expression);
+	T visitTrimFunction(SqmTrimFunction<?> function);
 
-	T visitUpperFunction(SqmUpperFunction<?> expression);
+	T visitUpperFunction(SqmUpperFunction<?> function);
 
+	T visitExpFunction(SqmExpFunction<?> function);
+
+	T visitLnFunction(SqmLnFunction<?> function);
+
+	T visitPowerFunction(SqmPowerFunction<?> function);
+
+	T visitCeilingFunction(SqmCeilingFunction<?> function);
+
+	T visitFloorFunction(SqmFloorFunction<?> function);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// predicates
@@ -344,9 +355,4 @@ public interface SemanticQueryWalker<T> {
 
 	T visitCastTarget(SqmCastTarget sqmCastTarget);
 
-	T visitExpFunction(SqmExpFunction<?> tSqmExpFunction);
-
-	T visitLnFunction(SqmLnFunction<?> tSqmLnFunction);
-
-	T visitPowerFunction(SqmPowerFunction<?> tSqmPowerFunction);
 }

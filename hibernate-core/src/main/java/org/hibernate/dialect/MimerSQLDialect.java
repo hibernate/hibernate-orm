@@ -68,8 +68,6 @@ public class MimerSQLDialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ceiling" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "floor" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dacos", StandardSpiBasicTypes.DOUBLE );

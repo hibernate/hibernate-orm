@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastFunction;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.CeilingFunction;
 import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.ConcatFunction;
@@ -36,6 +37,7 @@ import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
 import org.hibernate.sql.ast.tree.expression.ExpFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.FloorFunction;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
 import org.hibernate.sql.ast.tree.expression.LengthFunction;
 import org.hibernate.sql.ast.tree.expression.LnFunction;
@@ -584,6 +586,16 @@ public class SqlAstPrinter implements SqlAstWalker {
 
 	@Override
 	public void visitAbsFunction(AbsFunction function) {
+
+	}
+
+	@Override
+	public void visitFloorFunction(FloorFunction function) {
+
+	}
+
+	@Override
+	public void visitCeilingFunction(CeilingFunction function) {
 
 	}
 

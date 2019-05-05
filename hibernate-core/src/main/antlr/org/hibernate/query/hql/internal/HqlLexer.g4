@@ -38,8 +38,8 @@ fragment
 FLOATING_POINT_NUMBER
 	: ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
 	| '.' ('0'..'9')+ EXPONENT?
-    | ('0'..'9')+ EXPONENT
-    | ('0'..'9')+
+	| ('0'..'9')+ EXPONENT
+	| ('0'..'9')+
 	;
 
 DOUBLE_LITERAL : FLOATING_POINT_NUMBER ('d'|'D') ;
@@ -119,11 +119,12 @@ ANY					: [aA] [nN] [yY];
 ASC					: [aA] [sS] [cC];
 AVG					: [aA] [vV] [gG];
 BY					: [bB] [yY];
-BETWEEN     		: [bB] [eE] [tT] [wW] [eE] [eE] [nN];
+BETWEEN	 			: [bB] [eE] [tT] [wW] [eE] [eE] [nN];
 BIT_LENGTH  		: [bB] [iI] [tT] [_] [lL] [eE] [nN] [gG] [tT] [hH];
-BOTH        		: [bB] [oO] [tT] [hH];
-CASE        		: [cC] [aA] [sS] [eE];
-CAST        		: [cC] [aA] [sS] [tT];
+BOTH				: [bB] [oO] [tT] [hH];
+CASE				: [cC] [aA] [sS] [eE];
+CAST				: [cC] [aA] [sS] [tT];
+CEILING				: [cC] [eE] [iI] [lL] [iI] [nN] [gG];
 CHARACTER_LENGTH	: [cC] [hH] [aA] [rR] [aA] [cC] [tT] [eE] [rR] '_' [lL] [eE] [nN] [gG] [tT] [hH];
 CLASS				: [cC] [lL] [aA] [sS] [sS];
 COALESCE			: [cC] [oO] [aA] [lL] [eE] [sS] [cC] [eE];
@@ -146,11 +147,12 @@ END					: [eE] [nN] [dD];
 ENTRY				: [eE] [nN] [tT] [rR] [yY];
 ESCAPE				: [eE] [sS] [cC] [aA] [pP] [eE];
 EXISTS				: [eE] [xX] [iI] [sS] [tT] [sS];
-EXP     			: [eE] [xX] [pP];
+EXP	 				: [eE] [xX] [pP];
 EXTRACT				: [eE] [xX] [tT] [rR] [aA] [cC] [tT];
 FETCH				: [fF] [eE] [tT] [cC] [hH];
+FLOOR				: [fF] [lL] [oO] [oO] [rR];
 FROM				: [fF] [rR] [oO] [mM];
-FOR				    : [fF] [oO] [rR];
+FOR					: [fF] [oO] [rR];
 FULL				: [fF] [uU] [lL] [lL];
 FUNCTION			: [fF] [uU] [nN] [cC] [tT] [iI] [oO] [nN];
 GROUP				: [gG] [rR] [oO] [uU] [pP];
@@ -170,7 +172,7 @@ LENGTH				: [lL] [eE] [nN] [gG] [tT] [hH];
 LIMIT				: [lL] [iI] [mM] [iI] [tT];
 LIKE				: [lL] [iI] [kK] [eE];
 LIST				: [lL] [iI] [sS] [tT];
-LN  	            : [lL] [nN];
+LN  				: [lL] [nN];
 LOCATE				: [lL] [oO] [cC] [aA] [tT] [eE];
 LOWER				: [lL] [oO] [wW] [eE] [rR];
 MAP					: [mM] [aA] [pP];
@@ -197,14 +199,14 @@ ORDER				: [oO] [rR] [dD] [eE] [rR];
 OUTER				: [oO] [uU] [tT] [eE] [rR];
 POSITION			: [pP] [oO] [sS] [iI] [tT] [iI] [oO] [nN];
 POWER				: [pP] [oO] [wW] [eE] [rR];
-REPLACE             : [rR] [eE] [pP] [lL] [aA] [cC] [eE];
+REPLACE			 : [rR] [eE] [pP] [lL] [aA] [cC] [eE];
 RIGHT				: [rR] [iI] [gG] [hH] [tT];
 SECOND				: [sS] [eE] [cC] [oO] [nN] [dD];
 SELECT				: [sS] [eE] [lL] [eE] [cC] [tT];
 SET					: [sS] [eE] [tT];
 SIZE				: [sS] [iI] [zZ] [eE];
 SQRT				: [sS] [qQ] [rR] [tT];
-STR                 : [sS] [tT] [rR];
+STR					: [sS] [tT] [rR];
 SUBSTRING			: [sS] [uU] [bB] [sS] [tT] [rR] [iI] [nN] [gG];
 SUM					: [sS] [uU] [mM];
 THEN				: [tT] [hH] [eE] [nN];

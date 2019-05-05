@@ -327,13 +327,11 @@ public abstract class AbstractHANADialect extends Dialect {
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerNamed( "bin2hex", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "bitand", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ceil" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "cosh", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cot", "cos" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerNamed( "floor" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "hex2bin", StandardSpiBasicTypes.BINARY );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
@@ -355,7 +353,6 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "char", StandardSpiBasicTypes.CHARACTER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lcase", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "left", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lpad", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim", StandardSpiBasicTypes.STRING );
@@ -365,7 +362,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "substr_after", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "substr_before", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ucase", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "length(to_binary(?1))*8", StandardSpiBasicTypes.INTEGER );
 
@@ -384,6 +380,11 @@ public abstract class AbstractHANADialect extends Dialect {
 								.register()
 				)
 		);
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceiling", "ceil" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_blob", StandardSpiBasicTypes.BLOB );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_clob", StandardSpiBasicTypes.CLOB );

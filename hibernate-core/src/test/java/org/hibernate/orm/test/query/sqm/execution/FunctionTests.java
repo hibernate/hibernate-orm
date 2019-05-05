@@ -80,6 +80,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                             .list();
                     session.createQuery("select power(e.theDouble, 2.5) from EntityOfBasics e")
                             .list();
+                    session.createQuery("select ceiling(e.theDouble), floor(e.theDouble) from EntityOfBasics e")
+                            .list();
                 }
         );
     }

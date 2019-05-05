@@ -274,6 +274,8 @@ public abstract class Dialect implements ConversionContext {
 	 *      * ln
 	 *      * exp
 	 *      * power
+	 *      * ceiling
+	 *      * floor
 	 *
 	 * And several additional "standard" functions:
 	 *

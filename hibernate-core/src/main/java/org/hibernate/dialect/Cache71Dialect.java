@@ -265,8 +265,6 @@ public class Cache71Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "($length(?1)*8)", StandardSpiBasicTypes.INTEGER );
 
-		CommonFunctionFactory.ceiling( queryEngine );
-
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape(
 				"char",
 				queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
@@ -318,7 +316,6 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%internal" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "isnull" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "isnumeric", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "lcase", queryEngine.getSqmFunctionRegistry().registerNamed( "lcase", StandardSpiBasicTypes.STRING ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "left", queryEngine.getSqmFunctionRegistry().registerNamed( "left", StandardSpiBasicTypes.STRING ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "len", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "$length" );
@@ -363,7 +360,6 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "string", StandardSpiBasicTypes.STRING );
 		// note that %string is deprecated
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%string", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "substr", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "tan", queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "timestampadd", queryEngine.getSqmFunctionRegistry().registerNamed( "timestampadd", StandardSpiBasicTypes.DOUBLE ) );
@@ -378,7 +374,6 @@ public class Cache71Dialect extends Dialect {
 		// use Hibernate implementation "From" is one of the parameters they pass in position ?3
 		//registerFunction( "trim", new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?1 ?2 from ?3)") );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "truncate", queryEngine.getSqmFunctionRegistry().registerNamed( "truncate", StandardSpiBasicTypes.STRING ) );
-		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "ucase", queryEngine.getSqmFunctionRegistry().registerNamed( "ucase", StandardSpiBasicTypes.STRING ) );
 		// %upper is deprecated
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%upper" );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "user", queryEngine.getSqmFunctionRegistry().registerNamed( "user", StandardSpiBasicTypes.STRING ) );
@@ -387,6 +382,12 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "xmlelement", StandardSpiBasicTypes.STRING );
 		// xmlforest requires a new kind of function constructor
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "year", queryEngine.getSqmFunctionRegistry().registerNamed( "year", StandardSpiBasicTypes.INTEGER ) );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+
 	}
 
 	protected void register71Functions(QueryEngine queryEngine) {

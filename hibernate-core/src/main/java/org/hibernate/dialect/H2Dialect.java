@@ -165,8 +165,6 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
 
-		CommonFunctionFactory.ceiling( queryEngine );
-
 		CommonFunctionFactory.cos( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "compress" )
@@ -192,8 +190,6 @@ public class H2Dialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
-
-		CommonFunctionFactory.floor( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "hash" )
 				.setExactArgumentCount( 3 )
@@ -273,8 +269,6 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "lcase", "lower" );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -327,8 +321,6 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ucase", "upper" );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "utf8tostring" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -361,8 +353,6 @@ public class H2Dialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "now", "current_timestamp" );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "quarter" )
 				.setExactArgumentCount( 1 )

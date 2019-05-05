@@ -344,7 +344,6 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "%pattern", StandardSpiBasicTypes.STRING, "", "%pattern", "" );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "pi", queryEngine.getSqmFunctionRegistry().registerNamed( "pi", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "$piece", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "power", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "quarter", queryEngine.getSqmFunctionRegistry().registerNamed( "quarter", StandardSpiBasicTypes.INTEGER ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "repeat", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "replicate", StandardSpiBasicTypes.STRING );

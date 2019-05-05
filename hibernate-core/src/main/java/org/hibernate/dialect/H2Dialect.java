@@ -208,11 +208,6 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "power" )
-				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
-
 		CommonFunctionFactory.radians( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rand" )

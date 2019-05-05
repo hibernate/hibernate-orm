@@ -100,7 +100,6 @@ public class MimerSQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dtan", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dpower" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "power" );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "date", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER );

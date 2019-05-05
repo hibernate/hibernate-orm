@@ -243,7 +243,6 @@ public class RDMSOS2200Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "atan2", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "power", StandardSpiBasicTypes.DOUBLE );
 	}
 
 

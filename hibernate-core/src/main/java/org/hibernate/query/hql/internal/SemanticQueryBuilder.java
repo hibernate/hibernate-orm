@@ -1877,6 +1877,22 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public SqmExpression visitPowerFunction(HqlParser.PowerFunctionContext ctx) {
+		//noinspection unchecked
+		return generateTwoArgFunction(
+				SqmModFunction.NAME,
+				(sqmFunctionTemplate, arg1, arg2) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						asList( arg1, arg2 ),
+						(AllowableFunctionReturnType) arg1.getExpressableType(),
+						creationContext.getQueryEngine()
+				),
+				(arg1, arg2) -> new SqmModFunction( arg1, arg2, (AllowableFunctionReturnType) arg1.getExpressableType(), creationContext.getNodeBuilder() ),
+				ctx.powerBaseArgument().expression(),
+				ctx.powerPowerArgument().expression()
+		);
+	}
+
+	@Override
 	public SqmExpression visitSqrtFunction(HqlParser.SqrtFunctionContext ctx) {
 		//noinspection unchecked
 		return generateSingleArgFunction(

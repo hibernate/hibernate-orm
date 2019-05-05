@@ -582,6 +582,7 @@ standardFunction
 	|   lnFunction
 	|   expFunction
 	|	modFunction
+	|   powerFunction
 	|   strFunction
 	|	currentDateFunction
 	|	currentTimeFunction
@@ -703,13 +704,21 @@ expFunction
 	:	EXP LEFT_PAREN expression RIGHT_PAREN
 	;
 
+powerFunction
+	:	POWER LEFT_PAREN powerBaseArgument COMMA powerPowerArgument RIGHT_PAREN
+	;
+
+powerBaseArgument
+	: expression
+	;
+
+powerPowerArgument
+	: expression
+	;
+
 modFunction
 	:	MOD LEFT_PAREN modDividendArgument COMMA modDivisorArgument RIGHT_PAREN
 	;
-
-strFunction
-    :   STR LEFT_PAREN expression RIGHT_PAREN
-    ;
 
 modDividendArgument
 	: expression
@@ -718,6 +727,10 @@ modDividendArgument
 modDivisorArgument
 	: expression
 	;
+
+strFunction
+    :   STR LEFT_PAREN expression RIGHT_PAREN
+    ;
 
 currentDateFunction
 	: CURRENT_DATE (LEFT_PAREN RIGHT_PAREN)?
@@ -840,6 +853,7 @@ identifier
 	| ORDER
 	| OUTER
 	| POSITION
+	| POWER
 	| REPLACE
 	| RIGHT
 	| SELECT

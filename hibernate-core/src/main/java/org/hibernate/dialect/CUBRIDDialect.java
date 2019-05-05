@@ -179,7 +179,6 @@ public class CUBRIDDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "substr", StandardSpiBasicTypes.STRING );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "power" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "stddev" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "variance" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "trunc" );

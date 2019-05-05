@@ -339,7 +339,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "power" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );

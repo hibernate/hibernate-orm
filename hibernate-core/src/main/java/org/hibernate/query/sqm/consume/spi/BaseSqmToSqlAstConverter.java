@@ -76,6 +76,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmPowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmReplaceFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
@@ -153,6 +154,7 @@ import org.hibernate.sql.ast.tree.expression.MinFunction;
 import org.hibernate.sql.ast.tree.expression.ModFunction;
 import org.hibernate.sql.ast.tree.expression.NonStandardFunction;
 import org.hibernate.sql.ast.tree.expression.NullifFunction;
+import org.hibernate.sql.ast.tree.expression.PowerFunction;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -1148,6 +1150,24 @@ public abstract class BaseSqmToSqlAstConverter
 			return new ModFunction(
 					dividend,
 					divisor,
+					function.getExpressableType().getSqlExpressableType()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
+	public Object visitPowerFunction(SqmPowerFunction function) {
+		shallownessStack.push( Shallowness.FUNCTION );
+
+		final Expression base = toSqlExpression( function.getBase().accept( this ) );
+		final Expression power = toSqlExpression( function.getPower().accept( this ) );
+		try {
+			return new PowerFunction(
+					base,
+					power,
 					function.getExpressableType().getSqlExpressableType()
 			);
 		}

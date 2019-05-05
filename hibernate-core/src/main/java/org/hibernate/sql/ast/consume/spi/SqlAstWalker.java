@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ExpFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.LnFunction;
+import org.hibernate.sql.ast.tree.expression.PowerFunction;
 import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
@@ -223,4 +224,6 @@ public interface SqlAstWalker {
 	void visitLnFunction(LnFunction lnFunction);
 
 	void visitExpFunction(ExpFunction expFunction);
+
+	void visitPowerFunction(PowerFunction powerFunction);
 }

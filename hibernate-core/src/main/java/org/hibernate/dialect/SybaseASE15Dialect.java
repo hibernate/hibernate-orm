@@ -44,13 +44,6 @@ public class SybaseASE15Dialect extends SybaseDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "second", "datepart(second, ?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "minute", "datepart(minute, ?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "hour", "datepart(hour, ?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "datepart(?1, ?3)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "?1 % ?2", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "datalength(?1) * 8", StandardSpiBasicTypes.INTEGER );
-
 		//TODO: is this really necessary:
 		queryEngine.getSqmFunctionRegistry().register(
 				"trim", new TransactSQLTrimEmulation(

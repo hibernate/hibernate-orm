@@ -100,7 +100,7 @@ public class SAPDBDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "month", "month(?1)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "year", "year(?1)", StandardSpiBasicTypes.INTEGER );
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?3)", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dayname", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "monthname", StandardSpiBasicTypes.STRING );
@@ -122,9 +122,9 @@ public class SAPDBDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "index", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "value" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "coalesce", "value" );
 
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "coalesce", "value" );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

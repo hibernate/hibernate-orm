@@ -109,18 +109,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "day" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "month" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "year" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datename" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
@@ -154,6 +142,46 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "isnull" )
 				.setExactArgumentCount( 2 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "day" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "month" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "year" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "second", "datepart(second, ?1)")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "minute", "datepart(minute, ?1)")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "hour", "datepart(hour, ?1)")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "extract", "datepart(?1, ?2)")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "mod", "(?1 % ?2)")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "bit_length", "(datalength(?1) * 8)")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "+", ")" );

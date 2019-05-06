@@ -343,6 +343,11 @@ public class MySQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "character_length" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount( 1 )
+				.register();
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_count" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
@@ -363,6 +368,8 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
+
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("length", "character_length");
 	}
 
 	protected void registerVarcharTypes() {

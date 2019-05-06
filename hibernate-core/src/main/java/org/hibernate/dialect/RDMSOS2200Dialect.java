@@ -177,7 +177,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "character_length", StandardSpiBasicTypes.INTEGER );
 
 		// The RDMS concat() function only supports 2 parameters
-		queryEngine.getSqmFunctionRegistry().registerPattern( "concat", "concat(?1, ?2)", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "instr", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lpad", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rpad", StandardSpiBasicTypes.STRING );

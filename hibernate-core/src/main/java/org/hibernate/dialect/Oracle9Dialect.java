@@ -161,7 +161,7 @@ public class Oracle9Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
 
 		// Multi-param string dialect functions...
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "", "||", "" );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "instr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 4 )

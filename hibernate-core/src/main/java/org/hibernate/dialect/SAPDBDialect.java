@@ -72,9 +72,7 @@ public class SAPDBDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "atan", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "cosh", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cot", "cos" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		queryEngine.getSqmFunctionRegistry().registerNamed( "cot", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sinh", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
@@ -93,12 +91,12 @@ public class SAPDBDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "date", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "microsecond", StandardSpiBasicTypes.INTEGER );
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "second", "second(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "minute", "minute(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "hour", "hour(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "day", "day(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "month", "month(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "year", "year(?1)", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "second", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "minute", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "hour", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "day", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "month", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "year", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", StandardSpiBasicTypes.INTEGER );
 

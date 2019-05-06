@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public class SqmJdbcFunctionEscapeWrapper
 		extends SelfRenderingSqmFunction
-		implements SqmNonStandardFunction, SqlAstFunctionProducer, SelfRenderingFunctionSupport {
+		implements SelfRenderingFunctionSupport {
 	private final SqmFunction wrappedSqmFunction;
 
 	public SqmJdbcFunctionEscapeWrapper(

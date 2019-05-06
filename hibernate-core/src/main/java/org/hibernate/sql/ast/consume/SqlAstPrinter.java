@@ -47,7 +47,7 @@ import org.hibernate.sql.ast.tree.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.expression.MinFunction;
 import org.hibernate.sql.ast.tree.expression.ModFunction;
 import org.hibernate.sql.ast.tree.expression.NamedParameter;
-import org.hibernate.sql.ast.tree.expression.NonStandardFunction;
+import org.hibernate.sql.ast.tree.expression.GenericFunction;
 import org.hibernate.sql.ast.tree.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.expression.PowerFunction;
@@ -56,7 +56,7 @@ import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
 import org.hibernate.sql.ast.tree.expression.SignFunction;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqrtFunction;
-import org.hibernate.sql.ast.tree.expression.SubstrFunction;
+import org.hibernate.sql.ast.tree.expression.SubstringFunction;
 import org.hibernate.sql.ast.tree.expression.SumFunction;
 import org.hibernate.sql.ast.tree.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
@@ -86,8 +86,6 @@ import org.hibernate.sql.ast.tree.sort.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.results.spi.SqlSelection;
-
-import java.util.Locale;
 
 /**
  * @author Steve Ebersole
@@ -581,7 +579,7 @@ public class SqlAstPrinter implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitNonStandardFunctionExpression(NonStandardFunction function) {
+	public void visitNonStandardFunctionExpression(GenericFunction function) {
 
 	}
 
@@ -626,7 +624,7 @@ public class SqlAstPrinter implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitSubstrFunction(SubstrFunction function) {
+	public void visitSubstringFunction(SubstringFunction function) {
 
 	}
 

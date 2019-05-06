@@ -10,15 +10,11 @@ import java.util.List;
 
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class ConcatFunction implements StandardFunction {
+public class ConcatFunction extends AbstractFunction {
 	private final List<Expression> expressions;
 	private final SqlExpressableType type;
 
@@ -48,17 +44,4 @@ public class ConcatFunction implements StandardFunction {
 		walker.visitConcatFunction( this );
 	}
 
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			BasicJavaDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				getType().getJdbcValueExtractor()
-		);
-	}
 }

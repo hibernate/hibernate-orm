@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmCastFunction<T> extends AbstractSqmFunction<T> implements SqmFunction<T> {
+public class SqmCastFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "cast";
 
 	private final SqmExpression<?> expressionToCast;

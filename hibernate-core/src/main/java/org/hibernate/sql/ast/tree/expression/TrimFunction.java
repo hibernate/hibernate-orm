@@ -6,17 +6,15 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.TrimSpecification;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Steve Ebersole
  */
-public class TrimFunction extends AbstractStandardFunction {
+public class TrimFunction extends AbstractFunction {
 	private final TrimSpecification specification;
 	private final Expression trimCharacter;
 	private final Expression source;

@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public class CurrentTimeFunction extends AbstractStandardFunction {
+public class CurrentTimeFunction extends AbstractFunction {
 	private final SqlExpressableType type;
 
 	public CurrentTimeFunction(SqlExpressableType type) {

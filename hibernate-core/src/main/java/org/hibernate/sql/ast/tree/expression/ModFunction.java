@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public class ModFunction extends AbstractStandardFunction implements StandardFunction {
+public class ModFunction extends AbstractFunction {
 	private final Expression dividend;
 	private final Expression divisor;
 	private final SqlExpressableType type;

@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public class MinFunction extends AbstractAggregateFunction implements AggregateFunction {
+public class MinFunction extends AbstractAggregateFunction {
 	public MinFunction(Expression argument, boolean distinct, SqlExpressableType resultType) {
 		super( argument, distinct, resultType );
 	}

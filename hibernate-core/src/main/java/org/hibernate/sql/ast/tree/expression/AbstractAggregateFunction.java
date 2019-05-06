@@ -11,7 +11,7 @@ import org.hibernate.sql.SqlExpressableType;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractAggregateFunction extends AbstractStandardFunction implements AggregateFunction {
+public abstract class AbstractAggregateFunction extends AbstractFunction implements AggregateFunction {
 	private final Expression argument;
 	private final boolean distinct;
 	private final SqlExpressableType resultType;

@@ -27,10 +27,6 @@ public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmF
 		super( argumentsValidator, returnTypeResolver );
 	}
 
-	public AbstractSelfRenderingFunctionTemplate(ArgumentsValidator argumentsValidator) {
-		super( argumentsValidator );
-	}
-
 	@Override
 	protected SqmExpression generateSqmFunctionExpression(
 			List<SqmTypedNode> arguments,

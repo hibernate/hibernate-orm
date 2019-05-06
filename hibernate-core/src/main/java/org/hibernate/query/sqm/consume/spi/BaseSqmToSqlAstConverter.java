@@ -157,7 +157,7 @@ import org.hibernate.sql.ast.tree.expression.LowerFunction;
 import org.hibernate.sql.ast.tree.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.expression.MinFunction;
 import org.hibernate.sql.ast.tree.expression.ModFunction;
-import org.hibernate.sql.ast.tree.expression.NonStandardFunction;
+import org.hibernate.sql.ast.tree.expression.GenericFunction;
 import org.hibernate.sql.ast.tree.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.expression.PowerFunction;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -166,7 +166,7 @@ import org.hibernate.sql.ast.tree.expression.SignFunction;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqrtFunction;
 import org.hibernate.sql.ast.tree.expression.SubQuery;
-import org.hibernate.sql.ast.tree.expression.SubstrFunction;
+import org.hibernate.sql.ast.tree.expression.SubstringFunction;
 import org.hibernate.sql.ast.tree.expression.SumFunction;
 import org.hibernate.sql.ast.tree.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
@@ -763,7 +763,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitGenericFunction(SqmGenericFunction<?> expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
-			return new NonStandardFunction(
+			return new GenericFunction(
 					expression.getFunctionName(),
 					expression.getExpressableType().getSqlExpressableType(),
 					visitArguments( expression.getArguments() )
@@ -1239,8 +1239,7 @@ public abstract class BaseSqmToSqlAstConverter
 				expressionList.add( toSqlExpression( expression.getLength().accept( this ) ) );
 			}
 
-			return new SubstrFunction(
-					expression.getFunctionName(),
+			return new SubstringFunction(
 					expressionList,
 					expression.getExpressableType().getSqlExpressableType()
 			);
@@ -1309,11 +1308,10 @@ public abstract class BaseSqmToSqlAstConverter
 
 		try {
 			if ( expression.getOperator() == MODULO ) {
-				return new NonStandardFunction(
-						"mod",
-						expression.getExpressableType().getSqlExpressableType(),
+				return new ModFunction(
 						toSqlExpression( expression.getLeftHandOperand().accept( this ) ),
-						toSqlExpression( expression.getRightHandOperand().accept( this ) )
+						toSqlExpression( expression.getRightHandOperand().accept( this ) ),
+						expression.getExpressableType().getSqlExpressableType()
 				);
 			}
 			return new BinaryArithmeticExpression(

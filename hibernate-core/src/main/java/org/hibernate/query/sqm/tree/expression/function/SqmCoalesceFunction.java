@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class SqmCoalesceFunction<T> extends AbstractSqmFunction<T> implements SqmFunction<T>, JpaCoalesce<T> {
+public class SqmCoalesceFunction<T> extends AbstractSqmFunction<T> implements JpaCoalesce<T> {
 	public static final String NAME = "coalesce";
 
 	private List<SqmExpression<T>> arguments = new ArrayList<>();

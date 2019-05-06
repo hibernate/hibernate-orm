@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Gavin King
  */
-public class ExpFunction extends AbstractStandardFunction {
+public class ExpFunction extends AbstractFunction {
 	private final Expression argument;
 	private final SqlExpressableType type;
 

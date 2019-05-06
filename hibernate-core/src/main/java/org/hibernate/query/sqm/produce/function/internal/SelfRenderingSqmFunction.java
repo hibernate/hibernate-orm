@@ -30,16 +30,7 @@ public class SelfRenderingSqmFunction<T> extends AbstractSqmFunction<T> implemen
 			AllowableFunctionReturnType<T> impliedResultType,
 			NodeBuilder nodeBuilder) {
 		super( impliedResultType, nodeBuilder );
-		this.renderingSupport = null;
-		this.sqmArguments = sqmArguments;
-	}
-
-	public SelfRenderingSqmFunction(
-			List<SqmExpression> sqmArguments,
-			AllowableFunctionReturnType<T> impliedResultType,
-			NodeBuilder nodeBuilder) {
-		super( impliedResultType, nodeBuilder );
-		this.renderingSupport = null;
+		this.renderingSupport = renderingSupport;
 		this.sqmArguments = sqmArguments;
 	}
 

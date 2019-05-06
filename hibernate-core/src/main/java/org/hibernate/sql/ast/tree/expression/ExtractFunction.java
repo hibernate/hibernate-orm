@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public class ExtractFunction extends AbstractStandardFunction {
+public class ExtractFunction extends AbstractFunction {
 	private final ExtractUnit unitToExtract;
 	private final Expression extractionSource;
 

@@ -52,7 +52,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
@@ -62,6 +61,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.produce.spi.SqmFunction;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -345,8 +345,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	SqmFunction<Instant> currentInstant();
 
 	@Override
-	<T> SqmFunction<T> function(
-			String name, Class<T> type, Expression<?>[] args);
+	<T> SqmFunction<T> function(String name, Class<T> type, Expression<?>[] args);
 
 	@Override
 	<Y> SqmRestrictedSubQueryExpression<Y> all(Subquery<Y> subquery);
@@ -358,22 +357,22 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<Y> SqmRestrictedSubQueryExpression<Y> any(Subquery<Y> subquery);
 
 	@Override
-	<K, M extends Map<K, ?>> JpaExpression<Set<K>> keys(M map);
+	<K, M extends Map<K, ?>> SqmExpression<Set<K>> keys(M map);
 
 	@Override
-	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
+	<K, L extends List<?>> SqmExpression<Set<K>> indexes(L list);
 
 	@Override
-	<V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection);
+	<V, C extends Collection<V>> SqmExpression<Collection<V>> values(C collection);
 
 	@Override
 	<V, M extends Map<?, V>> Expression<Collection<V>> values(M map);
 
 	@Override
-	<C extends Collection<?>> JpaExpression<Integer> size(Expression<C> collection);
+	<C extends Collection<?>> SqmExpression<Integer> size(Expression<C> collection);
 
 	@Override
-	<C extends Collection<?>> JpaExpression<Integer> size(C collection);
+	<C extends Collection<?>> SqmExpression<Integer> size(C collection);
 
 	@Override
 	<T> JpaCoalesce<T> coalesce();
@@ -386,10 +385,10 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Y y);
 
 	@Override
-	<Y> JpaExpression<Y> nullif(Expression<Y> x, Expression<?> y);
+	<Y> SqmExpression<Y> nullif(Expression<Y> x, Expression<?> y);
 
 	@Override
-	<Y> JpaExpression<Y> nullif(Expression<Y> x, Y y);
+	<Y> SqmExpression<Y> nullif(Expression<Y> x, Y y);
 
 	@Override
 	<C, R> JpaSimpleCase<C, R> selectCase(Expression<? extends C> expression);

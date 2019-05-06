@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import java.sql.Types;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -41,7 +42,7 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public <T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
 					AllowableFunctionReturnType<T> impliedType,
-					List<SqmTypedNode> arguments) {
+					List<SqmTypedNode<?>> arguments) {
 				return useImpliedTypeIfPossible( invariantType, impliedType );
 			}
 		};
@@ -52,7 +53,7 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public <T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
 					AllowableFunctionReturnType<T> impliedType,
-					List<SqmTypedNode> arguments) {
+					List<SqmTypedNode<?>> arguments) {
 				final AllowableFunctionReturnType specifiedArgType = extractArgumentType( arguments, argPosition );
 				return useImpliedTypeIfPossible( specifiedArgType, impliedType );
 			}
@@ -64,21 +65,14 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public <T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
 					AllowableFunctionReturnType<T> impliedType,
-					List<SqmTypedNode> arguments) {
-				final Optional<SqmTypedNode> firstNonNull = arguments.stream()
-						.filter(
-								arg -> arg instanceof SqmExpression
-										&& ((SqmExpression) arg).getExpressableType() instanceof AllowableFunctionReturnType
-						)
-						.findFirst();
-				if ( firstNonNull.isPresent() ) {
-					SqmExpression arg = (SqmExpression) firstNonNull.get();
-					AllowableFunctionReturnType argType = (AllowableFunctionReturnType) arg.getExpressableType();
-					return useImpliedTypeIfPossible( argType, impliedType );
+					List<SqmTypedNode<?>> arguments) {
+				for (SqmTypedNode arg: arguments) {
+					if (arg!=null && arg.getExpressableType() instanceof AllowableFunctionReturnType) {
+						AllowableFunctionReturnType argType = (AllowableFunctionReturnType) arg.getExpressableType();
+						return useImpliedTypeIfPossible(argType, impliedType);
+					}
 				}
-				else {
-					return impliedType;
-				}
+				return impliedType;
 			}
 		};
 	}
@@ -90,22 +84,46 @@ public class StandardFunctionReturnTypeResolvers {
 
 	@SuppressWarnings("unchecked")
 	private static <T> AllowableFunctionReturnType<T> useImpliedTypeIfPossible(
-			AllowableFunctionReturnType found,
+			AllowableFunctionReturnType defined,
 			AllowableFunctionReturnType implied) {
-		return areCompatible( found, implied ) ? implied : found;
+		return areCompatible( defined, implied ) ? implied : defined;
 	}
 
 	@SuppressWarnings({"unchecked", "SimplifiableIfStatement"})
-	private static boolean areCompatible(AllowableFunctionReturnType expected, AllowableFunctionReturnType found) {
-		if ( expected == null || found == null ) {
+	private static boolean areCompatible(AllowableFunctionReturnType defined, AllowableFunctionReturnType implied) {
+		if ( defined == null || defined.getSqlExpressableType() == null ) {
+			return true;
+		}
+
+		if ( implied == null || implied.getSqlExpressableType() == null ) {
 			return false;
 		}
 
-		return expected.getJavaType().isAssignableFrom( found.getJavaType() );
+		//This list of cases defines legal promotions from a SQL function return
+		//type specified in the function template (i.e. in the Dialect) and a type
+		//that is determined by how the function is used in the HQL query. In essence
+		//the types are compatible if the map to the same JDBC type, of if they are
+		//both numeric types.
+		int impliedTypeCode = implied.getSqlExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
+		int definedTypeCode = defined.getSqlExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
+		return impliedTypeCode == definedTypeCode
+			|| isInteger(impliedTypeCode) && isInteger(definedTypeCode)
+			|| isFloat(impliedTypeCode) && isFloat(definedTypeCode);
 	}
 
-	private static AllowableFunctionReturnType extractArgumentType(List<SqmTypedNode> arguments, int position) {
-		final SqmExpression specifiedArgument = (SqmExpression) arguments.get( position-1 );
+	private static boolean isInteger(int type) {
+		return type == Types.INTEGER
+			|| type == Types.BIGINT
+			|| type == Types.SMALLINT
+			|| type == Types.TINYINT;
+	}
+
+	private static boolean isFloat(int type) {
+		return type == Types.FLOAT || type == Types.DOUBLE;
+	}
+
+	private static AllowableFunctionReturnType extractArgumentType(List<SqmTypedNode<?>> arguments, int position) {
+		final SqmTypedNode specifiedArgument = arguments.get( position-1 );
 		final ExpressableType specifiedArgType = specifiedArgument.getExpressableType();
 		if ( !(specifiedArgType instanceof AllowableFunctionReturnType) ) {
 			throw new QueryException(

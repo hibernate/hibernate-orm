@@ -80,10 +80,9 @@ public class TeradataDialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "year", "extract(year from ?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "length", "character_length(?1)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "substring", "substring(?1 from ?2 for ?3)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "locate", "position(?1 in ?2)", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "locate", "position(?1 in ?2)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "?1 mod ?2", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar(255))", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(octet_length(?1)*8)", StandardSpiBasicTypes.INTEGER );

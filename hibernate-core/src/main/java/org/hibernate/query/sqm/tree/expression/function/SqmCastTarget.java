@@ -12,12 +12,13 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Gavin King
  */
-public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode, SqmVisitableNode {
+public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
 	private AllowableFunctionReturnType<T> type;
 
 	public SqmCastTarget(AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
@@ -30,13 +31,12 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode, S
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return null;
-	}
-
-	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitCastTarget(this);
 	}
 
+	@Override
+	public ExpressableType getExpressableType() {
+		return type;
+	}
 }

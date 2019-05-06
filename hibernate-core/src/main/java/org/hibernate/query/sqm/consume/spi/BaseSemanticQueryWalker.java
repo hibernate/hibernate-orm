@@ -27,7 +27,6 @@ import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -38,42 +37,11 @@ import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.function.SqmCeilingFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmExpFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
-import org.hibernate.query.sqm.tree.expression.function.SqmFloorFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLnFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLocateFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmPowerFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmReplaceFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSignFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmStar;
+import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -109,7 +77,7 @@ import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.produce.spi.SqmFunction;
 
 /**
  * @author Steve Ebersole
@@ -472,96 +440,13 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitGenericFunction(SqmGenericFunction<?> function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitSqlAstFunctionProducer(SqlAstFunctionProducer sqlAstFunctionProducer) {
-		return (T) sqlAstFunctionProducer;
-	}
-
-	@Override
-	public T visitAbsFunction(SqmAbsFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitSignFunction(SqmSignFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitCeilingFunction(SqmCeilingFunction<?> function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitFloorFunction(SqmFloorFunction<?> function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitAvgFunction(SqmAvgFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitBitLengthFunction(SqmBitLengthFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitCastFunction(SqmCastFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitConcatFunction(SqmConcatFunction<?> expression) {
-		for ( SqmExpression argument : expression.getExpressions() ) {
-			argument.accept( this );
-		}
-		return (T) expression;
+	public T visitFunction(SqmFunction sqmFunction) {
+		return (T) sqmFunction;
 	}
 
 	@Override
 	public T visitRestrictedSubQueryExpression(SqmRestrictedSubQueryExpression<?> sqmRestrictedSubQueryExpression) {
 		return sqmRestrictedSubQueryExpression.getSubQuery().accept( this );
-	}
-
-	@Override
-	public T visitCountStarFunction(SqmCountStarFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitCountFunction(SqmCountFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitCurrentDateFunction(SqmCurrentDateFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitCurrentTimeFunction(SqmCurrentTimeFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitCurrentTimestampFunction(SqmCurrentTimestampFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitCurrentInstantFunction(SqmCurrentInstantFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitExtractFunction(SqmExtractFunction function) {
-		return (T) function;
 	}
 
 	@Override
@@ -575,90 +460,19 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
-	public T visitLengthFunction(SqmLengthFunction function) {
-		return (T) function;
+	public T visitTrimSpecification(SqmTrimSpecification trimSpecification) {
+		return (T) trimSpecification;
 	}
 
 	@Override
-	public T visitLocateFunction(SqmLocateFunction function) {
-		return (T) function;
+	public T visitDistinct(SqmDistinct distinct) {
+		return (T) distinct;
 	}
 
 	@Override
-	public T visitReplaceFunction(SqmReplaceFunction function) {
-		return (T) function;
+	public T visitStar(SqmStar sqmStar) {
+		return (T) sqmStar;
 	}
-
-	@Override
-	public T visitLowerFunction(SqmLowerFunction expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitMaxFunction(SqmMaxFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitMinFunction(SqmMinFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitModFunction(SqmModFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitPowerFunction(SqmPowerFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitNullifFunction(SqmNullifFunction expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitSqrtFunction(SqmSqrtFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitLnFunction(SqmLnFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitExpFunction(SqmExpFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitSubstringFunction(SqmSubstringFunction expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitStrFunction(SqmStrFunction expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitSumFunction(SqmSumFunction function) {
-		return (T) function;
-	}
-
-	@Override
-	public T visitTrimFunction(SqmTrimFunction expression) {
-		return (T) expression;
-	}
-
-	@Override
-	public T visitUpperFunction(SqmUpperFunction expression) {
-		return (T) expression;
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// expressions
@@ -687,13 +501,6 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	@Override
 	public T visitTuple(SqmTuple sqmTuple) {
 		return (T) sqmTuple;
-	}
-
-	@Override
-	public T visitConcatExpression(SqmConcat<?> expression) {
-		expression.getLeftHandOperand().accept( this );
-		expression.getRightHandOperand().accept( this );
-		return (T) expression;
 	}
 
 	@Override
@@ -737,8 +544,4 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 		throw new UnsupportedOperationException( "Not supported" );
 	}
 
-	@Override
-	public T visitCoalesceFunction(SqmCoalesceFunction<?> expression) {
-		return (T) expression;
-	}
 }

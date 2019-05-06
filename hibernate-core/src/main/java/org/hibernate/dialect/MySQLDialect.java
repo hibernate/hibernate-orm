@@ -338,17 +338,17 @@ public class MySQLDialect extends Dialect {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "octet_length" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "character_length" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_count" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
@@ -368,7 +368,6 @@ public class MySQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey("length", "character_length");
 	}
 
 	protected void registerVarcharTypes() {

@@ -10,6 +10,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;

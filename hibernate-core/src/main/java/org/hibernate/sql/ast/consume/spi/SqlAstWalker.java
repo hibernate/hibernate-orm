@@ -9,51 +9,22 @@ package org.hibernate.sql.ast.consume.spi;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.CeilingFunction;
-import org.hibernate.sql.ast.tree.expression.ExpFunction;
+import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
-import org.hibernate.sql.ast.tree.expression.FloorFunction;
-import org.hibernate.sql.ast.tree.expression.LnFunction;
-import org.hibernate.sql.ast.tree.expression.PowerFunction;
-import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
-import org.hibernate.sql.ast.tree.expression.SignFunction;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.expression.AbsFunction;
-import org.hibernate.sql.ast.tree.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.BitLengthFunction;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.CastFunction;
-import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.ConcatFunction;
-import org.hibernate.sql.ast.tree.expression.CountFunction;
-import org.hibernate.sql.ast.tree.expression.CountStarFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentDateFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentTimeFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
-import org.hibernate.sql.ast.tree.expression.ExtractFunction;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
-import org.hibernate.sql.ast.tree.expression.LengthFunction;
-import org.hibernate.sql.ast.tree.expression.LocateFunction;
-import org.hibernate.sql.ast.tree.expression.LowerFunction;
-import org.hibernate.sql.ast.tree.expression.MaxFunction;
-import org.hibernate.sql.ast.tree.expression.MinFunction;
-import org.hibernate.sql.ast.tree.expression.ModFunction;
 import org.hibernate.sql.ast.tree.expression.NamedParameter;
-import org.hibernate.sql.ast.tree.expression.GenericFunction;
-import org.hibernate.sql.ast.tree.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqrtFunction;
-import org.hibernate.sql.ast.tree.expression.SubstringFunction;
-import org.hibernate.sql.ast.tree.expression.SumFunction;
-import org.hibernate.sql.ast.tree.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.expression.UpperFunction;
 import org.hibernate.sql.ast.tree.expression.domain.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -123,8 +94,6 @@ public interface SqlAstWalker {
 
 	void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression);
 
-	void visitCoalesceFunction(CoalesceFunction coalesceExpression);
-
 	void visitNamedParameter(NamedParameter namedParameter);
 
 	void visitGenericParameter(GenericParameter parameter);
@@ -169,71 +138,13 @@ public interface SqlAstWalker {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// functions
 
-	void visitNonStandardFunctionExpression(GenericFunction function);
-
-	void visitAbsFunction(AbsFunction function);
-
-	void visitSignFunction(SignFunction function);
-
-	void visitAvgFunction(AvgFunction function);
-
-	void visitBitLengthFunction(BitLengthFunction function);
-
-	void visitCastFunction(CastFunction function);
-
-	void visitConcatFunction(ConcatFunction function);
-
-	void visitSubstringFunction(SubstringFunction function);
-
-	void visitCountFunction(CountFunction function);
-
-	void visitCountStarFunction(CountStarFunction function);
-
-	void visitCurrentDateFunction(CurrentDateFunction function);
-
-	void visitCurrentTimeFunction(CurrentTimeFunction function);
-
-	void visitCurrentTimestampFunction(CurrentTimestampFunction function);
-
-	void visitExtractFunction(ExtractFunction function);
-
-	void visitLengthFunction(LengthFunction function);
-
-	void visitLocateFunction(LocateFunction function);
-
-	void visitReplaceFunction(ReplaceFunction function);
-
-	void visitLowerFunction(LowerFunction function);
-
-	void visitMaxFunction(MaxFunction function);
-
-	void visitMinFunction(MinFunction function);
-
-	void visitModFunction(ModFunction function);
-
-	void visitNullifFunction(NullifFunction function);
-
-	void visitSqrtFunction(SqrtFunction function);
-
-	void visitSumFunction(SumFunction function);
-
-	void visitTrimFunction(TrimFunction function);
-
-	void visitUpperFunction(UpperFunction function);
-
-	void visitLnFunction(LnFunction function);
-
-	void visitExpFunction(ExpFunction function);
-
-	void visitPowerFunction(PowerFunction function);
-
-	void visitFloorFunction(FloorFunction function);
-
-	void visitCeilingFunction(CeilingFunction function);
-
-
 	void visitExtractUnit(ExtractUnit unit);
 
 	void visitCastTarget(CastTarget castTarget);
 
+	void visitTrimSpecification(TrimSpecification trimSpecification);
+
+	void visitStar(Star star);
+
+	void visitDistinct(Distinct distinct);
 }

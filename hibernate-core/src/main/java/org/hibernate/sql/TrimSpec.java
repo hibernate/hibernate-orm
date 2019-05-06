@@ -4,16 +4,19 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.sql.ast.tree.expression;
+package org.hibernate.sql;
 
-import org.hibernate.sql.SqlExpressableType;
+import java.util.Locale;
 
 /**
- * Marker interface to more readily identify "aggregate functions".
- *
  * @author Steve Ebersole
  */
-public interface AggregateFunction extends Function {
-	Expression getArgument();
-	boolean isDistinct();
+public enum TrimSpec {
+	LEADING,
+	TRAILING,
+	BOTH;
+
+	public String toSqlText() {
+		return name().toLowerCase( Locale.ROOT );
+	}
 }

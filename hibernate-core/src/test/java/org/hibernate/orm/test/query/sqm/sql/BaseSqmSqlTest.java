@@ -43,19 +43,4 @@ public class BaseSqmSqlTest extends BaseSqmUnitTest {
 				executionContext.getSession().getSessionFactory()
 		);
 	}
-
-	@Override
-	public MetamodelImplementor getDomainModel() {
-		return sessionFactory().getMetamodel();
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return sessionFactory().getServiceRegistry();
-	}
-
-	@Override
-	public Integer getMaximumFetchDepth() {
-		return sessionFactory().getMaximumFetchDepth();
-	}
 }

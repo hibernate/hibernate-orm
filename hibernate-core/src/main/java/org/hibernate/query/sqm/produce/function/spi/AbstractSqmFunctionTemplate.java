@@ -15,8 +15,8 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
@@ -46,9 +46,9 @@ public abstract class AbstractSqmFunctionTemplate implements SqmFunctionTemplate
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final SqmExpression makeSqmFunctionExpression(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType impliedResultType,
+	public final <T> SelfRenderingSqmFunction<T> makeSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		argumentsValidator.validate( arguments );
 
@@ -59,8 +59,8 @@ public abstract class AbstractSqmFunctionTemplate implements SqmFunctionTemplate
 		);
 	}
 
-	protected abstract SqmExpression generateSqmFunctionExpression(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType impliedResultType,
+	protected abstract <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine);
 }

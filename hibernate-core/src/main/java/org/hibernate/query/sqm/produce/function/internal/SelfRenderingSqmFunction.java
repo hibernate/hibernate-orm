@@ -9,41 +9,58 @@ package org.hibernate.query.sqm.produce.function.internal;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.AbstractSqmFunction;
-import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
+import org.hibernate.sql.ast.produce.spi.SqmFunction;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.tree.expression.Expression;
 
 import java.util.List;
 
 /**
  * @author Steve Ebersole
  */
-public class SelfRenderingSqmFunction<T> extends AbstractSqmFunction<T> implements SqlAstFunctionProducer<T> {
+public class SelfRenderingSqmFunction<T> extends AbstractSqmExpression<T> implements SqmFunction<T> {
 	private final SelfRenderingFunctionSupport renderingSupport;
-	private final List<SqmExpression> sqmArguments;
+	private List<SqmTypedNode<?>> arguments;
 
 	public SelfRenderingSqmFunction(
 			SelfRenderingFunctionSupport renderingSupport,
-			List<SqmExpression> sqmArguments,
+			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			NodeBuilder nodeBuilder) {
 		super( impliedResultType, nodeBuilder );
 		this.renderingSupport = renderingSupport;
-		this.sqmArguments = sqmArguments;
+		this.arguments = arguments;
+	}
+
+	public List<SqmTypedNode<?>> getArguments() {
+		return arguments;
+	}
+
+	@Override
+	public AllowableFunctionReturnType<T> getExpressableType() {
+		return (AllowableFunctionReturnType<T>) super.getExpressableType();
 	}
 
 	public SelfRenderingFunctionSupport getRenderingSupport() {
 		return renderingSupport;
 	}
 
-	public List<SqmExpression> getSqmArguments() {
-		return sqmArguments;
+	@Override
+	public SelfRenderingFunctionSqlAstExpression<T> convertToSqlAst(SqmToSqlAstConverter walker) {
+		return new SelfRenderingFunctionSqlAstExpression<>( this, walker );
 	}
 
 	@Override
-	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
-		return new SelfRenderingFunctionSqlAstExpression( this, walker );
+	public String getFunctionName() {
+		//TODO
+		return null;
 	}
+
+	@Override
+	public boolean isAggregator() {
+		//TODO
+		return false;
+	}
+
 }

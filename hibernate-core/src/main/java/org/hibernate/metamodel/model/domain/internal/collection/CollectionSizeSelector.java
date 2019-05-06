@@ -16,13 +16,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.consume.spi.SelfRenderingExpression;
+import org.hibernate.sql.ast.consume.spi.SqlAppender;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.expression.CountFunction;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -36,7 +38,9 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.internal.IntegerJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Chris Cranford
@@ -89,11 +93,22 @@ public class CollectionSizeSelector extends AbstractSelector {
 
 			final Expression columnExpression = tableGroup.qualify( column );
 
-			final Expression maxExpression = new MaxFunction(
-					columnExpression,
-					false,
-					column.getExpressableType()
-			);
+			final Expression maxExpression = new SelfRenderingExpression() {
+				@Override
+				public void renderToSql(SqlAppender sqlAppender, SqlAstWalker walker, SessionFactoryImplementor sessionFactory) {
+					sqlAppender.appendSql("max(");
+					columnExpression.accept(walker);
+					sqlAppender.appendSql(")");
+				}
+				@Override
+				public SqlExpressableType getType() {
+					return column.getExpressableType();
+				}
+				@Override
+				public SqlSelection createSqlSelection(int jdbcPosition, int valuesArrayPosition, BasicJavaDescriptor javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+					return null;
+				}
+			};
 
 			SqlSelection sqlSelection = new SqlSelectionImpl(
 					1,
@@ -119,15 +134,26 @@ public class CollectionSizeSelector extends AbstractSelector {
 					creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 			);
 
-			final Expression countExpression = new CountFunction(
+			final Expression countExpression = new SelfRenderingExpression() {
+				@Override
+				public void renderToSql(SqlAppender sqlAppender, SqlAstWalker walker, SessionFactoryImplementor sessionFactory) {
+					sqlAppender.appendSql("count(");
 					new QueryLiteral(
 							1,
 							sqlExpressableType,
 							Clause.SELECT
-					),
-					false,
-					sqlExpressableType
-			);
+					).accept(walker);
+					sqlAppender.appendSql(")");
+				}
+				@Override
+				public SqlExpressableType getType() {
+					return sqlExpressableType;
+				}
+				@Override
+				public SqlSelection createSqlSelection(int jdbcPosition, int valuesArrayPosition, BasicJavaDescriptor javaTypeDescriptor, TypeConfiguration typeConfiguration) {
+					return null;
+				}
+			};
 
 			SqlSelection sqlSelection = new SqlSelectionImpl(
 					1,

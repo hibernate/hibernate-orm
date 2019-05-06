@@ -39,14 +39,6 @@ public class FunctionAsExpressionTemplate
 			String expressionStart,
 			String argumentSeparator,
 			String expressionEnd,
-			FunctionReturnTypeResolver returnTypeResolver) {
-		this( expressionStart, argumentSeparator, expressionEnd, returnTypeResolver, null );
-	}
-
-	public FunctionAsExpressionTemplate(
-			String expressionStart,
-			String argumentSeparator,
-			String expressionEnd,
 			FunctionReturnTypeResolver returnTypeResolver,
 			ArgumentsValidator argumentsValidator) {
 		super( returnTypeResolver, argumentsValidator );
@@ -57,8 +49,8 @@ public class FunctionAsExpressionTemplate
 
 	@Override
 	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType resolvedReturnType,
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<?> resolvedReturnType,
 			QueryEngine queryEngine) {
 		return this;
 	}
@@ -77,7 +69,6 @@ public class FunctionAsExpressionTemplate
 		}
 		else {
 			// render the first argument..
-			sqlAstArguments.get( 0 ).accept( walker );
 			renderArgument( sqlAppender, sqlAstArguments.get( 0 ), walker, sessionFactory );
 
 			// render the rest of the arguments, preceded by the separator

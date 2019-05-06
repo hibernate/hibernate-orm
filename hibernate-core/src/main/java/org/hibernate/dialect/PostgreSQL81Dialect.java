@@ -174,7 +174,7 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "octet_length" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
 

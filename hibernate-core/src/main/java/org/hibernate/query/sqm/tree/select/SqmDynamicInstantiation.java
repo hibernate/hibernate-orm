@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -179,7 +180,7 @@ public class SqmDynamicInstantiation<T>
 		private final JavaTypeDescriptor<T> javaTypeDescriptor;
 
 
-		public DynamicInstantiationTargetImpl(DynamicInstantiationNature nature, JavaTypeDescriptor<T> javaTypeDescriptor) {
+		private DynamicInstantiationTargetImpl(DynamicInstantiationNature nature, JavaTypeDescriptor<T> javaTypeDescriptor) {
 			this.nature = nature;
 			this.javaTypeDescriptor = javaTypeDescriptor;
 		}
@@ -240,6 +241,11 @@ public class SqmDynamicInstantiation<T>
 
 	@Override
 	public NodeBuilder nodeBuilder() {
+		return null;
+	}
+
+	@Override
+	public ExpressableType getExpressableType() {
 		return null;
 	}
 }

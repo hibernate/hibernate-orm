@@ -34,7 +34,6 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -240,66 +239,42 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public SqmExpression<Long> asLong() {
-		return new SqmCastFunction<>(
-				this,
-				StandardSpiBasicTypes.LONG
-		);
+		return castAs( StandardSpiBasicTypes.LONG );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		return new SqmCastFunction<>(
-				this,
-				StandardSpiBasicTypes.INTEGER
-		);
+		return castAs( StandardSpiBasicTypes.INTEGER );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		return new SqmCastFunction<>(
-				this,
-				StandardSpiBasicTypes.FLOAT
-		);
+		return castAs( StandardSpiBasicTypes.FLOAT );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		return new SqmCastFunction<>(
-				this,
-				StandardSpiBasicTypes.DOUBLE
-		);
+		return castAs( StandardSpiBasicTypes.DOUBLE );
 	}
 
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		return new SqmCastFunction<>(
-				this,
-				StandardSpiBasicTypes.BIG_DECIMAL
-		);
+		return castAs( StandardSpiBasicTypes.BIG_DECIMAL );
 	}
 
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
-		return new SqmCastFunction<>(
-				this,
-				StandardSpiBasicTypes.BIG_INTEGER
-		);
+		return castAs( StandardSpiBasicTypes.BIG_INTEGER );
 	}
 
 	@Override
 	public SqmExpression<String> asString() {
-		return new SqmCastFunction<>(
-				this,
-				StandardSpiBasicTypes.STRING
-		);
+		return castAs( StandardSpiBasicTypes.STRING );
 	}
 
 	@Override
 	public <X> SqmExpression<X> as(Class<X> type) {
-		return new SqmCastFunction<>(
-				this,
-				nodeBuilder().getDomainModel().getTypeConfiguration().standardExpressableTypeForJavaType( type )
-		);
+		return nodeBuilder().cast( this, type );
 	}
 
 	@Override

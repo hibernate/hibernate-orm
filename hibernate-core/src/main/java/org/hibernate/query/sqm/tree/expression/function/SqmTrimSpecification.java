@@ -6,46 +6,46 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.sql.TrimSpec;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
- * @author Gavin King
+ * Needed to pass TrimSpecification as an SqmExpression when we call out to
+ * SqmFunctionTemplates handling TRIM calls as a function argument.
+ *
+ * @author Steve Ebersole
  */
-public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
-	private String name;
-	private AllowableFunctionReturnType type;
+public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNode, SqmVisitableNode {
 
-	public SqmExtractUnit(String name, AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
+	private final TrimSpec specification;
+
+	public SqmTrimSpecification(TrimSpec specification, NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
-		this.type = type;
-		this.name = name;
+		this.specification = specification;
 	}
 
-	public AllowableFunctionReturnType getType() {
-		return type;
+	public TrimSpec getSpecification() {
+		return specification;
 	}
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitExtractUnit(this);
+		return walker.visitTrimSpecification(this);
 	}
 
-	public String getUnitName() {
-		return name;
+	@Override
+	public String asLoggableText() {
+		return specification.name();
 	}
 
 	@Override
 	public ExpressableType getExpressableType() {
-		return type;
+		return null;
 	}
 }
-
-

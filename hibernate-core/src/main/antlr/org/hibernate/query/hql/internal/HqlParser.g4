@@ -648,10 +648,10 @@ lowerFunction
 	;
 
 locateFunction
-	: LOCATE LEFT_PAREN locateFunctionSubstrArgument COMMA locateFunctionStringArgument (COMMA locateFunctionStartArgument)? RIGHT_PAREN
+	: LOCATE LEFT_PAREN locateFunctionPatternArgument COMMA locateFunctionStringArgument (COMMA locateFunctionStartArgument)? RIGHT_PAREN
 	;
 
-locateFunctionSubstrArgument
+locateFunctionPatternArgument
 	: expression
 	;
 
@@ -787,14 +787,14 @@ timeZoneField
 	;
 
 positionFunction
-	: POSITION LEFT_PAREN positionSubstrArgument IN positionStringArgument RIGHT_PAREN
+	: POSITION LEFT_PAREN positionFunctionPatternArgument IN positionFunctionStringArgument RIGHT_PAREN
 	;
 
-positionSubstrArgument
+positionFunctionPatternArgument
 	: expression
 	;
 
-positionStringArgument
+positionFunctionStringArgument
 	: expression
 	;
 

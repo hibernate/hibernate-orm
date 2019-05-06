@@ -38,7 +38,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 		Component childComponents = ( Component ) children.getElement();
 		Formula f = ( Formula ) childComponents.getProperty( "bioLength" ).getValue().getColumnIterator().next();
 
-		SQLFunction lengthFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "length" );
+		SQLFunction lengthFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "character_length" );
 		if ( lengthFunction != null ) {
 			ArrayList args = new ArrayList();
 			args.add( "bio" );

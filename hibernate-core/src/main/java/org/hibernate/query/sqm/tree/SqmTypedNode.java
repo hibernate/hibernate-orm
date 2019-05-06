@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -14,10 +15,15 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface SqmTypedNode extends SqmNode {
+public interface SqmTypedNode<T> extends SqmNode {
 
 	/**
 	 * The Java type descriptor for this node.
 	 */
-	JavaTypeDescriptor getJavaTypeDescriptor();
+	default JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+		final ExpressableType<T> expressableType = getExpressableType();
+		return expressableType != null ? expressableType.getJavaTypeDescriptor() : null;
+	}
+
+	ExpressableType<T> getExpressableType();
 }

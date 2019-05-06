@@ -17,50 +17,21 @@ import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.AbsFunction;
-import org.hibernate.sql.ast.tree.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.BitLengthFunction;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.CastFunction;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.CeilingFunction;
-import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.ConcatFunction;
-import org.hibernate.sql.ast.tree.expression.CountFunction;
-import org.hibernate.sql.ast.tree.expression.CountStarFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentDateFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentTimeFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
-import org.hibernate.sql.ast.tree.expression.ExpFunction;
-import org.hibernate.sql.ast.tree.expression.ExtractFunction;
+import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
-import org.hibernate.sql.ast.tree.expression.FloorFunction;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
-import org.hibernate.sql.ast.tree.expression.LengthFunction;
-import org.hibernate.sql.ast.tree.expression.LnFunction;
-import org.hibernate.sql.ast.tree.expression.LocateFunction;
-import org.hibernate.sql.ast.tree.expression.LowerFunction;
-import org.hibernate.sql.ast.tree.expression.MaxFunction;
-import org.hibernate.sql.ast.tree.expression.MinFunction;
-import org.hibernate.sql.ast.tree.expression.ModFunction;
 import org.hibernate.sql.ast.tree.expression.NamedParameter;
-import org.hibernate.sql.ast.tree.expression.GenericFunction;
-import org.hibernate.sql.ast.tree.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.expression.PositionalParameter;
-import org.hibernate.sql.ast.tree.expression.PowerFunction;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
-import org.hibernate.sql.ast.tree.expression.SignFunction;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqrtFunction;
-import org.hibernate.sql.ast.tree.expression.SubstringFunction;
-import org.hibernate.sql.ast.tree.expression.SumFunction;
-import org.hibernate.sql.ast.tree.expression.TrimFunction;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.expression.UpperFunction;
 import org.hibernate.sql.ast.tree.expression.domain.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -442,11 +413,6 @@ public class SqlAstPrinter implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitCoalesceFunction(CoalesceFunction coalesceExpression) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
 	public void visitNamedParameter(NamedParameter namedParameter) {
 		logNode( "named-param (%s)", namedParameter.getName() );
 	}
@@ -579,94 +545,11 @@ public class SqlAstPrinter implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitNonStandardFunctionExpression(GenericFunction function) {
-
-	}
-
-	@Override
-	public void visitAbsFunction(AbsFunction function) {
-
-	}
-
-	@Override
-	public void visitSignFunction(SignFunction function) {
-
-	}
-
-	@Override
-	public void visitFloorFunction(FloorFunction function) {
-
-	}
-
-	@Override
-	public void visitCeilingFunction(CeilingFunction function) {
-
-	}
-
-	@Override
-	public void visitAvgFunction(AvgFunction function) {
-
-	}
-
-	@Override
-	public void visitBitLengthFunction(BitLengthFunction function) {
-
-	}
-
-	@Override
-	public void visitCastFunction(CastFunction function) {
-
-	}
-
-	@Override
-	public void visitConcatFunction(ConcatFunction function) {
-
-	}
-
-	@Override
-	public void visitSubstringFunction(SubstringFunction function) {
-
-	}
-
-	@Override
-	public void visitCountFunction(CountFunction function) {
-		logNode(
-				"count",
-				() -> function.getArgument().accept( this )
-		);
-	}
-
-	@Override
-	public void visitCountStarFunction(CountStarFunction function) {
-		logNode( "count(*)" );
-	}
-
-	@Override
-	public void visitCurrentDateFunction(CurrentDateFunction function) {
-		logNode( "current_date" );
-	}
-
-	@Override
-	public void visitCurrentTimeFunction(CurrentTimeFunction function) {
-		logNode( "current_time" );
-	}
-
-	@Override
-	public void visitCurrentTimestampFunction(CurrentTimestampFunction function) {
-		logNode( "current_timestamp" );
-	}
-
-	@Override
 	public void visitTuple(SqlTuple tuple) {
 		logNode(
 				"tuple",
 				() -> tuple.getExpressions().forEach( expr -> expr.accept( this ) )
 		);
-	}
-
-	@Override
-	public void visitExtractFunction(ExtractFunction extractFunction) {
-
 	}
 
 	@Override
@@ -680,77 +563,17 @@ public class SqlAstPrinter implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitLengthFunction(LengthFunction function) {
+	public void visitTrimSpecification(TrimSpecification trimSpecification) {
 
 	}
 
 	@Override
-	public void visitLocateFunction(LocateFunction function) {
+	public void visitStar(Star star) {
 
 	}
 
 	@Override
-	public void visitReplaceFunction(ReplaceFunction function) {
-
-	}
-
-	@Override
-	public void visitLowerFunction(LowerFunction function) {
-
-	}
-
-	@Override
-	public void visitMaxFunction(MaxFunction function) {
-
-	}
-
-	@Override
-	public void visitMinFunction(MinFunction function) {
-
-	}
-
-	@Override
-	public void visitModFunction(ModFunction function) {
-
-	}
-
-	@Override
-	public void visitPowerFunction(PowerFunction function) {
-
-	}
-
-	@Override
-	public void visitNullifFunction(NullifFunction function) {
-
-	}
-
-	@Override
-	public void visitSqrtFunction(SqrtFunction function) {
-
-	}
-
-	@Override
-	public void visitLnFunction(LnFunction function) {
-
-	}
-
-	@Override
-	public void visitExpFunction(ExpFunction function) {
-
-	}
-
-	@Override
-	public void visitSumFunction(SumFunction function) {
-
-	}
-
-	@Override
-	public void visitTrimFunction(TrimFunction function) {
-
-	}
-
-	@Override
-	public void visitUpperFunction(UpperFunction function) {
+	public void visitDistinct(Distinct distinct) {
 
 	}
 

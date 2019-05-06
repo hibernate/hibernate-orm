@@ -10,9 +10,12 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.Template;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 /**
  * Extension for supplying support for non-standard (ANSI SQL) functions
@@ -32,10 +35,31 @@ public interface SqmFunctionTemplate {
 	 * to transform the source function expression into any
 	 * "expressable form".
 	 */
-	SqmExpression makeSqmFunctionExpression(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType impliedResultType,
+	<T> SelfRenderingSqmFunction<T> makeSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine);
+
+	default <T> SelfRenderingSqmFunction<T> makeSqmFunctionExpression(
+			SqmTypedNode<?> argument,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine) {
+		return makeSqmFunctionExpression(
+				singletonList(argument),
+				impliedResultType,
+				queryEngine
+		);
+	}
+
+	default <T> SelfRenderingSqmFunction<T> makeSqmFunctionExpression(
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine) {
+		return makeSqmFunctionExpression(
+				emptyList(),
+				impliedResultType,
+				queryEngine
+		);
+	}
 
 	/**
 	 * Will a call to the described function always include

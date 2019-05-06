@@ -18,6 +18,6 @@ public interface ArgumentsValidator {
 	/**
 	 * The main (functional) operation defining validation
 	 */
-	void validate(List<SqmTypedNode> arguments);
+	void validate(List<SqmTypedNode<?>> arguments);
 
 }

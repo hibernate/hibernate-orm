@@ -6,9 +6,9 @@
  */
 package org.hibernate.sql.ast.produce.spi;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.spi.DomainResultProducer;
@@ -23,7 +23,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface SqlAstFunctionProducer<T> extends SqmFunction<T> {
+public interface SqmFunction<T> extends SqmExpression<T>, JpaFunction<T> {
 	/**
 	 * Generate the SQL AST form of the function as an expression.
 	 *
@@ -36,29 +36,10 @@ public interface SqlAstFunctionProducer<T> extends SqmFunction<T> {
 
 	@Override
 	default <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitSqlAstFunctionProducer( this );
+		return walker.visitFunction( this );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// these are not needed since we perform the production of the SQL AST directly
 
-	@Override
-	default String asLoggableText() {
-		return null;
-	}
-
-	@Override
-	default String getFunctionName() {
-		return null;
-	}
-
-	@Override
-	default AllowableFunctionReturnType<T> getExpressableType() {
-		return null;
-	}
-
-	@Override
-	default boolean hasArguments() {
-		return false;
-	}
 }

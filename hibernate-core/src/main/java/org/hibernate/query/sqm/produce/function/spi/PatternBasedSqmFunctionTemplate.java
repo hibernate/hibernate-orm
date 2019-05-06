@@ -33,7 +33,8 @@ import java.util.List;
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
-public class PatternBasedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTemplate
+public class PatternBasedSqmFunctionTemplate
+		extends AbstractSelfRenderingFunctionTemplate
 		implements SelfRenderingFunctionSupport {
 	private final PatternRenderer renderer;
 
@@ -57,8 +58,8 @@ public class PatternBasedSqmFunctionTemplate extends AbstractSelfRenderingFuncti
 
 	@Override
 	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType impliedResultType,
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<?> impliedResultType,
 			QueryEngine queryEngine) {
 		return this;
 	}

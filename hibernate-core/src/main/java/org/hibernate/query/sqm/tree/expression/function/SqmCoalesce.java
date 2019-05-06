@@ -16,23 +16,27 @@ import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
+ * @author Gavin King
  */
-public class SqmCoalesceFunction<T> extends AbstractSqmFunction<T> implements JpaCoalesce<T> {
-	public static final String NAME = "coalesce";
+public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoalesce<T> {
 
-	private List<SqmExpression<T>> arguments = new ArrayList<>();
+	private List<SqmExpression<? extends T>> arguments = new ArrayList<>();
+	private SqmFunctionTemplate coalesceFunction;
 
-	public SqmCoalesceFunction(NodeBuilder nodeBuilder) {
+	public SqmCoalesce(NodeBuilder nodeBuilder) {
 		this( null, nodeBuilder );
 	}
 
-	public SqmCoalesceFunction(AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
+	public SqmCoalesce(AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
+		coalesceFunction = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate("coalesce");
 	}
 
 	@Override
@@ -44,21 +48,28 @@ public class SqmCoalesceFunction<T> extends AbstractSqmFunction<T> implements Jp
 		return getExpressableType().getJavaTypeDescriptor();
 	}
 
-	public List<SqmExpression<T>> getArguments() {
-		return arguments;
-	}
-
-	public void value(SqmExpression<T> expression) {
+	public void value(SqmExpression<? extends T> expression) {
 		arguments.add( expression );
 
+		//TODO: improve this
 //		if ( getExpressableType() == null ) {
 			setExpressableType( expression.getExpressableType() );
 //		}
 	}
 
+	public List<SqmExpression<? extends T>> getArguments() {
+		return arguments;
+	}
+
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitCoalesceFunction( this );
+		return walker.visitFunction(
+				coalesceFunction.makeSqmFunctionExpression(
+						new ArrayList<>(arguments),
+						(AllowableFunctionReturnType<?>) getExpressableType(),
+						nodeBuilder().getQueryEngine()
+				)
+		);
 	}
 
 	@Override
@@ -66,35 +77,25 @@ public class SqmCoalesceFunction<T> extends AbstractSqmFunction<T> implements Jp
 		return "coalesce(...)";
 	}
 
-	@Override
-	public String getFunctionName() {
-		return NAME;
-	}
-
-	@Override
-	public boolean hasArguments() {
-		return true;
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
 	@Override
-	public SqmCoalesceFunction<T> value(T value) {
+	public SqmCoalesce<T> value(T value) {
 		value( nodeBuilder().literal( value ) );
 		return this;
 	}
 
 	@Override
-	public SqmCoalesceFunction<T> value(Expression<? extends T> value) {
+	public SqmCoalesce<T> value(Expression<? extends T> value) {
 		//noinspection unchecked
 		value( (SqmExpression) value );
 		return this;
 	}
 
 	@Override
-	public SqmCoalesceFunction<T> value(JpaExpression<? extends T> value) {
+	public SqmCoalesce<T> value(JpaExpression<? extends T> value) {
 		//noinspection unchecked
 		value( (SqmExpression) value );
 		return this;
@@ -102,7 +103,7 @@ public class SqmCoalesceFunction<T> extends AbstractSqmFunction<T> implements Jp
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmCoalesceFunction<T> values(T... values) {
+	public SqmCoalesce<T> values(T... values) {
 		for ( T value : values ) {
 			value( nodeBuilder().literal( value ) );
 		}

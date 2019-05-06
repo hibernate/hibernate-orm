@@ -29,7 +29,9 @@ import java.util.Locale;
  * @author David Channon
  * @author Steve Ebersole
  */
-public class NamedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTemplate {
+public class NamedSqmFunctionTemplate
+		extends AbstractSelfRenderingFunctionTemplate
+		implements SelfRenderingFunctionSupport {
 	private final String functionName;
 	private final boolean useParenthesesWhenNoArgs;
 
@@ -55,43 +57,53 @@ public class NamedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTempl
 
 	@Override
 	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType impliedResultType,
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<?> impliedResultType,
 			QueryEngine queryEngine) {
-		return new RenderingSupport();
+		return this;
 	}
 
-	private class RenderingSupport implements SelfRenderingFunctionSupport {
+	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<SqlAstNode> sqlAstArguments,
+			SqlAstWalker walker,
+			SessionFactoryImplementor sessionFactory) {
+		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
 
-		RenderingSupport() {
+		sqlAppender.appendSql( functionName );
+		if ( useParens ) {
+			sqlAppender.appendSql( "(" );
 		}
 
-		@Override
-		public void render(
-				SqlAppender sqlAppender,
-				List<SqlAstNode> sqlAstArguments,
-				SqlAstWalker walker,
-				SessionFactoryImplementor sessionFactory) {
-			final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
-
-			sqlAppender.appendSql( functionName );
-			if ( useParens ) {
-				sqlAppender.appendSql( "(" );
+		boolean firstPass = true;
+		for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
+			if ( !firstPass ) {
+				sqlAppender.appendSql( ", " );
 			}
-
-			boolean firstPass = true;
-			for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
-				if ( !firstPass ) {
-					sqlAppender.appendSql( ", " );
-				}
-				sqlAstArgument.accept( walker );
-				firstPass = false;
-			}
-
-			if ( useParens ) {
-				sqlAppender.appendSql( ")" );
-			}
+			renderArgument( sqlAppender, sqlAstArgument, walker, sessionFactory );
+			firstPass = false;
 		}
+
+		if ( useParens ) {
+			sqlAppender.appendSql( ")" );
+		}
+	}
+
+	/**
+	 * Called from {@link #render} to render an argument.
+	 *
+	 * @param sqlAppender The sql appender to append the rendered argument.
+	 * @param sqlAstArgument The argument being processed.
+	 * @param walker The walker to use for rendering {@link SqlAstNode} expressions
+	 * @param sessionFactory The session factory
+	 */
+	protected void renderArgument(
+			SqlAppender sqlAppender,
+			SqlAstNode sqlAstArgument,
+			SqlAstWalker walker,
+			SessionFactoryImplementor sessionFactory) {
+		sqlAstArgument.accept( walker );
 	}
 
 	@Override
@@ -103,6 +115,4 @@ public class NamedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTempl
 		);
 	}
 
-	public static class Builder {
-	}
 }

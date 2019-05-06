@@ -306,7 +306,7 @@ public class IngresDialect extends Dialect {
 
 
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "octet_length", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "octet_length", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "pad", StandardSpiBasicTypes.STRING );
 
 

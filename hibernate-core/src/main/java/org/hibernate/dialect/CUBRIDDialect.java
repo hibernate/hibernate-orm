@@ -171,8 +171,6 @@ public class CUBRIDDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_count", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "md5", StandardSpiBasicTypes.STRING );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "concat", StandardSpiBasicTypes.STRING );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
@@ -202,7 +200,7 @@ public class CUBRIDDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "add_months", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "user", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "", "||", "" );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 	}
 
 	@Override

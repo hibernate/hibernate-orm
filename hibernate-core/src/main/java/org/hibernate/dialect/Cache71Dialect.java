@@ -287,7 +287,7 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "", "||", "" );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "convert" );
 

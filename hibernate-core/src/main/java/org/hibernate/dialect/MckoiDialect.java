@@ -65,7 +65,6 @@ public class MckoiDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "user", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "concat", StandardSpiBasicTypes.STRING );
 	}
 
 	@Override

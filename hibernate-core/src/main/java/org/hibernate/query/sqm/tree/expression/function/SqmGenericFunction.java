@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmGenericFunction<T> extends AbstractSqmFunction<T> implements SqmNonStandardFunction<T> {
+public class SqmGenericFunction<T> extends AbstractSqmFunction<T> {
 
 	// todo (6.0) : rename this (and friends) using the "non-standard" wording
 

@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Gavin King
  */
-public class PowerFunction extends AbstractStandardFunction implements StandardFunction {
+public class PowerFunction extends AbstractFunction {
 	private final Expression base;
 	private final Expression power;
 	private final SqlExpressableType type;

@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  */
 public class SqmSubstringFunction<T> extends AbstractSqmFunction<T> {
 	public static final String NAME = "substring";
-	public static final String ALT_NAME = "substr";
 
 	private final SqmExpression source;
 	private final SqmExpression startPosition;

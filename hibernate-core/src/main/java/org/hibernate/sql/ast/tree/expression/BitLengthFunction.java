@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public class BitLengthFunction extends AbstractStandardFunction {
+public class BitLengthFunction extends AbstractFunction {
 	private final Expression argument;
 	private final SqlExpressableType type;
 

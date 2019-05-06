@@ -41,14 +41,14 @@ public class SelfRenderingFunctionSqlAstExpression
 		implements SelfRenderingExpression, Selectable, SqlExpressable, DomainResultProducer {
 	private final SelfRenderingSqmFunction sqmExpression;
 	private final List<SqlAstNode> sqlAstArguments;
-	private final TypeConfiguration typeConfiguration;
+	private final SqlExpressableType type;
 
 	public SelfRenderingFunctionSqlAstExpression(
-			SelfRenderingSqmFunction sqmExpression,
+			SelfRenderingSqmFunction sqmFunction,
 			SqmToSqlAstConverter walker) {
-		this.sqmExpression = sqmExpression;
-		this.sqlAstArguments = resolveSqlAstArguments( sqmExpression.getSqmArguments(), walker );
-		this.typeConfiguration = walker.getCreationContext().getDomainModel().getTypeConfiguration();
+		this.sqmExpression = sqmFunction;
+		this.sqlAstArguments = resolveSqlAstArguments( sqmFunction.getSqmArguments(), walker );
+		this.type = sqmFunction.getExpressableType().getSqlExpressableType();
 	}
 
 	private static List<SqlAstNode> resolveSqlAstArguments(List<SqmExpression> sqmArguments, SqmToSqlAstConverter walker) {
@@ -65,19 +65,19 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	private static SqlAstNode toSqlAstNode(Object arg, SqmToSqlAstConverter walker) {
 		if (arg instanceof SqmExpressionInterpretation) {
-			return ((SqmExpressionInterpretation) arg).toSqlExpression(walker);
+			return ( (SqmExpressionInterpretation) arg ).toSqlExpression( walker );
 		}
 		return (SqlAstNode) arg;
 	}
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return getType();
+		return type;
 	}
 
 	@Override
 	public SqlExpressableType getType() {
-		return sqmExpression.getExpressableType().getSqlExpressableType( typeConfiguration );
+		return type;
 	}
 
 	@Override

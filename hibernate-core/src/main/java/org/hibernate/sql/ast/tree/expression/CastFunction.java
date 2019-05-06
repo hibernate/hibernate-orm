@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public class CastFunction extends AbstractStandardFunction {
+public class CastFunction extends AbstractFunction {
 	private final Expression expressionToCast;
 	private final CastTarget castTarget;
 

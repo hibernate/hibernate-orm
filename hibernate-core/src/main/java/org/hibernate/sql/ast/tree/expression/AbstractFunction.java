@@ -6,8 +6,26 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
+
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractFunction implements Function {
+	@Override
+	public SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			BasicJavaDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
+		return new SqlSelectionImpl(
+				jdbcPosition,
+				valuesArrayPosition,
+				this,
+				getExpressableType()
+		);
+	}
 }

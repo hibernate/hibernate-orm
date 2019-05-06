@@ -13,10 +13,7 @@ import org.hibernate.sql.SqlExpressableType;
  *
  * @author Steve Ebersole
  */
-public interface AggregateFunction extends StandardFunction {
-	@Override
-	SqlExpressableType getType();
-
+public interface AggregateFunction extends Function {
 	Expression getArgument();
 	boolean isDistinct();
 }

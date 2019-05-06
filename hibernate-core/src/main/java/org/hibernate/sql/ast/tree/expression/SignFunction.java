@@ -8,15 +8,11 @@ package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Gavin King
  */
-public class SignFunction extends AbstractStandardFunction {
+public class SignFunction extends AbstractFunction {
 	private final Expression argument;
 	private SqlExpressableType type;
 
@@ -44,21 +40,4 @@ public class SignFunction extends AbstractStandardFunction {
 		return type;
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			BasicJavaDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				getType().getSqlTypeDescriptor().getSqlExpressableType(
-						getType().getJavaTypeDescriptor(),
-						typeConfiguration
-				)
-		);
-	}
 }

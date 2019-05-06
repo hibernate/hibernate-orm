@@ -48,13 +48,13 @@ import org.hibernate.sql.ast.tree.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.expression.MinFunction;
 import org.hibernate.sql.ast.tree.expression.ModFunction;
 import org.hibernate.sql.ast.tree.expression.NamedParameter;
-import org.hibernate.sql.ast.tree.expression.NonStandardFunction;
+import org.hibernate.sql.ast.tree.expression.GenericFunction;
 import org.hibernate.sql.ast.tree.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqrtFunction;
-import org.hibernate.sql.ast.tree.expression.SubstrFunction;
+import org.hibernate.sql.ast.tree.expression.SubstringFunction;
 import org.hibernate.sql.ast.tree.expression.SumFunction;
 import org.hibernate.sql.ast.tree.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
@@ -398,7 +398,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void visitNonStandardFunctionExpression(NonStandardFunction function) {
+	public void visitNonStandardFunctionExpression(GenericFunction function) {
 		appendSql( function.getFunctionName() );
 		if ( !function.getArguments().isEmpty() ) {
 			appendSql( OPEN_PARENTHESIS );
@@ -493,7 +493,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void visitSubstrFunction(SubstrFunction function) {
+	public void visitSubstringFunction(SubstringFunction function) {
 		appendSql( "substring(" );
 
 		boolean firstPass = true;

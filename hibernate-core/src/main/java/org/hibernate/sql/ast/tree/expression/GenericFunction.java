@@ -6,44 +6,28 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Represents a call to a function other than one of the standardized ones.
  *
  * @author Steve Ebersole
  */
-public class NonStandardFunction extends AbstractFunction {
+public class GenericFunction extends AbstractFunction {
 	private final String functionName;
 	private final List<Expression> arguments;
 	private final SqlExpressableType resultType;
 
-	public NonStandardFunction(
+	public GenericFunction(
 			String functionName,
 			SqlExpressableType resultType,
 			List<Expression> arguments) {
 		this.functionName = functionName;
 		this.arguments = arguments;
 		this.resultType = resultType;
-	}
-
-	public NonStandardFunction(
-			String functionName,
-			SqlExpressableType resultType,
-			Expression... arguments) {
-		this(
-				functionName,
-				resultType,
-				Arrays.asList( arguments )
-		);
 	}
 
 	public String getFunctionName() {
@@ -69,17 +53,4 @@ public class NonStandardFunction extends AbstractFunction {
 		walker.visitNonStandardFunctionExpression( this );
 	}
 
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			BasicJavaDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				getExpressableType()
-		);
-	}
 }

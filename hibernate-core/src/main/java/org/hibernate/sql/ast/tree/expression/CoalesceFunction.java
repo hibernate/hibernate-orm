@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public class CoalesceFunction extends AbstractStandardFunction {
+public class CoalesceFunction extends AbstractFunction {
 	private List<Expression> values = new ArrayList<>();
 	private SqlExpressableType type;
 

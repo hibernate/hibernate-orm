@@ -9,15 +9,11 @@ package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class NullifFunction extends AbstractStandardFunction {
+public class NullifFunction extends AbstractFunction {
 	private final Expression first;
 	private final Expression second;
 	private final SqlExpressableType type;

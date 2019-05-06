@@ -43,13 +43,13 @@ import org.hibernate.sql.ast.tree.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.expression.MinFunction;
 import org.hibernate.sql.ast.tree.expression.ModFunction;
 import org.hibernate.sql.ast.tree.expression.NamedParameter;
-import org.hibernate.sql.ast.tree.expression.NonStandardFunction;
+import org.hibernate.sql.ast.tree.expression.GenericFunction;
 import org.hibernate.sql.ast.tree.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqrtFunction;
-import org.hibernate.sql.ast.tree.expression.SubstrFunction;
+import org.hibernate.sql.ast.tree.expression.SubstringFunction;
 import org.hibernate.sql.ast.tree.expression.SumFunction;
 import org.hibernate.sql.ast.tree.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
@@ -169,7 +169,7 @@ public interface SqlAstWalker {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// functions
 
-	void visitNonStandardFunctionExpression(NonStandardFunction function);
+	void visitNonStandardFunctionExpression(GenericFunction function);
 
 	void visitAbsFunction(AbsFunction function);
 
@@ -183,7 +183,7 @@ public interface SqlAstWalker {
 
 	void visitConcatFunction(ConcatFunction function);
 
-	void visitSubstrFunction(SubstrFunction function);
+	void visitSubstringFunction(SubstringFunction function);
 
 	void visitCountFunction(CountFunction function);
 

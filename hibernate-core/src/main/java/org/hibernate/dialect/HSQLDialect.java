@@ -177,9 +177,9 @@ public class HSQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "char", StandardSpiBasicTypes.CHARACTER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "soundex", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "reverse" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "reverse", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "space", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar(256))", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_char", StandardSpiBasicTypes.STRING );

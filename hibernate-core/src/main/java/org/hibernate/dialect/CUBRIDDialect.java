@@ -97,9 +97,9 @@ public class CUBRIDDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "character_length", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthb", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthh", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "reverse" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "reverse", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "space", StandardSpiBasicTypes.STRING );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );

@@ -240,7 +240,7 @@ public class Oracle8iDialect extends Dialect {
 				.setExactArgumentCount( 3 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "vsize(?1)*8", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(vsize(?1)*8)", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
 				.setExactArgumentCount( 2 )

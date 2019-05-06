@@ -329,7 +329,7 @@ public class Cache71Dialect extends Dialect {
 				.register();
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "log", queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "log10", queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE ) );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "minute", queryEngine.getSqmFunctionRegistry().registerNamed( "minute", StandardSpiBasicTypes.INTEGER ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "mod", queryEngine.getSqmFunctionRegistry().registerNamed( "mod", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "month", queryEngine.getSqmFunctionRegistry().registerNamed( "month", StandardSpiBasicTypes.INTEGER ) );
@@ -370,9 +370,6 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_date", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "tonumber" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "to_number", "tonumber" );
-		// TRIM(end_keyword string-expression-1 FROM string-expression-2)
-		// use Hibernate implementation "From" is one of the parameters they pass in position ?3
-		//registerFunction( "trim", new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?1 ?2 from ?3)") );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "truncate", queryEngine.getSqmFunctionRegistry().registerNamed( "truncate", StandardSpiBasicTypes.STRING ) );
 		// %upper is deprecated
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%upper" );

@@ -11,6 +11,7 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.LocateEmulation;
+import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -150,6 +151,8 @@ public class SAPDBDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
+
+		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 
 	}
 

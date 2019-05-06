@@ -86,21 +86,8 @@ public class TeradataDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "locate", "position(?1 in ?2)", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "?1 mod ?2", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar(255))", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "octet_length(?1)*8", StandardSpiBasicTypes.INTEGER );
 
-		// bit_length feels a bit broken to me. We have to cast to char in order to
-		// pass when a numeric value is supplied. But of course the answers given will
-		// be wildly different for these two datatypes. 1234.5678 will be 9 bytes as
-		// a char string but will be 8 or 16 bytes as a true numeric.
-		// Jay Nance 2006-09-22
-		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "octet_length(cast(?1 as char))*4", StandardSpiBasicTypes.INTEGER );
-
-		// The preference here would be
-		//   SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp(?1)", false)
-		// but this appears not to work.
-		// Jay Nance 2006-09-22
-		queryEngine.getSqmFunctionRegistry().registerPattern( "current_timestamp", "current_timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "current_time", "current_time", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "current_date", "current_date", StandardSpiBasicTypes.TIMESTAMP );
 	}
 
 	/**

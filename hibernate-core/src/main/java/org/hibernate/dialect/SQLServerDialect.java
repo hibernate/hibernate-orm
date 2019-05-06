@@ -53,18 +53,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "second", "datepart(second, ?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "minute", "datepart(minute, ?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "hour", "datepart(hour, ?1)", StandardSpiBasicTypes.INTEGER );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "locate", "charindex" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "datepart(?1, ?3)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "?1 % ?2", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "datalength(?1) * 8", StandardSpiBasicTypes.INTEGER );
 
 	}
 

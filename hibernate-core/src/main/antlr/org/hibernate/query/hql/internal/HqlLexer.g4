@@ -199,7 +199,7 @@ ORDER				: [oO] [rR] [dD] [eE] [rR];
 OUTER				: [oO] [uU] [tT] [eE] [rR];
 POSITION			: [pP] [oO] [sS] [iI] [tT] [iI] [oO] [nN];
 POWER				: [pP] [oO] [wW] [eE] [rR];
-REPLACE			 : [rR] [eE] [pP] [lL] [aA] [cC] [eE];
+REPLACE				: [rR] [eE] [pP] [lL] [aA] [cC] [eE];
 RIGHT				: [rR] [iI] [gG] [hH] [tT];
 SECOND				: [sS] [eE] [cC] [oO] [nN] [dD];
 SELECT				: [sS] [eE] [lL] [eE] [cC] [tT];

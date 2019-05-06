@@ -218,8 +218,6 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
 
-		CommonFunctionFactory.sign( queryEngine );
-
 		CommonFunctionFactory.sin( queryEngine );
 
 		CommonFunctionFactory.tan( queryEngine );

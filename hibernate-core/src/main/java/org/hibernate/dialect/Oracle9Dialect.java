@@ -94,8 +94,6 @@ public class Oracle9Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.sign( queryEngine );
-
 		CommonFunctionFactory.acos( queryEngine );
 		CommonFunctionFactory.asin( queryEngine );
 		CommonFunctionFactory.atan( queryEngine );

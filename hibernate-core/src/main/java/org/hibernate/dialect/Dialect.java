@@ -268,9 +268,9 @@ public abstract class Dialect implements ConversionContext {
 	 * 		* nullif
 	 * 		* cast
 	 * 		* extract
-	 * 	    * position
+	 * 	    * position (alternative syntax for locate)
 	 * 		* bit_length
-	 * 	    * character_length
+	 * 	    * character_length (synonym for length)
 	 *      * ln
 	 *      * exp
 	 *      * power
@@ -280,7 +280,11 @@ public abstract class Dialect implements ConversionContext {
 	 * And several additional "standard" functions:
 	 *
 	 *      * replace
+	 *      * sign
 	 * 	    * current_instant
+	 *
+	 * TODO: should we continue to support these legacy functions?
+	 *
 	 * 		* second		- defined as `extract(second from ?1)`
 	 * 		* minute		- defined as `extract(minute from ?1)`
 	 * 		* hour			- defined as `extract(hour from ?1)`

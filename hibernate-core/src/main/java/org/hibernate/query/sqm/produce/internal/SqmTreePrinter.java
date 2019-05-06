@@ -69,6 +69,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmPowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmReplaceFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSignFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
@@ -620,6 +621,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitAbsFunction(SqmAbsFunction function) {
+		return null;
+	}
+
+	@Override
+	public Object visitSignFunction(SqmSignFunction function) {
 		return null;
 	}
 

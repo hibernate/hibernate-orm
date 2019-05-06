@@ -442,6 +442,14 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	@SuppressWarnings("unchecked")
+	public void visitSignFunction(SignFunction function) {
+		appendSql( "sign(" );
+		function.getArgument().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public void visitAvgFunction(AvgFunction function) {
 		appendSql( "avg(" );
 		function.getArgument().accept( this );

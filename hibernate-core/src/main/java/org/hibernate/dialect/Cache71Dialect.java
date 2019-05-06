@@ -363,7 +363,6 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "round", StandardSpiBasicTypes.FLOAT );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "second", queryEngine.getSqmFunctionRegistry().registerNamed( "second", StandardSpiBasicTypes.INTEGER ) );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "sign", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "sin", queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "space", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%sqlstring", StandardSpiBasicTypes.STRING );

@@ -401,7 +401,7 @@ expression
 	| entityTypeReference						# EntityTypeExpression
 	| path										# PathExpression
 	| function									# FunctionExpression
-	| LEFT_PAREN subQuery RIGHT_PAREN		    # SubQueryExpression
+	| LEFT_PAREN subQuery RIGHT_PAREN			# SubQueryExpression
 	;
 
 entityTypeReference
@@ -578,14 +578,15 @@ standardFunction
 	|	octetLengthFunction
 	|	bitLengthFunction
 	|	absFunction
+	|	signFunction
 	|	sqrtFunction
-	|   lnFunction
-	|   expFunction
+	|	lnFunction
+	|	expFunction
 	|	modFunction
-	|   powerFunction
-	|   ceilingFunction
-	|   floorFunction
-	|   strFunction
+	|	powerFunction
+	|	ceilingFunction
+	|	floorFunction
+	|	strFunction
 	|	currentDateFunction
 	|	currentTimeFunction
 	|	currentTimestampFunction
@@ -663,20 +664,20 @@ locateFunctionStartArgument
 	;
 
 replaceFunction
-    : REPLACE LEFT_PAREN replaceFunctionStringArgument COMMA replaceFunctionPatternArgument COMMA replaceFunctionReplacementArgument RIGHT_PAREN
-    ;
+	: REPLACE LEFT_PAREN replaceFunctionStringArgument COMMA replaceFunctionPatternArgument COMMA replaceFunctionReplacementArgument RIGHT_PAREN
+	;
 
 replaceFunctionStringArgument
-    : expression
-    ;
+	: expression
+	;
 
 replaceFunctionPatternArgument
-    : expression
-    ;
+	: expression
+	;
 
 replaceFunctionReplacementArgument
-    : expression
-    ;
+	: expression
+	;
 
 lengthFunction
 	: (CHARACTER_LENGTH | LENGTH) LEFT_PAREN expression RIGHT_PAREN
@@ -692,6 +693,10 @@ bitLengthFunction
 
 absFunction
 	:	ABS LEFT_PAREN expression RIGHT_PAREN
+	;
+
+signFunction
+	:	SIGN LEFT_PAREN expression RIGHT_PAREN
 	;
 
 sqrtFunction
@@ -739,8 +744,8 @@ floorFunction
 	;
 
 strFunction
-    :   STR LEFT_PAREN expression RIGHT_PAREN
-    ;
+	:   STR LEFT_PAREN expression RIGHT_PAREN
+	;
 
 currentDateFunction
 	: CURRENT_DATE (LEFT_PAREN RIGHT_PAREN)?
@@ -871,6 +876,7 @@ identifier
 	| SELECT
 	| SECOND
 	| SET
+	| SIGN
 	| SQRT
 	| STR
 	| SUBSTRING
@@ -883,7 +889,7 @@ identifier
 	| WHERE
 	| WITH
 	| YEAR) {
-	    logUseOfReservedWordAsIdentifier(getCurrentToken());
+		logUseOfReservedWordAsIdentifier(getCurrentToken());
 	}
 	;
 

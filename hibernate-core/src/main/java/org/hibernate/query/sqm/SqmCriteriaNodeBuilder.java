@@ -13,7 +13,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -45,15 +44,14 @@ import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.criteria.JpaParameterExpression;
-import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
-import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
@@ -66,36 +64,14 @@ import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLocateFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCoalesce;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
@@ -118,10 +94,12 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.TrimSpecification;
+import org.hibernate.sql.TrimSpec;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqmFunction;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
+import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 
 /**
@@ -195,10 +173,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 	@Override
 	public 	<X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
+		BasicValuedExpressableType<X> type = getTypeConfiguration().standardExpressableTypeForJavaType( castTargetJavaType );
 		//noinspection unchecked
-		return new SqmCastFunction<>(
-				(SqmExpression) expression,
-				getTypeConfiguration().standardExpressableTypeForJavaType( castTargetJavaType )
+		return getFunctionTemplate("cast").makeSqmFunctionExpression(
+				asList( (SqmTypedNode) expression, new SqmCastTarget<>( type, this ) ),
+				type,
+				queryEngine
 		);
 	}
 
@@ -401,25 +381,20 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 	@Override
 	public <N extends Number> SqmExpression<Double> avg(Expression<N> argument) {
-		final SqmExpression sqmExpression = (SqmExpression) argument;
-
-		//noinspection unchecked
-		return new SqmAvgFunction(
-				sqmExpression,
-				(AllowableFunctionReturnType) QueryHelper.highestPrecedenceType2( sqmExpression.getExpressableType(), StandardSpiBasicTypes.DOUBLE ),
-				this
+		return getFunctionTemplate("avg").makeSqmFunctionExpression(
+				(SqmTypedNode) argument,
+				StandardSpiBasicTypes.DOUBLE,
+				queryEngine
 		);
 	}
 
 	@Override
 	public <N extends Number> SqmExpression<N> sum(Expression<N> argument) {
-		final SqmExpression sqmExpression = (SqmExpression) argument;
-
 		//noinspection unchecked
-		return new SqmSumFunction(
-				sqmExpression,
-				(AllowableFunctionReturnType) sqmExpression.getExpressableType(),
-				this
+		return getFunctionTemplate("sum").makeSqmFunctionExpression(
+				(SqmTypedNode) argument,
+				(AllowableFunctionReturnType<N>) ((SqmExpression<N>) argument).getExpressableType(),
+				queryEngine
 		);
 	}
 
@@ -435,23 +410,21 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 	@Override
 	public <N extends Number> SqmExpression<N> max(Expression<N> argument) {
-		final SqmExpression<N> sqmExpression = (SqmExpression<N>) argument;
 		//noinspection unchecked
-		return new SqmMaxFunction(
-				sqmExpression,
-				(BasicValuedExpressableType) sqmExpression.getExpressableType(),
-				this
+		return getFunctionTemplate("max").makeSqmFunctionExpression(
+				(SqmTypedNode) argument,
+				(AllowableFunctionReturnType<N>) ((SqmExpression<N>) argument).getExpressableType(),
+				queryEngine
 		);
 	}
 
 	@Override
 	public <N extends Number> SqmExpression<N> min(Expression<N> argument) {
-		final SqmExpression<N> sqmExpression = (SqmExpression<N>) argument;
 		//noinspection unchecked
-		return new SqmMinFunction(
-				sqmExpression,
-				(BasicValuedExpressableType) sqmExpression.getExpressableType(),
-				this
+		return getFunctionTemplate("min").makeSqmFunctionExpression(
+				(SqmTypedNode) argument,
+				(AllowableFunctionReturnType<N>) ((SqmExpression<N>) argument).getExpressableType(),
+				queryEngine
 		);
 	}
 
@@ -466,19 +439,21 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public SqmCountFunction<Long> count(Expression<?> argument) {
-		return new SqmCountFunction<>(
-				(SqmExpression) argument,
+	public SqmExpression<Long> count(Expression<?> argument) {
+		return getFunctionTemplate("count").makeSqmFunctionExpression(
+				(SqmTypedNode) argument,
 				StandardSpiBasicTypes.LONG,
-				this
+				queryEngine
 		);
 	}
 
 	@Override
-	public SqmCountFunction<Long> countDistinct(Expression<?> argument) {
-		final SqmCountFunction<Long> count = count( argument );
-		count.makeDistinct();
-		return count;
+	public SqmExpression<Long> countDistinct(Expression<?> argument) {
+		return getFunctionTemplate("count").makeSqmFunctionExpression(
+				new SqmDistinct<>( (SqmExpression<?>) argument, getQueryEngine().getCriteriaBuilder() ),
+				StandardSpiBasicTypes.LONG,
+				queryEngine
+		);
 	}
 
 	@Override
@@ -492,12 +467,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 	@Override
 	public <N extends Number> SqmExpression<N> abs(Expression<N> x) {
-		final SqmExpression<N> sqmExpression = (SqmExpression<N>) x;
 		//noinspection unchecked
-		return new SqmAbsFunction(
-				sqmExpression,
-				(AllowableFunctionReturnType) sqmExpression.getExpressableType(),
-				this
+		return getFunctionTemplate("abs").makeSqmFunctionExpression(
+				(SqmTypedNode) x,
+				(AllowableFunctionReturnType<N>) ((SqmExpression<N>) x).getExpressableType(),
+				queryEngine
 		);
 	}
 
@@ -632,15 +606,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 	@Override
 	public SqmExpression<Double> sqrt(Expression<? extends Number> x) {
-		final SqmExpression xSqmExpression = (SqmExpression) x;
 		//noinspection unchecked
-		return new SqmSqrtFunction(
-				xSqmExpression,
+		return getFunctionTemplate("sqrt").makeSqmFunctionExpression(
+				(SqmTypedNode) x,
 				(AllowableFunctionReturnType) QueryHelper.highestPrecedenceType2(
-						xSqmExpression.getExpressableType(),
+						((SqmExpression) x).getExpressableType(),
 						StandardSpiBasicTypes.DOUBLE
 				),
-				this
+				queryEngine
 		);
 	}
 
@@ -756,15 +729,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		final SqmExpression xSqmExpression = (SqmExpression) x;
 		final SqmExpression ySqmExpression = (SqmExpression) y;
 		//noinspection unchecked
-		return new SqmConcat(
-				xSqmExpression,
-				ySqmExpression,
+		return getFunctionTemplate( "concat" ).makeSqmFunctionExpression(
+				asList( xSqmExpression, ySqmExpression ),
 				(BasicValuedExpressableType) highestPrecedenceType(
 						xSqmExpression.getExpressableType(),
 						ySqmExpression.getExpressableType(),
 						StandardSpiBasicTypes.STRING
 				),
-				this
+				getQueryEngine()
 		);
 	}
 
@@ -773,15 +745,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		final SqmExpression xSqmExpression = (SqmExpression) x;
 		final SqmExpression ySqmExpression = literal( y );
 		//noinspection unchecked
-		return new SqmConcat(
-				xSqmExpression,
-				ySqmExpression,
+		return getFunctionTemplate( "concat" ).makeSqmFunctionExpression(
+				asList( xSqmExpression, ySqmExpression ),
 				(BasicValuedExpressableType) highestPrecedenceType(
 						xSqmExpression.getExpressableType(),
 						ySqmExpression.getExpressableType(),
 						StandardSpiBasicTypes.STRING
 				),
-				this
+				getQueryEngine()
 		);
 	}
 
@@ -790,15 +761,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		final SqmExpression xSqmExpression = literal( x );
 		final SqmExpression ySqmExpression = (SqmExpression) y;
 		//noinspection unchecked
-		return new SqmConcat(
-				xSqmExpression,
-				ySqmExpression,
+		return getFunctionTemplate( "concat" ).makeSqmFunctionExpression(
+				asList( xSqmExpression, ySqmExpression ),
 				(BasicValuedExpressableType) highestPrecedenceType(
 						xSqmExpression.getExpressableType(),
 						ySqmExpression.getExpressableType(),
 						StandardSpiBasicTypes.STRING
 				),
-				this
+				getQueryEngine()
 		);
 	}
 
@@ -807,15 +777,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		final SqmExpression xSqmExpression = literal( x );
 		final SqmExpression ySqmExpression = literal( y );
 		//noinspection unchecked
-		return new SqmConcat(
-				xSqmExpression,
-				ySqmExpression,
+		return getFunctionTemplate( "concat" ).makeSqmFunctionExpression(
+				asList( xSqmExpression, ySqmExpression ),
 				(BasicValuedExpressableType) highestPrecedenceType(
 						xSqmExpression.getExpressableType(),
 						ySqmExpression.getExpressableType(),
 						StandardSpiBasicTypes.STRING
 				),
-				this
+				getQueryEngine()
 		);
 	}
 
@@ -835,28 +804,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 				StandardSpiBasicTypes.STRING
 		);
 
-		final SqmFunctionTemplate registeredProducer = getQueryEngine()
-				.getSqmFunctionRegistry()
-				.findFunctionTemplate( SqmSubstringFunction.NAME );
-
-		if ( registeredProducer != null ) {
-			//noinspection unchecked
-			return (SqmFunction<String>) registeredProducer.makeSqmFunctionExpression(
-					Collections.singletonList( from ),
-					resultType,
-					getQueryEngine()
-			);
-		}
-		else {
-			//noinspection unchecked
-			return new SqmSubstringFunction(
-					source,
-					from,
-					len,
-					resultType,
-					this
-			);
-		}
+		//noinspection unchecked
+		return getFunctionTemplate( "substring" ).makeSqmFunctionExpression(
+				len==null ? asList( source, from ) : asList( source, from, len ),
+				resultType,
+				getQueryEngine()
+		);
 	}
 
 	@Override
@@ -891,15 +844,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return createTrimNode( null, null, (SqmExpression) source );
 	}
 
-	private SqmFunction<String> createTrimNode(TrimSpecification trimSpecification, SqmExpression trimCharacter, SqmExpression source) {
-		final SqmFunctionTemplate functionTemplate = getQueryEngine()
-				.getSqmFunctionRegistry()
-				.findFunctionTemplate( SqmTrimFunction.NAME );
-		if ( functionTemplate != null ) {
-			final ArrayList<SqmTypedNode> arguments = new ArrayList<>();
+	private SqmFunction<String> createTrimNode(TrimSpec trimSpecification, SqmExpression trimCharacter, SqmExpression source) {
+
+		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>();
 			if ( trimSpecification != null ) {
 				arguments.add(
-						TrimSpecificationExpressionWrapper.from( trimSpecification )
+						new SqmTrimSpecification( trimSpecification, this )
 				);
 			}
 
@@ -910,25 +860,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 			arguments.add( source );
 
 			//noinspection unchecked
-			return (SqmFunction<String>) functionTemplate.makeSqmFunctionExpression(
+			return getFunctionTemplate( "trim" ).makeSqmFunctionExpression(
 					arguments,
 					(BasicValuedExpressableType) QueryHelper.highestPrecedenceType2( source.getExpressableType(), StandardSpiBasicTypes.STRING ),
 					getQueryEngine()
 			);
-		}
-		else {
-			//noinspection unchecked
-			return new SqmTrimFunction(
-					trimSpecification,
-					trimCharacter,
-					source,
-					(BasicValuedExpressableType) QueryHelper.highestPrecedenceType2(
-							source.getExpressableType(),
-							StandardSpiBasicTypes.STRING
-					),
-					this
-			);
-		}
 	}
 
 	@Override
@@ -936,20 +872,20 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return createTrimNode( convertTrimSpec( ts ), null, (SqmExpression) source );
 	}
 
-	private static TrimSpecification convertTrimSpec(Trimspec jpaTs) {
+	private static TrimSpec convertTrimSpec(Trimspec jpaTs) {
 		if ( jpaTs == null ) {
 			return null;
 		}
 
 		switch ( jpaTs ) {
 			case BOTH: {
-				return TrimSpecification.BOTH;
+				return TrimSpec.BOTH;
 			}
 			case LEADING: {
-				return TrimSpecification.LEADING;
+				return TrimSpec.LEADING;
 			}
 			case TRAILING: {
-				return TrimSpecification.TRAILING;
+				return TrimSpec.TRAILING;
 			}
 		}
 
@@ -978,82 +914,48 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 	@Override
 	public SqmFunction<String> lower(Expression<String> x) {
-		final SqmFunctionTemplate functionTemplate = getQueryEngine()
-				.getSqmFunctionRegistry()
-				.findFunctionTemplate( SqmLowerFunction.NAME );
 
-		final SqmExpression xSqmExpression = (SqmExpression) x;
 		final BasicValuedExpressableType type = (BasicValuedExpressableType) highestPrecedenceType(
-				xSqmExpression.getExpressableType(),
+				((SqmExpression) x).getExpressableType(),
 				StandardSpiBasicTypes.STRING
 		);
 
-		if ( functionTemplate != null ) {
-			//noinspection unchecked
-			return (SqmFunction<String>) functionTemplate.makeSqmFunctionExpression(
-					Collections.singletonList( xSqmExpression ),
-					type,
-					getQueryEngine()
-			);
-		}
-		else {
-			//noinspection unchecked
-			return new SqmLowerFunction<>(
-					xSqmExpression,
-					type,
-					this
-			);
-		}
+		//noinspection unchecked
+		return getFunctionTemplate( "lower" ).makeSqmFunctionExpression(
+				(SqmExpression) x,
+				type,
+				getQueryEngine()
+		);
 	}
 
 	@Override
 	public SqmFunction<String> upper(Expression<String> x) {
-		final SqmFunctionTemplate functionTemplate = getQueryEngine()
-				.getSqmFunctionRegistry()
-				.findFunctionTemplate( SqmUpperFunction.NAME );
 
-		final SqmExpression xSqmExpression = (SqmExpression) x;
 		final BasicValuedExpressableType type = (BasicValuedExpressableType) highestPrecedenceType(
-				xSqmExpression.getExpressableType(),
+				((SqmExpression) x).getExpressableType(),
 				StandardSpiBasicTypes.STRING
 		);
 
-		if ( functionTemplate != null ) {
-			//noinspection unchecked
-			return (SqmFunction<String>) functionTemplate.makeSqmFunctionExpression(
-					Collections.singletonList( xSqmExpression ),
-					type,
-					getQueryEngine()
-			);
-		}
-		else {
-			//noinspection unchecked
-			return new SqmUpperFunction<>(
-					xSqmExpression,
-					type,
-					this
-			);
-		}
+		//noinspection unchecked
+		return getFunctionTemplate( "upper" ).makeSqmFunctionExpression(
+				(SqmExpression) x,
+				type,
+				getQueryEngine()
+		);
 	}
 
 	@Override
 	public SqmFunction<Integer> length(Expression<String> argument) {
-		final SqmExpression argumentSqmExpression = (SqmExpression) argument;
-		final SqmFunctionTemplate functionTemplate = getQueryEngine().getSqmFunctionRegistry()
-				.findFunctionTemplate( SqmLengthFunction.NAME );
 
-		if ( functionTemplate != null ) {
-			//noinspection unchecked
-			return (SqmFunction<Integer>) functionTemplate.makeSqmFunctionExpression(
-					Collections.singletonList( argumentSqmExpression ),
-					(AllowableFunctionReturnType) highestPrecedenceType( argumentSqmExpression.getExpressableType(), StandardSpiBasicTypes.INTEGER ),
-					getQueryEngine()
-			);
-		}
-		else {
-			//noinspection unchecked
-			return new SqmLengthFunction( argumentSqmExpression, StandardSpiBasicTypes.INTEGER, this );
-		}
+		//noinspection unchecked
+		return getFunctionTemplate( "length" ).makeSqmFunctionExpression(
+				(SqmExpression) argument,
+				(AllowableFunctionReturnType) highestPrecedenceType(
+						((SqmExpression) argument).getExpressableType(),
+						StandardSpiBasicTypes.INTEGER
+				),
+				getQueryEngine()
+		);
 	}
 
 	@Override
@@ -1071,43 +973,30 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 			SqmExpression<Integer> startPosition) {
 		final AllowableFunctionReturnType type = (AllowableFunctionReturnType) highestPrecedenceType(
 				source.getExpressableType(),
-				StandardSpiBasicTypes.STRING
+				StandardSpiBasicTypes.INTEGER
 		);
 
-		final SqmFunctionTemplate functionTemplate = queryEngine.getSqmFunctionRegistry().findFunctionTemplate( SqmLocateFunction.NAME );
-
-		if ( functionTemplate != null ) {
-			final List<SqmTypedNode> arguments;
-			if ( startPosition == null ) {
-				arguments = Arrays.asList(
-						source,
-						pattern
-				);
-			}
-			else {
-				arguments = Arrays.asList(
-						source,
-						pattern
-				);
-			}
-
-			//noinspection unchecked
-			return (SqmFunction<Integer>) functionTemplate.makeSqmFunctionExpression(
-					arguments,
-					type,
-					getQueryEngine()
+		final List<SqmTypedNode<?>> arguments;
+		if ( startPosition == null ) {
+			arguments = asList(
+					source,
+					pattern
 			);
 		}
 		else {
-			//noinspection unchecked
-			return new SqmLocateFunction(
-					pattern,
+			arguments = asList(
 					source,
-					startPosition,
-					type,
-					this
+					pattern
 			);
 		}
+
+		//noinspection unchecked
+		return getFunctionTemplate("locate").makeSqmFunctionExpression(
+				arguments,
+				type,
+				getQueryEngine()
+		);
+
 	}
 
 	@Override
@@ -1139,33 +1028,52 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 	@Override
 	public SqmFunction<Date> currentDate() {
-		return new SqmCurrentDateFunction( (AllowableFunctionReturnType) StandardSpiBasicTypes.DATE, this );
+		//noinspection unchecked
+		return getFunctionTemplate("current_date")
+				.makeSqmFunctionExpression(
+						(AllowableFunctionReturnType) StandardSpiBasicTypes.DATE,
+						queryEngine
+				);
 	}
 
 	@Override
 	public SqmFunction<Timestamp> currentTimestamp() {
-		return new SqmCurrentTimestampFunction( (AllowableFunctionReturnType) StandardSpiBasicTypes.TIMESTAMP, this );
+		//noinspection unchecked
+		return getFunctionTemplate("current_timestamp")
+				.makeSqmFunctionExpression(
+						(AllowableFunctionReturnType) StandardSpiBasicTypes.TIMESTAMP,
+						queryEngine
+				);
 	}
 
 	@Override
 	public SqmFunction<Time> currentTime() {
-		return new SqmCurrentTimeFunction( (AllowableFunctionReturnType) StandardSpiBasicTypes.TIME, this );
+		//noinspection unchecked
+		return getFunctionTemplate("current_time")
+				.makeSqmFunctionExpression(
+						(AllowableFunctionReturnType) StandardSpiBasicTypes.TIME,
+						queryEngine
+				);
 	}
 
 	@Override
 	public SqmFunction<Instant> currentInstant() {
-		return new SqmCurrentInstantFunction( (AllowableFunctionReturnType) StandardSpiBasicTypes.INSTANT, this );
+		return getFunctionTemplate("current_timestamp")
+				.makeSqmFunctionExpression(
+						StandardSpiBasicTypes.INSTANT,
+						queryEngine
+				);
 	}
 
 	@Override
 	public <T> SqmFunction<T> function(String name, Class<T> type, Expression<?>[] args) {
-		final SqmFunctionTemplate functionTemplate = queryEngine.getSqmFunctionRegistry().findFunctionTemplate( SqmLocateFunction.NAME );
+		final SqmFunctionTemplate functionTemplate = getFunctionTemplate(name);
 		if ( functionTemplate == null ) {
 			throw new SemanticException( "Could not resolve function named `" + name + "`" );
 		}
 
 		//noinspection unchecked
-		return (SqmFunction<T>) functionTemplate.makeSqmFunctionExpression(
+		return functionTemplate.makeSqmFunctionExpression(
 				(List) expressionList( args ),
 				getTypeConfiguration().standardExpressableTypeForJavaType( type ),
 				getQueryEngine()
@@ -1212,17 +1120,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public <K, M extends Map<K, ?>> JpaExpression<Set<K>> keys(M map) {
+	public <K, M extends Map<K, ?>> SqmExpression<Set<K>> keys(M map) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public <K, L extends List<?>> JpaExpression<Set<K>> indexes(L list) {
+	public <K, L extends List<?>> SqmExpression<Set<K>> indexes(L list) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
-	public <V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection) {
+	public <V, C extends Collection<V>> SqmExpression<Collection<V>> values(C collection) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
@@ -1232,12 +1140,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public <C extends Collection<?>> JpaExpression<Integer> size(Expression<C> collection) {
+	public <C extends Collection<?>> SqmExpression<Integer> size(Expression<C> collection) {
 		return new SqmCollectionSize( (SqmPath) collection, this );
 	}
 
 	@Override
-	public <C extends Collection<?>> JpaExpression<Integer> size(C collection) {
+	public <C extends Collection<?>> SqmExpression<Integer> size(C collection) {
 		return new SqmLiteral<>(
 				collection.size(),
 				StandardSpiBasicTypes.INTEGER,
@@ -1246,31 +1154,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public <T> SqmCoalesceFunction<T> coalesce() {
-		//noinspection unchecked
-		return new SqmCoalesceFunction( this );
+	public <T> SqmCoalesce<T> coalesce() {
+		return new SqmCoalesce<>( this );
 	}
 
 	@Override
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
 		//noinspection unchecked
-		final SqmExpression<Y> xSqmExpression = (SqmExpression) x;
-		//noinspection unchecked
-		final SqmExpression<Y> ySqmExpression = (SqmExpression) y;
-
-		//noinspection unchecked
-		final SqmCoalesceFunction<Y> coalesce = new SqmCoalesceFunction(
+		return new SqmCoalesce<Y>(
 				(AllowableFunctionReturnType) highestPrecedenceType(
-						xSqmExpression.getExpressableType(),
-						ySqmExpression.getExpressableType()
+						((SqmExpression) x).getExpressableType(),
+						((SqmExpression) y).getExpressableType()
 				),
 				this
-		);
-
-		coalesce.value( xSqmExpression );
-		coalesce.value( ySqmExpression );
-
-		return coalesce;
+		)
+				.value(x)
+				.value(y);
 	}
 
 	@Override
@@ -1279,44 +1178,35 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public <Y> JpaExpression<Y> nullif(Expression<Y> x, Expression<?> y) {
+	public <Y> SqmExpression<Y> nullif(Expression<Y> x, Expression<?> y) {
 		//noinspection unchecked
 		return createNullifFunctionNode( (SqmExpression) x, (SqmExpression) y );
 	}
 
 	@Override
-	public <Y> JpaExpression<Y> nullif(Expression<Y> x, Y y) {
+	public <Y> SqmExpression<Y> nullif(Expression<Y> x, Y y) {
 		//noinspection unchecked
 		return createNullifFunctionNode( (SqmExpression) x, literal( y ) );
 	}
 
-	private <Y> JpaExpression<Y> createNullifFunctionNode(SqmExpression<Y> first, SqmExpression<Y> second) {
+	private <Y> SqmExpression<Y> createNullifFunctionNode(SqmExpression<Y> first, SqmExpression<Y> second) {
 		//noinspection unchecked
 		final AllowableFunctionReturnType<Y> type = (AllowableFunctionReturnType<Y>) highestPrecedenceType(
 				first.getExpressableType(),
 				second.getExpressableType()
 		);
 
-		final SqmFunctionTemplate functionTemplate = queryEngine.getSqmFunctionRegistry()
-				.findFunctionTemplate( SqmNullifFunction.NAME );
+		//noinspection unchecked
+		return getFunctionTemplate("nullif").makeSqmFunctionExpression(
+				asList( first, second ),
+				type,
+				getQueryEngine()
+		);
 
-		if ( functionTemplate != null ) {
-			//noinspection unchecked
-			return functionTemplate.makeSqmFunctionExpression(
-					Arrays.asList( first, second ),
-					type,
-					getQueryEngine()
-			);
-		}
-		else {
-			//noinspection unchecked
-			return new SqmNullifFunction(
-					first,
-					second,
-					type,
-					this
-			);
-		}
+	}
+
+	private SqmFunctionTemplate getFunctionTemplate(String name) {
+		return queryEngine.getSqmFunctionRegistry().findFunctionTemplate(name);
 	}
 
 	@Override
@@ -1334,7 +1224,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	public <R> SqmTuple<R> tuple(Class<R> tupleType, JpaExpression<?>... expressions) {
 		//noinspection unchecked
 		return new SqmTuple<R>(
-				(List) Arrays.asList( expressions ),
+				(List) asList( expressions ),
 //				getTypeConfiguration().standardExpressableTypeForJavaType( tupleType ),
 				this
 		);
@@ -1354,7 +1244,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	public <R> SqmTuple<R> tuple(DomainType<R> tupleType, JpaExpression<?>... expressions) {
 		//noinspection unchecked
 		return new SqmTuple<R>(
-				(List) Arrays.asList( expressions ),
+				(List) asList( expressions ),
 				tupleType,
 				this
 		);
@@ -1365,7 +1255,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 			DomainType<R> tupleType, List<JpaExpression<?>> expressions) {
 		//noinspection unchecked
 		return new SqmTuple<R>(
-				(List) Arrays.asList( expressions ),
+				new ArrayList<>((List) expressions),
 				tupleType,
 				this
 		);
@@ -1380,8 +1270,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	public SqmExpression<Integer> mapSize(Map map) {
 		return new SqmLiteral<>( map.size(), StandardSpiBasicTypes.INTEGER, this );
 	}
-
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

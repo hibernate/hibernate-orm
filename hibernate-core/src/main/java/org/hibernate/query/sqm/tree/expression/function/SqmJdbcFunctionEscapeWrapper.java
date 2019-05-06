@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -17,42 +16,32 @@ import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.SqlTreeException;
-import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+
+import static java.util.Collections.singletonList;
 
 /**
  * Adds a JDBC function escape (i.e. `{fn <wrapped-function-call>})  around the wrapped function
  *
  * @author Steve Ebersole
  */
-public class SqmJdbcFunctionEscapeWrapper
-		extends SelfRenderingSqmFunction
+public class SqmJdbcFunctionEscapeWrapper<T>
+		extends SelfRenderingSqmFunction<T>
 		implements SelfRenderingFunctionSupport {
-	private final SqmFunction wrappedSqmFunction;
+	private final SelfRenderingSqmFunction<?> wrappedSqmFunction;
 
 	public SqmJdbcFunctionEscapeWrapper(
-			SqmFunction wrappedSqmFunction,
-			AllowableFunctionReturnType impliedResultType,
+			SelfRenderingSqmFunction<T> wrappedSqmFunction,
+			AllowableFunctionReturnType<T> impliedResultType,
 			NodeBuilder nodeBuilder) {
-		super( null, Collections.singletonList( wrappedSqmFunction ), impliedResultType, nodeBuilder );
+		super( null, singletonList( wrappedSqmFunction ), impliedResultType, nodeBuilder );
 		this.wrappedSqmFunction = wrappedSqmFunction;
 	}
 
-	public SqmJdbcFunctionEscapeWrapper(SqmFunction wrappedSqmFunction, NodeBuilder nodeBuilder) {
-		super( null, Collections.singletonList( wrappedSqmFunction ), wrappedSqmFunction.getExpressableType(), nodeBuilder );
+	public SqmJdbcFunctionEscapeWrapper(SelfRenderingSqmFunction<T> wrappedSqmFunction, NodeBuilder nodeBuilder) {
+		super( null, singletonList( wrappedSqmFunction ), wrappedSqmFunction.getExpressableType(), nodeBuilder );
 		this.wrappedSqmFunction = wrappedSqmFunction;
-	}
-
-	@Override
-	public String getFunctionName() {
-		return wrappedSqmFunction.getFunctionName();
-	}
-
-	@Override
-	public boolean hasArguments() {
-		return wrappedSqmFunction.hasArguments();
 	}
 
 	@Override
@@ -90,7 +79,7 @@ public class SqmJdbcFunctionEscapeWrapper
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getExpressableType().getJavaTypeDescriptor();
 	}
 }

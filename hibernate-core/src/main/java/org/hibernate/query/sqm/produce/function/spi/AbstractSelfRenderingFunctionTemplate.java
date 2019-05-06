@@ -28,9 +28,9 @@ public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmF
 	}
 
 	@Override
-	protected SqmExpression generateSqmFunctionExpression(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType resolvedReturnType,
+	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> resolvedReturnType,
 			QueryEngine queryEngine) {
 		//noinspection unchecked
 		return new SelfRenderingSqmFunction(
@@ -42,7 +42,7 @@ public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmF
 	}
 
 	protected abstract SelfRenderingFunctionSupport getRenderingFunctionSupport(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType resolvedReturnType,
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<?> resolvedReturnType,
 			QueryEngine queryEngine);
 }

@@ -27,14 +27,14 @@ public abstract class AbstractJpaTupleElement<T>
 	private String alias;
 
 	@SuppressWarnings("WeakerAccess")
-	protected AbstractJpaTupleElement(ExpressableType expressableType, NodeBuilder criteriaBuilder) {
+	protected AbstractJpaTupleElement(ExpressableType<T> expressableType, NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
 
 		setExpressableType( expressableType );
 	}
 
 	@SuppressWarnings("unused")
-	protected AbstractJpaTupleElement(Class javaType, NodeBuilder criteriaBuilder) {
+	protected AbstractJpaTupleElement(Class<T> javaType, NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
 
 		if ( javaType != null ) {
@@ -57,12 +57,11 @@ public abstract class AbstractJpaTupleElement<T>
 		this.alias = alias;
 	}
 
-	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return expressableType.getJavaTypeDescriptor();
+	public ExpressableType<T> getExpressableType() {
+		return expressableType;
 	}
 
-	protected void setExpressableType(ExpressableType expressableType) {
+	protected final void setExpressableType(ExpressableType expressableType) {
 		this.expressableType = expressableType;
 	}
 

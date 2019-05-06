@@ -16,18 +16,18 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  *
  * @author Steve Ebersole
  */
-public class SqmSelection extends AbstractSqmNode implements SqmAliasedNode, SqmVisitableNode {
-	private final SqmSelectableNode selectableNode;
+public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T>, SqmVisitableNode {
+	private final SqmSelectableNode<T> selectableNode;
 
 	public SqmSelection(
-			SqmSelectableNode selectableNode,
+			SqmSelectableNode<T> selectableNode,
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.selectableNode = selectableNode;
 	}
 
 	public SqmSelection(
-			SqmSelectableNode selectableNode,
+			SqmSelectableNode<T> selectableNode,
 			String alias,
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
@@ -36,7 +36,7 @@ public class SqmSelection extends AbstractSqmNode implements SqmAliasedNode, Sqm
 	}
 
 	@Override
-	public SqmSelectableNode<?> getSelectableNode() {
+	public SqmSelectableNode<T> getSelectableNode() {
 		return selectableNode;
 	}
 

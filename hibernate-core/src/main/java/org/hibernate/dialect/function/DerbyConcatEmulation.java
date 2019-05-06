@@ -7,7 +7,6 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;

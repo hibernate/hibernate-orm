@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.produce.spi;
 
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 
 /**

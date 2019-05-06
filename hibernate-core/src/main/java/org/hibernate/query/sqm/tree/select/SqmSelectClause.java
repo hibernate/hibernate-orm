@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -17,6 +16,8 @@ import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
+import static java.util.Arrays.asList;
+
 /**
  * The semantic select clause.  Defined as a list of individual selections.
  *
@@ -24,7 +25,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpressionContainer<SqmSelection>, JpaSelection<Object> {
 	private boolean distinct;
-	private List<SqmSelection> selections;
+	private List<SqmSelection<?>> selections;
 
 	public SqmSelectClause(
 			boolean distinct,
@@ -35,7 +36,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 
 	public SqmSelectClause(
 			boolean distinct,
-			List<SqmSelection> selections,
+			List<SqmSelection<?>> selections,
 			NodeBuilder nodeBuilder) {
 		this( distinct, nodeBuilder );
 		this.selections = selections;
@@ -44,8 +45,8 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	public SqmSelectClause(
 			boolean distinct,
 			NodeBuilder nodeBuilder,
-			SqmSelection... selections) {
-		this( distinct, Arrays.asList( selections ), nodeBuilder );
+			SqmSelection<?>... selections) {
+		this( distinct, asList( selections ), nodeBuilder );
 	}
 
 	public boolean isDistinct() {
@@ -74,7 +75,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 
 	@Override
 	public SqmSelection add(SqmExpression<?> expression, String alias) {
-		final SqmSelection selection = new SqmSelection( expression, alias, nodeBuilder()  );
+		final SqmSelection selection = new SqmSelection<>( expression, alias, nodeBuilder()  );
 		addSelection( selection );
 		return selection;
 	}
@@ -92,8 +93,8 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 		addSelection( sqmSelection );
 	}
 
-	public void setSelection(SqmSelectableNode selectableNode) {
-		setSelection( new SqmSelection( selectableNode, selectableNode.getAlias(), nodeBuilder() ) );
+	public void setSelection(SqmSelectableNode<?> selectableNode) {
+		setSelection( new SqmSelection<>( selectableNode, selectableNode.getAlias(), nodeBuilder() ) );
 	}
 
 
@@ -114,11 +115,12 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	public List<SqmSelectableNode<?>> getSelectionItems() {
 		final List<SqmSelectableNode<?>> subSelections = new ArrayList<>();
 
-		if ( this.selections == null || this.selections.size() != 1 ) {
+		//TODO: this has gotta be wrong!!
+		if ( this.selections != null || this.selections.size() != 1 ) {
 			this.selections.get( 0 ).getSelectableNode().visitSubSelectableNodes( subSelections::add );
 		}
 		else {
-			for ( SqmSelection selection : this.selections ) {
+			for ( SqmSelection<?> selection : this.selections ) {
 				selection.getSelectableNode().visitSubSelectableNodes( subSelections::add );
 			}
 

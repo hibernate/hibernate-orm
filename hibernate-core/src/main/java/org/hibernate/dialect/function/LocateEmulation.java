@@ -10,9 +10,9 @@ import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import java.util.List;
 
@@ -34,9 +34,9 @@ public class LocateEmulation
 	}
 
 	@Override
-	protected SqmExpression generateSqmFunctionExpression(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType impliedResultType,
+	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		return ( arguments.size()<3 ? binaryFunction : ternaryFunction )
 				.makeSqmFunctionExpression( arguments, impliedResultType, queryEngine );

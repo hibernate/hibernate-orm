@@ -93,10 +93,10 @@ public class CUBRIDDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "bin", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "char_length", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "character_length", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthb", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthh", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "char_length", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "character_length", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthb", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "lengthh", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "reverse", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
@@ -164,9 +164,9 @@ public class CUBRIDDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "hex", StandardSpiBasicTypes.STRING );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "octet_length", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "octet_length", StandardSpiBasicTypes.INTEGER );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_count", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_count", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "md5", StandardSpiBasicTypes.STRING );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )

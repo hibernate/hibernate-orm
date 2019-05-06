@@ -311,10 +311,11 @@ public class DB2Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rtrim" )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substr" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("substring", "substr");
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "posstr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.select;
 
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -22,12 +23,17 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface SqmAliasedNode extends SqmTypedNode {
-	SqmSelectableNode getSelectableNode();
+public interface SqmAliasedNode<T> extends SqmTypedNode<T> {
+	SqmSelectableNode<T> getSelectableNode();
 	String getAlias();
 
 	@Override
-	default JavaTypeDescriptor getJavaTypeDescriptor() {
+	default JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getSelectableNode().getJavaTypeDescriptor();
+	}
+
+	@Override
+	default ExpressableType<T> getExpressableType() {
+		return getSelectableNode().getExpressableType();
 	}
 }

@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Defines a SQM AST node that can be used as a selection in the query,
@@ -23,7 +24,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode, SqmVisitableNode {
+public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T>, SqmVisitableNode {
 	/**
 	 * The expectation is that the walking method for SqmSelectableNode
 	 * will return some reference to a
@@ -43,4 +44,9 @@ public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode, Sqm
 	 * @see Selection#getCompoundSelectionItems()
 	 */
 	void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer);
+
+	@Override
+	default JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+		return SqmTypedNode.super.getJavaTypeDescriptor();
+	}
 }

@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
 public class OrderByFragmentParser extends SemanticQueryBuilder {
 	private static final Logger log = Logger.getLogger( OrderByFragmentParser.class.getName() );
 
-	public static SqmOrderByClause convertOrderByFragmentParseTree(
+	static SqmOrderByClause convertOrderByFragmentParseTree(
 			TranslationContext translationContext,
 			PersistentCollectionDescriptor collectionDescriptor,
 			HqlParser.OrderByClauseContext orderByClauseContext) {

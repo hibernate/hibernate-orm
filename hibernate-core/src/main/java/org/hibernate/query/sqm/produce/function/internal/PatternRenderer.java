@@ -54,12 +54,16 @@ public class PatternRenderer {
 			char c = pattern.charAt( i );
 			if ( c == '?' ) {
 				chunkList.add( chunk.toString() );
-				chunk.delete( 0, chunk.length() );
+				chunk.setLength(0);
 
 				while ( ++i < pattern.length() ) {
 					c = pattern.charAt( i );
 					if ( Character.isDigit( c ) ) {
 						index.append( c );
+					}
+					else if ( c  == '?' ) {
+						i--;
+						break;
 					}
 					else {
 						chunk.append( c );
@@ -70,7 +74,7 @@ public class PatternRenderer {
 				Integer paramNumber = Integer.valueOf( index.toString() );
 				paramNumbers.add( paramNumber );
 				paramList.add( paramNumber );
-				index.delete( 0, index.length() );
+				index.setLength(0);
 			}
 			else {
 				chunk.append( c );
@@ -107,8 +111,8 @@ public class PatternRenderer {
 	 *
 	 * @param args The arguments to inject into the template
 	 * @param sqlAppender
-	 *@param factory The SessionFactory
-	 *  @return The rendered template with replacements
+	 * @param factory The SessionFactory
+	 * @return The rendered template with replacements
 	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void render(
@@ -124,7 +128,7 @@ public class PatternRenderer {
 		for ( int i = 0; i < chunks.length; ++i ) {
 			if ( i < paramIndexes.length ) {
 				final int index = paramIndexes[i] - 1;
-				final SqlAstNode arg =  index < numberOfArguments ? args.get( index ) : null;
+				final SqlAstNode arg = index < numberOfArguments ? args.get( index ) : null;
 				if ( arg != null ) {
 					sqlAppender.appendSql( chunks[i] );
 					arg.accept( walker );

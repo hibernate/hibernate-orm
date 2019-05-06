@@ -7,36 +7,33 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.sql.SqlExpressableType;
+import org.hibernate.sql.TrimSpec;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
  * @author Gavin King
  */
-public class ExpFunction extends AbstractFunction {
-	private final Expression argument;
-	private final SqlExpressableType type;
+public class Distinct implements SqlExpressable, SqlAstNode {
 
-	public ExpFunction(Expression argument, SqlExpressableType type) {
-		this.argument = argument;
-		this.type = type;
+	private Expression expression;
+
+	public Distinct(Expression expression) {
+		this.expression = expression;
 	}
 
-	public Expression getArgument() {
-		return argument;
-	}
-
-	@Override
-	public void accept(SqlAstWalker walker) {
-		walker.visitExpFunction( this );
+	public Expression getExpression() {
+		return expression;
 	}
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return type;
+		return expression.getType();
 	}
 
 	@Override
-	public SqlExpressableType getType() {
-		return type;
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		sqlTreeWalker.visitDistinct(this);
 	}
 }

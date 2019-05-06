@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.NodeBuilder;
  *
  * @author Steve Ebersole
  */
-public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode {
+public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 	private final SqmSelectableNode<T> selectableNode;
 	private final String alias;
 	private final NodeBuilder nodeBuilder;

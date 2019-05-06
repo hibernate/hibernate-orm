@@ -7,15 +7,12 @@
 package org.hibernate.query.sqm.produce.function;
 
 import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.produce.SqmProductionException;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmJdbcFunctionEscapeWrapper;
 
 /**
@@ -33,27 +30,16 @@ public class JdbcFunctionEscapeWrapperTemplate
 	}
 
 	@Override
-	protected SqmExpression generateSqmFunctionExpression(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType impliedResultType,
+	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final SqmExpression wrappedSqmExpression = wrapped.makeSqmFunctionExpression(
-				arguments,
-				impliedResultType,
-				queryEngine
-		);
-		if ( !SqmFunction.class.isInstance( wrappedSqmExpression ) ) {
-			throw new SqmProductionException(
-					String.format(
-							Locale.ROOT,
-							"Expected expression to wrap in a JDBC escape wrapper to be a %s, but was %s",
-							SqmFunction.class.getName(),
-							wrappedSqmExpression.asLoggableText()
-					)
-			);
-		}
-		return new SqmJdbcFunctionEscapeWrapper(
-				(SqmFunction) wrappedSqmExpression,
+		return new SqmJdbcFunctionEscapeWrapper<>(
+				wrapped.makeSqmFunctionExpression(
+                        arguments,
+                        impliedResultType,
+                        queryEngine
+                ),
 				queryEngine.getCriteriaBuilder()
 		);
 	}

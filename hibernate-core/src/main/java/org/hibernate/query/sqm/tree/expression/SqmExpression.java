@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -84,4 +85,11 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 
 	@Override
 	SqmPredicate in(Expression<Collection<?>> values);
+
+	default <X> SqmExpression<X> castAs(AllowableFunctionReturnType<X> type) {
+		return nodeBuilder().getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate( "cast" )
+				.makeSqmFunctionExpression( this, type, nodeBuilder().getQueryEngine() );
+	}
+
+
 }

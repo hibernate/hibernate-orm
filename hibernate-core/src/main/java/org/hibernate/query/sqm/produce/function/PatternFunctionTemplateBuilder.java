@@ -38,7 +38,7 @@ public class PatternFunctionTemplateBuilder {
 		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}
 
-	public PatternFunctionTemplateBuilder setArgumentsBetween(int min, int max) {
+	public PatternFunctionTemplateBuilder setArgumentCountBetween(int min, int max) {
 		return setArgumentsValidator( StandardArgumentsValidators.between( min, max ) );
 	}
 

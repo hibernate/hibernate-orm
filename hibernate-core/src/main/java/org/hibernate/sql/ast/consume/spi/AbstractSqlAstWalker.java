@@ -21,44 +21,25 @@ import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.expression.*;
+
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.expression.AbsFunction;
-import org.hibernate.sql.ast.tree.expression.AvgFunction;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.BitLengthFunction;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.CastFunction;
-import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.ConcatFunction;
-import org.hibernate.sql.ast.tree.expression.CountFunction;
-import org.hibernate.sql.ast.tree.expression.CountStarFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentDateFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentTimeFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractFunction;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
-import org.hibernate.sql.ast.tree.expression.LengthFunction;
-import org.hibernate.sql.ast.tree.expression.LocateFunction;
-import org.hibernate.sql.ast.tree.expression.LowerFunction;
-import org.hibernate.sql.ast.tree.expression.MaxFunction;
-import org.hibernate.sql.ast.tree.expression.MinFunction;
-import org.hibernate.sql.ast.tree.expression.ModFunction;
 import org.hibernate.sql.ast.tree.expression.NamedParameter;
-import org.hibernate.sql.ast.tree.expression.GenericFunction;
-import org.hibernate.sql.ast.tree.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqrtFunction;
-import org.hibernate.sql.ast.tree.expression.SubstringFunction;
-import org.hibernate.sql.ast.tree.expression.SumFunction;
-import org.hibernate.sql.ast.tree.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.expression.UpperFunction;
 import org.hibernate.sql.ast.tree.expression.domain.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -396,152 +377,8 @@ public abstract class AbstractSqlAstWalker
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expression : Function : Non-Standard
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitNonStandardFunctionExpression(GenericFunction function) {
-		appendSql( function.getFunctionName() );
-		if ( !function.getArguments().isEmpty() ) {
-			appendSql( OPEN_PARENTHESIS );
-			String separator = NO_SEPARATOR;
-			for ( Expression argumentExpression : function.getArguments() ) {
-				appendSql( separator );
-				argumentExpression.accept( this );
-				separator = COMA_SEPARATOR;
-			}
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expression : Function : Standard
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitFloorFunction(FloorFunction function) {
-		appendSql( "floor(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitCeilingFunction(CeilingFunction function) {
-		appendSql( "ceiling(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitAbsFunction(AbsFunction function) {
-		appendSql( "abs(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitSignFunction(SignFunction function) {
-		appendSql( "sign(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitAvgFunction(AvgFunction function) {
-		appendSql( "avg(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitBitLengthFunction(BitLengthFunction function) {
-		appendSql( "bit_length(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitCastFunction(CastFunction function) {
-		sqlAppender.appendSql( "cast(" );
-		function.getExpressionToCast().accept( this );
-		sqlAppender.appendSql( " as " );
-		function.getCastTarget().accept( this );
-		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitConcatFunction(ConcatFunction function) {
-		appendSql( "concat(" );
-
-		boolean firstPass = true;
-		for ( Expression expression : function.getExpressions() ) {
-			if ( ! firstPass ) {
-				appendSql( COMA_SEPARATOR );
-			}
-			expression.accept( this );
-			firstPass = false;
-		}
-
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitSubstringFunction(SubstringFunction function) {
-		appendSql( "substring(" );
-
-		boolean firstPass = true;
-		for ( Expression expression : function.getExpressions() ) {
-			if ( ! firstPass ) {
-				appendSql( COMA_SEPARATOR );
-			}
-			expression.accept( this );
-			firstPass = false;
-		}
-
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitCountFunction(CountFunction function) {
-		appendSql( "count(" );
-		if ( function.isDistinct() ) {
-			appendSql( DISTINCT_KEYWORD );
-		}
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	public void visitCountStarFunction(CountStarFunction function) {
-		appendSql( "count(" );
-		if ( function.isDistinct() ) {
-			appendSql( DISTINCT_KEYWORD );
-		}
-		appendSql( "*)" );
-	}
-
-	@Override
-	public void visitCurrentDateFunction(CurrentDateFunction function) {
-		appendSql( "current_date" );
-	}
-
-	@Override
-	public void visitCurrentTimeFunction(CurrentTimeFunction function) {
-		appendSql( "current_time" );
-	}
-
-	@Override
-	public void visitCurrentTimestampFunction(CurrentTimestampFunction function) {
-		appendSql( "current_timestamp" );
-	}
 
 	@Override
 	public void visitTuple(SqlTuple tuple) {
@@ -562,166 +399,33 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void visitExtractFunction(ExtractFunction extractFunction) {
-		appendSql( "extract(" );
-		extractFunction.getUnitToExtract().accept( this );
-		appendSql( FROM_KEYWORD );
-		extractFunction.getExtractionSource().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
+	public void visitExtractUnit(ExtractUnit unit) {
+		appendSql( unit.getName() );
 	}
 
 	@Override
-	public void visitExtractUnit(ExtractUnit unit) {
-		appendSql(unit.getName());
+	public void visitTrimSpecification(TrimSpecification trimSpecification) {
+		appendSql( trimSpecification.getSpecification().name() );
+	}
+
+	@Override
+	public void visitStar(Star star) {
+		appendSql("*");
+	}
+
+	@Override
+	public void visitDistinct(Distinct distinct) {
+		appendSql("distinct ");
+		distinct.getExpression().accept(this);
 	}
 
 	@Override
 	public void visitCastTarget(CastTarget target) {
 		int typecode = target.getExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
 		String type = sessionFactory.getJdbcServices().getDialect().getCastTypeName( typecode );
-		appendSql(type);
+		appendSql( type );
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitLengthFunction(LengthFunction function) {
-		sqlAppender.appendSql( "length(" );
-		function.getArgument().accept( this );
-		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitLocateFunction(LocateFunction function) {
-		appendSql( "locate(" );
-		function.getPatternString().accept( this );
-		appendSql( COMA_SEPARATOR );
-		function.getStringToSearch().accept( this );
-		if ( function.getStartPosition() != null ) {
-			appendSql( COMA_SEPARATOR );
-			function.getStartPosition().accept( this );
-		}
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitReplaceFunction(ReplaceFunction function) {
-		appendSql( "replace(" );
-		function.getStringToSearch().accept( this );
-		appendSql( COMA_SEPARATOR );
-		function.getPatternString().accept( this );
-		appendSql( COMA_SEPARATOR );
-		function.getReplacementString().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitLowerFunction(LowerFunction function) {
-		appendSql( "lower(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitMaxFunction(MaxFunction function) {
-		appendSql( "max(" );
-		if ( function.isDistinct() ) {
-			appendSql( DISTINCT_KEYWORD );
-		}
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitMinFunction(MinFunction function) {
-		appendSql( "min(" );
-		if ( function.isDistinct() ) {
-			appendSql( DISTINCT_KEYWORD );
-		}
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitModFunction(ModFunction function) {
-		sqlAppender.appendSql( "mod(" );
-		function.getDividend().accept( this );
-		sqlAppender.appendSql( COMA_SEPARATOR );
-		function.getDivisor().accept( this );
-		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitPowerFunction(PowerFunction function) {
-		sqlAppender.appendSql( "power(" );
-		function.getBase().accept( this );
-		sqlAppender.appendSql( COMA_SEPARATOR );
-		function.getPower().accept( this );
-		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitSqrtFunction(SqrtFunction function) {
-		appendSql( "sqrt(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitLnFunction(LnFunction function) {
-		appendSql( "ln(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitExpFunction(ExpFunction function) {
-		appendSql( "exp(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitSumFunction(SumFunction function) {
-		appendSql( "sum(" );
-		if ( function.isDistinct() ) {
-			appendSql( DISTINCT_KEYWORD );
-		}
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitTrimFunction(TrimFunction function) {
-		sqlAppender.appendSql( "trim(" );
-		sqlAppender.appendSql( function.getSpecification().toSqlText() );
-		sqlAppender.appendSql( EMPTY_STRING_SEPARATOR );
-		function.getTrimCharacter().accept( this );
-		sqlAppender.appendSql( FROM_KEYWORD );
-		function.getSource().accept( this );
-		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitUpperFunction(UpperFunction function) {
-		appendSql( "upper(" );
-		function.getArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
-	}
 
 	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {
@@ -787,20 +491,6 @@ public abstract class AbstractSqlAstWalker
 
 		caseSimpleExpression.getOtherwise().accept( this );
 		appendSql( " end" );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void visitCoalesceFunction(CoalesceFunction coalesceExpression) {
-		appendSql( "coalesce(" );
-		String separator = NO_SEPARATOR;
-		for ( Expression expression : coalesceExpression.getValues() ) {
-			appendSql( separator );
-			expression.accept( this );
-			separator = COMA_SEPARATOR;
-		}
-
-		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override
@@ -890,15 +580,6 @@ public abstract class AbstractSqlAstWalker
 					)
 			);
 		}
-	}
-
-	@Override
-	public void visitNullifFunction(NullifFunction function) {
-		appendSql( "nullif(" );
-		function.getFirstArgument().accept( this );
-		appendSql( COMA_SEPARATOR );
-		function.getSecondArgument().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override
@@ -1085,4 +766,5 @@ public abstract class AbstractSqlAstWalker
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
+
 }

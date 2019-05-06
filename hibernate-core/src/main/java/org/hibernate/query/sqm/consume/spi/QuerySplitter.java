@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.sqm.consume.spi;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -32,23 +30,12 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.function.Distinctable;
-import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -84,8 +71,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.produce.spi.SqmFunction;
 
 /**
  * Handles splitting queries containing unmapped polymorphic references.
@@ -610,103 +596,11 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmGenericFunction visitGenericFunction(SqmGenericFunction expression) {
-			List<SqmExpression> argumentsCopy = new ArrayList<>();
-			for ( SqmExpression argument : ( (SqmGenericFunction<?>) expression ).getArguments() ) {
-				argumentsCopy.add( (SqmExpression) argument.accept( this ) );
-			}
-			return new SqmGenericFunction(
-					expression.getFunctionName(),
-					expression.getExpressableType(),
-					argumentsCopy,
-					expression.nodeBuilder()
-			);
-		}
-
-		@Override
-		public SqlAstFunctionProducer visitSqlAstFunctionProducer(SqlAstFunctionProducer functionProducer) {
+		public SqmFunction visitFunction(SqmFunction functionProducer) {
 			// todo (6.0) : likely this needs a copy too
 			//		how to model that?
 			//		for now, return the same reference
 			return functionProducer;
-		}
-
-		@Override
-		public SqmAvgFunction visitAvgFunction(SqmAvgFunction expression) {
-			return handleDistinct(
-					new SqmAvgFunction(
-							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType(),
-							expression.nodeBuilder()
-					),
-					expression.isDistinct()
-			);
-		}
-
-		private <T extends SqmFunction> T handleDistinct(T function, boolean shouldMakeDistinction) {
-			if ( function instanceof Distinctable
-					&& shouldMakeDistinction ) {
-				( (Distinctable) function ).makeDistinct();
-			}
-
-			return function;
-		}
-
-		@Override
-		public SqmCountStarFunction visitCountStarFunction(SqmCountStarFunction expression) {
-			return handleDistinct(
-					new SqmCountStarFunction( expression.getExpressableType(), expression.nodeBuilder() ),
-					expression.isDistinct()
-			);
-
-		}
-
-		@Override
-		public SqmCountFunction visitCountFunction(SqmCountFunction expression) {
-			return handleDistinct(
-					new SqmCountFunction(
-							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType(),
-							expression.nodeBuilder()
-					),
-					expression.isDistinct()
-			);
-		}
-
-		@Override
-		public SqmMaxFunction visitMaxFunction(SqmMaxFunction expression) {
-			return handleDistinct(
-					new SqmMaxFunction(
-							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType(),
-							expression.nodeBuilder()
-					),
-					expression.isDistinct()
-			);
-		}
-
-		@Override
-		public SqmMinFunction visitMinFunction(SqmMinFunction expression) {
-			return handleDistinct(
-					new SqmMinFunction(
-							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType(),
-							expression.nodeBuilder()
-					),
-					expression.isDistinct()
-			);
-		}
-
-		@Override
-		public SqmSumFunction visitSumFunction(SqmSumFunction expression) {
-			return handleDistinct(
-					new SqmSumFunction(
-							(SqmExpression) expression.getArgument().accept( this ),
-							expression.getExpressableType(),
-							expression.nodeBuilder()
-					),
-					expression.isDistinct()
-			);
 		}
 
 		@Override
@@ -715,31 +609,6 @@ public class QuerySplitter {
 					literal.getLiteralValue(),
 					literal.getExpressableType(),
 					literal.nodeBuilder()
-			);
-		}
-
-		@Override
-		public SqmConcat visitConcatExpression(SqmConcat expression) {
-			return new SqmConcat(
-					(SqmExpression) expression.getLeftHandOperand().accept( this ),
-					(SqmExpression) expression.getRightHandOperand().accept( this ),
-					expression.getExpressableType(),
-					expression.nodeBuilder()
-			);
-		}
-
-		@Override
-		public SqmConcatFunction visitConcatFunction(SqmConcatFunction expression) {
-			final List<SqmExpression<?>> arguments = new ArrayList<>();
-			// generics ftw!
-			for ( SqmExpression argument : ( (SqmConcatFunction<?>) expression ).getExpressions() ) {
-				arguments.add( (SqmExpression) argument.accept( this ) );
-			}
-
-			return new SqmConcatFunction(
-					(BasicValuedExpressableType) expression.getExpressableType(),
-					arguments,
-					expression.nodeBuilder()
 			);
 		}
 

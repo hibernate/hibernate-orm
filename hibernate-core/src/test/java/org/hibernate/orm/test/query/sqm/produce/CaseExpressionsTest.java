@@ -6,19 +6,15 @@
  */
 package org.hibernate.orm.test.query.sqm.produce;
 
-import org.hibernate.metamodel.model.domain.spi.BasicValuedNavigable;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.produce.domain.Person;
-import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.jupiter.api.Test;
@@ -98,9 +94,9 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 		assertThat( select.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
 
-		final SqmCoalesceFunction coalesce = TestingUtil.cast(
+		final SelfRenderingSqmFunction coalesce = TestingUtil.cast(
 				select.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				SqmCoalesceFunction.class
+				SelfRenderingSqmFunction.class
 		);
 
 		assertThat( coalesce.getArguments(), hasSize( 2 ) );
@@ -114,11 +110,12 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		);
 
 		assertThat( select.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
-		final SqmNullifFunction nullif = TestingUtil.cast(
+		final SelfRenderingSqmFunction nullif = TestingUtil.cast(
 				select.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				SqmNullifFunction.class
+				SelfRenderingSqmFunction.class
 		);
 
+		assertThat( nullif.getArguments(), hasSize( 2 ) );
 		assertEquals( nullif.getJavaTypeDescriptor().getJavaType(), String.class );
 	}
 

@@ -69,7 +69,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "len" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
 
@@ -186,7 +186,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ln", "log" );
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "length", "len" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "len" );
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 	}

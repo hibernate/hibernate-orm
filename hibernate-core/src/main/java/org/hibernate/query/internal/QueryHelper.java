@@ -44,7 +44,8 @@ public class QueryHelper {
 		// disallow direct instantiation
 	}
 
-	public static ExpressableType<?> highestPrecedenceType(ExpressableType<?>... types) {
+	@SafeVarargs
+	public static <T> ExpressableType<? extends T> highestPrecedenceType(ExpressableType<? extends T>... types) {
 		if ( types == null || types.length == 0 ) {
 			return null;
 		}
@@ -54,7 +55,7 @@ public class QueryHelper {
 		}
 
 		//noinspection unchecked
-		ExpressableType highest = highestPrecedenceType2( (ExpressableType) types[0], types[1] );
+		ExpressableType<? extends T> highest = highestPrecedenceType2( (ExpressableType) types[0], types[1] );
 		for ( int i = 2; i < types.length; i++ ) {
 			//noinspection unchecked
 			highest = highestPrecedenceType2( highest, types[i] );
@@ -62,7 +63,7 @@ public class QueryHelper {
 		return highest;
 	}
 
-	public static <X> ExpressableType<X> highestPrecedenceType2(ExpressableType<X> type1, ExpressableType<X> type2) {
+	public static <X> ExpressableType<? extends X> highestPrecedenceType2(ExpressableType<? extends X> type1, ExpressableType<? extends X> type2) {
 		if ( type1 == null && type2 == null ) {
 			return null;
 		}
@@ -89,7 +90,7 @@ public class QueryHelper {
 	/**
 	 * @see TypeConfiguration#resolveArithmeticType
 	 */
-	public static <X> ExpressableType<X> highestPrecedenceType(Supplier<ExpressableType<X>>... typeSuppliers) {
+	public static <X> ExpressableType<? extends X> highestPrecedenceType(Supplier<ExpressableType<? extends X>>... typeSuppliers) {
 		if ( typeSuppliers == null || typeSuppliers.length == 0 ) {
 			return null;
 		}
@@ -98,7 +99,7 @@ public class QueryHelper {
 			return typeSuppliers[0].get();
 		}
 
-		ExpressableType<X> highest = highestPrecedenceType2( typeSuppliers[0].get(), typeSuppliers[1].get() );
+		ExpressableType<? extends X> highest = highestPrecedenceType2( typeSuppliers[0].get(), typeSuppliers[1].get() );
 		for ( int i = 2; i < typeSuppliers.length; i++ ) {
 			highest = highestPrecedenceType2( highest, typeSuppliers[i].get() );
 		}

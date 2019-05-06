@@ -38,7 +38,7 @@ import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
  *
  * @author Steve Ebersole
  */
-public interface SqmFrom<O,T> extends SqmVisitableNode, SqmTypedNode, SqmPath<T>, JpaFrom<O, T> {
+public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T> {
 	/**
 	 * The Navigable for an SqmFrom will always be a NavigableContainer
 	 *

@@ -8,8 +8,6 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.DB2SubstringEmulation;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
@@ -21,7 +19,6 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect for DB2 9.7.
@@ -32,14 +29,6 @@ public class DB297Dialect extends DB2Dialect {
 
 	public DB297Dialect() {
 		super();
-	}
-
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "chr", StandardSpiBasicTypes.CHARACTER );
-		queryEngine.getSqmFunctionRegistry().register( "substring", new DB2SubstringEmulation() );
 	}
 
 	@Override

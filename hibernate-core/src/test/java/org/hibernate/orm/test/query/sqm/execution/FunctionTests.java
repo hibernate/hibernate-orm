@@ -224,6 +224,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                             .list();
                     session.createQuery("select count(e) from EntityOfBasics e")
                             .list();
+                    session.createQuery("select count(distinct e) from EntityOfBasics e")
+                            .list();
                 }
         );
     }
@@ -233,6 +235,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
         inTransaction(
                 session -> {
                     session.createQuery("select avg(e.theDouble), avg(abs(e.theDouble)), min(e.theDouble), max(e.theDouble), sum(e.theDouble), sum(e.theInt) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select avg(distinct e.theInt), sum(distinct e.theInt) from EntityOfBasics e")
                             .list();
                 }
         );

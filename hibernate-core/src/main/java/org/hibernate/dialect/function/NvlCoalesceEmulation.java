@@ -13,6 +13,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -37,9 +38,9 @@ public class NvlCoalesceEmulation
 	}
 
 	@Override
-	protected SqmExpression generateSqmFunctionExpression(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType impliedResultType,
+	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine) {
 
 		SqmFunctionTemplate nvl = queryEngine.getSqmFunctionRegistry().findFunctionTemplate("nvl");
@@ -53,7 +54,7 @@ public class NvlCoalesceEmulation
 			result = nvl.makeSqmFunctionExpression( asList( next, result ), type, queryEngine );
 		}
 
-		return result;
+		return (SelfRenderingSqmFunction) result;
 	}
 
 }

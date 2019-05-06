@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.consume.spi;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -42,7 +41,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmConcat;
 import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -51,42 +49,11 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmBitLengthFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.function.SqmCeilingFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentDateFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentInstantFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimeFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmCurrentTimestampFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmExpFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmExtractFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
-import org.hibernate.query.sqm.tree.expression.function.SqmFloorFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLengthFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLnFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLocateFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmPowerFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmReplaceFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSignFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmStar;
+import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -121,7 +88,7 @@ import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.produce.spi.SqmFunction;
 import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlAstQuerySpecProcessingState;
 import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
@@ -131,46 +98,19 @@ import org.hibernate.sql.ast.produce.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmExpressionInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.tree.expression.AbsFunction;
-import org.hibernate.sql.ast.tree.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.BitLengthFunction;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.CastFunction;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.CeilingFunction;
-import org.hibernate.sql.ast.tree.expression.CoalesceFunction;
-import org.hibernate.sql.ast.tree.expression.ConcatFunction;
-import org.hibernate.sql.ast.tree.expression.CountFunction;
-import org.hibernate.sql.ast.tree.expression.CountStarFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentDateFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentTimeFunction;
-import org.hibernate.sql.ast.tree.expression.CurrentTimestampFunction;
+import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractFunction;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
-import org.hibernate.sql.ast.tree.expression.FloorFunction;
-import org.hibernate.sql.ast.tree.expression.LengthFunction;
-import org.hibernate.sql.ast.tree.expression.LocateFunction;
-import org.hibernate.sql.ast.tree.expression.LowerFunction;
-import org.hibernate.sql.ast.tree.expression.MaxFunction;
-import org.hibernate.sql.ast.tree.expression.MinFunction;
-import org.hibernate.sql.ast.tree.expression.ModFunction;
-import org.hibernate.sql.ast.tree.expression.GenericFunction;
-import org.hibernate.sql.ast.tree.expression.NullifFunction;
-import org.hibernate.sql.ast.tree.expression.PowerFunction;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
-import org.hibernate.sql.ast.tree.expression.SignFunction;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqrtFunction;
+import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.SubQuery;
-import org.hibernate.sql.ast.tree.expression.SubstringFunction;
-import org.hibernate.sql.ast.tree.expression.SumFunction;
-import org.hibernate.sql.ast.tree.expression.TrimFunction;
+import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.expression.UpperFunction;
 import org.hibernate.sql.ast.tree.expression.domain.BasicValuedNavigableReference;
 import org.hibernate.sql.ast.tree.expression.domain.EmbeddableValuedNavigableReference;
 import org.hibernate.sql.ast.tree.expression.domain.EntityValuedNavigableReference;
@@ -201,10 +141,8 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
-import static java.util.Collections.singletonList;
 import static org.hibernate.query.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
-import static org.hibernate.query.BinaryArithmeticOperator.MODULO;
 import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.BinaryArithmeticOperator.QUOT;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
@@ -300,7 +238,7 @@ public abstract class BaseSqmToSqlAstConverter
 		return Collections.emptyList();
 	}
 
-	protected QuerySpec currentQuerySpec() {
+	private QuerySpec currentQuerySpec() {
 		return ( (SqlAstQuerySpecProcessingState) processingStateStack.getCurrent() ).getInflightQuerySpec();
 	}
 
@@ -308,11 +246,11 @@ public abstract class BaseSqmToSqlAstConverter
 		return queryOptions;
 	}
 
-	public FromClauseIndex getFromClauseIndex() {
+	protected FromClauseIndex getFromClauseIndex() {
 		return fromClauseIndex;
 	}
 
-	public Stack<Clause> getCurrentClauseStack() {
+	protected Stack<Clause> getCurrentClauseStack() {
 		return currentClauseStack;
 	}
 
@@ -684,7 +622,6 @@ public abstract class BaseSqmToSqlAstConverter
 		return consumeSqmParameter( expression );
 	}
 
-
 	private Expression consumeSqmParameter(SqmParameter sqmParameter) {
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
@@ -756,61 +693,11 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// non-standard functions
-
 	@Override
-	public Object visitGenericFunction(SqmGenericFunction<?> expression) {
+	public Object visitFunction(SqmFunction sqmFunction) {
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
-			return new GenericFunction(
-					expression.getFunctionName(),
-					expression.getExpressableType().getSqlExpressableType(),
-					visitArguments( expression.getArguments() )
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	private List<Expression> visitArguments(List<SqmExpression> sqmArguments) {
-		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
-			return Collections.emptyList();
-		}
-
-		final ArrayList<Expression> sqlAstArguments = new ArrayList<>();
-		for ( SqmExpression sqmArgument : sqmArguments ) {
-			sqlAstArguments.add( toSqlExpression( sqmArgument.accept( this ) ) );
-		}
-
-		return sqlAstArguments;
-	}
-
-	@Override
-	public Object visitSqlAstFunctionProducer(SqlAstFunctionProducer sqlAstFunctionProducer) {
-		shallownessStack.push( Shallowness.FUNCTION );
-		try {
-			return sqlAstFunctionProducer.convertToSqlAst( this );
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// standard functions
-
-	@Override
-	public Object visitCeilingFunction(SqmCeilingFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new CeilingFunction(
-					toSqlExpression( function.getArgument().accept( this ) ),
-					function.getExpressableType().getSqlExpressableType()
-			);
+			return sqmFunction.convertToSqlAst( this );
 		}
 		finally {
 			shallownessStack.pop();
@@ -818,231 +705,11 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitFloorFunction(SqmFloorFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new FloorFunction(
-					toSqlExpression( function.getArgument().accept( this ) ),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitAbsFunction(SqmAbsFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new AbsFunction(
-					toSqlExpression( function.getArgument().accept( this ) ),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitSignFunction(SqmSignFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new SignFunction(
-					toSqlExpression( function.getArgument().accept( this ) ),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitSqrtFunction(SqmSqrtFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new SqrtFunction(
-					toSqlExpression( function.getArgument().accept( this ) ) ,
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitLnFunction(SqmLnFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new SqrtFunction(
-					toSqlExpression( function.getArgument().accept( this ) ) ,
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitExpFunction(SqmExpFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new SqrtFunction(
-					toSqlExpression( function.getArgument().accept( this ) ) ,
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-
-	@Override
-	public AvgFunction visitAvgFunction(SqmAvgFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new AvgFunction(
-					toSqlExpression( function.getArgument().accept( this ) ),
-					function.isDistinct(),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitBitLengthFunction(SqmBitLengthFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new BitLengthFunction(
-					toSqlExpression( function.getArgument().accept( this ) ),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitCastFunction(SqmCastFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new CastFunction(
-					toSqlExpression( function.getExpressionToCast().accept( this ) ),
-					(CastTarget) function.getCastTarget().accept( this )
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public CountFunction visitCountFunction(SqmCountFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new CountFunction(
-					toSqlExpression( function.getArgument().accept( this ) ),
-					function.isDistinct(),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public ConcatFunction visitConcatFunction(SqmConcatFunction function) {
-		return new ConcatFunction(
-				collectionExpressions( function.getExpressions() ),
-				function.getExpressableType().getSqlExpressableType()
-		);
-	}
-
-	private List<Expression> collectionExpressions(List<SqmExpression> sqmExpressions) {
-		if ( sqmExpressions == null || sqmExpressions.isEmpty() ) {
-			return Collections.emptyList();
-		}
-
-		if ( sqmExpressions.size() == 1 ) {
-			return singletonList( toSqlExpression( sqmExpressions.get( 0 ).accept( this ) ) );
-		}
-
-		final List<Expression> results = new ArrayList<>();
-
-		sqmExpressions.forEach( sqmExpression -> {
-
-			final Object expression = sqmExpression.accept( this );
-			if ( expression instanceof BasicValuedNavigableReference ) {
-				final BasicValuedNavigableReference navigableReference = (BasicValuedNavigableReference) expression;
-				results.add(
-						getSqlExpressionResolver().resolveSqlExpression(
-								fromClauseIndex.getTableGroup( navigableReference.getNavigablePath().getParent() ),
-								navigableReference.getNavigable().getBoundColumn()
-						)
-				);
-			}
-			else {
-				results.add( toSqlExpression( expression ) );
-			}
-		} );
-		return results;
-	}
-
-	@Override
-	public CurrentDateFunction visitCurrentDateFunction(SqmCurrentDateFunction function) {
-		return new CurrentDateFunction(
-				function.getExpressableType().getSqlExpressableType()
-		);
-	}
-
-	@Override
-	public CurrentTimeFunction visitCurrentTimeFunction(SqmCurrentTimeFunction function) {
-		return new CurrentTimeFunction(
-				function.getExpressableType().getSqlExpressableType()
-		);
-	}
-
-	@Override
-	public CurrentTimestampFunction visitCurrentTimestampFunction(SqmCurrentTimestampFunction function) {
-		return new CurrentTimestampFunction(
-				function.getExpressableType().getSqlExpressableType()
-		);
-	}
-
-	@Override
-	public CurrentTimestampFunction visitCurrentInstantFunction(SqmCurrentInstantFunction function) {
-		return new CurrentTimestampFunction(
-				function.getExpressableType().getSqlExpressableType()
-		);
-	}
-
-	@Override
-	public Object visitExtractUnit(SqmExtractUnit unit) {
+	public Object visitTrimSpecification(SqmTrimSpecification specification) {
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
-			return new ExtractUnit(
-					unit.getUnitName(),
-					unit.getType().getSqlExpressableType()
+			return new TrimSpecification(
+					specification.getSpecification()
 			);
 		}
 		finally {
@@ -1064,13 +731,12 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public ExtractFunction visitExtractFunction(SqmExtractFunction function) {
+	public Object visitExtractUnit(SqmExtractUnit unit) {
 		shallownessStack.push( Shallowness.FUNCTION );
-
 		try {
-			return new ExtractFunction(
-					(ExtractUnit) function.getUnitToExtract().accept( this ),
-					toSqlExpression( function.getExtractionSource().accept( this ) )
+			return new ExtractUnit(
+					unit.getUnitName(),
+					unit.getType().getSqlExpressableType()
 			);
 		}
 		finally {
@@ -1079,206 +745,13 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public CountStarFunction visitCountStarFunction(SqmCountStarFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new CountStarFunction(
-					function.isDistinct(),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
+	public Object visitDistinct(SqmDistinct distinct) {
+		return new Distinct( toSqlExpression( distinct.getExpression().accept(this) ) );
 	}
 
 	@Override
-	public LengthFunction visitLengthFunction(SqmLengthFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new LengthFunction(
-					toSqlExpression( function.getArgument().accept( this ) ),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public LocateFunction visitLocateFunction(SqmLocateFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new LocateFunction(
-					toSqlExpression( function.getPatternString().accept( this ) ),
-					toSqlExpression( function.getStringToSearch().accept( this ) ),
-					function.getStartPosition() == null
-							? null
-							: toSqlExpression( function.getStartPosition().accept( this ) ),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public ReplaceFunction visitReplaceFunction(SqmReplaceFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new ReplaceFunction(
-					toSqlExpression( function.getPatternString().accept( this ) ),
-					toSqlExpression( function.getStringToSearch().accept( this ) ),
-					toSqlExpression( function.getReplacementString().accept( this ) ),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitLowerFunction(SqmLowerFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new LowerFunction(
-					toSqlExpression( function.getArgument().accept( this ) ),
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public MaxFunction visitMaxFunction(SqmMaxFunction expression) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new MaxFunction(
-					toSqlExpression( expression.getArgument().accept( this ) ),
-					expression.isDistinct(),
-					expression.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public MinFunction visitMinFunction(SqmMinFunction expression) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new MinFunction(
-					toSqlExpression( expression.getArgument().accept( this ) ),
-					expression.isDistinct(),
-					expression.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitModFunction(SqmModFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		final Expression dividend = toSqlExpression( function.getDividend().accept( this ) );
-		final Expression divisor = toSqlExpression( function.getDivisor().accept( this ) );
-		try {
-			return new ModFunction(
-					dividend,
-					divisor,
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitPowerFunction(SqmPowerFunction function) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		final Expression base = toSqlExpression( function.getBase().accept( this ) );
-		final Expression power = toSqlExpression( function.getPower().accept( this ) );
-		try {
-			return new PowerFunction(
-					base,
-					power,
-					function.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitSubstringFunction(SqmSubstringFunction expression) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			List<Expression> expressionList = new ArrayList<>();
-			expressionList.add( toSqlExpression( expression.getSource().accept( this ) ) );
-			expressionList.add( toSqlExpression( expression.getStartPosition().accept( this ) ) );
-			if ( expression.getLength()!=null ) {
-				expressionList.add( toSqlExpression( expression.getLength().accept( this ) ) );
-			}
-
-			return new SubstringFunction(
-					expressionList,
-					expression.getExpressableType().getSqlExpressableType()
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public Object visitStrFunction(SqmStrFunction expression) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new CastFunction(
-					toSqlExpression( expression.getArgument().accept( this ) ),
-					new CastTarget( StandardSpiBasicTypes.STRING.getSqlExpressableType() )
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
-	}
-
-	@Override
-	public SumFunction visitSumFunction(SqmSumFunction expression) {
-		shallownessStack.push( Shallowness.FUNCTION );
-
-		try {
-			return new SumFunction(
-					toSqlExpression( expression.getArgument().accept( this ) ),
-					expression.isDistinct(),
-					expression.getExpressableType().getSqlExpressableType()
-
-			);
-		}
-		finally {
-			shallownessStack.pop();
-		}
+	public Object visitStar(SqmStar sqmStar) {
+		return new Star();
 	}
 
 	@Override
@@ -1307,13 +780,6 @@ public abstract class BaseSqmToSqlAstConverter
 		shallownessStack.push( Shallowness.NONE );
 
 		try {
-			if ( expression.getOperator() == MODULO ) {
-				return new ModFunction(
-						toSqlExpression( expression.getLeftHandOperand().accept( this ) ),
-						toSqlExpression( expression.getRightHandOperand().accept( this ) ),
-						expression.getExpressableType().getSqlExpressableType()
-				);
-			}
 			return new BinaryArithmeticExpression(
 					toSqlExpression( expression.getLeftHandOperand().accept( this ) ),
 					interpret( expression.getOperator() ),
@@ -1346,15 +812,6 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 
 		throw new IllegalStateException( "Unexpected BinaryArithmeticOperator : " + operator );
-	}
-
-	@Override
-	public CoalesceFunction visitCoalesceFunction(SqmCoalesceFunction<?> expression) {
-		final CoalesceFunction result = new CoalesceFunction( expression.getExpressableType().getSqlExpressableType() );
-		for ( SqmExpression value : expression.getArguments() ) {
-			result.value( toSqlExpression( value.accept( this ) ) );
-		}
-		return result;
 	}
 
 	@Override
@@ -1407,46 +864,6 @@ public abstract class BaseSqmToSqlAstConverter
 		result.otherwise( toSqlExpression( expression.getOtherwise().accept( this ) ) );
 
 		return result;
-	}
-
-	@Override
-	public NullifFunction visitNullifFunction(SqmNullifFunction expression) {
-		return new NullifFunction(
-				toSqlExpression( expression.getFirstArgument().accept( this ) ),
-				toSqlExpression( expression.getSecondArgument().accept( this ) ),
-				expression.getExpressableType().getSqlExpressableType()
-		);
-	}
-
-	@Override
-	public Object visitTrimFunction(SqmTrimFunction expression) {
-		return new TrimFunction(
-				expression.getSpecification(),
-				toSqlExpression( expression.getTrimCharacter().accept( this ) ),
-				toSqlExpression( expression.getSource().accept( this ) ),
-				expression.getExpressableType().getSqlExpressableType(),
-				getCreationContext()
-		);
-	}
-
-	@Override
-	public Object visitUpperFunction(SqmUpperFunction sqmFunction) {
-		return new UpperFunction(
-				toSqlExpression( sqmFunction.getArgument().accept( this ) ),
-				sqmFunction.getExpressableType().getSqlExpressableType()
-		);
-
-	}
-
-	@Override
-	public ConcatFunction visitConcatExpression(SqmConcat<?> expression) {
-		return new ConcatFunction(
-				Arrays.asList(
-						toSqlExpression( expression.getLeftHandOperand().accept( this ) ),
-						toSqlExpression( expression.getRightHandOperand().accept( this ) )
-				),
-				expression.getExpressableType().getSqlExpressableType()
-		);
 	}
 
 //	@Override

@@ -6,20 +6,20 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
-import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
+import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
-import org.hibernate.sql.TrimSpecification;
+import org.hibernate.sql.TrimSpec;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static java.util.Arrays.asList;
 
 /**
  * A {@link SqmFunctionTemplate} implementation that emulates the ANSI SQL trim function
@@ -49,7 +49,7 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 	/**
 	 * The placeholder used to represent whitespace
 	 */
-	public static final String TRIM_CHAR_PLACEHOLDER = "${space}$";
+	private static final String TRIM_CHAR_PLACEHOLDER = "${space}$";
 
 	private final String ltrimFunctionName;
 	private final String rtrimFunctionName;
@@ -79,11 +79,11 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 	}
 
 	@Override
-	public SqmFunction makeSqmFunctionExpression(
-			List<SqmTypedNode> arguments,
-			AllowableFunctionReturnType impliedResultType,
+	public <T> SelfRenderingSqmFunction<T>  makeSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final TrimSpecification specification = ( (TrimSpecificationExpressionWrapper) arguments.get( 0 ) ).getSpecification();
+		final TrimSpec specification = ( (SqmTrimSpecification) arguments.get( 0 ) ).getSpecification();
 		//noinspection unchecked
 		final SqmLiteral<Character> trimCharacterExpr = (SqmLiteral<Character>) arguments.get( 1 );
 		final SqmExpression sourceExpr = (SqmExpression) arguments.get( 1 );
@@ -104,7 +104,7 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 		}
 	}
 
-	private SqmFunction trimLeading(
+	private SelfRenderingSqmFunction trimLeading(
 			SqmLiteral<Character> trimChar,
 			SqmExpression source,
 			QueryEngine queryEngine) {
@@ -116,11 +116,11 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 		}
 	}
 
-	private SqmFunction trimLeadingSpaces(SqmExpression source, QueryEngine queryEngine) {
+	private SelfRenderingSqmFunction trimLeadingSpaces(SqmExpression source, QueryEngine queryEngine) {
 		return ltrim( source, queryEngine );
 	}
 
-	private SqmFunction trimLeadingNonSpaces(
+	private SelfRenderingSqmFunction trimLeadingNonSpaces(
 			SqmLiteral<Character> trimChar,
 			SqmExpression source,
 			QueryEngine queryEngine) {
@@ -158,7 +158,7 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 		);
 	}
 
-	private SqmFunction trimTrailing(
+	private SelfRenderingSqmFunction trimTrailing(
 			SqmLiteral<Character> trimChar,
 			SqmExpression source,
 			QueryEngine queryEngine) {
@@ -170,11 +170,11 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 		}
 	}
 
-	private SqmFunction trimTrailingSpaces(SqmExpression sourceExpr, QueryEngine queryEngine) {
+	private SelfRenderingSqmFunction trimTrailingSpaces(SqmExpression sourceExpr, QueryEngine queryEngine) {
 		return rtrim( sourceExpr, queryEngine );
 	}
 
-	private SqmFunction trimTrailingNonSpaces(
+	private SelfRenderingSqmFunction trimTrailingNonSpaces(
 			SqmLiteral<Character> trimChar,
 			SqmExpression source,
 			QueryEngine queryEngine) {
@@ -212,7 +212,7 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 		);
 	}
 
-	private SqmFunction trimBoth(
+	private SelfRenderingSqmFunction trimBoth(
 			SqmLiteral<Character> trimCharacterExpr,
 			SqmExpression sourceExpr,
 			QueryEngine queryEngine) {
@@ -225,11 +225,11 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 		}
 	}
 
-	private SqmFunction trimBothSpaces(SqmExpression sourceExpr, QueryEngine queryEngine) {
+	private SelfRenderingSqmFunction trimBothSpaces(SqmExpression sourceExpr, QueryEngine queryEngine) {
 		return ltrim( rtrim( sourceExpr, queryEngine ), queryEngine );
 	}
 
-	private SqmFunction trimBothNonSpaces(SqmLiteral<Character> trimChar, SqmExpression source, QueryEngine queryEngine) {
+	private SelfRenderingSqmFunction trimBothNonSpaces(SqmLiteral<Character> trimChar, SqmExpression source, QueryEngine queryEngine) {
 		final SqmLiteral<Character> space = charExpr( ' ', queryEngine );
 		final SqmLiteral<String> placeholder = placeholder( queryEngine );
 
@@ -268,7 +268,7 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 		);
 	}
 
-	protected SqmFunction replace(
+	private SelfRenderingSqmFunction replace(
 			SqmExpression source,
 			SqmExpression searchPattern,
 			SqmExpression replacement,
@@ -282,31 +282,30 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 		);
 	}
 
-	protected SqmFunction rtrim(SqmExpression source, QueryEngine queryEngine) {
+	private SelfRenderingSqmFunction rtrim(SqmExpression source, QueryEngine queryEngine) {
 		return function( rtrimFunctionName, queryEngine, source );
 	}
 
-	protected SqmFunction ltrim(SqmExpression source, QueryEngine queryEngine) {
+	private SelfRenderingSqmFunction ltrim(SqmExpression source, QueryEngine queryEngine) {
 		return function( ltrimFunctionName, queryEngine, source );
 	}
 
-	private static SqmGenericFunction function(
+	private static SelfRenderingSqmFunction function(
 			String name,
 			QueryEngine queryEngine,
 			SqmExpression... arguments) {
-		return new SqmGenericFunction(
-				name,
+		return queryEngine.getSqmFunctionRegistry().findFunctionTemplate(name).makeSqmFunctionExpression(
+				asList( arguments ),
 				StandardSpiBasicTypes.STRING,
-				Arrays.asList( arguments ),
-				queryEngine.getCriteriaBuilder()
+				queryEngine
 		);
 	}
 
-	protected final SqmLiteral<String> placeholder(QueryEngine queryEngine) {
+	private SqmLiteral<String> placeholder(QueryEngine queryEngine) {
 		return new SqmLiteral<>( TRIM_CHAR_PLACEHOLDER, StandardSpiBasicTypes.STRING, queryEngine.getCriteriaBuilder() );
 	}
 
-	protected SqmLiteral<Character> charExpr(char trimChar, QueryEngine queryEngine) {
+	private SqmLiteral<Character> charExpr(char trimChar, QueryEngine queryEngine) {
 		return new SqmLiteral<>( trimChar, StandardSpiBasicTypes.CHARACTER, queryEngine.getCriteriaBuilder() );
 	}
 

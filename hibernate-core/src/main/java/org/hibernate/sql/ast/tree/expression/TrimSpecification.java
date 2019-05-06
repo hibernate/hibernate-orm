@@ -7,36 +7,32 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.sql.SqlExpressableType;
+import org.hibernate.sql.TrimSpec;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.SqlExpressable;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
  * @author Gavin King
  */
-public class LnFunction extends AbstractFunction {
-	private final Expression argument;
-	private final SqlExpressableType type;
+public class TrimSpecification implements SqlExpressable, SqlAstNode {
+	private TrimSpec trimSpec;
 
-	public LnFunction(Expression argument, SqlExpressableType type) {
-		this.argument = argument;
-		this.type = type;
+	public TrimSpecification(TrimSpec trimSpec) {
+		this.trimSpec = trimSpec;
 	}
 
-	public Expression getArgument() {
-		return argument;
-	}
-
-	@Override
-	public void accept(SqlAstWalker walker) {
-		walker.visitLnFunction( this );
+	public TrimSpec getSpecification() {
+		return trimSpec;
 	}
 
 	@Override
 	public SqlExpressableType getExpressableType() {
-		return type;
+		return null;
 	}
 
 	@Override
-	public SqlExpressableType getType() {
-		return type;
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		sqlTreeWalker.visitTrimSpecification(this);
 	}
 }

@@ -1788,13 +1788,24 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Functions
 
+	private AllowableFunctionReturnType<?> getFunctionReturnType(String functionName, List functionArguments) {
+		final SqmFunctionTemplate functionTemplate = creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate( functionName );
+		return functionTemplate != null
+				? (AllowableFunctionReturnType<?>) functionTemplate.makeSqmFunctionExpression( functionArguments, null, creationContext.getQueryEngine() ).getExpressableType()
+				: null;
+	}
+
 	@Override
 	public SqmGenericFunction visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
 		final String functionName = ctx.jpaNonStandardFunctionName().STRING_LITERAL().getText();
 		final List<SqmExpression> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
 
-		// todo : integrate some form of SqlFunction look-up using the ParsingContext so we can resolve the "type"
-		return new SqmGenericFunction<>( functionName, null, functionArguments, creationContext.getNodeBuilder() );
+		return new SqmGenericFunction<>(
+				functionName,
+				getFunctionReturnType( functionName, functionArguments ),
+				functionArguments,
+				creationContext.getNodeBuilder()
+		);
 	}
 
 	@Override
@@ -1810,8 +1821,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final String functionName = ctx.nonStandardFunctionName().getText();
 		final List<SqmExpression> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
 
-		// todo : integrate some form of SqlFunction look-up using the ParsingContext so we can resolve the "type"
-		return new SqmGenericFunction<>( functionName, null, functionArguments, creationContext.getNodeBuilder() );
+		return new SqmGenericFunction<>(
+				functionName,
+				getFunctionReturnType( functionName, functionArguments ),
+				functionArguments,
+				creationContext.getNodeBuilder()
+		);
 	}
 
 	@Override

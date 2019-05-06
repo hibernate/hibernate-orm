@@ -14,6 +14,7 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.LocateEmulation;
 import org.hibernate.dialect.identity.Chache71IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -289,6 +290,22 @@ public class Cache71Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 
+		queryEngine.getSqmFunctionRegistry().register(
+				"locate",
+				new LocateEmulation(
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/2", "$find(?2, ?1)" )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/3", "$find(?2, ?1, ?3)" )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
+
 		queryEngine.getSqmFunctionRegistry().registerNamed( "convert" );
 
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "curdate", queryEngine.getSqmFunctionRegistry().registerNamed( "curdate", StandardSpiBasicTypes.DATE ) );
@@ -324,9 +341,7 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "$listfind" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "$listget" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "$listlength", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "locate", "$FIND" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
+		queryEngine.getSqmFunctionRegistry().registerNamed( "$find",  StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "log", queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "log10", queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim", StandardSpiBasicTypes.STRING );

@@ -142,13 +142,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void sign(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sign" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
-	}
-
 	public static void rand(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rand" )
 				.setArgumentCountBetween( 0, 1 )

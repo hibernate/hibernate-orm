@@ -16,6 +16,7 @@ import org.hibernate.sql.ast.tree.expression.FloorFunction;
 import org.hibernate.sql.ast.tree.expression.LnFunction;
 import org.hibernate.sql.ast.tree.expression.PowerFunction;
 import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
+import org.hibernate.sql.ast.tree.expression.SignFunction;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.expression.AbsFunction;
@@ -171,6 +172,8 @@ public interface SqlAstWalker {
 	void visitNonStandardFunctionExpression(NonStandardFunction function);
 
 	void visitAbsFunction(AbsFunction function);
+
+	void visitSignFunction(SignFunction function);
 
 	void visitAvgFunction(AvgFunction function);
 

@@ -114,8 +114,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		CommonFunctionFactory.sign( queryEngine );
-
 		CommonFunctionFactory.acos( queryEngine );
 		CommonFunctionFactory.asin( queryEngine );
 		CommonFunctionFactory.atan( queryEngine );

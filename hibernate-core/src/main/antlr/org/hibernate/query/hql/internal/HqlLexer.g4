@@ -204,6 +204,7 @@ RIGHT				: [rR] [iI] [gG] [hH] [tT];
 SECOND				: [sS] [eE] [cC] [oO] [nN] [dD];
 SELECT				: [sS] [eE] [lL] [eE] [cC] [tT];
 SET					: [sS] [eE] [tT];
+SIGN				: [sS] [iI] [gG] [nN];
 SIZE				: [sS] [iI] [zZ] [eE];
 SQRT				: [sS] [qQ] [rR] [tT];
 STR					: [sS] [tT] [rR];

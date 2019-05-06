@@ -166,7 +166,6 @@ public class MySQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		CommonFunctionFactory.sign( queryEngine );
 		CommonFunctionFactory.acos( queryEngine );
 		CommonFunctionFactory.asin( queryEngine );
 		CommonFunctionFactory.atan( queryEngine );

@@ -53,6 +53,7 @@ import org.hibernate.sql.ast.tree.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.expression.PowerFunction;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
+import org.hibernate.sql.ast.tree.expression.SignFunction;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqrtFunction;
 import org.hibernate.sql.ast.tree.expression.SubstrFunction;
@@ -586,6 +587,11 @@ public class SqlAstPrinter implements SqlAstWalker {
 
 	@Override
 	public void visitAbsFunction(AbsFunction function) {
+
+	}
+
+	@Override
+	public void visitSignFunction(SignFunction function) {
 
 	}
 

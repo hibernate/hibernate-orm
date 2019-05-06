@@ -137,7 +137,6 @@ public class DB2Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.sign( queryEngine );
 		CommonFunctionFactory.round( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "absval" )

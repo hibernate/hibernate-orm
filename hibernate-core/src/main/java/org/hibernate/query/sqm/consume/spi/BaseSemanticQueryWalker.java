@@ -67,6 +67,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmPowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmReplaceFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSignFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
@@ -482,6 +483,11 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 
 	@Override
 	public T visitAbsFunction(SqmAbsFunction function) {
+		return (T) function;
+	}
+
+	@Override
+	public T visitSignFunction(SqmSignFunction function) {
 		return (T) function;
 	}
 

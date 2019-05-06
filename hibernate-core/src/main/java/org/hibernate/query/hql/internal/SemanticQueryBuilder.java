@@ -133,6 +133,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSignFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
@@ -1888,6 +1889,21 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 						creationContext.getQueryEngine()
 				),
 				arg -> new SqmAbsFunction( arg, (AllowableFunctionReturnType) arg.getExpressableType(), creationContext.getNodeBuilder() ),
+				ctx.expression()
+		);
+	}
+
+	@Override
+	public SqmExpression visitSignFunction(HqlParser.SignFunctionContext ctx) {
+		//noinspection unchecked
+		return generateSingleArgFunction(
+				SqmSignFunction.NAME,
+				(sqmFunctionTemplate, arg) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						singletonList( arg ),
+						resolveExpressableTypeBasic( Integer.class ),
+						creationContext.getQueryEngine()
+				),
+				arg -> new SqmSignFunction( arg, resolveExpressableTypeBasic( Integer.class ), creationContext.getNodeBuilder() ),
 				ctx.expression()
 		);
 	}

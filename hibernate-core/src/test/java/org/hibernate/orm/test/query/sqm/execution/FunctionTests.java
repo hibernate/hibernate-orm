@@ -72,9 +72,9 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     public void testMathFunctions() {
         inTransaction(
                 session -> {
-                    session.createQuery("select abs(e.theInt), mod(e.theInt, 2) from EntityOfBasics e")
+                    session.createQuery("select abs(e.theInt), sign(e.theInt), mod(e.theInt, 2) from EntityOfBasics e")
                             .list();
-                    session.createQuery("select abs(e.theDouble), sqrt(e.theDouble) from EntityOfBasics e")
+                    session.createQuery("select abs(e.theDouble), sign(e.theDouble), sqrt(e.theDouble) from EntityOfBasics e")
                             .list();
                     session.createQuery("select exp(e.theDouble), ln(e.theDouble) from EntityOfBasics e")
                             .list();

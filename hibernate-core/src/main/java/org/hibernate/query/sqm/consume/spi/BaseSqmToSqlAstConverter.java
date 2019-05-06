@@ -80,6 +80,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmModFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmPowerFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmReplaceFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSignFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSqrtFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmStrFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
@@ -161,6 +162,7 @@ import org.hibernate.sql.ast.tree.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.expression.PowerFunction;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.ReplaceFunction;
+import org.hibernate.sql.ast.tree.expression.SignFunction;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqrtFunction;
 import org.hibernate.sql.ast.tree.expression.SubQuery;
@@ -836,6 +838,21 @@ public abstract class BaseSqmToSqlAstConverter
 
 		try {
 			return new AbsFunction(
+					toSqlExpression( function.getArgument().accept( this ) ),
+					function.getExpressableType().getSqlExpressableType()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
+	public Object visitSignFunction(SqmSignFunction function) {
+		shallownessStack.push( Shallowness.FUNCTION );
+
+		try {
+			return new SignFunction(
 					toSqlExpression( function.getArgument().accept( this ) ),
 					function.getExpressableType().getSqlExpressableType()
 			);

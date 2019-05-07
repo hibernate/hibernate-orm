@@ -16,17 +16,6 @@ public class MariaDB10Dialect extends MariaDB53Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "regexp_replace", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "regexp_instr", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "regexp_substr", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "weight_string", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "to_base64", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "from_base64", StandardSpiBasicTypes.STRING );
-	}
-
-		@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return true;
 	}

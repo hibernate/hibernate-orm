@@ -17,7 +17,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.naming.Identifier;
@@ -75,39 +74,31 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.ifnull_isnull( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "len" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
+		CommonFunctionFactory.characterLength_len( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "square" )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "isnull" )
-				.setExactArgumentCount( 2 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "second", "datepart(second, ?1)")
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "second", "datepart(second, ?1)" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "minute", "datepart(minute, ?1)")
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "minute", "datepart(minute, ?1)" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "hour", "datepart(hour, ?1)")
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "hour", "datepart(hour, ?1)" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "extract", "datepart(?1, ?2)")
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "extract", "datepart" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "mod", "(?1 % ?2)")
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "mod", "(?1 % ?2)" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
 				.register();
@@ -126,11 +117,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ln", "log" );
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "repeat", "replicate" );
-
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "len" );
-
-		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 	}
 
 	@Override

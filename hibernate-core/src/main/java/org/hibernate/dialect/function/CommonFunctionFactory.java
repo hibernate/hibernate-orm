@@ -574,6 +574,14 @@ public class CommonFunctionFactory {
 
 	}
 
+	public static void characterLength_len(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "len" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "len" );
+	}
+
 	public static void bitLength(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("bit_length")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )

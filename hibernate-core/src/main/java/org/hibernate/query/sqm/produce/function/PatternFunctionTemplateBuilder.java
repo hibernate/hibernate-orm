@@ -58,14 +58,15 @@ public class PatternFunctionTemplateBuilder {
 	}
 
 	public SqmFunctionTemplate register() {
-		return registry.register(
-				registrationKey,
-				new PatternBasedSqmFunctionTemplate(
-						new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
-						argumentsValidator,
-						returnTypeResolver,
-						registrationKey
-				)
-		);
+		return registry.register( registrationKey, template() );
+	}
+
+	public SqmFunctionTemplate template() {
+		return new PatternBasedSqmFunctionTemplate(
+                new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
+                argumentsValidator,
+                returnTypeResolver,
+                registrationKey
+        );
 	}
 }

@@ -13,6 +13,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
@@ -121,7 +122,7 @@ public class Oracle9Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 
-		CommonFunctionFactory.locate( queryEngine, "instr(?2, ?1)", "instr(?2, ?1, ?3)" );
+		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
 
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "str", "to_char" );
 	}

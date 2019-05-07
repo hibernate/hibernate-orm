@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -129,7 +130,7 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 
-		CommonFunctionFactory.locate( queryEngine, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)" );
+		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(octet_length(?1)*8)", StandardSpiBasicTypes.INTEGER );
 

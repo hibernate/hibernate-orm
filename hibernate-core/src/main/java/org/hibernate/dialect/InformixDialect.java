@@ -11,7 +11,6 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -104,7 +103,9 @@ public class InformixDialect extends Dialect {
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+		//coalesce() and nullif() both supported since Informix 12
+
+//		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 
 	}
 

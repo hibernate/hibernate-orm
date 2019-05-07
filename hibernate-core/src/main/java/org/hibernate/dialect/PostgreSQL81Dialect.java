@@ -20,6 +20,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -133,7 +134,7 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		CommonFunctionFactory.locate( queryEngine, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)" );
+		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar)", StandardSpiBasicTypes.STRING );
 

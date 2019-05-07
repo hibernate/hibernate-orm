@@ -58,6 +58,15 @@ public class MckoiDialect extends Dialect {
 	}
 
 	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "nullif", "if(?1==?2, null, ?1)" )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	@Override
 	public String getAddColumnString() {
 		return "add column";
 	}

@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.sqm.produce.function.StandardArgumentsValidators.min;
@@ -171,6 +172,11 @@ public class CommonFunctionFactory {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
+	}
+
+	public static void pad_fill(QueryEngine queryEngine) {
+		PairedFunctionTemplate.register(queryEngine, "lpad", StandardSpiBasicTypes.STRING, "lfill(?1,' ',?2)", "lfill(?1,?3,?2)");
+		PairedFunctionTemplate.register(queryEngine, "rpad", StandardSpiBasicTypes.STRING, "rfill(?1,' ',?2)", "rfill(?1,?3,?2)");
 	}
 
 	public static void octetLength(QueryEngine queryEngine) {
@@ -480,24 +486,6 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
 	}
 
-	public static void locate(QueryEngine queryEngine, String pattern2, String pattern3) {
-		queryEngine.getSqmFunctionRegistry().register(
-				"locate",
-				new LocateEmulation(
-						queryEngine.getSqmFunctionRegistry()
-								.patternTemplateBuilder( "locate/2", pattern2 )
-								.setExactArgumentCount( 2 )
-								.setInvariantType( StandardSpiBasicTypes.INTEGER )
-								.register(),
-						queryEngine.getSqmFunctionRegistry()
-								.patternTemplateBuilder( "locate/3", pattern3 )
-								.setExactArgumentCount( 3 )
-								.setInvariantType( StandardSpiBasicTypes.INTEGER )
-								.register()
-				)
-		);
-	}
-
     public static void trigonometry(QueryEngine queryEngine) {
         queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("sin")
                 .setInvariantType( StandardSpiBasicTypes.DOUBLE )
@@ -537,10 +525,18 @@ public class CommonFunctionFactory {
 
     public static void coalesce(QueryEngine queryEngine) {
         queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("coalesce")
+				.setArgumentsValidator( min(1) )
                 .register();
     }
 
-    public static void nullif(QueryEngine queryEngine) {
+	public static void coalesce_value(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("value")
+				.setArgumentsValidator( min(1) )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "coalesce", "value" );
+	}
+
+	public static void nullif(QueryEngine queryEngine) {
         queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("nullif")
                 .setExactArgumentCount(2)
                 .register();
@@ -752,4 +748,5 @@ public class CommonFunctionFactory {
                 .setExactArgumentCount(1)
                 .register();
     }
+
 }

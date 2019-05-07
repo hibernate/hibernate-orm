@@ -40,33 +40,6 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		registerSybaseKeywords();
 	}
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		//TODO: is this really necessary:
-		queryEngine.getSqmFunctionRegistry().register(
-				"trim", new TransactSQLTrimEmulation(
-						TransactSQLTrimEmulation.LTRIM, TransactSQLTrimEmulation.RTRIM, "str_replace"
-				)
-		);
-
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "current_date", "current date")
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setExactArgumentCount( 0 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "current_time", "current time")
-				.setInvariantType( StandardSpiBasicTypes.TIME )
-				.setExactArgumentCount( 0 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "current_timestamp", "current timestamp")
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 0 )
-				.register();
-	}
-
 	private void registerSybaseKeywords() {
 		registerKeyword( "add" );
 		registerKeyword( "all" );

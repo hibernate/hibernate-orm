@@ -8,6 +8,8 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
@@ -46,12 +48,37 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charindex" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 2 )
-				.register();
+		//this doesn't work 100% on earlier versions of Sybase
+		//which were missing the third parameter in charindex()
+		//TODO: we could emulate it with substring() like in Postgres
+		CommonFunctionFactory.locate_charindex( queryEngine );
 
-		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "locate(?2, ?1)", "locate(?2, ?1, ?3)");
+		CommonFunctionFactory.replace_strReplace( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register(
+				"trim", new TransactSQLTrimEmulation(
+						TransactSQLTrimEmulation.LTRIM,
+						TransactSQLTrimEmulation.RTRIM,
+						"str_replace"
+				)
+		);
+
+		//these functions need parens
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register();
 
 	}
 

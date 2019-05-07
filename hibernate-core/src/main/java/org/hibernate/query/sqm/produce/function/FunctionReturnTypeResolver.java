@@ -31,7 +31,7 @@ public interface FunctionReturnTypeResolver {
 	 *
 	 * @return The resolved type.
 	 */
-	<T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
-			AllowableFunctionReturnType<T> impliedType,
+	AllowableFunctionReturnType<?> resolveFunctionReturnType(
+			AllowableFunctionReturnType<?> impliedType,
 			List<SqmTypedNode<?>> arguments);
 }

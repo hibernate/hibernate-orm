@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.query.sqm.NodeBuilder;
@@ -13,24 +19,24 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
  */
 public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
 
-    private final SqmExpression<T> expression;
+	private final SqmExpression<T> expression;
 
-    public SqmDistinct(SqmExpression<T> expression, NodeBuilder builder) {
-        super(builder);
-        this.expression = expression;
-    }
+	public SqmDistinct(SqmExpression<T> expression, NodeBuilder builder) {
+		super(builder);
+		this.expression = expression;
+	}
 
-    public SqmExpression<T> getExpression() {
-        return expression;
-    }
+	public SqmExpression<T> getExpression() {
+		return expression;
+	}
 
-    @Override
-    public ExpressableType<T> getExpressableType() {
-        return expression.getExpressableType();
-    }
+	@Override
+	public ExpressableType<T> getExpressableType() {
+		return expression.getExpressableType();
+	}
 
-    @Override
-    public <X> X accept(SemanticQueryWalker<X> walker) {
-        return walker.visitDistinct(this);
-    }
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitDistinct(this);
+	}
 }

@@ -162,7 +162,6 @@ public class Oracle8iDialect extends Dialect {
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(vsize(?1)*8)", StandardSpiBasicTypes.INTEGER );
 

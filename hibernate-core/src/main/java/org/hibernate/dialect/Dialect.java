@@ -117,6 +117,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
+import static org.hibernate.query.sqm.produce.function.StandardArgumentsValidators.min;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
@@ -300,7 +301,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 
-		//aggregate functions
+		//aggregate functions, supported on every database
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("max")
 				.setExactArgumentCount(1)
@@ -324,7 +325,7 @@ public abstract class Dialect implements ConversionContext {
 				.setExactArgumentCount(1)
 				.register();
 
-		//math functions
+		//math functions supported on almost every database
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "round" )
 				.setExactArgumentCount(2)
@@ -370,7 +371,7 @@ public abstract class Dialect implements ConversionContext {
 				.setExactArgumentCount(2)
 				.register();
 
-		//trig functions
+		//trig functions supported on almost every database
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("sin")
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
@@ -407,7 +408,7 @@ public abstract class Dialect implements ConversionContext {
 				.setExactArgumentCount(2)
 				.register();
 
-		//null functions
+		//null functions, must be redefined where not supported
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("coalesce")
 				.register();
@@ -416,7 +417,7 @@ public abstract class Dialect implements ConversionContext {
 				.setExactArgumentCount(2)
 				.register();
 
-		//string functions
+		//string functions, must be redefined where not supported
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("character_length") //length() is a synonym
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
@@ -469,7 +470,7 @@ public abstract class Dialect implements ConversionContext {
 				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.register();
 
-		//ANSI SQL functions with weird syntax
+		//ANSI SQL functions with weird syntax, not supported on every database
 
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("trim", "trim(?1 ?2 from ?3)")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -492,7 +493,7 @@ public abstract class Dialect implements ConversionContext {
 				.setExactArgumentCount(2)
 				.register();
 
-		//current date/time functions
+		//ANSI current date/time functions, supported on almost every database
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_time")
 				.setInvariantType( StandardSpiBasicTypes.TIME )
@@ -508,6 +509,15 @@ public abstract class Dialect implements ConversionContext {
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey("now", "current_timestamp");
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey("curdate", "current_date");
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey("curtime", "current_time");
+
+		//comparison functions supported on every known database
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "least" )
+				.setArgumentsValidator( min(1) )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "greatest" )
+				.setArgumentsValidator( min(1) )
+				.register();
 
 		//TODO: re-express these in terms of registered cast() function so
 		//      it doesn't need to be redefined by dialect subclasses

@@ -126,7 +126,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )

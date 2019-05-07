@@ -86,7 +86,6 @@ public class SAPDBDialect extends Dialect {
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.week_weekofyear(queryEngine);
 		CommonFunctionFactory.concat_operator( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );

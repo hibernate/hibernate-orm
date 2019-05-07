@@ -203,14 +203,10 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 
-		if ( hsqldbVersion < 200 ) {
-			queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
-		}
-		else {
-			//This function is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
-			queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
+		if ( hsqldbVersion >= 200 ) {
+			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
+			CommonFunctionFactory.sysdateSystimestamp( queryEngine );
 		}
 
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM

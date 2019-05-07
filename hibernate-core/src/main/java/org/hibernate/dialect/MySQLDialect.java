@@ -216,7 +216,6 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "crc32" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )

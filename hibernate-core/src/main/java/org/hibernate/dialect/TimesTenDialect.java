@@ -94,7 +94,6 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 	}
 
 	@Override

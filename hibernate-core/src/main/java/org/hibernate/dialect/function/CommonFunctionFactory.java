@@ -489,10 +489,4 @@ public class CommonFunctionFactory {
 		);
 	}
 
-	public static void leastGreatest(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
-	}
-
-
 }

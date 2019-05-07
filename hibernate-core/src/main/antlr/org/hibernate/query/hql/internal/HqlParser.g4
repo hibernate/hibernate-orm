@@ -433,6 +433,14 @@ searchedCaseWhen
 	: WHEN predicate THEN expression
 	;
 
+greatestFunction
+	: GREATEST LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
+	;
+
+leastFunction
+	: LEAST LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
+	;
+
 coalesce
 	: COALESCE LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
 	;
@@ -592,6 +600,8 @@ standardFunction
 	|	asciiFunction
 	|	chrFunction
 	|	strFunction
+	|	greatestFunction
+	|	leastFunction
 	|	currentDateFunction
 	|	currentTimeFunction
 	|	currentTimestampFunction
@@ -849,6 +859,8 @@ identifier
 	| ANY
 	| AS
 	| ASC
+	| ASCII
+	| ATAN2
 	| AVG
 	| BY
 	| BETWEEN
@@ -857,6 +869,7 @@ identifier
 	| CAST
 	| CEILING
 	| CHARACTER_LENGTH
+	| CHR
 	| COALESCE
 	| COLLATE
 	| CONCAT
@@ -905,6 +918,7 @@ identifier
 	| POSITION
 	| POWER
 	| REPLACE
+	| ROUND
 	| RIGHT
 	| SELECT
 	| SECOND
@@ -921,7 +935,8 @@ identifier
 	| VALUE
 	| WHERE
 	| WITH
-	| YEAR) {
+	| YEAR
+	| trigFunctionName) {
 		logUseOfReservedWordAsIdentifier(getCurrentToken());
 	}
 	;

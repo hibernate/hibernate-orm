@@ -63,6 +63,9 @@ public class BasicTypeRegistry implements Serializable {
 		register( LocalTimeType.INSTANCE );
 		register( OffsetDateTimeType.INSTANCE );
 		register( OffsetTimeType.INSTANCE );
+		register( YearType.INSTANCE );
+		register( ZoneIdType.INSTANCE );
+		register( ZoneOffsetType.INSTANCE );
 		register( ZonedDateTimeType.INSTANCE );
 
 		register( DateType.INSTANCE );

@@ -68,6 +68,9 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 		addDescriptorInternal( LocalDateTimeJavaDescriptor.INSTANCE );
 		addDescriptorInternal( OffsetDateTimeJavaDescriptor.INSTANCE );
 		addDescriptorInternal( OffsetTimeJavaDescriptor.INSTANCE );
+		addDescriptorInternal( YearJavaDescriptor.INSTANCE );
+		addDescriptorInternal( ZoneIdJavaDescriptor.INSTANCE );
+		addDescriptorInternal( ZoneOffsetJavaDescriptor.INSTANCE );
 		addDescriptorInternal( ZonedDateTimeJavaDescriptor.INSTANCE );
 
 		addDescriptorInternal( CalendarTypeDescriptor.INSTANCE );

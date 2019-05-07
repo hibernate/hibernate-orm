@@ -58,13 +58,6 @@ public class MckoiDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		CommonFunctionFactory.leastGreatest( queryEngine );
-	}
-
-	@Override
 	public String getAddColumnString() {
 		return "add column";
 	}

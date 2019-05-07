@@ -164,7 +164,6 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )

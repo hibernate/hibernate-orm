@@ -128,7 +128,6 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		CommonFunctionFactory.locate( queryEngine, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)" );
 

@@ -273,7 +273,6 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		CommonFunctionFactory.locate( queryEngine, "$find(?2, ?1)", "$find(?2, ?1, ?3)" );
 

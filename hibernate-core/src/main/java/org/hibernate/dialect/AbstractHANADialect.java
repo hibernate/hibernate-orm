@@ -299,7 +299,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.leastGreatest( queryEngine );
 	}
 
 	@Override

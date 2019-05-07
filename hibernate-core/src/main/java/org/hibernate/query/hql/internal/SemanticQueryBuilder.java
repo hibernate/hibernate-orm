@@ -1508,6 +1508,48 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public Object visitLeastFunction(HqlParser.LeastFunctionContext ctx) {
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
+
+		ExpressableType<?> type = null;
+
+		for ( HqlParser.ExpressionContext argument : ctx.expression() ) {
+			SqmTypedNode arg = (SqmTypedNode) argument.accept(this);
+			arguments.add(arg);
+			//TODO: do something better here!
+			type = arg.getExpressableType();
+		}
+
+		return getFunctionTemplate("least")
+				.makeSqmFunctionExpression(
+						arguments,
+						(AllowableFunctionReturnType<?>) type,
+						creationContext.getQueryEngine()
+				);
+	}
+
+	@Override
+	public Object visitGreatestFunction(HqlParser.GreatestFunctionContext ctx) {
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
+
+		ExpressableType<?> type = null;
+
+		for ( HqlParser.ExpressionContext argument : ctx.expression() ) {
+			SqmTypedNode arg = (SqmTypedNode) argument.accept(this);
+			arguments.add(arg);
+			//TODO: do something better here!
+			type = arg.getExpressableType();
+		}
+
+		return getFunctionTemplate("greatest")
+				.makeSqmFunctionExpression(
+						arguments,
+						(AllowableFunctionReturnType<?>) type,
+						creationContext.getQueryEngine()
+				);
+	}
+
+	@Override
 	public SqmExpression visitCoalesceExpression(HqlParser.CoalesceExpressionContext ctx) {
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
 
@@ -1786,16 +1828,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Functions
 
-	private AllowableFunctionReturnType<?> getFunctionReturnType(String functionName, List functionArguments) {
-		final SqmFunctionTemplate functionTemplate = getFunctionTemplate(functionName);
-		return functionTemplate != null
-				? (AllowableFunctionReturnType<?>) functionTemplate.makeSqmFunctionExpression( functionArguments, null, creationContext.getQueryEngine() ).getExpressableType()
-				: null;
-	}
-
 	@Override
 	public SqmExpression visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
-		final String functionName = ctx.jpaNonStandardFunctionName().STRING_LITERAL().getText();
+		final String functionName = ctx.jpaNonStandardFunctionName().STRING_LITERAL().getText().toLowerCase();
 		final List<SqmTypedNode<?>> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
 
 
@@ -1820,7 +1855,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			);
 		}
 
-		final String functionName = ctx.nonStandardFunctionName().getText();
+		final String functionName = ctx.nonStandardFunctionName().getText().toLowerCase();
 		final List<SqmTypedNode<?>> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
 
 		SqmFunctionTemplate functionTemplate = getFunctionTemplate(functionName);

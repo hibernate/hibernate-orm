@@ -243,6 +243,18 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     }
 
     @Test
+    public void testLeastGreatestFunctions() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select least(1, 2, e.theInt, -1), greatest(1, e.theInt, 2, -1) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select least(0.0, e.theDouble), greatest(0.0, e.theDouble, 2.0) from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+    @Test
     public void testCountFunction() {
         inTransaction(
                 session -> {

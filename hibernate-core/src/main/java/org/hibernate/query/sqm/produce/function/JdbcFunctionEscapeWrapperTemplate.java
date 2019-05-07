@@ -36,10 +36,10 @@ public class JdbcFunctionEscapeWrapperTemplate
 			QueryEngine queryEngine) {
 		return new SqmJdbcFunctionEscapeWrapper<>(
 				wrapped.makeSqmFunctionExpression(
-                        arguments,
-                        impliedResultType,
-                        queryEngine
-                ),
+						arguments,
+						impliedResultType,
+						queryEngine
+				),
 				queryEngine.getCriteriaBuilder()
 		);
 	}

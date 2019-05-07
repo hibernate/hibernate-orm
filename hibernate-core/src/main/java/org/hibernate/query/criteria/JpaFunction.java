@@ -20,11 +20,4 @@ public interface JpaFunction<T> extends JpaExpression<T> {
 	 * @return The function name.
 	 */
 	String getFunctionName();
-
-	/**
-	 * Is this function a value aggregator (like a <tt>COUNT</tt> or <tt>MAX</tt> function e.g.)?
-	 *
-	 * @return True if this functions does aggregation.
-	 */
-	boolean isAggregator();
 }

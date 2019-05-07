@@ -20,17 +20,20 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public class SelfRenderingSqmFunction<T> extends AbstractSqmExpression<T> implements SqmFunction<T> {
+	private final String name;
 	private final SelfRenderingFunctionSupport renderingSupport;
-	private List<SqmTypedNode<?>> arguments;
+	private final List<SqmTypedNode<?>> arguments;
 
 	public SelfRenderingSqmFunction(
 			SelfRenderingFunctionSupport renderingSupport,
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			NodeBuilder nodeBuilder) {
+			NodeBuilder nodeBuilder,
+			String name) {
 		super( impliedResultType, nodeBuilder );
 		this.renderingSupport = renderingSupport;
 		this.arguments = arguments;
+		this.name = name;
 	}
 
 	public List<SqmTypedNode<?>> getArguments() {
@@ -53,14 +56,7 @@ public class SelfRenderingSqmFunction<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public String getFunctionName() {
-		//TODO
-		return null;
-	}
-
-	@Override
-	public boolean isAggregator() {
-		//TODO
-		return false;
+		return name;
 	}
 
 }

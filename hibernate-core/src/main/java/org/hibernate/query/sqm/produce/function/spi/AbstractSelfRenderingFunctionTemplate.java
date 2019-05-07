@@ -10,21 +10,23 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmFunctionTemplate {
+	private final String name;
+
 	public AbstractSelfRenderingFunctionTemplate(
+			String name,
 			FunctionReturnTypeResolver returnTypeResolver,
 			ArgumentsValidator argumentsValidator) {
 		super( argumentsValidator, returnTypeResolver );
+		this.name = name;
 	}
 
 	@Override
@@ -37,8 +39,8 @@ public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmF
 				getRenderingFunctionSupport( arguments, resolvedReturnType, queryEngine ),
 				arguments,
 				resolvedReturnType,
-				queryEngine.getCriteriaBuilder()
-		);
+				queryEngine.getCriteriaBuilder(),
+				name);
 	}
 
 	protected abstract SelfRenderingFunctionSupport getRenderingFunctionSupport(

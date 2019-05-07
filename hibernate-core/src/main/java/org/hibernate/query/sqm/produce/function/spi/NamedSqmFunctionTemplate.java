@@ -40,7 +40,16 @@ public class NamedSqmFunctionTemplate
 			boolean useParenthesesWhenNoArgs,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver) {
-		super( returnTypeResolver, argumentsValidator );
+		this( functionName, useParenthesesWhenNoArgs, argumentsValidator, returnTypeResolver, functionName );
+	}
+
+	public NamedSqmFunctionTemplate(
+			String functionName,
+			boolean useParenthesesWhenNoArgs,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver,
+			String name) {
+		super( name, returnTypeResolver, argumentsValidator );
 
 		this.functionName = functionName;
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;

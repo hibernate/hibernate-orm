@@ -39,7 +39,8 @@ public class DerbyConcatEmulation extends FunctionAsExpressionTemplate {
 		super(
 				"(", "||", ")",
 				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING ),
-				StandardArgumentsValidators.min( 2 )
+				StandardArgumentsValidators.min( 2 ),
+				"concat"
 		);
 	}
 

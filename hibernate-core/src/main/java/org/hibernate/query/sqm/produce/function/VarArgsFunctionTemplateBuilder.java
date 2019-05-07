@@ -70,7 +70,8 @@ public class VarArgsFunctionTemplateBuilder {
 						sep,
 						end,
 						returnTypeResolver,
-						argumentsValidator
+						argumentsValidator,
+						registrationKey
 				)
 		);
 	}

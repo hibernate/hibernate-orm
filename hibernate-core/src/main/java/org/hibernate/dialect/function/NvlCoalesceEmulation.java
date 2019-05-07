@@ -26,6 +26,7 @@ import static java.util.Arrays.asList;
  * todo (6.0) : what was the first version of Oracle to support `coalesce`?
  *
  * @author Steve Ebersole
+ * @author Gavin King
  */
 public class NvlCoalesceEmulation
 		extends AbstractSqmFunctionTemplate {
@@ -46,15 +47,16 @@ public class NvlCoalesceEmulation
 		SqmFunctionTemplate nvl = queryEngine.getSqmFunctionRegistry().findFunctionTemplate("nvl");
 
 		int pos = arguments.size();
-		SqmExpression result = (SqmExpression) arguments.get( --pos );
-		AllowableFunctionReturnType type = (AllowableFunctionReturnType) result.getExpressableType();
+		SqmExpression<?> result = (SqmExpression<?>) arguments.get( --pos );
+		AllowableFunctionReturnType<?> type = (AllowableFunctionReturnType<?>) result.getExpressableType();
 
 		while (pos>0) {
-			SqmExpression next = (SqmExpression) arguments.get( --pos );
+			SqmExpression<?> next = (SqmExpression<?>) arguments.get( --pos );
 			result = nvl.makeSqmFunctionExpression( asList( next, result ), type, queryEngine );
 		}
 
-		return (SelfRenderingSqmFunction) result;
+		//noinspection unchecked
+		return (SelfRenderingSqmFunction<T>) result;
 	}
 
 }

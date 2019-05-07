@@ -36,7 +36,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -122,13 +121,86 @@ public class MySQLDialect extends Dialect {
 		uniqueDelegate = new MySQLUniqueDelegate( this );
 	}
 
+	void upgradeTo57() {
+
+		// For details about MySQL 5.7 support for fractional seconds
+		// precision (fsp): http://dev.mysql.com/doc/refman/5.7/en/fractional-seconds.html
+		// Regarding datetime(fsp), "The fsp value, if given, must be
+		// in the range 0 to 6. A value of 0 signifies that there is
+		// no fractional part. If omitted, the default precision is 0.
+		// (This differs from the standard SQL default of 6, for
+		// compatibility with previous MySQL versions.)".
+
+		// The following is defined because Hibernate currently expects
+		// the SQL 1992 default of 6 (which is inconsistent with the MySQL
+		// default).
+		registerColumnType(Types.TIMESTAMP, "datetime(6)");
+
+		// MySQL 5.7 brings JSON native support with a dedicated datatype.
+		// For more details about MySql new JSON datatype support, see:
+		// https://dev.mysql.com/doc/refman/5.7/en/json.html
+		registerColumnType(Types.JAVA_OBJECT, "json");
+
+	}
+
+	void upgradeTo57(QueryEngine queryEngine) {
+
+		// MySQL also supports fractional seconds precision for time values
+		// (time(fsp)). According to SQL 1992, the default for <time precision>
+		// is 0. The MySQL default is time(0), there's no need to override
+		// the setting for Types.TIME columns.
+
+		// For details about MySQL support for timestamp functions, see:
+		// http://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html
+
+		// The following are synonyms for now(fsp), where fsp defaults to 0 on MySQL 5.7:
+		// current_timestamp([fsp]), localtime(fsp), localtimestamp(fsp).
+		// Register the same StaticPrecisionFspTimestampFunction for all 4 functions.
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "current_timestamp", "now(6)" )
+				.setExactArgumentCount(0)
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
+
+		// Don't need all these synonyms for current_timestamp
+//		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "localtime", "now(6)" )
+//				.setExactArgumentCount(0)
+//				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
+//		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "localtimestamp", "now(6)")
+//				.setExactArgumentCount(0)
+//				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
+//
+//		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "now", "now(6)" )
+//				.setExactArgumentCount(0)
+//				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
+
+		// sysdate is different from now():
+		// "SYSDATE() returns the time at which it executes. This differs
+		// from the behavior for NOW(), which returns a constant time that
+		// indicates the time at which the statement began to execute.
+		// (Within a stored function or trigger, NOW() returns the time at
+		// which the function or triggering statement began to execute.)
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "sysdate", "sysdate(6)" )
+				.setExactArgumentCount(0)
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
+
+		// from_unixtime(), timestamp() are functions that return TIMESTAMP that do not support a
+		// fractional seconds precision argument (so there's no need to override them here):
+	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ascii" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.pi( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
 				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bin" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -155,8 +227,6 @@ public class MySQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		CommonFunctionFactory.soundex( queryEngine );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "space" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
@@ -166,34 +236,19 @@ public class MySQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		CommonFunctionFactory.acos( queryEngine );
-		CommonFunctionFactory.asin( queryEngine );
-		CommonFunctionFactory.atan( queryEngine );
-		CommonFunctionFactory.atan( queryEngine );
-		CommonFunctionFactory.cos( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "crc32" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.log( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "log2" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.log10( queryEngine );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "pi", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rand", StandardSpiBasicTypes.DOUBLE );
-		CommonFunctionFactory.sin( queryEngine );
-		CommonFunctionFactory.tan( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "stddev", "std" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-
-		CommonFunctionFactory.round( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datediff" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
@@ -207,9 +262,6 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
 				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curdate", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "curtime", StandardSpiBasicTypes.TIME );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "date" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
@@ -251,8 +303,6 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "microseconds" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
@@ -269,7 +319,6 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "now", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "quarter" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
@@ -282,7 +331,6 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.TIME )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "time" )
 				.setInvariantType( StandardSpiBasicTypes.TIME )
 				.setExactArgumentCount( 1 )
@@ -342,11 +390,6 @@ public class MySQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "character_length" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_count" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
@@ -367,6 +410,23 @@ public class MySQLDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
+
+		// Don't need all these synonyms for current_timestamp
+//		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIMESTAMP );
+//		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
+//
+//		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "now" )
+//				.setInvariantType(StandardSpiBasicTypes.TIMESTAMP )
+//				.setUseParenthesesWhenNoArgs(true)
+//				.register();
+
+		//sysdate is different
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "sysdate" )
+				.setInvariantType(StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs(true)
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "chr", "char" );
 
 	}
 

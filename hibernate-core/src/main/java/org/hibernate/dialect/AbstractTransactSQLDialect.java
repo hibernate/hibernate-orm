@@ -60,14 +60,19 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ascii" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.pi( queryEngine );
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
-				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.register();
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "len" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
@@ -99,8 +104,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "user", StandardSpiBasicTypes.STRING );
-
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "getdate" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setUseParenthesesWhenNoArgs( true )
@@ -114,29 +117,9 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		CommonFunctionFactory.acos( queryEngine );
-		CommonFunctionFactory.asin( queryEngine );
-		CommonFunctionFactory.atan( queryEngine );
-		CommonFunctionFactory.cos( queryEngine );
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-		CommonFunctionFactory.sin( queryEngine );
-		CommonFunctionFactory.tan( queryEngine );
-		CommonFunctionFactory.sin( queryEngine );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "pi" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "square" )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.rand( queryEngine );
-
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-
-		CommonFunctionFactory.round( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "isnull" )
 				.setExactArgumentCount( 2 )
@@ -182,11 +165,18 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2", "atn2")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 2 )
+				.register();
+
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "+", ")" );
 
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ln", "log" );
 
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "len" );
+
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "chr", "char" );
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 	}

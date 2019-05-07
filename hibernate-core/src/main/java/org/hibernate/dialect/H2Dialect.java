@@ -144,14 +144,15 @@ public class H2Dialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		// Numeric Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		CommonFunctionFactory.acos( queryEngine );
-		CommonFunctionFactory.asin( queryEngine );
-		CommonFunctionFactory.atan( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setExactArgumentCount( 1 )
-				.register();
+		CommonFunctionFactory.pi( queryEngine );
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.truncate( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitand" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
@@ -165,21 +166,15 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
 
-		CommonFunctionFactory.cos( queryEngine );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "compress" )
 				.setArgumentCountBetween( 1, 2 )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
 
-		CommonFunctionFactory.cot( queryEngine );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "decrypt" )
 				.setExactArgumentCount( 3 )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
-
-		CommonFunctionFactory.degrees( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setExactArgumentCount( 3 )
@@ -196,44 +191,17 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
 
-		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.log10( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "pi" )
-				.setExactArgumentCount( 0 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
-
-		CommonFunctionFactory.radians( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rand" )
-				.setArgumentCountBetween( 0, 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
-
-		CommonFunctionFactory.round( queryEngine );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "roundmagic" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
 
-		CommonFunctionFactory.sin( queryEngine );
-
-		CommonFunctionFactory.tan( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "truncate" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setUseParenthesesWhenNoArgs(true)
 				.register();
-
 
 		// String Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ascii" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
 				.setExactArgumentCount( 1 )
@@ -297,8 +265,6 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
 
-		CommonFunctionFactory.soundex( queryEngine );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "space" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -326,11 +292,6 @@ public class H2Dialect extends Dialect {
 
 
 		// Time and Date Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datediff" )
-				.setExactArgumentCount( 3 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "dayname" )
 				.setExactArgumentCount( 1 )
@@ -362,18 +323,7 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
 
-
-		// System Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "database" )
-				.setExactArgumentCount( 0 )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "user" )
-				.setExactArgumentCount( 0 )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "chr", "char" );
 	}
 
 	@Override

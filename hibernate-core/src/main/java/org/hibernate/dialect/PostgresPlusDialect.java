@@ -34,7 +34,7 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		CommonFunctionFactory.soundex( queryEngine );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
+
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rowid", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "instr" )

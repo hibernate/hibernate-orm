@@ -586,6 +586,11 @@ standardFunction
 	|	powerFunction
 	|	ceilingFunction
 	|	floorFunction
+	|	roundFunction
+	|	trigFunction
+	|	atan2Function
+	|	asciiFunction
+	|	chrFunction
 	|	strFunction
 	|	currentDateFunction
 	|	currentTimeFunction
@@ -741,6 +746,34 @@ ceilingFunction
 
 floorFunction
 	:	FLOOR LEFT_PAREN expression RIGHT_PAREN
+	;
+
+roundFunction
+	:	ROUND LEFT_PAREN expression COMMA roundFunctionPrecision RIGHT_PAREN
+	;
+
+roundFunctionPrecision
+	: expression
+	;
+
+trigFunction
+	:	trigFunctionName LEFT_PAREN expression RIGHT_PAREN
+	;
+
+trigFunctionName
+    : SIN | COS | TAN | ASIN | ACOS | ATAN
+    ;
+
+atan2Function
+	:	ATAN2 LEFT_PAREN expression COMMA expression RIGHT_PAREN
+	;
+
+asciiFunction
+	:   ASCII LEFT_PAREN expression RIGHT_PAREN
+	;
+
+chrFunction
+	:   CHR LEFT_PAREN expression RIGHT_PAREN
 	;
 
 strFunction

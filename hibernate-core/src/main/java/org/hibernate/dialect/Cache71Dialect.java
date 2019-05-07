@@ -249,7 +249,6 @@ public class Cache71Dialect extends Dialect {
 	}
 
 	protected void commonFunctionRegistrations(QueryEngine queryEngine) {
-		CommonFunctionFactory.acos( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "%alphaup" )
 				.setExactArgumentCount( 1 )
@@ -261,9 +260,6 @@ public class Cache71Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
 
-		CommonFunctionFactory.asin( queryEngine );
-		CommonFunctionFactory.atan( queryEngine );
-
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "($length(?1)*8)", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape(
@@ -274,18 +270,6 @@ public class Cache71Dialect extends Dialect {
 						.register()
 		);
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "character_length" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char_length" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
-
-
-		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
@@ -308,9 +292,7 @@ public class Cache71Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "convert" );
 
-		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "curdate", queryEngine.getSqmFunctionRegistry().registerNamed( "curdate", StandardSpiBasicTypes.DATE ) );
-		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "curtime", queryEngine.getSqmFunctionRegistry().registerNamed( "curtime", StandardSpiBasicTypes.TIME ) );
-		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "database", queryEngine.getSqmFunctionRegistry().registerNamed( "database", StandardSpiBasicTypes.STRING ) );
+		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "cos", queryEngine.getSqmFunctionRegistry().registerNamed( "cos", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "dateadd", StandardSpiBasicTypes.TIMESTAMP);
 		queryEngine.getSqmFunctionRegistry().registerNamed( "datediff", StandardSpiBasicTypes.INTEGER);
 		queryEngine.getSqmFunctionRegistry().registerNamed( "datename", StandardSpiBasicTypes.STRING);
@@ -349,7 +331,6 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "mod", queryEngine.getSqmFunctionRegistry().registerNamed( "mod", StandardSpiBasicTypes.DOUBLE ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "month", queryEngine.getSqmFunctionRegistry().registerNamed( "month", StandardSpiBasicTypes.INTEGER ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "monthname", queryEngine.getSqmFunctionRegistry().registerNamed( "monthname", StandardSpiBasicTypes.STRING ) );
-		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "now", queryEngine.getSqmFunctionRegistry().registerNamed( "monthname", StandardSpiBasicTypes.TIMESTAMP ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%odbcin" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%odbcout" );
@@ -387,7 +368,6 @@ public class Cache71Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "truncate", queryEngine.getSqmFunctionRegistry().registerNamed( "truncate", StandardSpiBasicTypes.STRING ) );
 		// %upper is deprecated
 		queryEngine.getSqmFunctionRegistry().registerNamed( "%upper" );
-		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "user", queryEngine.getSqmFunctionRegistry().registerNamed( "user", StandardSpiBasicTypes.STRING ) );
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape( "week", queryEngine.getSqmFunctionRegistry().registerNamed( "week", StandardSpiBasicTypes.INTEGER ) );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "xmlconcat", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "xmlelement", StandardSpiBasicTypes.STRING );

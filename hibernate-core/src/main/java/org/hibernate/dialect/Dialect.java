@@ -243,16 +243,14 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * 		* avg
 	 * 		* count
-	 * 		* max
-	 * 		* min
+	 * 		* max, min
 	 * 		* sum
 	 *
 	 * 		* concat
 	 * 		* locate
 	 * 		* substring
 	 * 		* trim
-	 * 		* lower
-	 * 		* upper
+	 * 		* lower, upper
 	 * 		* length
 	 *
 	 * 		* abs
@@ -275,13 +273,17 @@ public abstract class Dialect implements ConversionContext {
 	 *      * ln
 	 *      * exp
 	 *      * power
-	 *      * ceiling
-	 *      * floor
+	 *      * floor, ceiling
 	 *
 	 * And several additional "standard" functions:
 	 *
+	 * 	    * ascii
+	 * 	    * chr
 	 *      * replace
 	 *      * sign
+	 *      * sin, cos, tan, asin, acos, atan
+	 *      * atan2
+	 *      * round
 	 * 	    * current_instant
 	 * 		* str 			- defined as `cast(?1 as CHAR )`
 	 *
@@ -324,6 +326,11 @@ public abstract class Dialect implements ConversionContext {
 
 		//math functions
 
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "round" )
+				.setExactArgumentCount(2)
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("floor")
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount(1)
@@ -363,6 +370,43 @@ public abstract class Dialect implements ConversionContext {
 				.setExactArgumentCount(2)
 				.register();
 
+		//trig functions
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("sin")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount(1)
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("cos")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount(1)
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("tan")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount(1)
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("asin")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount(1)
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("acos")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount(1)
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("atan")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount(1)
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("atan2")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount(2)
+				.register();
+
 		//null functions
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("coalesce")
@@ -378,6 +422,8 @@ public abstract class Dialect implements ConversionContext {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount(1)
 				.register();
+		//this is a synonym on many databases
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("char_length", "character_length");
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("bit_length")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
@@ -413,6 +459,15 @@ public abstract class Dialect implements ConversionContext {
 				.setExactArgumentCount(1)
 				.register();
 
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ascii" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER ) //should it be BYTE??
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "chr" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
+				.register();
 
 		//ANSI SQL functions with weird syntax
 
@@ -449,6 +504,10 @@ public abstract class Dialect implements ConversionContext {
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.register();
 
+		//these are synonyms on many databases, so for convenience register them here
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("now", "current_timestamp");
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("curdate", "current_date");
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("curtime", "current_time");
 
 		//TODO: re-express these in terms of registered cast() function so
 		//      it doesn't need to be redefined by dialect subclasses

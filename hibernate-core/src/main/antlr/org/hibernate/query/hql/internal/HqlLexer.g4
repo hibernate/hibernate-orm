@@ -113,6 +113,7 @@ ARROW :	'->';
 // Keywords
 ABS					: [aA] [bB] [sS];
 AS					: [aA] [sS];
+ASCII				: [aA] [sS] [cC] [iI] [iI];
 ALL					: [aA] [lL] [lL];
 AND					: [aA] [nN] [dD];
 ANY					: [aA] [nN] [yY];
@@ -126,6 +127,7 @@ CASE				: [cC] [aA] [sS] [eE];
 CAST				: [cC] [aA] [sS] [tT];
 CEILING				: [cC] [eE] [iI] [lL] [iI] [nN] [gG];
 CHARACTER_LENGTH	: [cC] [hH] [aA] [rR] [aA] [cC] [tT] [eE] [rR] '_' [lL] [eE] [nN] [gG] [tT] [hH];
+CHR					: [cC] [hH] [rR];
 CLASS				: [cC] [lL] [aA] [sS] [sS];
 COALESCE			: [cC] [oO] [aA] [lL] [eE] [sS] [cC] [eE];
 COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
@@ -201,6 +203,7 @@ POSITION			: [pP] [oO] [sS] [iI] [tT] [iI] [oO] [nN];
 POWER				: [pP] [oO] [wW] [eE] [rR];
 REPLACE				: [rR] [eE] [pP] [lL] [aA] [cC] [eE];
 RIGHT				: [rR] [iI] [gG] [hH] [tT];
+ROUND				: [rR] [oO] [uU] [nN] [dD];
 SECOND				: [sS] [eE] [cC] [oO] [nN] [dD];
 SELECT				: [sS] [eE] [lL] [eE] [cC] [tT];
 SET					: [sS] [eE] [tT];
@@ -224,6 +227,14 @@ WHEN				: [wW] [hH] [eE] [nN];
 WHERE				: [wW] [hH] [eE] [rR] [eE];
 WITH				: [wW] [iI] [tT] [hH];
 YEAR				: [yY] [eE] [aA] [rR];
+
+ASIN				: [aA] [sS] [iI] [nN];
+ATAN				: [aA] [cC] [oO] [sH];
+ATAN2				: [aA] [tT] [aA] [nN] '2';
+ACOS				: [aA] [tT] [aA] [nN];
+SIN					: [sS] [iI] [nN];
+COS					: [cC] [oO] [sH];
+TAN					: [tT] [aA] [nN];
 
 // case-insensitive true, false and null recognition (split vote :)
 TRUE 	: [tT] [rR] [uU] [eE];

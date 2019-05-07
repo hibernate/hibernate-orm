@@ -140,31 +140,20 @@ public class Oracle8iDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.acos( queryEngine );
-		CommonFunctionFactory.asin( queryEngine );
-		CommonFunctionFactory.atan( queryEngine );
-
-		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.sin( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.tan( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitand" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
 				.register();
 
-		CommonFunctionFactory.round( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "chr" )
-				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
-				.setExactArgumentCount( 1 )
-				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "initcap" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
@@ -177,11 +166,6 @@ public class Oracle8iDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
-		CommonFunctionFactory.soundex( queryEngine );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ascii" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_char" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -192,25 +176,18 @@ public class Oracle8iDialect extends Dialect {
 				.setArgumentCountBetween( 1, 3 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "current_timestamp" )
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setArgumentCountBetween( 0, 1 )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "last_day" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 1 )
 				.register();
+
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "systimestamp", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "uid", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "user", StandardSpiBasicTypes.STRING );
 
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rowid", StandardSpiBasicTypes.LONG );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
 
 		// Multi-param string dialect functions...
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "instr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 4 )
@@ -227,10 +204,6 @@ public class Oracle8iDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substrb" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
@@ -239,6 +212,13 @@ public class Oracle8iDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 3 )
 				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(vsize(?1)*8)", StandardSpiBasicTypes.INTEGER );
 
@@ -270,13 +250,6 @@ public class Oracle8iDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
-
-		// Multi-param numeric dialect functions...
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2" )
-				.setInvariantType( StandardSpiBasicTypes.FLOAT )
-				.setExactArgumentCount( 2 )
-				.register();
-		CommonFunctionFactory.log( queryEngine );
 
 		// Multi-param date dialect functions...
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_months" )

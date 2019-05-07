@@ -1936,12 +1936,69 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public SqmExpression visitTrigFunction(HqlParser.TrigFunctionContext ctx) {
+		final SqmExpression arg = (SqmExpression) ctx.expression().accept( this );
+
+		return getFunctionTemplate( ctx.trigFunctionName().getText() ).makeSqmFunctionExpression(
+				arg,
+				resolveExpressableTypeBasic( Double.class ),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public SqmExpression visitAsciiFunction(HqlParser.AsciiFunctionContext ctx) {
+		final SqmExpression arg = (SqmExpression) ctx.expression().accept( this );
+
+		return getFunctionTemplate( "ascii" ).makeSqmFunctionExpression(
+				arg,
+				resolveExpressableTypeBasic( Integer.class ),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public SqmExpression visitChrFunction(HqlParser.ChrFunctionContext ctx) {
+		final SqmExpression arg = (SqmExpression) ctx.expression().accept( this );
+
+		return getFunctionTemplate( "chr" ).makeSqmFunctionExpression(
+				arg,
+				resolveExpressableTypeBasic( Character.class ),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
 	public SqmExpression visitSqrtFunction(HqlParser.SqrtFunctionContext ctx) {
 		final SqmExpression arg = (SqmExpression) ctx.expression().accept( this );
 
 		return getFunctionTemplate("sqrt").makeSqmFunctionExpression(
 				arg,
 				(AllowableFunctionReturnType) arg.getExpressableType(),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public SqmExpression visitRoundFunction(HqlParser.RoundFunctionContext ctx) {
+		final SqmExpression arg = (SqmExpression) ctx.expression().accept( this );
+		final SqmExpression precision = (SqmExpression) ctx.roundFunctionPrecision().expression().accept( this );
+
+		return getFunctionTemplate("round").makeSqmFunctionExpression(
+				asList(arg, precision),
+				(AllowableFunctionReturnType) arg.getExpressableType(),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public SqmExpression visitAtan2Function(HqlParser.Atan2FunctionContext ctx) {
+		final SqmExpression sin = (SqmExpression) ctx.expression().get(0).accept( this );
+		final SqmExpression cos = (SqmExpression) ctx.expression().get(1).accept( this );
+
+		return getFunctionTemplate("atan2").makeSqmFunctionExpression(
+				asList(sin, cos),
+				(AllowableFunctionReturnType) sin.getExpressableType(),
 				creationContext.getQueryEngine()
 		);
 	}

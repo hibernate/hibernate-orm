@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -60,10 +61,8 @@ public class MckoiDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "round", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "user", StandardSpiBasicTypes.STRING );
 	}
 
 	@Override

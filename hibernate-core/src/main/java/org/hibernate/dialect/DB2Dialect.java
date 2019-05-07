@@ -38,7 +38,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -137,24 +136,15 @@ public class DB2Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.round( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "absval" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		CommonFunctionFactory.acos( queryEngine );
-		CommonFunctionFactory.asin( queryEngine );
-		CommonFunctionFactory.atan( queryEngine );
-		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.sin( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.tan( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "float" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
@@ -164,12 +154,6 @@ public class DB2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.rand( queryEngine );
-
-		CommonFunctionFactory.soundex( queryEngine );
-
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "julian_day" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
@@ -264,9 +248,13 @@ public class DB2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "varchar" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentsValidator( StandardArgumentsValidators.min( 1 ) )
+				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "real" )
 				.setInvariantType( StandardSpiBasicTypes.FLOAT )
@@ -274,10 +262,6 @@ public class DB2Dialect extends Dialect {
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bigint" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
-				.setArgumentsValidator( StandardArgumentsValidators.min( 1 ) )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "integer" )
@@ -291,10 +275,6 @@ public class DB2Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "digits" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "chr" )
-				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
@@ -664,7 +644,6 @@ public class DB2Dialect extends Dialect {
 	 * if expression has not been explicitly specified.
 	 * @param nullPrecedence Nulls precedence. Default value: {@link NullPrecedence#NONE}.
 	 *
-	 * @return
 	 */
 	@Override
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nullPrecedence) {

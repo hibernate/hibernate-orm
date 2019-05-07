@@ -108,30 +108,21 @@ public class PostgreSQL81Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.acos( queryEngine );
-		CommonFunctionFactory.asin( queryEngine );
-		CommonFunctionFactory.atan( queryEngine );
-		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.sin( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		CommonFunctionFactory.tan( queryEngine );
-		CommonFunctionFactory.radians( queryEngine );
-		CommonFunctionFactory.degrees( queryEngine );
-
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
-
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "random", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "rand", "random" );
-
-		CommonFunctionFactory.round( queryEngine );
-		CommonFunctionFactory.trunc( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -140,10 +131,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rtrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "chr" )
-				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
-				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "initcap" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -165,14 +152,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ascii" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char_length" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setExactArgumentCount( 1 )
-				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "octet_length" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
@@ -185,25 +164,10 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 2 )
 				.register();
+
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "now" )
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "timeofday" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "current_user", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "session_user", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "user", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_database" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_schema" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
@@ -225,7 +189,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "lpad" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
@@ -243,6 +206,8 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
+
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
 
 		queryEngine.getSqmFunctionRegistry().register(
 				"locate",
@@ -262,12 +227,6 @@ public class PostgreSQL81Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar)", StandardSpiBasicTypes.STRING );
 
-		// Multi-param numeric dialect functions...
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2" )
-				.setInvariantType( StandardSpiBasicTypes.FLOAT )
-				.setExactArgumentCount( 2 )
-				.register();
-		CommonFunctionFactory.log( queryEngine );
 	}
 
 	@Override

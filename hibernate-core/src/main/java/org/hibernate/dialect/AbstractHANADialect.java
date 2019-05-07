@@ -299,7 +299,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "month", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "monthname", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "next_day", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "now", StandardSpiBasicTypes.TIMESTAMP );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "quarter", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "second", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "seconds_between", StandardSpiBasicTypes.LONG );
@@ -320,29 +319,18 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_smallint", StandardSpiBasicTypes.SHORT );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_tinyint", StandardSpiBasicTypes.BYTE );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "acos", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "asin", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2", "atan" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
 		queryEngine.getSqmFunctionRegistry().registerNamed( "bin2hex", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "bitand", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "cos", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "cosh", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cot", "cos" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
 		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "hex2bin", StandardSpiBasicTypes.BINARY );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "sin", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "sinh", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "tan", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "tanh", StandardSpiBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "uminus" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "sinh", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "tanh", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "cosh", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "cot", StandardSpiBasicTypes.DOUBLE );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_alphanum", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_nvarchar", StandardSpiBasicTypes.STRING );

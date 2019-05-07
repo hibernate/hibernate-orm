@@ -51,15 +51,6 @@ public class SybaseASE15Dialect extends SybaseDialect {
 				)
 		);
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "atan2", "atn2(?1, ?2)", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "atn2", "atn2(?1, ?2)", StandardSpiBasicTypes.DOUBLE );
-
-		queryEngine.getSqmFunctionRegistry().registerPattern( "biginttohex", "biginttohext(?1)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "char_length", "char_length(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "charindex", "charindex(?1, ?2)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "col_length", "col_length(?1, ?2)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "col_name", "col_name(?1, ?2)", StandardSpiBasicTypes.STRING );
-
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "current_date", "current date")
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 0 )
@@ -74,73 +65,6 @@ public class SybaseASE15Dialect extends SybaseDialect {
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 0 )
 				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerPattern( "data_pages", "data_pages(?1, ?2)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "data_pages", "data_pages(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "data_pages", "data_pages(?1, ?2, ?3, ?4)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "datalength", "datalength(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "dateadd", "dateadd(?1, ?2, ?3)", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "datediff", "datediff(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "datepart", "datepart(?1, ?2)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "datetime", "datetime", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "db_id", "db_id(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "difference", "difference(?1,?2)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "db_name", "db_name(?1)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "has_role", "has_role(?1, ?2)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "hextobigint", "hextobigint(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "hextoint", "hextoint(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "host_id", "host_id", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "host_name", "host_name", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "inttohex", "inttohex(?1)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "is_quiesced", "is_quiesced(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "is_sec_service_on", "is_sec_service_on(?1)", StandardSpiBasicTypes.BOOLEAN );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "object_id", "object_id(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "object_name", "object_name(?1)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "pagesize", "pagesize(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "pagesize", "pagesize(?1, ?2)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "pagesize", "pagesize(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "partition_id", "partition_id(?1, ?2)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "partition_id", "partition_id(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "partition_name", "partition_name(?1, ?2)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "partition_name", "partition_name(?1, ?2, ?3)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "patindex", "patindex", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "proc_role", "proc_role", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "role_name", "role_name", StandardSpiBasicTypes.STRING );
-		// check return type
-		queryEngine.getSqmFunctionRegistry().registerPattern( "row_count", "row_count", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "rand2", "rand2(?1)", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "rand2", "rand2", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "replicate", "replicate(?1,?2)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "role_contain", "role_contain", StandardSpiBasicTypes.BOOLEAN );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "role_id", "role_id", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "reserved_pages", "reserved_pages", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "right", "right", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "show_role", "show_role", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "show_sec_services", "show_sec_services", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "sortkey", StandardSpiBasicTypes.BINARY, "sortkey(", ",", ")" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "soundex", "sounded", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "stddev", "stddev", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "stddev_pop", "stddev_pop", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "stddev_samp", "stddev_samp", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "stuff", "stuff", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "suser_id", "suser_id", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "suser_name", "suser_name", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "tempdb_id", "tempdb_id", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "textvalid", "textvalid", StandardSpiBasicTypes.BOOLEAN );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "to_unichar", "to_unichar(?1)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "tran_dumptable_status", "ran_dumptable_status(?1)", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "uhighsurr", "uhighsurr", StandardSpiBasicTypes.BOOLEAN );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "ulowsurr", "ulowsurr", StandardSpiBasicTypes.BOOLEAN );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "uscalar", "uscalar", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "used_pages", "used_pages", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "user_id", "user_id", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "user_name", "user_name", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "valid_name", "valid_name", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "valid_user", "valid_user", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "variance", "variance", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "var_pop", "var_pop", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "var_samp", "var_samp", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
 	}
 
 	private void registerSybaseKeywords() {

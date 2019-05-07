@@ -111,16 +111,6 @@ public class IngresDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "+", ")" );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "day" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "hour" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1', ?2)", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().register(
@@ -155,6 +145,16 @@ public class IngresDialect extends Dialect {
 				)
 		);
 
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "day" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "hour" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "minute" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
@@ -184,34 +184,13 @@ public class IngresDialect extends Dialect {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Common functions
 
-		CommonFunctionFactory.atan( queryEngine );
-		CommonFunctionFactory.cos( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
-		CommonFunctionFactory.sin( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Connection/database info functions
 
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_user" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "dba" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "gmt_timestamp", StandardSpiBasicTypes.STRING );
-
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "initial_user", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "session_user", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "system_user", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "user", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "usercode" ).setInvariantType( StandardSpiBasicTypes.STRING ).setUseParenthesesWhenNoArgs( true ).register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "username" ).setInvariantType( StandardSpiBasicTypes.STRING ).setUseParenthesesWhenNoArgs( true ).register();
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// UUID functions
@@ -291,29 +270,17 @@ public class IngresDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
 
-
-
-
 		// uncategorized
 		queryEngine.getSqmFunctionRegistry().registerNamed( "hash", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "hex", StandardSpiBasicTypes.STRING );
 
-
-
-
 		queryEngine.getSqmFunctionRegistry().registerNamed( "intextract", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "left", StandardSpiBasicTypes.STRING );
-
-
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "octet_length", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "pad", StandardSpiBasicTypes.STRING );
 
-
-
 		queryEngine.getSqmFunctionRegistry().registerNamed( "right", StandardSpiBasicTypes.STRING );
-
-
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "size" )
 				.setExactArgumentCount( 1 )

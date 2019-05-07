@@ -69,6 +69,18 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     }
 
     @Test
+    public void testTrigFunctions() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select sin(e.theDouble), cos(e.theDouble), tan(e.theDouble), asin(e.theDouble), acos(e.theDouble), atan(e.theDouble) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select atan2(sin(e.theDouble), cos(e.theDouble)) from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+    @Test
     public void testMathFunctions() {
         inTransaction(
                 session -> {
@@ -81,6 +93,20 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                     session.createQuery("select power(e.theDouble, 2.5) from EntityOfBasics e")
                             .list();
                     session.createQuery("select ceiling(e.theDouble), floor(e.theDouble) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select round(e.theDouble, 3) from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+    @Test
+    public void testAsciiChrFunctions() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select ascii('x') from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select chr(120) from EntityOfBasics e")
                             .list();
                 }
         );

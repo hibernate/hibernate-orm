@@ -38,42 +38,25 @@ public class StandardFunctionReturnTypeResolvers {
 			throw new IllegalArgumentException( "Passed `invariantType` for function return cannot be null" );
 		}
 
-		return new FunctionReturnTypeResolver() {
-			@Override
-			public <T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
-					AllowableFunctionReturnType<T> impliedType,
-					List<SqmTypedNode<?>> arguments) {
-				return useImpliedTypeIfPossible( invariantType, impliedType );
-			}
-		};
+		return (impliedType, arguments) -> useImpliedTypeIfPossible( invariantType, impliedType );
 	}
 
 	public static FunctionReturnTypeResolver useArgType(int argPosition) {
-		return new FunctionReturnTypeResolver() {
-			@Override
-			public <T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
-					AllowableFunctionReturnType<T> impliedType,
-					List<SqmTypedNode<?>> arguments) {
-				final AllowableFunctionReturnType specifiedArgType = extractArgumentType( arguments, argPosition );
-				return useImpliedTypeIfPossible( specifiedArgType, impliedType );
-			}
+		return (impliedType, arguments) -> {
+			final AllowableFunctionReturnType specifiedArgType = extractArgumentType( arguments, argPosition );
+			return useImpliedTypeIfPossible( specifiedArgType, impliedType );
 		};
 	}
 
 	public static FunctionReturnTypeResolver useFirstNonNull() {
-		return new FunctionReturnTypeResolver() {
-			@Override
-			public <T> AllowableFunctionReturnType<T> resolveFunctionReturnType(
-					AllowableFunctionReturnType<T> impliedType,
-					List<SqmTypedNode<?>> arguments) {
-				for (SqmTypedNode arg: arguments) {
-					if (arg!=null && arg.getExpressableType() instanceof AllowableFunctionReturnType) {
-						AllowableFunctionReturnType argType = (AllowableFunctionReturnType) arg.getExpressableType();
-						return useImpliedTypeIfPossible(argType, impliedType);
-					}
+		return (impliedType, arguments) -> {
+			for (SqmTypedNode<?> arg: arguments) {
+				if (arg!=null && arg.getExpressableType() instanceof AllowableFunctionReturnType) {
+					AllowableFunctionReturnType<?> argType = (AllowableFunctionReturnType<?>) arg.getExpressableType();
+					return useImpliedTypeIfPossible(argType, impliedType);
 				}
-				return impliedType;
 			}
+			return impliedType;
 		};
 	}
 
@@ -83,14 +66,16 @@ public class StandardFunctionReturnTypeResolvers {
 	// Internal helpers
 
 	@SuppressWarnings("unchecked")
-	private static <T> AllowableFunctionReturnType<T> useImpliedTypeIfPossible(
-			AllowableFunctionReturnType defined,
-			AllowableFunctionReturnType implied) {
+	private static AllowableFunctionReturnType<?> useImpliedTypeIfPossible(
+			AllowableFunctionReturnType<?> defined,
+			AllowableFunctionReturnType<?> implied) {
 		return areCompatible( defined, implied ) ? implied : defined;
 	}
 
 	@SuppressWarnings({"unchecked", "SimplifiableIfStatement"})
-	private static boolean areCompatible(AllowableFunctionReturnType defined, AllowableFunctionReturnType implied) {
+	private static boolean areCompatible(
+			AllowableFunctionReturnType<?> defined,
+			AllowableFunctionReturnType<?> implied) {
 		if ( defined == null || defined.getSqlExpressableType() == null ) {
 			return true;
 		}

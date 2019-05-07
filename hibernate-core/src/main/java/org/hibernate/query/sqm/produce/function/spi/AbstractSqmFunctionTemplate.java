@@ -54,7 +54,8 @@ public abstract class AbstractSqmFunctionTemplate implements SqmFunctionTemplate
 
 		return generateSqmFunctionExpression(
 				arguments,
-				returnTypeResolver.resolveFunctionReturnType( impliedResultType, arguments ),
+				(AllowableFunctionReturnType<T>) //this cast is not truly correct
+						returnTypeResolver.resolveFunctionReturnType( impliedResultType, arguments ),
 				queryEngine
 		);
 	}

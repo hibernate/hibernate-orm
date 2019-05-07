@@ -258,7 +258,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		this.observer.addObserver( integratorObserver );
 		try {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
-				integrator.integrate( metadata, this, this.serviceRegistry );
+				integrator.integrate( metadata, bootstrapContext, this, this.serviceRegistry );
 				integratorObserver.integrators.add( integrator );
 			}
 

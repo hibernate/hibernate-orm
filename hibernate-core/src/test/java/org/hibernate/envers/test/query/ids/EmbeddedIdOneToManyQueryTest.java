@@ -4,28 +4,34 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.query.ids;
+package org.hibernate.envers.test.query.ids;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.EntityManager;
 
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.ids.EmbId;
-import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdEmbIdEntity;
-import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngEmbIdEntity;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.envers.test.support.domains.ids.EmbId;
+import org.hibernate.envers.test.support.domains.onetomany.ids.SetRefEdEmbIdEntity;
+import org.hibernate.envers.test.support.domains.onetomany.ids.SetRefIngEmbIdEntity;
+import org.junit.jupiter.api.Disabled;
 
-import org.junit.Test;
+import org.hibernate.testing.hamcrest.CollectionMatchers;
+import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
+import org.hibernate.testing.junit5.dynamictests.DynamicTest;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"unchecked"})
-public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
+@Disabled("NPE - lamba expression inside EntityIdentifierCompositeAggregatedImpl")
+public class EmbeddedIdOneToManyQueryTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	private EmbId id1;
 	private EmbId id2;
 
@@ -34,57 +40,52 @@ public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {SetRefEdEmbIdEntity.class, SetRefIngEmbIdEntity.class};
+		return new Class[] { SetRefEdEmbIdEntity.class, SetRefIngEmbIdEntity.class };
 	}
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	@DynamicBeforeAll
+	public void prepareAuditData() {
+		// Initialize identifier values
 		id1 = new EmbId( 0, 1 );
 		id2 = new EmbId( 10, 11 );
 		id3 = new EmbId( 20, 21 );
 		id4 = new EmbId( 30, 31 );
 
-		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+		inTransactions(
+				// Revision 1
+				entityManager -> {
+					final SetRefIngEmbIdEntity refIng1 = new SetRefIngEmbIdEntity( id1, "x", null );
+					final SetRefIngEmbIdEntity refIng2 = new SetRefIngEmbIdEntity( id2, "y", null );
 
-		SetRefIngEmbIdEntity refIng1 = new SetRefIngEmbIdEntity( id1, "x", null );
-		SetRefIngEmbIdEntity refIng2 = new SetRefIngEmbIdEntity( id2, "y", null );
+					entityManager.persist( refIng1 );
+					entityManager.persist( refIng2 );
+				},
 
-		em.persist( refIng1 );
-		em.persist( refIng2 );
+				// Revision 2
+				entityManager -> {
+					final SetRefEdEmbIdEntity refEd3 = new SetRefEdEmbIdEntity( id3, "a" );
+					final SetRefEdEmbIdEntity refEd4 = new SetRefEdEmbIdEntity( id4, "a" );
 
-		em.getTransaction().commit();
+					entityManager.persist( refEd3 );
+					entityManager.persist( refEd4 );
 
-		// Revision 2
-		em.getTransaction().begin();
+					final SetRefIngEmbIdEntity refIng1 = entityManager.find( SetRefIngEmbIdEntity.class, id1 );
+					final SetRefIngEmbIdEntity refIng2 = entityManager.find( SetRefIngEmbIdEntity.class, id2 );
 
-		SetRefEdEmbIdEntity refEd3 = new SetRefEdEmbIdEntity( id3, "a" );
-		SetRefEdEmbIdEntity refEd4 = new SetRefEdEmbIdEntity( id4, "a" );
+					refIng1.setReference( refEd3 );
+					refIng2.setReference( refEd4 );
+				},
 
-		em.persist( refEd3 );
-		em.persist( refEd4 );
-
-		refIng1 = em.find( SetRefIngEmbIdEntity.class, id1 );
-		refIng2 = em.find( SetRefIngEmbIdEntity.class, id2 );
-
-		refIng1.setReference( refEd3 );
-		refIng2.setReference( refEd4 );
-
-		em.getTransaction().commit();
-
-		// Revision 3
-		em.getTransaction().begin();
-
-		refEd3 = em.find( SetRefEdEmbIdEntity.class, id3 );
-		refIng2 = em.find( SetRefIngEmbIdEntity.class, id2 );
-		refIng2.setReference( refEd3 );
-
-		em.getTransaction().commit();
+				// Revision 3
+				entityManager -> {
+					final SetRefEdEmbIdEntity refEd3 = entityManager.find( SetRefEdEmbIdEntity.class, id3 );
+					final SetRefIngEmbIdEntity refIng2 = entityManager.find( SetRefIngEmbIdEntity.class, id2 );
+					refIng2.setReference( refEd3 );
+				}
+		);
 	}
 
-	@Test
+	@DynamicTest
 	public void testEntitiesReferencedToId3() {
 		Set rev1_related = new HashSet(
 				getAuditReader().createQuery()
@@ -128,21 +129,19 @@ public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
 						.getResultList()
 		);
 
-		assert rev1.equals( rev1_related );
-		assert rev2.equals( rev2_related );
-		assert rev3.equals( rev3_related );
+		assertThat( rev1, equalTo( rev1_related ) );
+		assertThat( rev2, equalTo( rev2_related ) );
+		assertThat( rev3, equalTo( rev3_related ) );
 
-		assert rev1.equals( TestTools.makeSet() );
-		assert rev2.equals( TestTools.makeSet( new SetRefIngEmbIdEntity( id1, "x", null ) ) );
-		assert rev3.equals(
-				TestTools.makeSet(
-						new SetRefIngEmbIdEntity( id1, "x", null ),
-						new SetRefIngEmbIdEntity( id2, "y", null )
-				)
-		);
+		final SetRefIngEmbIdEntity xId1 = new SetRefIngEmbIdEntity( id1, "x", null );
+		final SetRefIngEmbIdEntity yId2 = new SetRefIngEmbIdEntity( id2, "y", null );
+
+		assertThat( rev1, CollectionMatchers.isEmpty() );
+		assertThat( (Iterable<? extends SetRefIngEmbIdEntity>) rev2, contains( xId1 ) );
+		assertThat( (Iterable<? extends SetRefIngEmbIdEntity>) rev3, containsInAnyOrder( xId1, yId2 ) );
 	}
 
-	@Test
+	@DynamicTest
 	public void testEntitiesReferencedToId4() {
 		Set rev1_related = new HashSet(
 				getAuditReader().createQuery()
@@ -165,12 +164,12 @@ public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
 						.getResultList()
 		);
 
-		assert rev1_related.equals( TestTools.makeSet() );
-		assert rev2_related.equals( TestTools.makeSet( new SetRefIngEmbIdEntity( id2, "y", null ) ) );
-		assert rev3_related.equals( TestTools.makeSet() );
+		assertThat( rev1_related, CollectionMatchers.isEmpty() );
+		assertThat( (Iterable<? extends SetRefIngEmbIdEntity>) rev2_related, contains( new SetRefIngEmbIdEntity( id2, "y", null ) ) );
+		assertThat( rev3_related, CollectionMatchers.isEmpty() );
 	}
 
-	@Test
+	@DynamicTest
 	public void testEntitiesReferencedByIng1ToId3() {
 		List rev1_related = getAuditReader().createQuery()
 				.forEntitiesAtRevision( SetRefIngEmbIdEntity.class, 1 )
@@ -190,12 +189,12 @@ public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
 				.add( AuditEntity.id().eq( id1 ) )
 				.getSingleResult();
 
-		assert rev1_related.size() == 0;
-		assert rev2_related.equals( new SetRefIngEmbIdEntity( id1, "x", null ) );
-		assert rev3_related.equals( new SetRefIngEmbIdEntity( id1, "x", null ) );
+		assertThat( rev1_related, CollectionMatchers.isEmpty() );
+		assertThat( rev2_related, equalTo( new SetRefIngEmbIdEntity( id1, "x", null ) ) );
+		assertThat( rev3_related, equalTo( new SetRefIngEmbIdEntity( id1, "x", null ) ) );
 	}
 
-	@Test
+	@DynamicTest
 	public void testEntitiesReferencedByIng2ToId3() {
 		List rev1_related = getAuditReader().createQuery()
 				.forEntitiesAtRevision( SetRefIngEmbIdEntity.class, 1 )
@@ -215,8 +214,8 @@ public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
 				.add( AuditEntity.id().eq( id2 ) )
 				.getSingleResult();
 
-		assert rev1_related.size() == 0;
-		assert rev2_related.size() == 0;
-		assert rev3_related.equals( new SetRefIngEmbIdEntity( id2, "y", null ) );
+		assertThat( rev1_related, CollectionMatchers.isEmpty() );
+		assertThat( rev2_related, CollectionMatchers.isEmpty() );
+		assertThat( rev3_related, equalTo( new SetRefIngEmbIdEntity( id2, "y", null ) ) );
 	}
 }

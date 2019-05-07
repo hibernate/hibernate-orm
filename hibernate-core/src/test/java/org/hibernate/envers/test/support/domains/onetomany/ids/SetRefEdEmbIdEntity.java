@@ -4,15 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.entities.onetomany.ids;
+package org.hibernate.envers.test.support.domains.onetomany.ids;
 
 import java.util.Set;
+
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.entities.ids.EmbId;
+import org.hibernate.envers.test.support.domains.ids.EmbId;
 
 /**
  * ReferencEd entity

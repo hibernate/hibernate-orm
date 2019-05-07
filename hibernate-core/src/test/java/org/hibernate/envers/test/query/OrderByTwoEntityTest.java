@@ -4,10 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.query;
+package org.hibernate.envers.test.query;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,15 +23,17 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.Disabled;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.hamcrest.CollectionMatchers;
+import org.hibernate.testing.junit5.dynamictests.DynamicBeforeAll;
+import org.hibernate.testing.junit5.dynamictests.DynamicTest;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.notNullValue;
 
 /**
  * Test the use of the {@link OrderBy} annotation on a many-to-many collection
@@ -45,7 +46,8 @@ import static org.junit.Assert.assertTrue;
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-12992")
-public class OrderByTwoEntityTest extends BaseEnversJPAFunctionalTestCase {
+@Disabled("NYI - @OrderBy support added by HHH-12992 - the old Template#translateOrderBy has been removed.")
+public class OrderByTwoEntityTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	@Entity(name = "Parent")
 	@Audited
 	public static class Parent {
@@ -164,106 +166,105 @@ public class OrderByTwoEntityTest extends BaseEnversJPAFunctionalTestCase {
 
 	private Integer parentId;
 
-	@Test
-	public void initData() {
-		// Rev 1
-		this.parentId = doInJPA( this::entityManagerFactory, entityManager -> {
-			final Parent parent = new Parent();
+	@DynamicBeforeAll
+	public void prepareAuditData() {
+		inTransactions(
+				// Revision 1
+				entityManager -> {
+					final Parent parent = new Parent();
 
-			final Child child1 = new Child();
-			child1.setId( 1 );
-			child1.setIndex1( 1 );
-			child1.setIndex2( 1 );
-			child1.getParents().add( parent );
-			parent.getChildren().add( child1 );
+					final Child child1 = new Child();
+					child1.setId( 1 );
+					child1.setIndex1( 1 );
+					child1.setIndex2( 1 );
+					child1.getParents().add( parent );
+					parent.getChildren().add( child1 );
 
-			final Child child2 = new Child();
-			child2.setId( 2 );
-			child2.setIndex1( 2 );
-			child2.setIndex2( 2 );
-			child2.getParents().add( parent );
-			parent.getChildren().add( child2 );
+					final Child child2 = new Child();
+					child2.setId( 2 );
+					child2.setIndex1( 2 );
+					child2.setIndex2( 2 );
+					child2.getParents().add( parent );
+					parent.getChildren().add( child2 );
 
-			entityManager.persist( parent );
+					entityManager.persist( parent );
 
-			return parent.getId();
-		} );
+					this.parentId = parent.getId();
+				},
 
-		// Rev 2
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final Parent parent = entityManager.find( Parent.class, parentId );
+				// Revision 2
+				entityManager -> {
+					final Parent parent = entityManager.find( Parent.class, parentId );
 
-			final Child child = new Child();
-			child.setId( 3 );
-			child.setIndex1( 3 );
-			child.setIndex2( 3 );
-			child.getParents().add( parent );
-			parent.getChildren().add( child );
+					final Child child = new Child();
+					child.setId( 3 );
+					child.setIndex1( 3 );
+					child.setIndex2( 3 );
+					child.getParents().add( parent );
+					parent.getChildren().add( child );
 
-			entityManager.merge( parent );
-		} );
+					entityManager.merge( parent );
+				},
 
-		// Rev 3
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final Parent parent = entityManager.find( Parent.class, parentId );
-			parent.getChildren().removeIf( c -> {
-				if ( c.getIndex1() == 2 ) {
-					c.getParents().remove( parent );
-					return true;
+				// Revision 3
+				entityManager -> {
+					final Parent parent = entityManager.find( Parent.class, parentId );
+					parent.getChildren().removeIf( c -> {
+						if ( c.getIndex1() == 2 ) {
+							c.getParents().remove( parent );
+							return true;
+						}
+						return false;
+					} );
+					entityManager.merge( parent );
+				},
+
+				// Revision 4
+				entityManager -> {
+					final Parent parent = entityManager.find( Parent.class, parentId );
+					parent.getChildren().forEach( c -> c.getParents().clear() );
+					parent.getChildren().clear();
+					entityManager.merge( parent );
 				}
-				return false;
-			} );
-			entityManager.merge( parent );
-		} );
-
-		// Rev 4
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final Parent parent = entityManager.find( Parent.class, parentId );
-			parent.getChildren().forEach( c -> c.getParents().clear() );
-			parent.getChildren().clear();
-			entityManager.merge( parent );
-		} );
+		);
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions( Parent.class, this.parentId ) );
-		assertEquals( Arrays.asList( 1, 4 ), getAuditReader().getRevisions( Child.class, 1 ) );
-		assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( Child.class, 2 ) );
-		assertEquals( Arrays.asList( 2, 4 ), getAuditReader().getRevisions( Child.class, 3 ) );
+		assertThat( getAuditReader().getRevisions( Parent.class, this.parentId ), contains( 1, 2, 3, 4 ) );
+		assertThat( getAuditReader().getRevisions( Child.class, 1 ), contains( 1, 4 ) );
+		assertThat( getAuditReader().getRevisions( Child.class, 2 ), contains( 1, 3 ) );
+		assertThat( getAuditReader().getRevisions( Child.class, 3 ), contains( 2, 4 ) );
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevision1History() {
 		final Parent parent = getAuditReader().find( Parent.class, this.parentId, 1 );
-		assertNotNull( parent );
-		assertTrue( !parent.getChildren().isEmpty() );
-		assertEquals( 2, parent.getChildren().size() );
-		assertEquals( Arrays.asList( new Child( 1, 1 ), new Child( 2, 2 ) ), parent.getChildren() );
+		assertThat( parent, notNullValue() );
+		assertThat( parent.getChildren(), CollectionMatchers.hasSize( 2 ) );
+		assertThat( parent.getChildren(), contains( new Child( 1, 1 ), new Child( 2, 2 ) ) );
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevision2History() {
 		final Parent parent = getAuditReader().find( Parent.class, this.parentId, 2 );
-		assertNotNull( parent );
-		assertTrue( !parent.getChildren().isEmpty() );
-		assertEquals( 3, parent.getChildren().size() );
-		assertEquals( Arrays.asList( new Child( 1, 1 ), new Child( 2, 2 ), new Child( 3, 3 ) ), parent.getChildren() );
+		assertThat( parent, notNullValue() );
+		assertThat( parent.getChildren(), CollectionMatchers.hasSize( 3 ) );
+		assertThat( parent.getChildren(), contains( new Child( 1, 1 ), new Child( 2, 2 ), new Child( 3, 3 ) ) );
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevision3History() {
 		final Parent parent = getAuditReader().find( Parent.class, this.parentId, 3 );
-		assertNotNull( parent );
-		assertTrue( !parent.getChildren().isEmpty() );
-		assertEquals( 2, parent.getChildren().size() );
-		assertEquals( Arrays.asList( new Child( 1, 1 ), new Child( 3, 3 ) ), parent.getChildren() );
+		assertThat( parent, notNullValue() );
+		assertThat( parent.getChildren(), CollectionMatchers.hasSize( 2 ) );
+		assertThat( parent.getChildren(), contains( new Child( 1, 1 ), new Child( 3, 3 ) ) );
 	}
 
-	@Test
+	@DynamicTest
 	public void testRevision4History() {
 		final Parent parent = getAuditReader().find( Parent.class, this.parentId, 4 );
-		assertNotNull( parent );
-		assertTrue( parent.getChildren().isEmpty() );
+		assertThat( parent, notNullValue() );
+		assertThat( parent.getChildren(), CollectionMatchers.isEmpty() );
 	}
 }

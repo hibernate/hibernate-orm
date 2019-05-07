@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
@@ -81,16 +82,30 @@ public class InformixDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "substring", "substring(?1 FROM ?2 FOR ?3)", StandardSpiBasicTypes.STRING );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.nvl( queryEngine );
+		CommonFunctionFactory.nvl2( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.reverse( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.sinh( queryEngine );
+		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.initcap( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.ceiling_ceil( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.leastGreatest( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl" );
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
 
 	}
 

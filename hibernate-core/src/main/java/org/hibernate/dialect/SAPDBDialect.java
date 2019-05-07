@@ -11,7 +11,6 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.LocateEmulation;
 import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.QueryEngine;
@@ -73,72 +72,36 @@ public class SAPDBDialect extends Dialect {
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+//		CommonFunctionFactory.pad( queryEngine ); //not really a padding function
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.translate( queryEngine );
+		CommonFunctionFactory.initcap( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
+		CommonFunctionFactory.daynameMonthname( queryEngine );
+		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
+		CommonFunctionFactory.ceiling_ceil( queryEngine );
+		CommonFunctionFactory.week_weekofyear(queryEngine);
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "time", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "date", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "microsecond", StandardSpiBasicTypes.INTEGER );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "second", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "minute", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "hour", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "day", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "month", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "year", StandardSpiBasicTypes.INTEGER );
-
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", StandardSpiBasicTypes.INTEGER );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dayname", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "monthname", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofmonth", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "weekofyear", StandardSpiBasicTypes.INTEGER );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "translate", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lpad", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "rpad", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "initcap", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ltrim", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "rtrim", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "lfill", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "rfill", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "soundex", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "index", StandardSpiBasicTypes.INTEGER );
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "value" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "coalesce", "value" );
 
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "index" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setArgumentCountBetween( 2, 4 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().register(
-				"locate",
-				new LocateEmulation(
-						queryEngine.getSqmFunctionRegistry()
-								.patternTemplateBuilder( "locate/2", "index(?2, ?1)" )
-								.setExactArgumentCount( 2 )
-								.setInvariantType( StandardSpiBasicTypes.INTEGER )
-								.register(),
-						queryEngine.getSqmFunctionRegistry()
-								.patternTemplateBuilder( "locate/3", "index(?2, ?1, ?3)" )
-								.setExactArgumentCount( 3 )
-								.setInvariantType( StandardSpiBasicTypes.INTEGER )
-								.register()
-				)
-		);
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceiling", "ceil" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		CommonFunctionFactory.locate( queryEngine, "index(?2, ?1)", "index(?2, ?1, ?3)" );
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 

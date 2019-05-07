@@ -11,6 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
@@ -53,11 +54,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "locate", "charindex" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
-
+		CommonFunctionFactory.translate( queryEngine );
+		CommonFunctionFactory.locate_charindex( queryEngine );
 	}
 
 	@Override

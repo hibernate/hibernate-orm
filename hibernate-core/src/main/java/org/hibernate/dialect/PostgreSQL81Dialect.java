@@ -21,7 +21,6 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.dialect.function.LocateEmulation;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
@@ -115,115 +114,29 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.md5( queryEngine );
+		CommonFunctionFactory.initcap( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.translate( queryEngine );
+		CommonFunctionFactory.rand_random( queryEngine );
+		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "random", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "rand", "random" );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 1, 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rtrim" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 1, 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "initcap" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_ascii" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 1, 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "quote_ident" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "quote_literal" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "md5" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "octet_length" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "age" )
-				.setArgumentCountBetween( 1, 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "date_trunc" )
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 2 )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "timeofday" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_char" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_date" )
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_timestamp" )
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_number" )
-				.setInvariantType( StandardSpiBasicTypes.BIG_DECIMAL )
-				.setExactArgumentCount( 2 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "lpad" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rpad" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "translate" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 3 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
-
-		queryEngine.getSqmFunctionRegistry().register(
-				"locate",
-				new LocateEmulation(
-						queryEngine.getSqmFunctionRegistry()
-								.patternTemplateBuilder( "locate/2", "position(?1 in ?2)" )
-								.setExactArgumentCount( 2 )
-								.setInvariantType( StandardSpiBasicTypes.INTEGER )
-								.register(),
-						queryEngine.getSqmFunctionRegistry()
-								.patternTemplateBuilder( "locate/3", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)" )
-								.setExactArgumentCount( 3 )
-								.setInvariantType( StandardSpiBasicTypes.INTEGER )
-								.register()
-				)
-		);
+		CommonFunctionFactory.locate( queryEngine, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)" );
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar)", StandardSpiBasicTypes.STRING );
 

@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.LocateEmulation;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
@@ -46,21 +47,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		queryEngine.getSqmFunctionRegistry().register(
-				"locate",
-				new LocateEmulation(
-						queryEngine.getSqmFunctionRegistry()
-								.patternTemplateBuilder( "locate/2", "locate(?2, ?1)" )
-								.setExactArgumentCount( 2 )
-								.setInvariantType( StandardSpiBasicTypes.INTEGER )
-								.register(),
-						queryEngine.getSqmFunctionRegistry()
-								.patternTemplateBuilder( "locate/3", "locate(?2, ?1, ?3)" )
-								.setExactArgumentCount( 3 )
-								.setInvariantType( StandardSpiBasicTypes.INTEGER )
-								.register()
-				)
-		);
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charindex" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		CommonFunctionFactory.locate( queryEngine, "locate(?2, ?1)", "locate(?2, ?1, ?3)" );
 
 	}
 

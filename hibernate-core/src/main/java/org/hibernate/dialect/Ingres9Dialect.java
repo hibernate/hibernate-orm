@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -75,7 +76,7 @@ public class Ingres9Dialect extends IngresDialect {
 		super.initializeFunctionRegistry( queryEngine );
 		registerColumnType( Types.DATE, "ansidate" );
 		registerColumnType( Types.TIMESTAMP, "timestamp(9) with time zone" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+		CommonFunctionFactory.concat_operator( queryEngine );
 	}
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

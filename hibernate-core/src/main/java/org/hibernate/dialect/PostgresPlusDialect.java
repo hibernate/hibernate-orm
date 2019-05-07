@@ -34,35 +34,13 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.nvl( queryEngine );
+		CommonFunctionFactory.nvl2( queryEngine );
+		CommonFunctionFactory.rownumRowid( queryEngine );
+		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rowid", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "instr" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setArgumentCountBetween( 2, 4 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl2" )
-				.setExactArgumentCount( 3 )
-				.register();
 //		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 
-		// Multi-param date dialect functions...
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_months" )
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "months_between" )
-				.setInvariantType( StandardSpiBasicTypes.FLOAT )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "next_day" )
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setExactArgumentCount( 2 )
-				.register();
 	}
 
 	@Override

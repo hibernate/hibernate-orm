@@ -40,8 +40,9 @@ public class FunctionAsExpressionTemplate
 			String argumentSeparator,
 			String expressionEnd,
 			FunctionReturnTypeResolver returnTypeResolver,
-			ArgumentsValidator argumentsValidator) {
-		super( returnTypeResolver, argumentsValidator );
+			ArgumentsValidator argumentsValidator,
+			String name) {
+		super( name, returnTypeResolver, argumentsValidator );
 		this.expressionStart = expressionStart;
 		this.argumentSeparator = argumentSeparator;
 		this.expressionEnd = expressionEnd;

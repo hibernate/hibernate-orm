@@ -44,8 +44,10 @@ public class PatternBasedSqmFunctionTemplate
 	public PatternBasedSqmFunctionTemplate(
 			PatternRenderer renderer,
 			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver) {
+			FunctionReturnTypeResolver returnTypeResolver,
+			String name) {
 		super(
+				name,
 				returnTypeResolver,
 				argumentsValidator != null
 						? argumentsValidator

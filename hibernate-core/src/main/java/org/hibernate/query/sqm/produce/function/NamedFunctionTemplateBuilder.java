@@ -68,7 +68,8 @@ public class NamedFunctionTemplateBuilder {
 						functionName,
 						useParenthesesWhenNoArgs,
 						argumentsValidator,
-						returnTypeResolver
+						returnTypeResolver,
+						registrationKey
 				)
 		);
 	}

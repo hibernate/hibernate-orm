@@ -158,19 +158,6 @@ public class CUBRIDDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "bit_count", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "md5", StandardSpiBasicTypes.STRING );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "stddev" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "variance" );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceiling", "ceil" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().registerNamed( "trunc" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "nvl2" );
@@ -178,6 +165,8 @@ public class CUBRIDDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_char", StandardSpiBasicTypes.STRING );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "to_date", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "substr", StandardSpiBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "substrb", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "instr", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "instrb", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "lpad", StandardSpiBasicTypes.STRING );
@@ -186,7 +175,19 @@ public class CUBRIDDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerNamed( "add_months", StandardSpiBasicTypes.DATE );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
+
+		queryEngine.getSqmFunctionRegistry().registerNamed( "stddev" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "variance" );
+
 		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "substring", "substr" );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceiling", "ceil" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
 	}
 
 	@Override

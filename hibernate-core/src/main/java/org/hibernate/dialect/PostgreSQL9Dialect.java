@@ -25,5 +25,6 @@ public class PostgreSQL9Dialect extends PostgreSQL82Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		CommonFunctionFactory.soundex( queryEngine );
+
 	}
 }

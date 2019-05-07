@@ -61,8 +61,7 @@ public class MckoiDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
+		CommonFunctionFactory.leastGreatest( queryEngine );
 	}
 
 	@Override

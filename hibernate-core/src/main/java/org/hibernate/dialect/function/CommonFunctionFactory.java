@@ -101,6 +101,14 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void rand_random(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "random")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setUseParenthesesWhenNoArgs(true)
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "rand", "random" );
+	}
+
 	public static void stddev(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "stddev" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
@@ -128,5 +136,363 @@ public class CommonFunctionFactory {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
 	}
+
+	public static void trim2(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rtrim" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
+	}
+
+	public static void trim1(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rtrim" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void pad(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "lpad" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rpad" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+	}
+
+	public static void octetLength(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "octet_length" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void reverse(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "reverse" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void space(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "space" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void repeat(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "repeat" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void leftRight(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "left" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "right" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void repeat_replicate(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "replicate" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "repeat", "replicate" );
+	}
+
+	public static void md5(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "md5" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void initcap(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "initcap" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void instr(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "instr" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setArgumentCountBetween( 2, 4 )
+				.register();
+	}
+
+	public static void substring_substr(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substr" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "substring", "substr" );
+	}
+
+	public static void locate_charindex(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charindex" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "locate", "charindex" );
+	}
+
+
+	public static void translate(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "translate" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	public static void nvl(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void nvl2(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl2" )
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	public static void bitand(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitand" )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void bitor(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitand" )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void bitxor(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitand" )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void bitnot(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitnot" )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void ifnull(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ifnull" )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void yearMonthDay(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "day" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "month" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "year" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void hourMinuteSecond(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "hour" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "minute" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "second" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "microsecond" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void dayofweekmonthyear(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("dayofweek")
+				.setInvariantType(StandardSpiBasicTypes.INTEGER)
+				.setExactArgumentCount(1)
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("dayofmonth")
+				.setInvariantType(StandardSpiBasicTypes.INTEGER)
+				.setExactArgumentCount(1)
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("day", "dayofmonth");
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("dayofyear")
+				.setInvariantType(StandardSpiBasicTypes.INTEGER)
+				.setExactArgumentCount(1)
+				.register();
+	}
+
+	public static void dayOfWeekMonthYear(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("day_of_week")
+				.setInvariantType(StandardSpiBasicTypes.INTEGER)
+				.setExactArgumentCount(1)
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("day_of_month")
+				.setInvariantType(StandardSpiBasicTypes.INTEGER)
+				.setExactArgumentCount(1)
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("day", "day_of_month");
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("day_of_year")
+				.setInvariantType(StandardSpiBasicTypes.INTEGER)
+				.setExactArgumentCount(1)
+				.register();
+	}
+
+	public static void daynameMonthname(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "monthname" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "dayname" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void weekQuarter(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "week" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "quarter" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+	}
+
+	public static void lastDay(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "last_day" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void chr_char(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "chr", "char" );
+	}
+
+	public static void ceiling_ceil(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceil" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ceiling", "ceil" );
+	}
+
+	public static void toCharNumberDateTimestamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_char" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_number" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_date" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_timestamp" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.register();
+	}
+
+	public static void dateTimeTimestamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "date" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "time" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "timestamp" )
+				.setArgumentCountBetween( 1, 2 )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.register();
+	}
+
+	public static void week_weekofyear(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "weekofyear" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "week", "weekofyear" );
+	}
+
+	public static void concat_operator(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+	}
+
+	public static void rownumRowid(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rowid", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
+	}
+
+	public static void sysdateSystimestamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "systimestamp", StandardSpiBasicTypes.TIMESTAMP );
+	}
+
+	public static void locate(QueryEngine queryEngine, String pattern2, String pattern3) {
+		queryEngine.getSqmFunctionRegistry().register(
+				"locate",
+				new LocateEmulation(
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/2", pattern2 )
+								.setExactArgumentCount( 2 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register(),
+						queryEngine.getSqmFunctionRegistry()
+								.patternTemplateBuilder( "locate/3", pattern3 )
+								.setExactArgumentCount( 3 )
+								.setInvariantType( StandardSpiBasicTypes.INTEGER )
+								.register()
+				)
+		);
+	}
+
+	public static void leastGreatest(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
+	}
+
 
 }

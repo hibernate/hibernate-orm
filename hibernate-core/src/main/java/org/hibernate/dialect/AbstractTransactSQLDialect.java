@@ -67,54 +67,17 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.pi( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
-				.register();
+		CommonFunctionFactory.reverse( queryEngine );
+		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.trim1( queryEngine );
+		CommonFunctionFactory.repeat_replicate( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "len" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "str" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 1, 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rtrim" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "reverse" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "space" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charindex" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 2 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "getdate" )
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "getutcdate" )
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datename" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 2 )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "square" )
@@ -125,18 +88,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "day" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "month" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "year" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "second", "datepart(second, ?1)")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
@@ -174,9 +125,9 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ln", "log" );
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "len" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "repeat", "replicate" );
 
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "chr", "char" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "len" );
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 	}

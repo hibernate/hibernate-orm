@@ -11,6 +11,7 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.QueryEngine;
@@ -73,7 +74,6 @@ public class SAPDBDialect extends Dialect {
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
-//		CommonFunctionFactory.pad( queryEngine ); //not really a padding function
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
@@ -84,23 +84,25 @@ public class SAPDBDialect extends Dialect {
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.week_weekofyear(queryEngine);
+		CommonFunctionFactory.week_weekofyear( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
+		CommonFunctionFactory.coalesce_value( queryEngine );
+		//since lpad/rpad are not actually useful padding
+		//functions, map them to lfill/rfill
+		CommonFunctionFactory.pad_fill( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", StandardSpiBasicTypes.INTEGER );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "value" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "coalesce", "value" );
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "nullif", "(case ?1 when ?2 then null else ?1)" )
+				.setExactArgumentCount(2)
+				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "index" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 4 )
 				.register();
 
-		CommonFunctionFactory.locate( queryEngine, "index(?2, ?1)", "index(?2, ?1, ?3)" );
+		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "index(?2, ?1)", "index(?2, ?1, ?3)");
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 

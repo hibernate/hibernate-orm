@@ -8,8 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.LocateEmulation;
+import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
@@ -52,7 +51,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		CommonFunctionFactory.locate( queryEngine, "locate(?2, ?1)", "locate(?2, ?1, ?3)" );
+		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "locate(?2, ?1)", "locate(?2, ?1, ?3)");
 
 	}
 

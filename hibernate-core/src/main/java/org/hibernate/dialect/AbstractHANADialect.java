@@ -43,6 +43,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -275,12 +276,10 @@ public abstract class AbstractHANADialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "greatest" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "least" );
-
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(length(to_binary(?1))*8)", StandardSpiBasicTypes.INTEGER );
 
-		CommonFunctionFactory.locate( queryEngine, "locate(?2, ?1)", "locate(?2, ?1, ?3)" );
+		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "locate(?2, ?1)", "locate(?2, ?1, ?3)");
+
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );

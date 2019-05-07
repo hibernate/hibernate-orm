@@ -279,6 +279,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * And several additional "standard" functions:
 	 *
+	 *      * least, greatest
 	 * 	    * ascii
 	 * 	    * chr
 	 *      * replace

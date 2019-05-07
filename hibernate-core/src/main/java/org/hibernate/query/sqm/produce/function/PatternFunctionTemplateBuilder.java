@@ -63,10 +63,10 @@ public class PatternFunctionTemplateBuilder {
 
 	public SqmFunctionTemplate template() {
 		return new PatternBasedSqmFunctionTemplate(
-                new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
-                argumentsValidator,
-                returnTypeResolver,
-                registrationKey
-        );
+				new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
+				argumentsValidator,
+				returnTypeResolver,
+				registrationKey
+		);
 	}
 }

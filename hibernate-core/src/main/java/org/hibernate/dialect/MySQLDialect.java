@@ -160,14 +160,6 @@ public class MySQLDialect extends Dialect {
 				.setExactArgumentCount(0)
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
 
-		// Don't need all these synonyms for current_timestamp
-//		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "localtime", "now(6)" )
-//				.setExactArgumentCount(0)
-//				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
-//		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "localtimestamp", "now(6)")
-//				.setExactArgumentCount(0)
-//				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
-//
 //		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "now", "now(6)" )
 //				.setExactArgumentCount(0)
 //				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
@@ -217,10 +209,6 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "crc32" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setExactArgumentCount( 1 )
-				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "log2" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
@@ -229,6 +217,14 @@ public class MySQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "crc32" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sha2" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sha1" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -239,10 +235,6 @@ public class MySQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		// Don't need all these synonyms for current_timestamp
-//		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIMESTAMP );
-//		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
-//
 //		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "now" )
 //				.setInvariantType(StandardSpiBasicTypes.TIMESTAMP )
 //				.setUseParenthesesWhenNoArgs(true)

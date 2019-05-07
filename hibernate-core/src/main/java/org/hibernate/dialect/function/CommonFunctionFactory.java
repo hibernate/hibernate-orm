@@ -471,6 +471,12 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "systimestamp", StandardSpiBasicTypes.TIMESTAMP );
 	}
 
+	public static void localtimeLocaltimestamp(QueryEngine queryEngine) {
+		//these functions return times without timezones
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
+	}
+
 	public static void locate(QueryEngine queryEngine, String pattern2, String pattern3) {
 		queryEngine.getSqmFunctionRegistry().register(
 				"locate",

@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SybaseASE157LimitHandler;
 import org.hibernate.exception.ConstraintViolationException;
@@ -36,18 +37,6 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 	 */
 	public SybaseASE157Dialect() {
 		super();
-	}
-
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().registerPattern( "create_locator", "create_locator(?1, ?2)", StandardSpiBasicTypes.BINARY );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "locator_literal", "locator_literal(?1, ?2)", StandardSpiBasicTypes.BINARY );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "locator_valid", "locator_valid(?1)", StandardSpiBasicTypes.BOOLEAN );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "return_lob", "return_lob(?1, ?2)", StandardSpiBasicTypes.BINARY );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "setdata", "setdata(?1, ?2, ?3)", StandardSpiBasicTypes.BOOLEAN );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "charindex", "charindex(?1, ?2, ?3)", StandardSpiBasicTypes.INTEGER );
 	}
 
 	@Override

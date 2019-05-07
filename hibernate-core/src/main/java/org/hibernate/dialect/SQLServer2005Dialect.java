@@ -56,16 +56,6 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "row_number" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-	}
-
-	@Override
 	protected LimitHandler getDefaultLimitHandler() {
 		return new SQLServer2005LimitHandler();
 	}

@@ -6,8 +6,10 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
+import org.hibernate.query.spi.QueryEngine;
 
 /**
  * Microsoft SQL Server 2012 Dialect
@@ -15,6 +17,17 @@ import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
  * @author Brett Meyer
  */
 public class SQLServer2012Dialect extends SQLServer2008Dialect {
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		CommonFunctionFactory.if_iif(queryEngine);
+
+		//actually translate() was added in 2017 but
+		//it's not worth adding a new dialect for that!
+		CommonFunctionFactory.translate( queryEngine );
+	}
 
 	@Override
 	public boolean supportsSequences() {

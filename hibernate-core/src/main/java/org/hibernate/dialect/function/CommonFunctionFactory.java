@@ -313,6 +313,28 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void ifnull_isnull(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "isnull" )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ifnull", "isnull" );
+	}
+
+	public static void if_(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "if" )
+				.setExactArgumentCount( 3 )
+				.setReturnTypeResolver( useArgType(2) )
+				.register();
+	}
+
+	public static void if_iif(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "iif" )
+				.setExactArgumentCount( 3 )
+				.setReturnTypeResolver( useArgType(2) )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "if", "iif" );
+	}
+
 	public static void yearMonthDay(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "day" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
@@ -578,6 +600,14 @@ public class CommonFunctionFactory {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(3)
 				.register();
+	}
+
+	public static void replace_strReplace(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("str_replace")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(3)
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("replace", "str_replace");
 	}
 
 	public static void concat(QueryEngine queryEngine) {

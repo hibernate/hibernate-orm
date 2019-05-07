@@ -74,6 +74,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.ifnull_isnull( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "len" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )

@@ -248,6 +248,9 @@ public abstract class Dialect implements ConversionContext {
 	 * 		* max, min
 	 * 		* sum
 	 *
+	 * 		* coalesce
+	 * 		* nullif
+	 *
 	 * 		* concat
 	 * 		* locate
 	 * 		* substring
@@ -265,8 +268,6 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * Along with an additional set of functions defined by ANSI SQL:
 	 *
-	 * 		* coalesce
-	 * 		* nullif
 	 * 		* cast
 	 * 		* extract
 	 * 	    * position (alternative syntax for locate)

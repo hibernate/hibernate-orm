@@ -38,8 +38,4 @@ public interface SqmFunction<T> extends SqmExpression<T>, JpaFunction<T> {
 	default <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitFunction( this );
 	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// these are not needed since we perform the production of the SQL AST directly
-
 }

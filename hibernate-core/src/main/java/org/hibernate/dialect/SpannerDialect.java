@@ -126,25 +126,20 @@ public class SpannerDialect extends Dialect {
 				.register();
 
 		// Mathematical Functions
-		CommonFunctionFactory.abs( queryEngine );
-		CommonFunctionFactory.sign( queryEngine );
-		CommonFunctionFactory.cos( queryEngine );
+		CommonFunctionFactory.math( queryEngine );
+		CommonFunctionFactory.trigonometry( queryEngine );
+
 		CommonFunctionFactory.cosh( queryEngine );
-		CommonFunctionFactory.acos( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ACOSH" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.sin( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.asin( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ASINH" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		CommonFunctionFactory.tan( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.atan( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ATANH" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
@@ -153,9 +148,6 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )
 				.register();
-		CommonFunctionFactory.exp( queryEngine );
-		CommonFunctionFactory.ln( queryEngine );
-		CommonFunctionFactory.sqrt( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "IS_INF" )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )

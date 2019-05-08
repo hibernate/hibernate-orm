@@ -63,7 +63,7 @@ public class MckoiDialect extends Dialect {
 
 		CommonFunctionFactory.if_(queryEngine);
 
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "nullif", "if(?1==?2, null, ?1)" )
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "nullif", "if(?1=?2, null, ?1)" )
 				.setExactArgumentCount(2)
 				.register();
 	}

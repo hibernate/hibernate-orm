@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.produce.function;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
 
+import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
 
 /**
@@ -57,22 +58,23 @@ public class VarArgsFunctionTemplateBuilder {
 		return this;
 	}
 
-	public VarArgsFunctionTemplateBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
+	public VarArgsFunctionTemplateBuilder setInvariantType(StandardBasicTypes.StandardBasicType<?> invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
 
 	public SqmFunctionTemplate register() {
-		return registry.register(
-				registrationKey,
-				new FunctionAsExpressionTemplate(
-						begin,
-						sep,
-						end,
-						returnTypeResolver,
-						argumentsValidator,
-						registrationKey
-				)
+		return registry.register( registrationKey, template() );
+	}
+
+	public SqmFunctionTemplate template() {
+		return new FunctionAsExpressionTemplate(
+				begin,
+				sep,
+				end,
+				returnTypeResolver,
+				argumentsValidator,
+				registrationKey
 		);
 	}
 }

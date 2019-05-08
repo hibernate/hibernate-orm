@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.TrimSpec;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A {@link SqmFunctionTemplate} implementation that emulates
@@ -89,7 +90,8 @@ public class LtrimRtrimReplaceTrimEmulation extends AbstractSqmFunctionTemplate 
 	public <T> SelfRenderingSqmFunction<T>  generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 		final TrimSpec specification = ( (SqmTrimSpecification) arguments.get( 0 ) ).getSpecification();
 		final char trimCharacter = ( (SqmLiteral<Character>) arguments.get( 1 ) ).getLiteralValue();
 		final SqmExpression sourceExpr = (SqmExpression) arguments.get( 2 );
@@ -101,7 +103,8 @@ public class LtrimRtrimReplaceTrimEmulation extends AbstractSqmFunctionTemplate 
 				.makeSqmFunctionExpression(
 						Collections.singletonList( sourceExpr ),
 						impliedResultType,
-						queryEngine
+						queryEngine,
+						typeConfiguration
 				);
 	}
 

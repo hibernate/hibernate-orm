@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -37,7 +38,8 @@ public class CastStrEmulation
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 		SqmTypedNode<?> argument = arguments.get(0);
 		return queryEngine.getSqmFunctionRegistry().findFunctionTemplate( "cast" )
 				.makeSqmFunctionExpression(
@@ -49,7 +51,8 @@ public class CastStrEmulation
 								)
 						),
 						impliedResultType,
-						queryEngine
+						queryEngine,
+						typeConfiguration
 				);
 	}
 }

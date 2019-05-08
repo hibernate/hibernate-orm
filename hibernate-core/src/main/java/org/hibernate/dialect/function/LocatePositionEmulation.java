@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunctio
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -34,9 +35,10 @@ public class LocatePositionEmulation
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionTemplate( "locate" )
-				.makeSqmFunctionExpression( arguments, impliedResultType, queryEngine );
+				.makeSqmFunctionExpression( arguments, impliedResultType, queryEngine, typeConfiguration );
 	}
 
 	@Override

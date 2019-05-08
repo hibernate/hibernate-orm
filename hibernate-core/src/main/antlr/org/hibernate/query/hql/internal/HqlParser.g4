@@ -443,6 +443,7 @@ leastFunction
 
 coalesce
 	: COALESCE LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
+	| IFNULL LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
 nullIf
@@ -889,6 +890,7 @@ identifier
 	| FUNCTION
 	| GROUP
 	| HOUR
+	| IFNULL
 	| IN
 	| INDEX
 	| INNER
@@ -909,6 +911,7 @@ identifier
 	| MINUTE
 	| MEMBER
 	| MONTH
+	| NULLIF
 	| OBJECT
 	| OFFSET
 	| ON

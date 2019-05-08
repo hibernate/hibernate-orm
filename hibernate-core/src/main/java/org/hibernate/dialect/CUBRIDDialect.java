@@ -129,7 +129,7 @@ public class CUBRIDDialect extends Dialect {
 //		CommonFunctionFactory.concat_operator( queryEngine );
 		IngresDialect.bitwiseFunctions( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
 	}
 
 	@Override

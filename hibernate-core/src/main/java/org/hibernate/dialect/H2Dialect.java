@@ -167,7 +167,7 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setUseParenthesesWhenNoArgs(true)
 				.register();
 

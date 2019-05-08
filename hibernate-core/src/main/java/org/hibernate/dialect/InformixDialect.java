@@ -26,7 +26,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
@@ -83,7 +82,7 @@ public class InformixDialect extends Dialect {
 
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.nvl( queryEngine );
+		CommonFunctionFactory.ifnull_nvl( queryEngine );
 		CommonFunctionFactory.nvl2( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );

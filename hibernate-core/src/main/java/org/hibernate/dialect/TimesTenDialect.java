@@ -90,7 +90,7 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
-		CommonFunctionFactory.nvl( queryEngine );
+		CommonFunctionFactory.ifnull_nvl( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );

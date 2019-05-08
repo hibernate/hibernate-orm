@@ -278,10 +278,11 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void nvl(QueryEngine queryEngine) {
+	public static void ifnull_nvl(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
 				.setExactArgumentCount( 2 )
 				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ifnull", "nvl" );
 	}
 
 	public static void nvl2(QueryEngine queryEngine) {

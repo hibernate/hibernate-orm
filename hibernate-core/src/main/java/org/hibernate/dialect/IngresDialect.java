@@ -112,7 +112,7 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.nvl( queryEngine );
+		CommonFunctionFactory.ifnull_nvl( queryEngine );
 		CommonFunctionFactory.nvl2( queryEngine );
 		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.pad( queryEngine );

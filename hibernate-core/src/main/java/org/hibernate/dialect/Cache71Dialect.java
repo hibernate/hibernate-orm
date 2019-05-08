@@ -253,14 +253,15 @@ public class Cache71Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "($length(?1)*8)", StandardSpiBasicTypes.INTEGER );
 
-		CommonFunctionFactory.cot( queryEngine );
-		CommonFunctionFactory.nvl( queryEngine );
+		CommonFunctionFactory.ifnull_nvl( queryEngine );
+		CommonFunctionFactory.ifnull_isnull( queryEngine );
+		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
-		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.pi( queryEngine );
@@ -274,7 +275,6 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.ifnull_isnull( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
 

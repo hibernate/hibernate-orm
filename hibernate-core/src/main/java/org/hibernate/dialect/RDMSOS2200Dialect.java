@@ -179,7 +179,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.nvl( queryEngine );
+		CommonFunctionFactory.ifnull_nvl( queryEngine );
 		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );

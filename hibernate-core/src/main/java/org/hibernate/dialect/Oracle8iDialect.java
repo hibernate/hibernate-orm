@@ -154,7 +154,7 @@ public class Oracle8iDialect extends Dialect {
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.nvl( queryEngine );
+		CommonFunctionFactory.ifnull_nvl( queryEngine );
 		CommonFunctionFactory.nvl2( queryEngine );
 		CommonFunctionFactory.bitand( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );

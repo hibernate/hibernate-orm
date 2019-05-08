@@ -10,10 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect for Postgres Plus
@@ -34,7 +32,7 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.nvl( queryEngine );
+		CommonFunctionFactory.ifnull_nvl( queryEngine );
 		CommonFunctionFactory.nvl2( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdateSystimestamp( queryEngine );

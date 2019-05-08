@@ -22,8 +22,6 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		CommonFunctionFactory.if_iif(queryEngine);
-
 		//actually translate() was added in 2017 but
 		//it's not worth adding a new dialect for that!
 		CommonFunctionFactory.translate( queryEngine );

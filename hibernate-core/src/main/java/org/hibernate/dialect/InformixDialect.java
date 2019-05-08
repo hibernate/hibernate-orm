@@ -82,8 +82,6 @@ public class InformixDialect extends Dialect {
 
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.ifnull_nvl( queryEngine );
-		CommonFunctionFactory.nvl2( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.pad( queryEngine );

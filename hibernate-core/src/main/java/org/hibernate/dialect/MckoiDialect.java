@@ -10,7 +10,6 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -60,8 +59,6 @@ public class MckoiDialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
-
-		CommonFunctionFactory.if_(queryEngine);
 
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "nullif", "if(?1=?2, null, ?1)" )
 				.setExactArgumentCount(2)

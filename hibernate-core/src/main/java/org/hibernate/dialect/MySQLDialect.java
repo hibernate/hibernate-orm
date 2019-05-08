@@ -196,7 +196,6 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.md5( queryEngine );
-		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
@@ -209,7 +208,6 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.if_( queryEngine );
 		CommonFunctionFactory.crc32( queryEngine );
 		CommonFunctionFactory.sha1sha2( queryEngine );
 		CommonFunctionFactory.sha( queryEngine );

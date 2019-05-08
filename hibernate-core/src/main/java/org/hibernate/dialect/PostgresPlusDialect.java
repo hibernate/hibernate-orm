@@ -32,8 +32,6 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.ifnull_nvl( queryEngine );
-		CommonFunctionFactory.nvl2( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
 

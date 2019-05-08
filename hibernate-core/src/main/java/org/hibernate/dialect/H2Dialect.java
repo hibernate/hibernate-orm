@@ -157,7 +157,6 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.bitand( queryEngine );
 		CommonFunctionFactory.bitor( queryEngine );
 		CommonFunctionFactory.bitxor( queryEngine );
-		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
 		CommonFunctionFactory.dayOfWeekMonthYear( queryEngine );

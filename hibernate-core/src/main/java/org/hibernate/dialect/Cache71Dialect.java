@@ -253,9 +253,6 @@ public class Cache71Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "($length(?1)*8)", StandardSpiBasicTypes.INTEGER );
 
-		CommonFunctionFactory.ifnull_nvl( queryEngine );
-		CommonFunctionFactory.ifnull_isnull( queryEngine );
-		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );

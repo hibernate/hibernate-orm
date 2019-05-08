@@ -2082,7 +2082,27 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		if (ctx.SECOND()!=null) {
 			return new SqmExtractUnit<>("second", resolveExpressableTypeBasic( Float.class ), nodeBuilder);
 		}
+		if (ctx.WEEK()!=null) {
+			return new SqmExtractUnit<>("week", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		}
+		if (ctx.QUARTER()!=null) {
+			return new SqmExtractUnit<>("quarter", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		}
 		return super.visitDatetimeField(ctx);
+	}
+
+	@Override
+	public Object visitSecondsField(HqlParser.SecondsFieldContext ctx) {
+		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
+		if (ctx.MICROSECOND()!=null) {
+			//TODO: need to go back to the dialect, it's called "microseconds" on some
+			return new SqmExtractUnit<>("microsecond", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		}
+		if (ctx.MILLISECOND()!=null) {
+			//TODO: need to go back to the dialect, it's called "milliseconds" on some
+			return new SqmExtractUnit<>("millisecond", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		}
+		return super.visitSecondsField(ctx);
 	}
 
 	@Override
@@ -2101,7 +2121,16 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public Object visitExtractFunction(HqlParser.ExtractFunctionContext ctx) {
 
 		final SqmExpression<?> expressionToExtract = (SqmExpression) ctx.expression().accept( this );
-		final SqmExtractUnit<?> extractFieldExpression = (SqmExtractUnit) ctx.extractField().accept( this );
+		final SqmExtractUnit<?> extractFieldExpression;
+		if ( ctx.extractField() != null ) {
+			extractFieldExpression = (SqmExtractUnit) ctx.extractField().accept(this);
+		}
+		else if ( ctx.datetimeField() != null ) {
+			extractFieldExpression = (SqmExtractUnit) ctx.datetimeField().accept(this);
+		}
+		else {
+			return expressionToExtract;
+		}
 
 		return getFunctionTemplate("extract").makeSqmFunctionExpression(
 				asList( extractFieldExpression, expressionToExtract ),
@@ -2263,9 +2292,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public Object visitStrFunction(HqlParser.StrFunctionContext ctx) {
 		final SqmExpression<?> arg = (SqmExpression) ctx.expression().accept( this );
-		return getFunctionTemplate("str").makeSqmFunctionExpression(
-				arg,
-				resolveExpressableTypeBasic( String.class ),
+        BasicValuedExpressableType<String> type = resolveExpressableTypeBasic( String.class );
+        return getFunctionTemplate("cast").makeSqmFunctionExpression(
+				asList( arg, new SqmCastTarget<>( type, creationContext.getNodeBuilder() ) ),
+                type,
 				creationContext.getQueryEngine()
 		);
 	}

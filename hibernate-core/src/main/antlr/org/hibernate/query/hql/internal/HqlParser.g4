@@ -809,21 +809,29 @@ currentInstantFunction
 
 extractFunction
 	: EXTRACT LEFT_PAREN extractField FROM expression RIGHT_PAREN
-	| extractField LEFT_PAREN expression RIGHT_PAREN
+	| datetimeField LEFT_PAREN expression RIGHT_PAREN
 	;
 
 extractField
 	: datetimeField
 	| timeZoneField
+	| secondsField
 	;
 
 datetimeField
 	: YEAR
 	| MONTH
 	| DAY
+	| WEEK
+	| QUARTER
 	| HOUR
 	| MINUTE
 	| SECOND
+	;
+
+secondsField
+	: MILLISECOND
+	| MICROSECOND
 	;
 
 timeZoneField
@@ -908,6 +916,8 @@ identifier
 	| LOWER
 	| MAP
 	| MAX
+	| MICROSECOND
+	| MILLISECOND
 	| MIN
 	| MINUTE
 	| MEMBER
@@ -920,6 +930,7 @@ identifier
 	| ORDER
 	| OUTER
 	| POSITION
+	| QUARTER
 	| POWER
 	| REPLACE
 	| ROUND
@@ -937,6 +948,7 @@ identifier
 	| UPDATE
 	| UPPER
 	| VALUE
+	| WEEK
 	| WHERE
 	| WITH
 	| YEAR

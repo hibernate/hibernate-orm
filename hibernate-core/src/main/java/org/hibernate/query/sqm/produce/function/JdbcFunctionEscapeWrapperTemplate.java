@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunctio
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.function.SqmJdbcFunctionEscapeWrapper;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Acts as a wrapper to another SqmFunctionTemplate - upon rendering uses the
@@ -33,12 +34,14 @@ public class JdbcFunctionEscapeWrapperTemplate
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 		return new SqmJdbcFunctionEscapeWrapper<>(
 				wrapped.makeSqmFunctionExpression(
 						arguments,
 						impliedResultType,
-						queryEngine
+						queryEngine,
+						typeConfiguration
 				),
 				queryEngine.getCriteriaBuilder()
 		);

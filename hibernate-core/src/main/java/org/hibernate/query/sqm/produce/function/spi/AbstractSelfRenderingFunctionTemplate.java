@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -33,7 +34,7 @@ public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmF
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> resolvedReturnType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine, TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
 		return new SelfRenderingSqmFunction(
 				getRenderingFunctionSupport( arguments, resolvedReturnType, queryEngine ),

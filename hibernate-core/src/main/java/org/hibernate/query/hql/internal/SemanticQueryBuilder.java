@@ -1833,8 +1833,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final String functionName = ctx.jpaNonStandardFunctionName().STRING_LITERAL().getText().toLowerCase();
 		final List<SqmTypedNode<?>> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
 
-
-		SqmFunctionTemplate functionTemplate = getFunctionTemplate(functionName);
+		SqmFunctionTemplate functionTemplate = getFunctionTemplate( functionName );
 		if (functionTemplate == null) {
 			functionTemplate = new NamedSqmFunctionTemplate( functionName, true, null, null );
 		}
@@ -1873,9 +1872,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public List<SqmTypedNode<?>> visitNonStandardFunctionArguments(HqlParser.NonStandardFunctionArgumentsContext ctx) {
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
 
-		for ( int i=0, x=ctx.expression().size(); i<x; i++ ) {
+		for ( int i=0, size=ctx.expression().size(); i<size; i++ ) {
 			// we handle the final argument differently...
-			if ( i == x-1 ) {
+			if ( i == size-1 ) {
 				arguments.add( visitFinalFunctionArgument( ctx.expression( i ) ) );
 			}
 			else {
@@ -1977,28 +1976,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate( ctx.trigFunctionName().getText() ).makeSqmFunctionExpression(
 				arg,
 				resolveExpressableTypeBasic( Double.class ),
-				creationContext.getQueryEngine()
-		);
-	}
-
-	@Override
-	public SqmExpression visitAsciiFunction(HqlParser.AsciiFunctionContext ctx) {
-		final SqmExpression arg = (SqmExpression) ctx.expression().accept( this );
-
-		return getFunctionTemplate( "ascii" ).makeSqmFunctionExpression(
-				arg,
-				resolveExpressableTypeBasic( Integer.class ),
-				creationContext.getQueryEngine()
-		);
-	}
-
-	@Override
-	public SqmExpression visitChrFunction(HqlParser.ChrFunctionContext ctx) {
-		final SqmExpression arg = (SqmExpression) ctx.expression().accept( this );
-
-		return getFunctionTemplate( "chr" ).makeSqmFunctionExpression(
-				arg,
-				resolveExpressableTypeBasic( Character.class ),
 				creationContext.getQueryEngine()
 		);
 	}

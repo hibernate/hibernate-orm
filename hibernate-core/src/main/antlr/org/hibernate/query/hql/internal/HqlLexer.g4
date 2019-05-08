@@ -113,7 +113,6 @@ ARROW :	'->';
 // Keywords
 ABS					: [aA] [bB] [sS];
 AS					: [aA] [sS];
-ASCII				: [aA] [sS] [cC] [iI] [iI];
 ALL					: [aA] [lL] [lL];
 AND					: [aA] [nN] [dD];
 ANY					: [aA] [nN] [yY];
@@ -125,7 +124,6 @@ BOTH				: [bB] [oO] [tT] [hH];
 CASE				: [cC] [aA] [sS] [eE];
 CAST				: [cC] [aA] [sS] [tT];
 CEILING				: [cC] [eE] [iI] [lL] [iI] [nN] [gG];
-CHR					: [cC] [hH] [rR];
 CLASS				: [cC] [lL] [aA] [sS] [sS];
 COALESCE			: [cC] [oO] [aA] [lL] [eE] [sS] [cC] [eE];
 COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];

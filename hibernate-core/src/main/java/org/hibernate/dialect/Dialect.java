@@ -277,10 +277,9 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * And a number of additional "standard" functions:
 	 *
-	 *      * least, greatest
 	 * 	    * ifnull (two-argument synonym for coalesce)
-	 * 	    * ascii, chr
 	 *      * replace
+	 *      * least, greatest
 	 *      * sign
 	 *      * sin, cos, tan, asin, acos, atan, atan2
 	 *      * round
@@ -325,8 +324,6 @@ public abstract class Dialect implements ConversionContext {
 		CommonFunctionFactory.replace(queryEngine);
 		CommonFunctionFactory.concat(queryEngine);
 		CommonFunctionFactory.lowerUpper(queryEngine);
-		CommonFunctionFactory.ascii(queryEngine);
-		CommonFunctionFactory.chr(queryEngine);
 
 		//ANSI SQL functions with weird syntax, not supported on every database
 

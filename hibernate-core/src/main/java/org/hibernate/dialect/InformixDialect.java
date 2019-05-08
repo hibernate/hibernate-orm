@@ -99,6 +99,8 @@ public class InformixDialect extends Dialect {
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.char_chr( queryEngine );
 
 		//coalesce() and nullif() both supported since Informix 12
 

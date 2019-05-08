@@ -40,7 +40,8 @@ public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmF
 				arguments,
 				resolvedReturnType,
 				queryEngine.getCriteriaBuilder(),
-				name);
+				name
+		);
 	}
 
 	protected abstract SelfRenderingFunctionSupport getRenderingFunctionSupport(

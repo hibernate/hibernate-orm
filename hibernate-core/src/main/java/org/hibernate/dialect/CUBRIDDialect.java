@@ -124,6 +124,8 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.sha1sha2( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.char_chr( queryEngine );
 //		CommonFunctionFactory.concat_operator( queryEngine );
 		IngresDialect.bitwiseFunctions( queryEngine );
 

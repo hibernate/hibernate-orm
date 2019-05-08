@@ -255,7 +255,6 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
@@ -271,6 +270,8 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.extract_datepart( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
 

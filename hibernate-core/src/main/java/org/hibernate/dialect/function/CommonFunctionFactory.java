@@ -390,14 +390,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void chr_char(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "chr", "char" );
-	}
-
 	public static void ceiling_ceil(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ceil" )
 				.setExactArgumentCount( 1 )
@@ -615,11 +607,20 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void chr(QueryEngine queryEngine) {
+	public static void char_chr(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "chr" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "char", "chr" );
+	}
+
+	public static void chr_char(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "char" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "chr", "char" );
 	}
 
 	public static void extract(QueryEngine queryEngine) {

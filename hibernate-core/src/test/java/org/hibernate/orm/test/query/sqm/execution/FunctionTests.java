@@ -106,9 +106,10 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     public void testAsciiChrFunctions() {
         inTransaction(
                 session -> {
-                    session.createQuery("select ascii('x') from EntityOfBasics e")
+                    //NOTE: "function" syntax still not working in select clause
+                    session.createQuery("from EntityOfBasics e where function('ascii', 'x') > 0")
                             .list();
-                    session.createQuery("select chr(120) from EntityOfBasics e")
+                    session.createQuery("from EntityOfBasics e where function('chr', 120) = 'z'")
                             .list();
                 }
         );

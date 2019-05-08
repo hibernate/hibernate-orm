@@ -596,8 +596,6 @@ standardFunction
 	|	roundFunction
 	|	trigFunction
 	|	atan2Function
-	|	asciiFunction
-	|	chrFunction
 	|	strFunction
 	|	greatestFunction
 	|	leastFunction
@@ -770,14 +768,6 @@ atan2Function
 	:	ATAN2 LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
-asciiFunction
-	:   ASCII LEFT_PAREN expression RIGHT_PAREN
-	;
-
-chrFunction
-	:   CHR LEFT_PAREN expression RIGHT_PAREN
-	;
-
 strFunction
 	:   STR LEFT_PAREN expression RIGHT_PAREN
 	;
@@ -860,7 +850,6 @@ identifier
 	| ANY
 	| AS
 	| ASC
-	| ASCII
 	| ATAN2
 	| AVG
 	| BY
@@ -868,7 +857,6 @@ identifier
 	| BOTH
 	| CAST
 	| CEILING
-	| CHR
 	| COALESCE
 	| COLLATE
 	| CONCAT
@@ -886,6 +874,7 @@ identifier
 	| FOR
 	| FULL
 	| FUNCTION
+	| GREATEST
 	| GROUP
 	| HOUR
 	| IFNULL
@@ -896,6 +885,7 @@ identifier
 	| JOIN
 	| KEY
 	| LEADING
+	| LEAST
 	| LEFT
 	| LENGTH
 	| LIKE

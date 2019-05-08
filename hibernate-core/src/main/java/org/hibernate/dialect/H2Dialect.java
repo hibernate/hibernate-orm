@@ -143,8 +143,6 @@ public class H2Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		// Numeric Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 		CommonFunctionFactory.pi( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
@@ -166,20 +164,18 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setUseParenthesesWhenNoArgs(true)
-				.register();
-
-		// String Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setUseParenthesesWhenNoArgs(true)
+				.register();
 
 	}
 

@@ -282,7 +282,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.cosh( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
@@ -296,6 +295,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
+
 	}
 
 	@Override

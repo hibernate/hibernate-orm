@@ -196,7 +196,6 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
@@ -205,6 +204,8 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
 
 		if ( hsqldbVersion >= 200 ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called

@@ -1361,7 +1361,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 						(SqmExpression<?>) ctx.expression( 1 ).accept( this )
 				),
 				basicType( String.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -1436,7 +1437,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return getFunctionTemplate("mod").makeSqmFunctionExpression(
 					asList( left, right ),
 					(AllowableFunctionReturnType) left.getExpressableType(),
-					creationContext.getQueryEngine()
+					creationContext.getQueryEngine(),
+					creationContext.getDomainModel().getTypeConfiguration()
 			);
 		}
 		else {
@@ -1502,7 +1504,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("current_date")
 				.makeSqmFunctionExpression(
 						basicType( Date.class ),
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 	}
 
@@ -1511,7 +1514,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("current_time")
 				.makeSqmFunctionExpression(
 						basicType( Time.class ),
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 	}
 
@@ -1520,7 +1524,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("current_timestamp")
 				.makeSqmFunctionExpression(
 						basicType( Timestamp.class ),
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 	}
 
@@ -1529,7 +1534,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("current_timestamp")
 				.makeSqmFunctionExpression(
 						basicType( Instant.class ),
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 	}
 
@@ -1549,7 +1555,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				.makeSqmFunctionExpression(
 						arguments,
 						(AllowableFunctionReturnType<?>) type,
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 	}
 
@@ -1569,7 +1576,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				.makeSqmFunctionExpression(
 						arguments,
 						(AllowableFunctionReturnType<?>) type,
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 	}
 
@@ -1589,7 +1597,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				.makeSqmFunctionExpression(
 						arguments,
 						(AllowableFunctionReturnType<?>) type,
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 	}
 
@@ -1601,7 +1610,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("nullif").makeSqmFunctionExpression(
 				asList( arg1, arg2 ),
 				(AllowableFunctionReturnType) arg1.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -1906,7 +1916,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return functionTemplate.makeSqmFunctionExpression(
 				functionArguments,
 				null,
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -1930,7 +1941,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return functionTemplate.makeSqmFunctionExpression(
 				functionArguments,
 				null,
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -1974,7 +1986,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("ceiling").makeSqmFunctionExpression(
 				arg,
 				basicType( Long.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -1985,7 +1998,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("floor").makeSqmFunctionExpression(
 				arg,
 				basicType( Long.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2000,7 +2014,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("abs").makeSqmFunctionExpression(
 				arg,
 				(AllowableFunctionReturnType) arg.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2011,7 +2026,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("sign").makeSqmFunctionExpression(
 				arg,
 				basicType( Integer.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2023,7 +2039,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("mod").makeSqmFunctionExpression(
 				asList( dividend, divisor ),
 				(AllowableFunctionReturnType) dividend.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2035,7 +2052,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("power").makeSqmFunctionExpression(
 				asList( base, power ),
 				(AllowableFunctionReturnType) base.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2046,7 +2064,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate( ctx.trigFunctionName().getText() ).makeSqmFunctionExpression(
 				arg,
 				basicType( Double.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2057,7 +2076,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("sqrt").makeSqmFunctionExpression(
 				arg,
 				(AllowableFunctionReturnType) arg.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2069,7 +2089,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("round").makeSqmFunctionExpression(
 				asList(arg, precision),
 				(AllowableFunctionReturnType) arg.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2081,7 +2102,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("atan2").makeSqmFunctionExpression(
 				asList(sin, cos),
 				(AllowableFunctionReturnType) sin.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2092,7 +2114,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("ln").makeSqmFunctionExpression(
 				arg,
 				(AllowableFunctionReturnType) arg.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 
 	}
@@ -2104,7 +2127,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("exp").makeSqmFunctionExpression(
 				arg,
 				(AllowableFunctionReturnType) arg.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2246,7 +2270,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 								)
 						),
 						type,
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 			case DATE:
 			case TIME:
@@ -2259,13 +2284,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 								)
 						),
 						type,
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 			default:
 				return getFunctionTemplate("extract").makeSqmFunctionExpression(
 						asList( extractFieldExpression, expressionToExtract ),
 						type,
-						creationContext.getQueryEngine()
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
 				);
 		}
 	}
@@ -2303,7 +2330,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
 				asList( expressionToCast, format ),
 				basicType( String.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2322,7 +2350,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("cast").makeSqmFunctionExpression(
 				asList( expressionToCast, castTargetExpression ),
 				castTargetExpression.getType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2357,7 +2386,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("upper").makeSqmFunctionExpression(
 				expression,
 				(BasicValuedExpressableType) expression.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2369,7 +2399,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("lower").makeSqmFunctionExpression(
 				expression,
 				(BasicValuedExpressableType) expression.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2384,7 +2415,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("concat").makeSqmFunctionExpression(
 				arguments,
 				basicType( String.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2396,7 +2428,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("character_length").makeSqmFunctionExpression(
 				arg,
 				basicType( Integer.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2409,7 +2442,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("locate").makeSqmFunctionExpression(
 				asList( pattern, string ),
 				basicType( Integer.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2427,7 +2461,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 						? asList( pattern, string )
 						: asList( pattern, string, start ),
 				basicType( Integer.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2441,7 +2476,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("replace").makeSqmFunctionExpression(
 				asList( string, pattern, replacement ),
 				basicType( String.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2452,7 +2488,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("cast").makeSqmFunctionExpression(
 				asList( arg, new SqmCastTarget<>( type, creationContext.getNodeBuilder() ) ),
 				type,
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2463,7 +2500,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("max").makeSqmFunctionExpression(
 				arg,
 				(AllowableFunctionReturnType<?>) arg.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2474,7 +2512,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("min").makeSqmFunctionExpression(
 				arg,
 				(AllowableFunctionReturnType<?>) arg.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2487,7 +2526,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("sum").makeSqmFunctionExpression(
 				argument,
 				(AllowableFunctionReturnType<?>) arg.getExpressableType(),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2500,7 +2540,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("avg").makeSqmFunctionExpression(
 				argument,
 				basicType( Double.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2515,7 +2556,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("count").makeSqmFunctionExpression(
 				argument,
 				basicType( Long.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 
@@ -2530,7 +2572,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("substring").makeSqmFunctionExpression(
 				length==null ? asList( source, start ) : asList( source, start, length ),
 				basicType( String.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 
 	}
@@ -2546,7 +2589,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 						source
 				),
 				basicType( String.class ),
-				creationContext.getQueryEngine()
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
 		);
 	}
 

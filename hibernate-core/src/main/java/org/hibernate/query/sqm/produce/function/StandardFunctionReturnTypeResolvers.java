@@ -9,13 +9,12 @@ package org.hibernate.query.sqm.produce.function;
 import java.sql.Types;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.QueryException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Steve Ebersole
@@ -33,27 +32,30 @@ public class StandardFunctionReturnTypeResolvers {
 	 * such, this resolver allows the context-impled expression type to be the
 	 * return type so long as the Java types are compatible.
 	 */
-	public static FunctionReturnTypeResolver invariant(AllowableFunctionReturnType invariantType) {
+	public static FunctionReturnTypeResolver invariant(StandardBasicTypes.StandardBasicType<?> invariantType) {
 		if ( invariantType == null ) {
 			throw new IllegalArgumentException( "Passed `invariantType` for function return cannot be null" );
 		}
 
-		return (impliedType, arguments) -> useImpliedTypeIfPossible( invariantType, impliedType );
+		return (impliedType, arguments, typeConfiguration)
+				-> isAssignableTo( invariantType, impliedType )
+				? impliedType
+				: typeConfiguration.resolveStandardBasicType( invariantType );
 	}
 
 	public static FunctionReturnTypeResolver useArgType(int argPosition) {
-		return (impliedType, arguments) -> {
-			final AllowableFunctionReturnType specifiedArgType = extractArgumentType( arguments, argPosition );
-			return useImpliedTypeIfPossible( specifiedArgType, impliedType );
+		return (impliedType, arguments, typeConfiguration) -> {
+			AllowableFunctionReturnType<?> argType = extractArgumentType( arguments, argPosition );
+			return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 		};
 	}
 
 	public static FunctionReturnTypeResolver useFirstNonNull() {
-		return (impliedType, arguments) -> {
+		return (impliedType, arguments, typeConfiguration) -> {
 			for (SqmTypedNode<?> arg: arguments) {
 				if (arg!=null && arg.getExpressableType() instanceof AllowableFunctionReturnType) {
 					AllowableFunctionReturnType<?> argType = (AllowableFunctionReturnType<?>) arg.getExpressableType();
-					return useImpliedTypeIfPossible(argType, impliedType);
+					return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 				}
 			}
 			return impliedType;
@@ -65,23 +67,15 @@ public class StandardFunctionReturnTypeResolvers {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Internal helpers
 
-	@SuppressWarnings("unchecked")
-	private static AllowableFunctionReturnType<?> useImpliedTypeIfPossible(
-			AllowableFunctionReturnType<?> defined,
-			AllowableFunctionReturnType<?> implied) {
-		return areCompatible( defined, implied ) ? implied : defined;
-	}
-
 	@SuppressWarnings({"unchecked", "SimplifiableIfStatement"})
-	private static boolean areCompatible(
-			AllowableFunctionReturnType<?> defined,
-			AllowableFunctionReturnType<?> implied) {
-		if ( defined == null || defined.getSqlExpressableType() == null ) {
-			return true;
-		}
-
+	private static boolean isAssignableTo(
+			AllowableFunctionReturnType<?> defined, AllowableFunctionReturnType<?> implied) {
 		if ( implied == null || implied.getSqlExpressableType() == null ) {
 			return false;
+		}
+
+		if ( defined == null || defined.getSqlExpressableType() == null ) {
+			return true;
 		}
 
 		//This list of cases defines legal promotions from a SQL function return

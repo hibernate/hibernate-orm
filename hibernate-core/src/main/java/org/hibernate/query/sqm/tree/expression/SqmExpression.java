@@ -88,7 +88,11 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 
 	default <X> SqmExpression<X> castAs(AllowableFunctionReturnType<X> type) {
 		return nodeBuilder().getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate( "cast" )
-				.makeSqmFunctionExpression( this, type, nodeBuilder().getQueryEngine() );
+				.makeSqmFunctionExpression(
+						this, type,
+						nodeBuilder().getQueryEngine(),
+						nodeBuilder().getDomainModel().getTypeConfiguration()
+				);
 	}
 
 }

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.sql.SqlExpressableType;
@@ -49,7 +50,8 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 			SqmToSqlAstConverter walker) {
 		this.sqmExpression = sqmFunction;
 		this.sqlAstArguments = resolveSqlAstArguments( sqmFunction.getArguments(), walker );
-		this.type = sqmFunction.getExpressableType().getSqlExpressableType();
+		AllowableFunctionReturnType<T> type = sqmFunction.getExpressableType();
+		this.type = type==null ? null : type.getSqlExpressableType();
 	}
 
 	private static List<SqlAstNode> resolveSqlAstArguments(List<SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {

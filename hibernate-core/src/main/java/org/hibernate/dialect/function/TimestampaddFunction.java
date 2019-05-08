@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -64,7 +65,8 @@ public class TimestampaddFunction
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 		return new SelfRenderingSqmFunction<>(
 				this,
 				arguments,

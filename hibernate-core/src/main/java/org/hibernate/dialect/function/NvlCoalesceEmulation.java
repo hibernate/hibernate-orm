@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunctio
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Arrays.asList;
 
@@ -42,7 +43,8 @@ public class NvlCoalesceEmulation
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 
 		SqmFunctionTemplate nvl = queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("nvl").setExactArgumentCount(2).template();
 
@@ -52,7 +54,12 @@ public class NvlCoalesceEmulation
 
 		while (pos>0) {
 			SqmExpression<?> next = (SqmExpression<?>) arguments.get( --pos );
-			result = nvl.makeSqmFunctionExpression( asList( next, result ), type, queryEngine );
+			result = nvl.makeSqmFunctionExpression(
+					asList( next, result ),
+					type,
+					queryEngine,
+					typeConfiguration
+			);
 		}
 
 		//noinspection unchecked

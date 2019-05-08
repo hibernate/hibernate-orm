@@ -10,7 +10,6 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
-import static org.hibernate.query.sqm.produce.function.StandardArgumentsValidators.min;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
@@ -538,13 +537,13 @@ public class CommonFunctionFactory {
 
 	public static void coalesce(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("coalesce")
-				.setArgumentsValidator( min(1) )
+				.setMinArgumentCount( 1 )
 				.register();
 	}
 
 	public static void coalesce_value(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("value")
-				.setArgumentsValidator( min(1) )
+				.setMinArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "coalesce", "value" );
 	}
@@ -664,6 +663,7 @@ public class CommonFunctionFactory {
 
 	public static void extract(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("extract", "extract(?1 from ?2)")
+//				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount(2)
 				.setReturnTypeResolver( useArgType(1) )
 				.register();
@@ -671,7 +671,8 @@ public class CommonFunctionFactory {
 
 	public static void extract_datepart(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datepart" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+//				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datename" )
@@ -714,10 +715,10 @@ public class CommonFunctionFactory {
 
 	public static void leastGreatest(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "least" )
-				.setArgumentsValidator( min(1) )
+				.setMinArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "greatest" )
-				.setArgumentsValidator( min(1) )
+				.setMinArgumentCount( 1 )
 				.register();
 	}
 

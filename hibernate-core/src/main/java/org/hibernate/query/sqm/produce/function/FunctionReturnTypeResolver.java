@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Pluggable strategy for resolving a function return type for a specific call.
@@ -29,9 +30,11 @@ public interface FunctionReturnTypeResolver {
 	 * @param impliedType the context-impled type
 	 * @param arguments the arguments "passed" to this call.
 	 *
+	 * @param typeConfiguration
 	 * @return The resolved type.
 	 */
 	AllowableFunctionReturnType<?> resolveFunctionReturnType(
 			AllowableFunctionReturnType<?> impliedType,
-			List<SqmTypedNode<?>> arguments);
+			List<SqmTypedNode<?>> arguments,
+			TypeConfiguration typeConfiguration);
 }

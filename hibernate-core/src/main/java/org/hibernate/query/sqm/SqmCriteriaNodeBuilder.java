@@ -178,7 +178,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("cast").makeSqmFunctionExpression(
 				asList( (SqmTypedNode) expression, new SqmCastTarget<>( type, this ) ),
 				type,
-				queryEngine
+				queryEngine,
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -384,7 +385,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("avg").makeSqmFunctionExpression(
 				(SqmTypedNode) argument,
 				StandardSpiBasicTypes.DOUBLE,
-				queryEngine
+				queryEngine,
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -394,7 +396,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("sum").makeSqmFunctionExpression(
 				(SqmTypedNode) argument,
 				(AllowableFunctionReturnType<N>) ((SqmExpression<N>) argument).getExpressableType(),
-				queryEngine
+				queryEngine,
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -414,7 +417,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("max").makeSqmFunctionExpression(
 				(SqmTypedNode) argument,
 				(AllowableFunctionReturnType<N>) ((SqmExpression<N>) argument).getExpressableType(),
-				queryEngine
+				queryEngine,
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -424,7 +428,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("min").makeSqmFunctionExpression(
 				(SqmTypedNode) argument,
 				(AllowableFunctionReturnType<N>) ((SqmExpression<N>) argument).getExpressableType(),
-				queryEngine
+				queryEngine,
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -443,7 +448,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("count").makeSqmFunctionExpression(
 				(SqmTypedNode) argument,
 				StandardSpiBasicTypes.LONG,
-				queryEngine
+				queryEngine,
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -452,7 +458,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("count").makeSqmFunctionExpression(
 				new SqmDistinct<>( (SqmExpression<?>) argument, getQueryEngine().getCriteriaBuilder() ),
 				StandardSpiBasicTypes.LONG,
-				queryEngine
+				queryEngine,
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -471,7 +478,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("abs").makeSqmFunctionExpression(
 				(SqmTypedNode) x,
 				(AllowableFunctionReturnType<N>) ((SqmExpression<N>) x).getExpressableType(),
-				queryEngine
+				queryEngine,
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -613,7 +621,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 						((SqmExpression) x).getExpressableType(),
 						StandardSpiBasicTypes.DOUBLE
 				),
-				queryEngine
+				queryEngine,
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -736,7 +745,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 						ySqmExpression.getExpressableType(),
 						StandardSpiBasicTypes.STRING
 				),
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -752,7 +762,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 						ySqmExpression.getExpressableType(),
 						StandardSpiBasicTypes.STRING
 				),
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -768,7 +779,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 						ySqmExpression.getExpressableType(),
 						StandardSpiBasicTypes.STRING
 				),
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -784,7 +796,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 						ySqmExpression.getExpressableType(),
 						StandardSpiBasicTypes.STRING
 				),
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -808,7 +821,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate( "substring" ).makeSqmFunctionExpression(
 				len==null ? asList( source, from ) : asList( source, from, len ),
 				resultType,
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -863,7 +877,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 			return getFunctionTemplate( "trim" ).makeSqmFunctionExpression(
 					arguments,
 					(BasicValuedExpressableType) QueryHelper.highestPrecedenceType2( source.getExpressableType(), StandardSpiBasicTypes.STRING ),
-					getQueryEngine()
+					getQueryEngine(),
+					domainModel.getTypeConfiguration()
 			);
 	}
 
@@ -924,7 +939,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate( "lower" ).makeSqmFunctionExpression(
 				(SqmExpression) x,
 				type,
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -940,7 +956,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate( "upper" ).makeSqmFunctionExpression(
 				(SqmExpression) x,
 				type,
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -954,7 +971,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 						((SqmExpression) argument).getExpressableType(),
 						StandardSpiBasicTypes.INTEGER
 				),
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -994,7 +1012,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("locate").makeSqmFunctionExpression(
 				arguments,
 				type,
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 
 	}
@@ -1032,7 +1051,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("current_date")
 				.makeSqmFunctionExpression(
 						(AllowableFunctionReturnType) StandardSpiBasicTypes.DATE,
-						queryEngine
+						queryEngine,
+						domainModel.getTypeConfiguration()
 				);
 	}
 
@@ -1042,7 +1062,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("current_timestamp")
 				.makeSqmFunctionExpression(
 						(AllowableFunctionReturnType) StandardSpiBasicTypes.TIMESTAMP,
-						queryEngine
+						queryEngine,
+						domainModel.getTypeConfiguration()
 				);
 	}
 
@@ -1052,7 +1073,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("current_time")
 				.makeSqmFunctionExpression(
 						(AllowableFunctionReturnType) StandardSpiBasicTypes.TIME,
-						queryEngine
+						queryEngine,
+						domainModel.getTypeConfiguration()
 				);
 	}
 
@@ -1061,7 +1083,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("current_timestamp")
 				.makeSqmFunctionExpression(
 						StandardSpiBasicTypes.INSTANT,
-						queryEngine
+						queryEngine,
+						domainModel.getTypeConfiguration()
 				);
 	}
 
@@ -1076,7 +1099,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return functionTemplate.makeSqmFunctionExpression(
 				(List) expressionList( args ),
 				getTypeConfiguration().standardExpressableTypeForJavaType( type ),
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 	}
 
@@ -1200,7 +1224,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 		return getFunctionTemplate("nullif").makeSqmFunctionExpression(
 				asList( first, second ),
 				type,
-				getQueryEngine()
+				getQueryEngine(),
+				domainModel.getTypeConfiguration()
 		);
 
 	}

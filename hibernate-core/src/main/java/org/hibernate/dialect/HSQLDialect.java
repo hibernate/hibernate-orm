@@ -213,7 +213,7 @@ public class HSQLDialect extends Dialect {
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
 		if ( hsqldbVersion > 219 ) {
 			queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
-					.setInvariantType( StandardSpiBasicTypes.INTEGER )
+					.setInvariantType( StandardSpiBasicTypes.LONG )
 					.setUseParenthesesWhenNoArgs(true)
 					.register();
 		}

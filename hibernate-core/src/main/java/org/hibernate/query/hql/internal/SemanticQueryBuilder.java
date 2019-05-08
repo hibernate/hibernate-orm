@@ -1455,7 +1455,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmCaseSearched visitSearchedCaseStatement(HqlParser.SearchedCaseStatementContext ctx) {
-		final SqmCaseSearched<?> caseExpression = new SqmCaseSearched<>( creationContext.getNodeBuilder());
+		final SqmCaseSearched<?> caseExpression = new SqmCaseSearched<>( creationContext.getNodeBuilder() );
 
 		for ( HqlParser.SearchedCaseWhenContext whenFragment : ctx.searchedCaseWhen() ) {
 			caseExpression.when(
@@ -1469,6 +1469,20 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 
 		return caseExpression;
+	}
+
+	@Override
+	public Object visitIfStatement(HqlParser.IfStatementContext ctx) {
+		final SqmCaseSearched<?> ifExpression = new SqmCaseSearched<>( creationContext.getNodeBuilder() );
+
+		ifExpression.when(
+				(SqmPredicate) ctx.predicate().accept(this),
+				(SqmExpression) ctx.expression(0).accept( this )
+		);
+
+		ifExpression.otherwise( (SqmExpression) ctx.expression(1).accept( this ) );
+
+		return ifExpression;
 	}
 
 	@Override

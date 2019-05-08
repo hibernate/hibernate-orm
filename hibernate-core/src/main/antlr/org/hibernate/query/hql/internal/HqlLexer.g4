@@ -157,6 +157,7 @@ GREATEST			: [gG] [rR] [eE] [aA] [tT] [eE] [sS] [tT];
 GROUP				: [gG] [rR] [oO] [uU] [pP];
 HAVING				: [hH] [aA] [vV] [iI] [nN] [gG];
 HOUR				: [hH] [oO] [uU] [rR];
+IF					: [iI] [fF];
 IFNULL				: [iI] [fF] [nN] [uU] [lL] [lL];
 IN					: [iI] [nN];
 INDEX				: [iI] [nN] [dD] [eE] [xX];

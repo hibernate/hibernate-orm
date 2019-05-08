@@ -328,4 +328,24 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
         );
     }
 
+    @Test
+    public void testIfThen() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select if e.theInt > 0 then 'pos' else 'neg' end from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+    @Test
+    public void testCaseWhen() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select case when e.theInt > 0 then 'pos' else 'neg' end from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
 }

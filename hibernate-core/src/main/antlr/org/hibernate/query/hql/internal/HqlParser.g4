@@ -411,6 +411,7 @@ entityTypeReference
 caseStatement
 	: simpleCaseStatement
 	| searchedCaseStatement
+	| ifStatement
 	;
 
 simpleCaseStatement
@@ -432,6 +433,10 @@ searchedCaseStatement
 searchedCaseWhen
 	: WHEN predicate THEN expression
 	;
+
+ifStatement
+    : IF predicate THEN expression ELSE expression END
+    ;
 
 greatestFunction
 	: GREATEST LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN

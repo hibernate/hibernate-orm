@@ -2292,10 +2292,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public Object visitStrFunction(HqlParser.StrFunctionContext ctx) {
 		final SqmExpression<?> arg = (SqmExpression) ctx.expression().accept( this );
-        BasicValuedExpressableType<String> type = resolveExpressableTypeBasic( String.class );
-        return getFunctionTemplate("cast").makeSqmFunctionExpression(
+		BasicValuedExpressableType<String> type = resolveExpressableTypeBasic( String.class );
+		return getFunctionTemplate("cast").makeSqmFunctionExpression(
 				asList( arg, new SqmCastTarget<>( type, creationContext.getNodeBuilder() ) ),
-                type,
+				type,
 				creationContext.getQueryEngine()
 		);
 	}

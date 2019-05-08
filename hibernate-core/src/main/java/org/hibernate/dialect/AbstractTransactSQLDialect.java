@@ -85,11 +85,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "bit_length", "(datalength(?1) * 8)")
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2", "atn2")
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )

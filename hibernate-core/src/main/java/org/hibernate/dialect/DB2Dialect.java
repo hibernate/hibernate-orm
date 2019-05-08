@@ -165,6 +165,7 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -180,7 +181,6 @@ public class DB2Dialect extends Dialect {
 //				.setExactArgumentCount( 2 )
 //				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(length(binary(?1))*8)", StandardSpiBasicTypes.INTEGER );
 	}
 
 	@Override

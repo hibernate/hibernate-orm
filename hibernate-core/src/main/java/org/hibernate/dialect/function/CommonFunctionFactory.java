@@ -186,13 +186,6 @@ public class CommonFunctionFactory {
 		PairedFunctionTemplate.register(queryEngine, "rpad", StandardSpiBasicTypes.STRING, "rfill(?1,' ',?2)", "rfill(?1,?3,?2)");
 	}
 
-	public static void octetLength(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "octet_length" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-	}
-
 	public static void reverse(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "reverse" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -532,13 +525,17 @@ public class CommonFunctionFactory {
 	}
 
 	public static void characterLength(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("character_length") //length() is a synonym
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("character_length")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount(1)
+				.setExactArgumentCount( 1 )
 				.register();
-		//this is a synonym on many databases
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey("char_length", "character_length");
+	}
 
+	public static void octetLength(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("octet_length")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
 	}
 
 	public static void characterLength_len(QueryEngine queryEngine) {
@@ -547,6 +544,14 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "len" );
+	}
+
+	public static void characterLength_length(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "length" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "length" );
 	}
 
 	public static void bitLength(QueryEngine queryEngine) {

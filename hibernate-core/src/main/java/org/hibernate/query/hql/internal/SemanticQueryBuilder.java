@@ -2233,18 +2233,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public Object visitBitLengthFunction(HqlParser.BitLengthFunctionContext ctx) {
-
-		final SqmExpression arg = (SqmExpression) ctx.expression().accept( this );
-
-		return getFunctionTemplate("bit_length").makeSqmFunctionExpression(
-				arg,
-				resolveExpressableTypeBasic( Integer.class ),
-				creationContext.getQueryEngine()
-		);
-	}
-
-	@Override
 	public Object visitPositionFunction(HqlParser.PositionFunctionContext ctx) {
 
 		final SqmExpression<?> string = (SqmExpression) ctx.positionFunctionStringArgument().accept( this );

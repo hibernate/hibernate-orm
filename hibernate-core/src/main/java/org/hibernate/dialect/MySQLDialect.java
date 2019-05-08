@@ -211,6 +211,8 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.crc32( queryEngine );
 		CommonFunctionFactory.sha1sha2( queryEngine );
 		CommonFunctionFactory.sha( queryEngine );
+		CommonFunctionFactory.bitLength( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

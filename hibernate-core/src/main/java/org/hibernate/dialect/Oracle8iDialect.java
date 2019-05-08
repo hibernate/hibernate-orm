@@ -161,8 +161,7 @@ public class Oracle8iDialect extends Dialect {
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(vsize(?1)*8)", StandardSpiBasicTypes.INTEGER );
+		CommonFunctionFactory.characterLength_length( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 

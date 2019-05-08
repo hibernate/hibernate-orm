@@ -44,7 +44,7 @@ public class NvlCoalesceEmulation
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine) {
 
-		SqmFunctionTemplate nvl = queryEngine.getSqmFunctionRegistry().findFunctionTemplate("nvl");
+		SqmFunctionTemplate nvl = queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("nvl").setExactArgumentCount(2).template();
 
 		int pos = arguments.size();
 		SqmExpression<?> result = (SqmExpression<?>) arguments.get( --pos );

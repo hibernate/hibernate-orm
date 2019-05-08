@@ -191,7 +191,6 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.bitor( queryEngine );
 		CommonFunctionFactory.bitxor( queryEngine );
 		CommonFunctionFactory.bitnot( queryEngine );
-		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );

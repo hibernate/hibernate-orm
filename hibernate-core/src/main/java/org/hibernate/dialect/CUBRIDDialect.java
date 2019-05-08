@@ -116,8 +116,6 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.md5( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
-		CommonFunctionFactory.ifnull_nvl( queryEngine );
-		CommonFunctionFactory.nvl2( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );

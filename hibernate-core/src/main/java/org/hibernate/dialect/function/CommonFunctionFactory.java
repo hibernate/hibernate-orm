@@ -278,19 +278,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void ifnull_nvl(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ifnull", "nvl" );
-	}
-
-	public static void nvl2(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "nvl2" )
-				.setExactArgumentCount( 3 )
-				.register();
-	}
-
 	public static void bitand(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitand" )
 				.setExactArgumentCount( 2 )
@@ -313,34 +300,6 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitnot" )
 				.setExactArgumentCount( 1 )
 				.register();
-	}
-
-	public static void ifnull(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ifnull" )
-				.setExactArgumentCount( 2 )
-				.register();
-	}
-
-	public static void ifnull_isnull(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "isnull" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ifnull", "isnull" );
-	}
-
-	public static void if_(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "if" )
-				.setExactArgumentCount( 3 )
-				.setReturnTypeResolver( useArgType(2) )
-				.register();
-	}
-
-	public static void if_iif(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "iif" )
-				.setExactArgumentCount( 3 )
-				.setReturnTypeResolver( useArgType(2) )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "if", "iif" );
 	}
 
 	public static void yearMonthDay(QueryEngine queryEngine) {

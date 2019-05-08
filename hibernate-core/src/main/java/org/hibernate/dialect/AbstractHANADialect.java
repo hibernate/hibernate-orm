@@ -281,7 +281,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "locate(?2, ?1)", "locate(?2, ?1, ?3)");
 
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.ifnull( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );

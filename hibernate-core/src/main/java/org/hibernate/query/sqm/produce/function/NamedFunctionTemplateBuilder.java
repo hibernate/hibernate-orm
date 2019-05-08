@@ -64,13 +64,17 @@ public class NamedFunctionTemplateBuilder {
 	public SqmFunctionTemplate register() {
 		return registry.register(
 				registrationKey,
-				new NamedSqmFunctionTemplate(
-						functionName,
-						useParenthesesWhenNoArgs,
-						argumentsValidator,
-						returnTypeResolver,
-						registrationKey
-				)
+				template()
 		);
+	}
+
+	public SqmFunctionTemplate template() {
+		return new NamedSqmFunctionTemplate(
+                functionName,
+                useParenthesesWhenNoArgs,
+                argumentsValidator,
+                returnTypeResolver,
+                registrationKey
+        );
 	}
 }

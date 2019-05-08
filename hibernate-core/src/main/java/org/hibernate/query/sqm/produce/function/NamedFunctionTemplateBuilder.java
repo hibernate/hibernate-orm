@@ -70,11 +70,11 @@ public class NamedFunctionTemplateBuilder {
 
 	public SqmFunctionTemplate template() {
 		return new NamedSqmFunctionTemplate(
-                functionName,
-                useParenthesesWhenNoArgs,
-                argumentsValidator,
-                returnTypeResolver,
-                registrationKey
-        );
+				functionName,
+				useParenthesesWhenNoArgs,
+				argumentsValidator,
+				returnTypeResolver,
+				registrationKey
+		);
 	}
 }

@@ -187,6 +187,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.log2( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.pi( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
@@ -208,32 +209,14 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.if_(queryEngine);
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "log2" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setExactArgumentCount( 1 )
-				.register();
+		CommonFunctionFactory.if_( queryEngine );
+		CommonFunctionFactory.crc32( queryEngine );
+		CommonFunctionFactory.sha1sha2( queryEngine );
+		CommonFunctionFactory.sha( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "crc32" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sha2" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sha1" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sha" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount( 1 )
 				.register();
 
 //		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "now" )

@@ -58,6 +58,13 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void log2(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "log2" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
 	public static void radians(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "radians" )
 				.setExactArgumentCount( 1 )
@@ -787,4 +794,28 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void crc32(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "crc32" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void sha1sha2(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sha2" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sha1" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void sha(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sha" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
 }

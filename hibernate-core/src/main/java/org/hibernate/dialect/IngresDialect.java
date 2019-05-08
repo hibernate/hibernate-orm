@@ -151,7 +151,7 @@ public class IngresDialect extends Dialect {
 
 	}
 
-	private void bitwiseFunctions(QueryEngine queryEngine) {
+	static void bitwiseFunctions(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_and" )
 				.setExactArgumentCount( 2 )
 				.register();

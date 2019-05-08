@@ -245,6 +245,41 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     }
 
     @Test
+    public void testExtractFunctions() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select year(e.theDate) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select month(e.theDate) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select day(e.theDate) from EntityOfBasics e")
+                            .list();
+
+                    session.createQuery("select hour(e.theTime) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select minute(e.theTime) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select second(e.theTime) from EntityOfBasics e")
+                            .list();
+
+                    session.createQuery("select year(e.theTimestamp) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select month(e.theTimestamp) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select day(e.theTimestamp) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select hour(e.theTimestamp) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select minute(e.theTimestamp) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select second(e.theTimestamp) from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+
+    @Test
     public void testLeastGreatestFunctions() {
         inTransaction(
                 session -> {

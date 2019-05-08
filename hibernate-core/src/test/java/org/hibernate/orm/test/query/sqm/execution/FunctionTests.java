@@ -202,9 +202,21 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     public void testCastFunction() {
         inTransaction(
                 session -> {
-                    session.createQuery("select cast(e.theDate as string) from EntityOfBasics e")
+                    session.createQuery("select cast(e.theDate as string), cast(e.theTime as string), cast(e.theTimestamp as string) from EntityOfBasics e")
                             .list();
-                    session.createQuery("select cast(e.id as string) from EntityOfBasics e")
+                    session.createQuery("select cast(e.id as string), cast(e.theInt as string), cast(e.theDouble as string) from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+    @Test
+    public void testStrFunction() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select str(e.theDate), str(e.theTime), str(e.theTimestamp) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select str(e.id), str(e.theInt), str(e.theDouble) from EntityOfBasics e")
                             .list();
                 }
         );

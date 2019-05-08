@@ -276,8 +276,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(length(to_binary(?1))*8)", StandardSpiBasicTypes.INTEGER );
-
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "locate(?2, ?1)", "locate(?2, ?1, ?3)");
 
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
@@ -297,6 +295,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.characterLength_length( queryEngine );
 	}
 
 	@Override

@@ -584,8 +584,6 @@ standardFunction
 	|	locateFunction
 	|	positionFunction
 	|	lengthFunction
-	|	octetLengthFunction
-	|	bitLengthFunction
 	|	absFunction
 	|	signFunction
 	|	sqrtFunction
@@ -697,15 +695,7 @@ replaceFunctionReplacementArgument
 	;
 
 lengthFunction
-	: (CHARACTER_LENGTH | LENGTH) LEFT_PAREN expression RIGHT_PAREN
-	;
-
-octetLengthFunction
-	: OCTET_LENGTH LEFT_PAREN expression RIGHT_PAREN
-	;
-
-bitLengthFunction
-	: BIT_LENGTH LEFT_PAREN expression RIGHT_PAREN
+	: LENGTH LEFT_PAREN expression RIGHT_PAREN
 	;
 
 absFunction
@@ -875,11 +865,9 @@ identifier
 	| AVG
 	| BY
 	| BETWEEN
-	| BIT_LENGTH
 	| BOTH
 	| CAST
 	| CEILING
-	| CHARACTER_LENGTH
 	| CHR
 	| COALESCE
 	| COLLATE

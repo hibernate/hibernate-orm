@@ -129,8 +129,6 @@ public class IngresDialect extends Dialect {
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(octet_length(?1)*8)", StandardSpiBasicTypes.INTEGER );
-
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1', ?2)", StandardSpiBasicTypes.INTEGER );
 
 		bitwiseFunctions(queryEngine);

@@ -271,10 +271,7 @@ public abstract class Dialect implements ConversionContext {
 	 * 		* cast
 	 * 		* extract
 	 * 	    * position (alternative syntax for locate)
-	 * 		* bit_length
-	 * 	    * character_length (synonym for length)
-	 *      * ln
-	 *      * exp
+	 *      * ln, exp
 	 *      * power
 	 *      * floor, ceiling
 	 *
@@ -282,8 +279,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 *      * least, greatest
 	 * 	    * ifnull (two-argument synonym for coalesce)
-	 * 	    * ascii
-	 * 	    * chr
+	 * 	    * ascii, chr
 	 *      * replace
 	 *      * sign
 	 *      * sin, cos, tan, asin, acos, atan, atan2
@@ -324,8 +320,6 @@ public abstract class Dialect implements ConversionContext {
 		//string functions, must be redefined where not supported
 
 		CommonFunctionFactory.characterLength(queryEngine);
-		CommonFunctionFactory.bitLength(queryEngine);
-
 		CommonFunctionFactory.locate(queryEngine);
 		CommonFunctionFactory.substring(queryEngine);
 		CommonFunctionFactory.replace(queryEngine);

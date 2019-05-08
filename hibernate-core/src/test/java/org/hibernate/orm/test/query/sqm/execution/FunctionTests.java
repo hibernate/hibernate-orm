@@ -125,12 +125,10 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     }
 
     @Test
-    public void testLengthFunctions() {
+    public void testLengthFunction() {
         inTransaction(
                 session -> {
                     session.createQuery("select length(e.theString) from EntityOfBasics e where length(e.theString) > 1")
-                            .list();
-                    session.createQuery("select bit_length(e.theString), character_length(e.theString) from EntityOfBasics e")
                             .list();
                 }
         );

@@ -7,6 +7,7 @@
 package org.hibernate.envers.boot.internal;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -41,8 +42,10 @@ public class EnversIntegrator implements Integrator {
 	private AuditService auditService;
 	private EnversService enversService;
 
+	@Override
 	public void integrate(
 			Metadata metadata,
+			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
 

@@ -302,12 +302,6 @@ public class Cache71Dialect extends Dialect {
 		useJdbcEscape(queryEngine, "dayofweek");
 		useJdbcEscape(queryEngine, "dayofmonth");
 		useJdbcEscape(queryEngine, "dayofyear");
-
-		// below is for Cache' that don't have str in 2007.1 there is str and we register str directly
-//		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as char varying)", StandardSpiBasicTypes.STRING );
-		// this is for recent versions
-		queryEngine.getSqmFunctionRegistry().registerNamed( "str", StandardSpiBasicTypes.STRING );
-
 	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

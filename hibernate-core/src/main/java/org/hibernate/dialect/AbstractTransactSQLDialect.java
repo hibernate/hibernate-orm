@@ -80,19 +80,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "second", "datepart(second, ?1)" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "minute", "datepart(minute, ?1)" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "hour", "datepart(hour, ?1)" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "mod", "(?1 % ?2)" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )

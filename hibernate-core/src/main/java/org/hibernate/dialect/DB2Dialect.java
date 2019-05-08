@@ -181,8 +181,6 @@ public class DB2Dialect extends Dialect {
 //				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "bit_length", "(length(binary(?1))*8)", StandardSpiBasicTypes.INTEGER );
-
-		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "rtrim(char(?1))", StandardSpiBasicTypes.STRING );
 	}
 
 	@Override

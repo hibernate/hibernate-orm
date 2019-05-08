@@ -133,11 +133,6 @@ public class IngresDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1', ?2)", StandardSpiBasicTypes.INTEGER );
 
-		// Casting to char of numeric values introduces space padding up to the
-		// maximum width of a value for that return type.  Casting to varchar
-		// does not introduce space padding.
-		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar)", StandardSpiBasicTypes.STRING );
-
 		bitwiseFunctions(queryEngine);
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "squeeze" )

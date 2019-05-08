@@ -353,10 +353,6 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.leastGreatest(queryEngine);
 
-		//support for legacy HQL functions, should be refined on subclasses
-
-		CommonFunctionFactory.str_cast(queryEngine);
-		CommonFunctionFactory.datetime_extract(queryEngine);
 	}
 
 	/**

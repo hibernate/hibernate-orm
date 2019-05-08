@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-
 import org.hibernate.query.sqm.produce.function.spi.MultipatternSqmFunctionTemplate;
 import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
@@ -92,7 +90,7 @@ public class SqmFunctionRegistry {
 	 * Register a pattern-based template by name and invariant return type.  Shortcut for building the template
 	 * via {@link #patternTemplateBuilder} accepting its defaults.
 	 */
-	public SqmFunctionTemplate registerPattern(String name, String pattern, AllowableFunctionReturnType returnType) {
+	public SqmFunctionTemplate registerPattern(String name, String pattern, StandardBasicTypes.StandardBasicType<?> returnType) {
 		return patternTemplateBuilder( name, pattern )
 				.setInvariantType( returnType )
 				.register();
@@ -128,7 +126,7 @@ public class SqmFunctionRegistry {
 	 *
 	 * @param name The function name (and registration key)
 	 */
-	public SqmFunctionTemplate registerNamed(String name, AllowableFunctionReturnType returnType) {
+	public SqmFunctionTemplate registerNamed(String name, StandardBasicTypes.StandardBasicType<?> returnType) {
 		return namedTemplateBuilder( name ).setInvariantType( returnType ).register();
 	}
 
@@ -186,17 +184,17 @@ public class SqmFunctionRegistry {
 		return noArgsBuilder( registrationKey, name ).register();
 	}
 
-	public SqmFunctionTemplate registerNoArgs(String name, AllowableFunctionReturnType returnType) {
+	public SqmFunctionTemplate registerNoArgs(String name, StandardBasicTypes.StandardBasicType<?> returnType) {
 		return registerNoArgs( name, name, returnType );
 	}
 
-	public SqmFunctionTemplate registerNoArgs(String registrationKey, String name, AllowableFunctionReturnType returnType) {
+	public SqmFunctionTemplate registerNoArgs(String registrationKey, String name, StandardBasicTypes.StandardBasicType<?> returnType) {
 		return noArgsBuilder( registrationKey, name )
 				.setInvariantType( returnType )
 				.register();
 	}
 
-	public SqmFunctionTemplate registerVarArgs(String registrationKey, AllowableFunctionReturnType returnType, String begin, String sep, String end) {
+	public SqmFunctionTemplate registerVarArgs(String registrationKey, StandardBasicTypes.StandardBasicType<?> returnType, String begin, String sep, String end) {
 		return varArgsBuilder( registrationKey, begin, sep, end )
 				.setInvariantType( returnType )
 				.register();

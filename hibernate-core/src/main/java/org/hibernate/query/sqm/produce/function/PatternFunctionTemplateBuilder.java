@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.produce.function;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.produce.function.spi.PatternBasedSqmFunctionTemplate;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Steve Ebersole
@@ -37,16 +38,12 @@ public class PatternFunctionTemplateBuilder {
 		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}
 
-	public PatternFunctionTemplateBuilder setArgumentCountBetween(int min, int max) {
-		return setArgumentsValidator( StandardArgumentsValidators.between( min, max ) );
-	}
-
 	public PatternFunctionTemplateBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
 		this.returnTypeResolver = returnTypeResolver;
 		return this;
 	}
 
-	public PatternFunctionTemplateBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
+	public PatternFunctionTemplateBuilder setInvariantType(StandardBasicTypes.StandardBasicType<?> invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}

@@ -54,6 +54,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                 session -> {
                     session.createQuery("select coalesce(null, e.gender, e.convertedGender, e.ordinalGender) from EntityOfBasics e")
                             .list();
+                    session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e")
+                            .list();
                 }
         );
     }

@@ -288,6 +288,7 @@ public abstract class Dialect implements ConversionContext {
 	 *      * atan2
 	 *      * round
 	 * 	    * current_instant
+	 * 	    * ifnull (two-argument synonym for coalesce)
 	 * 		* str 			- defined as `cast(?1 as CHAR )`
 	 *
 	 * TODO: should we continue to support these legacy functions?

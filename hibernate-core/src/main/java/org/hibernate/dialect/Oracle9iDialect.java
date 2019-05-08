@@ -10,10 +10,12 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.CaseFragment;
 
@@ -87,6 +89,14 @@ public class Oracle9iDialect extends Oracle8iDialect {
 		registerColumnType( Types.VARCHAR, "long" );
 		registerColumnType( Types.NVARCHAR, "nvarchar2($l)" );
 		registerColumnType( Types.LONGNVARCHAR, "nvarchar2($l)" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		//Oracle has had coalesce() since 9.0.1
+		CommonFunctionFactory.coalesce( queryEngine );
 	}
 
 	@Override

@@ -809,6 +809,7 @@ currentInstantFunction
 
 extractFunction
 	: EXTRACT LEFT_PAREN extractField FROM expression RIGHT_PAREN
+	| extractField LEFT_PAREN expression RIGHT_PAREN
 	;
 
 extractField

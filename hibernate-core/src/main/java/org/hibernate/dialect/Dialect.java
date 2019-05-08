@@ -277,22 +277,18 @@ public abstract class Dialect implements ConversionContext {
 	 *      * power
 	 *      * floor, ceiling
 	 *
-	 * And several additional "standard" functions:
+	 * And a number of additional "standard" functions:
 	 *
 	 *      * least, greatest
+	 * 	    * ifnull (two-argument synonym for coalesce)
 	 * 	    * ascii
 	 * 	    * chr
 	 *      * replace
 	 *      * sign
-	 *      * sin, cos, tan, asin, acos, atan
-	 *      * atan2
+	 *      * sin, cos, tan, asin, acos, atan, atan2
 	 *      * round
 	 * 	    * current_instant
-	 * 	    * ifnull (two-argument synonym for coalesce)
 	 * 		* str 			- defined as `cast(?1 as CHAR )`
-	 *
-	 * TODO: should we continue to support these legacy functions?
-	 *
 	 * 		* second		- defined as `extract(second from ?1)`
 	 * 		* minute		- defined as `extract(minute from ?1)`
 	 * 		* hour			- defined as `extract(hour from ?1)`

@@ -12,6 +12,8 @@ import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -34,8 +36,9 @@ public class PairedFunctionTemplate extends AbstractSqmFunctionTemplate {
 	public static void register(
 			QueryEngine queryEngine,
 			String name,
-			AllowableFunctionReturnType type,
-			String pattern2, String pattern3) {
+			StandardBasicTypes.StandardBasicType<?> type,
+			String pattern2,
+			String pattern3) {
 		queryEngine.getSqmFunctionRegistry().register(
 				name,
 				new PairedFunctionTemplate(
@@ -57,8 +60,9 @@ public class PairedFunctionTemplate extends AbstractSqmFunctionTemplate {
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 		return ( arguments.size()<3 ? binaryFunction : ternaryFunction )
-				.makeSqmFunctionExpression( arguments, impliedResultType, queryEngine );
+				.makeSqmFunctionExpression( arguments, impliedResultType, queryEngine, typeConfiguration);
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.produce.function;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 
+import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
 
 /**
@@ -46,12 +47,16 @@ public class NamedFunctionTemplateBuilder {
 		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}
 
+	public NamedFunctionTemplateBuilder setMinArgumentCount(int min) {
+		return setArgumentsValidator( StandardArgumentsValidators.min( min ) );
+	}
+
 	public NamedFunctionTemplateBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
 		this.returnTypeResolver = returnTypeResolver;
 		return this;
 	}
 
-	public NamedFunctionTemplateBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
+	public NamedFunctionTemplateBuilder setInvariantType(StandardBasicTypes.StandardBasicType<?> invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
@@ -62,10 +67,7 @@ public class NamedFunctionTemplateBuilder {
 	}
 
 	public SqmFunctionTemplate register() {
-		return registry.register(
-				registrationKey,
-				template()
-		);
+		return registry.register( registrationKey, template() );
 	}
 
 	public SqmFunctionTemplate template() {

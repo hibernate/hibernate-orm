@@ -67,7 +67,8 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 				coalesceFunction.makeSqmFunctionExpression(
 						new ArrayList<>(arguments),
 						(AllowableFunctionReturnType<?>) getExpressableType(),
-						nodeBuilder().getQueryEngine()
+						nodeBuilder().getQueryEngine(),
+						nodeBuilder().getDomainModel().getTypeConfiguration()
 				)
 		);
 	}

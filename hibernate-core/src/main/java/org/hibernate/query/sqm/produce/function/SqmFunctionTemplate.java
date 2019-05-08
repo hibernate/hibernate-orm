@@ -13,6 +13,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.Template;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -25,6 +26,7 @@ import static java.util.Collections.singletonList;
  *
  * @author David Channon
  * @author Steve Ebersole
+ * @author Gavin King
  */
 public interface SqmFunctionTemplate {
 	/**
@@ -38,26 +40,37 @@ public interface SqmFunctionTemplate {
 	<T> SelfRenderingSqmFunction<T> makeSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine);
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration);
 
+	/**
+	 * Convenience for single argument
+	 */
 	default <T> SelfRenderingSqmFunction<T> makeSqmFunctionExpression(
 			SqmTypedNode<?> argument,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 		return makeSqmFunctionExpression(
 				singletonList(argument),
 				impliedResultType,
-				queryEngine
+				queryEngine,
+				typeConfiguration
 		);
 	}
 
+	/**
+	 * Convenience for no arguments
+	 */
 	default <T> SelfRenderingSqmFunction<T> makeSqmFunctionExpression(
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 		return makeSqmFunctionExpression(
 				emptyList(),
 				impliedResultType,
-				queryEngine
+				queryEngine,
+				typeConfiguration
 		);
 	}
 

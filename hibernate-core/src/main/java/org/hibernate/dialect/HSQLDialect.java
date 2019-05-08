@@ -217,8 +217,6 @@ public class HSQLDialect extends Dialect {
 					.register();
 		}
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "str", "cast(?1 as varchar(256))", StandardSpiBasicTypes.STRING );
-
 	}
 
 	@Override

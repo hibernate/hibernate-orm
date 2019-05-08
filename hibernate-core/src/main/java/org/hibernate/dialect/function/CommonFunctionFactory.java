@@ -742,26 +742,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void datetime_extract(QueryEngine queryEngine) {
-		//TODO: re-express these in terms of registered extract() function so
-		//	  they don't need to be redefined by dialect subclasses
-		queryEngine.getSqmFunctionRegistry().registerPattern( "second", "extract(second from ?1)" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "minute", "extract(minute from ?1)" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "hour", "extract(hour from ?1)" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "day", "extract(day from ?1)" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "month", "extract(month from ?1)" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "year", "extract(year from ?1)" );
-	}
-
-	public static void str_cast(QueryEngine queryEngine) {
-		//TODO: re-express this in terms of registered cast() function so
-		//	  it doesn't need to be redefined by dialect subclasses
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "str", "cast(?1 as char)" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount(1)
-				.register();
-	}
-
 	public static void crc32(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "crc32" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )

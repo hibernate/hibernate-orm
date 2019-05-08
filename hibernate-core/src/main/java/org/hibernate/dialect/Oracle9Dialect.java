@@ -121,8 +121,6 @@ public class Oracle9Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
-
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "str", "to_char" );
 	}
 
 	@Override

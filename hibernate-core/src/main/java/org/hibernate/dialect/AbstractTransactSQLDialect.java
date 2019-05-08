@@ -74,6 +74,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.characterLength_len( queryEngine );
+		CommonFunctionFactory.extract_datepart( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "square" )
 				.setExactArgumentCount( 1 )
@@ -90,11 +91,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "hour", "datepart(hour, ?1)" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "extract", "datepart" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 2 )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "mod", "(?1 % ?2)" )

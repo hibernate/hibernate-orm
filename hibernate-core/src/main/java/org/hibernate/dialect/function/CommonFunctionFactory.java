@@ -624,6 +624,14 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void extract_datepart(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datepart" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "extract", "datepart ");
+	}
+
 	public static void cast(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("cast", "cast(?1 as ?2)")
 				.setExactArgumentCount(2)
@@ -778,4 +786,5 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 1 )
 				.register();
 	}
+
 }

@@ -121,8 +121,9 @@ public class StandardFunctionReturnTypeResolvers {
 			throw new QueryException(
 					String.format(
 							Locale.ROOT,
-							"Function argument [%s] at specified position [%d] in call arguments was not typed as an allowable function return type",
+							"Function argument [%s] of type [%s] at specified position [%d] in call arguments was not typed as an allowable function return type",
 							specifiedArgument,
+							specifiedArgType,
 							position
 					)
 			);

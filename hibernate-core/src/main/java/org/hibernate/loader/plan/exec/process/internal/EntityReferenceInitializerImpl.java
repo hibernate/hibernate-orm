@@ -200,21 +200,31 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			processingState.registerEntityInstance( existing );
 			//context.registerHydratedEntity( entityReference, entityKey, existing );
 
-			boolean readFromResults = false;
 			// see if the entity is enhanced and is being used as a "proxy" (is fully uninitialized)
 			final BytecodeEnhancementMetadata enhancementMetadata = entityReference.getEntityPersister()
 					.getEntityMetamodel()
 					.getBytecodeEnhancementMetadata();
+
 			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
 				final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor( existing );
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					readFromResults = true;
+					final LockMode requestedLockMode = context.resolveLockMode( entityReference );
+					final LockMode lockModeToAcquire = requestedLockMode == LockMode.NONE
+							? LockMode.READ
+							: requestedLockMode;
+
+					loadFromResultSet(
+							resultSet,
+							context,
+							existing,
+							getConcreteEntityTypeName( resultSet, context, entityKey ),
+							entityKey,
+							lockModeToAcquire
+					);
 				}
 			}
 
-			if ( ! readFromResults ) {
-				return;
-			}
+			return;
 		}
 
 		// Otherwise, we need to load it from the ResultSet...

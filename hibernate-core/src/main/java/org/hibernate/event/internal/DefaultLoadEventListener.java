@@ -14,6 +14,7 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
@@ -25,6 +26,7 @@ import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -307,7 +309,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			persistenceContext.addEntity(
 					entity,
 					Status.MANAGED,
-					new Object[persister.getPropertyTypes().length],
+					ArrayHelper.filledArray( LazyPropertyInitializer.UNFETCHED_PROPERTY, Object.class, persister.getPropertyTypes().length ),
 					keyToLoad,
 					null,
 					LockMode.NONE,

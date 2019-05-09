@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
@@ -26,8 +25,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 public class PatternRenderer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PatternRenderer.class );
 
-	private final String pattern;
-	private final boolean useParenthesisIfNoArgs;
+//	private final String pattern;
 	private final String[] chunks;
 	private final int[] paramIndexes;
 	private final int paramCount;
@@ -36,11 +34,9 @@ public class PatternRenderer {
 	 * Constructs a template renderer
 	 *
 	 * @param pattern The template
-	 * @param useParenthesisIfNoArgs
 	 */
-	public PatternRenderer(String pattern, boolean useParenthesisIfNoArgs) {
-		this.pattern = pattern;
-		this.useParenthesisIfNoArgs = useParenthesisIfNoArgs;
+	public PatternRenderer(String pattern) {
+//		this.pattern = pattern;
 
 		final Set<Integer> paramNumbers = new HashSet<>();
 		final List<String> chunkList = new ArrayList<>();
@@ -94,9 +90,9 @@ public class PatternRenderer {
 		}
 	}
 
-	public String getPattern() {
-		return pattern;
-	}
+//	public String getPattern() {
+//		return pattern;
+//	}
 
 	public int getAnticipatedNumberOfArguments() {
 		return paramIndexes.length;
@@ -110,16 +106,12 @@ public class PatternRenderer {
 	 * The rendering code.
 	 *
 	 * @param args The arguments to inject into the template
-	 * @param sqlAppender
-	 * @param factory The SessionFactory
-	 * @return The rendered template with replacements
 	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> args,
-			SqlAstWalker walker,
-			SessionFactoryImplementor factory) {
+			SqlAstWalker walker) {
 		final int numberOfArguments = args.size();
 		if ( getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments() ) {
 			LOG.missingArguments( getAnticipatedNumberOfArguments(), numberOfArguments );

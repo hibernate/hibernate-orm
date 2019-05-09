@@ -11,7 +11,10 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -30,7 +33,7 @@ import static java.util.Arrays.asList;
  *
  * @author Steve Ebersole
  */
-public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
+public class TransactSQLTrimEmulation extends AbstractSqmFunctionTemplate {
 	/**
 	 * The default {@code ltrim} function name
 	 */
@@ -73,13 +76,17 @@ public class TransactSQLTrimEmulation implements SqmFunctionTemplate {
 	 * @param replaceFunctionName The <tt>replace</tt> function to use.
 	 */
 	public TransactSQLTrimEmulation(String ltrimFunctionName, String rtrimFunctionName, String replaceFunctionName) {
+		super(
+				StandardArgumentsValidators.exactly( 3 ),
+				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
+		);
 		this.ltrimFunctionName = ltrimFunctionName;
 		this.rtrimFunctionName = rtrimFunctionName;
 		this.replaceFunctionName = replaceFunctionName;
 	}
 
 	@Override
-	public <T> SelfRenderingSqmFunction<T>  makeSqmFunctionExpression(
+	public <T> SelfRenderingSqmFunction<T>  generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine) {

@@ -8,17 +8,14 @@ package org.hibernate.query.sqm.produce.function.spi;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
 
 import org.jboss.logging.Logger;
 
@@ -61,8 +58,7 @@ public class FunctionAsExpressionTemplate
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
-			SqlAstWalker walker,
-			SessionFactoryImplementor sessionFactory) {
+			SqlAstWalker walker) {
 		sqlAppender.appendSql( expressionStart );
 
 		if ( sqlAstArguments.isEmpty() ) {
@@ -70,12 +66,12 @@ public class FunctionAsExpressionTemplate
 		}
 		else {
 			// render the first argument..
-			renderArgument( sqlAppender, sqlAstArguments.get( 0 ), walker, sessionFactory );
+			renderArgument( sqlAppender, sqlAstArguments.get( 0 ), walker );
 
 			// render the rest of the arguments, preceded by the separator
 			for ( int i = 1; i < sqlAstArguments.size(); i++ ) {
 				sqlAppender.appendSql( argumentSeparator );
-				renderArgument( sqlAppender, sqlAstArguments.get( i ), walker, sessionFactory );
+				renderArgument( sqlAppender, sqlAstArguments.get( i ), walker );
 			}
 		}
 
@@ -88,13 +84,12 @@ public class FunctionAsExpressionTemplate
 	 * @param sqlAppender The sql appender to append the rendered argument.
 	 * @param sqlAstArgument The argument being processed.
 	 * @param walker The walker to use for rendering {@link SqlAstNode} expressions
-	 * @param sessionFactory The session factory
 	 */
 	protected void renderArgument(
 			SqlAppender sqlAppender,
 			SqlAstNode sqlAstArgument,
-			SqlAstWalker walker,
-			SessionFactoryImplementor sessionFactory) {
-		sqlAstArgument.accept( walker );
+			SqlAstWalker walker) {
+		sqlAstArgument.accept(walker);
 	}
+
 }

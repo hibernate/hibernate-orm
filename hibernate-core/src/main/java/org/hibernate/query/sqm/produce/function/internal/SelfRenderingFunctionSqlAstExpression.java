@@ -116,6 +116,6 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 			SqlAppender sqlAppender,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
-		sqmExpression.getRenderingSupport().render( sqlAppender, sqlAstArguments, walker, sessionFactory );
+		sqmExpression.getRenderingSupport().render( sqlAppender, sqlAstArguments, walker);
 	}
 }

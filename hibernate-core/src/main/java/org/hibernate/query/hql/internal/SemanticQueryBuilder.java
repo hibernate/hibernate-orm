@@ -2097,6 +2097,38 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public Object visitAddFunction(HqlParser.AddFunctionContext ctx) {
+
+		final SqmExtractUnit<?> extractFieldExpression = (SqmExtractUnit) ctx.extractField().accept(this);
+
+		return getFunctionTemplate("timestampadd").makeSqmFunctionExpression(
+				asList(
+						extractFieldExpression,
+						(SqmExpression) ctx.expression(0).accept( this ),
+						(SqmExpression) ctx.expression(1).accept( this )
+				),
+				extractFieldExpression.getType(),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public Object visitDiffFunction(HqlParser.DiffFunctionContext ctx) {
+
+		final SqmExtractUnit<?> extractFieldExpression = (SqmExtractUnit) ctx.extractField().accept(this);
+
+		return getFunctionTemplate("timestampdiff").makeSqmFunctionExpression(
+				asList(
+						extractFieldExpression,
+						(SqmExpression) ctx.expression(0).accept( this ),
+						(SqmExpression) ctx.expression(1).accept( this )
+				),
+				resolveExpressableTypeBasic( Integer.class ),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
 	public Object visitExtractFunction(HqlParser.ExtractFunctionContext ctx) {
 
 		final SqmExpression<?> expressionToExtract = (SqmExpression) ctx.expression().accept( this );

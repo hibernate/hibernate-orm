@@ -236,9 +236,9 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Initialize the given registry with any dialect-specific functions.
 	 *
-	 * Note that support for certain functions is required, and if the
-	 * database does not support a required function, then the dialect
-	 * must define a way to emulate it.
+	 * Support for certain SQL functions is required, and if the database
+	 * does not support a required function, then the dialect must define
+	 * a way to emulate it.
 	 *
 	 * These required functions include the functions defined by the JPA
 	 * query language specification:
@@ -270,29 +270,43 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * 		* cast
 	 * 		* extract
-	 * 	    * position (alternative syntax for locate)
 	 *      * ln, exp
 	 *      * power
 	 *      * floor, ceiling
 	 *
 	 * And a number of additional "standard" functions:
 	 *
-	 * 	    * ifnull (two-argument synonym for coalesce)
 	 *      * replace
 	 *      * least, greatest
 	 *      * sign
 	 *      * sin, cos, tan, asin, acos, atan, atan2
 	 *      * round
-	 * 	    * current_instant
-	 * 		* str 			- defined as `cast(?1 as CHAR )`
-	 * 		* second		- defined as `extract(second from ?1)`
-	 * 		* minute		- defined as `extract(minute from ?1)`
-	 * 		* hour			- defined as `extract(hour from ?1)`
-	 * 		* day			- defined as `extract(day from ?1)`
-	 * 		* month			- defined as `extract(month from ?1)`
-	 * 		* year			- defined as `extract(year from ?1)`
 	 *
-	 * @param queryEngine
+	 * 	Finally, each Dialect is required to support:
+	 *
+	 * 	    * timestampdiff (aliased to diff)
+	 * 	    * timestampadd (aliased to add)
+	 *
+	 * 	(These can be implemented based on intervals where necessary.)
+	 *
+	 *  In addition to the above functions, HQL implements the
+	 *  following additional "standard" functions as synonyms:
+	 *
+	 *      * ifnull        - two-argument synonym for coalesce
+	 *
+	 * 	    * position      - ANSI SQL alternative syntax for locate
+	 *
+	 * 		* str 			- defined as `cast(arg as varchar)`
+	 *
+	 * 		* second		- defined as `extract(second from arg)`
+	 * 		* minute		- defined as `extract(minute from arg)`
+	 * 		* hour			- defined as `extract(hour from arg)`
+	 * 		* day			- defined as `extract(day from arg)`
+	 * 		* month			- defined as `extract(month from arg)`
+	 * 		* year			- defined as `extract(year from arg)`
+	 *
+	 *      * current_instant
+	 *
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 

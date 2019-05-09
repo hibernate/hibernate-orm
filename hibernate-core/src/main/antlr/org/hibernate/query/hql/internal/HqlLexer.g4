@@ -112,6 +112,7 @@ ARROW :	'->';
 
 // Keywords
 ABS					: [aA] [bB] [sS];
+ADD					: [aA] [dD] [dD];
 AS					: [aA] [sS];
 ALL					: [aA] [lL] [lL];
 AND					: [aA] [nN] [dD];
@@ -137,6 +138,7 @@ CROSS				: [cC] [rR] [oO] [sS] [sS];
 DAY					: [dD] [aA] [yY];
 DELETE				: [dD] [eE] [lL] [eE] [tT] [eE];
 DESC				: [dD] [eE] [sS] [cC];
+DIFF				: [dD] [iI] [fF] [fF];
 DISTINCT			: [dD] [iI] [sS] [tT] [iI] [nN] [cC] [tT];
 ELEMENTS			: [eE] [lL] [eE] [mM] [eE] [nN] [tT] [sS];
 ELSE				: [eE] [lL] [sS] [eE];

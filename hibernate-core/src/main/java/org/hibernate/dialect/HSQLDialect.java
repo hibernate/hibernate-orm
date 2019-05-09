@@ -206,8 +206,8 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.dateadd( queryEngine );
-		CommonFunctionFactory.datediff( queryEngine );
+		CommonFunctionFactory.timestampadd_dateadd( queryEngine );
+		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
 		CommonFunctionFactory.timestampadd( queryEngine );
 		CommonFunctionFactory.timestampdiff( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );

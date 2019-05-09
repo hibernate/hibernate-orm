@@ -575,6 +575,8 @@ countFunction
 standardFunction
 	:	castFunction
 	|	extractFunction
+	|	diffFunction
+	|	addFunction
 	|	concatFunction
 	|	substringFunction
 	|   replaceFunction
@@ -761,8 +763,8 @@ trigFunction
 	;
 
 trigFunctionName
-    : SIN | COS | TAN | ASIN | ACOS | ATAN
-    ;
+	: SIN | COS | TAN | ASIN | ACOS | ATAN
+	;
 
 atan2Function
 	:	ATAN2 LEFT_PAREN expression COMMA expression RIGHT_PAREN
@@ -786,6 +788,14 @@ currentTimestampFunction
 
 currentInstantFunction
 	: CURRENT_INSTANT (LEFT_PAREN RIGHT_PAREN)?
+	;
+
+diffFunction
+	: DIFF LEFT_PAREN extractField COMMA expression COMMA expression RIGHT_PAREN
+	;
+
+addFunction
+	: ADD LEFT_PAREN extractField COMMA expression COMMA expression RIGHT_PAREN
 	;
 
 extractFunction

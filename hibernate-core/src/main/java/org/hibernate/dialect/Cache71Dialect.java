@@ -273,8 +273,8 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.extract_datepart( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.dateadd( queryEngine );
-		CommonFunctionFactory.datediff( queryEngine );
+		CommonFunctionFactory.timestampadd_dateadd( queryEngine );
+		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
 		CommonFunctionFactory.timestampadd( queryEngine );
 		CommonFunctionFactory.timestampdiff( queryEngine );
 

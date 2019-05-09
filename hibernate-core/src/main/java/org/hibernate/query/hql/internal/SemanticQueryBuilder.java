@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.hibernate.NullPrecedence;
 import org.antlr.v4.runtime.Token;
 import org.hibernate.SortOrder;
@@ -760,7 +761,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				}
 			}
 
-			return new SqmLiteral<>( position, resolveExpressableTypeBasic( Integer.class ), creationContext.getNodeBuilder() );
+			return new SqmLiteral<>( position, basicType( Integer.class ), creationContext.getNodeBuilder() );
 		}
 
 		if ( ctx.identifier() != null ) {
@@ -1337,7 +1338,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 						(SqmExpression) ctx.expression( 0 ).accept( this ),
 						(SqmExpression) ctx.expression( 1 ).accept( this )
 				),
-				resolveExpressableTypeBasic( String.class ),
+				basicType( String.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -1477,7 +1478,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmExpression visitCurrentDateFunction(HqlParser.CurrentDateFunctionContext ctx) {
 		return getFunctionTemplate("current_date")
 				.makeSqmFunctionExpression(
-						resolveExpressableTypeBasic( Date.class ),
+						basicType( Date.class ),
 						creationContext.getQueryEngine()
 				);
 	}
@@ -1486,7 +1487,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmExpression visitCurrentTimeFunction(HqlParser.CurrentTimeFunctionContext ctx) {
 		return getFunctionTemplate("current_time")
 				.makeSqmFunctionExpression(
-						resolveExpressableTypeBasic( Time.class ),
+						basicType( Time.class ),
 						creationContext.getQueryEngine()
 				);
 	}
@@ -1495,7 +1496,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmExpression visitCurrentTimestampFunction(HqlParser.CurrentTimestampFunctionContext ctx) {
 		return getFunctionTemplate("current_timestamp")
 				.makeSqmFunctionExpression(
-						resolveExpressableTypeBasic( Timestamp.class ),
+						basicType( Timestamp.class ),
 						creationContext.getQueryEngine()
 				);
 	}
@@ -1504,7 +1505,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmExpression visitCurrentInstantFunction(HqlParser.CurrentInstantFunctionContext ctx) {
 		return getFunctionTemplate("current_timestamp")
 				.makeSqmFunctionExpression(
-						resolveExpressableTypeBasic( Instant.class ),
+						basicType( Instant.class ),
 						creationContext.getQueryEngine()
 				);
 	}
@@ -1652,7 +1653,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	private SqmLiteral<Boolean> booleanLiteral(boolean value) {
-		final BasicValuedExpressableType expressionType = resolveExpressableTypeBasic( Boolean.class );
+		final BasicValuedExpressableType expressionType = basicType( Boolean.class );
 		return new SqmLiteral<>( value, expressionType, creationContext.getQueryEngine().getCriteriaBuilder() );
 	}
 
@@ -1663,7 +1664,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 		return new SqmLiteral<>(
 				text.charAt( 0 ),
-				resolveExpressableTypeBasic( Character.class ),
+				basicType( Character.class ),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -1682,7 +1683,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			final Integer value = Integer.valueOf( text );
 			return new SqmLiteral<>(
 					value,
-					resolveExpressableTypeBasic( Integer.class ),
+					basicType( Integer.class ),
 					creationContext.getQueryEngine().getCriteriaBuilder()
 			);
 		}
@@ -1704,7 +1705,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			final Long value = Long.valueOf( text );
 			return new SqmLiteral<>(
 					value,
-					resolveExpressableTypeBasic( Long.class ),
+					basicType( Long.class ),
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -1725,7 +1726,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			}
 			return new SqmLiteral<>(
 					new BigInteger( text ),
-					resolveExpressableTypeBasic( BigInteger.class  ),
+					basicType( BigInteger.class  ),
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -1742,7 +1743,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		try {
 			return new SqmLiteral<>(
 					Float.valueOf( text ),
-					resolveExpressableTypeBasic( Float.class ),
+					basicType( Float.class ),
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -1759,7 +1760,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		try {
 			return new SqmLiteral<>(
 					Double.valueOf( text ),
-					resolveExpressableTypeBasic( Double.class ),
+					basicType( Double.class ),
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -1780,7 +1781,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			}
 			return new SqmLiteral<>(
 					new BigDecimal( text ),
-					resolveExpressableTypeBasic( BigDecimal.class ),
+					basicType( BigDecimal.class ),
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -1792,7 +1793,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-	private <J> BasicValuedExpressableType<J> resolveExpressableTypeBasic(Class<J> javaType) {
+	private <J> BasicValuedExpressableType<J> basicType(Class<J> javaType) {
 		return creationContext.getDomainModel().getTypeConfiguration().standardExpressableTypeForJavaType( javaType );
 	}
 
@@ -1905,7 +1906,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("ceiling").makeSqmFunctionExpression(
 				arg,
-				resolveExpressableTypeBasic( Long.class ),
+				basicType( Long.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -1916,7 +1917,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("floor").makeSqmFunctionExpression(
 				arg,
-				resolveExpressableTypeBasic( Long.class ),
+				basicType( Long.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -1942,7 +1943,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("sign").makeSqmFunctionExpression(
 				arg,
-				resolveExpressableTypeBasic( Integer.class ),
+				basicType( Integer.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -1977,7 +1978,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate( ctx.trigFunctionName().getText() ).makeSqmFunctionExpression(
 				arg,
-				resolveExpressableTypeBasic( Double.class ),
+				basicType( Double.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -2044,28 +2045,28 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public Object visitDatetimeField(HqlParser.DatetimeFieldContext ctx) {
 		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 		if (ctx.DAY()!=null) {
-			return new SqmExtractUnit<>("day", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("day", basicType( Integer.class ), nodeBuilder);
 		}
 		if (ctx.MONTH()!=null) {
-			return new SqmExtractUnit<>("month", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("month", basicType( Integer.class ), nodeBuilder);
 		}
 		if (ctx.YEAR()!=null) {
-			return new SqmExtractUnit<>("year", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("year", basicType( Integer.class ), nodeBuilder);
 		}
 		if (ctx.HOUR()!=null) {
-			return new SqmExtractUnit<>("hour", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("hour", basicType( Integer.class ), nodeBuilder);
 		}
 		if (ctx.MINUTE()!=null) {
-			return new SqmExtractUnit<>("minute", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("minute", basicType( Integer.class ), nodeBuilder);
 		}
 		if (ctx.SECOND()!=null) {
-			return new SqmExtractUnit<>("second", resolveExpressableTypeBasic( Float.class ), nodeBuilder);
+			return new SqmExtractUnit<>("second", basicType( Float.class ), nodeBuilder);
 		}
 		if (ctx.WEEK()!=null) {
-			return new SqmExtractUnit<>("week", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("week", basicType( Integer.class ), nodeBuilder);
 		}
 		if (ctx.QUARTER()!=null) {
-			return new SqmExtractUnit<>("quarter", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("quarter", basicType( Integer.class ), nodeBuilder);
 		}
 		return super.visitDatetimeField(ctx);
 	}
@@ -2075,11 +2076,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 		if (ctx.MICROSECOND()!=null) {
 			//TODO: need to go back to the dialect, it's called "microseconds" on some
-			return new SqmExtractUnit<>("microsecond", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("microsecond", basicType( Integer.class ), nodeBuilder);
 		}
 		if (ctx.MILLISECOND()!=null) {
 			//TODO: need to go back to the dialect, it's called "milliseconds" on some
-			return new SqmExtractUnit<>("millisecond", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("millisecond", basicType( Integer.class ), nodeBuilder);
 		}
 		return super.visitSecondsField(ctx);
 	}
@@ -2088,10 +2089,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public Object visitTimeZoneField(HqlParser.TimeZoneFieldContext ctx) {
 		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 		if (ctx.TIMEZONE_HOUR()!=null) {
-			return new SqmExtractUnit<>("timezone_hour", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("timezone_hour", basicType( Integer.class ), nodeBuilder);
 		}
 		if (ctx.TIMEZONE_MINUTE()!=null) {
-			return new SqmExtractUnit<>("timezone_minute", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>("timezone_minute", basicType( Integer.class ), nodeBuilder);
 		}
 		return super.visitTimeZoneField(ctx);
 	}
@@ -2122,13 +2123,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmExpression visitCastFunction(HqlParser.CastFunctionContext ctx) {
 
 		final SqmExpression<?> expressionToCast = (SqmExpression) ctx.expression().accept( this );
-		final SqmCastTarget<?> castTargetExpression = interpretCastTarget( ctx.castTarget() );
-
-		//getSessionFactory().getTypeConfiguration().resolveCastTargetType( ctx.dataType().IDENTIFIER().getText() )
-
-//		if ( !AllowableFunctionReturnType.class.isInstance( castTargetExpression ) ) {
-//			throw new SqmProductionException( "Found cast target expression [%s] which is not allowed as a function return" );
-//		}
+		final SqmCastTarget<?> castTargetExpression = (SqmCastTarget) ctx.castTarget().accept( this );
 
 		return getFunctionTemplate("cast").makeSqmFunctionExpression(
 				asList( expressionToCast, castTargetExpression ),
@@ -2137,29 +2132,27 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		);
 	}
 
-	private SqmCastTarget<?> interpretCastTarget(HqlParser.CastTargetContext castTargetContext) {
-		// todo (6.0) : what are the allowable forms of specifying cast-target?
-		// 		the exactness of this is being discussed on the dev ml.  Most
-		//		likely we will accept either:
-		//			1) a String, which might represent:
-		//				a) a Java type name
-		//				b) a java.sql.Types field name (e.g. VARCHAR...)
-		//				c) (not huge fan of this...) a "pass-thru" value
-		//			2) an int signifying the SqlTypeDescriptor (JDBC type code)
+	@Override
+	public SqmCastTarget<?> visitCastTarget(HqlParser.CastTargetContext castTargetContext) {
+		String targetName = castTargetContext.identifier().getText();
 
-		String text = castTargetContext.identifier().getText();
-		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		switch (text.toLowerCase()) {
-			case "string": return new SqmCastTarget<>( resolveExpressableTypeBasic( String.class ), nodeBuilder );
-			case "integer": return new SqmCastTarget<>( resolveExpressableTypeBasic( Integer.class ), nodeBuilder );
-			case "long": return new SqmCastTarget<>( resolveExpressableTypeBasic( Long.class ), nodeBuilder );
-			case "float": return new SqmCastTarget<>( resolveExpressableTypeBasic( Float.class ), nodeBuilder );
-			case "double": return new SqmCastTarget<>( resolveExpressableTypeBasic( Double.class ), nodeBuilder );
-			case "time": return new SqmCastTarget<>( resolveExpressableTypeBasic( Time.class ), nodeBuilder );
-			case "date": return new SqmCastTarget<>( resolveExpressableTypeBasic( Date.class ), nodeBuilder );
-			case "timestamp": return new SqmCastTarget<>( resolveExpressableTypeBasic( Timestamp.class ), nodeBuilder );
-			default: throw new SqmProductionException("unrecognized cast target type: " + text);
+		List<TerminalNode> args = castTargetContext.INTEGER_LITERAL();
+		Long length = args.size() == 1 ? Long.valueOf( args.get(0).getText() ) : null;
+		Integer precision = args.size()>0 ? Integer.valueOf( args.get(0).getText() ) : null;
+		Integer scale = args.size()>1 ? Integer.valueOf( args.get(1).getText() ) : null;
+
+		BasicValuedExpressableType<?> targetType = creationContext.getDomainModel().getTypeConfiguration().resolveCastTargetType(targetName);
+		if ( !AllowableFunctionReturnType.class.isInstance( targetType ) ) {
+			throw new SqmProductionException( "Found cast target expression [%s] which is not allowed as a function return" );
 		}
+
+		return new SqmCastTarget<>(
+				(AllowableFunctionReturnType<?>) targetType,
+				//TODO: is there some way to interpret as length vs precision/scale here at this point?
+				length,
+				precision, scale,
+				creationContext.getNodeBuilder()
+		);
 	}
 
 	@Override
@@ -2194,7 +2187,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("concat").makeSqmFunctionExpression(
 				arguments,
-				resolveExpressableTypeBasic( String.class ),
+				basicType( String.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -2206,7 +2199,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("character_length").makeSqmFunctionExpression(
 				arg,
-				resolveExpressableTypeBasic( Integer.class ),
+				basicType( Integer.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -2219,7 +2212,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("locate").makeSqmFunctionExpression(
 				asList( pattern, string ),
-				resolveExpressableTypeBasic( Integer.class ),
+				basicType( Integer.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -2237,7 +2230,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				start == null
 						? asList( pattern, string )
 						: asList( pattern, string, start ),
-				resolveExpressableTypeBasic( Integer.class ),
+				basicType( Integer.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -2251,7 +2244,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("replace").makeSqmFunctionExpression(
 				asList( string, pattern, replacement ),
-				resolveExpressableTypeBasic( String.class ),
+				basicType( String.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -2259,7 +2252,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public Object visitStrFunction(HqlParser.StrFunctionContext ctx) {
 		final SqmExpression<?> arg = (SqmExpression) ctx.expression().accept( this );
-		BasicValuedExpressableType<String> type = resolveExpressableTypeBasic( String.class );
+		BasicValuedExpressableType<String> type = basicType( String.class );
 		return getFunctionTemplate("cast").makeSqmFunctionExpression(
 				asList( arg, new SqmCastTarget<>( type, creationContext.getNodeBuilder() ) ),
 				type,
@@ -2310,7 +2303,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("avg").makeSqmFunctionExpression(
 				argument,
-				resolveExpressableTypeBasic( Double.class ),
+				basicType( Double.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -2325,7 +2318,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("count").makeSqmFunctionExpression(
 				argument,
-				resolveExpressableTypeBasic( Long.class ),
+				basicType( Long.class ),
 				creationContext.getQueryEngine()
 		);
 	}
@@ -2340,7 +2333,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("substring").makeSqmFunctionExpression(
 				length==null ? asList( source, start ) : asList( source, start, length ),
-				resolveExpressableTypeBasic( String.class ),
+				basicType( String.class ),
 				creationContext.getQueryEngine()
 		);
 
@@ -2352,16 +2345,17 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return getFunctionTemplate("trim").makeSqmFunctionExpression(
 				asList(
-						interpretTrimSpecification( ctx.trimSpecification() ),
-						visitTrimCharacter( ctx.trimCharacter() ),
+						(SqmTrimSpecification) ctx.trimSpecification().accept( this ),
+						(SqmLiteral<Character>) ctx.trimCharacter().accept( this ),
 						source
 				),
-				resolveExpressableTypeBasic( String.class ),
+				basicType( String.class ),
 				creationContext.getQueryEngine()
 		);
 	}
 
-	private SqmTrimSpecification interpretTrimSpecification(HqlParser.TrimSpecificationContext ctx) {
+	@Override
+	public SqmTrimSpecification visitTrimSpecification(HqlParser.TrimSpecificationContext ctx) {
 		TrimSpec spec = TrimSpec.BOTH;	// JPA says the default is BOTH
 
 		if ( ctx.LEADING() != null ) {
@@ -2385,7 +2379,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			}
 			return new SqmLiteral<>(
 					trimCharText.charAt( 0 ),
-					resolveExpressableTypeBasic( Character.class ),
+					basicType( Character.class ),
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -2397,7 +2391,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			}
 			return new SqmLiteral<>(
 					trimCharText.charAt( 0 ),
-					resolveExpressableTypeBasic( Character.class ),
+					basicType( Character.class ),
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -2405,7 +2399,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		// JPA says space is the default
 		return new SqmLiteral<>(
 				' ',
-				resolveExpressableTypeBasic( Character.class ),
+				basicType( Character.class ),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -2414,7 +2408,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmCollectionSize visitCollectionSizeFunction(HqlParser.CollectionSizeFunctionContext ctx) {
 		return new SqmCollectionSize(
 				consumeDomainPath( ctx.path() ),
-				resolveExpressableTypeBasic( Integer.class ),
+				basicType( Integer.class ),
 				creationContext.getNodeBuilder()
 		);
 	}

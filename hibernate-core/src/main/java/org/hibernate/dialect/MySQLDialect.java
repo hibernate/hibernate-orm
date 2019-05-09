@@ -28,7 +28,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -36,7 +35,11 @@ import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.descriptor.sql.spi.BinarySqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NumericSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.StandardSqlExpressableTypeImpl;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -373,58 +376,46 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getCastTypeName(int code) {
-		switch ( code ) {
-			case Types.BOOLEAN:
-				return "char";
+	public String getCastTypeName(SqlExpressableType type, Long length, Integer precision, Integer scale) {
+		switch ( type.getSqlTypeDescriptor().getJdbcTypeCode() ) {
 			case Types.INTEGER:
 			case Types.BIGINT:
 			case Types.SMALLINT:
-				return smallIntegerCastTarget();
+			case Types.TINYINT:
+				//MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
+				return "signed";
 			case Types.FLOAT:
-			case Types.REAL: {
-				return floatingPointNumberCastTarget();
-			}
-			case Types.NUMERIC:
-				return fixedPointNumberCastTarget();
-			case Types.VARCHAR:
-				return "char";
+			case Types.DOUBLE:
+			case Types.REAL:
+				//MySQL doesn't let you cast to DOUBLE/FLOAT
+				//but don't just return 'decimal' because
+				//the default scale is 0 (no decimal places)
+				return String.format(
+						"decimal(%d, %d)",
+						precision == null ? type.getJavaTypeDescriptor().getDefaultSqlPrecision() : precision,
+						scale == null ? type.getJavaTypeDescriptor().getDefaultSqlScale() : scale
+				);
 			case Types.VARBINARY:
-				return "binary";
+			case Types.LONGVARBINARY:
+				//MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
+				//we could just return 'binary' here but that would be
+				//inconsistent with other Dialects which need a length
+				return String.format(
+						"binary(%d)",
+						length == null ? type.getJavaTypeDescriptor().getDefaultSqlLength() : length
+				);
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+				//MySQL doesn't let you cast to TEXT/LONGTEXT
+				//we could just return 'char' here but that would be
+				//inconsistent with other Dialects which need a length
+				return String.format(
+						"char(%d)",
+						length == null ? type.getJavaTypeDescriptor().getDefaultSqlLength() : length
+				);
 			default:
-				return super.getCastTypeName( code );
+				return super.getCastTypeName( type, length, precision, scale );
 		}
-	}
-
-	/**
-	 * Determine the cast target for {@link Types#INTEGER}, {@link Types#BIGINT} and {@link Types#SMALLINT}
-	 *
-	 * @return The proper cast target type.
-	 */
-	protected String smallIntegerCastTarget() {
-		return "signed";
-	}
-
-	/**
-	 * Determine the cast target for {@link Types#FLOAT} and {@link Types#REAL} (DOUBLE)
-	 *
-	 * @return The proper cast target type.
-	 */
-	protected String floatingPointNumberCastTarget() {
-		// MySQL does not allow casting to DOUBLE nor FLOAT, so we have to cast these as DECIMAL.
-		// MariaDB does allow casting to DOUBLE, although not FLOAT.
-		return fixedPointNumberCastTarget();
-	}
-
-	/**
-	 * Determine the cast target for {@link Types#NUMERIC}
-	 *
-	 * @return The proper cast target type.
-	 */
-	protected String fixedPointNumberCastTarget() {
-		// NOTE : the precision/scale are somewhat arbitrary choices, but MySQL/MariaDB
-		// effectively require *some* values
-		return "decimal(" + Size.Builder.DEFAULT_PRECISION + "," + Size.Builder.DEFAULT_SCALE + ")";
 	}
 
 	@Override

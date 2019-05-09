@@ -138,4 +138,19 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 //		return charValue == 't' || charValue == 'T' || charValue == 'y' || charValue == 'Y';
 		return charValue == 'T';
 	}
+
+	@Override
+	public long getDefaultSqlLength() {
+		return 1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 1;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
+	}
 }

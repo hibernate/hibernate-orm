@@ -98,6 +98,7 @@ import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -115,11 +116,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-
-import static org.hibernate.query.sqm.produce.function.StandardArgumentsValidators.min;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
@@ -522,13 +519,33 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type appropriate for casting operations
-	 * (via the CAST() SQL function) for the given {@link java.sql.Types} typecode.
+	 * (via the CAST() SQL function) for the given {@link SqlExpressableType}
+	 * SQL type.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
 	 * @return The database type name
 	 */
-	public String getCastTypeName(int code) {
-		return getTypeName( code, Size.Builder.DEFAULT_LENGTH, Size.Builder.DEFAULT_PRECISION, Size.Builder.DEFAULT_SCALE );
+	public String getCastTypeName(SqlExpressableType type, Long length, Integer precision, Integer scale) {
+		Size size;
+		if ( length == null && precision == null ) {
+			//use defaults
+			size = getDefaultSizeStrategy().resolveDefaultSize(
+					type.getSqlTypeDescriptor(),
+					type.getJavaTypeDescriptor()
+			);
+		}
+		else {
+			//use the given length/precision/scale
+			if ( precision != null && scale == null ) {
+				//needed for cast(x as BigInteger(p))
+				scale = type.getJavaTypeDescriptor().getDefaultSqlScale();
+			}
+			size = new Size.Builder().setLength( length )
+					.setPrecision( precision )
+					.setScale( scale )
+					.cast();
+		}
+
+		return getTypeName( type.getSqlTypeDescriptor().getJdbcTypeCode(), size );
 	}
 
 	/**
@@ -3241,17 +3258,21 @@ public abstract class Dialect implements ConversionContext {
 					|| jdbcTypeCode == Types.LONGVARCHAR
 					|| jdbcTypeCode == Types.NCHAR
 					|| jdbcTypeCode == Types.NVARCHAR
-					|| jdbcTypeCode == Types.LONGNVARCHAR ) {
-				builder.setLength( Size.Builder.DEFAULT_LENGTH );
+					|| jdbcTypeCode == Types.LONGNVARCHAR
+					|| jdbcTypeCode == Types.BINARY ) {
+				builder.setLength( javaType.getDefaultSqlLength() );
 				return builder.build();
 			}
-			else if ( jdbcTypeCode == Types.FLOAT ) {
-				builder.setPrecision( Size.Builder.DEFAULT_PRECISION );
+			else if ( jdbcTypeCode == Types.FLOAT
+					|| jdbcTypeCode == Types.DOUBLE
+					|| jdbcTypeCode == Types.REAL ) {
+				builder.setPrecision( javaType.getDefaultSqlPrecision() );
 				return builder.build();
 			}
-			else if ( jdbcTypeCode == Types.NUMERIC ) {
-				builder.setPrecision( Size.Builder.DEFAULT_PRECISION );
-				builder.setScale( Size.Builder.DEFAULT_SCALE );
+			else if ( jdbcTypeCode == Types.NUMERIC
+					|| jdbcTypeCode == Types.DECIMAL ) {
+				builder.setPrecision( javaType.getDefaultSqlPrecision() );
+				builder.setScale( javaType.getDefaultSqlScale() );
 				return builder.build();
 			}
 			return null;

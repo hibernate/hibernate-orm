@@ -421,11 +421,15 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitCastTarget(CastTarget target) {
-		int typecode = target.getExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
-		String type = sessionFactory.getJdbcServices().getDialect().getCastTypeName( typecode );
-		appendSql( type );
+		appendSql(
+				sessionFactory.getJdbcServices().getDialect().getCastTypeName(
+						target.getExpressableType(),
+						target.getLength(),
+						target.getPrecision(),
+						target.getScale()
+				)
+		);
 	}
-
 
 	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {

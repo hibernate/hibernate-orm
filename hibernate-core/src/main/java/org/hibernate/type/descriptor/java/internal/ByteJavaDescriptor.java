@@ -105,4 +105,20 @@ public class ByteJavaDescriptor extends AbstractNumericJavaDescriptor<Byte> impl
 	public VersionSupport<Byte> getVersionSupport() {
 		return ByteVersionSupport.INSTANCE ;
 	}
+
+	@Override
+	public long getDefaultSqlLength() {
+		return 1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 3;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
+	}
+
 }

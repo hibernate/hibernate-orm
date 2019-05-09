@@ -114,4 +114,20 @@ public class IntegerJavaDescriptor extends AbstractNumericJavaDescriptor<Integer
 	public VersionSupport<Integer> getVersionSupport() {
 		return IntegerVersionSupport.INSTANCE;
 	}
+
+	@Override
+	public long getDefaultSqlLength() {
+		return getDefaultSqlPrecision()+1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 10;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
+	}
+
 }

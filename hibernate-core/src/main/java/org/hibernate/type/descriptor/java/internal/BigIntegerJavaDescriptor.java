@@ -29,7 +29,7 @@ public class BigIntegerJavaDescriptor extends AbstractNumericJavaDescriptor<BigI
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BIGINT );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NUMERIC );
 	}
 
 	@Override
@@ -93,4 +93,20 @@ public class BigIntegerJavaDescriptor extends AbstractNumericJavaDescriptor<BigI
 		}
 		throw unknownWrap( value.getClass() );
 	}
+
+	@Override
+	public long getDefaultSqlLength() {
+		return getDefaultSqlPrecision()+1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 38;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
+	}
+
 }

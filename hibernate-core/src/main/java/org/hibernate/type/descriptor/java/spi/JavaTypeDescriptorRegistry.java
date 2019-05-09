@@ -56,7 +56,7 @@ public class JavaTypeDescriptorRegistry implements Serializable, JavaTypeDescrip
 		if ( descriptor.getJavaType() == null ) {
 			throw new IllegalStateException( "Illegal to add BasicJavaTypeDescriptor with null Java type" );
 		}
-		addBaselineDescriptor( (Class) descriptor.getJavaType(), descriptor );
+		addBaselineDescriptor( descriptor.getJavaType(), descriptor );
 	}
 
 	@Override

@@ -163,5 +163,12 @@ public class Size implements Serializable {
 
 			return new Size( precision, scale, length, lobMultiplier );
 		}
+
+		public Size cast() {
+			// disable the above checks because in Dialect.getCastTypeName()
+			// we don't know whether what we have is a length or a precision
+			// (the cast target syntax is ambiguous)
+			return new Size( precision, scale, length, lobMultiplier );
+		}
 	}
 }

@@ -227,9 +227,50 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     public void testCastFunction() {
         inTransaction(
                 session -> {
-                    session.createQuery("select cast(e.theDate as string), cast(e.theTime as string), cast(e.theTimestamp as string) from EntityOfBasics e")
+                    session.createQuery("select cast(e.theDate as String), cast(e.theTime as String), cast(e.theTimestamp as String) from EntityOfBasics e")
                             .list();
-                    session.createQuery("select cast(e.id as string), cast(e.theInt as string), cast(e.theDouble as string) from EntityOfBasics e")
+                    session.createQuery("select cast(e.id as String), cast(e.theInt as String), cast(e.theDouble as String) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select cast(e.id as Float), cast(e.theInt as Double), cast(e.theDouble as Long) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select cast(e.id as BigInteger(10)), cast(e.theDouble as BigDecimal(10,5)) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(8)) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select cast(e.theString as Binary) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select cast(e.theString as Binary(10)) from EntityOfBasics e")
+                            .list();
+
+                    session.createQuery("select cast('1002342345234523.452435245245243' as BigDecimal) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1002342345234523.452435245245243' as BigDecimal(30, 10)) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1234234523452345243524524524' as BigInteger) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1234234523452345243524524524' as BigInteger(30)) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('3811234234.12312' as Double) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1234234' as Integer) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast(1 as Boolean), cast(0 as Boolean) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('ABCDEF' as Character) from EntityOfBasics")
+                            .list();
+
+                    session.createQuery("select cast('12:13:14' as Time) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1911-10-09' as Date) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1911-10-09 12:13:14.123' as Timestamp) from EntityOfBasics")
+                            .list();
+
+                    session.createQuery("select cast('12:13:14' as LocalTime) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1911-10-09' as LocalDate) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1911-10-09 12:13:14.123' as LocalDateTime) from EntityOfBasics")
                             .list();
                 }
         );

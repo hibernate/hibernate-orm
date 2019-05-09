@@ -64,6 +64,9 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.type = type;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
 	}
 
 	public AllowableFunctionReturnType<T> getType() {

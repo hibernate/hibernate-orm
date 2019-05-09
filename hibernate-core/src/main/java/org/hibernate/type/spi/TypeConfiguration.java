@@ -10,7 +10,13 @@ import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -23,7 +29,6 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
@@ -562,14 +567,49 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	}
 
-	public BasicType resolveCastTargetType(String name) {
-		throw new NotYetImplementedException(  );
+	/**
+	 * Understands the following target type names for the cast() function:
+	 *
+	 * - String
+	 * - Character
+	 * - Byte, Integer, Long
+	 * - Float, Double
+	 * - Time, Date, Timestamp
+	 * - LocalDate, LocalTime, LocalDateTime
+	 * - BigInteger
+	 * - BigDecimal
+	 * - Binary
+	 * - Boolean (fragile)
+	 *
+	 * (The type names are not case-sensitive.)
+	 */
+	public BasicValuedExpressableType<?> resolveCastTargetType(String name) {
+		switch ( name.toLowerCase() ) {
+			case "string": return standardExpressableTypeForJavaType( String.class );
+			case "character": return standardExpressableTypeForJavaType( Character.class );
+			case "byte": return standardExpressableTypeForJavaType( Byte.class );
+			case "integer": return standardExpressableTypeForJavaType( Integer.class );
+			case "long": return standardExpressableTypeForJavaType( Long.class );
+			case "float": return standardExpressableTypeForJavaType( Float.class );
+			case "double": return standardExpressableTypeForJavaType( Double.class );
+			case "time": return standardExpressableTypeForJavaType( Time.class );
+			case "date": return standardExpressableTypeForJavaType( Date.class );
+			case "timestamp": return standardExpressableTypeForJavaType( Timestamp.class );
+			case "localtime": return standardExpressableTypeForJavaType( LocalTime.class );
+			case "localdate": return standardExpressableTypeForJavaType( LocalDate.class );
+			case "localdatetime": return standardExpressableTypeForJavaType( LocalDateTime.class );
+			case "biginteger": return standardExpressableTypeForJavaType( BigInteger.class );
+			case "bigdecimal": return standardExpressableTypeForJavaType( BigDecimal.class );
+			case "binary":
+				//TODO: why does this not work:
+//				standardExpressableTypeForJavaType( byte[].class );
+				return resolveStandardBasicType( StandardSpiBasicTypes.BINARY );
+			//this one is very fragile ... works well for BIT or BOOLEAN columns only
+			//works OK, I suppose, for integer columns, but not at all for char columns
+			case "boolean": return standardExpressableTypeForJavaType( Boolean.class );
+			default: throw new HibernateException( "unrecognized cast target type: " + name );
+		}
 	}
-
-
-
-
-
 
 	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in

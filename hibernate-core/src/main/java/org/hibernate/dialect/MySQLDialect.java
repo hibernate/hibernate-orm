@@ -28,7 +28,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -429,37 +428,6 @@ public class MySQLDialect extends Dialect {
 			default:
 				return super.getCastTypeName( type, length, precision, scale );
 		}
-	}
-
-	/**
-	 * Determine the cast target for {@link Types#INTEGER}, {@link Types#BIGINT} and {@link Types#SMALLINT}
-	 *
-	 * @return The proper cast target type.
-	 */
-	protected String smallIntegerCastTarget() {
-		return "signed";
-	}
-
-	/**
-	 * Determine the cast target for {@link Types#FLOAT} and {@link Types#REAL} (DOUBLE)
-	 *
-	 * @return The proper cast target type.
-	 */
-	protected String floatingPointNumberCastTarget() {
-		// MySQL does not allow casting to DOUBLE nor FLOAT, so we have to cast these as DECIMAL.
-		// MariaDB does allow casting to DOUBLE, although not FLOAT.
-		return fixedPointNumberCastTarget();
-	}
-
-	/**
-	 * Determine the cast target for {@link Types#NUMERIC}
-	 *
-	 * @return The proper cast target type.
-	 */
-	protected String fixedPointNumberCastTarget() {
-		// NOTE : the precision/scale are somewhat arbitrary choices, but MySQL/MariaDB
-		// effectively require *some* values
-		return "decimal(" + Size.Builder.DEFAULT_PRECISION + "," + Size.Builder.DEFAULT_SCALE + ")";
 	}
 
 	@Override

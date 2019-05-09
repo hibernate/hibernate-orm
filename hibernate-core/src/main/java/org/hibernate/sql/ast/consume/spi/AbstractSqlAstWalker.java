@@ -430,7 +430,6 @@ public abstract class AbstractSqlAstWalker
 		);
 	}
 
-
 	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {
 		final boolean useSelectionPosition = getSessionFactory().getJdbcServices()

@@ -15,6 +15,7 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.WrongClassException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -40,6 +41,7 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -326,7 +328,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			persistenceContext.addEntity(
 					entity,
 					Status.MANAGED,
-					new Object[persister.getPropertyTypes().length],
+					ArrayHelper.filledArray( LazyPropertyInitializer.UNFETCHED_PROPERTY, Object.class, persister.getPropertyTypes().length ),
 					keyToLoad,
 					null,
 					LockMode.NONE,

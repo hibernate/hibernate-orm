@@ -25,6 +25,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
+import org.hibernate.ScrollableResults;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
@@ -37,11 +38,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -120,6 +120,57 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					assert !Hibernate.isPropertyInitialized( entityD, "a" );
 					assert !Hibernate.isPropertyInitialized( entityD, "c" );
 					assert !Hibernate.isPropertyInitialized( entityD, "e" );
+				}
+		);
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-11147" )
+	public void testFetchingScroll() {
+		final StatisticsImplementor stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		assert sessionFactory().getMetamodel()
+				.entityPersister( DEntity.class )
+				.getBytecodeEnhancementMetadata()
+				.isEnhancedForLazyLoading();
+
+
+		inStatelessSession(
+				session -> {
+					final String qry = "select e from E e join fetch e.d";
+
+					final ScrollableResults scrollableResults = session.createQuery( qry ).scroll();
+					while ( scrollableResults.next() ) {
+						System.out.println( "Got entity : " + scrollableResults.get( 0 ) );
+					}
+				}
+		);
+
+		inStatelessSession(
+				session -> {
+					final String qry = "select d from D d " +
+							"join fetch d.a " +
+							"join fetch d.bs " +
+							"join fetch d.c " +
+							"join fetch d.e " +
+							"join fetch d.g";
+
+					final ScrollableResults scrollableResults = session.createQuery( qry ).scroll();
+					while ( scrollableResults.next() ) {
+						System.out.println( "Got entity : " + scrollableResults.get( 0 ) );
+					}
+				}
+		);
+
+		inStatelessSession(
+				session -> {
+					final String qry = "select g from G g join fetch g.dEntities";
+
+					final ScrollableResults scrollableResults = session.createQuery( qry ).scroll();
+					while ( scrollableResults.next() ) {
+						System.out.println( "Got entity : " + scrollableResults.get( 0 ) );
+					}
 				}
 		);
 	}

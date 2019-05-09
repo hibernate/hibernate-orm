@@ -123,11 +123,14 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.timestampadd( queryEngine );
+		CommonFunctionFactory.timestampdiff( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
 

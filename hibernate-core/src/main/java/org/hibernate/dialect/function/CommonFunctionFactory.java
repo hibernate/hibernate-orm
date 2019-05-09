@@ -18,6 +18,7 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * Dialects
  *
  * @author Steve Ebersole
+ * @author Gavin King
  */
 public class CommonFunctionFactory {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -385,9 +386,17 @@ public class CommonFunctionFactory {
 
 	public static void lastDay(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "last_day" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.setExactArgumentCount( 1 )
 				.register();
+	}
+
+	public static void lastDay_eomonth(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "eomonth" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "last_date", "eomonth" );
 	}
 
 	public static void ceiling_ceil(QueryEngine queryEngine) {
@@ -635,6 +644,10 @@ public class CommonFunctionFactory {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
 				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datename" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "extract", "datepart ");
 	}
 
@@ -770,6 +783,156 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "sha" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void timestampadd(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("timestampadd")
+				.setReturnTypeResolver(useArgType(3))
+				.setExactArgumentCount(3)
+				.register();
+	}
+
+	public static void timestampdiff(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "timestampdiff" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	/**
+	 * Transact SQL style, accepts (datepart, int, datetime)
+	 * and returns a datetime type
+	 */
+	public static void dateadd(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "dateadd" )
+				.setReturnTypeResolver( useArgType(3) )
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	/**
+	 * Transact SQL style, accepts (datepart, startdatetime, enddatetime)
+	 * and returns an int
+	 */
+	public static void datediff(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datediff" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	/**
+	 * MySQL style, returns the number of days between two dates
+	 */
+	public static void datediff2(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datediff" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	/**
+	 * MySQL style
+	 */
+	public static void adddateSubdateAddtimeSubtime(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "adddate" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "subdate" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "addtime" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "subtime" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void addMonths(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("add_months")
+				.setReturnTypeResolver(useArgType(1))
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	public static void monthsBetween(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("months_between")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	public static void daysBetween(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("days_between")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	public static void secondsBetween(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("seconds_between")
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	public static void yearsMonthsDaysHoursMinutesSecondsBetween(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("years_between")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount(2)
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("months_between")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount(2)
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("days_between")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount(2)
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("hours_between")
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount(2)
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("minutes_between")
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount(2)
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("seconds_between")
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	public static void addYearsMonthsDaysHoursMinutesSeconds(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_years" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_months" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_days" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_hours" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_minutes" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_seconds" )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
 				.register();
 	}
 

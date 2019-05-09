@@ -162,6 +162,8 @@ public class Oracle8iDialect extends Dialect {
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 

@@ -94,6 +94,10 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory.timestampadd( queryEngine );
+		CommonFunctionFactory.timestampdiff( queryEngine );
 	}
 
 	@Override

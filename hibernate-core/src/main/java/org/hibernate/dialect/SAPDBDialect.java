@@ -90,6 +90,9 @@ public class SAPDBDialect extends Dialect {
 		//since lpad/rpad are not actually useful padding
 		//functions, map them to lfill/rfill
 		CommonFunctionFactory.pad_fill( queryEngine );
+		CommonFunctionFactory.datediff2( queryEngine );
+		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", StandardSpiBasicTypes.INTEGER );
 

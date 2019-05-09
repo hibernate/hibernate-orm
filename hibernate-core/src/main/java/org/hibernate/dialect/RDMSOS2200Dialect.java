@@ -190,6 +190,10 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory.timestampadd( queryEngine );
+		CommonFunctionFactory.timestampdiff( queryEngine );
 
 		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );

@@ -101,6 +101,8 @@ public class InformixDialect extends Dialect {
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
 
 		//coalesce() and nullif() both supported since Informix 12
 

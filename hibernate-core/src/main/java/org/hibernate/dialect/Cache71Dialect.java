@@ -269,9 +269,14 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
-		CommonFunctionFactory.extract_datepart( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.extract_datepart( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.dateadd( queryEngine );
+		CommonFunctionFactory.datediff( queryEngine );
+		CommonFunctionFactory.timestampadd( queryEngine );
+		CommonFunctionFactory.timestampdiff( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
 
@@ -301,6 +306,9 @@ public class Cache71Dialect extends Dialect {
 		useJdbcEscape(queryEngine, "dayofweek");
 		useJdbcEscape(queryEngine, "dayofmonth");
 		useJdbcEscape(queryEngine, "dayofyear");
+
+		useJdbcEscape(queryEngine, "timestampadd");
+		useJdbcEscape(queryEngine, "timestampdiff");
 	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

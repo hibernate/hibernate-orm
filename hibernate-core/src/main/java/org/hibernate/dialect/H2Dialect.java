@@ -171,6 +171,10 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.dateadd( queryEngine );
+		CommonFunctionFactory.datediff( queryEngine );
+		CommonFunctionFactory.timestampadd( queryEngine );
+		CommonFunctionFactory.timestampdiff( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )

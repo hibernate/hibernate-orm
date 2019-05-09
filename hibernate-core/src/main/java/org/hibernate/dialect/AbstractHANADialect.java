@@ -297,7 +297,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.characterLength_length( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
-
+		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
+		CommonFunctionFactory.daysBetween( queryEngine );
+		CommonFunctionFactory.secondsBetween( queryEngine );
 	}
 
 	@Override

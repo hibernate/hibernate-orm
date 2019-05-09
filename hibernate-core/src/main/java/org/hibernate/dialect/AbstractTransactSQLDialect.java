@@ -76,6 +76,9 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.characterLength_len( queryEngine );
 		CommonFunctionFactory.extract_datepart( queryEngine );
+		CommonFunctionFactory.dateadd( queryEngine );
+		CommonFunctionFactory.datediff( queryEngine );
+		CommonFunctionFactory.lastDay_eomonth( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "square" )
 				.setExactArgumentCount( 1 )

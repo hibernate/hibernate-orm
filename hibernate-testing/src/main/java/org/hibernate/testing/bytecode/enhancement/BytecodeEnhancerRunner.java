@@ -231,7 +231,8 @@ public class BytecodeEnhancerRunner extends Suite {
 					}
 					catch ( Throwable t ) {
 						throw new ClassNotFoundException( name + " not found", t );
-					}				}
+					}
+				}
 			}
 
 			return getParent().loadClass( name );

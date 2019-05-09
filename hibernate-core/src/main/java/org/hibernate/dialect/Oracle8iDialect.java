@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.OracleTimestampaddEmulation;
+import org.hibernate.dialect.function.OracleTimestampdiffEmulation;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -168,6 +170,10 @@ public class Oracle8iDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
+
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new OracleTimestampaddEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new OracleTimestampdiffEmulation() );
+
 	}
 
 	protected void registerCharacterTypeMappings() {

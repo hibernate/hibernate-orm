@@ -786,6 +786,9 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * JDBC-style, accepts (interval, count, timestamp)
+	 */
 	public static void timestampadd(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("timestampadd")
 				.setReturnTypeResolver(useArgType(3))
@@ -793,6 +796,9 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * JDBC-style, accepts (interval, count, timestamp1, timestamp2)
+	 */
 	public static void timestampdiff(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "timestampdiff" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )

@@ -20,6 +20,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.PostgresTimestampaddEmulation;
+import org.hibernate.dialect.function.PostgresTimestampdiffEmulation;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -139,6 +141,10 @@ public class PostgreSQL81Dialect extends Dialect {
 				.register();
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
+
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new PostgresTimestampaddEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new PostgresTimestampdiffEmulation() );
+
 	}
 
 	@Override
@@ -635,4 +641,5 @@ public class PostgreSQL81Dialect extends Dialect {
 			default: return fieldName;
 		}
 	}
+
 }

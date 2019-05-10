@@ -171,12 +171,12 @@ public class EntitySharedInCollectionAndToOneTest extends BaseNonConfigCoreFunct
 	@Entity( name = "CodeTable" )
 	@Table( name = "code_table" )
 	public static class CodeTable extends BaseEntity {
-		@OneToOne( fetch = FetchType.LAZY, cascade = CascadeType.REMOVE )
+		@OneToOne( fetch = FetchType.LAZY )
 		@LazyGroup( "defaultCodeTableItem" )
 		@JoinColumn( name = "default_code_id" )
 		private CodeTableItem defaultItem;
 
-		@OneToMany( mappedBy = "codeTable", cascade = CascadeType.REMOVE )
+		@OneToMany( mappedBy = "codeTable" )
 		private Set<CodeTableItem> codeTableItems = new HashSet<>();
 
 		public CodeTable() {

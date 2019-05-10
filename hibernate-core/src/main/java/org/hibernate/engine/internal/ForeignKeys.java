@@ -177,10 +177,7 @@ public final class ForeignKeys {
 				//       superclass or the same as the entity type of a nullifiable entity).
 				//       It is unclear if a more complicated check would impact performance
 				//       more than just initializing the associated entity.
-				return persister
-						.getBytecodeEnhancementMetadata()
-						.extractInterceptor( self )
-						.fetchAttribute( self, propertyName );
+				return ( (LazyPropertyInitializer) persister ).initializeLazyProperty( propertyName, self, session );
 			}
 			else {
 				return value;

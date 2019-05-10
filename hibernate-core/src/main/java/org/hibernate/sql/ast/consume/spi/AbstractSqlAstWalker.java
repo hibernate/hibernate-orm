@@ -22,8 +22,8 @@ import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 
-import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -426,6 +426,13 @@ public abstract class AbstractSqlAstWalker
 		appendSql( type );
 	}
 
+	@Override
+	public void visitFormat(Format format) {
+		String dialectFormat = sessionFactory.getJdbcServices().getDialect().translateDatetimeFormat( format.getFormat() );
+		appendSql("'");
+		appendSql(dialectFormat);
+		appendSql("'");
+	}
 
 	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {

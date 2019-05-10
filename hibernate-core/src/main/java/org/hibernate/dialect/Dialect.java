@@ -115,11 +115,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-
-import static org.hibernate.query.sqm.produce.function.StandardArgumentsValidators.min;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
@@ -292,6 +288,8 @@ public abstract class Dialect implements ConversionContext {
 	 *  In addition to the above functions, HQL implements the
 	 *  following additional "standard" functions as synonyms:
 	 *
+	 *      * format
+	 *
 	 *      * ifnull        - two-argument synonym for coalesce
 	 *
 	 * 	    * position      - ANSI SQL alternative syntax for locate
@@ -358,6 +356,10 @@ public abstract class Dialect implements ConversionContext {
 		//comparison functions supported on every known database
 
 		CommonFunctionFactory.leastGreatest(queryEngine);
+
+		//datetime formatting function, Oracle-style to_char() on most databases
+
+		CommonFunctionFactory.formatdatetime_toChar(queryEngine);
 
 	}
 
@@ -3271,4 +3273,12 @@ public abstract class Dialect implements ConversionContext {
 			return null;
 		}
 	}
+
+	public String translateDatetimeFormat(String format) {
+		//most databases support a datetime format
+		//copied from Oracle's to_char() function,
+		//with some minor variation
+		return Oracle8iDialect.datetimeFormat( format, true ).result();
+	}
+
 }

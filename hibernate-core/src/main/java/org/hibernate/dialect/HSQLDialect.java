@@ -656,4 +656,16 @@ public class HSQLDialect extends Dialect {
 	public String getCascadeConstraintsString() {
 		return " CASCADE ";
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return Oracle8iDialect.datetimeFormat( format, false )
+				.replace("SSSSSS", "FF")
+				.replace("SSSSS", "FF")
+				.replace("SSSS", "FF")
+				.replace("SSS", "FF")
+				.replace("SS", "FF")
+				.replace("S", "FF")
+				.result();
+	}
 }

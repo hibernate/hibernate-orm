@@ -604,4 +604,26 @@ public class PostgreSQL81Dialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//TODO: this is a tiny bit fragile
+		//      it breaks if there are escaped double quotes \"
+		//      in the output from Oracle8iDialect.datetimeFormat
+		return datetimeFormat( format ).result();
+	}
+
+	public Replacer datetimeFormat(String format) {
+		return Oracle8iDialect.datetimeFormat( format, true )
+				.replace("SSSSSS", "US")
+				.replace("SSSSS", "US")
+				.replace("SSSS", "US")
+				.replace("SSS", "MS")
+				.replace("SS", "MS")
+				.replace("S", "MS")
+				//TZR is TZ in Postgres
+				.replace("zzzz", "TZ")
+				.replace("zzz", "TZ")
+				.replace("zz", "TZ")
+				.replace("z", "TZ");
+	}
 }

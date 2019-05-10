@@ -63,6 +63,7 @@ import org.hibernate.query.sqm.produce.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
@@ -2146,6 +2147,34 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return getFunctionTemplate("extract").makeSqmFunctionExpression(
 				asList( extractFieldExpression, expressionToExtract ),
 				extractFieldExpression.getType(),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public Object visitFormat(HqlParser.FormatContext ctx) {
+		return new SqmFormat(
+				ctx.STRING_LITERAL().getText(),
+				resolveExpressableTypeBasic( String.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
+	public SqmExpression visitFormatFunction(HqlParser.FormatFunctionContext ctx) {
+
+		final SqmExpression<?> expressionToCast = (SqmExpression) ctx.expression().accept( this );
+		final SqmLiteral<?> format = (SqmLiteral) ctx.format().accept( this );
+
+		//getSessionFactory().getTypeConfiguration().resolveCastTargetType( ctx.dataType().IDENTIFIER().getText() )
+
+//		if ( !AllowableFunctionReturnType.class.isInstance( castTargetExpression ) ) {
+//			throw new SqmProductionException( "Found cast target expression [%s] which is not allowed as a function return" );
+//		}
+
+		return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
+				asList( expressionToCast, format ),
+				resolveExpressableTypeBasic( String.class ),
 				creationContext.getQueryEngine()
 		);
 	}

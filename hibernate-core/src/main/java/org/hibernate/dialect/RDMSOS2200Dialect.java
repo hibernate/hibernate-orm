@@ -373,4 +373,16 @@ public class RDMSOS2200Dialect extends Dialect {
 			return new SelectLockingStrategy( lockable, lockMode );
 		}
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return Oracle8iDialect.datetimeFormat( format, true ) //Does it really support FM?
+				.replace("SSSSSS", "MLS")
+				.replace("SSSSS", "MLS")
+				.replace("SSSS", "MLS")
+				.replace("SSS", "MLS")
+				.replace("SS", "MLS")
+				.replace("S", "MLS")
+				.result();
+	}
 }

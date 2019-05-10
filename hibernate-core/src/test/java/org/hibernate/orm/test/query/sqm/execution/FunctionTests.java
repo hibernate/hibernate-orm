@@ -10,7 +10,12 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.junit.jupiter.api.Test;
+
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 
 /**
  * @author Gavin King
@@ -391,6 +396,28 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select avg(e.theDouble), avg(abs(e.theDouble)), min(e.theDouble), max(e.theDouble), sum(e.theDouble), sum(e.theInt) from EntityOfBasics e")
 							.list();
 					session.createQuery("select avg(distinct e.theInt), sum(distinct e.theInt) from EntityOfBasics e")
+							.list();
+				}
+		);
+	}
+
+	@Test
+	public void testFormat() {
+		inTransaction(
+				session -> {
+					EntityOfBasics entity = new EntityOfBasics();
+					entity.setId(123);
+					entity.setTheDate( new Date( 1974, 3, 25 ) );
+					entity.setTheTime( new Time( System.currentTimeMillis() ) );
+					entity.setTheTimestamp( new Timestamp( System.currentTimeMillis() ) );
+					session.persist(entity);
+					session.flush();
+
+					session.createQuery("select format(e.theTime as 'hh:mm:ss aa') from EntityOfBasics e")
+							.list();
+					session.createQuery("select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e")
+							.list();
+					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e")
 							.list();
 				}
 		);

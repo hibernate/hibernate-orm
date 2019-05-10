@@ -153,6 +153,7 @@ FETCH				: [fF] [eE] [tT] [cC] [hH];
 FLOOR				: [fF] [lL] [oO] [oO] [rR];
 FROM				: [fF] [rR] [oO] [mM];
 FOR					: [fF] [oO] [rR];
+FORMAT				: [fF] [oO] [rR] [mM] [aA] [tT];
 FULL				: [fF] [uU] [lL] [lL];
 FUNCTION			: [fF] [uU] [nN] [cC] [tT] [iI] [oO] [nN];
 GREATEST			: [gG] [rR] [eE] [aA] [tT] [eE] [sS] [tT];

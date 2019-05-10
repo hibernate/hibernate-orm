@@ -131,6 +131,7 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.timestampadd( queryEngine );
 		CommonFunctionFactory.timestampdiff( queryEngine );
+		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
 
@@ -324,5 +325,10 @@ public class IngresDialect extends Dialect {
 	@Override
 	public boolean supportsTupleDistinctCounts() {
 		return false;
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return MySQLDialect.datetimeFormat( format ).result();
 	}
 }

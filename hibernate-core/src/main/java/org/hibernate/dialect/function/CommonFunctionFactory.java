@@ -938,4 +938,63 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * H2-style (uses Java's SimpleDateFormat directly so no need to translate format)
+	 */
+	public static final void formatdatetime(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	/**
+	 * Usually Oracle-style (except for Informix which quite close to MySQL-style)
+	 *
+	 * @see org.hibernate.dialect.Oracle8iDialect#datetimeFormat
+	 * @see org.hibernate.dialect.InformixDialect#datetimeFormat
+	 */
+	public static final void formatdatetime_toChar(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "to_char")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	/**
+	 * MySQL-style (also Ingres)
+	 *
+	 * @see org.hibernate.dialect.MySQLDialect#datetimeFormat
+	 */
+	public static final void formatdatetime_dateFormat(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "date_format")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	/**
+	 * SQL Server-style
+	 *
+	 * @see org.hibernate.dialect.SQLServerDialect#datetimeFormat
+	 */
+	public static final void formatdatetime_format(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "format")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	/**
+	 * HANA's name for to_char() is still Oracle-style
+	 *
+	 *  @see org.hibernate.dialect.Oracle8iDialect#datetimeFormat
+	 */
+	public static final void formatdatetime_toVarchar(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "to_varchar")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
 }

@@ -577,6 +577,7 @@ standardFunction
 	|	extractFunction
 	|	diffFunction
 	|	addFunction
+	|   formatFunction
 	|	concatFunction
 	|	substringFunction
 	|   replaceFunction
@@ -790,6 +791,14 @@ currentInstantFunction
 	: CURRENT_INSTANT (LEFT_PAREN RIGHT_PAREN)?
 	;
 
+formatFunction
+	: FORMAT LEFT_PAREN expression AS format RIGHT_PAREN
+	;
+
+format
+	: STRING_LITERAL
+	;
+
 diffFunction
 	: DIFF LEFT_PAREN extractField COMMA expression COMMA expression RIGHT_PAREN
 	;
@@ -882,6 +891,7 @@ identifier
 	| FLOOR
 	| FROM
 	| FOR
+	| FORMAT
 	| FULL
 	| FUNCTION
 	| GREATEST

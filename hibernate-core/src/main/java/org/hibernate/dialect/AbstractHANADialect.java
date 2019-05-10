@@ -300,6 +300,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
 		CommonFunctionFactory.daysBetween( queryEngine );
 		CommonFunctionFactory.secondsBetween( queryEngine );
+		CommonFunctionFactory.formatdatetime_toVarchar( queryEngine );
 	}
 
 	@Override
@@ -1708,5 +1709,11 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	public boolean supportsNoColumnsInsert() {
 		return false;
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//I don't think HANA needs FM
+		return Oracle8iDialect.datetimeFormat( format, false ).result();
 	}
 }

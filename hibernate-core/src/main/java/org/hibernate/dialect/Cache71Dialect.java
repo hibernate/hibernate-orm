@@ -617,4 +617,11 @@ public class Cache71Dialect extends Dialect {
 	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		return false;
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//I don't think Cache needs FM
+		return Oracle8iDialect.datetimeFormat( format, false ).result();
+	}
+
 }

@@ -11,6 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
@@ -51,6 +52,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
+
+		//note: this function was introduced in SQL Server 2012
+		CommonFunctionFactory.formatdatetime_format( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 	}
@@ -207,5 +211,56 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new SQLServerIdentityColumnSupport();
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return datetimeFormat(format).result();
+	}
+
+	public static Replacer datetimeFormat(String format) {
+		return new Replacer( format, "'", "\"" )
+				//era
+				.replace("G", "g")
+
+				//y nothing to do
+				//M nothing to do
+
+				//w no equivalent
+				//W no equivalent
+
+				//day of week
+				.replace("EEEE", "dddd")
+				.replace("EEE", "ddd")
+				//u no equivalent
+
+				//d nothing to do
+				//D no equivalent
+
+				//am pm
+				.replace("aa", "tt")
+				.replace("a", "tt")
+
+				//h nothing to do
+				//H nothing to do
+
+				//m nothing to do
+				//s nothing to do
+
+				//fractional seconds
+				.replace("S", "F")
+
+				//timezones
+				.replace("zzzz", "K")
+				.replace("zzz", "K")
+				.replace("zzz", "K")
+				.replace("z", "K")
+				.replace("ZZZZ", "zz00")
+				.replace("ZZZ", "zz00")
+				.replace("ZZ", "zz00")
+				.replace("Z", "zz00")
+				.replace("XXX", "zzz")
+				.replace("XX", "zz00")
+				.replace("X", "zz");
 	}
 }

@@ -257,7 +257,16 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsPartitionBy() {
-		return true;
+	public String translateDatetimeFormat(String format) {
+		//I do not know if CUBRID supports FM, but it
+		//seems that it does pad by default, so it needs it!
+		return Oracle8iDialect.datetimeFormat( format, true )
+				.replace("SSSSSS", "FF")
+				.replace("SSSSS", "FF")
+				.replace("SSSS", "FF")
+				.replace("SSS", "FF")
+				.replace("SS", "FF")
+				.replace("S", "FF")
+				.result();
 	}
 }

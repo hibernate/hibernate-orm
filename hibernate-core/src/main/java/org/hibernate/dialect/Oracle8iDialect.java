@@ -724,4 +724,87 @@ public class Oracle8iDialect extends Dialect {
 	public boolean supportsNoWait() {
 		return true;
 	}
+
+	public static Replacer datetimeFormat(String format, boolean useFm) {
+		String fm = useFm ? "fm" : "";
+		return new Replacer( format, "'", "\"" )
+				//era
+				.replace("GG", "AD")
+				.replace("G", "AD")
+
+				//year
+				.replace("yyyy", "YYYY")
+				.replace("yyy", fm + "YYYY")
+				.replace("yy", "YY")
+				.replace("y", fm + "YYYY")
+
+				//month of year
+				.replace("MMMM", fm + "Month")
+				.replace("MMM", "Mon")
+				.replace("MM", "MM")
+				.replace("M", fm + "MM")
+
+				//week of year
+				.replace("ww", "WW")
+				.replace("w", fm + "WW")
+
+				//week of month
+				.replace("W", "W")
+
+				//day of week
+				.replace("EEEE", fm + "Day")
+				.replace("EEE", "Dy")
+				.replace("uu", "D")
+				.replace("u", fm + "D")
+
+				//day of month
+				.replace("dd", "DD")
+				.replace("d", fm + "DD")
+
+				//day of year
+				.replace("DDD", "DDD")
+				.replace("DD", fm + "DDD")
+				.replace("D", fm + "DDD")
+
+				//am pm
+				.replace("aa", "AM")
+				.replace("a", "AM")
+
+				//hour
+				.replace("hh", "HH12")
+				.replace("HH", "HH24")
+				.replace("h", fm + "HH12")
+				.replace("H", fm + "HH24")
+
+				//minute
+				.replace("mm", "MI")
+				.replace("m", fm + "MI")
+
+				//second
+				.replace("ss", "SS")
+				.replace("s", fm + "SS")
+
+				//fractional seconds
+				.replace("SSSSSS", "FF6")
+				.replace("SSSSS", "FF5")
+				.replace("SSSS", "FF4")
+				.replace("SSS", "FF3")
+				.replace("SS", "FF2")
+				.replace("S", "FF1")
+
+				//timezones
+				.replace("zzzz", "TZR")
+				.replace("zzz", "TZR")
+				.replace("zz", "TZR")
+				.replace("z", "TZR")
+				.replace("ZZZZ", "TZHTZM")
+				.replace("ZZZ", "TZHTZM")
+				.replace("ZZ", "TZHTZM")
+				.replace("Z", "TZHTZM")
+				.replace("XXXX", "TZH:TZM")
+				.replace("XXX", "TZH:TZM")
+				.replace("XX", "TZH:TZM")
+				.replace("X", "TZH"); //note special case
+	}
+
 }

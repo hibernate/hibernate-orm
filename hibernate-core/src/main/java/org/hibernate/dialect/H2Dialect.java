@@ -175,6 +175,7 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
 		CommonFunctionFactory.timestampadd( queryEngine );
 		CommonFunctionFactory.timestampdiff( queryEngine );
+		CommonFunctionFactory.formatdatetime( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
@@ -413,5 +414,10 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String getQueryHintString(String query, String hints) {
 		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return new Replacer( format, "'", "''" ).result(); //NICE!!
 	}
 }

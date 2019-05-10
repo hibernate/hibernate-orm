@@ -218,6 +218,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
 		CommonFunctionFactory.timestampadd( queryEngine );
 		CommonFunctionFactory.timestampdiff( queryEngine );
+		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -615,5 +616,75 @@ public class MySQLDialect extends Dialect {
 	@Override
 	protected String escapeLiteral(String literal) {
 		return super.escapeLiteral( literal ).replace("\\", "\\\\");
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return datetimeFormat( format ).result();
+	}
+
+	public static Replacer datetimeFormat(String format) {
+		return new Replacer( format, "'", "" )
+				.replace("%", "%%")
+
+				//year
+				.replace("yyyy", "%Y")
+				.replace("yyy", "%Y")
+				.replace("yy", "%y")
+				.replace("y", "%Y")
+
+				//month of year
+				.replace("MMMM", "%M")
+				.replace("MMM", "%b")
+				.replace("MM", "%m")
+				.replace("M", "%c")
+
+				//week of year
+				.replace("ww", "%V")
+				.replace("w", "%V")
+
+				//week of month
+				//????
+
+				//day of week
+				.replace("EEEE", "%W")
+				.replace("EEE", "%a")
+				.replace("uu", "%w")
+				.replace("u", "%w")
+
+				//day of month
+				.replace("dd", "%d")
+				.replace("d", "%e")
+
+				//day of year
+				.replace("DDD", "%j")
+				.replace("DD", "%j")
+				.replace("D", "%j")
+
+				//am pm
+				.replace("aa", "%p")
+				.replace("a", "%p")
+
+				//hour
+				.replace("hh", "%h")
+				.replace("HH", "%H")
+				.replace("h", "%l")
+				.replace("H", "%k")
+
+				//minute
+				.replace("mm", "%i")
+				.replace("m", "%i")
+
+				//second
+				.replace("ss", "%S")
+				.replace("s", "%S")
+
+				//fractional seconds
+				.replace("SSSSSS", "%f")
+				.replace("SSSSS", "%f")
+				.replace("SSSS", "%f")
+				.replace("SSS", "%f")
+				.replace("SS", "%f")
+				.replace("S", "%f");
 	}
 }

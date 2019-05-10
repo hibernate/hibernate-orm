@@ -570,4 +570,10 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsPartitionBy() {
 		return true;
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//DB2 does not need nor support FM
+		return Oracle8iDialect.datetimeFormat( format, false ).result();
+	}
 }

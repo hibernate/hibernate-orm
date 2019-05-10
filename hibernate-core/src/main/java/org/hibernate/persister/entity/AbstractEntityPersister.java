@@ -1177,7 +1177,7 @@ public abstract class AbstractEntityPersister
 		final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
 		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
 
-		LOG.trace( "Initializing lazy properties from datastore" );
+		LOG.tracef( "Initializing lazy properties from datastore (triggered for `%s`)", fieldName );
 
 		final String fetchGroup = getEntityMetamodel().getBytecodeEnhancementMetadata()
 				.getLazyAttributesMetadata()

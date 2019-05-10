@@ -32,6 +32,7 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -652,6 +653,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			reassociateProxy( li, proxy );
 			//initialize + unwrap the object and return it
 			return li.getImplementation();
+		}
+		else if ( maybeProxy instanceof PersistentAttributeInterceptable ) {
+			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) maybeProxy;
+			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( maybeProxy, null );
+			}
+			return maybeProxy;
 		}
 		else {
 			return maybeProxy;

@@ -101,7 +101,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 					if ( isTemporarySession ) {
 						// Add an entry for this entity in the PC of the temp Session
 						// NOTE : a few arguments that would be nice to pass along here...
-						//		1) loadedState if we know any
+						//		1) loadedState if we know any - since this is an uninitialized "proxy",
+						//		all attributes are not yet fetched
 						final Object[] loadedState = ArrayHelper.filledArray(
 								LazyPropertyInitializer.UNFETCHED_PROPERTY,
 								Object.class,

@@ -107,4 +107,14 @@ public class DoubleJavaDescriptor extends AbstractNumericJavaDescriptor<Double> 
 	public Double getDefaultValue() {
 		return ZERO;
 	}
+
+	@Override
+	public long getDefaultSqlLength() {
+		return getDefaultSqlPrecision()+2+6;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 17;
+	}
 }

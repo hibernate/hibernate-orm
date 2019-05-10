@@ -38,6 +38,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		//store booleans in SQL Server and Sybase?
 //		registerColumnType( Types.BIT, "bit" );
 //		registerColumnType( Types.BOOLEAN, "bit" );
+		registerColumnType( Types.BIT, 1, "tinyint" );
 		registerColumnType( Types.BIT, "tinyint" );
 		registerColumnType( Types.BOOLEAN, "tinyint" );
 

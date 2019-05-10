@@ -16,9 +16,27 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  */
 public class CastTarget implements SqlExpressable, SqlAstNode {
 	private SqlExpressableType type;
+	private Long length;
+	private Integer precision;
+	private Integer scale;
 
-	public CastTarget(SqlExpressableType type) {
+	public CastTarget(SqlExpressableType type, Long length, Integer precision, Integer scale) {
 		this.type = type;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
+	}
+
+	public Long getLength() {
+		return length;
+	}
+
+	public Integer getPrecision() {
+		return precision;
+	}
+
+	public Integer getScale() {
+		return scale;
 	}
 
 	@Override

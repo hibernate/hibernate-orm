@@ -104,4 +104,19 @@ public class ShortJavaDescriptor extends AbstractNumericJavaDescriptor<Short> im
 	public VersionSupport<Short> getVersionSupport() {
 		return ShortVersionSupport.INSTANCE;
 	}
+
+	@Override
+	public long getDefaultSqlLength() {
+		return getDefaultSqlPrecision()+1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 5;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
+	}
 }

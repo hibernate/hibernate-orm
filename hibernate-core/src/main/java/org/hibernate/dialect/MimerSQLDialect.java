@@ -36,6 +36,7 @@ public class MimerSQLDialect extends Dialect {
 	 */
 	public MimerSQLDialect() {
 		super();
+		registerColumnType( Types.BIT, 1, "odbc.bit" );
 		registerColumnType( Types.BIT, "odbc.bit" );
 		registerColumnType( Types.BOOLEAN, "odbc.bit" );
 		registerColumnType( Types.TINYINT, "odbc.tinyint" );

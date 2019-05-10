@@ -36,6 +36,7 @@ public class TeradataDialect extends Dialect {
 		super();
 		//registerColumnType data types
 		registerColumnType( Types.BIGINT, "numeric(18,0)" );
+		registerColumnType( Types.BIT, 1, "byteint" );
 		registerColumnType( Types.BIT, "byteint" );
 		registerColumnType( Types.BOOLEAN, "byteint" );
 		registerColumnType( Types.TINYINT, "byteint" );

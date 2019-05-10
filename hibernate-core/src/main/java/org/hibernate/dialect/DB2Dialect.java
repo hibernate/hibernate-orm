@@ -91,6 +91,7 @@ public class DB2Dialect extends Dialect {
 	 */
 	public DB2Dialect() {
 		super();
+		registerColumnType( Types.BIT, 1, "boolean" ); //no bit
 		registerColumnType( Types.BIT, "smallint" ); //no bit
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
 

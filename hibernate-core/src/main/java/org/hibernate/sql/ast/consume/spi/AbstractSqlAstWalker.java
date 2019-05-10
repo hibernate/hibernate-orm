@@ -22,7 +22,6 @@ import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 
-import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
@@ -421,9 +420,14 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitCastTarget(CastTarget target) {
-		int typecode = target.getExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
-		String type = sessionFactory.getJdbcServices().getDialect().getCastTypeName( typecode );
-		appendSql( type );
+		appendSql(
+				sessionFactory.getJdbcServices().getDialect().getCastTypeName(
+						target.getExpressableType(),
+						target.getLength(),
+						target.getPrecision(),
+						target.getScale()
+				)
+		);
 	}
 
 

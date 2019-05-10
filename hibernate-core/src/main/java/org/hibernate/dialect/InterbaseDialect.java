@@ -46,6 +46,7 @@ public class InterbaseDialect extends Dialect {
 	 */
 	public InterbaseDialect() {
 		super();
+		registerColumnType( Types.BIT, 1, "smallint" );
 		registerColumnType( Types.BIT, "smallint" );
 		registerColumnType( Types.BOOLEAN, "smallint" );
 

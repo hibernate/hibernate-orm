@@ -60,7 +60,8 @@ public class Oracle9Dialect extends Dialect {
 	public Oracle9Dialect() {
 		super();
 		LOG.deprecatedOracle9Dialect();
-		registerColumnType( Types.BIT, "number(1,0)" );
+		registerColumnType( Types.BIT, 1, "number(1,0)" );
+		registerColumnType( Types.BIT, "number(3,0)" );
 		registerColumnType( Types.BOOLEAN, "number(1,0)" );
 
 		registerColumnType( Types.TINYINT, "number(3,0)" );

@@ -135,7 +135,7 @@ public class HSQLDialect extends Dialect {
 		registerColumnType( Types.LONGVARCHAR, "longvarchar" ); //synonym for 'varchar(16M)'
 		registerColumnType( Types.LONGVARBINARY, "longvarbinary" ); //synonym for 'varbinary(16M)'
 
-		registerColumnType( Types.NCLOB, "clob" );
+		registerColumnType( Types.NCLOB, "clob" ); //HHH-10364
 
 		if ( hsqldbVersion < 200 ) {
 			registerColumnType( Types.NUMERIC, "numeric" );

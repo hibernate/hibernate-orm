@@ -565,64 +565,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return an expression casting the value to the specified type
-	 *
-	 * @param value The value to cast
-	 * @param jdbcTypeCode The JDBC type code to cast to
-	 * @param length The type length
-	 * @param precision The type precision
-	 * @param scale The type scale
-	 *
-	 * @return The cast expression
-	 */
-	public String cast(String value, int jdbcTypeCode, int length, int precision, int scale) {
-		return cast( value, jdbcTypeCode, (long) length, precision, scale );
-	}
-
-	public String cast(String value, int jdbcTypeCode, long length, int precision, int scale) {
-		if ( jdbcTypeCode == Types.CHAR ) {
-			return "cast(" + value + " as char(" + length + "))";
-		}
-		else {
-			return "cast(" + value + "as " + getTypeName( jdbcTypeCode, length, precision, scale ) + ")";
-		}
-	}
-
-	/**
-	 * Return an expression casting the value to the specified type.  Simply calls
-	 * {@link #cast(String, int, int, int, int)} passing {@link Size.Builder#DEFAULT_PRECISION} and
-	 * {@link Size.Builder#DEFAULT_SCALE} as the precision/scale.
-	 *
-	 * @param value The value to cast
-	 * @param jdbcTypeCode The JDBC type code to cast to
-	 * @param length The type length
-	 *
-	 * @return The cast expression
-	 */
-	public String cast(String value, int jdbcTypeCode, int length) {
-		return cast( value, jdbcTypeCode, (long) length );
-	}
-
-	public String cast(String value, int jdbcTypeCode, long length) {
-		return cast( value, jdbcTypeCode, length, Size.Builder.DEFAULT_PRECISION, Size.Builder.DEFAULT_SCALE );
-	}
-
-	/**
-	 * Return an expression casting the value to the specified type.  Simply calls
-	 * {@link #cast(String, int, int, int, int)} passing {@link Size.Builder#DEFAULT_LENGTH} as the length
-	 *
-	 * @param value The value to cast
-	 * @param jdbcTypeCode The JDBC type code to cast to
-	 * @param precision The type precision
-	 * @param scale The type scale
-	 *
-	 * @return The cast expression
-	 */
-	public String cast(String value, int jdbcTypeCode, int precision, int scale) {
-		return cast( value, jdbcTypeCode, Size.Builder.DEFAULT_LENGTH, precision, scale );
-	}
-
-	/**
 	 * Subclasses register a type name for the given type code and maximum
 	 * column length. <tt>$l</tt> in the type name with be replaced by the
 	 * column length (if appropriate).

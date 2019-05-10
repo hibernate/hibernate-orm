@@ -60,22 +60,6 @@ public class SelectValues {
 		return this;
 	}
 
-	public SelectValues addParameter(int jdbcTypeCode, int length) {
-		final String selectExpression = dialect.requiresCastingOfParametersInSelectClause()
-				? dialect.cast( "?", jdbcTypeCode, length )
-				: "?";
-		selectValueList.add( new SelectValue( null, selectExpression, null ) );
-		return this;
-	}
-
-	public SelectValues addParameter(int jdbcTypeCode, int precision, int scale) {
-		final String selectExpression = dialect.requiresCastingOfParametersInSelectClause()
-				? dialect.cast( "?", jdbcTypeCode, precision, scale )
-				: "?";
-		selectValueList.add( new SelectValue( null, selectExpression, null ) );
-		return this;
-	}
-
 	public String render() {
 		final StringBuilder buf = new StringBuilder( selectValueList.size() * 10 );
 		final HashSet<String> uniqueAliases = new HashSet<String>();

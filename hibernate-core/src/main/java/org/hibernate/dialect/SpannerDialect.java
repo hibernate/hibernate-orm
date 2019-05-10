@@ -29,6 +29,7 @@ import org.hibernate.metamodel.model.relational.spi.Sequence;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -60,7 +61,8 @@ public class SpannerDialect extends Dialect {
 	 */
 	public SpannerDialect() {
 		registerColumnType( Types.BOOLEAN, "BOOL" );
-		registerColumnType( Types.BIT, "BOOL" );
+		registerColumnType( Types.BIT, 1, "BOOL" );
+		registerColumnType( Types.BIT, "INT64" );
 		registerColumnType( Types.BIGINT, "INT64" );
 		registerColumnType( Types.SMALLINT, "INT64" );
 		registerColumnType( Types.TINYINT, "INT64" );
@@ -494,11 +496,6 @@ public class SpannerDialect extends Dialect {
 		return true;
 	}
 
-	@Override
-	public boolean supportsCaseInsensitiveLike() {
-		return false;
-	}
-
 	/* DDL-related functions */
 
 	@Override
@@ -778,13 +775,11 @@ public class SpannerDialect extends Dialect {
 	/* Type conversion and casting */
 
 	@Override
-	public String getCastTypeName(int code) {
-		switch ( code ) {
-			case Types.VARCHAR:
-				return "STRING";
-			default:
-				return super.getCastTypeName( code );
-		}
+	public String getCastTypeName(SqlExpressableType type, Long length, Integer precision, Integer scale) {
+		String result = super.getCastTypeName( type, length, precision, scale );
+		//Spanner doesn't let you specify a length in cast() types
+		int paren = result.indexOf('(');
+		return paren>0 ? result.substring(0, paren) : result;
 	}
 
 	/**

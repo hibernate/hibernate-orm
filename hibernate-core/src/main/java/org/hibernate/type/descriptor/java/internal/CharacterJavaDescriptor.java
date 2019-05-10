@@ -91,5 +91,18 @@ public class CharacterJavaDescriptor extends AbstractBasicJavaDescriptor<Charact
 		throw new UnsupportedOperationException( "char has no non-null default" );
 	}
 
+	@Override
+	public long getDefaultSqlLength() {
+		return 1;
+	}
 
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 3;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
+	}
 }

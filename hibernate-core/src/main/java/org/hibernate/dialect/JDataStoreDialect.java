@@ -24,6 +24,7 @@ public class JDataStoreDialect extends Dialect {
 	public JDataStoreDialect() {
 		super();
 
+		registerColumnType( Types.BIT, 1, "tinyint" );
 		registerColumnType( Types.BIT, "tinyint" );
 		registerColumnType( Types.BOOLEAN, "tinyint" );
 

@@ -31,6 +31,7 @@ public class PointbaseDialect extends org.hibernate.dialect.Dialect {
 	public PointbaseDialect() {
 		super();
 		//no pointbase BIT
+		registerColumnType( Types.BIT, 1, "smallint" );
 		registerColumnType( Types.BIT, "smallint" );
 		registerColumnType( Types.BOOLEAN, "smallint" );
 		//no pointbase TINYINT

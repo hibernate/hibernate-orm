@@ -39,7 +39,8 @@ public class SAPDBDialect extends Dialect {
 	 */
 	public SAPDBDialect() {
 		super();
-		registerColumnType( Types.BIT, "boolean" );
+		registerColumnType( Types.BIT, 1, "boolean" );
+		registerColumnType( Types.TINYINT, "fixed(3,0)" );
 
 		registerColumnType( Types.TINYINT, "fixed(3,0)" );
 		registerColumnType( Types.INTEGER, "int" );

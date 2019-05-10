@@ -36,6 +36,7 @@ import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -366,26 +367,45 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getCastTypeName(int code) {
-		switch ( code ) {
-			case Types.BOOLEAN:
-				return "char";
+	public String getCastTypeName(SqlExpressableType type, Long length, Integer precision, Integer scale) {
+		switch ( type.getSqlTypeDescriptor().getJdbcTypeCode() ) {
 			case Types.INTEGER:
 			case Types.BIGINT:
 			case Types.SMALLINT:
-				return smallIntegerCastTarget();
+			case Types.TINYINT:
+				//MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
+				return "signed";
 			case Types.FLOAT:
-			case Types.REAL: {
-				return floatingPointNumberCastTarget();
-			}
-			case Types.NUMERIC:
-				return fixedPointNumberCastTarget();
-			case Types.VARCHAR:
-				return "char";
+			case Types.DOUBLE:
+			case Types.REAL:
+				//MySQL doesn't let you cast to DOUBLE/FLOAT
+				//but don't just return 'decimal' because
+				//the default scale is 0 (no decimal places)
+				return String.format(
+						"decimal(%d, %d)",
+						precision == null ? type.getJavaTypeDescriptor().getDefaultSqlPrecision() : precision,
+						scale == null ? type.getJavaTypeDescriptor().getDefaultSqlScale() : scale
+				);
 			case Types.VARBINARY:
-				return "binary";
+			case Types.LONGVARBINARY:
+				//MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
+				//we could just return 'binary' here but that would be
+				//inconsistent with other Dialects which need a length
+				return String.format(
+						"binary(%d)",
+						length == null ? type.getJavaTypeDescriptor().getDefaultSqlLength() : length
+				);
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+				//MySQL doesn't let you cast to TEXT/LONGTEXT
+				//we could just return 'char' here but that would be
+				//inconsistent with other Dialects which need a length
+				return String.format(
+						"char(%d)",
+						length == null ? type.getJavaTypeDescriptor().getDefaultSqlLength() : length
+				);
 			default:
-				return super.getCastTypeName( code );
+				return super.getCastTypeName( type, length, precision, scale );
 		}
 	}
 

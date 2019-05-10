@@ -105,4 +105,14 @@ public class FloatJavaDescriptor extends AbstractNumericJavaDescriptor<Float> im
 	public Float getDefaultValue() {
 		return ZERO;
 	}
+
+	@Override
+	public long getDefaultSqlLength() {
+		return getDefaultSqlPrecision()+2+5;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 8;
+	}
 }

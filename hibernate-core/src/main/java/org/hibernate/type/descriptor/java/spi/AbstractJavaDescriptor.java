@@ -9,6 +9,8 @@ package org.hibernate.type.descriptor.java.spi;
 import java.util.Comparator;
 import java.util.Objects;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import org.jboss.logging.Logger;
@@ -78,4 +80,7 @@ public abstract class AbstractJavaDescriptor<T> implements JavaTypeDescriptor<T>
 	public boolean areEqual(T one, T another) {
 		return Objects.equals( one, another );
 	}
+
+
+
 }

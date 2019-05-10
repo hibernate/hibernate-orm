@@ -59,6 +59,7 @@ public class IngresDialect extends Dialect {
 	 */
 	public IngresDialect() {
 		super();
+		registerColumnType( Types.BIT, 1, "tinyint" );
 		registerColumnType( Types.BIT, "tinyint" );
 		registerColumnType( Types.BOOLEAN, "tinyint" );
 

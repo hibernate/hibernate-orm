@@ -114,4 +114,20 @@ public class LongJavaDescriptor extends AbstractNumericJavaDescriptor<Long> impl
 	public VersionSupport<Long> getVersionSupport() {
 		return LongVersionSupport.INSTANCE;
 	}
+
+	@Override
+	public long getDefaultSqlLength() {
+		return getDefaultSqlPrecision()+1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 19;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
+	}
+
 }

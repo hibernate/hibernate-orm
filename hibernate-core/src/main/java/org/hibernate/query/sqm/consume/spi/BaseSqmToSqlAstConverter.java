@@ -722,7 +722,10 @@ public abstract class BaseSqmToSqlAstConverter
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
 			return new CastTarget(
-					target.getType().getSqlExpressableType()
+					target.getType().getSqlExpressableType(),
+					target.getLength(),
+					target.getPrecision(),
+					target.getScale()
 			);
 		}
 		finally {

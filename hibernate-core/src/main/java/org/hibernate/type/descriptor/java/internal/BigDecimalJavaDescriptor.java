@@ -91,4 +91,15 @@ public class BigDecimalJavaDescriptor extends AbstractNumericJavaDescriptor<BigD
 		}
 		throw unknownWrap( value.getClass() );
 	}
+
+	@Override
+	public long getDefaultSqlLength() {
+		return getDefaultSqlPrecision() + 2;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 38;
+	}
+
 }

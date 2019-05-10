@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -33,6 +34,18 @@ public interface JavaTypeDescriptor<T> extends org.hibernate.type.descriptor.jav
 	 * todo (6.0) : ? - rename `#getImplicitSqlTypeDescriptor` ?
 	 */
 	SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context);
+
+	default long getDefaultSqlLength() {
+		return Size.Builder.DEFAULT_LENGTH;
+	}
+
+	default int getDefaultSqlPrecision() {
+		return Size.Builder.DEFAULT_PRECISION;
+	}
+
+	default int getDefaultSqlScale() {
+		return Size.Builder.DEFAULT_SCALE;
+	}
 
 	/**
 	 * Unwrap an instance of our handled Java type into the requested type.

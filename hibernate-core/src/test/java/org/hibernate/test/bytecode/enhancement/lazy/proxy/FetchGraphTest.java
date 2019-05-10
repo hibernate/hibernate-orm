@@ -559,6 +559,76 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
+	@Test
+	public void testQueryAndDeleteDEntity() {
+		inTransaction(
+				session -> {
+					List<DEntity> result = session.createQuery(
+							"select d from D d ",
+							DEntity.class
+					).list();
+					result.forEach( entity -> {
+						session.delete( entity );
+						session.delete( entity.getE() );
+						session.delete( entity.getA() );
+						Set<BEntity> bs = entity.getBs();
+						bs.forEach( bEntity -> session.delete( bEntity ) );
+						session.delete( entity.getC() );
+						session.delete( entity.getG() );
+
+					} );
+				}
+		);
+	}
+
+	@Test
+	public void testLoadAndDeleteDEntity() {
+		inTransaction(
+				session -> {
+					DEntity entity = session.load( DEntity.class, 1L );
+					session.delete( entity );
+					session.delete( entity.getE() );
+					session.delete( entity.getA() );
+					Set<BEntity> bs = entity.getBs();
+					bs.forEach( bEntity -> session.delete( bEntity ) );
+					session.delete( entity.getC() );
+					session.delete( entity.getG() );
+				}
+		);
+	}
+
+	@Test
+	public void testGetAndDeleteDEntity() {
+		inTransaction(
+				session -> {
+					DEntity entity = session.get( DEntity.class, 1L );
+					session.delete( entity );
+					session.delete( entity.getE() );
+					session.delete( entity.getA() );
+					Set<BEntity> bs = entity.getBs();
+					bs.forEach( bEntity -> session.delete( bEntity ) );
+					session.delete( entity.getC() );
+					session.delete( entity.getG() );
+				}
+		);
+	}
+
+	@Test
+	public void testQueryAndDeleteEEntity() {
+		inTransaction(
+				session -> {
+					List<EEntity> result = session.createQuery(
+							"select e from E e",
+							EEntity.class
+					).list();
+					result.forEach( entity -> {
+						session.delete( entity );
+						session.delete( entity.getD() );
+					} );
+				}
+		);
+	}
+
 	@After
 	public void cleanUpTestData() {
 		inTransaction(

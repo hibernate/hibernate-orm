@@ -168,6 +168,7 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.insert( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

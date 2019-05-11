@@ -567,6 +567,13 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void insert(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("insert")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(4)
+				.register();
+	}
+
 	public static void replace(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("replace")
 				.setInvariantType( StandardSpiBasicTypes.STRING )

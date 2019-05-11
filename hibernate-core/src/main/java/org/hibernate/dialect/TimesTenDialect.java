@@ -31,8 +31,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
-import org.hibernate.sql.JoinFragment;
-import org.hibernate.sql.OracleJoinFragment;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTimesTenDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -50,7 +48,7 @@ import org.hibernate.tool.schema.spi.Exporter;
  * No Calendar support
  * No support for updating primary keys.
  *
- * @author Sherry Listgarten and Max Andersen
+ * @author Sherry Listgarten, Max Andersen, Chris Jenkins
  */
 @SuppressWarnings("deprecation")
 public class TimesTenDialect extends Dialect {
@@ -59,24 +57,32 @@ public class TimesTenDialect extends Dialect {
 	 */
 	public TimesTenDialect() {
 		super();
-		registerColumnType( Types.BIT, "TINYINT" );
-		registerColumnType( Types.BIGINT, "BIGINT" );
-		registerColumnType( Types.SMALLINT, "SMALLINT" );
-		registerColumnType( Types.TINYINT, "TINYINT" );
-		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.CHAR, "CHAR(1)" );
-		registerColumnType( Types.VARCHAR, "VARCHAR($l)" );
-		registerColumnType( Types.FLOAT, "FLOAT" );
-		registerColumnType( Types.DOUBLE, "DOUBLE" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIME" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.VARBINARY, "VARBINARY($l)" );
-		registerColumnType( Types.NUMERIC, "DECIMAL($p, $s)" );
-		// TimesTen has no BLOB/CLOB support, but these types may be suitable 
-		// for some applications. The length is limited to 4 million bytes.
-		registerColumnType( Types.BLOB, "VARBINARY(4000000)" );
-		registerColumnType( Types.CLOB, "VARCHAR(4000000)" );
+		registerColumnType(Types.BIT, "TT_TINYINT");
+		registerColumnType(Types.SMALLINT, "TT_SMALLINT");
+		registerColumnType(Types.TINYINT, "TT_TINYINT");
+		registerColumnType(Types.INTEGER, "TT_INTEGER");
+		registerColumnType(Types.BIGINT, "TT_BIGINT");
+
+		registerColumnType(Types.CHAR, "CHAR(1)");
+		registerColumnType(Types.VARCHAR, 4194304, "VARCHAR2($l)");
+		registerColumnType(Types.LONGVARCHAR, 4194304, "VARCHAR2($l)");
+
+		registerColumnType(Types.BINARY, 8300, "BINARY($l)" );
+		registerColumnType(Types.VARBINARY, 4194304, "VARBINARY($l)");
+		registerColumnType(Types.LONGVARBINARY, 4194304, "VARBINARY($l)");
+
+		registerColumnType(Types.NUMERIC, "NUMBER($p,$s)");
+		registerColumnType(Types.DECIMAL, "NUMBER($p,$s)" );
+		registerColumnType(Types.FLOAT, "BINARY_FLOAT");
+		registerColumnType(Types.DOUBLE, "BINARY_DOUBLE");
+
+		registerColumnType(Types.DATE, "TT_DATE");
+		registerColumnType(Types.TIME, "TT_TIME");
+		registerColumnType(Types.TIMESTAMP, "TIMESTAMP");
+
+		registerColumnType(Types.BLOB, "BLOB");
+		registerColumnType(Types.CLOB, "CLOB");
+		registerColumnType(Types.NCLOB, "NCLOB");
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
@@ -94,11 +100,7 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
-	}
-
-	@Override
-	public boolean dropConstraints() {
-		return true;
+		CommonFunctionFactory.rownumRowid( queryEngine );
 	}
 
 	@Override
@@ -117,13 +119,18 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsPooledSequences() {
+		return true;
+	}
+
+	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
 		return sequenceName + ".nextval";
 	}
 
 	@Override
 	public String getSequenceNextValString(String sequenceName) {
-		return "select first 1 " + sequenceName + ".nextval from sys.tables";
+		return "select " + sequenceName + ".nextval from sys.dual";
 	}
 
 	@Override
@@ -138,7 +145,7 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select * from sys.sequences";
+		return "select name from sys.sequences";
 	}
 
 	@Override
@@ -147,18 +154,23 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public JoinFragment createOuterJoinFragment() {
-		return new OracleJoinFragment();
-	}
-
-	@Override
 	public String getCrossJoinSeparator() {
 		return ", ";
 	}
 
 	@Override
+	public boolean supportsNoWait() {
+		return true;
+	}
+
+	@Override
 	public String getForUpdateString() {
-		return "";
+		return " for update";
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return " for update nowait";
 	}
 
 	@Override
@@ -181,7 +193,7 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public boolean supportsLimitOffset() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -200,13 +212,15 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	public boolean bindLimitParametersFirst() {
+		return true;
+	}
+
+	@Override
 	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 8 )
+		return new StringBuilder( querySelect.length() + 15 )
 				.append( querySelect )
-				.insert( 6, " first " + limit )
+				.insert( 6, " rows " + (offset + 1) + " to " + limit )
 				.toString();
 	}
 
@@ -217,7 +231,7 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select first 1 sysdate from sys.tables";
+		return "select sysdate from sys.dual";
 	}
 
 	@Override
@@ -277,10 +291,35 @@ public class TimesTenDialect extends Dialect {
 		}
 	}
 
-	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
+	public boolean supportsUnionAll() {
+		return true;
+	}
 
 	@Override
-	public boolean supportsEmptyInList() {
+	public boolean supportsCircularCascadeDeleteConstraints() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsUniqueConstraintInCreateAlterTable() {
+		return false;
+	}
+
+	@Override
+	public String getSelectClauseNullString(int sqlType) {
+		switch (sqlType) {
+			case Types.VARCHAR:
+			case Types.CHAR:
+				return "to_char(null)";
+
+			case Types.DATE:
+			case Types.TIMESTAMP:
+			case Types.TIME:
+				return "to_date(null)";
+
+			default:
+				return "to_number(null)";
+		}
 	}
 }

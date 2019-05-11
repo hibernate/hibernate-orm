@@ -153,6 +153,16 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     }
 
     @Test
+    public void testLeftRightFunctions() {
+        inTransaction(
+                session -> {
+                    session.createQuery("select left(e.theString, e.theInt), right(e.theString, e.theInt) from EntityOfBasics e")
+                            .list();
+                }
+        );
+    }
+
+    @Test
     public void testPositionFunction() {
         inTransaction(
                 session -> {

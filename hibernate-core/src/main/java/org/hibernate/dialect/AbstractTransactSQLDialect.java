@@ -83,7 +83,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.concat_plusOperator( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.characterLength_len( queryEngine );
 		CommonFunctionFactory.extract_datepart( queryEngine );
 

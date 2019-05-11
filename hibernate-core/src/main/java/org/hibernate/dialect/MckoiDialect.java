@@ -60,6 +60,7 @@ public class MckoiDialect extends Dialect {
 		super.initializeFunctionRegistry(queryEngine);
 
 		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.trim1( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "nullif", "if(?1=?2, null, ?1)" )
 				.setExactArgumentCount(2)

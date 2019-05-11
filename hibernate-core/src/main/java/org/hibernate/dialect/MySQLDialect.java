@@ -202,7 +202,6 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.crc32( queryEngine );
 		CommonFunctionFactory.sha1( queryEngine );
 		CommonFunctionFactory.sha2( queryEngine );

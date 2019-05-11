@@ -135,6 +135,11 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.position( queryEngine );
 
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("insert", "overlay(?1 placing ?4 from ?2 for ?3)")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(4)
+				.register();
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )

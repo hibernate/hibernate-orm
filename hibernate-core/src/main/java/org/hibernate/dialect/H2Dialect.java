@@ -161,6 +161,7 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
+		CommonFunctionFactory.insert( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )

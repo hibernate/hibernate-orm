@@ -218,6 +218,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
+		CommonFunctionFactory.insert( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

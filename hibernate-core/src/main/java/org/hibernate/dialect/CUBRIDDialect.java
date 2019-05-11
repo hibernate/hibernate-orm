@@ -133,6 +133,7 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.position( queryEngine );
 //		CommonFunctionFactory.concat_pipeOperator( queryEngine );
+		CommonFunctionFactory.insert( queryEngine );
 		IngresDialect.bitwiseFunctions( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 

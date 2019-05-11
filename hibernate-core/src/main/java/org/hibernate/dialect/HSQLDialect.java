@@ -195,6 +195,7 @@ public class HSQLDialect extends Dialect {
 		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
+		CommonFunctionFactory.insert( queryEngine );
 
 		if ( hsqldbVersion >= 200 ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called

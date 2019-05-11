@@ -174,6 +174,7 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
+		CommonFunctionFactory.insert( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

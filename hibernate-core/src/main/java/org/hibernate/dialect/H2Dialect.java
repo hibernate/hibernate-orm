@@ -144,7 +144,6 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.dayOfWeekMonthYear( queryEngine );
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );

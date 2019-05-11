@@ -260,7 +260,6 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.extract_datepart( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );

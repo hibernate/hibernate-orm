@@ -113,6 +113,7 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.leftRight_substr( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );

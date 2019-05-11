@@ -613,7 +613,7 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	public Replacer datetimeFormat(String format) {
-		return Oracle8iDialect.datetimeFormat( format, true )
+		return Oracle8iDialect.datetimeFormat(format, true)
 				.replace("SSSSSS", "US")
 				.replace("SSSSS", "US")
 				.replace("SSSS", "US")
@@ -625,5 +625,14 @@ public class PostgreSQL81Dialect extends Dialect {
 				.replace("zzz", "TZ")
 				.replace("zz", "TZ")
 				.replace("z", "TZ");
+	}
+
+	public String translateExtractField(String fieldName) {
+		switch ( fieldName ) {
+			case "dayofmonth": return "day";
+			case "dayofyear": return "doy";
+			case "dayofweek": return "dow";
+			default: return fieldName;
+		}
 	}
 }

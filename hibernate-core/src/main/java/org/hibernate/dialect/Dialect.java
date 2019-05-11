@@ -3281,4 +3281,12 @@ public abstract class Dialect implements ConversionContext {
 		return Oracle8iDialect.datetimeFormat( format, true ).result();
 	}
 
+	public String translateExtractField(String fieldName) {
+		switch ( fieldName ) {
+			case "dayofmonth": return "dd";
+			case "dayofyear": return "dy";
+			case "dayofweek": return "dw";
+			default: return fieldName;
+		}
+	}
 }

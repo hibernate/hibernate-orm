@@ -2072,6 +2072,21 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public Object visitDayField(HqlParser.DayFieldContext ctx) {
+		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
+		if (ctx.WEEK()!=null) {
+			return new SqmExtractUnit<>("dayofweek", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		}
+		if (ctx.MONTH()!=null) {
+			return new SqmExtractUnit<>("dayofmonth", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		}
+		if (ctx.YEAR()!=null) {
+			return new SqmExtractUnit<>("dayofyear", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		}
+		return super.visitDayField(ctx);
+	}
+
+	@Override
 	public Object visitSecondsField(HqlParser.SecondsFieldContext ctx) {
 		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 		if (ctx.MICROSECOND()!=null) {

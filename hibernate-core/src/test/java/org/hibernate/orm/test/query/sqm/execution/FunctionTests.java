@@ -294,6 +294,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 		);
 	}
 
+
 	@Test
 	public void testExtractFunction() {
 		inTransaction(
@@ -303,6 +304,18 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select extract(month from e.theDate) from EntityOfBasics e")
 							.list();
 					session.createQuery("select extract(day from e.theDate) from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select extract(day of year from e.theDate) from EntityOfBasics e")
+							.list();
+					session.createQuery("select extract(day of month from e.theDate) from EntityOfBasics e")
+							.list();
+					session.createQuery("select extract(day of week from e.theDate) from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select extract(week from e.theDate) from EntityOfBasics e")
+							.list();
+					session.createQuery("select extract(quarter from e.theDate) from EntityOfBasics e")
 							.list();
 
 					session.createQuery("select extract(hour from e.theTime) from EntityOfBasics e")
@@ -324,6 +337,12 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select extract(second from e.theTimestamp) from EntityOfBasics e")
 							.list();
+
+					session.createQuery("select extract(timezone_hour from e.theTime) from EntityOfBasics e")
+							.list();
+					session.createQuery("select extract(timezone_hour minute from e.theTime) from EntityOfBasics e")
+							.list();
+
 				}
 		);
 	}
@@ -361,7 +380,6 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 	}
-
 
 	@Test
 	public void testLeastGreatestFunctions() {

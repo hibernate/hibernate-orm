@@ -659,7 +659,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
-		return Oracle8iDialect.datetimeFormat( format, false )
+		return Oracle8iDialect.datetimeFormat(format, false)
 				.replace("SSSSSS", "FF")
 				.replace("SSSSS", "FF")
 				.replace("SSSS", "FF")
@@ -667,5 +667,14 @@ public class HSQLDialect extends Dialect {
 				.replace("SS", "FF")
 				.replace("S", "FF")
 				.result();
+	}
+
+	public String translateExtractField(String fieldName) {
+		switch ( fieldName ) {
+			case "dayofmonth": return "day_of_month";
+			case "dayofyear": return "day_of_year";
+			case "dayofweek": return "day_of_week";
+			default: return fieldName;
+		}
 	}
 }

@@ -576,4 +576,14 @@ public class DB2Dialect extends Dialect {
 		//DB2 does not need nor support FM
 		return Oracle8iDialect.datetimeFormat( format, false ).result();
 	}
+
+	public String translateExtractField(String fieldName) {
+		switch ( fieldName ) {
+			case "dayofmonth": return "day";
+			case "dayofyear": return "doy";
+			case "dayofweek": return "dow";
+			default: return fieldName;
+		}
+	}
+
 }

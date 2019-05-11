@@ -107,6 +107,7 @@ public class Oracle9Dialect extends Dialect {
 		CommonFunctionFactory.initcap( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.leftRight_substr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.bitand( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );

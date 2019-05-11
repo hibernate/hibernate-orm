@@ -278,6 +278,7 @@ public abstract class Dialect implements ConversionContext {
 	 * And a number of additional "standard" functions:
 	 *
 	 * 	    * ifnull (two-argument synonym for coalesce)
+	 *      * left, right
 	 *      * replace
 	 *      * least, greatest
 	 *      * sign
@@ -321,6 +322,7 @@ public abstract class Dialect implements ConversionContext {
 		CommonFunctionFactory.characterLength(queryEngine);
 		CommonFunctionFactory.locate(queryEngine);
 		CommonFunctionFactory.substring(queryEngine);
+		CommonFunctionFactory.leftRight(queryEngine);
 		CommonFunctionFactory.replace(queryEngine);
 		CommonFunctionFactory.concat(queryEngine);
 		CommonFunctionFactory.lowerUpper(queryEngine);

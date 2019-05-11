@@ -2341,7 +2341,30 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				resolveExpressableTypeBasic( String.class ),
 				creationContext.getQueryEngine()
 		);
+	}
 
+	@Override
+	public SqmExpression visitLeftFunction(HqlParser.LeftFunctionContext ctx) {
+		final SqmExpression source = (SqmExpression) ctx.expression(0).accept( this );
+		final SqmExpression length = (SqmExpression) ctx.expression(1).accept( this );
+
+		return getFunctionTemplate("left").makeSqmFunctionExpression(
+				asList( source, length ),
+				resolveExpressableTypeBasic( String.class ),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public SqmExpression visitRightFunction(HqlParser.RightFunctionContext ctx) {
+		final SqmExpression source = (SqmExpression) ctx.expression(0).accept( this );
+		final SqmExpression length = (SqmExpression) ctx.expression(1).accept( this );
+
+		return getFunctionTemplate("right").makeSqmFunctionExpression(
+				asList( source, length ),
+				resolveExpressableTypeBasic( String.class ),
+				creationContext.getQueryEngine()
+		);
 	}
 
 	@Override

@@ -577,6 +577,8 @@ standardFunction
 	|	extractFunction
 	|	concatFunction
 	|	substringFunction
+	|	leftFunction
+	|	rightFunction
 	|   replaceFunction
 	|	trimFunction
 	|	upperFunction
@@ -623,6 +625,13 @@ castTarget
 
 concatFunction
 	: CONCAT LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
+	;
+
+leftFunction
+	: LEFT LEFT_PAREN expression COMMA expression RIGHT_PAREN
+	;
+rightFunction
+	: RIGHT LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
 substringFunction

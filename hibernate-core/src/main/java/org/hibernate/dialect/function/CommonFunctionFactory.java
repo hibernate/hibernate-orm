@@ -218,6 +218,17 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void leftRight_substr(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "left", "substr(?1,0,?2)" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "right", "substr(?1,-?2)" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
 	public static void repeat_replicate(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "replicate" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

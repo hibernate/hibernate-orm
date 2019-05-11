@@ -32,12 +32,13 @@ public class JdbcLiteralFormatterCharacterData extends BasicJdbcLiteralFormatter
 	public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
 		final String literalValue = unwrap( value, String.class, session );
 
+		String escaped = literalValue.replace("'", "''");
 		if ( isNationalized ) {
 			// is there a standardized form for n-string literals?  This is the SQL Server syntax for sure
-			return String.format( Locale.ROOT, "n'%s'", literalValue );
+			return String.format( Locale.ROOT, "n'%s'", escaped );
 		}
 		else {
-			return String.format( Locale.ROOT, "'%s'", literalValue );
+			return String.format( Locale.ROOT, "'%s'", escaped );
 		}
 	}
 }

@@ -795,6 +795,7 @@ extractFunction
 
 extractField
 	: datetimeField
+	| dayField
 	| timeZoneField
 	| secondsField
 	;
@@ -809,6 +810,12 @@ datetimeField
 	| MINUTE
 	| SECOND
 	;
+
+dayField
+	: DAY OF MONTH
+	| DAY OF WEEK
+	| DAY OF YEAR
+    ;
 
 secondsField
 	: MILLISECOND

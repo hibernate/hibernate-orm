@@ -604,4 +604,13 @@ public class PostgreSQL81Dialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public String translateExtractField(String fieldName) {
+		switch ( fieldName ) {
+			case "dayofmonth": return "day";
+			case "dayofyear": return "doy";
+			case "dayofweek": return "dow";
+			default: return fieldName;
+		}
+	}
 }

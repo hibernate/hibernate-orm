@@ -650,4 +650,14 @@ public class HSQLDialect extends Dialect {
 	public String getCascadeConstraintsString() {
 		return " CASCADE ";
 	}
+
+	@Override
+	public String translateExtractField(String fieldName) {
+		switch ( fieldName ) {
+			case "dayofmonth": return "day_of_month";
+			case "dayofyear": return "day_of_year";
+			case "dayofweek": return "day_of_week";
+			default: return fieldName;
+		}
+	}
 }

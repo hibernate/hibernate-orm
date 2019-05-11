@@ -566,4 +566,15 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsPartitionBy() {
 		return true;
 	}
+
+	@Override
+	public String translateExtractField(String fieldName) {
+		switch ( fieldName ) {
+			case "dayofmonth": return "day";
+			case "dayofyear": return "doy";
+			case "dayofweek": return "dow";
+			default: return fieldName;
+		}
+	}
+
 }

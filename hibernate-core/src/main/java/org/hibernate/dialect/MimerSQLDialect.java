@@ -9,10 +9,10 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
@@ -21,43 +21,40 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  * because of the mappings to NCLOB, BINARY, and BINARY VARYING.
  *
  * @author Fredrik lund <fredrik.alund@mimer.se>
+ * @author Gavin King
  */
 @SuppressWarnings("deprecation")
 public class MimerSQLDialect extends Dialect {
 
-	private static final int NATIONAL_CHAR_LENGTH = 2000;
-	private static final int BINARY_MAX_LENGTH = 2000;
-
 	/**
-	 * Even thoug Mimer SQL supports character and binary columns up to 15 000 in lenght,
-	 * this is also the maximum width of the table (exluding LOBs). To avoid breaking the limit all the
-	 * time we limit the length of the character columns to CHAR_MAX_LENTH, NATIONAL_CHAR_LENGTH for national
-	 * characters, and BINARY_MAX_LENGTH for binary types.
+	 * Even though Mimer SQL supports character and binary columns up to 15 000 in length,
+	 * this is also the maximum width of the table (exluding LOBs). To avoid breaking the
+	 * limit all the time we limit the length of the character columns to CHAR_MAX_LENGTH
+	 * for character types, and BINARY_MAX_LENGTH for binary types.
 	 */
 	public MimerSQLDialect() {
 		super();
-		registerColumnType( Types.BIT, "ODBC.BIT" );
-		registerColumnType( Types.BIGINT, "BIGINT" );
-		registerColumnType( Types.SMALLINT, "SMALLINT" );
-		registerColumnType( Types.TINYINT, "ODBC.TINYINT" );
-		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.CHAR, "NCHAR(1)" );
-		registerColumnType( Types.VARCHAR, NATIONAL_CHAR_LENGTH, "NATIONAL CHARACTER VARYING($l)" );
-		registerColumnType( Types.VARCHAR, "NCLOB($l)" );
-		registerColumnType( Types.LONGVARCHAR, "CLOB($1)" );
-		registerColumnType( Types.FLOAT, "FLOAT" );
-		registerColumnType( Types.DOUBLE, "DOUBLE PRECISION" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIME" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.VARBINARY, BINARY_MAX_LENGTH, "BINARY VARYING($l)" );
-		registerColumnType( Types.VARBINARY, "BLOB($1)" );
-		registerColumnType( Types.LONGVARBINARY, "BLOB($1)" );
-		registerColumnType( Types.BINARY, BINARY_MAX_LENGTH, "BINARY" );
-		registerColumnType( Types.BINARY, "BLOB($1)" );
-		registerColumnType( Types.NUMERIC, "NUMERIC(19, $l)" );
-		registerColumnType( Types.BLOB, "BLOB($l)" );
-		registerColumnType( Types.CLOB, "NCLOB($l)" );
+		registerColumnType( Types.BIT, "boolean" );
+		registerColumnType( Types.TINYINT, "smallint" );
+		registerColumnType( Types.SMALLINT, "smallint" );
+		registerColumnType( Types.INTEGER, "integer" );
+		registerColumnType( Types.BIGINT, "bigint" );
+		registerColumnType( Types.CHAR, "char(1)" );
+		registerColumnType( Types.VARCHAR, "varchar($l)" );
+		registerColumnType( Types.LONGVARCHAR, "varchar($l)" );
+		registerColumnType( Types.NVARCHAR, "nvarchar($l)" );
+		registerColumnType( Types.LONGNVARCHAR, "nvarchar($l)" );
+		registerColumnType( Types.FLOAT, "float" );
+		registerColumnType( Types.DOUBLE, "double precision" );
+		registerColumnType( Types.DATE, "date" );
+		registerColumnType( Types.TIME, "time" );
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.VARBINARY, "varbinary($l)" );
+		registerColumnType( Types.LONGVARBINARY, "varbinary($l)" );
+		registerColumnType( Types.BINARY, "binary" );
+		registerColumnType( Types.NUMERIC, "numeric(19, $l)" );
+		registerColumnType( Types.BLOB, "blob($l)" );
+		registerColumnType( Types.CLOB, "nclob($l)" );
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
@@ -67,49 +64,13 @@ public class MimerSQLDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dacos", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dasin", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "datan", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "datan2", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dcos", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dcot", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "cot", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ddegrees", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "degrees", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dexp", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dlog", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dlog10", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "log10", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dradian", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "radian", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dsin", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "soundex", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dsqrt", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dtan", StandardSpiBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dpower" );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "date", StandardSpiBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofweek", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofyear", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "time", StandardSpiBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "timestamp", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "week", StandardSpiBasicTypes.INTEGER );
-
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "varchar", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "real", StandardSpiBasicTypes.FLOAT );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "bigint", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "char", StandardSpiBasicTypes.CHARACTER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "integer", StandardSpiBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "smallint", StandardSpiBasicTypes.SHORT );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii_char", StandardSpiBasicTypes.CHARACTER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii_code", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode_char", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode_code", StandardSpiBasicTypes.STRING );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.truncate( queryEngine );
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 	}
 
 
@@ -129,13 +90,18 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsPooledSequences() {
+		return true;
+	}
+
+	@Override
 	public String getSequenceNextValString(String sequenceName) {
-		return "select next_value of " + sequenceName + " from system.onerow";
+		return "select next value for " + sequenceName + " from system.onerow";
 	}
 
 	@Override
 	public String getCreateSequenceString(String sequenceName) {
-		return "create unique sequence " + sequenceName;
+		return "create sequence " + sequenceName;
 	}
 
 	@Override

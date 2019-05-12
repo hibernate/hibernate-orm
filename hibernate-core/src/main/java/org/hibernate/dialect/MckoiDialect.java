@@ -42,7 +42,7 @@ public class MckoiDialect extends Dialect {
 		registerColumnType( Types.SMALLINT, "smallint" );
 		registerColumnType( Types.TINYINT, "tinyint" );
 		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "char(1)" );
+		registerColumnType( Types.CHAR, "char($l)" );
 		registerColumnType( Types.VARCHAR, "varchar($l)" );
 		registerColumnType( Types.FLOAT, "float" );
 		registerColumnType( Types.DOUBLE, "double" );

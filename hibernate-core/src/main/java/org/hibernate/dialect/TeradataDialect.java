@@ -43,7 +43,7 @@ public class TeradataDialect extends Dialect {
 		registerColumnType( Types.VARBINARY, "VARBYTE($l)" );
 		registerColumnType( Types.BINARY, "BYTEINT" );
 		registerColumnType( Types.LONGVARCHAR, "LONG VARCHAR" );
-		registerColumnType( Types.CHAR, "CHAR(1)" );
+		registerColumnType( Types.CHAR, "CHAR($l)" );
 		registerColumnType( Types.DECIMAL, "DECIMAL" );
 		registerColumnType( Types.INTEGER, "INTEGER" );
 		registerColumnType( Types.SMALLINT, "SMALLINT" );

@@ -169,7 +169,7 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	protected void registerCharacterTypeMappings() {
-		registerColumnType( Types.CHAR, "char(1)" );
+		registerColumnType( Types.CHAR, "char($l)" );
 		registerColumnType( Types.VARCHAR, 4000, "varchar2($l)" );
 		registerColumnType( Types.VARCHAR, "long" );
 	}

@@ -37,7 +37,7 @@ public class PointbaseDialect extends org.hibernate.dialect.Dialect {
 		//no pointbase TINYINT
 		registerColumnType( Types.TINYINT, "smallint" );
 		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "char(1)" );
+		registerColumnType( Types.CHAR, "char($l)" );
 		registerColumnType( Types.VARCHAR, "varchar($l)" );
 		registerColumnType( Types.FLOAT, "float" );
 		registerColumnType( Types.DOUBLE, "double precision" );

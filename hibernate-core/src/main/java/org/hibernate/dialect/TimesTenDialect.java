@@ -64,7 +64,7 @@ public class TimesTenDialect extends Dialect {
 		registerColumnType( Types.SMALLINT, "SMALLINT" );
 		registerColumnType( Types.TINYINT, "TINYINT" );
 		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.CHAR, "CHAR(1)" );
+		registerColumnType( Types.CHAR, "CHAR($l)" );
 		registerColumnType( Types.VARCHAR, "VARCHAR($l)" );
 		registerColumnType( Types.FLOAT, "FLOAT" );
 		registerColumnType( Types.DOUBLE, "DOUBLE" );

@@ -94,7 +94,7 @@ public class MySQLDialect extends Dialect {
 		registerColumnType( Types.SMALLINT, "smallint" );
 		registerColumnType( Types.TINYINT, "tinyint" );
 		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "char(1)" );
+		registerColumnType( Types.CHAR, "char($l)" );
 		registerColumnType( Types.FLOAT, "float" );
 		registerColumnType( Types.DOUBLE, "double precision" );
 		registerColumnType( Types.BOOLEAN, "bit" ); // HHH-6935

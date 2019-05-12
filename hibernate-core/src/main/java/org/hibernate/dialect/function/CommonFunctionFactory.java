@@ -120,7 +120,7 @@ public class CommonFunctionFactory {
 
 	public static void truncate(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "truncate" )
-				.setArgumentCountBetween( 1, 2 )
+				.setExactArgumentCount( 2 ) //some databases allow 1 arg but in these it's a synonym for trunc()
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
 	}

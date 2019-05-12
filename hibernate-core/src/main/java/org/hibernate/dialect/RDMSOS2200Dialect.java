@@ -171,6 +171,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.pi( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.pad( queryEngine );

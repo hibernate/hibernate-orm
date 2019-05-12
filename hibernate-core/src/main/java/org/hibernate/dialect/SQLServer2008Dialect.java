@@ -39,15 +39,8 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 
 		CommonFunctionFactory.locate_charindex( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "row_number" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rank" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
+		CommonFunctionFactory.stddevPopSamp_stdevp( queryEngine );
+		CommonFunctionFactory.varPopSamp_varp( queryEngine );
 	}
 
 	@Override

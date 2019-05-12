@@ -110,8 +110,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
@@ -133,15 +131,23 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.position( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("insert", "overlay(?1 placing ?4 from ?2 for ?3)")
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount(4)
-				.register();
+		CommonFunctionFactory.bitandorxornot_operator( queryEngine );
+		CommonFunctionFactory.bitAndOr( queryEngine );
+		CommonFunctionFactory.everyAny_boolAndOr( queryEngine );
+		CommonFunctionFactory.median_percentileCont( queryEngine, false );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("insert", "overlay(?1 placing ?4 from ?2 for ?3)")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(4)
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");

@@ -124,8 +124,6 @@ public class CUBRIDDialect extends Dialect {
 		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.sha1( queryEngine );
 		CommonFunctionFactory.sha2( queryEngine );
@@ -134,8 +132,14 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.position( queryEngine );
 //		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
-		IngresDialect.bitwiseFunctions( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
+		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot( queryEngine );
+
+		CommonFunctionFactory.median( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
 	}

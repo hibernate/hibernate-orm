@@ -134,6 +134,28 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void median(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "median" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void median_percentileCont(QueryEngine queryEngine, boolean over) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "median",
+				"percentile_cont(0.5) within group (order by ?1)"
+						+ (over ? " over()" : "") )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	/**
+	 * Warning: the semantics of this function are inconsistent between DBs.
+	 *
+	 * - On Postgres it means stdev_samp()
+	 * - On Oracle, DB2, MySQL it means stdev_pop()
+	 */
 	public static void stddev(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "stddev" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
@@ -141,11 +163,71 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Warning: the semantics of this function are inconsistent between DBs.
+	 *
+	 * - On Postgres it means stdev_samp()
+	 * - On Oracle, DB2, MySQL it means stdev_pop()
+	 */
 	public static void variance(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "variance" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
+	}
+
+	public static void stddevPopSamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "stddev_pop" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "stddev_samp" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void varPopSamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "variance_pop" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "variance_samp" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	/**
+	 * SQL Server-style
+	 */
+	public static void stddevPopSamp_stdevp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "stdev" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "stdevp" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "stddev_samp", "stdev" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "stddev_pop", "stdevp" );
+	}
+
+	/**
+	 * SQL Server-style
+	 */
+	public static void varPopSamp_varp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "var" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "varp" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "var_samp", "var" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "var_pop", "varp" );
 	}
 
 	public static void pi(QueryEngine queryEngine) {
@@ -296,13 +378,13 @@ public class CommonFunctionFactory {
 	}
 
 	public static void bitor(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitand" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitor" )
 				.setExactArgumentCount( 2 )
 				.register();
 	}
 
 	public static void bitxor(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitand" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitxor" )
 				.setExactArgumentCount( 2 )
 				.register();
 	}
@@ -310,6 +392,123 @@ public class CommonFunctionFactory {
 	public static void bitnot(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bitnot" )
 				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	/**
+	 * Binary bitwise operators, not aggregate functions!
+	 */
+	public static void bitandorxornot_bitAndOrXorNot(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_and" )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitand", "bit_and");
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_or" )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitor", "bit_or");
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_xor" )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitxor", "bit_xor");
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_not" )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitnot", "bit_not");
+	}
+
+	/**
+	 * Binary bitwise operators, not aggregate functions!
+	 */
+	public static void bitandorxornot_operator(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "bitand", "(?1&?2)" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "bitor", "(?1|?2)" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "bitxor", "(?1^?2)" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "bitnot", "~?1" )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	/**
+	 * These are aggregate functions taking one argument!
+	 */
+	public static void bitAndOr(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_and" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_or" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		//MySQL has it but how is that even useful?
+//		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_xor" )
+//				.setExactArgumentCount( 1 )
+//				.register();
+	}
+
+	/**
+	 * These are aggregate functions taking one argument!
+	 */
+	public static void everyAny(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "every" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "any" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.register();
+	}
+
+	/**
+	 * These are aggregate functions taking one argument, for
+	 * databases that can directly aggregate both boolean columns
+	 * and predicates!
+	 */
+	public static void everyAny_boolAndOr(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bool_and" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "every", "bool_and" );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bool_or" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "any", "bool_or" );
+	}
+
+	/**
+	 * These are aggregate functions taking one argument,
+	 * for databases that have to emulate the boolean
+	 * aggregation functions using sum() and case.
+	 */
+	public static void everyAny_sumCase(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "every",
+				"(sum(case when ?1 then 0 else 1 end)=0)" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "any",
+				"(sum(case when ?1 then 1 else 0 end)>0)" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.register();
 	}
 

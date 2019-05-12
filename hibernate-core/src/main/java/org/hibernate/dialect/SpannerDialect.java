@@ -140,7 +140,7 @@ public class SpannerDialect extends Dialect {
 		CommonFunctionFactory.tanh( queryEngine );
 		CommonFunctionFactory.moreHyperbolic( queryEngine );
 
-		IngresDialect.bitwiseFunctions( queryEngine );
+		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "is_inf" )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )

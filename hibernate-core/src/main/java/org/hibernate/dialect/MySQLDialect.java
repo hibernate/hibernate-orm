@@ -198,8 +198,6 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.crc32( queryEngine );
@@ -218,6 +216,12 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
+		CommonFunctionFactory.bitandorxornot_operator( queryEngine );
+		CommonFunctionFactory.bitAndOr( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

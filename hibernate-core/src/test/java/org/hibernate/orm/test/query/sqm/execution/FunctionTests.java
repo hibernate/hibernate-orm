@@ -7,10 +7,14 @@
 package org.hibernate.orm.test.query.sqm.execution;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.junit.jupiter.api.Test;
+
+import javax.persistence.EntityManager;
 
 /**
  * @author Gavin King
@@ -20,6 +24,17 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
     @Override
     protected void applyMetadataSources(MetadataSources metadataSources) {
         StandardDomainModel.GAMBIT.getDescriptor().applyDomainModel(metadataSources);
+    }
+
+    @Override
+    protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
+        EntityManager em = factory.createEntityManager();
+        em.getTransaction().begin();
+        EntityOfBasics entity = new EntityOfBasics();
+        entity.setId(12);
+        em.persist(entity);
+        em.getTransaction().commit();
+        em.close();
     }
 
     @Test
@@ -334,6 +349,13 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                     session.createQuery("select avg(e.theDouble), avg(abs(e.theDouble)), min(e.theDouble), max(e.theDouble), sum(e.theDouble), sum(e.theInt) from EntityOfBasics e")
                             .list();
                     session.createQuery("select avg(distinct e.theInt), sum(distinct e.theInt) from EntityOfBasics e")
+                            .list();
+                    session.createQuery("select any(e.theInt > 0), every(e.theInt > 0) from EntityOfBasics e")
+                            .list();
+                    //not supported by grammar:
+//                    session.createQuery("select any(e.theBoolean), every(e.theBoolean) from EntityOfBasics e")
+//                            .list();
+                    session.createQuery("select some(e.theInt > 0), all(e.theInt > 0) from EntityOfBasics e")
                             .list();
                 }
         );

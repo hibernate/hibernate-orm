@@ -265,6 +265,10 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
 

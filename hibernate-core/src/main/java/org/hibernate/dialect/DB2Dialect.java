@@ -145,8 +145,6 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
@@ -175,6 +173,12 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
+
+		CommonFunctionFactory.median( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

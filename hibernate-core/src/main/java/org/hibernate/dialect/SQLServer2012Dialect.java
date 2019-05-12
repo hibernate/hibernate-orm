@@ -10,6 +10,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Microsoft SQL Server 2012 Dialect
@@ -25,6 +26,8 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 		//actually translate() was added in 2017 but
 		//it's not worth adding a new dialect for that!
 		CommonFunctionFactory.translate( queryEngine );
+
+		CommonFunctionFactory.median_percentileCont( queryEngine, true );
 	}
 
 	@Override

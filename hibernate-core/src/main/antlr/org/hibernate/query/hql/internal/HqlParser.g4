@@ -551,6 +551,8 @@ aggregateFunction
 	| minFunction
 	| maxFunction
 	| countFunction
+	| everyFunction
+	| anyFunction
 	;
 
 avgFunction
@@ -559,6 +561,14 @@ avgFunction
 
 sumFunction
 	: SUM LEFT_PAREN DISTINCT? expression RIGHT_PAREN
+	;
+
+everyFunction
+	: (EVERY|ALL) LEFT_PAREN DISTINCT? predicate RIGHT_PAREN
+	;
+
+anyFunction
+	: (ANY|SOME) LEFT_PAREN DISTINCT? predicate RIGHT_PAREN
 	;
 
 minFunction
@@ -881,6 +891,7 @@ identifier
 	| DISTINCT
 	| ELEMENTS
 	| ENTRY
+	| EVERY
 	| EXP
 	| FLOOR
 	| FROM
@@ -931,6 +942,7 @@ identifier
 	| SECOND
 	| SET
 	| SIGN
+	| SOME
 	| SQRT
 	| STR
 	| SUBSTRING

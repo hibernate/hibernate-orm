@@ -331,6 +331,7 @@ public abstract class Dialect implements ConversionContext {
 		//aggregate functions, supported on every database
 
 		CommonFunctionFactory.aggregates(queryEngine);
+		CommonFunctionFactory.everyAny_sumCase(queryEngine);
 
 		//math functions supported on almost every database
 

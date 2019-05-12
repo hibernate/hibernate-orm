@@ -99,10 +99,6 @@ public class CommonFunctionFactory {
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setExactArgumentCount( 2 )
-				.register();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

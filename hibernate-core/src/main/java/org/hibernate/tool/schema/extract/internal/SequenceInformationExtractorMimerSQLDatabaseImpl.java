@@ -20,8 +20,4 @@ public class SequenceInformationExtractorMimerSQLDatabaseImpl extends SequenceIn
 		return "initial_value";
 	}
 
-	@Override
-	protected String sequenceMinValueColumn() {
-		return null;
-	}
 }

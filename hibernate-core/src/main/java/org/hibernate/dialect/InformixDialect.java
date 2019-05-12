@@ -93,6 +93,7 @@ public class InformixDialect extends Dialect {
 		CommonFunctionFactory.sinh( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
 		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.moreHyperbolic( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );

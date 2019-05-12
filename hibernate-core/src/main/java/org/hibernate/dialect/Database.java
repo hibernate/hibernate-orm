@@ -91,31 +91,28 @@ public enum Database {
 				else if ( majorVersion == 10 && minorVersion == 5 ) {
 					return new DerbyTenFiveDialect();
 				}
-				else {
-					return new DerbyDialect();
-				}
 			}
 
 			return null;
 		}
 	},
-	ENTERPRISEDB {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return PostgresPlusDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "EnterpriseDB".equals( databaseName ) ) {
-				return latestDialectInstance( this );
-			}
-
-			return null;
-		}
-	},
+//	ENTERPRISEDB {
+//		@Override
+//		public Class<? extends Dialect> latestDialect() {
+//			return PostgresPlusDialect.class;
+//		}
+//
+//		@Override
+//		public Dialect resolveDialect(DialectResolutionInfo info) {
+//			final String databaseName = info.getDatabaseName();
+//
+//			if ( "EnterpriseDB".equals( databaseName ) ) {
+//				return latestDialectInstance( this );
+//			}
+//
+//			return null;
+//		}
+//	},
 	FIREBIRD {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
@@ -130,17 +127,6 @@ public enum Database {
 				return latestDialectInstance( this );
 			}
 
-			return null;
-		}
-	},
-	FRONTBASE {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return FrontBaseDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
 			return null;
 		}
 	},
@@ -302,17 +288,6 @@ public enum Database {
 			return null;
 		}
 	},
-	MCKOI {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return MckoiDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
-		}
-	},
 	MIMERSQL {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
@@ -392,17 +367,6 @@ public enum Database {
 			return null;
 		}
 	},
-	POINTBASE {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return PointbaseDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
-		}
-	},
 	POSTGRESQL {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
@@ -443,17 +407,6 @@ public enum Database {
 				return latestDialectInstance( this );
 			}
 
-			return null;
-		}
-	},
-	PROGRESS {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return ProgressDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
 			return null;
 		}
 	},

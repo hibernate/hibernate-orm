@@ -11,7 +11,6 @@ import java.util.Date;
 
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
@@ -34,7 +33,7 @@ public class AuctionTest extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
-	@SkipForDialect(value = { PostgreSQL81Dialect.class, PostgreSQLDialect.class }, comment = "doesn't like boolean=1")
+	@SkipForDialect(value = { PostgreSQL81Dialect.class }, comment = "doesn't like boolean=1")
 	public void testLazy() {
 		Auction auction = new Auction();
 		Bid bid = new Bid();

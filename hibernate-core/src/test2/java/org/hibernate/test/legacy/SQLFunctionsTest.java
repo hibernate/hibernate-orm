@@ -20,7 +20,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.AbstractDerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
@@ -385,7 +385,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		simple.setName("Simple 1");
 		s.save( simple );
 
-		if ( getDialect() instanceof DB2Dialect && !(getDialect() instanceof DerbyDialect) ) {
+		if ( getDialect() instanceof DB2Dialect && !(getDialect() instanceof AbstractDerbyDialect) ) {
 			s.createQuery( "from Simple s where repeat('foo', 3) = 'foofoofoo'" ).list();
 			s.createQuery( "from Simple s where repeat(s.name, 3) = 'foofoofoo'" ).list();
 			s.createQuery( "from Simple s where repeat( lower(s.name), 3 + (1-1) / 2) = 'foofoofoo'" ).list();

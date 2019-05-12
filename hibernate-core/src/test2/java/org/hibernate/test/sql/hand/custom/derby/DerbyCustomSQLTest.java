@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.sql.hand.custom.derby;
 
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.DerbyTenFiveDialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
@@ -14,7 +14,7 @@ import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialect(DerbyDialect.class)
+@RequiresDialect(DerbyTenFiveDialect.class)
 public class DerbyCustomSQLTest extends CustomStoredProcTestSupport {
 	public String[] getMappings() {
 		return new String[] {"sql/hand/custom/derby/Mappings.hbm.xml"};

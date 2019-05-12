@@ -15,7 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.AbstractDerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDB103Dialect;
@@ -35,7 +35,7 @@ public class SequenceValueExtractor {
 
 	public SequenceValueExtractor(Dialect dialect, String sequenceName) {
 		this.dialect = dialect;
-		if ( dialect instanceof DerbyDialect ) {
+		if ( dialect instanceof AbstractDerbyDialect ) {
 			queryString = "VALUES SYSCS_UTIL.SYSCS_PEEK_AT_SEQUENCE('HIBERNATE_ORM_TEST', '" + sequenceName.toUpperCase() + "')";
 		}
 		else if ( dialect instanceof DB2Dialect ) {
@@ -85,7 +85,7 @@ public class SequenceValueExtractor {
 					transaction.rollback();
 					throw e;
 				}
-				if ( dialect instanceof DerbyDialect ) {
+				if ( dialect instanceof AbstractDerbyDialect ) {
 					value--;
 				}
 			}

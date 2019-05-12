@@ -9,10 +9,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.annotations.Remove;
+import org.hibernate.dialect.AbstractDerbyDialect;
 
 /**
  * @author Simon Johnston
- * @see org.hibernate.dialect.DerbyDialect
+ * @see AbstractDerbyDialect
  *
  * @deprecated Converting to use SQL AST
  */

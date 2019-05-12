@@ -21,7 +21,7 @@ public class PropertiesTest extends BaseUnitTestCase {
 	public void testProperties() throws Exception {
 		final Properties props = new Properties();
 
-		props.put("rpt.1.hibernate.dialect", "org.hibernate.dialect.DerbyDialect");
+		props.put("rpt.1.hibernate.dialect", "org.hibernate.dialect.DerbyTenFiveDialect");
 		props.put("rpt.2.hibernate.connection.driver_class", "org.apache.derby.jdbc.ClientDriver");
 		props.put("rpt.3.hibernate.connection.url", "jdbc:derby://localhost:1527/db/reports.db");
 		props.put("rpt.4.hibernate.connection.username", "sa");

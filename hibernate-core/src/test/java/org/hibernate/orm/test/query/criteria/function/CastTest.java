@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.query.criteria.function;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.AbstractDerbyDialect;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -42,7 +42,7 @@ public class CastTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class,comment = "Derby does not support cast from INTEGER to VARCHAR")
+	@SkipForDialect(value = AbstractDerbyDialect.class,comment = "Derby does not support cast from INTEGER to VARCHAR")
 	@TestForIssue( jiraKey = "HHH-5755" )
 	public void testCastToString() {
 		inTransaction(

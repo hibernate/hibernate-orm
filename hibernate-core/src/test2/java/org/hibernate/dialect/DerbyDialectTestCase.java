@@ -24,7 +24,7 @@ import org.junit.Test;
  */
 public class DerbyDialectTestCase extends BaseUnitTestCase {
 
-	private static class LocalDerbyDialect extends DerbyDialect {
+	private static class LocalDerbyDialect extends AbstractDerbyDialect {
 		protected boolean isTenPointFiveReleaseOrNewer() {
 			return true; // for test sake :)
 		}

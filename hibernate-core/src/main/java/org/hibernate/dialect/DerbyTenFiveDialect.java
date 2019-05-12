@@ -16,7 +16,7 @@ package org.hibernate.dialect;
  * @author Scott Marlow
  */
 @SuppressWarnings("deprecation")
-public class DerbyTenFiveDialect extends DerbyDialect {
+public class DerbyTenFiveDialect extends AbstractDerbyDialect {
 	/**
 	 * Constructs a DerbyTenFiveDialect
 	 */

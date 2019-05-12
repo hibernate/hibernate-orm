@@ -47,7 +47,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.AbstractDerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
@@ -427,7 +427,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		//s.find("from Baz as baz where baz.topComponents[baz].name = 'bazzz'");
 
-		if ( (getDialect() instanceof DB2Dialect) && !(getDialect() instanceof DerbyDialect) ) {
+		if ( (getDialect() instanceof DB2Dialect) && !(getDialect() instanceof AbstractDerbyDialect) ) {
 			s.createQuery( "from Foo foo where lower( foo.foo.string ) = 'foo'" ).list();
 			s.createQuery( "from Foo foo where lower( (foo.foo.string || 'foo') || 'bar' ) = 'foo'" ).list();
 			s.createQuery( "from Foo foo where repeat( (foo.foo.string || 'foo') || 'bar', 2 ) = 'foo'" ).list();
@@ -480,7 +480,7 @@ public class FooBarTest extends LegacyTestCase {
 				!(getDialect() instanceof MckoiDialect) &&
 				!(getDialect() instanceof SAPDBDialect) &&
 				!(getDialect() instanceof PointbaseDialect) &&
-				!(getDialect() instanceof DerbyDialect)
+				!(getDialect() instanceof AbstractDerbyDialect)
 		)  {
 			// && !db.equals("weblogic") {
 			if ( !( getDialect() instanceof InterbaseDialect ) ) {
@@ -3553,7 +3553,7 @@ public class FooBarTest extends LegacyTestCase {
 		Iterator rs = null;
 		Object[] row = null;
 		//Derby does not support multiple DISTINCT aggregates
-		if ( !(getDialect() instanceof DerbyDialect) ) {
+		if ( !(getDialect() instanceof AbstractDerbyDialect) ) {
 			rs = s.createQuery(
 					"select count(distinct child.id), count(distinct parent.id) from Foo parent, Foo child where parent.foo = child"
 			).iterate();

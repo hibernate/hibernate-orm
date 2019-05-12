@@ -10,7 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.AbstractDerbyDialect;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class CastFunctionTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
-		if ( getDialect() instanceof DerbyDialect ) {
+		if ( getDialect() instanceof AbstractDerbyDialect ) {
 			// the conversion from DOUBLE to VARCHAR is not supported by Derby,
 			// using the short name
 			s.createQuery( "select cast(char(e.theLostNumber) as string) from MyEntity e" ).list();

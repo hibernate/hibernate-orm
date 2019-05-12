@@ -42,14 +42,12 @@ import org.jboss.logging.Logger;
  *
  * @author Simon Johnston
  *
- * @deprecated HHH-6073
  */
-@Deprecated
-public class DerbyDialect extends DB2Dialect {
-	@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation")
+public abstract class AbstractDerbyDialect extends DB2Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
-			DerbyDialect.class.getName()
+			AbstractDerbyDialect.class.getName()
 	);
 
 	private int driverVersionMajor;
@@ -59,12 +57,8 @@ public class DerbyDialect extends DB2Dialect {
 	/**
 	 * Constructs a DerbyDialect
 	 */
-	@SuppressWarnings("deprecation")
-	public DerbyDialect() {
+	public AbstractDerbyDialect() {
 		super();
-		if ( this.getClass() == DerbyDialect.class ) {
-			LOG.deprecatedDerbyDialect();
-		}
 
 		registerColumnType( Types.BLOB, "blob" );
 		registerDerbyKeywords();

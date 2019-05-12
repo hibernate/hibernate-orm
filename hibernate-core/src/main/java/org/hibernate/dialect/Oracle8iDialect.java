@@ -142,9 +142,7 @@ public class Oracle8iDialect extends Dialect {
 
 		CommonFunctionFactory.cosh( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
@@ -162,6 +160,12 @@ public class Oracle8iDialect extends Dialect {
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
+
+		CommonFunctionFactory.median( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 

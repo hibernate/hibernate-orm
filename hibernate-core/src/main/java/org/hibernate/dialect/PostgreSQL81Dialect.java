@@ -111,8 +111,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
@@ -132,6 +130,15 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.bitandorxornot_operator( queryEngine );
+
+		CommonFunctionFactory.bitAndOr( queryEngine );
+		CommonFunctionFactory.everyAny_boolAndOr( queryEngine );
+		CommonFunctionFactory.median_percentileCont( queryEngine, false );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )

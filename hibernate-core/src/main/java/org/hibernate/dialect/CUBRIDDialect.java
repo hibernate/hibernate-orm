@@ -120,14 +120,18 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.sha1sha2( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 //		CommonFunctionFactory.concat_operator( queryEngine );
-		IngresDialect.bitwiseFunctions( queryEngine );
+		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot( queryEngine );
+
+		CommonFunctionFactory.median( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
 	}

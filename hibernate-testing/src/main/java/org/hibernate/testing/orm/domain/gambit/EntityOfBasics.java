@@ -32,6 +32,7 @@ public class EntityOfBasics {
 	}
 
 	private Integer id;
+	private boolean theBoolean;
 	private String theString;
 	private Integer theInteger;
 	private int theInt;

@@ -133,35 +133,13 @@ public class IngresDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1', ?2)", StandardSpiBasicTypes.INTEGER );
 
-		bitwiseFunctions(queryEngine);
+		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot(queryEngine);
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "squeeze" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
 
-	}
-
-	static void bitwiseFunctions(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_and" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitand", "bit_and");
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_or" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitor", "bit_xor");
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_xor" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitxor", "bit_xor");
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_not" )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitnot", "bit_not");
 	}
 
 	@Override

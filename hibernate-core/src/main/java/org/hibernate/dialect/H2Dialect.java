@@ -155,6 +155,7 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.bitand( queryEngine );
 		CommonFunctionFactory.bitor( queryEngine );
 		CommonFunctionFactory.bitxor( queryEngine );
+		CommonFunctionFactory.bitAndOr( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
 		CommonFunctionFactory.dayOfWeekMonthYear( queryEngine );
@@ -171,6 +172,12 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
+
+//		CommonFunctionFactory.everyAny( queryEngine ); //this would work too
+		CommonFunctionFactory.everyAny_boolAndOr( queryEngine );
+		CommonFunctionFactory.median( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )

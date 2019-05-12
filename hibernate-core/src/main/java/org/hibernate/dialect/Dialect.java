@@ -115,11 +115,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-
-import static org.hibernate.query.sqm.produce.function.StandardArgumentsValidators.min;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
@@ -299,6 +295,7 @@ public abstract class Dialect implements ConversionContext {
 		//aggregate functions, supported on every database
 
 		CommonFunctionFactory.aggregates(queryEngine);
+		CommonFunctionFactory.everyAny_sumCase(queryEngine);
 
 		//math functions supported on almost every database
 

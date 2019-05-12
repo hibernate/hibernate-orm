@@ -2337,6 +2337,34 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public SqmExpression visitEveryFunction(HqlParser.EveryFunctionContext ctx) {
+
+		final SqmExpression<?> arg = (SqmExpression) ctx.predicate().accept( this );
+		SqmTypedNode<?> argument = ctx.DISTINCT() != null ? new SqmDistinct<>(arg, getCreationContext().getNodeBuilder()) : arg;
+
+		return getFunctionTemplate("every").makeSqmFunctionExpression(
+				argument,
+				resolveExpressableTypeBasic( Boolean.class ),
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmExpression visitAnyFunction(HqlParser.AnyFunctionContext ctx) {
+
+		final SqmExpression<?> arg = (SqmExpression) ctx.predicate().accept( this );
+		SqmTypedNode<?> argument = ctx.DISTINCT() != null ? new SqmDistinct<>(arg, getCreationContext().getNodeBuilder()) : arg;
+
+		return getFunctionTemplate("any").makeSqmFunctionExpression(
+				argument,
+				resolveExpressableTypeBasic( Boolean.class ),
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
+		);
+	}
+
+	@Override
 	public SqmExpression visitAvgFunction(HqlParser.AvgFunctionContext ctx) {
 
 		final SqmExpression<?> arg = (SqmExpression) ctx.expression().accept( this );

@@ -96,9 +96,7 @@ public class Oracle9Dialect extends Dialect {
 
 		CommonFunctionFactory.cosh( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
-		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
-		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
@@ -116,6 +114,12 @@ public class Oracle9Dialect extends Dialect {
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
+
+		CommonFunctionFactory.median( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 

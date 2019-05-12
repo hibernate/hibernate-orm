@@ -196,7 +196,8 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.crc32( queryEngine );
-		CommonFunctionFactory.sha1sha2( queryEngine );
+		CommonFunctionFactory.sha1( queryEngine );
+		CommonFunctionFactory.sha2( queryEngine );
 		CommonFunctionFactory.sha( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );

@@ -109,7 +109,8 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.sha1sha2( queryEngine );
+		CommonFunctionFactory.sha1( queryEngine );
+		CommonFunctionFactory.sha2( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 //		CommonFunctionFactory.concat_operator( queryEngine );

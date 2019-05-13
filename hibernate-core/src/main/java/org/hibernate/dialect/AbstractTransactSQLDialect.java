@@ -34,21 +34,28 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 abstract class AbstractTransactSQLDialect extends Dialect {
 	public AbstractTransactSQLDialect() {
 		super();
-		registerColumnType( Types.BINARY, "binary($l)" );
+		//TODO: Why are we not using the BIT type to
+		//store booleans in SQL Server and Sybase?
+//		registerColumnType( Types.BIT, "bit" );
+//		registerColumnType( Types.BOOLEAN, "bit" );
 		registerColumnType( Types.BIT, "tinyint" );
-		registerColumnType( Types.BIGINT, "numeric(19,0)" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "smallint" );
+		registerColumnType( Types.BOOLEAN, "tinyint" );
+
+		//it's called 'int' not 'integer'
 		registerColumnType( Types.INTEGER, "int" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double precision" );
+
+		//note that 'real' is double precision on SQL Server, single precision on Sybase
+		//but 'float' is single precision on Sybase, double precision on SQL Server
+
+		registerColumnType( Types.BINARY, "binary($l)" );
+		registerColumnType( Types.VARBINARY, "varbinary($l)" );
+		registerColumnType( Types.LONGVARBINARY, "image" );
+		registerColumnType( Types.LONGVARCHAR, "text" );
+
 		registerColumnType( Types.DATE, "datetime" );
 		registerColumnType( Types.TIME, "datetime" );
 		registerColumnType( Types.TIMESTAMP, "datetime" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
+
 		registerColumnType( Types.BLOB, "image" );
 		registerColumnType( Types.CLOB, "text" );
 

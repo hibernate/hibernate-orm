@@ -79,26 +79,18 @@ public class PostgreSQL81Dialect extends Dialect {
 	 */
 	public PostgreSQL81Dialect() {
 		super();
-		registerColumnType( Types.BIT, "bool" );
-		registerColumnType( Types.BIGINT, "int8" );
-		registerColumnType( Types.SMALLINT, "int2" );
-		registerColumnType( Types.TINYINT, "int2" );
-		registerColumnType( Types.INTEGER, "int4" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float4" );
-		registerColumnType( Types.DOUBLE, "float8" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
+
+		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint, not even in Postgres 11
+
+		registerColumnType( Types.FLOAT, "real" ); //'float' means double precision!
+
 		registerColumnType( Types.VARBINARY, "bytea" );
 		registerColumnType( Types.BINARY, "bytea" );
-		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGVARBINARY, "bytea" );
+		registerColumnType( Types.LONGVARCHAR, "text" );
+
+		registerColumnType( Types.BLOB, "bytea" );
 		registerColumnType( Types.CLOB, "text" );
-		registerColumnType( Types.BLOB, "oid" );
-		registerColumnType( Types.NUMERIC, "numeric($p, $s)" );
-		registerColumnType( Types.OTHER, "uuid" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );

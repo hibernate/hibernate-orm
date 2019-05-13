@@ -221,8 +221,9 @@ public abstract class AbstractHANADialect extends Dialect {
 	public AbstractHANADialect() {
 		super();
 
-		registerColumnType( Types.DECIMAL, "decimal($p, $s)" );
+		//there is no 'numeric' type in HANA
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
+
 		registerColumnType( Types.DOUBLE, "double" );
 
 		// varbinary max length 5000
@@ -235,8 +236,10 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerColumnType( Types.VARBINARY, "blob" );
 		registerColumnType( Types.LONGVARBINARY, "blob" );
 
-		registerColumnType( Types.CHAR, "varchar(1)" );
-		registerColumnType( Types.NCHAR, "nvarchar(1)" );
+		//there is no 'char' or 'nchar' type in HANA
+		registerColumnType( Types.CHAR, "varchar($l)" );
+		registerColumnType( Types.NCHAR, "nvarchar($l)" );
+
 		registerColumnType( Types.VARCHAR, 5000, "varchar($l)" );
 		registerColumnType( Types.LONGVARCHAR, 5000, "varchar($l)" );
 		registerColumnType( Types.NVARCHAR, 5000, "nvarchar($l)" );
@@ -939,7 +942,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		);
 
 		if ( this.useUnicodeStringTypes ) {
-			registerColumnType( Types.CHAR, "nvarchar(1)" );
+			registerColumnType( Types.CHAR, "nvarchar($l)" );
 			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
 			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
 

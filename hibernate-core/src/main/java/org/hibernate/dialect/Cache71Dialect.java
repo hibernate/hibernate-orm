@@ -212,25 +212,13 @@ public class Cache71Dialect extends Dialect {
 		//
 		//	TBD	registerColumnType(Types.BINARY,        "binary($1)");
 		// changed 08-11-2005, jsl
+		registerColumnType( Types.BOOLEAN, "bit" );
+
 		registerColumnType( Types.BINARY, "varbinary($1)" );
-		registerColumnType( Types.BIGINT, "BigInt" );
-		registerColumnType( Types.BIT, "bit" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.DECIMAL, "decimal" );
-		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.INTEGER, "integer" );
+		registerColumnType( Types.VARBINARY, "longvarbinary" );
 		registerColumnType( Types.LONGVARBINARY, "longvarbinary" );
 		registerColumnType( Types.LONGVARCHAR, "longvarchar" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
-		registerColumnType( Types.REAL, "real" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.VARBINARY, "longvarbinary" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
+
 		registerColumnType( Types.BLOB, "longvarbinary" );
 		registerColumnType( Types.CLOB, "longvarchar" );
 

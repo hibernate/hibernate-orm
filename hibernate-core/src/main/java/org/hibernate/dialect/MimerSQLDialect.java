@@ -36,28 +36,20 @@ public class MimerSQLDialect extends Dialect {
 	 */
 	public MimerSQLDialect() {
 		super();
-		registerColumnType( Types.BIT, "ODBC.BIT" );
-		registerColumnType( Types.BIGINT, "BIGINT" );
-		registerColumnType( Types.SMALLINT, "SMALLINT" );
-		registerColumnType( Types.TINYINT, "ODBC.TINYINT" );
-		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.CHAR, "NCHAR(1)" );
-		registerColumnType( Types.VARCHAR, NATIONAL_CHAR_LENGTH, "NATIONAL CHARACTER VARYING($l)" );
-		registerColumnType( Types.VARCHAR, "NCLOB($l)" );
-		registerColumnType( Types.LONGVARCHAR, "CLOB($1)" );
-		registerColumnType( Types.FLOAT, "FLOAT" );
-		registerColumnType( Types.DOUBLE, "DOUBLE PRECISION" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIME" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.VARBINARY, BINARY_MAX_LENGTH, "BINARY VARYING($l)" );
-		registerColumnType( Types.VARBINARY, "BLOB($1)" );
-		registerColumnType( Types.LONGVARBINARY, "BLOB($1)" );
-		registerColumnType( Types.BINARY, BINARY_MAX_LENGTH, "BINARY" );
-		registerColumnType( Types.BINARY, "BLOB($1)" );
-		registerColumnType( Types.NUMERIC, "NUMERIC(19, $l)" );
-		registerColumnType( Types.BLOB, "BLOB($l)" );
-		registerColumnType( Types.CLOB, "NCLOB($l)" );
+		registerColumnType( Types.BIT, "odbc.bit" );
+		registerColumnType( Types.BOOLEAN, "odbc.bit" );
+		registerColumnType( Types.TINYINT, "odbc.tinyint" );
+
+		registerColumnType( Types.VARCHAR, NATIONAL_CHAR_LENGTH, "national character varying($l)" );
+		registerColumnType( Types.VARCHAR, "nclob($l)" );
+		registerColumnType( Types.LONGVARCHAR, "clob($1)" );
+		registerColumnType( Types.VARBINARY, BINARY_MAX_LENGTH, "binary varying($l)" );
+		registerColumnType( Types.VARBINARY, "blob($1)" );
+		registerColumnType( Types.LONGVARBINARY, "blob($1)" );
+		registerColumnType( Types.BINARY, BINARY_MAX_LENGTH, "binary" );
+		registerColumnType( Types.BINARY, "blob($1)" );
+		registerColumnType( Types.BLOB, "blob($l)" );
+		registerColumnType( Types.CLOB, "nclob($l)" );
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );

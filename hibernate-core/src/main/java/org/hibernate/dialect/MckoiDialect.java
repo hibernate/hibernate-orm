@@ -37,22 +37,12 @@ public class MckoiDialect extends Dialect {
 	 */
 	public MckoiDialect() {
 		super();
-		registerColumnType( Types.BIT, "bit" );
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
 		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.VARBINARY, "varbinary" );
-		registerColumnType( Types.NUMERIC, "numeric" );
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
+		registerColumnType( Types.DOUBLE, "double" ); //'double precision' not supported
+
+		registerColumnType( Types.BINARY, "binary($l)" );
+		registerColumnType( Types.VARBINARY, "varbinary($l)" );
+		registerColumnType( Types.LONGVARBINARY, "longvarbinary($l)" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}

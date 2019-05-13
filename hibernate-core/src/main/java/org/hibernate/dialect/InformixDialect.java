@@ -47,31 +47,28 @@ public class InformixDialect extends Dialect {
 	public InformixDialect() {
 		super();
 
-		registerColumnType( Types.BIGINT, "int8" );
-		registerColumnType( Types.BINARY, "byte" );
 		// Informix doesn't have a bit type
 		registerColumnType( Types.BIT, "smallint" );
-		registerColumnType( Types.CHAR, "char($l)" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.DECIMAL, "decimal" );
-		registerColumnType( Types.DOUBLE, "float" );
+		registerColumnType( Types.BOOLEAN, "smallint" );
+
+		registerColumnType( Types.TINYINT, "smallint" );
+		registerColumnType( Types.BIGINT, "int8" );
+
 		registerColumnType( Types.FLOAT, "smallfloat" );
-		registerColumnType( Types.INTEGER, "integer" );
-		// or BYTE
-		registerColumnType( Types.LONGVARBINARY, "blob" );
-		// or TEXT?
-		registerColumnType( Types.LONGVARCHAR, "clob" );
-		// or MONEY
-		registerColumnType( Types.NUMERIC, "decimal" );
 		registerColumnType( Types.REAL, "smallfloat" );
-		registerColumnType( Types.SMALLINT, "smallint" );
+		registerColumnType( Types.DOUBLE, "float" );
+
 		registerColumnType( Types.TIMESTAMP, "datetime year to fraction(5)" );
 		registerColumnType( Types.TIME, "datetime hour to second" );
-		registerColumnType( Types.TINYINT, "smallint" );
+
+		registerColumnType( Types.BINARY, "byte" );
 		registerColumnType( Types.VARBINARY, "byte" );
+		registerColumnType( Types.LONGVARBINARY, "blob" );
+
 		registerColumnType( Types.VARCHAR, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, 32739, "lvarchar($l)" );
+		registerColumnType( Types.LONGVARCHAR, "clob" );
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
 	}

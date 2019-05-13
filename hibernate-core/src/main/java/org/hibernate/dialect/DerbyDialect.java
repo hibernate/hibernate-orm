@@ -66,13 +66,8 @@ public class DerbyDialect extends DB2Dialect {
 			LOG.deprecatedDerbyDialect();
 		}
 
-		registerColumnType( Types.BLOB, "blob" );
 		registerDerbyKeywords();
 		determineDriverVersion();
-
-		if ( driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 7 ) ) {
-			registerColumnType( Types.BOOLEAN, "boolean" );
-		}
 
 		this.limitHandler = new DerbyLimitHandler();
 	}

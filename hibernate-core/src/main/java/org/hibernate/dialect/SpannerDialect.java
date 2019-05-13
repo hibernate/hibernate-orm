@@ -70,9 +70,6 @@ public class SpannerDialect extends Dialect {
 		registerColumnType( Types.NVARCHAR, STRING_MAX_LENGTH, "STRING($l)" );
 		registerColumnType( Types.FLOAT, "FLOAT64" );
 		registerColumnType( Types.DOUBLE, "FLOAT64" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIMESTAMP" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
 		registerColumnType( Types.VARBINARY, BYTES_MAX_LENGTH, "BYTES($l)" );
 		registerColumnType( Types.BINARY, BYTES_MAX_LENGTH, "BYTES($l)" );
 		registerColumnType( Types.LONGVARCHAR, STRING_MAX_LENGTH, "STRING($l)" );

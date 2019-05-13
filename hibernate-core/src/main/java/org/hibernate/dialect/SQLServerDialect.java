@@ -36,11 +36,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	 * Constructs a SQLServerDialect
 	 */
 	public SQLServerDialect() {
+		registerColumnType( Types.FLOAT, "float(24)" );
+		registerColumnType( Types.DOUBLE, "float(53)" );
+
 		registerColumnType( Types.VARBINARY, "image" );
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
-		registerColumnType( Types.LONGVARBINARY, "image" );
-		registerColumnType( Types.LONGVARCHAR, "text" );
-		registerColumnType( Types.BOOLEAN, "bit" );
 
 		registerKeyword( "top" );
 		registerKeyword( "key" );

@@ -18,8 +18,6 @@ import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A dialect for Microsoft SQL 2005. (HHH-3936 fix)
@@ -44,13 +42,10 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		registerColumnType( Types.LONGVARBINARY, "varbinary(MAX)" );
 
 		registerColumnType( Types.CLOB, "varchar(MAX)" );
-		registerColumnType( Types.LONGVARCHAR, "varchar(MAX)" );
 		registerColumnType( Types.VARCHAR, "varchar(MAX)" );
 		registerColumnType( Types.VARCHAR, MAX_LENGTH, "varchar($l)" );
+		registerColumnType( Types.LONGVARCHAR, "varchar(MAX)" );
 
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.BIT, "bit" );
-		
 		// HHH-8435 fix
 		registerColumnType( Types.NCLOB, "nvarchar(MAX)" );
 	}

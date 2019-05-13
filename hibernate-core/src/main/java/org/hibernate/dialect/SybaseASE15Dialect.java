@@ -28,14 +28,12 @@ public class SybaseASE15Dialect extends SybaseDialect {
 	public SybaseASE15Dialect() {
 		super();
 
-		registerColumnType( Types.LONGVARBINARY, "image" );
-		registerColumnType( Types.LONGVARCHAR, "text" );
+		//bigint was added in version 15
 		registerColumnType( Types.BIGINT, "bigint" );
+
+		//date / date were introduced in version 12
 		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.DECIMAL, "numeric($p,$s)" );
 		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.REAL, "real" );
-		registerColumnType( Types.BOOLEAN, "tinyint" );
 
 		registerSybaseKeywords();
 	}

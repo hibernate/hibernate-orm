@@ -95,13 +95,10 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.BIT, "smallint" ); //no bit
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
 
-		registerColumnType( Types.FLOAT, "real" ); //'float' means double precision!
-		registerColumnType( Types.DOUBLE, "double" );
-
 		//HHH-12827: map them both to the same type to
 		//           avoid problems with schema update
+//		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
-		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 
 		registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
 		registerColumnType( Types.BINARY, 254, "char($l) for bit data" ); //should use 'binary' since version 11

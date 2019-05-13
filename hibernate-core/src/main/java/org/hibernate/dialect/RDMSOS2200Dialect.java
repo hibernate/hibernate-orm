@@ -136,8 +136,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		registerColumnType( Types.BOOLEAN, "smallint" );
 		registerColumnType( Types.TINYINT, "smallint" );
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );
-		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.VARCHAR, "character($l)" );
 		registerColumnType( Types.BLOB, "blob($l)" );
 
 		//no 'binary' nor 'varbinary' so use 'blob'

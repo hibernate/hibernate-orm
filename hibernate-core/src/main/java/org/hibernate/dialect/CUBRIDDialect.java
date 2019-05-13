@@ -32,8 +32,12 @@ public class CUBRIDDialect extends Dialect {
 		super();
 
 		registerColumnType( Types.BOOLEAN, "bit" );
-
 		registerColumnType( Types.TINYINT, "smallint" ); //no 'tinyint'
+
+		//Note: the precision of a CUBRID 'float(p)' represents
+		//decimal digits instead of binary digits
+		//TODO: perform some sort of transformation so that
+		//      24 => 7 and 53 => 16
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );

@@ -55,9 +55,10 @@ public class InformixDialect extends Dialect {
 		registerColumnType( Types.TINYINT, "smallint" );
 		registerColumnType( Types.BIGINT, "int8" );
 
-		registerColumnType( Types.FLOAT, "smallfloat" );
-		registerColumnType( Types.REAL, "smallfloat" );
-		registerColumnType( Types.DOUBLE, "float" );
+		//Ingres ignores the precision argument in
+		//float(n) and just always defaults to
+		//double precision.
+		//TODO: return 'smallfloat' when n <= 24
 
 		registerColumnType( Types.TIMESTAMP, "datetime year to fraction(5)" );
 		registerColumnType( Types.TIME, "datetime hour to second" );

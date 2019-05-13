@@ -29,11 +29,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public SybaseDialect() {
 		super();
 
-		registerColumnType( Types.FLOAT, "real" );
-
 		//Sybase ASE didn't introduce bigint until version 15.0
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );
-
 	}
 
 	@Override

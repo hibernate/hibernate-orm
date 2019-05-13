@@ -108,11 +108,16 @@ public class FloatJavaDescriptor extends AbstractNumericJavaDescriptor<Float> im
 
 	@Override
 	public long getDefaultSqlLength() {
-		return getDefaultSqlPrecision()+2+5;
+		//this is the number of decimal digits
+		// + sign + decimal point
+		// + space for "E+nn"
+		return 1+8+1+4;
 	}
 
 	@Override
 	public int getDefaultSqlPrecision() {
-		return 8;
+		//this is the number of *binary* digits
+		//in a single-precision FP number
+		return 24;
 	}
 }

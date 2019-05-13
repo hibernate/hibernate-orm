@@ -32,7 +32,7 @@ public class DoubleJavaDescriptor extends AbstractNumericJavaDescriptor<Double> 
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.DOUBLE );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.FLOAT );
 	}
 
 	@Override
@@ -110,11 +110,16 @@ public class DoubleJavaDescriptor extends AbstractNumericJavaDescriptor<Double> 
 
 	@Override
 	public long getDefaultSqlLength() {
-		return getDefaultSqlPrecision()+2+6;
+		//this is the number of decimal digits
+		// + sign + decimal point
+		// + space for "E+nnn"
+		return 1+17+1+5;
 	}
 
 	@Override
 	public int getDefaultSqlPrecision() {
-		return 17;
+		//this is the number of *binary* digits
+		//in a double-precision FP number
+		return 53;
 	}
 }

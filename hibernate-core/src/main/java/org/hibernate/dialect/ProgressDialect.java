@@ -30,10 +30,16 @@ public class ProgressDialect extends Dialect {
 	 */
 	public ProgressDialect() {
 		super();
+
+		//'float' is a synonym for 'double precision'
+		//TODO: return single-precision 'real' when
+		//      precision <= 24
+		registerColumnType( Types.FLOAT, "float" );
+		registerColumnType( Types.DOUBLE, "float" );
+
 		registerColumnType( Types.BOOLEAN, "bit" );
 		registerColumnType( Types.BIGINT, "numeric" );
 		registerColumnType( Types.CHAR, "character($l)" );
-		registerColumnType( Types.FLOAT, "real" );
 		registerColumnType( Types.VARBINARY, "varbinary($l)" );
 	}
 

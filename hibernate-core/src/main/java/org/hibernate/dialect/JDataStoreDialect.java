@@ -28,8 +28,6 @@ public class JDataStoreDialect extends Dialect {
 		registerColumnType( Types.BIT, "tinyint" );
 		registerColumnType( Types.BOOLEAN, "tinyint" );
 
-		registerColumnType( Types.DOUBLE, "double" );
-
 		registerColumnType( Types.VARBINARY, "varbinary($l)" );
 
 		registerColumnType( Types.BLOB, "varbinary" );

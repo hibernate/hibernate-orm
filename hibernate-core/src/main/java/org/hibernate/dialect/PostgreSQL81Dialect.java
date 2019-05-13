@@ -82,8 +82,6 @@ public class PostgreSQL81Dialect extends Dialect {
 
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint, not even in Postgres 11
 
-		registerColumnType( Types.FLOAT, "real" ); //'float' means double precision!
-
 		registerColumnType( Types.VARBINARY, "bytea" );
 		registerColumnType( Types.BINARY, "bytea" );
 		registerColumnType( Types.LONGVARBINARY, "bytea" );

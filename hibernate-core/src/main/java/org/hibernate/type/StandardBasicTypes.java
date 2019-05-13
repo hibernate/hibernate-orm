@@ -162,7 +162,7 @@ public final class StandardBasicTypes {
 	public static final StandardBasicType<Float> FLOAT = StandardSpiBasicTypes.FLOAT;
 
 	/**
-	 * The standard Hibernate type for mapping {@link Double} to JDBC {@link java.sql.Types#DOUBLE DOUBLE}.
+	 * The standard Hibernate type for mapping {@link Double} to JDBC {@link java.sql.Types#FLOAT FLOAT}.
 	 */
 	public static final StandardBasicType<Double> DOUBLE = StandardSpiBasicTypes.DOUBLE;
 

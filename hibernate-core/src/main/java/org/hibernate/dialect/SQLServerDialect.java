@@ -29,6 +29,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 @SuppressWarnings("deprecation")
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
+	static final int MAX_LENGTH = 8000;
 
 	private final LimitHandler limitHandler;
 
@@ -36,11 +37,15 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	 * Constructs a SQLServerDialect
 	 */
 	public SQLServerDialect() {
-		registerColumnType( Types.FLOAT, "float(24)" );
-		registerColumnType( Types.DOUBLE, "float(53)" );
+		super();
+		//there is no 'double' type in SQL server
+		//but 'float' is double precision by default
+		registerColumnType( Types.DOUBLE, "float" );
 
 		registerColumnType( Types.VARBINARY, "image" );
-		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
+		registerColumnType( Types.VARBINARY, MAX_LENGTH, "varbinary($l)" );
+		registerColumnType( Types.VARCHAR, "text" );
+		registerColumnType( Types.VARCHAR, MAX_LENGTH, "varchar($l)" );
 
 		registerKeyword( "top" );
 		registerKeyword( "key" );

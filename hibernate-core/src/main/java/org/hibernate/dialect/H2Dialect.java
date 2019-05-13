@@ -113,9 +113,6 @@ public class H2Dialect extends Dialect {
 		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
 //		registerColumnType( Types.BIT, "bit" );
 
-		//'float' means double precision!
-		registerColumnType( Types.FLOAT, "real" );
-
 		registerColumnType( Types.BINARY, "binary($l)" );
 		registerColumnType( Types.VARBINARY, "varbinary($l)" ); //synonym for 'binary'
 		registerColumnType( Types.LONGVARCHAR, "longvarchar($l)"); //synonym for 'varchar'

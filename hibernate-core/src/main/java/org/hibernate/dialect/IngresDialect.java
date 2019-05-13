@@ -63,8 +63,6 @@ public class IngresDialect extends Dialect {
 		registerColumnType( Types.BIT, "tinyint" );
 		registerColumnType( Types.BOOLEAN, "tinyint" );
 
-		registerColumnType( Types.DOUBLE, "float" );
-
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //Ingres has no 'numeric' type
 
 		registerColumnType( Types.BINARY, 32000, "byte($l)" );

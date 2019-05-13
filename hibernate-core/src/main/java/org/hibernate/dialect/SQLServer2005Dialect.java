@@ -27,7 +27,6 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
  */
 @SuppressWarnings("deprecation")
 public class SQLServer2005Dialect extends SQLServerDialect {
-	private static final int MAX_LENGTH = 8000;
 
 	/**
 	 * Constructs a SQLServer2005Dialect

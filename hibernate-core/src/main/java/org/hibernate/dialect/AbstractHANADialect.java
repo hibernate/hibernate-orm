@@ -224,6 +224,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		//there is no 'numeric' type in HANA
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
 
+		//'double precision' syntax not supported
 		registerColumnType( Types.DOUBLE, "double" );
 
 		// varbinary max length 5000

@@ -37,7 +37,11 @@ public class MckoiDialect extends Dialect {
 	 */
 	public MckoiDialect() {
 		super();
-		registerColumnType( Types.FLOAT, "float" );
+
+		//Note: there is no single-precision type
+		//'float' and 'double' are the exact same
+		//double precision type.
+		registerColumnType( Types.FLOAT, "float" ); //precision argument not supported
 		registerColumnType( Types.DOUBLE, "double" ); //'double precision' not supported
 
 		registerColumnType( Types.BINARY, "binary($l)" );

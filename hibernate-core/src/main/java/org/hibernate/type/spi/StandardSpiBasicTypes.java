@@ -276,11 +276,11 @@ public final class StandardSpiBasicTypes {
 
 
 	/**
-	 * The standard Hibernate type for mapping {@link Double} to JDBC {@link java.sql.Types#DOUBLE DOUBLE}.
+	 * The standard Hibernate type for mapping {@link Double} to JDBC {@link java.sql.Types#FLOAT FLOAT}.
 	 */
 	public static final StandardBasicType<Double> DOUBLE = new StandardBasicTypeImpl(
 			DoubleJavaDescriptor.INSTANCE,
-			DoubleSqlDescriptor.INSTANCE
+			FloatSqlDescriptor.INSTANCE
 	);
 
 

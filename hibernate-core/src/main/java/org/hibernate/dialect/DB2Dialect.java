@@ -91,32 +91,24 @@ public class DB2Dialect extends Dialect {
 	 */
 	public DB2Dialect() {
 		super();
-		registerColumnType( Types.BIT, "smallint" );
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "smallint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float" );
+		registerColumnType( Types.BIT, "smallint" ); //no bit
+		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
+
+		registerColumnType( Types.FLOAT, "real" ); //'float' means double precision!
 		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.VARBINARY, "varchar($l) for bit data" );
-		// DB2 converts numeric to decimal under the hood
-		// Note that the type returned by DB2 for a numeric column will be Types.DECIMAL. Thus, we have an issue when
-		// comparing the types during the schema validation, defining the type to decimal here as the type names will
-		// also be compared and there will be a match. See HHH-12827 for the details.
+
+		//HHH-12827: map them both to the same type to
+		//           avoid problems with schema update
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
+
+		registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
+		registerColumnType( Types.BINARY, 254, "char($l) for bit data" ); //should use 'binary' since version 11
+		registerColumnType( Types.VARBINARY, "varchar($l) for bit data" ); //should use 'varbinary' since version 11
+		registerColumnType( Types.LONGVARBINARY, "varchar($l) for bit data" ); //'long varchar' deprecated since at least version 9.8!
+
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "clob($l)" );
-		registerColumnType( Types.LONGVARCHAR, "long varchar" );
-		registerColumnType( Types.LONGVARBINARY, "long varchar for bit data" );
-		registerColumnType( Types.BINARY, "varchar($l) for bit data" );
-		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
-		registerColumnType( Types.BOOLEAN, "smallint" );
 
 		registerKeyword( "current" );
 		registerKeyword( "date" );

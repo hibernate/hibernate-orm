@@ -106,7 +106,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		// Display the dialect version.
 		LOG.rdmsOs2200Dialect();
 
-		/**
+		/*
 		 * For a list of column types to register, see section A-1
 		 * in 7862 7395, the Unisys JDBC manual.
 		 *
@@ -131,30 +131,26 @@ public class RDMSOS2200Dialect extends Dialect {
 		 * Note that $l (dollar-L) will use the length value if provided.
 		 * Also new for Hibernate3 is the $p percision and $s (scale) parameters
 		 */
-		registerColumnType( Types.BIT, "SMALLINT" );
-		registerColumnType( Types.TINYINT, "SMALLINT" );
-		registerColumnType( Types.BIGINT, "NUMERIC(21,0)" );
-		registerColumnType( Types.SMALLINT, "SMALLINT" );
-		registerColumnType( Types.CHAR, "CHARACTER(1)" );
-		registerColumnType( Types.DOUBLE, "DOUBLE PRECISION" );
-		registerColumnType( Types.FLOAT, "FLOAT" );
-		registerColumnType( Types.REAL, "REAL" );
-		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.NUMERIC, "NUMERIC(21,$l)" );
-		registerColumnType( Types.DECIMAL, "NUMERIC(21,$l)" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIME" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.VARCHAR, "CHARACTER($l)" );
-		registerColumnType( Types.BLOB, "BLOB($l)" );
-		/*
-         * The following types are not supported in RDMS/JDBC and therefore commented out.
-         * However, in some cases, mapping them to CHARACTER columns works
-         * for many applications, but does not work for all cases.
-         */
-		// registerColumnType(Types.VARBINARY, "CHARACTER($l)");
-		// registerColumnType(Types.BLOB, "CHARACTER($l)" );  // For use prior to CP 11.0
-		// registerColumnType(Types.CLOB, "CHARACTER($l)" );
+		registerColumnType( Types.BIT, "smallint" );
+		registerColumnType( Types.BOOLEAN, "smallint" );
+		registerColumnType( Types.TINYINT, "smallint" );
+		registerColumnType( Types.BIGINT, "numeric(19,0)" );
+		registerColumnType( Types.DOUBLE, "double" );
+		registerColumnType( Types.VARCHAR, "character($l)" );
+		registerColumnType( Types.BLOB, "blob($l)" );
+
+		//no 'binary' nor 'varbinary' so use 'blob'
+		registerColumnType( Types.BINARY, "blob($l)");
+		registerColumnType( Types.VARBINARY, "blob($l)");
+		registerColumnType( Types.LONGVARBINARY, "blob($l)");
+
+		//'varchar' is not supported in RDMS for OS 2200
+		//(but it is for other flavors of RDMS)
+		//'character' means ASCII by default, 'unicode(n)'
+		//means 'character(n) character set "UCS-2"'
+		registerColumnType( Types.CHAR, "unicode($l)");
+		registerColumnType( Types.VARCHAR, "unicode($l)");
+		registerColumnType( Types.LONGVARCHAR, "unicode($l)");
 	}
 
 	@Override

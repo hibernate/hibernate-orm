@@ -47,22 +47,14 @@ public class InterbaseDialect extends Dialect {
 	public InterbaseDialect() {
 		super();
 		registerColumnType( Types.BIT, "smallint" );
-		registerColumnType( Types.BIGINT, "numeric(18,0)" );
-		registerColumnType( Types.SMALLINT, "smallint" );
+		registerColumnType( Types.BOOLEAN, "smallint" );
+
 		registerColumnType( Types.TINYINT, "smallint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double precision" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.BIGINT, "numeric(18,0)" );
+
 		registerColumnType( Types.VARBINARY, "blob" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "blob sub_type 1" );
-		registerColumnType( Types.BOOLEAN, "smallint" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}

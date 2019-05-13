@@ -131,7 +131,7 @@ public class Oracle8iDialect extends Dialect {
 		registerCharacterTypeMappings();
 		registerNumericTypeMappings();
 		registerDateTimeTypeMappings();
-		registerLargeObjectTypeMappings();
+		registerBinaryTypeMappings();
 		registerReverseHibernateTypeMappings();
 		registerDefaultProperties();
 	}
@@ -169,24 +169,21 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	protected void registerCharacterTypeMappings() {
-		registerColumnType( Types.CHAR, "char(1)" );
 		registerColumnType( Types.VARCHAR, 4000, "varchar2($l)" );
 		registerColumnType( Types.VARCHAR, "long" );
 	}
 
 	protected void registerNumericTypeMappings() {
 		registerColumnType( Types.BIT, "number(1,0)" );
+		registerColumnType( Types.BOOLEAN, "number(1,0)" );
+
 		registerColumnType( Types.BIGINT, "number(19,0)" );
 		registerColumnType( Types.SMALLINT, "number(5,0)" );
 		registerColumnType( Types.TINYINT, "number(3,0)" );
 		registerColumnType( Types.INTEGER, "number(10,0)" );
 
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double precision" );
 		registerColumnType( Types.NUMERIC, "number($p,$s)" );
 		registerColumnType( Types.DECIMAL, "number($p,$s)" );
-
-		registerColumnType( Types.BOOLEAN, "number(1,0)" );
 	}
 
 	protected void registerDateTimeTypeMappings() {
@@ -195,15 +192,12 @@ public class Oracle8iDialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP, "date" );
 	}
 
-	protected void registerLargeObjectTypeMappings() {
+	protected void registerBinaryTypeMappings() {
 		registerColumnType( Types.BINARY, 2000, "raw($l)" );
 		registerColumnType( Types.BINARY, "long raw" );
 
 		registerColumnType( Types.VARBINARY, 2000, "raw($l)" );
 		registerColumnType( Types.VARBINARY, "long raw" );
-
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
 
 		registerColumnType( Types.LONGVARCHAR, "long" );
 		registerColumnType( Types.LONGVARBINARY, "long raw" );

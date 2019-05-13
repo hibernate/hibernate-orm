@@ -60,29 +60,36 @@ public class IngresDialect extends Dialect {
 	public IngresDialect() {
 		super();
 		registerColumnType( Types.BIT, "tinyint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.REAL, "real" );
-		registerColumnType( Types.FLOAT, "float" );
+		registerColumnType( Types.BOOLEAN, "tinyint" );
+
 		registerColumnType( Types.DOUBLE, "float" );
-		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
-		registerColumnType( Types.DECIMAL, "decimal($p, $s)" );
+
+		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //Ingres has no 'numeric' type
+
 		registerColumnType( Types.BINARY, 32000, "byte($l)" );
 		registerColumnType( Types.BINARY, "long byte" );
 		registerColumnType( Types.VARBINARY, 32000, "varbyte($l)" );
 		registerColumnType( Types.VARBINARY, "long byte" );
 		registerColumnType( Types.LONGVARBINARY, "long byte" );
+
+		//TODO: should we be using nchar/nvarchar/long nvarchar
+		//      here? I think Ingres char/varchar types don't
+		//      support Unicode. Copy what AbstractHANADialect
+		//      does with a Hibernate property to config this.
 		registerColumnType( Types.CHAR, 32000, "char($l)" );
 		registerColumnType( Types.VARCHAR, 32000, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, "long varchar" );
 		registerColumnType( Types.LONGVARCHAR, "long varchar" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time with time zone" );
-		registerColumnType( Types.TIMESTAMP, "timestamp with time zone" );
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
+
+		registerColumnType( Types.NCHAR, 32000, "nchar($l)" );
+		registerColumnType( Types.NVARCHAR, 32000, "nvarchar($l)" );
+		registerColumnType( Types.NVARCHAR, "long nvarchar" );
+		registerColumnType( Types.LONGNVARCHAR, "long nvarchar" );
+
+		//TODO: why do we have 'with time zone' here and not in other dialects?
+//		registerColumnType( Types.TIME, "time with time zone" );
+//		registerColumnType( Types.TIMESTAMP, "timestamp($p) with time zone" );
+
 		// Ingres driver supports getGeneratedKeys but only in the following
 		// form:
 		// The Ingres DBMS returns only a single table key or a single object

@@ -59,24 +59,17 @@ public class TimesTenDialect extends Dialect {
 	 */
 	public TimesTenDialect() {
 		super();
-		registerColumnType( Types.BIT, "TINYINT" );
-		registerColumnType( Types.BIGINT, "BIGINT" );
-		registerColumnType( Types.SMALLINT, "SMALLINT" );
-		registerColumnType( Types.TINYINT, "TINYINT" );
-		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.CHAR, "CHAR(1)" );
-		registerColumnType( Types.VARCHAR, "VARCHAR($l)" );
-		registerColumnType( Types.FLOAT, "FLOAT" );
-		registerColumnType( Types.DOUBLE, "DOUBLE" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIME" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.VARBINARY, "VARBINARY($l)" );
-		registerColumnType( Types.NUMERIC, "DECIMAL($p, $s)" );
-		// TimesTen has no BLOB/CLOB support, but these types may be suitable 
+		registerColumnType( Types.BIT, "tinyint" );
+		registerColumnType( Types.BOOLEAN, "tinyint" );
+
+		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //it's a synonym
+
+		registerColumnType( Types.VARBINARY, "varbinary($l)" );
+
+		// TimesTen has no BLOB/CLOB support, but these types may be suitable
 		// for some applications. The length is limited to 4 million bytes.
-		registerColumnType( Types.BLOB, "VARBINARY(4000000)" );
-		registerColumnType( Types.CLOB, "VARCHAR(4000000)" );
+		registerColumnType( Types.BLOB, "varbinary(4000000)" );
+		registerColumnType( Types.CLOB, "varchar(4000000)" );
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );

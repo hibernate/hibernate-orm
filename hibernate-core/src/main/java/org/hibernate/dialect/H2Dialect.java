@@ -110,29 +110,16 @@ public class H2Dialect extends Dialect {
 			this.querySequenceString = null;
 		}
 
-		registerColumnType( Types.BOOLEAN, "boolean" );
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.BINARY, "binary" );
-		registerColumnType( Types.BIT, "boolean" );
-		registerColumnType( Types.CHAR, "char($l)" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
-		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
-		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.LONGVARBINARY, "longvarbinary" );
-		// H2 does define "longvarchar", but it is a simple alias to "varchar"
-		registerColumnType( Types.LONGVARCHAR, String.format( "varchar(%d)", Integer.MAX_VALUE ) );
-		registerColumnType( Types.REAL, "real" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.VARBINARY, "binary($l)" );
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
+		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
+//		registerColumnType( Types.BIT, "bit" );
+
+		//'float' means double precision!
+		registerColumnType( Types.FLOAT, "real" );
+
+		registerColumnType( Types.BINARY, "binary($l)" );
+		registerColumnType( Types.VARBINARY, "varbinary($l)" ); //synonym for 'binary'
+		registerColumnType( Types.LONGVARCHAR, "longvarchar($l)"); //synonym for 'varchar'
+		registerColumnType( Types.LONGVARBINARY, "longvarbinary($l)" ); //synonym for 'binary'
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235

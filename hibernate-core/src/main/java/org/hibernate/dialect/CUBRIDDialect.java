@@ -31,27 +31,9 @@ public class CUBRIDDialect extends Dialect {
 	public CUBRIDDialect() {
 		super();
 
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.BIT, "bit(8)" );
-		registerColumnType( Types.BLOB, "bit varying(65535)" );
-		registerColumnType( Types.BOOLEAN, "bit(8)" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.CLOB, "string" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.DECIMAL, "decimal" );
-		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.INTEGER, "int" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
-		registerColumnType( Types.REAL, "double" );
-		registerColumnType( Types.SMALLINT, "short" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.TINYINT, "short" );
-		registerColumnType( Types.VARBINARY, 2000, "bit varying($l)" );
-		registerColumnType( Types.VARCHAR, "string" );
-		registerColumnType( Types.VARCHAR, 2000, "varchar($l)" );
-		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
+		registerColumnType( Types.BOOLEAN, "bit" );
+
+		registerColumnType( Types.TINYINT, "smallint" ); //no 'tinyint'
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );

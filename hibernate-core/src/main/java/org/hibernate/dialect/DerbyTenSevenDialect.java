@@ -19,7 +19,6 @@ public class DerbyTenSevenDialect extends DerbyTenSixDialect {
 	 */
 	public DerbyTenSevenDialect() {
 		super();
-		registerColumnType( Types.BOOLEAN, "boolean" );
 	}
 
 	@Override

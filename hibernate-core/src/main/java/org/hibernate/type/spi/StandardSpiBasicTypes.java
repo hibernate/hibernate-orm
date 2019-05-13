@@ -73,8 +73,8 @@ import org.hibernate.type.descriptor.java.internal.UrlJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BinarySqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BooleanSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.DateSqlDescriptor;
@@ -122,7 +122,7 @@ public final class StandardSpiBasicTypes {
 	 */
 	public static final StandardBasicType<Boolean> BOOLEAN = new StandardBasicTypeImpl(
 			BooleanJavaDescriptor.INSTANCE,
-			BitSqlDescriptor.INSTANCE
+			BooleanSqlDescriptor.INSTANCE
 	);
 
 

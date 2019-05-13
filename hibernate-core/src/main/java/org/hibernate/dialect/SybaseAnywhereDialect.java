@@ -24,7 +24,9 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	public SybaseAnywhereDialect() {
 		super();
 
-		registerColumnType( Types.BOOLEAN, "bit" );
+		registerColumnType( Types.BIGINT, "bigint" );
+		registerColumnType( Types.DATE, "date" );
+		registerColumnType( Types.TIME, "time" );
 	}
 
 	/**

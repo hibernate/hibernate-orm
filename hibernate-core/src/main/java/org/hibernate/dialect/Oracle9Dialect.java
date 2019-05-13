@@ -61,24 +61,25 @@ public class Oracle9Dialect extends Dialect {
 		super();
 		LOG.deprecatedOracle9Dialect();
 		registerColumnType( Types.BIT, "number(1,0)" );
-		registerColumnType( Types.BIGINT, "number(19,0)" );
-		registerColumnType( Types.SMALLINT, "number(5,0)" );
+		registerColumnType( Types.BOOLEAN, "number(1,0)" );
+
 		registerColumnType( Types.TINYINT, "number(3,0)" );
+		registerColumnType( Types.SMALLINT, "number(5,0)" );
 		registerColumnType( Types.INTEGER, "number(10,0)" );
-		registerColumnType( Types.CHAR, "char(1 char)" );
+		registerColumnType( Types.BIGINT, "number(19,0)" );
+
+		registerColumnType( Types.NUMERIC, "number($p,$s)" );
+		registerColumnType( Types.DECIMAL, "number($p,$s)" );
+
 		registerColumnType( Types.VARCHAR, 4000, "varchar2($l char)" );
 		registerColumnType( Types.VARCHAR, "long" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double precision" );
+
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "date" );
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
+
 		registerColumnType( Types.VARBINARY, 2000, "raw($l)" );
 		registerColumnType( Types.VARBINARY, "long raw" );
-		registerColumnType( Types.NUMERIC, "number($p,$s)" );
-		registerColumnType( Types.DECIMAL, "number($p,$s)" );
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
 
 		// Oracle driver reports to support getGeneratedKeys(), but they only
 		// support the version taking an array of the names of the columns to

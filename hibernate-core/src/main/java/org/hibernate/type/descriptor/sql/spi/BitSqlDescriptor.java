@@ -19,6 +19,7 @@ import org.hibernate.sql.JdbcValueExtractor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.internal.JdbcLiteralFormatterBoolean;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -52,8 +53,7 @@ public class BitSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		// todo : how to handle this
-		return null;
+		return new JdbcLiteralFormatterBoolean(javaTypeDescriptor);
 	}
 
 	@Override

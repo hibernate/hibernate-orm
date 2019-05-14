@@ -90,6 +90,11 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerColumnType( Types.BLOB, "bytea" );
 		registerColumnType( Types.CLOB, "text" );
 
+		//there are no nchar/nvarchar types in Postgres
+		registerColumnType( Types.NCHAR, "char($l)" );
+		registerColumnType( Types.NVARCHAR, "varchar($l)" );
+		registerColumnType( Types.LONGNVARCHAR, "varchar($l)" );
+
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
 	}

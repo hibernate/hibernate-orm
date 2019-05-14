@@ -92,14 +92,6 @@ public class MySQLDialect extends Dialect {
 
 		registerVarcharTypes();
 
-		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.VARBINARY, "longblob" );
-		registerColumnType( Types.VARBINARY, 16777215, "mediumblob" );
-		registerColumnType( Types.VARBINARY, 65535, "blob" );
-		registerColumnType( Types.VARBINARY, 255, "tinyblob" );
-		registerColumnType( Types.LONGVARBINARY, "longblob" );
-		registerColumnType( Types.LONGVARBINARY, 16777215, "mediumblob" );
-
 		registerColumnType( Types.TIMESTAMP, "datetime" );
 
 		registerColumnType( Types.BLOB, "longblob" );
@@ -234,6 +226,12 @@ public class MySQLDialect extends Dialect {
 //		registerColumnType( Types.VARCHAR, 65535, "text" );
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
 		registerColumnType( Types.LONGVARCHAR, "longtext" );
+
+		registerColumnType( Types.VARBINARY, "longblob" );
+//		registerColumnType( Types.VARBINARY, 16777215, "mediumblob" );
+//		registerColumnType( Types.VARBINARY, 65535, "bloc" );
+		registerColumnType( Types.VARBINARY, 255, "varbinary($l)" );
+		registerColumnType( Types.LONGVARBINARY, "longblob" );
 	}
 
 	@Override

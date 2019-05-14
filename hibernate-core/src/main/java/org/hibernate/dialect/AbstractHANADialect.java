@@ -272,7 +272,11 @@ public abstract class AbstractHANADialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
 	}
 
-
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BOOLEAN;
+	}
+	
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );

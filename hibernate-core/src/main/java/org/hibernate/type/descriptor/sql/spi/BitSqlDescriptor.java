@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.AbstractJdbcValueBinder;
 import org.hibernate.sql.AbstractJdbcValueExtractor;
 import org.hibernate.sql.JdbcValueBinder;
@@ -19,6 +21,7 @@ import org.hibernate.sql.JdbcValueExtractor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.internal.BasicJdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -52,8 +55,15 @@ public class BitSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		// todo : how to handle this
-		return null;
+		//this is to allow literals to be formatted correctly when
+		//we are in the legacy Boolean-to-BIT JDBC type mapping mode
+		return new BasicJdbcLiteralFormatter( javaTypeDescriptor ) {
+			@Override
+			public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
+				Boolean bool = unwrap( value, Boolean.class, session );
+				return bool ? "1" : "0";
+			}
+		};
 	}
 
 	@Override

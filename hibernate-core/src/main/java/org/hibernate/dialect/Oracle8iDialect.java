@@ -198,6 +198,7 @@ public class Oracle8iDialect extends Dialect {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "date" );
 		registerColumnType( Types.TIMESTAMP, "date" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "date" );
 	}
 
 	protected void registerBinaryTypeMappings() {
@@ -308,8 +309,9 @@ public class Oracle8iDialect extends Dialect {
 			case Types.CHAR:
 				return "to_char(null)";
 			case Types.DATE:
-			case Types.TIMESTAMP:
 			case Types.TIME:
+			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
 				return "to_date(null)";
 			default:
 				return "to_number(null)";

@@ -178,6 +178,7 @@ public class TeradataDialect extends Dialect {
 			case Types.DATE:
 			case Types.TIME:
 			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
 				v = "cast(null as timestamp)";
 				break;
 			case Types.BINARY:

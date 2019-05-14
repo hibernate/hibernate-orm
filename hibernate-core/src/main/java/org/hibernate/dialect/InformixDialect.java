@@ -61,8 +61,9 @@ public class InformixDialect extends Dialect {
 		//double precision.
 		//TODO: return 'smallfloat' when n <= 24
 
-		registerColumnType( Types.TIMESTAMP, "datetime year to fraction(5)" ); //5 is the maximum precision
 		registerColumnType( Types.TIME, "datetime hour to second" );
+		registerColumnType( Types.TIMESTAMP, "datetime year to fraction($p)" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetime year to fraction($p)" );
 
 		//these types have no defined length
 		registerColumnType( Types.BINARY, "byte" );
@@ -85,6 +86,12 @@ public class InformixDialect extends Dialect {
 	public int getDefaultDecimalPrecision() {
 		//the maximum
 		return 32;
+	}
+
+	@Override
+	public int getDefaultTimestampPrecision() {
+		//the maximum
+		return 5;
 	}
 
 	@Override

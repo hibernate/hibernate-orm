@@ -76,7 +76,6 @@ public class Oracle9Dialect extends Dialect {
 
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "date" );
-		registerColumnType( Types.TIMESTAMP, "timestamp($p)" );
 
 		registerColumnType( Types.VARBINARY, 2000, "raw($l)" );
 		registerColumnType( Types.VARBINARY, "long raw" );

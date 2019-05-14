@@ -44,6 +44,8 @@ public class MimerSQLDialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "nclob($l)" );
 
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
+
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
 	}

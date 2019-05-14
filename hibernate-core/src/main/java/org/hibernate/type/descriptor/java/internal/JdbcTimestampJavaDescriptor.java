@@ -199,6 +199,6 @@ public class JdbcTimestampJavaDescriptor extends AbstractBasicJavaDescriptor<Dat
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect) {
-		return 6; // milliseconds
+		return dialect.getDefaultTimestampPrecision();
 	}
 }

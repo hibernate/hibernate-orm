@@ -50,6 +50,10 @@ public class FrontBaseDialect extends Dialect {
 		registerColumnType( Types.BINARY, "bit($l)");
 		registerColumnType( Types.VARBINARY, "bit varying($l)");
 		registerColumnType( Types.LONGVARBINARY, "bit varying($l)");
+
+		//no precision
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
 	}
 
 	@Override

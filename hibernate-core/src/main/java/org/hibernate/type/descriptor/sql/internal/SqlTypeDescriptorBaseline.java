@@ -30,6 +30,7 @@ import org.hibernate.type.descriptor.sql.spi.RealSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TimeSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimestampWithTimeZoneSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
@@ -61,6 +62,7 @@ public class SqlTypeDescriptorBaseline {
 		target.addDescriptor( DateSqlDescriptor.INSTANCE );
 		target.addDescriptor( TimestampSqlDescriptor.INSTANCE );
 		target.addDescriptor( TimeSqlDescriptor.INSTANCE );
+		target.addDescriptor( TimestampWithTimeZoneSqlDescriptor.INSTANCE );
 
 		target.addDescriptor( BinarySqlDescriptor.INSTANCE );
 		target.addDescriptor( VarbinarySqlDescriptor.INSTANCE );

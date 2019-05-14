@@ -77,6 +77,7 @@ public class SpannerDialect extends Dialect {
 
 		//timestamp does not accept precision
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 		//there is no time type of any kind
 		registerColumnType( Types.TIME, "timestamp" );
 

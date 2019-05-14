@@ -42,6 +42,10 @@ public class ProgressDialect extends Dialect {
 
 		//note: unnecessary in Progress 10
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );
+
+		//no precision
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
 	}
 
 	@Override

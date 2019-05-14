@@ -68,13 +68,14 @@ public class Ingres9Dialect extends IngresDialect {
 	 */
 	public Ingres9Dialect() {
 		super();
+		// Not completely necessary, given that Ingres
+		// can be configured to set DATE = ANSIDATE
+		registerColumnType( Types.DATE, "ansidate" );
 	}
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
-		registerColumnType( Types.DATE, "ansidate" );
-		registerColumnType( Types.TIMESTAMP, "timestamp($p) with time zone" );
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 	}
 

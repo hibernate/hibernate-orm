@@ -46,6 +46,7 @@ public class MckoiDialect extends Dialect {
 
 		//no explicit precision
 		registerColumnType(Types.TIMESTAMP, "timestamp");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}

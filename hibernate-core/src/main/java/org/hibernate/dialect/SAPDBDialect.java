@@ -38,7 +38,7 @@ public class SAPDBDialect extends Dialect {
 	 */
 	public SAPDBDialect() {
 		super();
-		registerColumnType( Types.BIT, 1, "boolean" );
+		registerColumnType( Types.BIT, 1, "boolean" ); //no BIT type
 		registerColumnType( Types.TINYINT, "smallint" );
 
 		registerColumnType( Types.BIGINT, "fixed(19,0)" );
@@ -48,6 +48,7 @@ public class SAPDBDialect extends Dialect {
 
 		//no explicit precision
 		registerColumnType(Types.TIMESTAMP, "timestamp");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
 
 		registerColumnType( Types.VARBINARY, "long byte" );
 

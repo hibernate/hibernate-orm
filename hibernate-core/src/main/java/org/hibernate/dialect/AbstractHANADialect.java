@@ -228,6 +228,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		//no explicit precision
 		registerColumnType(Types.TIMESTAMP, "timestamp");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
 
 		// varbinary max length 5000
 		registerColumnType( Types.BINARY, 5000, "varbinary($l)" );

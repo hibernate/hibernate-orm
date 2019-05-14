@@ -94,6 +94,7 @@ public class MySQLDialect extends Dialect {
 		registerVarcharTypes();
 
 		registerColumnType( Types.TIMESTAMP, "datetime" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 
 		registerColumnType( Types.BLOB, "longblob" );
 //		registerColumnType( Types.BLOB, 16777215, "mediumblob" );
@@ -125,6 +126,7 @@ public class MySQLDialect extends Dialect {
 		// the SQL 1992 default of 6 (which is inconsistent with the MySQL
 		// default).
 		registerColumnType(Types.TIMESTAMP, "datetime($p)");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
 
 		// MySQL 5.7 brings JSON native support with a dedicated datatype.
 		// For more details about MySql new JSON datatype support, see:

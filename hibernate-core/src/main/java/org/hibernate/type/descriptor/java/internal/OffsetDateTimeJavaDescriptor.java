@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
@@ -53,7 +54,7 @@ public class OffsetDateTimeJavaDescriptor
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
 	}
 
 	@Override
@@ -75,6 +76,10 @@ public class OffsetDateTimeJavaDescriptor
 
 		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
 			return (X) offsetDateTime;
+		}
+
+		if ( ZonedDateTime.class.isAssignableFrom( type ) ) {
+			return (X) offsetDateTime.toZonedDateTime();
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
@@ -112,6 +117,11 @@ public class OffsetDateTimeJavaDescriptor
 
 		if ( OffsetDateTime.class.isInstance( value ) ) {
 			return (OffsetDateTime) value;
+		}
+
+		if ( ZonedDateTime.class.isInstance( value ) ) {
+			ZonedDateTime zonedDateTime = (ZonedDateTime) value;
+			return OffsetDateTime.of( zonedDateTime.toLocalDateTime(), zonedDateTime.getOffset() );
 		}
 
 		if ( Timestamp.class.isInstance( value ) ) {
@@ -165,6 +175,6 @@ public class OffsetDateTimeJavaDescriptor
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect) {
-		return 6;
+		return dialect.getDefaultTimestampPrecision();
 	}
 }

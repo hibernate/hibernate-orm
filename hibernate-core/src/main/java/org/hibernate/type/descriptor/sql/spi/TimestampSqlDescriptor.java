@@ -70,12 +70,7 @@ public class TimestampSqlDescriptor extends AbstractTemplateSqlTypeDescriptor im
 					X value,
 					ExecutionContext executionContext) throws SQLException {
 				final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, executionContext.getSession() );
-				if ( value instanceof Calendar ) {
-					st.setTimestamp( index, timestamp, (Calendar) value );
-				}
-				else {
-					st.setTimestamp( index, timestamp );
-				}
+				st.setTimestamp( index, timestamp );
 			}
 
 			@Override
@@ -86,12 +81,7 @@ public class TimestampSqlDescriptor extends AbstractTemplateSqlTypeDescriptor im
 					ExecutionContext executionContext)
 					throws SQLException {
 				final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, executionContext.getSession() );
-				if ( value instanceof Calendar ) {
-					st.setTimestamp( name, timestamp, (Calendar) value );
-				}
-				else {
-					st.setTimestamp( name, timestamp );
-				}
+				st.setTimestamp( name, timestamp );
 			}
 		};
 	}
@@ -108,8 +98,7 @@ public class TimestampSqlDescriptor extends AbstractTemplateSqlTypeDescriptor im
 
 			@Override
 			protected X doExtract(CallableStatement statement, int position, ExecutionContext executionContext) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getTimestamp( position ), executionContext
-						.getSession() );
+				return javaTypeDescriptor.wrap( statement.getTimestamp( position ), executionContext.getSession() );
 			}
 
 			@Override

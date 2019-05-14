@@ -194,10 +194,12 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "timestamp($p)" );
-
-		//currently not used:
-		registerColumnType( Types.TIME_WITH_TIMEZONE, "time with time zone" );
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p) with time zone" );
+		// type included here for completeness but note that
+		// very few databases support it, and the general
+		// advice is to caution against its use (for reasons,
+		// check the comments in the Postgres documentation).
+		registerColumnType( Types.TIME_WITH_TIMEZONE, "time with time zone" );
 
 		registerColumnType( Types.BINARY, "binary($l)" );
 		registerColumnType( Types.VARBINARY, "varbinary($l)" );
@@ -3258,6 +3260,21 @@ public abstract class Dialect implements ConversionContext {
 		//Sybase, and Teradata, so it makes a reasonable
 		//default (uses 17 bytes on SQL Server and MySQL)
 		return 38;
+	}
+
+	/**
+	 * This is the default precision for a generated
+	 * column mapped to a BigInteger or BigDecimal.
+	 *
+	 * Usually returns the maximum precision of the
+	 * database, except when there is no such maximum
+	 * precision, or the maximum precision is very high.
+	 */
+	public int getDefaultTimestampPrecision() {
+		//milliseconds is the maximum for most
+		//that support explicit precision, though
+		//DB2 goes as high as 12!
+		return 6;
 	}
 
 	public class DefaultSizeStrategyImpl implements DefaultSizeStrategy {

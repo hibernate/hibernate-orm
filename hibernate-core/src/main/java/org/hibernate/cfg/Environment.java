@@ -232,17 +232,6 @@ public final class Environment implements AvailableSettings {
 	}
 
 	/**
-	 * This will be removed soon; currently just returns false as no known JVM exibits this bug
-	 * and is also able to run this version of Hibernate ORM.
-	 * @deprecated removed as unneccessary
-	 * @return false
-	 */
-	@Deprecated
-	public static boolean jvmHasTimestampBug() {
-		return false;
-	}
-
-	/**
 	 * Should we use streams to bind binary types to JDBC IN parameters?
 	 *
 	 * @return True if streams should be used for binary data handling; false otherwise.

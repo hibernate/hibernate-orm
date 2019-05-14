@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java.internal;
 
 import java.sql.Types;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
@@ -16,7 +17,6 @@ import java.util.GregorianCalendar;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
@@ -119,7 +119,7 @@ public class CalendarJavaDescriptor
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
 	}
 
 	@Override
@@ -145,7 +145,13 @@ public class CalendarJavaDescriptor
 			return (X) new java.sql.Timestamp( value.getTimeInMillis() );
 		}
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) new  Date( value.getTimeInMillis() );
+			return (X) new Date( value.getTimeInMillis() );
+		}
+		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
+			return (X) value.toInstant().atZone( value.getTimeZone().toZoneId() ).toOffsetDateTime();
+		}
+		if ( ZonedDateTime.class.isAssignableFrom( type ) ) {
+			return (X) value.toInstant().atZone( value.getTimeZone().toZoneId() );
 		}
 		throw unknownUnwrap( type );
 	}
@@ -157,27 +163,22 @@ public class CalendarJavaDescriptor
 		if ( Calendar.class.isInstance( value ) ) {
 			return (Calendar) value;
 		}
-
-		if ( ! Date.class.isInstance( value ) ) {
-			throw unknownWrap( value.getClass() );
+		if ( OffsetDateTime.class.isInstance( value ) ) {
+			return GregorianCalendar.from( ((OffsetDateTime) value).toZonedDateTime() );
 		}
-
-		Calendar cal = new GregorianCalendar();
-		if ( Environment.jvmHasTimestampBug() ) {
-			final long milliseconds = ( (Date) value ).getTime();
-			final long nanoseconds = java.sql.Timestamp.class.isInstance( value )
-					? ( (java.sql.Timestamp) value ).getNanos()
-					: 0;
-			cal.setTime( new Date( milliseconds + nanoseconds / 1000000 ) );
+		if ( ZonedDateTime.class.isInstance( value ) ) {
+			return GregorianCalendar.from( (ZonedDateTime) value );
 		}
-		else {
+		if ( Date.class.isInstance( value ) ) {
+			Calendar cal = new GregorianCalendar();
 			cal.setTime( (Date) value );
+			return cal;
 		}
-		return cal;
+		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect) {
-		return 6; // milliseconds
+		return dialect.getDefaultTimestampPrecision();
 	}
 }

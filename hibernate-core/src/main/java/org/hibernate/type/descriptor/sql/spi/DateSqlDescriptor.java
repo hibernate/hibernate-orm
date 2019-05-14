@@ -67,12 +67,7 @@ public class DateSqlDescriptor extends AbstractTemplateSqlTypeDescriptor impleme
 					int index, X value,
 					ExecutionContext executionContext) throws SQLException {
 				final Date date = javaTypeDescriptor.unwrap( value, Date.class, executionContext.getSession() );
-				if ( value instanceof Calendar ) {
-					st.setDate( index, date, (Calendar) value );
-				}
-				else {
-					st.setDate( index, date );
-				}
+				st.setDate( index, date );
 			}
 
 			@Override
@@ -81,12 +76,7 @@ public class DateSqlDescriptor extends AbstractTemplateSqlTypeDescriptor impleme
 					String name, X value,
 					ExecutionContext executionContext) throws SQLException {
 				final Date date = javaTypeDescriptor.unwrap( value, Date.class, executionContext.getSession() );
-				if ( value instanceof Calendar ) {
-					st.setDate( name, date, (Calendar) value );
-				}
-				else {
-					st.setDate( name, date );
-				}
+				st.setDate( name, date );
 			}
 		};
 	}

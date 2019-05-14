@@ -150,6 +150,8 @@ public class RDMSOS2200Dialect extends Dialect {
 		registerColumnType( Types.CHAR, "unicode($l)");
 		registerColumnType( Types.VARCHAR, "unicode($l)");
 		registerColumnType( Types.LONGVARCHAR, "unicode($l)");
+
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
 	}
 
 	@Override

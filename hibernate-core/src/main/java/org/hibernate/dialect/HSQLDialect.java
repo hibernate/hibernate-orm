@@ -439,6 +439,7 @@ public class HSQLDialect extends Dialect {
 				literal = "cast(null as date)";
 				break;
 			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
 				literal = "cast(null as timestamp)";
 				break;
 			case Types.BOOLEAN:

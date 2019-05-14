@@ -105,6 +105,8 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "clob($l)" );
 
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
+
 		//not keywords, at least not in DB2 11,
 		//but perhaps they were in older versions?
 		registerKeyword( "current" );
@@ -329,11 +331,12 @@ public class DB2Dialect extends Dialect {
 			case Types.DATE:
 				literal = "'2000-1-1'";
 				break;
-			case Types.TIMESTAMP:
-				literal = "'2000-1-1 00:00:00'";
-				break;
 			case Types.TIME:
 				literal = "'00:00:00'";
+				break;
+			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				literal = "'2000-1-1 00:00:00'";
 				break;
 			default:
 				literal = "0";

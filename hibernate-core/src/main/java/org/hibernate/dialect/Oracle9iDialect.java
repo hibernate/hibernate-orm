@@ -104,6 +104,7 @@ public class Oracle9iDialect extends Oracle8iDialect {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "date" );
 		registerColumnType( Types.TIMESTAMP, "timestamp($p)" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p) with time zone" );
 	}
 
 	@Override

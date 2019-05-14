@@ -129,9 +129,6 @@ public class HSQLDialect extends Dialect {
 
 		//note that all floating point types are synonyms for 'double'
 
-		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
-
 		registerColumnType( Types.LONGVARCHAR, "longvarchar" ); //synonym for 'varchar(16M)'
 		registerColumnType( Types.LONGVARBINARY, "longvarbinary" ); //synonym for 'varbinary(16M)'
 
@@ -140,18 +137,11 @@ public class HSQLDialect extends Dialect {
 		if ( hsqldbVersion < 200 ) {
 			registerColumnType( Types.NUMERIC, "numeric" );
 		}
-		else {
-			registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
-		}
 
-		//HSQL has no Blob/Clob support .... but just put these here for now!
 		if ( hsqldbVersion < 200 ) {
+			//HSQL has no Blob/Clob support .... but just put these here for now!
 			registerColumnType( Types.BLOB, "longvarbinary" );
 			registerColumnType( Types.CLOB, "longvarchar" );
-		}
-		else {
-			registerColumnType( Types.BLOB, "blob($l)" );
-			registerColumnType( Types.CLOB, "clob($l)" );
 		}
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );

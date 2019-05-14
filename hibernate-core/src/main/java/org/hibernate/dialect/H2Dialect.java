@@ -113,11 +113,6 @@ public class H2Dialect extends Dialect {
 		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
 //		registerColumnType( Types.BIT, "bit" );
 
-		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" ); //synonym for 'binary'
-		registerColumnType( Types.LONGVARCHAR, "longvarchar($l)"); //synonym for 'varchar'
-		registerColumnType( Types.LONGVARBINARY, "longvarbinary($l)" ); //synonym for 'binary'
-
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );

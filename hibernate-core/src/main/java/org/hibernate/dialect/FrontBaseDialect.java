@@ -45,6 +45,11 @@ public class FrontBaseDialect extends Dialect {
 
 		registerColumnType( Types.BOOLEAN, "bit" );
 		registerColumnType( Types.BIGINT, "longint" );
+
+		//FrontBase has no 'binary' nor 'varbinary'
+		registerColumnType( Types.BINARY, "bit($l)");
+		registerColumnType( Types.VARBINARY, "bit varying($l)");
+		registerColumnType( Types.LONGVARBINARY, "bit varying($l)");
 	}
 
 	@Override

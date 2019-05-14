@@ -48,8 +48,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		//note that 'real' is double precision on SQL Server, single precision on Sybase
 		//but 'float' is single precision on Sybase, double precision on SQL Server
 
-		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
 		registerColumnType( Types.LONGVARBINARY, "image" );
 		registerColumnType( Types.LONGVARCHAR, "text" );
 

@@ -44,10 +44,6 @@ public class MckoiDialect extends Dialect {
 		registerColumnType( Types.FLOAT, "float" ); //precision argument not supported
 		registerColumnType( Types.DOUBLE, "double" ); //'double precision' not supported
 
-		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
-		registerColumnType( Types.LONGVARBINARY, "longvarbinary($l)" );
-
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 

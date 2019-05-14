@@ -214,13 +214,8 @@ public class Cache71Dialect extends Dialect {
 		// changed 08-11-2005, jsl
 		registerColumnType( Types.BOOLEAN, "bit" );
 
-		registerColumnType( Types.BINARY, "varbinary($1)" );
-		registerColumnType( Types.VARBINARY, "longvarbinary" );
-		registerColumnType( Types.LONGVARBINARY, "longvarbinary" );
-		registerColumnType( Types.LONGVARCHAR, "longvarchar" );
-
-		registerColumnType( Types.BLOB, "longvarbinary" );
-		registerColumnType( Types.CLOB, "longvarchar" );
+		registerColumnType( Types.BLOB, "image" );
+		registerColumnType( Types.CLOB, "text" );
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );

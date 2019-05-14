@@ -63,6 +63,7 @@ public class InformixDialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP, "datetime year to fraction(5)" );
 		registerColumnType( Types.TIME, "datetime hour to second" );
 
+		//these types have no defined length
 		registerColumnType( Types.BINARY, "byte" );
 		registerColumnType( Types.VARBINARY, "byte" );
 		registerColumnType( Types.LONGVARBINARY, "blob" );

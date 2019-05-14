@@ -34,15 +34,17 @@ public class TeradataDialect extends Dialect {
 	 */
 	public TeradataDialect() {
 		super();
-		//registerColumnType data types
-		registerColumnType( Types.BIGINT, "numeric(18,0)" );
+
+		registerColumnType( Types.BOOLEAN, "byteint" );
 		registerColumnType( Types.BIT, 1, "byteint" );
 		registerColumnType( Types.BIT, "byteint" );
-		registerColumnType( Types.BOOLEAN, "byteint" );
+
 		registerColumnType( Types.TINYINT, "byteint" );
+		registerColumnType( Types.BIGINT, "numeric(18,0)" );
+
+		registerColumnType( Types.BINARY, "byte($l)" );
 		registerColumnType( Types.VARBINARY, "varbyte($l)" );
-		registerColumnType( Types.BINARY, "byteint" );
-		registerColumnType( Types.LONGVARCHAR, "long varchar" );
+		registerColumnType( Types.LONGVARBINARY, "varbyte($l)" );
 
 		registerKeyword( "password" );
 		registerKeyword( "type" );

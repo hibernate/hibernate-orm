@@ -39,6 +39,12 @@ public class CUBRIDDialect extends Dialect {
 		//TODO: perform some sort of transformation so that
 		//      24 => 7 and 53 => 16
 
+		//CUBRID has no 'binary' nor 'varbinary', but 'bit' is
+		//intended to be used for binary data
+		registerColumnType( Types.BINARY, "bit($l)");
+		registerColumnType( Types.VARBINARY, "bit varying($l)");
+		registerColumnType( Types.LONGVARBINARY, "bit varying($l)");
+
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 

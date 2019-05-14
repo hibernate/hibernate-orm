@@ -188,9 +188,9 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 
-		registerColumnType( Types.BINARY, "bit($l)" );
-		registerColumnType( Types.VARBINARY, "bit varying($l)" );
-		registerColumnType( Types.LONGVARBINARY, "bit varying($l)" );
+		registerColumnType( Types.BINARY, "binary($l)" );
+		registerColumnType( Types.VARBINARY, "varbinary($l)" );
+		registerColumnType( Types.LONGVARBINARY, "varbinary($l)" );
 		registerColumnType( Types.BLOB, "blob" );
 
 		registerColumnType( Types.CHAR, "char($l)" );

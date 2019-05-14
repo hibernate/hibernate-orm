@@ -40,7 +40,6 @@ public class ProgressDialect extends Dialect {
 		registerColumnType( Types.BOOLEAN, "bit" );
 		registerColumnType( Types.BIGINT, "numeric" );
 		registerColumnType( Types.CHAR, "character($l)" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
 	}
 
 	@Override

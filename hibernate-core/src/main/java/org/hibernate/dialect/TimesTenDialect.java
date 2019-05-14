@@ -81,9 +81,6 @@ public class TimesTenDialect extends Dialect {
 		registerColumnType( Types.LONGVARCHAR, "varchar2($l)" );
 		registerColumnType( Types.NVARCHAR, "nvarchar2($l)" );
 		registerColumnType( Types.LONGNVARCHAR, "nvarchar2($l)" );
-		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
-		registerColumnType( Types.LONGVARBINARY, "varbinary($l)" );
 
 		//do not use 'date' because it's a datetime
 		registerColumnType(Types.DATE, "tt_date");

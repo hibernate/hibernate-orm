@@ -39,6 +39,11 @@ public class CUBRIDDialect extends Dialect {
 		//TODO: perform some sort of transformation so that
 		//      24 => 7 and 53 => 16
 
+		//'timestamp' has a very limited range
+		//'datetime' does not support explicit precision
+		//(always 3, millisecond precision)
+		registerColumnType(Types.TIMESTAMP, "datetime");
+
 		//CUBRID has no 'binary' nor 'varbinary', but 'bit' is
 		//intended to be used for binary data
 		registerColumnType( Types.BINARY, "bit($l)");

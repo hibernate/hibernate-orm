@@ -122,7 +122,7 @@ public class MySQLDialect extends Dialect {
 		// The following is defined because Hibernate currently expects
 		// the SQL 1992 default of 6 (which is inconsistent with the MySQL
 		// default).
-		registerColumnType(Types.TIMESTAMP, "datetime(6)");
+		registerColumnType(Types.TIMESTAMP, "datetime($p)");
 
 		// MySQL 5.7 brings JSON native support with a dedicated datatype.
 		// For more details about MySql new JSON datatype support, see:

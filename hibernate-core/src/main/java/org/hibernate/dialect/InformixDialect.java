@@ -60,7 +60,7 @@ public class InformixDialect extends Dialect {
 		//double precision.
 		//TODO: return 'smallfloat' when n <= 24
 
-		registerColumnType( Types.TIMESTAMP, "datetime year to fraction(5)" );
+		registerColumnType( Types.TIMESTAMP, "datetime year to fraction(5)" ); //5 is the maximum precision
 		registerColumnType( Types.TIME, "datetime hour to second" );
 
 		//these types have no defined length

@@ -78,7 +78,6 @@ import org.hibernate.type.descriptor.sql.spi.BooleanSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.DateSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.DoubleSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.FloatSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.LongNVarcharSqlDescriptor;
@@ -538,6 +537,7 @@ public final class StandardSpiBasicTypes {
 	public static final StandardBasicType<OffsetDateTime> OFFSET_DATE_TIME = new StandardBasicTypeImpl(
 			// todo (6.0) : apply timezone normalization (as value converter)?
 			OffsetDateTimeJavaDescriptor.INSTANCE,
+			//TODO: should be a TimestampWithTimeZoneZqlDescriptor!
 			TimestampSqlDescriptor.INSTANCE
 	);
 
@@ -548,6 +548,7 @@ public final class StandardSpiBasicTypes {
 	public static final StandardBasicType<OffsetTime> OFFSET_TIME = new StandardBasicTypeImpl<>(
 			// todo (6.0) : apply timezone normalization (as value converter)?
 			OffsetTimeJavaDescriptor.INSTANCE,
+			//TODO: should be a TimeWithTimeZoneZqlDescriptor!
 			TimeSqlDescriptor.INSTANCE
 	);
 
@@ -558,6 +559,7 @@ public final class StandardSpiBasicTypes {
 	public static final StandardBasicType<ZonedDateTime> ZONED_DATE_TIME = new StandardBasicTypeImpl(
 			// todo (6.0) : apply timezone normalization (as value converter)?
 			ZonedDateTimeJavaDescriptor.INSTANCE,
+			//TODO: should be a TimestampWithTimeZoneZqlDescriptor!
 			TimestampSqlDescriptor.INSTANCE
 	);
 

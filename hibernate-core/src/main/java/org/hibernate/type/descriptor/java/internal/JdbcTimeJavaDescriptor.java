@@ -181,4 +181,9 @@ public class JdbcTimeJavaDescriptor extends AbstractBasicJavaDescriptor<Date> im
 				.getDescriptor( java.sql.Timestamp.class );
 		return jdbcTimestampDescriptor.resolveTypeForPrecision( precision, scope );
 	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 0; //seconds (currently ignored since Dialects don't parameterize time type by precision)
+	}
 }

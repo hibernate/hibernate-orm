@@ -26,6 +26,11 @@ public class MySQL5Dialect extends MySQLDialect {
 //		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
 		registerColumnType( Types.VARCHAR, 65535, "varchar($l)" );
 		registerColumnType( Types.LONGVARCHAR, "longtext" );
+
+		registerColumnType( Types.VARBINARY, "longblob" );
+//		registerColumnType( Types.VARBINARY, 16777215, "mediumblob" );
+		registerColumnType( Types.VARBINARY, 65535, "varbinary($l)" );
+		registerColumnType( Types.LONGVARBINARY, "longblob" );
 	}
 
 	@Override

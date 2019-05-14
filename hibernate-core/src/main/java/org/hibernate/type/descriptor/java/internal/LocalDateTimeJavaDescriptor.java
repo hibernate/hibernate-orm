@@ -175,6 +175,6 @@ public class LocalDateTimeJavaDescriptor
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect) {
-		return 6;
+		return dialect.getDefaultTimestampPrecision();
 	}
 }

@@ -9,6 +9,11 @@ package org.hibernate.testing.orm.domain.gambit;
 import java.net.URL;
 import java.sql.Clob;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Column;
@@ -46,6 +51,12 @@ public class EntityOfBasics {
 	private Gender gender;
 	private Gender convertedGender;
 	private Gender ordinalGender;
+
+	private LocalDateTime theLocalDateTime;
+	private LocalDate theLocalDate;
+	private LocalTime theLocalTime;
+	private ZonedDateTime theZonedDateTime;
+	private OffsetDateTime theOffsetDateTime;
 
 	@Id
 	public Integer getId() {
@@ -166,6 +177,46 @@ public class EntityOfBasics {
 
 	public void setTheInstant(Instant theInstant) {
 		this.theInstant = theInstant;
+	}
+
+	public LocalDate getTheLocalDate() {
+		return theLocalDate;
+	}
+
+	public void setTheLocalDate(LocalDate theLocalDate) {
+		this.theLocalDate = theLocalDate;
+	}
+
+	public LocalDateTime getTheLocalDateTime() {
+		return theLocalDateTime;
+	}
+
+	public void setTheLocalDateTime(LocalDateTime theLocalDateTime) {
+		this.theLocalDateTime = theLocalDateTime;
+	}
+
+	public LocalTime getTheLocalTime() {
+		return theLocalTime;
+	}
+
+	public void setTheLocalTime(LocalTime theLocalTime) {
+		this.theLocalTime = theLocalTime;
+	}
+
+	public OffsetDateTime getTheOffsetDateTime() {
+		return theOffsetDateTime;
+	}
+
+	public void setTheOffsetDateTime(OffsetDateTime theOffsetDateTime) {
+		this.theOffsetDateTime = theOffsetDateTime;
+	}
+
+	public ZonedDateTime getTheZonedDateTime() {
+		return theZonedDateTime;
+	}
+
+	public void setTheZonedDateTime(ZonedDateTime theZonedDateTime) {
+		this.theZonedDateTime = theZonedDateTime;
 	}
 
 	public static class GenderConverter implements AttributeConverter<Gender,Character> {

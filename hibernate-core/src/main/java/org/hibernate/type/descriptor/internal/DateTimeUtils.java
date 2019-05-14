@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.internal;
 
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
@@ -22,12 +23,16 @@ public final class DateTimeUtils {
 	private DateTimeUtils() {
 	}
 
-	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss.S";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_OFFSET = "yyyy-MM-dd HH:mm:ss.SSSSSSxxx";
+	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss.SSSSSS";
 	public static final String FORMAT_STRING_DATE = "yyyy-MM-dd";
+	public static final String FORMAT_STRING_TIME_WITH_OFFSET = "HH:mm:ssxxx";
 	public static final String FORMAT_STRING_TIME = "HH:mm:ss";
 
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_OFFSET = DateTimeFormatter.ofPattern( FORMAT_STRING_TIMESTAMP_WITH_OFFSET, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP = DateTimeFormatter.ofPattern( FORMAT_STRING_TIMESTAMP, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_DATE = DateTimeFormatter.ofPattern( FORMAT_STRING_DATE, Locale.ENGLISH );
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME_WITH_OFFSET = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME_WITH_OFFSET, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME, Locale.ENGLISH );
 
 	public static final String JDBC_ESCAPE_START_TIMESTAMP = "{ts '";
@@ -50,7 +55,12 @@ public final class DateTimeUtils {
 	}
 
 	public static String formatAsTimestamp(TemporalAccessor temporalAccessor) {
-		return DATE_TIME_FORMATTER_TIMESTAMP.format( temporalAccessor );
+		if ( temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS) ) {
+			return DATE_TIME_FORMATTER_TIMESTAMP_WITH_OFFSET.format(temporalAccessor);
+		}
+		else {
+			return DATE_TIME_FORMATTER_TIMESTAMP.format(temporalAccessor);
+		}
 	}
 
 	public static String formatAsDate(TemporalAccessor temporalAccessor) {
@@ -58,7 +68,12 @@ public final class DateTimeUtils {
 	}
 
 	public static String formatAsTime(TemporalAccessor temporalAccessor) {
-		return DATE_TIME_FORMATTER_TIME.format( temporalAccessor );
+		if ( temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS) ) {
+			return DATE_TIME_FORMATTER_TIME_WITH_OFFSET.format(temporalAccessor);
+		}
+		else {
+			return DATE_TIME_FORMATTER_TIME.format(temporalAccessor);
+		}
 	}
 
 	public static String formatJdbcLiteralUsingPrecision(TemporalAccessor temporalAccessor, TemporalType precision) {

@@ -215,6 +215,7 @@ public class Cache71Dialect extends Dialect {
 
 		//no explicit precision
 		registerColumnType(Types.TIMESTAMP, "timestamp");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
 
 		registerColumnType( Types.BLOB, "image" );
 		registerColumnType( Types.CLOB, "text" );

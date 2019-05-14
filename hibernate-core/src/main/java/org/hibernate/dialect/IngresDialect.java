@@ -86,10 +86,6 @@ public class IngresDialect extends Dialect {
 		registerColumnType( Types.NVARCHAR, "long nvarchar" );
 		registerColumnType( Types.LONGNVARCHAR, "long nvarchar" );
 
-		//TODO: why do we have 'with time zone' here and not in other dialects?
-//		registerColumnType( Types.TIME, "time with time zone" );
-//		registerColumnType( Types.TIMESTAMP, "timestamp($p) with time zone" );
-
 		// Ingres driver supports getGeneratedKeys but only in the following
 		// form:
 		// The Ingres DBMS returns only a single table key or a single object

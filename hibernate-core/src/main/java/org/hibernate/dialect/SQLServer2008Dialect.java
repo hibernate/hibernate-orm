@@ -28,6 +28,7 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetimeoffset($p)" );
 
 		registerColumnType( Types.NVARCHAR, NVARCHAR_MAX_LENGTH, "nvarchar($l)" );
 		registerColumnType( Types.NVARCHAR, "nvarchar(MAX)" );

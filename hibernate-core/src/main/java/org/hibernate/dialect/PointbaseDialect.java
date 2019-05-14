@@ -33,13 +33,13 @@ public class PointbaseDialect extends org.hibernate.dialect.Dialect {
 		//no pointbase BIT
 		registerColumnType( Types.BIT, 1, "smallint" );
 		registerColumnType( Types.BIT, "smallint" );
-		registerColumnType( Types.BOOLEAN, "smallint" );
 		//no pointbase TINYINT
 		registerColumnType( Types.TINYINT, "smallint" );
-		//the BLOB type requires a size arguement - this defaults to
-		//bytes - no arg defaults to 1 whole byte!
-		//other argument mods include K - kilobyte, M - megabyte, G - gigabyte.
-		//refer to the PBdevelopers guide for more info.
+
+		//no precision
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
+
 		registerColumnType( Types.VARBINARY, "blob($l)" );
 	}
 

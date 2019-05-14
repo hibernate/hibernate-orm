@@ -19,6 +19,7 @@ import java.util.GregorianCalendar;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
@@ -146,5 +147,10 @@ public class InstantJavaDescriptor
 	@Override
 	public VersionSupport<Instant> getVersionSupport() {
 		return InstantVersionSupport.INSTANCE;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return dialect.getDefaultTimestampPrecision();
 	}
 }

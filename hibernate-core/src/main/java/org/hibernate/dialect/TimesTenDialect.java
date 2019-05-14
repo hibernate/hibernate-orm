@@ -89,6 +89,7 @@ public class TimesTenDialect extends Dialect {
 		registerColumnType(Types.TIME, "tt_time");
 		//`timestamp` has more precision than `tt_timestamp`
 //		registerColumnType(Types.TIMESTAMP, "tt_timestamp");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
@@ -332,8 +333,9 @@ public class TimesTenDialect extends Dialect {
 				return "to_char(null)";
 
 			case Types.DATE:
-			case Types.TIMESTAMP:
 			case Types.TIME:
+			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
 				return "to_date(null)";
 
 			default:

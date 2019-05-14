@@ -40,6 +40,7 @@ public class CUBRIDDialect extends Dialect {
 		//'datetime' does not support explicit precision
 		//(always 3, millisecond precision)
 		registerColumnType(Types.TIMESTAMP, "datetime");
+		registerColumnType(Types.TIMESTAMP, "datetimetz");
 
 		//CUBRID has no 'binary' nor 'varbinary', but 'bit' is
 		//intended to be used for binary data
@@ -80,6 +81,13 @@ public class CUBRIDDialect extends Dialect {
 		registerKeyword( "ATTRIBUTE" );
 		registerKeyword( "STRING" );
 		registerKeyword( "SEARCH" );
+	}
+
+	//not used for anything right now, but it
+	//could be used for timestamp literal format
+	@Override
+	public int getDefaultTimestampPrecision() {
+		return 3;
 	}
 
 	@Override

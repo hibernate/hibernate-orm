@@ -54,6 +54,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		registerColumnType( Types.DATE, "datetime" );
 		registerColumnType( Types.TIME, "datetime" );
 		registerColumnType( Types.TIMESTAMP, "datetime" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetime" );
 
 		registerColumnType( Types.BLOB, "image" );
 		registerColumnType( Types.CLOB, "text" );

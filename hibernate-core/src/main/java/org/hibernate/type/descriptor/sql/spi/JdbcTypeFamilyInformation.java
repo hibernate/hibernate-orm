@@ -23,7 +23,7 @@ public class JdbcTypeFamilyInformation {
 		BINARY( Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY ),
 		NUMERIC( Types.BIGINT, Types.DECIMAL, Types.DOUBLE, Types.FLOAT, Types.INTEGER, Types.NUMERIC, Types.REAL, Types.SMALLINT, Types.TINYINT ),
 		CHARACTER( Types.CHAR, Types.LONGNVARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.VARCHAR ),
-		DATETIME( Types.DATE, Types.TIME, Types.TIMESTAMP ),
+		DATETIME( Types.DATE, Types.TIME, Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE, Types.TIME_WITH_TIMEZONE ),
 		CLOB( Types.CLOB, Types.NCLOB );
 
 		private final int[] typeCodes;

@@ -70,12 +70,7 @@ public class TimeSqlDescriptor extends AbstractTemplateSqlTypeDescriptor impleme
 					X value,
 					ExecutionContext executionContext) throws SQLException {
 				final Time time = javaTypeDescriptor.unwrap( value, Time.class, executionContext.getSession() );
-				if ( value instanceof Calendar ) {
-					st.setTime( index, time, (Calendar) value );
-				}
-				else {
-					st.setTime( index, time );
-				}
+				st.setTime( index, time );
 			}
 
 			@Override
@@ -86,12 +81,7 @@ public class TimeSqlDescriptor extends AbstractTemplateSqlTypeDescriptor impleme
 					ExecutionContext executionContext)
 					throws SQLException {
 				final Time time = javaTypeDescriptor.unwrap( value, Time.class, executionContext.getSession() );
-				if ( value instanceof Calendar ) {
-					st.setTime( name, time, (Calendar) value );
-				}
-				else {
-					st.setTime( name, time );
-				}
+				st.setTime( name, time );
 			}
 		};
 	}

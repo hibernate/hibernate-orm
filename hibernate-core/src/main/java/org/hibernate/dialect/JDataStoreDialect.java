@@ -31,6 +31,10 @@ public class JDataStoreDialect extends Dialect {
 		registerColumnType( Types.BLOB, "varbinary" );
 		registerColumnType( Types.CLOB, "varchar" );
 
+		//no precision, probably, documentation impossible to find!
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
+
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 	}
 

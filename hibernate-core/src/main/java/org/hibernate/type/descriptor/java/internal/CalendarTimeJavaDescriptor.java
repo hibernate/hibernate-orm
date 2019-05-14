@@ -17,7 +17,6 @@ import java.util.GregorianCalendar;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
@@ -121,23 +120,12 @@ public class CalendarTimeJavaDescriptor
 		if ( Calendar.class.isInstance( value ) ) {
 			return (Calendar) value;
 		}
-
-		if ( ! Date.class.isInstance( value ) ) {
-			throw unknownWrap( value.getClass() );
-		}
-
-		Calendar cal = new GregorianCalendar();
-		if ( Environment.jvmHasTimestampBug() ) {
-			final long milliseconds = ( (Date) value ).getTime();
-			final long nanoseconds = java.sql.Timestamp.class.isInstance( value )
-					? ( (java.sql.Timestamp) value ).getNanos()
-					: 0;
-			cal.setTime( new Date( milliseconds + nanoseconds / 1000000 ) );
-		}
-		else {
+		if ( Date.class.isInstance( value ) ) {
+			Calendar cal = new GregorianCalendar();
 			cal.setTime( (Date) value );
+			return cal;
 		}
-		return cal;
+		throw unknownWrap( value.getClass() );
 	}
 
 	@Override

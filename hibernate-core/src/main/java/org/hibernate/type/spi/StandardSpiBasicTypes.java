@@ -91,6 +91,7 @@ import org.hibernate.type.descriptor.sql.spi.ObjectSqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TimeSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimestampWithTimeZoneSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
@@ -532,13 +533,13 @@ public final class StandardSpiBasicTypes {
 
 
 	/**
-	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC
+	 * {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
 	 */
 	public static final StandardBasicType<OffsetDateTime> OFFSET_DATE_TIME = new StandardBasicTypeImpl(
 			// todo (6.0) : apply timezone normalization (as value converter)?
 			OffsetDateTimeJavaDescriptor.INSTANCE,
-			//TODO: should be a TimestampWithTimeZoneZqlDescriptor!
-			TimestampSqlDescriptor.INSTANCE
+			TimestampWithTimeZoneSqlDescriptor.INSTANCE
 	);
 
 
@@ -548,19 +549,18 @@ public final class StandardSpiBasicTypes {
 	public static final StandardBasicType<OffsetTime> OFFSET_TIME = new StandardBasicTypeImpl<>(
 			// todo (6.0) : apply timezone normalization (as value converter)?
 			OffsetTimeJavaDescriptor.INSTANCE,
-			//TODO: should be a TimeWithTimeZoneZqlDescriptor!
 			TimeSqlDescriptor.INSTANCE
 	);
 
 
 	/**
-	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC
+	 * {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
 	 */
 	public static final StandardBasicType<ZonedDateTime> ZONED_DATE_TIME = new StandardBasicTypeImpl(
 			// todo (6.0) : apply timezone normalization (as value converter)?
 			ZonedDateTimeJavaDescriptor.INSTANCE,
-			//TODO: should be a TimestampWithTimeZoneZqlDescriptor!
-			TimestampSqlDescriptor.INSTANCE
+			TimestampWithTimeZoneSqlDescriptor.INSTANCE
 	);
 
 
@@ -598,12 +598,12 @@ public final class StandardSpiBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
-	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 * {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
 	 */
 	public static final StandardBasicType<Calendar> CALENDAR = new StandardBasicTypeImpl(
 			// todo (6.0) : apply timezone normalization (as value converter)?
 			CalendarJavaDescriptor.INSTANCE,
-			TimestampSqlDescriptor.INSTANCE
+			TimestampWithTimeZoneSqlDescriptor.INSTANCE
 	);
 
 

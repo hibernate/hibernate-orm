@@ -66,8 +66,8 @@ public class IngresDialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //Ingres has no 'numeric' type
 
 		registerColumnType( Types.BINARY, 32000, "byte($l)" );
-		registerColumnType( Types.BINARY, "long byte" );
 		registerColumnType( Types.VARBINARY, 32000, "varbyte($l)" );
+		//note: 'long byte' is really a blob type
 		registerColumnType( Types.VARBINARY, "long byte" );
 		registerColumnType( Types.LONGVARBINARY, "long byte" );
 
@@ -77,11 +77,13 @@ public class IngresDialect extends Dialect {
 		//      does with a Hibernate property to config this.
 		registerColumnType( Types.CHAR, 32000, "char($l)" );
 		registerColumnType( Types.VARCHAR, 32000, "varchar($l)" );
+		//note: 'long varchar' is really a clob type
 		registerColumnType( Types.VARCHAR, "long varchar" );
 		registerColumnType( Types.LONGVARCHAR, "long varchar" );
 
 		registerColumnType( Types.NCHAR, 32000, "nchar($l)" );
 		registerColumnType( Types.NVARCHAR, 32000, "nvarchar($l)" );
+		//note: 'long nvarchar' is really a clob type
 		registerColumnType( Types.NVARCHAR, "long nvarchar" );
 		registerColumnType( Types.LONGNVARCHAR, "long nvarchar" );
 

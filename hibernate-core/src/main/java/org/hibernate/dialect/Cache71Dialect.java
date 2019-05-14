@@ -214,6 +214,9 @@ public class Cache71Dialect extends Dialect {
 		// changed 08-11-2005, jsl
 		registerColumnType( Types.BOOLEAN, "bit" );
 
+		//no explicit precision
+		registerColumnType(Types.TIMESTAMP, "timestamp");
+
 		registerColumnType( Types.BLOB, "image" );
 		registerColumnType( Types.CLOB, "text" );
 

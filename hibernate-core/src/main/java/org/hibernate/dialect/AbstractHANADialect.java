@@ -227,6 +227,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		//'double precision' syntax not supported
 		registerColumnType( Types.DOUBLE, "double" );
 
+		//no explicit precision
+		registerColumnType(Types.TIMESTAMP, "timestamp");
+
 		// varbinary max length 5000
 		registerColumnType( Types.BINARY, 5000, "varbinary($l)" );
 		registerColumnType( Types.VARBINARY, 5000, "varbinary($l)" );

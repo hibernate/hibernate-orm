@@ -195,4 +195,9 @@ public class JdbcTimestampJavaDescriptor extends AbstractBasicJavaDescriptor<Dat
 
 		throw new IllegalArgumentException( "Unrecognized JPA TemporalType precision [" + precision + "]" );
 	}
+
+	@Override
+	public int getDefaultSqlPrecision() {
+		return 6; // milliseconds
+	}
 }

@@ -44,6 +44,9 @@ public class MckoiDialect extends Dialect {
 		registerColumnType( Types.FLOAT, "float" ); //precision argument not supported
 		registerColumnType( Types.DOUBLE, "double" ); //'double precision' not supported
 
+		//no explicit precision
+		registerColumnType(Types.TIMESTAMP, "timestamp");
+
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 

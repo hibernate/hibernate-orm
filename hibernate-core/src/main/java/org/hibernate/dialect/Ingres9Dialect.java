@@ -75,7 +75,7 @@ public class Ingres9Dialect extends IngresDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 		registerColumnType( Types.DATE, "ansidate" );
-		registerColumnType( Types.TIMESTAMP, "timestamp(9) with time zone" );
+		registerColumnType( Types.TIMESTAMP, "timestamp($p) with time zone" );
 		CommonFunctionFactory.concat_operator( queryEngine );
 	}
 

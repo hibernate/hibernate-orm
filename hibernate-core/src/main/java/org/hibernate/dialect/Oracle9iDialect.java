@@ -103,7 +103,7 @@ public class Oracle9iDialect extends Oracle8iDialect {
 	protected void registerDateTimeTypeMappings() {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "date" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP, "timestamp($p)" );
 	}
 
 	@Override

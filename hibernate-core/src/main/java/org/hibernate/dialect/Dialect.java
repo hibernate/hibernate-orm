@@ -186,7 +186,11 @@ public abstract class Dialect implements ConversionContext {
 
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP, "timestamp($p)" );
+
+		//currently not used:
+		registerColumnType( Types.TIME_WITH_TIMEZONE, "time with time zone" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p) with time zone" );
 
 		registerColumnType( Types.BINARY, "binary($l)" );
 		registerColumnType( Types.VARBINARY, "varbinary($l)" );
@@ -3275,7 +3279,9 @@ public abstract class Dialect implements ConversionContext {
 			}
 			else if ( jdbcTypeCode == Types.FLOAT
 					|| jdbcTypeCode == Types.DOUBLE
-					|| jdbcTypeCode == Types.REAL ) {
+					|| jdbcTypeCode == Types.REAL
+					|| jdbcTypeCode == Types.TIMESTAMP
+					|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE ) {
 				builder.setPrecision( javaType.getDefaultSqlPrecision() );
 				return builder.build();
 			}

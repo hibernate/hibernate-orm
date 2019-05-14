@@ -50,6 +50,9 @@ public class SAPDBDialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "fixed($p,$s)" );
 		registerColumnType( Types.DECIMAL, "fixed($p,$s)" );
 
+		//no explicit precision (I'm not 100% sure)
+		registerColumnType(Types.TIMESTAMP, "timestamp");
+
 		registerColumnType( Types.VARBINARY, "long byte" );
 
 		registerColumnType( Types.CLOB, "long varchar" );

@@ -37,6 +37,11 @@ public class Ingres10Dialect extends Ingres9Dialect {
 		registerDefaultProperties();
 	}
 
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BOOLEAN;
+	}
+
 	private void registerDefaultProperties() {
 		// true, false and unknown are now valid values
 		// Remove the query substitutions previously added in IngresDialect.

@@ -31,15 +31,17 @@ public class ProgressDialect extends Dialect {
 	public ProgressDialect() {
 		super();
 
+		registerColumnType( Types.BOOLEAN, "bit" );
+
 		//'float' is a synonym for 'double precision'
 		//TODO: return single-precision 'real' when
 		//      precision <= 24
+		//note: unnecessary in Progress 10
 		registerColumnType( Types.FLOAT, "float" );
 		registerColumnType( Types.DOUBLE, "float" );
 
-		registerColumnType( Types.BOOLEAN, "bit" );
-		registerColumnType( Types.BIGINT, "numeric" );
-		registerColumnType( Types.CHAR, "character($l)" );
+		//note: unnecessary in Progress 10
+		registerColumnType( Types.BIGINT, "numeric(19,0)" );
 	}
 
 	@Override

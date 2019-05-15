@@ -18,6 +18,7 @@ import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
@@ -157,4 +158,10 @@ public class CalendarTimeJavaDescriptor
 				.getDescriptor( Calendar.class );
 		return baseCalendarDescriptor.resolveTypeForPrecision( precision, scope );
 	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return 0; //seconds (currently ignored since Dialects don't parameterize time type by precision)
+	}
+
 }

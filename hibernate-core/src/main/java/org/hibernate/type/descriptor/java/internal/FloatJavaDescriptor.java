@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractNumericJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.Primitive;
@@ -107,17 +108,17 @@ public class FloatJavaDescriptor extends AbstractNumericJavaDescriptor<Float> im
 	}
 
 	@Override
-	public long getDefaultSqlLength() {
-		//this is the number of decimal digits
-		// + sign + decimal point
-		// + space for "E+nn"
-		return 1+8+1+4;
+	public long getDefaultSqlLength(Dialect dialect) {
+			//this is the number of decimal digits
+			// + sign + decimal point
+			// + space for "E+nn"
+			return 1+8+1+4;
 	}
 
 	@Override
-	public int getDefaultSqlPrecision() {
-		//this is the number of *binary* digits
-		//in a single-precision FP number
-		return 24;
+	public int getDefaultSqlPrecision(Dialect dialect) {
+			//this is the number of *binary* digits
+			//in a single-precision FP number
+			return 24;
 	}
 }

@@ -280,6 +280,11 @@ public abstract class AbstractHANADialect extends Dialect {
 		return Types.BOOLEAN;
 	}
 	
+	public int getDefaultDecimalPrecision() {
+		//the maximum on HANA
+		return 34;
+	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );

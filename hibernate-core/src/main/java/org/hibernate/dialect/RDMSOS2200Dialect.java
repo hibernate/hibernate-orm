@@ -153,6 +153,12 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	public int getDefaultDecimalPrecision() {
+		//the (really low) maximum
+		return 21;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

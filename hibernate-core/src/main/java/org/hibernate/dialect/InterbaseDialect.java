@@ -51,7 +51,7 @@ public class InterbaseDialect extends Dialect {
 		registerColumnType( Types.BOOLEAN, "smallint" );
 
 		registerColumnType( Types.TINYINT, "smallint" );
-		registerColumnType( Types.BIGINT, "numeric(18,0)" );
+		registerColumnType( Types.BIGINT, "numeric(19,0)" );
 
 		registerColumnType( Types.VARBINARY, "blob" );
 		registerColumnType( Types.BLOB, "blob" );

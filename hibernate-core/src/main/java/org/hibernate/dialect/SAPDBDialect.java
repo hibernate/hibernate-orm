@@ -40,17 +40,14 @@ public class SAPDBDialect extends Dialect {
 	public SAPDBDialect() {
 		super();
 		registerColumnType( Types.BIT, 1, "boolean" );
-		registerColumnType( Types.TINYINT, "fixed(3,0)" );
+		registerColumnType( Types.TINYINT, "smallint" );
 
-		registerColumnType( Types.TINYINT, "fixed(3,0)" );
-		registerColumnType( Types.INTEGER, "int" );
-		registerColumnType( Types.SMALLINT, "smallint" );
 		registerColumnType( Types.BIGINT, "fixed(19,0)" );
 
 		registerColumnType( Types.NUMERIC, "fixed($p,$s)" );
 		registerColumnType( Types.DECIMAL, "fixed($p,$s)" );
 
-		//no explicit precision (I'm not 100% sure)
+		//no explicit precision
 		registerColumnType(Types.TIMESTAMP, "timestamp");
 
 		registerColumnType( Types.VARBINARY, "long byte" );

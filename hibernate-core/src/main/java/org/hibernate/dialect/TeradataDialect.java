@@ -40,7 +40,7 @@ public class TeradataDialect extends Dialect {
 		registerColumnType( Types.BIT, "byteint" );
 
 		registerColumnType( Types.TINYINT, "byteint" );
-		registerColumnType( Types.BIGINT, "numeric(18,0)" );
+		registerColumnType( Types.BIGINT, "numeric(19,0)" );
 
 		registerColumnType( Types.BINARY, "byte($l)" );
 		registerColumnType( Types.VARBINARY, "varbyte($l)" );

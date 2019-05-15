@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
@@ -163,5 +164,10 @@ public class OffsetTimeJavaDescriptor
 		}
 
 		throw new IllegalArgumentException( "Unrecognized JPA TemporalType precision [" + precision + "]" );
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return 0;
 	}
 }

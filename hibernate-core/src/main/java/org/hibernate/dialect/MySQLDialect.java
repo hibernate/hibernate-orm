@@ -166,6 +166,12 @@ public class MySQLDialect extends Dialect {
 		// fractional seconds precision argument (so there's no need to override them here):
 	}
 
+//	@Override
+//	public int getDefaultDecimalPrecision() {
+//		//this is the maximum, but I guess it's too high
+//		return 65;
+//	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
@@ -384,7 +390,7 @@ public class MySQLDialect extends Dialect {
 				//the default scale is 0 (no decimal places)
 				return String.format(
 						"decimal(%d, %d)",
-						precision == null ? type.getJavaTypeDescriptor().getDefaultSqlPrecision() : precision,
+						precision == null ? type.getJavaTypeDescriptor().getDefaultSqlPrecision(this) : precision,
 						scale == null ? type.getJavaTypeDescriptor().getDefaultSqlScale() : scale
 				);
 			case Types.VARBINARY:
@@ -394,7 +400,7 @@ public class MySQLDialect extends Dialect {
 				//inconsistent with other Dialects which need a length
 				return String.format(
 						"binary(%d)",
-						length == null ? type.getJavaTypeDescriptor().getDefaultSqlLength() : length
+						length == null ? type.getJavaTypeDescriptor().getDefaultSqlLength(this) : length
 				);
 			case Types.VARCHAR:
 			case Types.LONGVARCHAR:
@@ -403,7 +409,7 @@ public class MySQLDialect extends Dialect {
 				//inconsistent with other Dialects which need a length
 				return String.format(
 						"char(%d)",
-						length == null ? type.getJavaTypeDescriptor().getDefaultSqlLength() : length
+						length == null ? type.getJavaTypeDescriptor().getDefaultSqlLength(this) : length
 				);
 			default:
 				return super.getCastTypeName( type, length, precision, scale );

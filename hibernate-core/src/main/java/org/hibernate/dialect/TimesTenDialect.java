@@ -94,6 +94,12 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	public int getDefaultDecimalPrecision() {
+		//the maximum
+		return 40;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

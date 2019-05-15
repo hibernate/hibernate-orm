@@ -16,6 +16,7 @@ import java.util.GregorianCalendar;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.MutableMutabilityPlan;
@@ -183,7 +184,7 @@ public class JdbcTimeJavaDescriptor extends AbstractBasicJavaDescriptor<Date> im
 	}
 
 	@Override
-	public int getDefaultSqlPrecision() {
+	public int getDefaultSqlPrecision(Dialect dialect) {
 		return 0; //seconds (currently ignored since Dialects don't parameterize time type by precision)
 	}
 }

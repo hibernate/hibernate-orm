@@ -81,6 +81,11 @@ public class InformixDialect extends Dialect {
 		return Types.BOOLEAN;
 	}
 
+	public int getDefaultDecimalPrecision() {
+		//the maximum
+		return 32;
+	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );

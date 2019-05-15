@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
@@ -35,11 +36,11 @@ public interface JavaTypeDescriptor<T> extends org.hibernate.type.descriptor.jav
 	 */
 	SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context);
 
-	default long getDefaultSqlLength() {
+	default long getDefaultSqlLength(Dialect dialect) {
 		return Size.Builder.DEFAULT_LENGTH;
 	}
 
-	default int getDefaultSqlPrecision() {
+	default int getDefaultSqlPrecision(Dialect dialect) {
 		return Size.Builder.DEFAULT_PRECISION;
 	}
 

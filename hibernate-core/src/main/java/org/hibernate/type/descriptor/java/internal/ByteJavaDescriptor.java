@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java.internal;
 
 import java.sql.Types;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractNumericJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.Primitive;
@@ -107,12 +108,12 @@ public class ByteJavaDescriptor extends AbstractNumericJavaDescriptor<Byte> impl
 	}
 
 	@Override
-	public long getDefaultSqlLength() {
+	public long getDefaultSqlLength(Dialect dialect) {
 		return 1;
 	}
 
 	@Override
-	public int getDefaultSqlPrecision() {
+	public int getDefaultSqlPrecision(Dialect dialect) {
 		return 3;
 	}
 

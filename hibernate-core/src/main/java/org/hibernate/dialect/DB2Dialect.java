@@ -127,6 +127,11 @@ public class DB2Dialect extends Dialect {
 		return Types.BOOLEAN;
 	}
 
+	public int getDefaultDecimalPrecision() {
+		//this is the maximum allowed in DB2
+		return 31;
+	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );

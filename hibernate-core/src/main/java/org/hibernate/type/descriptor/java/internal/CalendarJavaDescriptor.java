@@ -17,6 +17,7 @@ import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
@@ -173,5 +174,10 @@ public class CalendarJavaDescriptor
 			cal.setTime( (Date) value );
 		}
 		return cal;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return 6; // milliseconds
 	}
 }

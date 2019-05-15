@@ -51,6 +51,12 @@ public class MimerSQLDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
 	}
 
+//	@Override
+//	public int getDefaultDecimalPrecision() {
+//		//the maximum, but I guess it's too high
+//		return 45;
+//	}
+
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BOOLEAN;

@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractNumericJavaDescriptor;
 import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
@@ -93,13 +94,13 @@ public class BigDecimalJavaDescriptor extends AbstractNumericJavaDescriptor<BigD
 	}
 
 	@Override
-	public long getDefaultSqlLength() {
-		return getDefaultSqlPrecision() + 2;
+	public long getDefaultSqlLength(Dialect dialect) {
+		return getDefaultSqlPrecision(dialect) + 2;
 	}
 
 	@Override
-	public int getDefaultSqlPrecision() {
-		return 38;
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return dialect.getDefaultDecimalPrecision();
 	}
 
 }

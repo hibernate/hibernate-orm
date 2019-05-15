@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java.internal;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.Primitive;
@@ -140,12 +141,12 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 	}
 
 	@Override
-	public long getDefaultSqlLength() {
+	public long getDefaultSqlLength(Dialect dialect) {
 		return 1;
 	}
 
 	@Override
-	public int getDefaultSqlPrecision() {
+	public int getDefaultSqlPrecision(Dialect dialect) {
 		return 1;
 	}
 

@@ -3187,7 +3187,22 @@ public abstract class Dialect implements ConversionContext {
 		this.defaultSizeStrategy = defaultSizeStrategy;
 	}
 
-	public static class DefaultSizeStrategyImpl implements DefaultSizeStrategy {
+	/**
+	 * This is the default precision for a generated
+	 * column mapped to a BigInteger or BigDecimal.
+	 *
+	 * Usually returns the maximum precision of the
+	 * database, except when there is no such maximum
+	 * precision, or the maximum precision is very high.
+	 */
+	public int getDefaultDecimalPrecision() {
+		//this is the maximum for Oracle, SQL Server,
+		//Sybase, and Teradata, so it makes a reasonable
+		//default (uses 17 bytes on SQL Server and MySQL)
+		return 38;
+	}
+
+	public class DefaultSizeStrategyImpl implements DefaultSizeStrategy {
 		@Override
 		public Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor javaType) {
 			final Size.Builder builder = new Size.Builder();
@@ -3202,18 +3217,18 @@ public abstract class Dialect implements ConversionContext {
 					|| jdbcTypeCode == Types.NVARCHAR
 					|| jdbcTypeCode == Types.LONGNVARCHAR
 					|| jdbcTypeCode == Types.BINARY ) {
-				builder.setLength( javaType.getDefaultSqlLength() );
+				builder.setLength( javaType.getDefaultSqlLength(Dialect.this) );
 				return builder.build();
 			}
 			else if ( jdbcTypeCode == Types.FLOAT
 					|| jdbcTypeCode == Types.DOUBLE
 					|| jdbcTypeCode == Types.REAL ) {
-				builder.setPrecision( javaType.getDefaultSqlPrecision() );
+				builder.setPrecision( javaType.getDefaultSqlPrecision(Dialect.this) );
 				return builder.build();
 			}
 			else if ( jdbcTypeCode == Types.NUMERIC
 					|| jdbcTypeCode == Types.DECIMAL ) {
-				builder.setPrecision( javaType.getDefaultSqlPrecision() );
+				builder.setPrecision( javaType.getDefaultSqlPrecision(Dialect.this) );
 				builder.setScale( javaType.getDefaultSqlScale() );
 				return builder.build();
 			}

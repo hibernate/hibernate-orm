@@ -248,6 +248,12 @@ public class Cache71Dialect extends Dialect {
 	}
 
 	@Override
+	public int getDefaultDecimalPrecision() {
+		//the largest *meaningful* value
+		return 19;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

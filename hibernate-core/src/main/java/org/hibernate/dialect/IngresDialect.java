@@ -101,6 +101,12 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
+	public int getDefaultDecimalPrecision() {
+		//the maximum
+		return 39;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

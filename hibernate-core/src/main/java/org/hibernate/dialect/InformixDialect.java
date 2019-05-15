@@ -77,6 +77,12 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public int getDefaultDecimalPrecision() {
+		//the maximum
+		return 32;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

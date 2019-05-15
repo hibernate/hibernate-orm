@@ -271,6 +271,11 @@ public abstract class AbstractHANADialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
 	}
 
+	@Override
+	public int getDefaultDecimalPrecision() {
+		//the maximum on HANA
+		return 34;
+	}
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {

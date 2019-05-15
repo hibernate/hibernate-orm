@@ -205,6 +205,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                             .list();
                     session.createQuery("select cast(e.id as String), cast(e.theInt as String), cast(e.theDouble as String) from EntityOfBasics e")
                             .list();
+                    session.createQuery("select cast(e.id as Float), cast(e.theInt as Double), cast(e.theDouble as Long) from EntityOfBasics e")
+                            .list();
                     session.createQuery("select cast(e.id as BigInteger(10)), cast(e.theDouble as BigDecimal(10,5)) from EntityOfBasics e")
                             .list();
                     session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(8)) from EntityOfBasics e")
@@ -225,6 +227,10 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                     session.createQuery("select cast('3811234234.12312' as Double) from EntityOfBasics")
                             .getResultList();
                     session.createQuery("select cast('1234234' as Integer) from EntityOfBasics")
+                            .getResultList();
+                    session.createQuery("select cast(1 as Boolean), cast(0 as Boolean) from EntityOfBasics")
+                            .getResultList();
+                    session.createQuery("select cast('ABCDEF' as Character) from EntityOfBasics")
                             .getResultList();
                 }
         );

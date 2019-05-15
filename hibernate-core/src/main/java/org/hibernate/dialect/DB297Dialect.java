@@ -29,8 +29,6 @@ public class DB297Dialect extends DB2Dialect {
 
 	public DB297Dialect() {
 		super();
-
-
 	}
 
 	@Override

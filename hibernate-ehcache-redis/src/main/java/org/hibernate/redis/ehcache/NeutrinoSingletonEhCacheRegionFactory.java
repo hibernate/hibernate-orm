@@ -60,7 +60,7 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 	private static final String REDIS_SERVER_FAILED_ATTEMPTS = "hib.redis.server.failed.attempts";
 	private static final String REDIS_SERVER_SUBSCRIPTION_PER_CONNECTION = "hib.redis.server.subscription.per.connection";
 	private static final String REDIS_SERVER_SUBS_CONN_MIN_IDLE_SIZE = "hib.redis.server.subscription.connection.min.idle.size";
-	private static final String REDIS_SERVER_SUBS_CONN_POOL_SIZE = "hib.redis.server.subscription.connection.min.idle.size";
+	private static final String REDIS_SERVER_SUBS_CONN_POOL_SIZE = "hib.redis.server.subscription.connection.pool.size";
 	private static final String REDIS_SERVER_DATABASE_ID = "hib.redis.server.database.id";
 	private static final String REDIS_SERVER_PASSWORD_KEY = "hib.redis.server.password";
 

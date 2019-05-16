@@ -8,8 +8,10 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -33,11 +35,6 @@ public class CUBRIDDialect extends Dialect {
 
 		registerColumnType( Types.BOOLEAN, "bit" );
 		registerColumnType( Types.TINYINT, "smallint" ); //no 'tinyint'
-
-		//Note: the precision of a CUBRID 'float(p)' represents
-		//decimal digits instead of binary digits
-		//TODO: perform some sort of transformation so that
-		//      24 => 7 and 53 => 16
 
 		//'timestamp' has a very limited range
 		//'datetime' does not support explicit precision
@@ -83,6 +80,13 @@ public class CUBRIDDialect extends Dialect {
 		registerKeyword( "ATTRIBUTE" );
 		registerKeyword( "STRING" );
 		registerKeyword( "SEARCH" );
+	}
+
+	@Override
+	public String getTypeName(int code, Size size) throws HibernateException {
+		//precision of a CUBRID 'float(p)' represents
+		//decimal digits instead of binary digits
+		return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
 	}
 
 	@Override

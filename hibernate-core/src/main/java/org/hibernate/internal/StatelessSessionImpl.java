@@ -424,7 +424,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
 		checkOpen();
-		return null;
+		// todo : should this get moved to PersistentContext?
+		// logically, is PersistentContext the "thing" to which an interceptor gets attached?
+		final Object result = temporaryPersistenceContext.getEntity( key );
+		return result == null
+				? getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() )
+				: result;
 	}
 
 	@Override

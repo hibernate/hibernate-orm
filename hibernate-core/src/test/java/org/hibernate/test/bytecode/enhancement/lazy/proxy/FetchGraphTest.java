@@ -125,7 +125,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	//@FailureExpected( jiraKey = "HHH-11147" )
+	@TestForIssue( jiraKey = "HHH-11147" )
 	public void testFetchingScroll() {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();

@@ -49,7 +49,7 @@ public class BasicResultAssembler implements DomainResultAssembler {
 			JdbcValuesSourceProcessingOptions options) {
 		Object value = rowProcessingState.getJdbcValue( sqlSelection );
 
-		LOG.infof( "Extracted value [Position %d] - [%s]", sqlSelection.getValuesArrayPosition(), value );
+		LOG.debugf( "Extracted value [Position %d] - [%s]", sqlSelection.getValuesArrayPosition(), value );
 
 		if ( valueConverter != null ) {
 			// the raw value type should be the converter's relational-JTD

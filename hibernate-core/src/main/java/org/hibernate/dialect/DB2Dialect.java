@@ -108,6 +108,8 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "clob($l)" );
 
+		//not keywords, at least not in DB2 11,
+		//but perhaps they were in older versions?
 		registerKeyword( "current" );
 		registerKeyword( "date" );
 		registerKeyword( "time" );

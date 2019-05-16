@@ -103,6 +103,8 @@ public class MySQLDialect extends Dialect {
 //		registerColumnType( Types.CLOB, 65535, "text" );
 		registerColumnType( Types.NCLOB, "longtext" );
 
+		registerKeyword( "key" );
+
 		getDefaultProperties().setProperty( Environment.MAX_FETCH_DEPTH, "2" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 

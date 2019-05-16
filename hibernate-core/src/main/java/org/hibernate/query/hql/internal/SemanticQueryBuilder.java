@@ -12,6 +12,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -2103,13 +2104,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public Object visitTimeZoneField(HqlParser.TimeZoneFieldContext ctx) {
 		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		if (ctx.TIMEZONE_HOUR()!=null) {
+		if (ctx.HOUR()!=null) {
 			return new SqmExtractUnit<>("timezone_hour", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
 		}
-		if (ctx.TIMEZONE_MINUTE()!=null) {
+		else if (ctx.MINUTE()!=null) {
 			return new SqmExtractUnit<>("timezone_minute", resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
 		}
-		return super.visitTimeZoneField(ctx);
+		else {
+			return new SqmExtractUnit<>("offset", resolveExpressableTypeBasic( ZoneOffset.class ), nodeBuilder);
+		}
 	}
 
 	@Override
@@ -2159,11 +2162,27 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return expressionToExtract;
 		}
 
-		return getFunctionTemplate("extract").makeSqmFunctionExpression(
-				asList( extractFieldExpression, expressionToExtract ),
-				extractFieldExpression.getType(),
-				creationContext.getQueryEngine()
-		);
+		if ( extractFieldExpression.getUnitName().equals("offset") ) {
+			return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
+					asList(
+							expressionToExtract,
+							new SqmFormat(
+									"XXX",
+									resolveExpressableTypeBasic( String.class ),
+									creationContext.getNodeBuilder()
+							)
+					),
+					extractFieldExpression.getType(),
+					creationContext.getQueryEngine()
+			);
+		}
+		else {
+			return getFunctionTemplate("extract").makeSqmFunctionExpression(
+					asList( extractFieldExpression, expressionToExtract ),
+					extractFieldExpression.getType(),
+					creationContext.getQueryEngine()
+			);
+		}
 	}
 
 	@Override

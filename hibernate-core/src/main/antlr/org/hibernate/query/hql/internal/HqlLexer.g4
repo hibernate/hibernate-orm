@@ -218,8 +218,6 @@ STR					: [sS] [tT] [rR];
 SUBSTRING			: [sS] [uU] [bB] [sS] [tT] [rR] [iI] [nN] [gG];
 SUM					: [sS] [uU] [mM];
 THEN				: [tT] [hH] [eE] [nN];
-TIMEZONE_HOUR		: [tT] [iI] [mM] [eE] [zZ] [oO] [nN] [eE] '_' [hH] [oO] [uU] [rR];
-TIMEZONE_MINUTE		: [tT] [iI] [mM] [eE] [zZ] [oO] [nN] [eE] '_' [mM] [iI] [nN] [uU] [tT] [eE];
 TRAILING			: [tT] [rR] [aA] [iI] [lL] [iI] [nN] [gG];
 TREAT				: [tT] [rR] [eE] [aA] [tT];
 TRIM				: [tT] [rR] [iI] [mM];

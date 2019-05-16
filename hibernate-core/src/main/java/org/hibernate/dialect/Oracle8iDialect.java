@@ -793,7 +793,7 @@ public class Oracle8iDialect extends Dialect {
 				.replace("S", "FF1")
 
 				//timezones
-				.replace("zzzz", "TZR")
+				.replace("zzzz", "TZR") //actually this is supposed to produce a long-format name, e.g. 'Central European Summer Time'
 				.replace("zzz", "TZR")
 				.replace("zz", "TZR")
 				.replace("z", "TZR")
@@ -801,9 +801,8 @@ public class Oracle8iDialect extends Dialect {
 				.replace("ZZZ", "TZHTZM")
 				.replace("ZZ", "TZHTZM")
 				.replace("Z", "TZHTZM")
-				.replace("XXXX", "TZH:TZM")
 				.replace("XXX", "TZH:TZM")
-				.replace("XX", "TZH:TZM")
+				.replace("XX", "TZHTZM")
 				.replace("X", "TZH"); //note special case
 	}
 

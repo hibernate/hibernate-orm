@@ -294,7 +294,6 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 		);
 	}
 
-
 	@Test
 	public void testExtractFunction() {
 		inTransaction(
@@ -338,11 +337,13 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select extract(second from e.theTimestamp) from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select extract(timezone_hour from e.theTime) from EntityOfBasics e")
+					session.createQuery("select extract(offset hour from e.theTime) from EntityOfBasics e")
 							.list();
-					session.createQuery("select extract(timezone_hour minute from e.theTime) from EntityOfBasics e")
+					session.createQuery("select extract(offset hour minute from e.theTime) from EntityOfBasics e")
 							.list();
 
+					session.createQuery("select extract(offset from e.theTimestamp) from EntityOfBasics e")
+							.list();
 				}
 		);
 	}

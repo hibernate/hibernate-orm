@@ -8,8 +8,10 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
@@ -33,11 +35,6 @@ public class MimerSQLDialect extends Dialect {
 		registerColumnType( Types.BIT, "integer(3)" );
 		registerColumnType( Types.TINYINT, "integer(3)" );
 
-		//Not: the precision of a Mimer 'float(p)' represents
-		//decimal digits instead of binary digits
-		//TODO: perform some sort of transformation so that
-		//      24 => 8 and 53 => 16
-
 		//Mimer CHARs are ASCII!!
 		registerColumnType( Types.CHAR, "nchar($l)" );
 		registerColumnType( Types.VARCHAR, "nvarchar($l)" );
@@ -49,6 +46,13 @@ public class MimerSQLDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
+	}
+
+	@Override
+	public String getTypeName(int code, Size size) throws HibernateException {
+		//precision of a Mimer 'float(p)' represents
+		//decimal digits instead of binary digits
+		return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
 	}
 
 //	@Override

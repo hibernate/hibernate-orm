@@ -246,6 +246,19 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Useful conversion for databases which represent the
+	 * precision of a float(p) using p expressed in decimal
+	 * digits instead of the usual (standard) binary digits.
+	 */
+	static Size binaryToDecimalPrecision(int code, Size size) {
+		return code == Types.FLOAT
+				&& size != null
+				&& size.getPrecision() != null
+				? Size.Builder.precision( (int) Math.ceil( size.getPrecision() / 53.0 * 17.0 ) )
+				: size;
+	}
+
+	/**
 	 * Initialize the given registry with any dialect-specific functions.
 	 *
 	 * Note that support for certain functions is required, and if the

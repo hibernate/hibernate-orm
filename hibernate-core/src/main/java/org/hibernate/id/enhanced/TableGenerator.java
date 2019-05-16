@@ -45,6 +45,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.naming.Identifier;
 import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.naming.spi.QualifiedNameParser;
@@ -711,8 +712,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
 				dialect.getCreateTableString() + ' ' + renderedTableName + " ( "
-						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 ) + " not null "
-						+ ", " + valueColumnName + ' ' + dialect.getTypeName( Types.BIGINT )
+						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, Size.Builder.length(segmentValueLength) ) + " not null "
+						+ ", " + valueColumnName + ' ' + dialect.getRawTypeName( Types.BIGINT )
 						+ ", primary key ( " + segmentColumnName + " ) )" + dialect.getTableTypeString()
 		};
 	}
@@ -741,7 +742,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					table,
 					segmentColumnName,
 					StandardSpiBasicTypes.STRING,
-					dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 )
+					dialect.getTypeName( Types.VARCHAR, Size.Builder.length(segmentValueLength) )
 			);
 			segmentColumn.setNullable( false );
 			table.addColumn( segmentColumn );

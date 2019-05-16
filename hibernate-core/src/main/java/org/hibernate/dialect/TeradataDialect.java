@@ -8,7 +8,6 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.spi.QueryEngine;
@@ -63,6 +62,11 @@ public class TeradataDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
 		// No batch statements
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public int getDefaultDecimalPrecision() {
+		return 18;
 	}
 
 	@Override
@@ -121,31 +125,6 @@ public class TeradataDialect extends Dialect {
 				return "delete from";
 			}
 		};
-	}
-	
-	/**
-	 * Get the name of the database type associated with the given
-	 * <tt>java.sql.Types</tt> typecode.
-	 *
-	 * @param code <tt>java.sql.Types</tt> typecode
-	 * @param length the length or precision of the column
-	 * @param precision the precision of the column
-	 * @param scale the scale of the column
-	 *
-	 * @return the database type name
-	 *
-	 * @throws HibernateException
-	 */
-	public String getTypeName(int code, int length, int precision, int scale) throws HibernateException {
-		/*
-		 * We might want a special case for 19,2. This is very common for money types
-		 * and here it is converted to 18,1
-		 */
-		float f = precision > 0 ? ( float ) scale / ( float ) precision : 0;
-		int p = ( precision > 18 ? 18 : precision );
-		int s = ( precision > 18 ? ( int ) ( 18.0 * f ) : ( scale > 18 ? 18 : scale ) );
-
-		return super.getTypeName( code, length, p, s );
 	}
 
 	@Override

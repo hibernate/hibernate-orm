@@ -528,7 +528,6 @@ public class RevisionInfoConfigurationBuilder {
 	}
 
 	private String getBasicTypeSqlType(BasicType basicType) {
-		final int sqlType = basicType.getSqlTypeDescriptor().getJdbcTypeCode();
-		return metadata.getDatabase().getDialect().getTypeName( sqlType );
+		return metadata.getDatabase().getDialect().getRawTypeName( basicType.getSqlTypeDescriptor() );
 	}
 }

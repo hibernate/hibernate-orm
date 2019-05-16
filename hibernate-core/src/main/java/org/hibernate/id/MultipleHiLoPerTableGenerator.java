@@ -36,6 +36,7 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.naming.Identifier;
 import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.naming.spi.QualifiedNameParser;
@@ -324,7 +325,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					table,
 					segmentColumnName,
 					StandardSpiBasicTypes.STRING,
-					database.getDialect().getTypeName( Types.VARCHAR, keySize, 0, 0 )
+					database.getDialect().getTypeName( Types.VARCHAR, Size.Builder.length(keySize) )
 			);
 			pkColumn.setNullable( false );
 			table.addColumn( pkColumn );
@@ -378,8 +379,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		return new String[] {
 				dialect.getCreateTableString()
 						+ ' ' + tableName + " ( "
-						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) + ",  "
-						+ valueColumnName + ' ' + dialect.getTypeName( Types.INTEGER )
+						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, Size.Builder.length(keySize) ) + ",  "
+						+ valueColumnName + ' ' + dialect.getRawTypeName( Types.INTEGER )
 						+ " )" + dialect.getTableTypeString()
 		};
 	}

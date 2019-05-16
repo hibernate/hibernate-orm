@@ -29,7 +29,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
@@ -470,47 +469,41 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type associated with the given
-	 * {@link java.sql.Types} typecode.
+	 * {@link java.sql.Types} typecode, with no length, precision,
+	 * or scale.
 	 *
 	 * @param code The {@link java.sql.Types} typecode
 	 * @return the database type name
 	 * @throws HibernateException If no mapping was specified for that type.
 	 */
-	public String getTypeName(int code) throws HibernateException {
+	public String getRawTypeName(int code) throws HibernateException {
 		final String result = typeNames.get( code );
 		if ( result == null ) {
 			throw new HibernateException( "No default type mapping for (java.sql.Types) " + code );
 		}
-		return result;
+		//trim off the length/precision/scale
+		final int paren = result.indexOf('(');
+		return paren>0 ? result.substring(0, paren) : result;
+	}
+
+	public String getRawTypeName(SqlTypeDescriptor sqlTypeDescriptor) throws HibernateException {
+		return getRawTypeName( sqlTypeDescriptor.getJdbcTypeCode() );
 	}
 
 	/**
 	 * Get the name of the database type associated with the given
-	 * {@link java.sql.Types} typecode with the given storage specification
-	 * parameters.
+	 * <tt>java.sql.Types</tt> typecode.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
-	 * @param length The datatype length
-	 * @param precision The datatype precision
-	 * @param scale The datatype scale
+	 * @param code <tt>java.sql.Types</tt> typecode
+	 * @param size the length, precision, scale of the column
+	 *
 	 * @return the database type name
-	 * @throws HibernateException If no mapping was specified for that type.
+	 *
+	 * @throws HibernateException
 	 */
-	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
-		final String result = typeNames.get( code, length, precision, scale );
-		if ( result == null ) {
-			throw new HibernateException(
-					String.format( "No type mapping for java.sql.Types code: %s, length: %s", code, length )
-			);
-		}
-		return result;
-	}
-
-	// todo (6.0) : use one of these (pick) vv, rather than ^^
-
 	public String getTypeName(int code, Size size) throws HibernateException {
 		if ( size == null ) {
-			return getTypeName( code );
+			return getRawTypeName( code );
 		}
 		else {
 			String result = typeNames.get( code, size.getLength(), size.getPrecision(), size.getScale() );
@@ -527,11 +520,20 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
+	/**
+	 * Get the name of the database type associated with the given
+	 * <tt>SqlTypeDescriptor</tt>.
+	 *
+	 * @param sqlTypeDescriptor the SQL type
+	 * @param size the length, precision, scale of the column
+	 *
+	 * @return the database type name
+	 *
+	 * @throws HibernateException
+	 */
 	public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor, Size size) {
-		throw new NotYetImplementedFor6Exception(  );
+		return getTypeName( sqlTypeDescriptor.getJdbcTypeCode(), size );
 	}
-
-	// todo (6.0) : related to above "SQL type name", also applies to cast target type names vv
 
 	/**
 	 * Get the name of the database type appropriate for casting operations
@@ -561,7 +563,7 @@ public abstract class Dialect implements ConversionContext {
 					.cast();
 		}
 
-		return getTypeName( type.getSqlTypeDescriptor().getJdbcTypeCode(), size );
+		return getTypeName( type.getSqlTypeDescriptor(), size );
 	}
 
 	/**

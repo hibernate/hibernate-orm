@@ -31,7 +31,7 @@ public class ExportableColumn extends Column {
 				table,
 				name,
 				type,
-				database.getDialect().getTypeName( type.getSqlTypeDescriptor().getJdbcTypeCode() )
+				database.getDialect().getRawTypeName( type.getSqlTypeDescriptor() )
 		);
 	}
 
@@ -40,7 +40,7 @@ public class ExportableColumn extends Column {
 				table,
 				name,
 				type,
-				dialect.getTypeName( type.getSqlTypeDescriptor().getJdbcTypeCode() )
+				dialect.getRawTypeName( type.getSqlTypeDescriptor() )
 		);
 	}
 

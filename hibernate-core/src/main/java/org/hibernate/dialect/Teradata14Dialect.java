@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -24,7 +23,6 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.metamodel.model.relational.spi.Index;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.naming.QualifiedNameImpl;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
@@ -49,32 +47,13 @@ public class Teradata14Dialect extends TeradataDialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "Add";
+	public int getDefaultDecimalPrecision() {
+		return 38;
 	}
 
-	/**
-	 * Get the name of the database type associated with the given
-	 * <tt>java.sql.Types</tt> typecode.
-	 *
-	 * @param code <tt>java.sql.Types</tt> typecode
-	 * @param length the length or precision of the column
-	 * @param precision the precision of the column
-	 * @param scale the scale of the column
-	 *
-	 * @return the database type name
-	 *
-	 * @throws HibernateException
-	 */
-	public String getTypeName(int code, int length, int precision, int scale) throws HibernateException {
-		/*
-		 * We might want a special case for 19,2. This is very common for money types
-		 * and here it is converted to 18,1
-		 */
-		float f = precision > 0 ? (float) scale / (float) precision : 0;
-		int p = ( precision > 38 ? 38 : precision );
-		int s = ( precision > 38 ? (int) ( 38.0 * f ) : ( scale > 38 ? 38 : scale ) );
-		return super.getTypeName( code, length, p, s );
+	@Override
+	public String getAddColumnString() {
+		return "Add";
 	}
 
 	@Override

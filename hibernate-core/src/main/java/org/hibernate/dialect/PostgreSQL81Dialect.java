@@ -317,13 +317,7 @@ public class PostgreSQL81Dialect extends Dialect {
 	 */
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
-		String typeName = getTypeName( sqlType, 1, 1, 0 );
-		//trim off the length/precision/scale
-		final int loc = typeName.indexOf( '(' );
-		if ( loc > -1 ) {
-			typeName = typeName.substring( 0, loc );
-		}
-		return "null::" + typeName;
+		return "null::" + getRawTypeName( sqlType );
 	}
 
 	@Override
@@ -399,7 +393,7 @@ public class PostgreSQL81Dialect extends Dialect {
 			}
 		}
 	};
-	
+
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return new SQLExceptionConversionDelegate() {
@@ -478,7 +472,7 @@ public class PostgreSQL81Dialect extends Dialect {
 					);
 		}
 	}
-	
+
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -550,12 +544,12 @@ public class PostgreSQL81Dialect extends Dialect {
 	public boolean supportsRowValueConstructorSyntax() {
 		return true;
 	}
-	
+
 	@Override
 	public String getForUpdateNowaitString() {
 		return getForUpdateString() + " nowait ";
 	}
-	
+
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases ) + " nowait ";

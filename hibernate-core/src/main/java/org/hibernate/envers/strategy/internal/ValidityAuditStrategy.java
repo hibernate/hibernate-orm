@@ -747,6 +747,6 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	private String getBasicTypeSqlType(Dialect dialect, BasicType basicType) {
-		return dialect.getTypeName( basicType.getSqlTypeDescriptor().getJdbcTypeCode() );
+		return dialect.getRawTypeName( basicType.getSqlTypeDescriptor() );
 	}
 }

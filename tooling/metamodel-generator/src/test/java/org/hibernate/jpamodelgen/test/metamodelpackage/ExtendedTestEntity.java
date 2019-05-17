@@ -6,20 +6,15 @@
  */
 package org.hibernate.jpamodelgen.test.metamodelpackage;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
 
 /**
- * @author Hardy Ferentschik
+ * @author Marvin S. Addison
  */
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-public class TestEntity {
-	@Id
-	private long id;
+public class ExtendedTestEntity  extends TestEntity {
+  @Column(name = "name")
+  private String name;
 }
-
-
-

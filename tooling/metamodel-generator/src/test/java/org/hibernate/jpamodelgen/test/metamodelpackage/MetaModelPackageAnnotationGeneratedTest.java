@@ -29,4 +29,12 @@ public class MetaModelPackageAnnotationGeneratedTest extends CompilationTest {
 	public void testMetaModelPackageAnnotationGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class, ALT_PACKAGE );
 	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13408")
+	@WithClasses(ExtendedTestEntity.class)
+	@WithProcessorOption(key = JPAMetaModelEntityProcessor.META_MODEL_PACKAGE, value = ALT_PACKAGE)
+	public void testMetaModelPackageAnnotationGeneratedWithInheritance() {
+		assertMetamodelClassGeneratedFor( ExtendedTestEntity.class, ALT_PACKAGE );
+	}
 }

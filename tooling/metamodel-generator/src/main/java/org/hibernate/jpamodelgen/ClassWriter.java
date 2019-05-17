@@ -147,6 +147,9 @@ public final class ClassWriter {
 			final Element superClassElement = ( (DeclaredType) superClass ).asElement();
 			String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
 			if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
+				if (context.getMetaModelPackage() != null) {
+					return context.getMetaModelPackage() + '.' + superClassElement.getSimpleName().toString();
+				}
 				return superClassName;
 			}
 			superClass = ( (TypeElement) superClassElement ).getSuperclass();

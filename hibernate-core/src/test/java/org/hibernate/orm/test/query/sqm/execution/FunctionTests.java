@@ -28,14 +28,18 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	public void testDateTimeFunctions() {
+	public void testCurrentDateTimeFunctions() {
 		inTransaction(
 				session -> {
 					session.createQuery("select current_time, current_date, current_timestamp from EntityOfBasics e")
 							.list();
+					session.createQuery("select current time, current date, current timestamp from EntityOfBasics e")
+							.list();
 					session.createQuery("from EntityOfBasics e where e.theDate > current_date and e.theTime > current_time and e.theTimestamp > current_timestamp")
 							.list();
-					session.createQuery("select current_instant from EntityOfBasics e")
+					session.createQuery("from EntityOfBasics e where e.theDate > current date and e.theTime > current time and e.theTimestamp > current timestamp")
+							.list();
+					session.createQuery("select current_instant, current instant from EntityOfBasics e")
 							.list();
 				}
 		);

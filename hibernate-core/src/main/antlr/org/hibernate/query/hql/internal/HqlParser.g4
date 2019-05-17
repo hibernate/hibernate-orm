@@ -777,18 +777,22 @@ strFunction
 
 currentDateFunction
 	: CURRENT_DATE (LEFT_PAREN RIGHT_PAREN)?
+	| CURRENT DATE
 	;
 
 currentTimeFunction
 	: CURRENT_TIME (LEFT_PAREN RIGHT_PAREN)?
+	| CURRENT TIME
 	;
 
 currentTimestampFunction
 	: CURRENT_TIMESTAMP (LEFT_PAREN RIGHT_PAREN)?
+	| CURRENT TIMESTAMP
 	;
 
 currentInstantFunction
 	: CURRENT_INSTANT (LEFT_PAREN RIGHT_PAREN)?
+	| CURRENT INSTANT
 	;
 
 formatFunction
@@ -887,6 +891,7 @@ identifier
 	| CONCAT
 	| COUNT
 	| CROSS
+	| DATE
 	| DAY
 	| DELETE
 	| DESC
@@ -908,6 +913,7 @@ identifier
 	| INDEX
 	| INNER
 	| INSERT
+	| INSTANT
 	| JOIN
 	| KEY
 	| LEADING
@@ -948,6 +954,8 @@ identifier
 	| STR
 	| SUBSTRING
 	| SUM
+	| TIME
+	| TIMESTAMP
 	| TRAILING
 	| TREAT
 	| UPDATE

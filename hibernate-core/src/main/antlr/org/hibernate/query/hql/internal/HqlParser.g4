@@ -483,14 +483,17 @@ literal
 
 timestampLiteral
 	: TIMESTAMP_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
+	| TIMESTAMP dateTimeLiteralText
 	;
 
 dateLiteral
 	: DATE_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
+	| DATE dateTimeLiteralText
 	;
 
 timeLiteral
 	: TIME_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
+	| TIME dateTimeLiteralText
 	;
 
 dateTimeLiteralText

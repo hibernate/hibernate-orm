@@ -24,6 +24,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -35,9 +36,11 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.id.IdentifierGeneratorHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
@@ -45,6 +48,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 
 /**
@@ -53,6 +57,8 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
  */
 public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSession {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
+
+	private static final boolean traceEnabled = LOG.isTraceEnabled();
 
 	private static LoadQueryInfluencers NO_INFLUENCERS = new LoadQueryInfluencers( null ) {
 		@Override
@@ -209,7 +215,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
 		final EntityPersister persister = this.getEntityPersister( entityName, entity );
 		final Serializable id = persister.getIdentifier( entity, this );
-		if ( LOG.isTraceEnabled() ) {
+		if ( traceEnabled ) {
 			LOG.tracev( "Refreshing transient {0}", MessageHelper.infoString( persister, id, this.getFactory() ) );
 		}
 		// TODO : can this ever happen???
@@ -269,27 +275,121 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Object internalLoad(
+	public final Object internalLoad(
 			String entityName,
 			Serializable id,
 			boolean eager,
 			boolean nullable) throws HibernateException {
+		return internalLoad( entityName, id, eager, nullable, null );
+	}
+
+	@Override
+	public Object internalLoad(
+			String entityName,
+			Serializable id,
+			boolean eager,
+			boolean nullable,
+			Boolean unwrapProxy) throws HibernateException {
 		checkOpen();
+		if ( traceEnabled ) {
+			LOG.tracev( "Loading entity: {0}", MessageHelper.infoString( entityName, id ) );
+		}
 		EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
 		// first, try to load it from the temp PC associated to this SS
-		Object loaded = temporaryPersistenceContext.getEntity( generateEntityKey( id, persister ) );
+		final EntityKey entityKey = generateEntityKey( id, persister );
+		Object loaded = temporaryPersistenceContext.getEntity( entityKey );
 		if ( loaded != null ) {
 			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
 			// containing eager fetches via join fetch
 			return loaded;
 		}
-		if ( !eager && persister.hasProxy() ) {
+		else if ( !eager ) {
 			// if the metadata allowed proxy creation and caller did not request forceful eager loading,
-			// generate a proxy
-			return persister.createProxy( id, this );
+			// return an existing proxy, if there is one already; otherwise, generate a new proxy
+			final Object proxy = temporaryPersistenceContext.getProxy( entityKey );
+			if ( proxy != null ) {
+				if ( traceEnabled ) {
+					LOG.trace( "Entity proxy found in session cache" );
+				}
+				LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
+				if ( li.isUnwrap() && unwrapProxy != null && unwrapProxy ) {
+					return li.getImplementation();
+				}
+				else {
+					return temporaryPersistenceContext.narrowProxy( proxy, persister, entityKey, null );
+				}
+			}
+			else if ( !nullable ) {
+
+				final boolean allowBytecodeProxy =
+						persister.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() &&
+						getFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled();
+
+				final boolean entityHasHibernateProxyFactory = persister.getEntityMetamodel()
+						.getTuplizer()
+						.getProxyFactory() != null;
+
+				if ( allowBytecodeProxy ) {
+					// specialized handling for entities with subclasses with a HibernateProxy factory
+					if ( entityHasHibernateProxyFactory && persister.getEntityMetamodel().hasSubclasses() ) {
+						// Need to create a proxy.
+						// Entities with subclasses that define a ProxyFactory can create a HibernateProxy
+						if ( ( unwrapProxy != null && unwrapProxy ) ||
+								( unwrapProxy == null && getFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled() ) ) {
+							LOG.debugf( "Ignoring NO_PROXY for to-one association with subclasses to honor laziness" );
+						}
+						return createProxy( entityKey, persister );
+					}
+					else {
+						return createEnhancedProxy( entityKey, persister);
+					}
+				}
+				else if ( persister.hasProxy() ) {
+					return createProxy( entityKey, persister );
+				}
+			}
 		}
 		// otherwise immediately materialize it
 		return get( entityName, id );
+	}
+
+
+	private Object createEnhancedProxy(EntityKey entityKey, EntityPersister persister) {
+		// This is the crux of HHH-11147
+		// create the (uninitialized) entity instance - has only id set
+		final Object entity = persister.getEntityTuplizer().instantiate(
+				entityKey.getIdentifier(),
+				this
+		);
+
+		// add the entity instance to the persistence context
+		temporaryPersistenceContext.addEntity(
+				entity,
+				Status.MANAGED,
+				ArrayHelper.filledArray(
+						LazyPropertyInitializer.UNFETCHED_PROPERTY,
+						Object.class,
+						persister.getPropertyTypes().length
+				),
+				entityKey,
+				null,
+				LockMode.NONE,
+				true,
+				persister,
+				true
+		);
+
+		persister.getEntityMetamodel()
+				.getBytecodeEnhancementMetadata()
+				.injectEnhancedEntityAsProxyInterceptor( entity, entityKey, this );
+
+		return entity;
+	}
+
+	private Object createProxy(EntityKey entityKey, EntityPersister persister) {
+		Object proxy = persister.createProxy( entityKey, this );
+		temporaryPersistenceContext.addProxy( entityKey, proxy );
+		return proxy;
 	}
 
 	@Override

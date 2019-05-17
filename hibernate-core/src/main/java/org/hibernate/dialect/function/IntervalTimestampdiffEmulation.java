@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
@@ -32,7 +33,7 @@ abstract class IntervalTimestampdiffEmulation
 	IntervalTimestampdiffEmulation() {
 		super(
 				StandardArgumentsValidators.exactly( 3 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.INTEGER )
+				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.LONG )
 		);
 	}
 
@@ -44,12 +45,12 @@ abstract class IntervalTimestampdiffEmulation
 		ExtractUnit field = (ExtractUnit) arguments.get(0);
 		Expression datetime1 = (Expression) arguments.get(1);
 		Expression datetime2 = (Expression) arguments.get(2);
-		//TODO: does not handle 'millisecond' / 'microsecond'
 		String fieldName = field.getName();
 		switch (fieldName) {
 			case "year":
 				extractField(sqlAppender, walker, datetime1, datetime2, "year");
 				break;
+			case "quarter":
 			case "month":
 				sqlAppender.appendSql("(");
 				sqlAppender.appendSql("12*");
@@ -57,9 +58,16 @@ abstract class IntervalTimestampdiffEmulation
 				sqlAppender.appendSql("+");
 				extractField(sqlAppender, walker, datetime1, datetime2, "month");
 				sqlAppender.appendSql(")");
+				if ("quarter".equals(fieldName)) {
+					sqlAppender.appendSql("/3");
+				}
 				break;
+			case "week":
 			case "day":
 				extractField(sqlAppender, walker, datetime1, datetime2, "day");
+				if ("week".equals(fieldName)) {
+					sqlAppender.appendSql("/7");
+				}
 				break;
 			case "hour":
 				sqlAppender.appendSql("(");
@@ -79,20 +87,24 @@ abstract class IntervalTimestampdiffEmulation
 				extractField(sqlAppender, walker, datetime1, datetime2, "minute");
 				sqlAppender.appendSql(")");
 				break;
+			case "microsecond":
+			case "millisecond":
 			case "second":
-				sqlAppender.appendSql("(");
-				sqlAppender.appendSql("60*60*24*");
-				extractField(sqlAppender, walker, datetime1, datetime2, "day");
-				sqlAppender.appendSql("+60*60*");
-				extractField(sqlAppender, walker, datetime1, datetime2, "hour");
-				sqlAppender.appendSql("+60*");
-				extractField(sqlAppender, walker, datetime1, datetime2, "minute");
-				sqlAppender.appendSql("+");
-				extractField(sqlAppender, walker, datetime1, datetime2, "second");
-				sqlAppender.appendSql(")");
+				//fields millisecond/microsecond supported
+				//directly on Postgres, but not on Oracle
+				renderSeconds(sqlAppender, walker, datetime1, datetime2, fieldName);
 				break;
+			default:
+				throw new SemanticException("unrecognized field: " + fieldName);
 		}
 	}
+
+	abstract void renderSeconds(
+			SqlAppender sqlAppender,
+			SqlAstWalker walker,
+			Expression datetime1,
+			Expression datetime2,
+			String fieldName);
 
 	abstract void extractField(
 			SqlAppender sqlAppender,

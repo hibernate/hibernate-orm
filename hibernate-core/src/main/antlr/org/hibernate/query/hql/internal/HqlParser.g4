@@ -804,12 +804,17 @@ format
 	;
 
 diffFunction
-	: DIFF LEFT_PAREN extractField COMMA expression COMMA expression RIGHT_PAREN
+	: DIFF LEFT_PAREN intervalField COMMA expression COMMA expression RIGHT_PAREN
 	;
 
 addFunction
-	: ADD LEFT_PAREN extractField COMMA expression COMMA expression RIGHT_PAREN
+	: ADD LEFT_PAREN intervalField COMMA expression COMMA expression RIGHT_PAREN
 	;
+
+intervalField
+    : datetimeField
+    | secondsField
+    ;
 
 extractFunction
 	: EXTRACT LEFT_PAREN extractField FROM expression RIGHT_PAREN

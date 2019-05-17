@@ -19,8 +19,11 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 
 import java.util.List;
+
+import static org.hibernate.query.UnaryArithmeticOperator.UNARY_MINUS;
 
 /**
  * Emulate timestampadd() on databases with intervals
@@ -50,7 +53,15 @@ abstract class IntervalTimestampaddEmulation
 		Expression datetime = (Expression) arguments.get(2);
 		sqlAppender.appendSql("(");
 		datetime.accept(walker);
-		sqlAppender.appendSql(" + ");
+		boolean subtract = false;
+		if (magnitude instanceof UnaryOperation) {
+			UnaryOperation operation = (UnaryOperation) magnitude;
+			if (operation.getOperator() == UNARY_MINUS) {
+				magnitude = operation.getOperand();
+				subtract = true;
+			}
+		}
+		sqlAppender.appendSql(subtract ? " - " : " + ");
 		renderInterval(sqlAppender, walker, field, magnitude);
 		sqlAppender.appendSql(")");
 	}

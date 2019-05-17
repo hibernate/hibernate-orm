@@ -183,7 +183,7 @@ public class DB2Dialect extends Dialect {
 				.setExactArgumentCount( 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "timestampdiff", "?1s_between(?3,?2)" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 3 )
 				.register();
 

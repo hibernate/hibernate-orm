@@ -801,7 +801,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void timestampdiff(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "timestampdiff" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 3 )
 				.register();
 	}
@@ -824,7 +824,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void timestampdiff_datediff(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datediff" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "timestampdiff", "datediff" );

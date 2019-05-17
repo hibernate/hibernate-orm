@@ -11,9 +11,19 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -94,7 +104,6 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
-import org.hibernate.query.sqm.tree.expression.LiteralHelper;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -150,11 +159,12 @@ import org.hibernate.sql.TrimSpec;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.jboss.logging.Logger;
 
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static java.util.Arrays.asList;
 
 /**
@@ -1638,22 +1648,86 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return new SqmLiteralNull( creationContext.getQueryEngine().getCriteriaBuilder() );
 		}
 		else if ( ctx.literal().timestampLiteral() != null ) {
-			return LiteralHelper.timestampLiteralFrom( ctx.literal().timestampLiteral().dateTimeLiteralText().getText(), this );
+			return timestampLiteralFrom( ctx.literal().timestampLiteral().dateTimeLiteralText().getText() );
 		}
 		else if ( ctx.literal().dateLiteral() != null ) {
-			return LiteralHelper.dateLiteralFrom( ctx.literal().dateLiteral().dateTimeLiteralText().getText(), this );
+			return dateLiteralFrom( ctx.literal().dateLiteral().dateTimeLiteralText().getText() );
 		}
 		else if ( ctx.literal().timeLiteral() != null ) {
-			return LiteralHelper.timeLiteralFrom( ctx.literal().timeLiteral().dateTimeLiteralText().getText(), this );
+			return timeLiteralFrom( ctx.literal().timeLiteral().dateTimeLiteralText().getText() );
 		}
 
 		// otherwise we have a problem
 		throw new ParsingException( "Unexpected literal expression type [" + ctx.getText() + "]" );
 	}
 
+	/**
+	 * Recognizes timestamps consisting of a date and time separated
+	 * by either T or a space, and with an optional offset or time
+	 * zone ID. Ideally we should accept both ISO and SQL standard
+	 * zoned timestamp formats here.
+	 */
+	private static final DateTimeFormatter DATE_TIME = new DateTimeFormatterBuilder()
+			.parseCaseInsensitive()
+			.append( ISO_LOCAL_DATE )
+			.optionalStart().appendLiteral( ' ' ).optionalEnd()
+			.optionalStart().appendLiteral( 'T' ).optionalEnd()
+			.append( ISO_LOCAL_TIME )
+			.optionalStart().appendLiteral( ' ' ).optionalEnd()
+			.optionalStart().appendZoneOrOffsetId().optionalEnd()
+			.toFormatter();
+
+	private SqmLiteral<?> timestampLiteralFrom(String literalText) {
+		TemporalAccessor parsed = DATE_TIME.parse( literalText );
+		try {
+			ZonedDateTime zonedDateTime = ZonedDateTime.from( parsed );
+			Calendar literal = GregorianCalendar.from( zonedDateTime );
+			return new SqmLiteral<Calendar>(
+					literal,
+					resolveExpressableTypeBasic( Calendar.class ),
+					getCreationContext().getQueryEngine().getCriteriaBuilder()
+			) {
+				@Override
+				protected void internalApplyInferableType(ExpressableType newType) {}
+			};
+		}
+		catch (DateTimeException dte) {
+			LocalDateTime localDateTime = LocalDateTime.from( parsed );
+			Timestamp literal = Timestamp.valueOf( localDateTime );
+			return new SqmLiteral<>(
+					literal,
+					resolveExpressableTypeBasic( Timestamp.class ),
+					getCreationContext().getQueryEngine().getCriteriaBuilder()
+			);
+		}
+	}
+
+	private SqmLiteral<Date> dateLiteralFrom(String literalText) {
+		final LocalDate localDate = LocalDate.from( ISO_LOCAL_DATE.parse( literalText ) );
+		final Date literal = Date.valueOf( localDate );
+		return new SqmLiteral<>(
+				literal,
+				resolveExpressableTypeBasic( Date.class ),
+				getCreationContext().getQueryEngine().getCriteriaBuilder()
+		);
+	}
+
+	private SqmLiteral<Time> timeLiteralFrom(String literalText) {
+		final LocalTime localTime = LocalTime.from( ISO_LOCAL_TIME.parse( literalText ) );
+		final Time literal = Time.valueOf( localTime );
+		return new SqmLiteral<>(
+				literal,
+				resolveExpressableTypeBasic( Time.class ),
+				getCreationContext().getQueryEngine().getCriteriaBuilder()
+		);
+	}
+
 	private SqmLiteral<Boolean> booleanLiteral(boolean value) {
-		final BasicValuedExpressableType expressionType = resolveExpressableTypeBasic( Boolean.class );
-		return new SqmLiteral<>( value, expressionType, creationContext.getQueryEngine().getCriteriaBuilder() );
+		return new SqmLiteral<>(
+				value,
+				resolveExpressableTypeBasic( Boolean.class ),
+				creationContext.getQueryEngine().getCriteriaBuilder()
+		);
 	}
 
 	private SqmLiteral<Character> characterLiteral(String text) {
@@ -1671,13 +1745,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	private SqmLiteral<String> stringLiteral(String text) {
 		return new SqmLiteral<>(
 				text,
-				creationContext.getDomainModel().getTypeConfiguration().resolveStandardBasicType( StandardBasicTypes.STRING ),
+				resolveExpressableTypeBasic( String.class ),
 				creationContext.getNodeBuilder()
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteral<Integer> integerLiteral(String text) {
+	private SqmLiteral<Integer> integerLiteral(String text) {
 		try {
 			final Integer value = Integer.valueOf( text );
 			return new SqmLiteral<>(
@@ -1694,8 +1767,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteral<Long> longLiteral(String text) {
+	private SqmLiteral<Long> longLiteral(String text) {
 		final String originalText = text;
 		try {
 			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
@@ -1716,8 +1788,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteral<BigInteger> bigIntegerLiteral(String text) {
+	private SqmLiteral<BigInteger> bigIntegerLiteral(String text) {
 		final String originalText = text;
 		try {
 			if ( text.endsWith( "bi" ) || text.endsWith( "BI" ) ) {
@@ -1737,8 +1808,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteral<Float> floatLiteral(String text) {
+	private SqmLiteral<Float> floatLiteral(String text) {
 		try {
 			return new SqmLiteral<>(
 					Float.valueOf( text ),
@@ -1754,8 +1824,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteral<Double> doubleLiteral(String text) {
+	private SqmLiteral<Double> doubleLiteral(String text) {
 		try {
 			return new SqmLiteral<>(
 					Double.valueOf( text ),
@@ -1771,8 +1840,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected SqmLiteral<BigDecimal> bigDecimalLiteral(String text) {
+	private SqmLiteral<BigDecimal> bigDecimalLiteral(String text) {
 		final String originalText = text;
 		try {
 			if ( text.endsWith( "bd" ) || text.endsWith( "BD" ) ) {

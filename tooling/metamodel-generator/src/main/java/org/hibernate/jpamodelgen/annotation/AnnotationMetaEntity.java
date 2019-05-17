@@ -93,6 +93,9 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	public final String getPackageName() {
+		if ( context.getMetaModelPackage() != null ) {
+			return context.getMetaModelPackage();
+		}
 		PackageElement packageOf = context.getElementUtils().getPackageOf( element );
 		return context.getElementUtils().getName( packageOf.getQualifiedName() ).toString();
 	}

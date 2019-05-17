@@ -61,6 +61,7 @@ public final class Context {
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
+	private String metaModelPackage;
 
 	// keep track of all classes for which model have been generated
 	private final Collection<String> generatedModelClasses = new HashSet<String>();
@@ -234,6 +235,14 @@ public final class Context {
 
 	public void setPersistenceUnitDefaultAccessType(AccessType persistenceUnitDefaultAccessType) {
 		this.persistenceUnitDefaultAccessType = persistenceUnitDefaultAccessType;
+	}
+
+	public String getMetaModelPackage() {
+		return metaModelPackage;
+	}
+
+	public void setMetaModelPackage(String metaModelPackage) {
+		this.metaModelPackage = metaModelPackage;
 	}
 
 	public boolean doLazyXmlParsing() {

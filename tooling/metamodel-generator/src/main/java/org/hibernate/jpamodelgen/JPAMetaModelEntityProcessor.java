@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpamodelgen;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -54,7 +53,8 @@ import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
 		JPAMetaModelEntityProcessor.LAZY_XML_PARSING,
 		JPAMetaModelEntityProcessor.ADD_GENERATION_DATE,
 		JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION,
-		JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION
+		JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION,
+		JPAMetaModelEntityProcessor.META_MODEL_PACKAGE
 })
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public static final String DEBUG_OPTION = "debug";
@@ -65,6 +65,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public static final String ADD_GENERATION_DATE = "addGenerationDate";
 	public static final String ADD_GENERATED_ANNOTATION = "addGeneratedAnnotation";
 	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
+	public static final String META_MODEL_PACKAGE = "metaModelPackage";
 
 	private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;
 
@@ -101,6 +102,10 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			if ( context.isFullyXmlConfigured() ) {
 				createMetaModelClasses();
 			}
+		}
+		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.META_MODEL_PACKAGE );
+		if ( tmp != null ) {
+			context.setMetaModelPackage( tmp );
 		}
 	}
 

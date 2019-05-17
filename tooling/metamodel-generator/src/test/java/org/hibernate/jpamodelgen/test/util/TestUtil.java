@@ -160,6 +160,16 @@ public class TestUtil {
 		assertNotNull( getMetamodelClassFor( clazz ) );
 	}
 
+
+	/**
+	 * Asserts that a metamodel class for the specified class got generated.
+	 *
+	 * @param clazz the class for which a metamodel class should have been generated.
+	 */
+	public static void assertMetamodelClassGeneratedFor(Class<?> clazz, String packageName) {
+		assertNotNull( getMetamodelClassFor( clazz, packageName ) );
+	}
+
 	/**
 	 * Deletes recursively all files found in the output directory for the annotation processor.
 	 */
@@ -177,15 +187,21 @@ public class TestUtil {
 	}
 
 	/**
-	 * Returns the static metamodel class for the specified entity.
+	 * Returns the static metamodel class for the specified entity in the given package.
 	 *
 	 * @param entityClass the entity for which to retrieve the metamodel class. Cannot be {@code null}.
+	 * @param packageName Expected package for generated metamodel class.
 	 *
 	 * @return the static metamodel class for the specified entity.
 	 */
-	public static Class<?> getMetamodelClassFor(Class<?> entityClass) {
+	public static Class<?> getMetamodelClassFor(Class<?> entityClass, String packageName) {
 		assertNotNull( "Class parameter cannot be null", entityClass );
-		String metaModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
+		String metaModelClassName;
+		if ( packageName != null ) {
+			metaModelClassName = packageName + '.' + entityClass.getSimpleName() + META_MODEL_CLASS_POSTFIX;
+		} else {
+			metaModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
+		}
 		try {
 			URL outDirUrl = OUT_BASE_DIR.toURI().toURL();
 			URL[] urls = new URL[1];
@@ -198,6 +214,17 @@ public class TestUtil {
 		}
 		// keep the compiler happy
 		return null;
+	}
+
+	/**
+	 * Returns the static metamodel class for the specified entity.
+	 *
+	 * @param entityClass the entity for which to retrieve the metamodel class. Cannot be {@code null}.
+	 *
+	 * @return the static metamodel class for the specified entity.
+	 */
+	public static Class<?> getMetamodelClassFor(Class<?> entityClass) {
+		return getMetamodelClassFor(entityClass, null);
 	}
 
 	public static File getMetaModelSourceFileFor(Class<?> clazz) {

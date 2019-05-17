@@ -134,6 +134,7 @@ CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [a
 CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE];
 CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
 CROSS				: [cC] [rR] [oO] [sS] [sS];
+DATE                : [dD] [aA] [tT] [eE];
 DAY					: [dD] [aA] [yY];
 DELETE				: [dD] [eE] [lL] [eE] [tT] [eE];
 DESC				: [dD] [eE] [sS] [cC];
@@ -215,6 +216,8 @@ STR					: [sS] [tT] [rR];
 SUBSTRING			: [sS] [uU] [bB] [sS] [tT] [rR] [iI] [nN] [gG];
 SUM					: [sS] [uU] [mM];
 THEN				: [tT] [hH] [eE] [nN];
+TIME                : [tT] [iI] [mM] [eE];
+TIMESTAMP           : [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
 TIMEZONE_HOUR		: [tT] [iI] [mM] [eE] [zZ] [oO] [nN] [eE] '_' [hH] [oO] [uU] [rR];
 TIMEZONE_MINUTE		: [tT] [iI] [mM] [eE] [zZ] [oO] [nN] [eE] '_' [mM] [iI] [nN] [uU] [tT] [eE];
 TRAILING			: [tT] [rR] [aA] [iI] [lL] [iI] [nN] [gG];

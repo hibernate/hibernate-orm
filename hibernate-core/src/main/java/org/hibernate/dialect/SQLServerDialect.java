@@ -251,15 +251,15 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				.replace("S", "F")
 
 				//timezones
-				.replace("zzzz", "K")
-				.replace("zzz", "K")
-				.replace("zzz", "K")
-				.replace("z", "K")
+				.replace("zzzz", "\"GMT\"zzz")
+				.replace("zzz", "\"GMT\"zzz")
+				.replace("zz", "\"GMT\"zzz")
+				.replace("z", "\"GMT\"zzz")
 				.replace("ZZZZ", "zz00")
 				.replace("ZZZ", "zz00")
 				.replace("ZZ", "zz00")
 				.replace("Z", "zz00")
-				.replace("XXX", "zzz")
+				.replace("XXX", "K") //slightly better than zzz
 				.replace("XX", "zz00")
 				.replace("X", "zz");
 	}

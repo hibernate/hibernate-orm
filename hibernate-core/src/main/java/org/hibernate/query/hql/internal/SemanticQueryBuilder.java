@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.hibernate.NullPrecedence;
 import org.antlr.v4.runtime.Token;
@@ -2185,10 +2186,20 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
+
+	//note: no XX, Z..ZZZZ, zzzz because I can't really implement them properly on SQL Server
+	//      no G, GG because I can't implement it on MySQL
+	//      note that this pattern is not restrictive enough for DB2, which doesn't accept quoted tokens, nor most punctuation
+	private static final Pattern FORMAT = Pattern.compile("('[^']+'|[:;/,.!@#$^&?~`|()\\[\\]{}<>\\-+*=]|\\s|y{1,4}|M{1,4}|w{1,2}|W|E{3,4}|u{1,2}|d{1,2}|D{1,3}|a{1,2}|[Hhms]{1,2}|S{1,6}|z{1,3}|X|XXX)*");
+
 	@Override
 	public Object visitFormat(HqlParser.FormatContext ctx) {
+		String format = ctx.STRING_LITERAL().getText();
+		if (!FORMAT.matcher(format).matches()) {
+			throw new SemanticException("illegal format pattern: '" + format + "'");
+		}
 		return new SqmFormat(
-				ctx.STRING_LITERAL().getText(),
+				format,
 				resolveExpressableTypeBasic( String.class ),
 				creationContext.getNodeBuilder()
 		);

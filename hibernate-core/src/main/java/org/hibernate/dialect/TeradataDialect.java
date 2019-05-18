@@ -76,13 +76,16 @@ public class TeradataDialect extends Dialect {
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.moreHyperbolic( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.position( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "substring", "substring(?1 from ?2 for ?3)", StandardSpiBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "(?1 mod ?2)", StandardSpiBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "mod", "(?1 mod ?2)" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
 
 	}
 

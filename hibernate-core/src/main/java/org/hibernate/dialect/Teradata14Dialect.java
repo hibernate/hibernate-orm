@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Teradata14IdentityColumnSupport;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -23,6 +24,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.metamodel.model.relational.spi.Index;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.naming.QualifiedNameImpl;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
@@ -49,6 +51,26 @@ public class Teradata14Dialect extends TeradataDialect {
 	@Override
 	public int getDefaultDecimalPrecision() {
 		return 38;
+	}
+
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		//list actually taken from Teradata 15 docs
+		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.initcap( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.moreHyperbolic( queryEngine );
+
+		//TODO: add these after the merge!
+//		CommonFunctionFactory.monthsBetween( queryEngine );
+//		CommonFunctionFactory.addMonths( queryEngine );
+		//TODO: also has stddev_pop/stddev_samp, var_pop/var_samp
 	}
 
 	@Override

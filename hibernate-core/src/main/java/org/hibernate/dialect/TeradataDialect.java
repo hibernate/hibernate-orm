@@ -11,6 +11,8 @@ import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.TeradataTimestampaddEmulation;
+import org.hibernate.dialect.function.TeradataTimestampdiffEmulation;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
@@ -86,6 +88,10 @@ public class TeradataDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "substring", "substring(?1 from ?2 for ?3)", StandardSpiBasicTypes.STRING );
 //		queryEngine.getSqmFunctionRegistry().registerPattern( "locate", "position(?1 in ?2)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "(?1 mod ?2)", StandardSpiBasicTypes.STRING );
+
+		//TODO: TOTALLY UNTESTED CODE!
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new TeradataTimestampdiffEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new TeradataTimestampaddEmulation() );
 
 	}
 

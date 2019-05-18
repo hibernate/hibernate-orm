@@ -1438,9 +1438,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmCaseSimple visitSimpleCaseStatement(HqlParser.SimpleCaseStatementContext ctx) {
-		final SqmCaseSimple caseExpression = new SqmCaseSimple(
-				(SqmExpression) ctx.expression().accept( this ),
+	public SqmCaseSimple visitSimpleCaseList(HqlParser.SimpleCaseListContext ctx) {
+		final SqmCaseSimple<?,?> caseExpression = new SqmCaseSimple<>(
+				(SqmExpression<?>) ctx.expression().accept( this ),
 				creationContext.getNodeBuilder()
 		);
 
@@ -1459,8 +1459,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmCaseSearched visitSearchedCaseStatement(HqlParser.SearchedCaseStatementContext ctx) {
-		final SqmCaseSearched<?> caseExpression = new SqmCaseSearched<>( creationContext.getNodeBuilder());
+	public SqmCaseSearched visitSearchedCaseList(HqlParser.SearchedCaseListContext ctx) {
+		final SqmCaseSearched<?> caseExpression = new SqmCaseSearched<>( creationContext.getNodeBuilder() );
 
 		for ( HqlParser.SearchedCaseWhenContext whenFragment : ctx.searchedCaseWhen() ) {
 			caseExpression.when(
@@ -1514,10 +1514,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public Object visitLeastFunction(HqlParser.LeastFunctionContext ctx) {
+
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
-
 		ExpressableType<?> type = null;
-
 		for ( HqlParser.ExpressionContext argument : ctx.expression() ) {
 			SqmTypedNode arg = (SqmTypedNode) argument.accept(this);
 			arguments.add(arg);
@@ -1535,10 +1534,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public Object visitGreatestFunction(HqlParser.GreatestFunctionContext ctx) {
+
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
-
 		ExpressableType<?> type = null;
-
 		for ( HqlParser.ExpressionContext argument : ctx.expression() ) {
 			SqmTypedNode arg = (SqmTypedNode) argument.accept(this);
 			arguments.add(arg);
@@ -1555,12 +1553,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmExpression visitCoalesceExpression(HqlParser.CoalesceExpressionContext ctx) {
+	public SqmExpression visitCoalesceFunction(HqlParser.CoalesceFunctionContext ctx) {
+
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
-
 		ExpressableType<?> type = null;
-
-		for ( HqlParser.ExpressionContext argument : ctx.coalesce().expression() ) {
+		for ( HqlParser.ExpressionContext argument : ctx.expression() ) {
 			SqmTypedNode arg = (SqmTypedNode) argument.accept(this);
 			arguments.add(arg);
 			//TODO: do something better here!
@@ -1576,9 +1573,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmExpression visitNullIfExpression(HqlParser.NullIfExpressionContext ctx) {
-		final SqmExpression arg1 = (SqmExpression) ctx.nullIf().expression( 0 ).accept( this );
-		final SqmExpression arg2 = (SqmExpression) ctx.nullIf().expression( 1 ).accept( this );
+	public SqmExpression visitNullIfFunction(HqlParser.NullIfFunctionContext ctx) {
+		final SqmExpression arg1 = (SqmExpression) ctx.expression( 0 ).accept( this );
+		final SqmExpression arg2 = (SqmExpression) ctx.expression( 1 ).accept( this );
 
 		return getFunctionTemplate("nullif").makeSqmFunctionExpression(
 				asList( arg1, arg2 ),
@@ -2117,15 +2114,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public Object visitAddFunction(HqlParser.AddFunctionContext ctx) {
+	public Object visitIntervalAddExpression(HqlParser.IntervalAddExpressionContext ctx) {
 
 		final SqmExtractUnit<?> extractFieldExpression = (SqmExtractUnit) ctx.intervalField().accept(this);
 
 		return getFunctionTemplate("timestampadd").makeSqmFunctionExpression(
 				asList(
 						extractFieldExpression,
-						(SqmExpression) ctx.expression(0).accept( this ),
-						(SqmExpression) ctx.expression(1).accept( this )
+						(SqmExpression) ctx.expression(1).accept( this ),
+						(SqmExpression) ctx.expression(0).accept( this )
 				),
 				extractFieldExpression.getType(),
 				creationContext.getQueryEngine()
@@ -2133,15 +2130,35 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public Object visitDiffFunction(HqlParser.DiffFunctionContext ctx) {
+	public Object visitIntervalSubExpression(HqlParser.IntervalSubExpressionContext ctx) {
+
+		final SqmExtractUnit<?> extractFieldExpression = (SqmExtractUnit) ctx.intervalField().accept(this);
+
+		return getFunctionTemplate("timestampadd").makeSqmFunctionExpression(
+				asList(
+						extractFieldExpression,
+						new SqmUnaryOperation<>(
+								UnaryArithmeticOperator.UNARY_MINUS,
+								(SqmExpression<Integer>) ctx.expression(1).accept( this ),
+								resolveExpressableTypeBasic( Integer.class )
+						),
+						(SqmExpression) ctx.expression(0).accept( this )
+				),
+				extractFieldExpression.getType(),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public Object visitIntervalDiffExpression(HqlParser.IntervalDiffExpressionContext ctx) {
 
 		final SqmExtractUnit<?> extractFieldExpression = (SqmExtractUnit) ctx.intervalField().accept(this);
 
 		return getFunctionTemplate("timestampdiff").makeSqmFunctionExpression(
 				asList(
 						extractFieldExpression,
-						(SqmExpression) ctx.expression(0).accept( this ),
-						(SqmExpression) ctx.expression(1).accept( this )
+						(SqmExpression) ctx.expression(1).accept( this ),
+						(SqmExpression) ctx.expression(0).accept( this )
 				),
 				resolveExpressableTypeBasic( Long.class ),
 				creationContext.getQueryEngine()

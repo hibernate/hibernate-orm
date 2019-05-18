@@ -29,7 +29,7 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 		this.name = name;
 	}
 
-	public AllowableFunctionReturnType getType() {
+	public AllowableFunctionReturnType<T> getType() {
 		return type;
 	}
 

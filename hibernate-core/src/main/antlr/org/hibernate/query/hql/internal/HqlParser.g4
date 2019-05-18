@@ -388,32 +388,31 @@ expression
 	| expression ASTERISK expression			# MultiplicationExpression
 	| expression SLASH expression				# DivisionExpression
 	| expression PERCENT expression				# ModuloExpression
-	// todo (6.0) : should these unary plus/minus rules only apply to literals?
-	//		if so, move the MINUS / PLUS recognition to the `literal` rule
-	//		specificcally for numeric literals
 	| MINUS expression							# UnaryMinusExpression
 	| PLUS expression							# UnaryPlusExpression
-	| caseStatement								# CaseExpression
-	| coalesce									# CoalesceExpression
-	| nullIf									# NullIfExpression
+	| caseList									# CaseExpression
 	| literal									# LiteralExpression
 	| parameter									# ParameterExpression
 	| entityTypeReference						# EntityTypeExpression
 	| path										# PathExpression
 	| function									# FunctionExpression
 	| LEFT_PAREN subQuery RIGHT_PAREN			# SubQueryExpression
+    | expression PLUS expression intervalField  # IntervalAddExpression
+    | expression MINUS expression intervalField # IntervalSubExpression
+    | LEFT_PAREN expression MINUS expression RIGHT_PAREN
+      BY intervalField							#IntervalDiffExpression
 	;
 
 entityTypeReference
 	: TYPE LEFT_PAREN (path | parameter) RIGHT_PAREN
 	;
 
-caseStatement
-	: simpleCaseStatement
-	| searchedCaseStatement
+caseList
+	: simpleCaseList
+	| searchedCaseList
 	;
 
-simpleCaseStatement
+simpleCaseList
 	: CASE expression (simpleCaseWhen)+ (caseOtherwise)? END
 	;
 
@@ -425,7 +424,7 @@ caseOtherwise
 	: ELSE expression
 	;
 
-searchedCaseStatement
+searchedCaseList
 	: CASE (searchedCaseWhen)+ (caseOtherwise)? END
 	;
 
@@ -441,12 +440,12 @@ leastFunction
 	: LEAST LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
 	;
 
-coalesce
+coalesceFunction
 	: COALESCE LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
 	| IFNULL LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
-nullIf
+nullIfFunction
 	: NULLIF LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
@@ -575,8 +574,8 @@ countFunction
 standardFunction
 	:	castFunction
 	|	extractFunction
-	|	diffFunction
-	|	addFunction
+	|   coalesceFunction
+	|   nullIfFunction
 	|   formatFunction
 	|	concatFunction
 	|	substringFunction
@@ -803,18 +802,10 @@ format
 	: STRING_LITERAL
 	;
 
-diffFunction
-	: DIFF LEFT_PAREN intervalField COMMA expression COMMA expression RIGHT_PAREN
-	;
-
-addFunction
-	: ADD LEFT_PAREN intervalField COMMA expression COMMA expression RIGHT_PAREN
-	;
-
 intervalField
-    : datetimeField
-    | secondsField
-    ;
+	: datetimeField
+	| secondsField
+	;
 
 extractFunction
 	: EXTRACT LEFT_PAREN extractField FROM expression RIGHT_PAREN
@@ -843,7 +834,7 @@ dayField
 	: DAY OF MONTH
 	| DAY OF WEEK
 	| DAY OF YEAR
-    ;
+	;
 
 secondsField
 	: MILLISECOND

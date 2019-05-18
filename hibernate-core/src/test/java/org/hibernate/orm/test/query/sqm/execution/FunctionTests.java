@@ -231,68 +231,107 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	public void testAddFunction() {
+	public void testIntervalAddExpressions() {
 		inTransaction(
 				session -> {
-					session.createQuery("select add(year, 1, e.theDate) from EntityOfBasics e")
+					session.createQuery("select e.theDate + 1 year from EntityOfBasics e")
 							.list();
-					session.createQuery("select add(month, 1, e.theDate) from EntityOfBasics e")
+					session.createQuery("select e.theDate + 2 month from EntityOfBasics e")
 							.list();
-					session.createQuery("select add(day, 1, e.theDate) from EntityOfBasics e")
-							.list();
-
-					session.createQuery("select add(hour, 1, e.theTime) from EntityOfBasics e")
-							.list();
-					session.createQuery("select add(minute, 1, e.theTime) from EntityOfBasics e")
-							.list();
-					session.createQuery("select add(second, 1, e.theTime) from EntityOfBasics e")
+					session.createQuery("select e.theDate + 7 day from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select add(year, 1, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTime + 1 hour from EntityOfBasics e")
 							.list();
-					session.createQuery("select add(month, 1, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTime + 59 minute from EntityOfBasics e")
 							.list();
-					session.createQuery("select add(day, 1, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTime + 30 second from EntityOfBasics e")
 							.list();
-					session.createQuery("select add(hour, 1, e.theTimestamp) from EntityOfBasics e")
+
+					session.createQuery("select e.theTimestamp + 1 year from EntityOfBasics e")
 							.list();
-					session.createQuery("select add(minute, 1, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTimestamp + 2 month from EntityOfBasics e")
 							.list();
-					session.createQuery("select add(second, 1, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTimestamp + 7 day from EntityOfBasics e")
 							.list();
+
+					session.createQuery("select e.theTimestamp + 1 hour from EntityOfBasics e")
+							.list();
+					session.createQuery("select e.theTimestamp + 59 minute from EntityOfBasics e")
+							.list();
+					session.createQuery("select e.theTimestamp + 30 second from EntityOfBasics e")
+							.list();
+
 				}
 		);
 	}
 
 	@Test
-	public void testDiffFunction() {
+	public void testIntervalSubExpressions() {
 		inTransaction(
 				session -> {
-					session.createQuery("select diff(year, e.theDate, e.theDate) from EntityOfBasics e")
+					session.createQuery("select e.theDate - 1 year from EntityOfBasics e")
 							.list();
-					session.createQuery("select diff(month, e.theDate, e.theDate) from EntityOfBasics e")
+					session.createQuery("select e.theDate - 2 month from EntityOfBasics e")
 							.list();
-					session.createQuery("select diff(day, e.theDate, e.theDate) from EntityOfBasics e")
-							.list();
-
-					session.createQuery("select diff(hour, e.theTime, e.theTime) from EntityOfBasics e")
-							.list();
-					session.createQuery("select diff(minute, e.theTime, e.theTime) from EntityOfBasics e")
-							.list();
-					session.createQuery("select diff(second, e.theTime, e.theTime) from EntityOfBasics e")
+					session.createQuery("select e.theDate - 7 day from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select diff(year, e.theTimestamp, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTime - 1 hour from EntityOfBasics e")
 							.list();
-					session.createQuery("select diff(month, e.theTimestamp, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTime - 59 minute from EntityOfBasics e")
 							.list();
-					session.createQuery("select diff(day, e.theTimestamp, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTime - 30 second from EntityOfBasics e")
 							.list();
-					session.createQuery("select diff(hour, e.theTimestamp, e.theTimestamp) from EntityOfBasics e")
+
+					session.createQuery("select e.theTimestamp - 1 year from EntityOfBasics e")
 							.list();
-					session.createQuery("select diff(minute, e.theTimestamp, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTimestamp - 2 month from EntityOfBasics e")
 							.list();
-					session.createQuery("select diff(second, e.theTimestamp, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select e.theTimestamp - 7 day from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select e.theTimestamp - 1 hour from EntityOfBasics e")
+							.list();
+					session.createQuery("select e.theTimestamp - 59 minute from EntityOfBasics e")
+							.list();
+					session.createQuery("select e.theTimestamp - 30 second from EntityOfBasics e")
+							.list();
+
+				}
+		);
+	}
+
+	@Test
+	public void testIntervalDiffExpressions() {
+		inTransaction(
+				session -> {
+					session.createQuery("select (e.theDate - e.theDate) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theDate) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theDate) by day from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select (e.theTime - e.theTime) by hour from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTime - e.theTime) by minute from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTime - e.theTime) by second from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select (e.theTime - e.theTimestamp) by hour from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTime - e.theTimestamp) by minute from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTime - e.theTimestamp) by second from EntityOfBasics e")
 							.list();
 				}
 		);

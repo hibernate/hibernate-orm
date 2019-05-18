@@ -18,6 +18,7 @@ import org.hibernate.MappingException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.HSQLTimestampdiffEmulation;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -206,12 +207,16 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.timestampadd_dateadd( queryEngine );
-		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
-		CommonFunctionFactory.timestampadd( queryEngine );
-		CommonFunctionFactory.timestampdiff( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory.timestampadd_dateadd( queryEngine );
+		//datediff() does not support 'microsecond' for some reason
+//		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
+		//these accept sql_tsi_<unit>, which we can't pass
+//		CommonFunctionFactory.timestampadd( queryEngine );
+//		CommonFunctionFactory.timestampdiff( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new HSQLTimestampdiffEmulation() );
 
 		if ( hsqldbVersion >= 200 ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called

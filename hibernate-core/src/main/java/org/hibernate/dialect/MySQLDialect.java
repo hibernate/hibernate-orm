@@ -216,8 +216,8 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.datediff2( queryEngine );
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
-		CommonFunctionFactory.timestampadd( queryEngine );
-		CommonFunctionFactory.timestampdiff( queryEngine );
+		CommonFunctionFactory.timestampadd( queryEngine ); //TODO: does not support 'millisecond'
+		CommonFunctionFactory.timestampdiff( queryEngine ); //TODO: does not support 'millisecond'
 		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )

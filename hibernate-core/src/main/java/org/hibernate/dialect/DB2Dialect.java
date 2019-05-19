@@ -18,6 +18,8 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DB2FormatEmulation;
+import org.hibernate.dialect.function.DB2TimestampaddEmulation;
+import org.hibernate.dialect.function.DB2TimestampdiffEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -48,7 +50,6 @@ import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
  * An SQL dialect for DB2.
@@ -176,15 +177,8 @@ public class DB2Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "formatdatetime", new DB2FormatEmulation() );
 
-		//TODO: handle millisecond/microsecond/week/quarter
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "timestampadd", "add_?1s(?3,?2)" )
-				.setReturnTypeResolver( useArgType(3) )
-				.setExactArgumentCount( 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "timestampdiff", "?1s_between(?3,?2)" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setExactArgumentCount( 3 )
-				.register();
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new DB2TimestampdiffEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new DB2TimestampaddEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

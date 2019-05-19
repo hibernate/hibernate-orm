@@ -22,7 +22,7 @@ public class Replacer {
 		String placeholder;
 		String replacement;
 
-		public Replacement(String placeholder, String replacement) {
+		Replacement(String placeholder, String replacement) {
 			this.placeholder = placeholder;
 			this.replacement = replacement;
 		}
@@ -51,7 +51,7 @@ public class Replacer {
 		this.quote = quote;
 	}
 
-	Replacer replace(String placeholder, String replacement) {
+	public Replacer replace(String placeholder, String replacement) {
 		for ( Replacement old : replacements ) {
 			if ( old.placeholder.equals( placeholder ) ) {
 				old.replacement = replacement;

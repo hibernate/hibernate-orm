@@ -6,6 +6,12 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.hibernate.QueryException;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -26,4 +32,5 @@ public interface SqmTypedNode<T> extends SqmNode {
 	}
 
 	ExpressableType<T> getExpressableType();
+
 }

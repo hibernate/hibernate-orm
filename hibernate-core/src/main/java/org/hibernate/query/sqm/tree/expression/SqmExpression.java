@@ -14,8 +14,12 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
@@ -91,5 +95,27 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 				.makeSqmFunctionExpression( this, type, nodeBuilder().getQueryEngine() );
 	}
 
+	/**
+	 * Apply an 'of unit' operator to a branch of the
+	 * expression tree, producing a complex expression
+	 * involving binary operators applied to numbers
+	 *
+	 * @return an expression with 'of unit' occurring
+	 *         only for leaf timestamp/date subtractions
+	 */
+	default SqmExpression<?> evaluateDuration(
+			QueryEngine queryEngine,
+			SqmExtractUnit<?> unit,
+			BasicValuedExpressableType<Long> resultType,
+			NodeBuilder nodeBuilder) {
+		return this;
+	}
 
+	default SqmExpression<?> evaluateDurationAddition(
+			boolean negate,
+			SqmExpression<?> timestamp,
+			QueryEngine queryEngine,
+			NodeBuilder nodeBuilder) {
+		return this;
+	}
 }

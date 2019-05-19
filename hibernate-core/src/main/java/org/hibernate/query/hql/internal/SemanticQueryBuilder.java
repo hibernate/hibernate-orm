@@ -12,6 +12,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.NullPrecedence;
 import org.antlr.v4.runtime.Token;
+import org.hibernate.QueryException;
 import org.hibernate.SortOrder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -77,6 +79,7 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.function.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -1179,51 +1182,38 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmComparisonPredicate visitEqualityPredicate(HqlParser.EqualityPredicateContext ctx) {
-		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
-		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
-
-		return new SqmComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs, creationContext.getNodeBuilder() );
+	public Object visitComparisonOperator(HqlParser.ComparisonOperatorContext ctx) {
+		if ( ctx.EQUAL()!=null ) {
+			return ComparisonOperator.EQUAL;
+		}
+		else if ( ctx.NOT_EQUAL()!=null ) {
+			return ComparisonOperator.NOT_EQUAL;
+		}
+		else if ( ctx.LESS()!=null ) {
+			return ComparisonOperator.LESS_THAN;
+		}
+		else if ( ctx.LESS_EQUAL()!=null ) {
+			return ComparisonOperator.LESS_THAN_OR_EQUAL;
+		}
+		else if ( ctx.GREATER()!=null ) {
+			return ComparisonOperator.GREATER_THAN;
+		}
+		else if ( ctx.GREATER_EQUAL()!=null ) {
+			return ComparisonOperator.GREATER_THAN_OR_EQUAL;
+		}
+		else {
+			throw new QueryException("missing operator");
+		}
 	}
 
 	@Override
-	public Object visitInequalityPredicate(HqlParser.InequalityPredicateContext ctx) {
-		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
-		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
-
-		return new SqmComparisonPredicate( lhs, ComparisonOperator.NOT_EQUAL, rhs, creationContext.getNodeBuilder() );
-	}
-
-	@Override
-	public Object visitGreaterThanPredicate(HqlParser.GreaterThanPredicateContext ctx) {
-		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
-		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
-
-		return new SqmComparisonPredicate( lhs, ComparisonOperator.GREATER_THAN, rhs, creationContext.getNodeBuilder() );
-	}
-
-	@Override
-	public Object visitGreaterThanOrEqualPredicate(HqlParser.GreaterThanOrEqualPredicateContext ctx) {
-		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
-		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
-
-		return new SqmComparisonPredicate( lhs, ComparisonOperator.GREATER_THAN_OR_EQUAL, rhs, creationContext.getNodeBuilder() );
-	}
-
-	@Override
-	public Object visitLessThanPredicate(HqlParser.LessThanPredicateContext ctx) {
-		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
-		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
-
-		return new SqmComparisonPredicate( lhs, ComparisonOperator.LESS_THAN, rhs, creationContext.getNodeBuilder() );
-	}
-
-	@Override
-	public Object visitLessThanOrEqualPredicate(HqlParser.LessThanOrEqualPredicateContext ctx) {
-		final SqmExpression lhs = (SqmExpression) ctx.expression().get( 0 ).accept( this );
-		final SqmExpression rhs = (SqmExpression) ctx.expression().get( 1 ).accept( this );
-
-		return new SqmComparisonPredicate( lhs, ComparisonOperator.LESS_THAN_OR_EQUAL, rhs, creationContext.getNodeBuilder() );
+	public SqmComparisonPredicate visitComparisonPredicate(HqlParser.ComparisonPredicateContext ctx) {
+		return new SqmComparisonPredicate(
+				(SqmExpression) ctx.expression().get( 0 ).accept(this),
+				(ComparisonOperator) ctx.comparisonOperator().accept( this ),
+				(SqmExpression) ctx.expression().get( 1 ).accept(this),
+				creationContext.getNodeBuilder()
+		);
 	}
 
 	@Override
@@ -1347,8 +1337,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 		return getFunctionTemplate( "concat" ).makeSqmFunctionExpression(
 				asList(
-						(SqmExpression) ctx.expression( 0 ).accept( this ),
-						(SqmExpression) ctx.expression( 1 ).accept( this )
+						(SqmExpression<?>) ctx.expression( 0 ).accept( this ),
+						(SqmExpression<?>) ctx.expression( 1 ).accept( this )
 				),
 				resolveExpressableTypeBasic( String.class ),
 				creationContext.getQueryEngine()
@@ -1356,93 +1346,100 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmBinaryArithmetic<?> visitAdditionExpression(HqlParser.AdditionExpressionContext ctx) {
+	public Object visitSignOperator(HqlParser.SignOperatorContext ctx) {
+		if (ctx.PLUS() != null) {
+			return UnaryArithmeticOperator.UNARY_PLUS;
+		}
+		else if (ctx.MINUS() != null) {
+			return UnaryArithmeticOperator.UNARY_MINUS;
+		}
+		else {
+			throw new QueryException("missing operator");
+		}
+	}
+
+	@Override
+	public Object visitAdditiveOperator(HqlParser.AdditiveOperatorContext ctx) {
+		if (ctx.PLUS() != null) {
+			return BinaryArithmeticOperator.ADD;
+		}
+		else if (ctx.MINUS() != null) {
+			return BinaryArithmeticOperator.SUBTRACT;
+		}
+		else {
+			throw new QueryException("missing operator");
+		}
+	}
+
+	@Override
+	public Object visitMultiplicativeOperator(HqlParser.MultiplicativeOperatorContext ctx) {
+		if (ctx.ASTERISK() != null) {
+			return BinaryArithmeticOperator.MULTIPLY;
+		}
+		else if (ctx.SLASH() != null) {
+			return BinaryArithmeticOperator.DIVIDE;
+		}
+		else if (ctx.PERCENT() != null) {
+			return BinaryArithmeticOperator.MODULO;
+		}
+		else {
+			throw new QueryException("missing operator");
+		}
+	}
+
+	@Override
+	public Object visitAdditionExpression(HqlParser.AdditionExpressionContext ctx) {
 		if ( ctx.expression().size() != 2 ) {
-			throw new ParsingException( "Expecting 2 operands to the + operator" );
+			throw new ParsingException( "Expecting 2 operands to the additive operator" );
 		}
 
 		return new SqmBinaryArithmetic<>(
-				BinaryArithmeticOperator.ADD,
-				(SqmExpression) ctx.expression( 0 ).accept( this ),
-				(SqmExpression) ctx.expression( 1 ).accept( this ),
-				creationContext.getDomainModel(),
+				(BinaryArithmeticOperator) ctx.additiveOperator().accept(this),
+				(SqmExpression<?>) ctx.expression( 0 ).accept(this),
+				(SqmExpression<?>) ctx.expression( 1 ).accept(this),
+				creationContext.getDomainModel().getTypeConfiguration(),
 				creationContext.getNodeBuilder()
-		);
+		)
+				.evaluateDurationAddition(
+						false,
+						null,
+						getCreationContext().getQueryEngine(),
+						getCreationContext().getNodeBuilder()
+				);
 	}
 
 	@Override
-	public SqmBinaryArithmetic<?> visitSubtractionExpression(HqlParser.SubtractionExpressionContext ctx) {
+	public Object visitMultiplicationExpression(HqlParser.MultiplicationExpressionContext ctx) {
 		if ( ctx.expression().size() != 2 ) {
-			throw new ParsingException( "Expecting 2 operands to the - operator" );
+			throw new ParsingException( "Expecting 2 operands to the multiplicative operator" );
 		}
 
-		return new SqmBinaryArithmetic<>(
-				BinaryArithmeticOperator.SUBTRACT,
-				(SqmExpression) ctx.expression( 0 ).accept( this ),
-				(SqmExpression) ctx.expression( 1 ).accept( this ),
-				creationContext.getDomainModel(),
-				creationContext.getNodeBuilder()
-		);
-	}
+		SqmExpression left = (SqmExpression) ctx.expression( 0 ).accept(this);
+		SqmExpression right = (SqmExpression) ctx.expression( 1 ).accept(this);
+		BinaryArithmeticOperator operator = (BinaryArithmeticOperator) ctx.multiplicativeOperator().accept( this );
 
-	@Override
-	public SqmBinaryArithmetic visitMultiplicationExpression(HqlParser.MultiplicationExpressionContext ctx) {
-		if ( ctx.expression().size() != 2 ) {
-			throw new ParsingException( "Expecting 2 operands to the * operator" );
+		if ( operator == BinaryArithmeticOperator.MODULO ) {
+			return getFunctionTemplate("mod").makeSqmFunctionExpression(
+					asList( left, right ),
+					(AllowableFunctionReturnType) left.getExpressableType(),
+					creationContext.getQueryEngine()
+			);
 		}
-
-		return new SqmBinaryArithmetic<>(
-				BinaryArithmeticOperator.MULTIPLY,
-				(SqmExpression) ctx.expression( 0 ).accept( this ),
-				(SqmExpression) ctx.expression( 1 ).accept( this ),
-				creationContext.getDomainModel(),
-				creationContext.getNodeBuilder()
-		);
-	}
-
-	@Override
-	public SqmBinaryArithmetic<?> visitDivisionExpression(HqlParser.DivisionExpressionContext ctx) {
-		if ( ctx.expression().size() != 2 ) {
-			throw new ParsingException( "Expecting 2 operands to the / operator" );
+		else {
+			return new SqmBinaryArithmetic<>(
+					operator,
+					left,
+					right,
+					creationContext.getDomainModel().getTypeConfiguration(),
+					creationContext.getNodeBuilder()
+			);
 		}
-
-		return new SqmBinaryArithmetic<>(
-				BinaryArithmeticOperator.DIVIDE,
-				(SqmExpression) ctx.expression( 0 ).accept( this ),
-				(SqmExpression) ctx.expression( 1 ).accept( this ),
-				creationContext.getDomainModel(),
-				creationContext.getNodeBuilder()
-		);
 	}
 
 	@Override
-	public SqmExpression<?> visitModuloExpression(HqlParser.ModuloExpressionContext ctx) {
-		if ( ctx.expression().size() != 2 ) {
-			throw new ParsingException( "Expecting 2 operands to the % operator" );
-		}
-
-		SqmExpression<?> dividend = (SqmExpression) ctx.expression(0).accept(this);
-		SqmExpression<?> divisor = (SqmExpression) ctx.expression( 1 ).accept( this );
-
-		return getFunctionTemplate("mod").makeSqmFunctionExpression(
-				asList( dividend, divisor ),
-				(AllowableFunctionReturnType) dividend.getExpressableType(),
-				creationContext.getQueryEngine()
-		);
-	}
-
-	@Override
-	public SqmUnaryOperation<?> visitUnaryPlusExpression(HqlParser.UnaryPlusExpressionContext ctx) {
+	public SqmUnaryOperation<?> visitUnaryExpression(HqlParser.UnaryExpressionContext ctx) {
 		return new SqmUnaryOperation<>(
-				UnaryArithmeticOperator.UNARY_PLUS,
-				(SqmExpression<?>) ctx.expression().accept( this )
-		);
-	}
-
-	@Override
-	public SqmUnaryOperation visitUnaryMinusExpression(HqlParser.UnaryMinusExpressionContext ctx) {
-		return new SqmUnaryOperation<>(
-				UnaryArithmeticOperator.UNARY_MINUS,
+				(UnaryArithmeticOperator) ctx.signOperator().accept( this ),
 				(SqmExpression<?>) ctx.expression().accept( this )
 		);
 	}
@@ -1596,10 +1593,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmLiteral visitLiteralExpression(HqlParser.LiteralExpressionContext ctx) {
-		if ( ctx.literal().CHARACTER_LITERAL() != null ) {
-			return characterLiteral( ctx.literal().CHARACTER_LITERAL().getText() );
-		}
-		else if ( ctx.literal().STRING_LITERAL() != null ) {
+		if ( ctx.literal().STRING_LITERAL() != null ) {
 			return stringLiteral( ctx.literal().STRING_LITERAL().getText() );
 		}
 		else if ( ctx.literal().INTEGER_LITERAL() != null ) {
@@ -1727,18 +1721,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				value,
 				resolveExpressableTypeBasic( Boolean.class ),
 				creationContext.getQueryEngine().getCriteriaBuilder()
-		);
-	}
-
-	private SqmLiteral<Character> characterLiteral(String text) {
-		if ( text.length() > 1 ) {
-			// todo : or just treat it as a String literal?
-			throw new ParsingException( "Value for CHARACTER_LITERAL token was more than 1 character" );
-		}
-		return new SqmLiteral<>(
-				text.charAt( 0 ),
-				resolveExpressableTypeBasic( Character.class ),
-				creationContext.getNodeBuilder()
 		);
 	}
 
@@ -2182,55 +2164,42 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public Object visitIntervalAddExpression(HqlParser.IntervalAddExpressionContext ctx) {
-
-		final SqmExtractUnit<?> extractFieldExpression = (SqmExtractUnit) ctx.intervalField().accept(this);
-
-		return getFunctionTemplate("timestampadd").makeSqmFunctionExpression(
-				asList(
-						extractFieldExpression,
-						(SqmExpression) ctx.expression(1).accept( this ),
-						(SqmExpression) ctx.expression(0).accept( this )
-				),
-				extractFieldExpression.getType(),
-				creationContext.getQueryEngine()
+	public Object visitToDurationExpression(HqlParser.ToDurationExpressionContext ctx) {
+		final SqmExtractUnit<?> unit = (SqmExtractUnit) ctx.intervalField().accept(this);
+		final SqmExpression<?> magnitude = (SqmExpression) ctx.expression().accept(this);
+		return new SqmToDuration<>(
+				magnitude,
+				unit,
+				resolveExpressableTypeBasic( Duration.class ),
+				getCreationContext().getNodeBuilder()
 		);
 	}
 
 	@Override
-	public Object visitIntervalSubExpression(HqlParser.IntervalSubExpressionContext ctx) {
-
-		final SqmExtractUnit<?> extractFieldExpression = (SqmExtractUnit) ctx.intervalField().accept(this);
-
-		return getFunctionTemplate("timestampadd").makeSqmFunctionExpression(
-				asList(
-						extractFieldExpression,
-						new SqmUnaryOperation<>(
-								UnaryArithmeticOperator.UNARY_MINUS,
-								(SqmExpression<Integer>) ctx.expression(1).accept( this ),
-								resolveExpressableTypeBasic( Integer.class )
-						),
-						(SqmExpression) ctx.expression(0).accept( this )
-				),
-				extractFieldExpression.getType(),
-				creationContext.getQueryEngine()
-		);
+	public Object visitGroupedExpression(HqlParser.GroupedExpressionContext ctx) {
+		return ctx.expression().accept(this);
 	}
 
 	@Override
-	public Object visitIntervalDiffExpression(HqlParser.IntervalDiffExpressionContext ctx) {
+	public Object visitFromDurationExpression(HqlParser.FromDurationExpressionContext ctx) {
+		final SqmExtractUnit<?> unit = (SqmExtractUnit) ctx.intervalField().accept(this);
+		final SqmExpression<?> duration = (SqmExpression) ctx.expression().accept(this);
 
-		final SqmExtractUnit<?> extractFieldExpression = (SqmExtractUnit) ctx.intervalField().accept(this);
-
-		return getFunctionTemplate("timestampdiff").makeSqmFunctionExpression(
-				asList(
-						extractFieldExpression,
-						(SqmExpression) ctx.expression(1).accept( this ),
-						(SqmExpression) ctx.expression(0).accept( this )
-				),
+		return duration.evaluateDuration(
+				getCreationContext().getQueryEngine(),
+				unit,
 				resolveExpressableTypeBasic( Long.class ),
-				creationContext.getQueryEngine()
+				getCreationContext().getNodeBuilder()
 		);
+
+//		SqmFromDuration<Long> fromDuration = new SqmFromDuration<>(
+//				duration,
+//				unit,
+//				resolveExpressableTypeBasic(Long.class),
+//				getCreationContext().getNodeBuilder()
+//		);
+
+//		return fromDuration;
 	}
 
 	@Override
@@ -2567,18 +2536,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmLiteral<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
 		// todo (6.0) : we should delay this until we are walking the SQM
-
-		if ( ctx.CHARACTER_LITERAL() != null ) {
-			final String trimCharText = ctx.CHARACTER_LITERAL().getText();
-			if ( trimCharText.length() != 1 ) {
-				throw new SemanticException( "Expecting [trim character] for TRIM function to be  single character, found : " + trimCharText );
-			}
-			return new SqmLiteral<>(
-					trimCharText.charAt( 0 ),
-					resolveExpressableTypeBasic( Character.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
 
 		if ( ctx.STRING_LITERAL() != null ) {
 			final String trimCharText = ctx.STRING_LITERAL().getText();

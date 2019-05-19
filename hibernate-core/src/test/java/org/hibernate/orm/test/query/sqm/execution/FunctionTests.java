@@ -305,6 +305,23 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testIntervalAddSubExpressions() {
+		inTransaction(
+				session -> {
+					session.createQuery("select e.theTimestamp + 4 day - 1 week from EntityOfBasics e")
+							.list();
+					session.createQuery("select e.theTimestamp - 4 day + 2 hour from EntityOfBasics e")
+							.list();
+					session.createQuery("select e.theTimestamp + (4 day - 1 week) from EntityOfBasics e")
+							.list();
+					session.createQuery("select e.theTimestamp - (4 day + 2 hour) from EntityOfBasics e")
+							.list();
+				}
+		);
+	}
+
+
+	@Test
 	public void testIntervalDiffExpressions() {
 		inTransaction(
 				session -> {
@@ -315,13 +332,6 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select (e.theDate - e.theDate) by day from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select (e.theTime - e.theTime) by hour from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTime - e.theTime) by minute from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTime - e.theTime) by second from EntityOfBasics e")
-							.list();
-
 					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
 							.list();
 					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
@@ -329,11 +339,40 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select (e.theTime - e.theTimestamp) by hour from EntityOfBasics e")
+					session.createQuery("select (e.theTimestamp - e.theDate) by year from EntityOfBasics e")
 							.list();
-					session.createQuery("select (e.theTime - e.theTimestamp) by minute from EntityOfBasics e")
+					session.createQuery("select (e.theTimestamp - e.theDate) by month from EntityOfBasics e")
 							.list();
-					session.createQuery("select (e.theTime - e.theTimestamp) by second from EntityOfBasics e")
+					session.createQuery("select (e.theTimestamp - e.theDate) by day from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select (e.theTimestamp - e.theTimestamp) by hour from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theTimestamp) by minute from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theTimestamp) by second from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select (e.theTimestamp - e.theTimestamp + 4 day) by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - (e.theTimestamp + 4 day)) by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp + 4 day - e.theTimestamp) by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp + 4 day - 2 hour - e.theTimestamp) by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theTimestamp + 4 day + 2 hour) by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - (e.theTimestamp + 4 day + 2 hour)) by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp + (4 day - 1 week) - e.theTimestamp) by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theTimestamp + (4 day + 2 hour)) by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - (e.theTimestamp + (4 day + 2 hour))) by second from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select 4 day by second from EntityOfBasics e")
 							.list();
 				}
 		);

@@ -6,12 +6,19 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import static java.util.Arrays.asList;
+import static org.hibernate.type.spi.TypeConfiguration.isDuration;
+import static org.hibernate.type.spi.TypeConfiguration.isTemporalType;
 
 /**
  * @author Steve Ebersole
@@ -25,11 +32,11 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			MetamodelImplementor domainModel,
+			TypeConfiguration typeConfiguration,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(ExpressableType<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
+				(ExpressableType<T>) typeConfiguration.resolveArithmeticType(
 						(BasicValuedExpressableType) lhsOperand.getExpressableType(),
 						(BasicValuedExpressableType) rhsOperand.getExpressableType(),
 						operator
@@ -103,7 +110,103 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 		rhsOperand.applyInferableType( type );
 		lhsOperand.applyInferableType( type );
 
-		super.internalApplyInferableType( type );
+		//don't try to cast Durations to Timestamps in addition expressions
+		if ( !TypeConfiguration.isDuration( getExpressableType() ) ) {
+			super.internalApplyInferableType(type);
+		}
+	}
+
+	@Override
+	public SqmExpression<?> evaluateDurationAddition(
+			boolean negate,
+			SqmExpression<?> timestamp,
+			QueryEngine queryEngine,
+			NodeBuilder nodeBuilder) {
+		SqmExpression leftOperand = getLeftHandOperand();
+		SqmExpression rightOperand = getRightHandOperand();
+
+		if ( timestamp!=null
+				&& isDuration( leftOperand.getExpressableType() )
+				&& isDuration( rightOperand.getExpressableType() ) ) {
+			// addition or subtraction of Durations
+			SqmExpression left = leftOperand.evaluateDurationAddition(
+					negate,
+					timestamp,
+					queryEngine,
+					nodeBuilder
+			);
+			return rightOperand.evaluateDurationAddition(
+					(operator == BinaryArithmeticOperator.SUBTRACT) != negate,
+					left,
+					queryEngine,
+					nodeBuilder
+			);
+		}
+		else if ( isTemporalType( leftOperand.getExpressableType() )
+				&& isDuration( rightOperand.getExpressableType() ) ) {
+			// must be addition/subtraction of a Duration to/from a timestamp
+			if ( timestamp != null ) {
+				throw new SemanticException("illegal operation");
+			}
+			return rightOperand.evaluateDurationAddition(
+					operator==BinaryArithmeticOperator.SUBTRACT,
+					leftOperand,
+					queryEngine,
+					nodeBuilder
+			);
+		}
+		else {
+			return this;
+		}
+	}
+
+	@Override
+	public SqmExpression<?> evaluateDuration(
+			QueryEngine queryEngine,
+			SqmExtractUnit<?> unit,
+			BasicValuedExpressableType<Long> resultType,
+			NodeBuilder nodeBuilder) {
+		SqmExpression leftOperand = getLeftHandOperand();
+		SqmExpression rightOperand = getRightHandOperand();
+
+		if ( isTemporalType( leftOperand.getExpressableType() )
+				&& isTemporalType( rightOperand.getExpressableType() ) ) {
+			if ( getOperator() == BinaryArithmeticOperator.SUBTRACT ) {
+				// the only kind of algebra we know how to do
+				// on dates/timestamps is subtract them in the
+				// presence of an 'of unit' operator, producing
+				// a number
+				return queryEngine.getSqmFunctionRegistry().findFunctionTemplate("timestampdiff").makeSqmFunctionExpression(
+						asList(
+								unit,
+								//intentionally switch order!
+								rightOperand,
+								leftOperand
+						),
+						resultType,
+						queryEngine
+				);
+			}
+			else {
+				// addition, multiplication, division of dates or
+				// timestamps is always wrong and meaningless
+				throw new SemanticException("illegal operator for temporal type " + getOperator());
+			}
+		}
+		else {
+			// we know how to do algebra on numbers, so
+			// distribute the 'of unit' operator over
+			// the terms, leaving us with a binary
+			// operator expression applied to numbers
+			return new SqmBinaryArithmetic<>(
+					getOperator(),
+					leftOperand.evaluateDuration( queryEngine, unit, resultType, nodeBuilder),
+					rightOperand.evaluateDuration( queryEngine, unit, resultType, nodeBuilder),
+					resultType,
+					nodeBuilder
+			);
+		}
+
 	}
 
 	@Override

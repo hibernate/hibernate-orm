@@ -264,4 +264,5 @@ public interface SemanticQueryWalker<T> {
 	T visitStar(SqmStar star);
 
 	T visitFormat(SqmFormat format);
+
 }

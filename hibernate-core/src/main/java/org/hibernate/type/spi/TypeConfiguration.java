@@ -11,6 +11,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
+import java.time.Duration;
+import java.time.temporal.Temporal;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -40,6 +43,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.StandardBasicTypes.StandardBasicType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -472,12 +476,26 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			BasicValuedExpressableType<?> secondType,
 			boolean isDivision) {
 
+		if ( isTemporalType( firstType ) ) {
+			if ( isTemporalType( secondType ) ) {
+				// special case for subtraction resulting in a duration
+				return getBasicTypeRegistry().getBasicType( Duration.class );
+			}
+			else {
+				// must be addition or subtraction of a Duration
+				return firstType;
+			}
+		}
+
+		if ( isDuration( firstType ) && isDuration( secondType) ) {
+			return firstType;
+		}
+
 		if ( isDivision ) {
 			// covered under the note in 6.5.7.1 discussing the unportable
 			// "semantics of the SQL division operation"..
 			return getBasicTypeRegistry().getBasicType( Number.class );
 		}
-
 
 		// non-division
 
@@ -528,8 +546,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
+	public static boolean isTemporalType(ExpressableType<?> type) {
+		return matchesJavaType( type, Date.class )
+			|| matchesJavaType( type, Temporal.class );
+	}
+
+	public static boolean isDuration(ExpressableType<?> type) {
+		return matchesJavaType( type, Duration.class );
+	}
+
 	@SuppressWarnings("unchecked")
-	private static boolean matchesJavaType(BasicValuedExpressableType type, Class javaType) {
+	private static boolean matchesJavaType(ExpressableType<?> type, Class javaType) {
 		assert javaType != null;
 		return type != null && javaType.isAssignableFrom( type.getJavaType() );
 	}

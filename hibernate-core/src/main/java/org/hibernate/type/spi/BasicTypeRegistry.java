@@ -120,7 +120,10 @@ public class BasicTypeRegistry {
 	public <T> BasicType<T> getBasicType(Class<T> javaType) {
 		final JavaTypeDescriptor<T> jtd = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( javaType );
 
-		if ( !BasicJavaDescriptor.class.isInstance( jtd ) ) {
+		if ( jtd == null ) {
+			return null;
+		}
+		else if ( !(jtd instanceof BasicJavaDescriptor) ) {
 			throw new HibernateException(
 					String.format(
 							Locale.ROOT,

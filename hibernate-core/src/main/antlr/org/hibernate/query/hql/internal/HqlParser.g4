@@ -73,7 +73,7 @@ targetFieldsSpec
 // QUERY SPEC - general structure of root sqm or sub sqm
 
 querySpec
-	:	selectClause? fromClause whereClause? ( groupByClause havingClause? )? orderByClause? limitClause? offsetClause?
+	: selectClause? fromClause whereClause? ( groupByClause havingClause? )? orderByClause? limitClause? offsetClause?
 	;
 
 
@@ -85,7 +85,7 @@ fromClause
 	;
 
 fromClauseSpace
-	:	pathRoot ( crossJoin | jpaCollectionJoin | qualifiedJoin )*
+	: pathRoot ( crossJoin | jpaCollectionJoin | qualifiedJoin )*
 	;
 
 pathRoot
@@ -111,7 +111,7 @@ crossJoin
 	;
 
 jpaCollectionJoin
-	:	COMMA IN LEFT_PAREN path RIGHT_PAREN (identificationVariableDef)?
+	: COMMA IN LEFT_PAREN path RIGHT_PAREN (identificationVariableDef)?
 	;
 
 qualifiedJoin
@@ -137,7 +137,7 @@ qualifiedJoinPredicate
 // SELECT clause
 
 selectClause
-	:	SELECT DISTINCT? selectionList
+	: SELECT DISTINCT? selectionList
 	;
 
 selectionList
@@ -149,10 +149,10 @@ selection
 	;
 
 selectExpression
-	:	dynamicInstantiation
-	|	jpaSelectObjectSyntax
-	|	mapEntrySelection
-	|	expression
+	: dynamicInstantiation
+	| jpaSelectObjectSyntax
+	| mapEntrySelection
+	| expression
 	;
 
 resultIdentifier
@@ -176,20 +176,20 @@ dynamicInstantiationTarget
 	;
 
 dynamicInstantiationArgs
-	:	dynamicInstantiationArg ( COMMA dynamicInstantiationArg )*
+	: dynamicInstantiationArg ( COMMA dynamicInstantiationArg )*
 	;
 
 dynamicInstantiationArg
-	:	dynamicInstantiationArgExpression (AS? identifier)?
+	: dynamicInstantiationArgExpression (AS? identifier)?
 	;
 
 dynamicInstantiationArgExpression
-	:	expression
-	|	dynamicInstantiation
+	: expression
+	| dynamicInstantiation
 	;
 
 jpaSelectObjectSyntax
-	:	OBJECT LEFT_PAREN identifier RIGHT_PAREN
+	: OBJECT LEFT_PAREN identifier RIGHT_PAREN
 	;
 
 
@@ -272,15 +272,15 @@ mapKeyNavigablePath
 // GROUP BY clause
 
 groupByClause
-	:	GROUP BY groupingSpecification
+	: GROUP BY groupingSpecification
 	;
 
 groupingSpecification
-	:	groupingValue ( COMMA groupingValue )*
+	: groupingValue ( COMMA groupingValue )*
 	;
 
 groupingValue
-	:	expression collationSpecification?
+	: expression collationSpecification?
 	;
 
 
@@ -288,7 +288,7 @@ groupingValue
 //HAVING clause
 
 havingClause
-	:	HAVING predicate
+	: HAVING predicate
 	;
 
 
@@ -311,16 +311,16 @@ sortExpression
 	;
 
 collationSpecification
-	:	COLLATE collateName
+	: COLLATE collateName
 	;
 
 collateName
-	:	dotIdentifierSequence
+	: dotIdentifierSequence
 	;
 
 orderingSpecification
-	:	ASC
-	|	DESC
+	: ASC
+	| DESC
 	;
 
 
@@ -345,32 +345,37 @@ parameterOrNumberLiteral
 // WHERE clause & Predicates
 
 whereClause
-	:	WHERE predicate
+	: WHERE predicate
 	;
 
 predicate
+	//highest to lowest precedence
 	: LEFT_PAREN predicate RIGHT_PAREN						# GroupedPredicate
-	| predicate OR predicate								# OrPredicate
-	| predicate AND predicate								# AndPredicate
-	| NOT predicate											# NegatedPredicate
 	| expression IS (NOT)? NULL								# IsNullPredicate
 	| expression IS (NOT)? EMPTY							# IsEmptyPredicate
-	| expression EQUAL expression							# EqualityPredicate
-	| expression NOT_EQUAL expression						# InequalityPredicate
-	| expression GREATER expression							# GreaterThanPredicate
-	| expression GREATER_EQUAL expression					# GreaterThanOrEqualPredicate
-	| expression LESS expression							# LessThanPredicate
-	| expression LESS_EQUAL expression						# LessThanOrEqualPredicate
 	| expression (NOT)? IN inList							# InPredicate
 	| expression (NOT)? BETWEEN expression AND expression	# BetweenPredicate
 	| expression (NOT)? LIKE expression (likeEscape)?		# LikePredicate
+	| expression comparisonOperator expression				# ComparisonPredicate
 	| MEMBER OF path										# MemberOfPredicate
+	| NOT predicate											# NegatedPredicate
+	| predicate AND predicate								# AndPredicate
+	| predicate OR predicate								# OrPredicate
+	;
+
+comparisonOperator
+	: EQUAL
+	| NOT_EQUAL
+	| GREATER
+	| GREATER_EQUAL
+	| LESS
+	| LESS_EQUAL
 	;
 
 inList
-	: ELEMENTS? LEFT_PAREN dotIdentifierSequence RIGHT_PAREN		# PersistentCollectionReferenceInList
-	| LEFT_PAREN expression (COMMA expression)*	RIGHT_PAREN			# ExplicitTupleInList
-	| expression													# SubQueryInList
+	: ELEMENTS? LEFT_PAREN dotIdentifierSequence RIGHT_PAREN	# PersistentCollectionReferenceInList
+	| LEFT_PAREN expression (COMMA expression)*	RIGHT_PAREN		# ExplicitTupleInList
+	| expression												# SubQueryInList
 	;
 
 likeEscape
@@ -382,25 +387,37 @@ likeEscape
 // Expression
 
 expression
-	: expression DOUBLE_PIPE expression			# ConcatenationExpression
-	| expression PLUS expression				# AdditionExpression
-	| expression MINUS expression				# SubtractionExpression
-	| expression ASTERISK expression			# MultiplicationExpression
-	| expression SLASH expression				# DivisionExpression
-	| expression PERCENT expression				# ModuloExpression
-	| MINUS expression							# UnaryMinusExpression
-	| PLUS expression							# UnaryPlusExpression
-	| caseList									# CaseExpression
-	| literal									# LiteralExpression
-	| parameter									# ParameterExpression
-	| entityTypeReference						# EntityTypeExpression
-	| path										# PathExpression
-	| function									# FunctionExpression
-	| LEFT_PAREN subQuery RIGHT_PAREN			# SubQueryExpression
-    | expression PLUS expression intervalField  # IntervalAddExpression
-    | expression MINUS expression intervalField # IntervalSubExpression
-    | LEFT_PAREN expression MINUS expression RIGHT_PAREN
-      BY intervalField							#IntervalDiffExpression
+	//highest to lowest precedence
+	: LEFT_PAREN expression RIGHT_PAREN				# GroupedExpression
+	| LEFT_PAREN subQuery RIGHT_PAREN				# SubQueryExpression
+	| caseList										# CaseExpression
+	| literal										# LiteralExpression
+	| parameter										# ParameterExpression
+	| entityTypeReference							# EntityTypeExpression
+	| path											# PathExpression
+	| function										# FunctionExpression
+	| signOperator expression						# UnaryExpression
+	| expression intervalField  					# ToDurationExpression
+	| expression BY intervalField					# FromDurationExpression
+	| expression multiplicativeOperator expression	# MultiplicationExpression
+	| expression additiveOperator expression		# AdditionExpression
+	| expression DOUBLE_PIPE expression				# ConcatenationExpression
+	;
+
+multiplicativeOperator
+	: SLASH
+	| PERCENT
+	| ASTERISK
+	;
+
+additiveOperator
+	: PLUS
+	| MINUS
+	;
+
+signOperator
+	: PLUS
+	| MINUS
 	;
 
 entityTypeReference
@@ -451,7 +468,6 @@ nullIfFunction
 
 literal
 	: STRING_LITERAL
-	| CHARACTER_LITERAL
 	| INTEGER_LITERAL
 	| LONG_LITERAL
 	| BIG_INTEGER_LITERAL
@@ -497,7 +513,7 @@ timeLiteral
 	;
 
 dateTimeLiteralText
-	: STRING_LITERAL | CHARACTER_LITERAL
+	: STRING_LITERAL
 	;
 
 parameter
@@ -575,39 +591,39 @@ countFunction
 	;
 
 standardFunction
-	:	castFunction
-	|	extractFunction
-	|   coalesceFunction
-	|   nullIfFunction
-	|   formatFunction
-	|	concatFunction
-	|	substringFunction
-	|   replaceFunction
-	|	trimFunction
-	|	upperFunction
-	|	lowerFunction
-	|	locateFunction
-	|	positionFunction
-	|	lengthFunction
-	|	absFunction
-	|	signFunction
-	|	sqrtFunction
-	|	lnFunction
-	|	expFunction
-	|	modFunction
-	|	powerFunction
-	|	ceilingFunction
-	|	floorFunction
-	|	roundFunction
-	|	trigFunction
-	|	atan2Function
-	|	strFunction
-	|	greatestFunction
-	|	leastFunction
-	|	currentDateFunction
-	|	currentTimeFunction
-	|	currentTimestampFunction
-	|	currentInstantFunction
+	: castFunction
+	| extractFunction
+	| coalesceFunction
+	| nullIfFunction
+	| formatFunction
+	| concatFunction
+	| substringFunction
+	| replaceFunction
+	| trimFunction
+	| upperFunction
+	| lowerFunction
+	| locateFunction
+	| positionFunction
+	| lengthFunction
+	| absFunction
+	| signFunction
+	| sqrtFunction
+	| lnFunction
+	| expFunction
+	| modFunction
+	| powerFunction
+	| ceilingFunction
+	| floorFunction
+	| roundFunction
+	| trigFunction
+	| atan2Function
+	| strFunction
+	| greatestFunction
+	| leastFunction
+	| currentDateFunction
+	| currentTimeFunction
+	| currentTimestampFunction
+	| currentInstantFunction
 	;
 
 
@@ -616,13 +632,6 @@ castFunction
 	;
 
 castTarget
-	// todo (6.0) : should allow either
-	// 		- named cast (IDENTIFIER)
-	//			- JavaTypeDescriptorRegistry (imported) key
-	//			- java.sql.Types field NAME (alias for its value as a coded cast)
-	//			- "pass through"
-	//		- coded cast (INTEGER_LITERAL)
-	//			- SqlTypeDescriptorRegistry key
 	: identifier
 	;
 
@@ -654,7 +663,7 @@ trimSpecification
 	;
 
 trimCharacter
-	: CHARACTER_LITERAL | STRING_LITERAL
+	: STRING_LITERAL
 	;
 
 upperFunction
@@ -702,27 +711,27 @@ lengthFunction
 	;
 
 absFunction
-	:	ABS LEFT_PAREN expression RIGHT_PAREN
+	: ABS LEFT_PAREN expression RIGHT_PAREN
 	;
 
 signFunction
-	:	SIGN LEFT_PAREN expression RIGHT_PAREN
+	: SIGN LEFT_PAREN expression RIGHT_PAREN
 	;
 
 sqrtFunction
-	:	SQRT LEFT_PAREN expression RIGHT_PAREN
+	: SQRT LEFT_PAREN expression RIGHT_PAREN
 	;
 
 lnFunction
-	:	LN LEFT_PAREN expression RIGHT_PAREN
+	: LN LEFT_PAREN expression RIGHT_PAREN
 	;
 
 expFunction
-	:	EXP LEFT_PAREN expression RIGHT_PAREN
+	: EXP LEFT_PAREN expression RIGHT_PAREN
 	;
 
 powerFunction
-	:	POWER LEFT_PAREN powerBaseArgument COMMA powerPowerArgument RIGHT_PAREN
+	: POWER LEFT_PAREN powerBaseArgument COMMA powerPowerArgument RIGHT_PAREN
 	;
 
 powerBaseArgument
@@ -734,7 +743,7 @@ powerPowerArgument
 	;
 
 modFunction
-	:	MOD LEFT_PAREN modDividendArgument COMMA modDivisorArgument RIGHT_PAREN
+	: MOD LEFT_PAREN modDividendArgument COMMA modDivisorArgument RIGHT_PAREN
 	;
 
 modDividendArgument
@@ -746,15 +755,15 @@ modDivisorArgument
 	;
 
 ceilingFunction
-	:	CEILING LEFT_PAREN expression RIGHT_PAREN
+	: CEILING LEFT_PAREN expression RIGHT_PAREN
 	;
 
 floorFunction
-	:	FLOOR LEFT_PAREN expression RIGHT_PAREN
+	: FLOOR LEFT_PAREN expression RIGHT_PAREN
 	;
 
 roundFunction
-	:	ROUND LEFT_PAREN expression COMMA roundFunctionPrecision RIGHT_PAREN
+	: ROUND LEFT_PAREN expression COMMA roundFunctionPrecision RIGHT_PAREN
 	;
 
 roundFunctionPrecision
@@ -762,7 +771,7 @@ roundFunctionPrecision
 	;
 
 trigFunction
-	:	trigFunctionName LEFT_PAREN expression RIGHT_PAREN
+	: trigFunctionName LEFT_PAREN expression RIGHT_PAREN
 	;
 
 trigFunctionName
@@ -770,11 +779,11 @@ trigFunctionName
 	;
 
 atan2Function
-	:	ATAN2 LEFT_PAREN expression COMMA expression RIGHT_PAREN
+	: ATAN2 LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
 strFunction
-	:   STR LEFT_PAREN expression RIGHT_PAREN
+	: STR LEFT_PAREN expression RIGHT_PAREN
 	;
 
 currentDateFunction

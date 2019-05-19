@@ -16,6 +16,8 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.MySQLTimestampaddEmulation;
+import org.hibernate.dialect.function.MySQLTimestampdiffEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -216,9 +218,14 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.datediff2( queryEngine );
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
-		CommonFunctionFactory.timestampadd( queryEngine ); //TODO: does not support 'millisecond'
-		CommonFunctionFactory.timestampdiff( queryEngine ); //TODO: does not support 'millisecond'
 		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+		//these do not support 'millisecond' as an argument
+		//(but they do support 'microsecond')
+//		CommonFunctionFactory.timestampadd( queryEngine );
+//		CommonFunctionFactory.timestampdiff( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new MySQLTimestampdiffEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new MySQLTimestampaddEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

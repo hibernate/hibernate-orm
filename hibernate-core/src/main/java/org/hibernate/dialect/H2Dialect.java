@@ -171,11 +171,14 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.formatdatetime( queryEngine );
+		//dateadd() / timestampadd() are synonyms
+		//datediff() / timestampdiff() are synonyms
+		//all support either <unit> or sql_tsi_<unit>
 		CommonFunctionFactory.timestampadd_dateadd( queryEngine );
 		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
 		CommonFunctionFactory.timestampadd( queryEngine );
 		CommonFunctionFactory.timestampdiff( queryEngine );
-		CommonFunctionFactory.formatdatetime( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )

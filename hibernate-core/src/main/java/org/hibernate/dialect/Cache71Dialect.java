@@ -275,8 +275,9 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.timestampadd_dateadd( queryEngine );
 		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
-		CommonFunctionFactory.timestampadd( queryEngine );
-		CommonFunctionFactory.timestampdiff( queryEngine );
+		//these accept sql_tsi_<unit>, which we can't pass
+//		CommonFunctionFactory.timestampadd( queryEngine );
+//		CommonFunctionFactory.timestampdiff( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
 

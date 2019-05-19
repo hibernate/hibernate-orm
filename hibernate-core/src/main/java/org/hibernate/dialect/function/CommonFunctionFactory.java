@@ -787,7 +787,8 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * JDBC-style, accepts (interval, count, timestamp)
+	 * Ingres/H2-style, accepts either (interval, count, timestamp)
+	 * or (sql_tsi_interval, count, timestamp)
 	 */
 	public static void timestampadd(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("timestampadd")
@@ -797,10 +798,51 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * JDBC-style, accepts (interval, count, timestamp1, timestamp2)
+	 * Ingres/H2-style, accepts either (interval, timestamp1, timestamp2)
+	 * or (sql_tsi_interval, count, timestamp)
 	 */
 	public static void timestampdiff(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "timestampdiff" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	/**
+	 * TimesTen-style, accepts (sql_tsi_interval, count, timestamp)
+	 */
+	public static void timestampaddSqlTsi(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("timestampadd", "timestampadd(sql_tsi_?1,?2,?3)")
+				.setReturnTypeResolver(useArgType(3))
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	/**
+	 * TimesTen-style, accepts (sql_tsi_interval, timestamp1, timestamp2)
+	 */
+	public static void timestampdiffSqlTsi(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("timestampdiff", "timestampdiff(sql_tsi_?1,?2,?3)")
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	/**
+	 * RDMS-style, accepts ('interval', count, timestamp)
+	 */
+	public static void timestampadd_dateaddQuoted(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("timestampadd", "dateadd('?1',?2,?3)")
+				.setReturnTypeResolver(useArgType(3))
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	/**
+	 * RDMS-style, accepts ('interval', timestamp1, timestamp2)
+	 */
+	public static void timestampdiff_datediffQuoted(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("timestampdiff", "datediff('?1',?2,?3)")
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 3 )
 				.register();

@@ -192,8 +192,11 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
-		CommonFunctionFactory.timestampadd( queryEngine );
-		CommonFunctionFactory.timestampdiff( queryEngine );
+		//TODO: dateadd()/datediff() do not support microseconds but
+		//      SQL_TSI_FRAC_SECOND in timestampadd()/timestampdiff()
+		//      does measures microseconds
+		CommonFunctionFactory.timestampadd_dateaddQuoted( queryEngine );
+		CommonFunctionFactory.timestampdiff_datediffQuoted( queryEngine );
 
 		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );

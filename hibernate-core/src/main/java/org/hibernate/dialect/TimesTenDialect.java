@@ -96,8 +96,10 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
-		CommonFunctionFactory.timestampadd( queryEngine );
-		CommonFunctionFactory.timestampdiff( queryEngine );
+		//TODO: Supports neither milliseconds nor microseconds
+		//      but SQL_TSI_FRAC_SECOND measures nanoseconds
+		CommonFunctionFactory.timestampaddSqlTsi( queryEngine );
+		CommonFunctionFactory.timestampdiffSqlTsi( queryEngine );
 	}
 
 	@Override

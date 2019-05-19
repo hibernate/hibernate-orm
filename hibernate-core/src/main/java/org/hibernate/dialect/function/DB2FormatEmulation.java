@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -19,20 +20,26 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import java.util.List;
 
 /**
+ * DB2's varchar_format() can't handle quoted literal strings in
+ * the format pattern. So just split the pattern into bits, call
+ * varcharformat() on the odd-numbered bits, and concatenate all
+ * the nonempty bits at the end.
+ *
  * @author Gavin King
  */
-public class TeradataTimestampdiffEmulation
+public class DB2FormatEmulation
 		extends AbstractSqmFunctionTemplate implements SelfRenderingFunctionSupport {
 
-	public TeradataTimestampdiffEmulation() {
+	public DB2FormatEmulation() {
 		super(
-				StandardArgumentsValidators.exactly( 3 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.LONG )
+				StandardArgumentsValidators.exactly( 2 ),
+				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
 		);
 	}
 
@@ -41,49 +48,39 @@ public class TeradataTimestampdiffEmulation
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
 			SqlAstWalker walker) {
-		ExtractUnit field = (ExtractUnit) arguments.get(0);
-		Expression datetime1 = (Expression) arguments.get(1);
-		Expression datetime2 = (Expression) arguments.get(2);
-		String fieldName = field.getName();
-		switch (fieldName) {
-			case "millisecond":
-				sqlAppender.appendSql("1e3*");
-				break;
-			case "microsecond":
-				sqlAppender.appendSql("1e6*");
-				break;
+		Expression datetime = (Expression) arguments.get(0);
+		Format format = (Format) arguments.get(1);
+
+		sqlAppender.appendSql("(");
+		String[] bits = Oracle8iDialect.datetimeFormat( format.getFormat(), false ).result().split("\"");
+		boolean first = true;
+		for ( int i=0; i<bits.length; i++ ) {
+			String bit = bits[i];
+			if ( !bit.isEmpty() ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					sqlAppender.appendSql("||");
+				}
+				if ( i % 2 == 0 ) {
+					sqlAppender.appendSql("varchar_format(");
+					datetime.accept(walker);
+					sqlAppender.appendSql(",'");
+					sqlAppender.appendSql( bit );
+					sqlAppender.appendSql("')");
+				}
+				else {
+					sqlAppender.appendSql("'");
+					sqlAppender.appendSql( bit );
+					sqlAppender.appendSql("'");
+				}
+			}
 		}
-		sqlAppender.appendSql("((");
-		datetime2.accept(walker);
-		sqlAppender.appendSql(" - ");
-		datetime1.accept(walker);
-		sqlAppender.appendSql(") ");
-		switch (fieldName) {
-			case "millisecond":
-				sqlAppender.appendSql("second(19,3)");
-				break;
-			case "microsecond":
-				sqlAppender.appendSql("second(19,6)");
-				break;
-			case "week":
-				sqlAppender.appendSql("day(19,0)");
-				break;
-			case "quarter":
-				sqlAppender.appendSql("month(19,0)");
-				break;
-			default:
-				sqlAppender.appendSql(fieldName);
-				sqlAppender.appendSql("(19,0)");
+		if ( first ) {
+			sqlAppender.appendSql("''");
 		}
 		sqlAppender.appendSql(")");
-		switch (fieldName) {
-			case "week":
-				sqlAppender.appendSql("/7");
-				break;
-			case "quarter":
-				sqlAppender.appendSql("/3");
-				break;
-		}
 	}
 
 	@Override
@@ -96,7 +93,7 @@ public class TeradataTimestampdiffEmulation
 				arguments,
 				impliedResultType,
 				queryEngine.getCriteriaBuilder(),
-				"timestampdiff"
+				"formatdatetime"
 		);
 	}
 

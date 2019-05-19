@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * @author Gavin King
  */
-class Replacer {
+public class Replacer {
 	private String[] chunks;
 	private String quote;
 	private String delimiter;
@@ -62,7 +62,7 @@ class Replacer {
 		return this;
 	}
 
-	String result() {
+	public String result() {
 		for ( int i=0; i<chunks.length; i+=2 ) {
 			StringBuilder chunk = new StringBuilder( chunks[i] );
 			for ( int position = 0; position < chunk.length(); position++ ) {

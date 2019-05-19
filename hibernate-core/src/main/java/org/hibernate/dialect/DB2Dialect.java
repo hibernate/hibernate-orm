@@ -17,6 +17,7 @@ import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.DB2FormatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -38,11 +39,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
-import org.hibernate.sql.ast.consume.spi.SqlAppender;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -178,6 +174,9 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
 		CommonFunctionFactory.yearsMonthsDaysHoursMinutesSecondsBetween( queryEngine );
 
+		queryEngine.getSqmFunctionRegistry().register( "formatdatetime", new DB2FormatEmulation() );
+
+		//TODO: handle millisecond/microsecond/week/quarter
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "timestampadd", "add_?1s(?3,?2)" )
 				.setReturnTypeResolver( useArgType(3) )
 				.setExactArgumentCount( 3 )

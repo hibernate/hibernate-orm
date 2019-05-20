@@ -85,6 +85,7 @@ import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -3281,12 +3282,12 @@ public abstract class Dialect implements ConversionContext {
 		return Oracle8iDialect.datetimeFormat( format, true ).result();
 	}
 
-	public String translateExtractField(String fieldName) {
-		switch ( fieldName ) {
-			case "dayofmonth": return "dd";
-			case "dayofyear": return "dy";
-			case "dayofweek": return "dw";
-			default: return fieldName;
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "dd";
+			case DAY_OF_YEAR: return "dy";
+			case DAY_OF_WEEK: return "dw";
+			default: return unit.toString();
 		}
 	}
 }

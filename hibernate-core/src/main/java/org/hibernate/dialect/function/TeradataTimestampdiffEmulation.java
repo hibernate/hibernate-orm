@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -44,12 +45,12 @@ public class TeradataTimestampdiffEmulation
 		ExtractUnit field = (ExtractUnit) arguments.get(0);
 		Expression datetime1 = (Expression) arguments.get(1);
 		Expression datetime2 = (Expression) arguments.get(2);
-		String fieldName = field.getName();
-		switch (fieldName) {
-			case "millisecond":
+		TemporalUnit unit = field.getUnit();
+		switch (unit) {
+			case MILLISECOND:
 				sqlAppender.appendSql("1e3*");
 				break;
-			case "microsecond":
+			case MICROSECOND:
 				sqlAppender.appendSql("1e6*");
 				break;
 		}
@@ -58,29 +59,29 @@ public class TeradataTimestampdiffEmulation
 		sqlAppender.appendSql(" - ");
 		datetime1.accept(walker);
 		sqlAppender.appendSql(") ");
-		switch (fieldName) {
-			case "millisecond":
+		switch (unit) {
+			case MILLISECOND:
 				sqlAppender.appendSql("second(19,3)");
 				break;
-			case "microsecond":
+			case MICROSECOND:
 				sqlAppender.appendSql("second(19,6)");
 				break;
-			case "week":
+			case WEEK:
 				sqlAppender.appendSql("day(19,0)");
 				break;
-			case "quarter":
+			case QUARTER:
 				sqlAppender.appendSql("month(19,0)");
 				break;
 			default:
-				sqlAppender.appendSql(fieldName);
+				sqlAppender.appendSql( unit.toString() );
 				sqlAppender.appendSql("(19,0)");
 		}
 		sqlAppender.appendSql(")");
-		switch (fieldName) {
-			case "week":
+		switch (unit) {
+			case WEEK:
 				sqlAppender.appendSql("/7");
 				break;
-			case "quarter":
+			case QUARTER:
 				sqlAppender.appendSql("/3");
 				break;
 		}

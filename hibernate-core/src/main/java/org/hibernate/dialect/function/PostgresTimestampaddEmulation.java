@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
@@ -30,14 +31,14 @@ public class PostgresTimestampaddEmulation extends IntervalTimestampaddEmulation
 			ExtractUnit field,
 			Expression magnitude) {
 		boolean literal = magnitude instanceof QueryLiteral;
-		String fieldName = field.getName();
-		switch ( fieldName ) {
-			case "quarter":
+		TemporalUnit unit = field.getUnit();
+		switch ( unit ) {
+			case QUARTER:
 				sqlAppender.appendSql("(");
 				magnitude.accept(walker);
 				sqlAppender.appendSql(") * interval '3 month'");
 				break;
-			case "week":
+			case WEEK:
 				sqlAppender.appendSql("(");
 				magnitude.accept(walker);
 				sqlAppender.appendSql(") * interval '7 day'");
@@ -53,7 +54,7 @@ public class PostgresTimestampaddEmulation extends IntervalTimestampaddEmulation
 					sqlAppender.appendSql(") * interval '1");
 				}
 				sqlAppender.appendSql(" ");
-				sqlAppender.appendSql( fieldName );
+				sqlAppender.appendSql( unit.toString() );
 				sqlAppender.appendSql("'");
 		}
 	}

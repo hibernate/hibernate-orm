@@ -34,6 +34,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
@@ -584,12 +585,13 @@ public class DB2Dialect extends Dialect {
 		return Oracle8iDialect.datetimeFormat( format, false ).result();
 	}
 
-	public String translateExtractField(String fieldName) {
-		switch ( fieldName ) {
-			case "dayofmonth": return "day";
-			case "dayofyear": return "doy";
-			case "dayofweek": return "dow";
-			default: return fieldName;
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			case DAY_OF_YEAR: return "doy";
+			case DAY_OF_WEEK: return "dow";
+			default: return unit.toString();
 		}
 	}
 

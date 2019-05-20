@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -21,6 +22,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 
 import java.util.List;
+
+import static org.hibernate.query.TemporalUnit.MILLISECOND;
 
 /**
  * MySQL timestampadd() does not support 'millisecond' as an argument.
@@ -45,18 +48,18 @@ public class MySQLTimestampaddEmulation
 		ExtractUnit field = (ExtractUnit) arguments.get(0);
 		Expression magnitude = (Expression) arguments.get(1);
 		Expression datetime = (Expression) arguments.get(2);
-		String fieldName = field.getName();
+		TemporalUnit unit = field.getUnit();
 		sqlAppender.appendSql("timestampadd(");
-		if ( "millisecond".equals( fieldName ) ) {
+		if ( MILLISECOND == unit ) {
 			sqlAppender.appendSql("microsecond,1e3*(");
 
 		}
 		else {
-			sqlAppender.appendSql( fieldName );
+			sqlAppender.appendSql( unit.toString() );
 			sqlAppender.appendSql(",");
 		}
 		magnitude.accept(walker);
-		if ( "millisecond".equals( fieldName ) ) {
+		if ( MILLISECOND == unit ) {
 			sqlAppender.appendSql(")");
 		}
 		sqlAppender.appendSql(",");

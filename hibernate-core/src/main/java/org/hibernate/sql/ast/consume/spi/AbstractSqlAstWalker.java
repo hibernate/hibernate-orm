@@ -400,7 +400,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitExtractUnit(ExtractUnit unit) {
-		appendSql( sessionFactory.getJdbcServices().getDialect().translateExtractField( unit.getName() ) );
+		appendSql( sessionFactory.getJdbcServices().getDialect().translateExtractField( unit.getUnit() ) );
 	}
 
 	@Override

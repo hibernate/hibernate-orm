@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticException;
@@ -54,7 +55,7 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	}
 
 	private void illegalConversion(SqmExtractUnit<?> unit) {
-		throw new SemanticException("illegal unit conversion " + this.unit.getUnitName() + " to " + unit.getUnitName());
+		throw new SemanticException("illegal unit conversion " + this.unit.getUnit() + " to " + unit.getUnit());
 	}
 
 	@Override
@@ -66,75 +67,141 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 			SqmExtractUnit<?> unit,
 			BasicValuedExpressableType<Long> resultType,
 			NodeBuilder nodeBuilder) {
-		String fromUnit = this.unit.getUnitName();
-		String toUnit = unit.getUnitName();
+		TemporalUnit fromUnit = this.unit.getUnit();
+		TemporalUnit toUnit = unit.getUnit();
 		if ( toUnit.equals(fromUnit) ) {
 			return magnitude;
 		}
 		long factor = 1;
+		//TODO: MICROSECOND!
 		switch (toUnit) {
-			case "second":
+			case MILLISECOND:
 				switch (fromUnit) {
-					case "day":
+					case WEEK:
+						factor*=7;
+					case DAY:
 						factor*=24;
-					case "hour":
+					case HOUR:
 						factor*=60;
-					case "minute":
+					case MINUTE:
+						factor*=60;
+						break;
+					case SECOND:
+						factor*=1e3;
+						break;
+					default: illegalConversion(unit);
+				}
+				break;
+			case SECOND:
+				switch (fromUnit) {
+					case MILLISECOND:
+						factor/=1e3;
+					break;
+					case WEEK:
+						factor*=7;
+					case DAY:
+						factor*=24;
+					case HOUR:
+						factor*=60;
+					case MINUTE:
 						factor*=60;
 					break;
 					default: illegalConversion(unit);
 				}
 				break;
-			case "minute":
+			case MINUTE:
 				switch (fromUnit) {
-					case "second":
+					case MILLISECOND:
+						factor/=1e3;
+					case SECOND:
 						factor/=60;
 					break;
-					case "day":
+					case WEEK:
+						factor*=7;
+					case DAY:
 						factor*=24;
-					case "hour":
+					case HOUR:
 						factor*=60;
 					break;
 					default: illegalConversion(unit);
 				}
 				break;
-			case "hour":
+			case HOUR:
 				switch (fromUnit) {
-					case "second":
+					case MILLISECOND:
+						factor/=1e3;
+					case SECOND:
 						factor/=60;
-					case "minute":
+					case MINUTE:
 						factor/=60;
 					break;
-					case "day":
+					case WEEK:
+						factor*=7;
+					case DAY:
 						factor*=24;
 					break;
 					default: illegalConversion(unit);
 				}
 				break;
-			case "day":
+			case DAY:
 				switch (fromUnit) {
-					case "second":
+					case MILLISECOND:
+						factor/=1e3;
+					case SECOND:
 						factor/=60;
-					case "minute":
+					case MINUTE:
 						factor/=60;
-					case "hour":
+					case HOUR:
 						factor/=24;
 					break;
+					case WEEK:
+						factor*=7;
+						break;
 					default: illegalConversion(unit);
 				}
 				break;
-			case "month":
+			case WEEK:
 				switch (fromUnit) {
-					case "year":
-						factor*=12;
+					case MILLISECOND:
+						factor/=1e3;
+					case SECOND:
+						factor/=60;
+					case MINUTE:
+						factor/=60;
+					case HOUR:
+						factor/=24;
+					case DAY:
+						factor/=7;
+						break;
+					default: illegalConversion(unit);
+				}
+			case MONTH:
+				switch (fromUnit) {
+					case YEAR:
+						factor*=4;
+					case QUARTER:
+						factor*=3;
 					break;
 					default: illegalConversion(unit);
 				}
 				break;
-			case "year":
+			case QUARTER:
 				switch (fromUnit) {
-					case "month":
-						factor/=12;
+					case MONTH:
+						factor*=3;
+						break;
+					case YEAR:
+						factor/=4;
+						break;
+					default: illegalConversion(unit);
+				}
+				break;
+			case YEAR:
+				switch (fromUnit) {
+					case MONTH:
+						factor/=3;
+					case QUARTER:
+						factor/=4;
 						break;
 					default: illegalConversion(unit);
 				}
@@ -171,7 +238,7 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public String asLoggableText() {
-		return magnitude.asLoggableText() + " " + unit.getUnitName();
+		return magnitude.asLoggableText() + " " + unit.getUnit();
 	}
 }
 

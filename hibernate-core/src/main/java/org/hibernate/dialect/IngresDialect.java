@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
@@ -332,12 +333,13 @@ public class IngresDialect extends Dialect {
 		return MySQLDialect.datetimeFormat( format ).result();
 	}
 
-	public String translateExtractField(String fieldName) {
-		switch ( fieldName ) {
-			case "dayofmonth": return "day";
-			case "dayofyear": return "doy";
-			case "dayofweek": return "dow";
-			default: return fieldName;
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			case DAY_OF_YEAR: return "doy";
+			case DAY_OF_WEEK: return "dow";
+			default: return unit.toString();
 		}
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.spi.SqlExpressable;
@@ -15,16 +16,16 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Gavin King
  */
 public class ExtractUnit implements SqlExpressable, SqlAstNode {
-	private String name;
+	private TemporalUnit unit;
 	private SqlExpressableType type;
 
-	public ExtractUnit(String name, SqlExpressableType type) {
-		this.name = name;
+	public ExtractUnit(TemporalUnit unit, SqlExpressableType type) {
+		this.unit = unit;
 		this.type = type;
 	}
 
-	public String getName() {
-		return name;
+	public TemporalUnit getUnit() {
+		return unit;
 	}
 
 	@Override

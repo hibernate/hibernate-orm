@@ -745,7 +745,7 @@ public abstract class BaseSqmToSqlAstConverter
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
 			return new ExtractUnit(
-					unit.getUnitName(),
+					unit.getUnit(),
 					unit.getType().getSqlExpressableType()
 			);
 		}

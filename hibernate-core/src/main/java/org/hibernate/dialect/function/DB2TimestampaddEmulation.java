@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -47,45 +48,45 @@ public class DB2TimestampaddEmulation
 		ExtractUnit field = (ExtractUnit) arguments.get(0);
 		Expression magnitude = (Expression) arguments.get(1);
 		Expression datetime = (Expression) arguments.get(2);
-		String fieldName = field.getName();
+		TemporalUnit unit = field.getUnit();
 		sqlAppender.appendSql("add_");
-		switch (fieldName) {
-			case "millisecond":
-			case "microsecond":
+		switch (unit) {
+			case MILLISECOND:
+			case MICROSECOND:
 				sqlAppender.appendSql("second");
 				break;
-			case "week":
+			case WEEK:
 				sqlAppender.appendSql("day");
 				break;
-			case "quarter":
+			case QUARTER:
 				sqlAppender.appendSql("month");
 				break;
 			default:
-				sqlAppender.appendSql( fieldName );
+				sqlAppender.appendSql( unit.toString() );
 		}
 		sqlAppender.appendSql("s(");
 		datetime.accept(walker);
 		sqlAppender.appendSql(",");
-		switch (fieldName) {
-			case "millisecond":
-			case "microsecond":
-			case "week":
-			case "quarter":
+		switch (unit) {
+			case MILLISECOND:
+			case MICROSECOND:
+			case WEEK:
+			case QUARTER:
 				sqlAppender.appendSql("(");
 				break;
 		}
 		magnitude.accept(walker);
-		switch (fieldName) {
-			case "millisecond":
+		switch (unit) {
+			case MILLISECOND:
 				sqlAppender.appendSql(")/1e3");
 				break;
-			case "microsecond":
+			case MICROSECOND:
 				sqlAppender.appendSql(")/1e6");
 				break;
-			case "week":
+			case WEEK:
 				sqlAppender.appendSql(")*7");
 				break;
-			case "quarter":
+			case QUARTER:
 				sqlAppender.appendSql(")*3");
 				break;
 		}

@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -22,6 +23,8 @@ import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import java.util.List;
+
+import static org.hibernate.query.TemporalUnit.MICROSECOND;
 
 /**
  * HSQL datediff() does not support 'microsecond' as an argument,
@@ -48,20 +51,20 @@ public class HSQLTimestampdiffEmulation
 		ExtractUnit field = (ExtractUnit) arguments.get(0);
 		Expression datetime1 = (Expression) arguments.get(1);
 		Expression datetime2 = (Expression) arguments.get(2);
-		String fieldName = field.getName();
-		if ( "microsecond".equals( fieldName ) ) {
+		TemporalUnit unit = field.getUnit();
+		if ( MICROSECOND == unit ) {
 			sqlAppender.appendSql("timestampdiff(SQL_TSI_FRAC_SECOND");
 		}
 		else {
 			sqlAppender.appendSql("datediff(");
-			sqlAppender.appendSql( fieldName );
+			sqlAppender.appendSql( unit.toString() );
 		}
 		sqlAppender.appendSql(",");
 		datetime1.accept(walker);
 		sqlAppender.appendSql(",");
 		datetime2.accept(walker);
 		sqlAppender.appendSql(")");
-		if ( "microsecond".equals( fieldName ) ) {
+		if ( MICROSECOND == unit ) {
 			sqlAppender.appendSql("/1e3");
 		}
 	}

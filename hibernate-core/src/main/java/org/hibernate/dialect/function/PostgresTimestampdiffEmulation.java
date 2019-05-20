@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
@@ -22,30 +23,30 @@ public class PostgresTimestampdiffEmulation extends IntervalTimestampdiffEmulati
 			SqlAstWalker walker,
 			Expression datetime1,
 			Expression datetime2,
-			String fieldName) {
+			TemporalUnit unit) {
 		sqlAppender.appendSql("(");
-		switch (fieldName) {
-			case "millisecond":
+		switch (unit) {
+			case MILLISECOND:
 				sqlAppender.appendSql("1e3*(");
 				break;
-			case "microsecond":
+			case MICROSECOND:
 				sqlAppender.appendSql("1e6*(");
 				break;
 		}
 		sqlAppender.appendSql("60*60*24*");
-		extractField(sqlAppender, walker, datetime1, datetime2, "day");
+		extractField(sqlAppender, walker, datetime1, datetime2, TemporalUnit.DAY);
 		sqlAppender.appendSql("+60*60*");
-		extractField(sqlAppender, walker, datetime1, datetime2, "hour");
+		extractField(sqlAppender, walker, datetime1, datetime2, TemporalUnit.HOUR);
 		sqlAppender.appendSql("+60*");
-		extractField(sqlAppender, walker, datetime1, datetime2, "minute");
-		switch ( fieldName ) {
-			case "millisecond":
-			case "microsecond":
+		extractField(sqlAppender, walker, datetime1, datetime2, TemporalUnit.MINUTE);
+		switch (unit) {
+			case MILLISECOND:
+			case MICROSECOND:
 				sqlAppender.appendSql(")");
 				break;
 		}
 		sqlAppender.appendSql("+");
-		extractField(sqlAppender, walker, datetime1, datetime2, fieldName);
+		extractField(sqlAppender, walker, datetime1, datetime2, unit);
 		sqlAppender.appendSql(")");
 	}
 
@@ -55,37 +56,37 @@ public class PostgresTimestampdiffEmulation extends IntervalTimestampdiffEmulati
 			SqlAstWalker walker,
 			Expression datetime1,
 			Expression datetime2,
-			String fieldName) {
+			TemporalUnit unit) {
 		sqlAppender.appendSql("extract(");
-		sqlAppender.appendSql(fieldName);
+		sqlAppender.appendSql( unit.toString() );
 		sqlAppender.appendSql(" from ");
-		switch (fieldName) {
-			case "year":
-			case "month":
+		switch (unit) {
+			case YEAR:
+			case MONTH:
 				sqlAppender.appendSql("age(");
 				break;
 		}
 		datetime2.accept(walker);
-		switch (fieldName) {
-			case "year":
-			case "month":
+		switch (unit) {
+			case YEAR:
+			case MONTH:
 				sqlAppender.appendSql(",");
 				break;
-			case "day":
-			case "hour":
-			case "minute":
-			case "second":
-			case "millisecond":
-			case "microsecond":
+			case DAY:
+			case HOUR:
+			case MINUTE:
+			case SECOND:
+			case MILLISECOND:
+			case MICROSECOND:
 				sqlAppender.appendSql("-");
 				break;
 			default:
-				throw new SemanticException(fieldName + " is not a legal field");
+				throw new SemanticException(unit + " is not a legal field");
 		}
 		datetime1.accept(walker);
-		switch (fieldName) {
-			case "year":
-			case "month":
+		switch (unit) {
+			case YEAR:
+			case MONTH:
 				sqlAppender.appendSql(")");
 				break;
 		}

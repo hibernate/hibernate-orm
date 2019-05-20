@@ -11,70 +11,98 @@ lexer grammar HqlLexer;
 package org.hibernate.query.hql.internal;
 }
 
-WS : ( ' ' | '\t' | '\f' | EOL ) -> skip;
+WS : WS_CHAR+ -> skip;
 
 fragment
-EOL	: [\r\n]+;
-
-INTEGER_LITERAL : INTEGER_NUMBER ;
+WS_CHAR : [ \f\t\r\n];
 
 fragment
-INTEGER_NUMBER : ('0' | '1'..'9' '0'..'9'*) ;
-
-LONG_LITERAL : INTEGER_NUMBER ('l'|'L');
-
-BIG_INTEGER_LITERAL : INTEGER_NUMBER ('bi'|'BI') ;
-
-HEX_LITERAL : '0' ('x'|'X') HEX_DIGIT+ ('l'|'L')? ;
+DIGIT : [0-9];
 
 fragment
-HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
+HEX_DIGIT : [0-9a-fA-F];
 
-OCTAL_LITERAL : '0' ('0'..'7')+ ('l'|'L')? ;
+fragment
+OCTAL_DIGIT : [0-7];
 
-FLOAT_LITERAL : FLOATING_POINT_NUMBER ('f'|'F')? ;
+fragment
+EXPONENT : [eE] [+-]? DIGIT+;
+
+fragment
+LONG_SUFFIX : [lL];
+
+fragment
+FLOAT_SUFFIX : [fF];
+
+fragment
+DOUBLE_SUFFIX : [dD];
+
+fragment
+BIG_DECIMAL_SUFFIX : [bB] [dD];
+
+fragment
+BIG_INTEGER_SUFFIX : [bB] [iI];
+
+fragment
+INTEGER_NUMBER
+	: '0'
+	| [1-9] DIGIT*
+	;
 
 fragment
 FLOATING_POINT_NUMBER
-	: ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-	| '.' ('0'..'9')+ EXPONENT?
-	| ('0'..'9')+ EXPONENT
-	| ('0'..'9')+
+	: DIGIT+ '.' DIGIT* EXPONENT?
+	| '.' DIGIT+ EXPONENT?
+	| DIGIT+ EXPONENT
+	| DIGIT+
 	;
 
-DOUBLE_LITERAL : FLOATING_POINT_NUMBER ('d'|'D') ;
+INTEGER_LITERAL : INTEGER_NUMBER;
 
-BIG_DECIMAL_LITERAL : FLOATING_POINT_NUMBER ('bd'|'BD') ;
+LONG_LITERAL : INTEGER_NUMBER LONG_SUFFIX;
 
-fragment
-EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
+FLOAT_LITERAL : FLOATING_POINT_NUMBER FLOAT_SUFFIX?;
 
-CHARACTER_LITERAL
-	:	'\'' ( ESCAPE_SEQUENCE | ~('\''|'\\') ) '\'' {setText(getText().substring(1, getText().length()-1));}
-	;
+DOUBLE_LITERAL : FLOATING_POINT_NUMBER DOUBLE_SUFFIX;
+
+BIG_INTEGER_LITERAL : INTEGER_NUMBER BIG_INTEGER_SUFFIX;
+
+BIG_DECIMAL_LITERAL : FLOATING_POINT_NUMBER BIG_DECIMAL_SUFFIX;
+
+HEX_LITERAL : '0' [xX] HEX_DIGIT+ LONG_SUFFIX?;
+
+OCTAL_LITERAL : '0' OCTAL_DIGIT+ LONG_SUFFIX?;
+
+fragment SINGLE_QUOTE : '\'';
+fragment DOUBLE_QUOTE : '"';
 
 STRING_LITERAL
-	:	'"' ( ESCAPE_SEQUENCE | ~('\\'|'"') )* '"' {setText(getText().substring(1, getText().length()-1));}
-	|	('\'' ( ESCAPE_SEQUENCE | ~('\\'|'\'') )* '\'')+ {setText(getText().substring(1, getText().length()-1).replace("''", "'"));}
+	: DOUBLE_QUOTE ( ~[\\"] | ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE )* DOUBLE_QUOTE
+	  { setText(getText().substring(1, getText().length()-1).replace("\"\"", "\"")); }
+	| SINGLE_QUOTE ( ~[\\'] | ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE )* SINGLE_QUOTE
+	  { setText(getText().substring(1, getText().length()-1).replace("''", "'")); }
 	;
+
+fragment BACKSLASH : '\\';
 
 fragment
 ESCAPE_SEQUENCE
-	:	'\\' ('b'|'t'|'n'|'f'|'r'|'\\"'|'\''|'\\')
-	|	UNICODE_ESCAPE
-	|	OCTAL_ESCAPE
+	: BACKSLASH [btnfr"']
+	| BACKSLASH UNICODE_ESCAPE
+	| BACKSLASH OCTAL_ESCAPE
+	| BACKSLASH BACKSLASH
 	;
 
 fragment
 OCTAL_ESCAPE
-	:	'\\' ('0'..'3') ('0'..'7') ('0'..'7')
-	|	'\\' ('0'..'7') ('0'..'7')
-	|	'\\' ('0'..'7')
+	: [0-3] OCTAL_DIGIT OCTAL_DIGIT
+	| OCTAL_DIGIT OCTAL_DIGIT
+	| OCTAL_DIGIT
 	;
 
 fragment
 UNICODE_ESCAPE
-	:	'\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+	: 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	;
 
 // ESCAPE start tokens
@@ -130,10 +158,10 @@ COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
 CONCAT				: [cC] [oO] [nN] [cC] [aA] [tT];
 COUNT				: [cC] [oO] [uU] [nN] [tT];
 CURRENT				: [cC] [uU] [rR] [rR] [eE] [nN] [tT];
-CURRENT_DATE		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE];
-CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [aA] [nN] [tT];
-CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE];
-CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
+CURRENT_DATE		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] [_] [dD] [aA] [tT] [eE];
+CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] [_] [iI] [nN] [sS] [tT] [aA] [nN] [tT];
+CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] [_] [tT] [iI] [mM] [eE];
+CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] [_] [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
 CROSS				: [cC] [rR] [oO] [sS] [sS];
 DATE				: [dD] [aA] [tT] [eE];
 DAY					: [dD] [aA] [yY];
@@ -236,7 +264,7 @@ YEAR				: [yY] [eE] [aA] [rR];
 
 ASIN				: [aA] [sS] [iI] [nN];
 ATAN				: [aA] [cC] [oO] [sH];
-ATAN2				: [aA] [tT] [aA] [nN] '2';
+ATAN2				: [aA] [tT] [aA] [nN] [2];
 ACOS				: [aA] [tT] [aA] [nN];
 SIN					: [sS] [iI] [nN];
 COS					: [cC] [oO] [sH];
@@ -247,11 +275,18 @@ TRUE 	: [tT] [rR] [uU] [eE];
 FALSE 	: [fF] [aA] [lL] [sS] [eE];
 NULL 	: [nN] [uU] [lL] [lL];
 
+
+fragment
+LETTER : [a-zA-Z\u0080-\ufffe_$];
+
 // Identifiers
 IDENTIFIER
-	:	('a'..'z'|'A'..'Z'|'_'|'$'|'\u0080'..'\ufffe')('a'..'z'|'A'..'Z'|'_'|'$'|'0'..'9'|'\u0080'..'\ufffe')*
+	: LETTER (LETTER | DIGIT)*
 	;
 
+fragment
+BACKTICK : '`';
+
 QUOTED_IDENTIFIER
-	: '`' ( ESCAPE_SEQUENCE | ~('\\'|'`') )* '`'
+	: BACKTICK ( ~([\\`]) | ESCAPE_SEQUENCE )* BACKTICK
 	;

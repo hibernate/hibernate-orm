@@ -297,6 +297,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select e.theTimestamp - 30 second from EntityOfBasics e")
 							.list();
+					session.createQuery("select e.theTimestamp + 3.333e-3 second from EntityOfBasics e")
+							.list();
 
 				}
 		);

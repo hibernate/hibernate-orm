@@ -443,7 +443,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			selectClause = visitSelectClause( ctx.selectClause() );
 		}
 		else {
-			log.debugf( "Encountered implicit select clause : " + ctx.getText() );
+			if ( log.isDebugEnabled() ) {
+				log.debugf( "Encountered implicit select clause : " + ctx.getText() );
+			}
 			selectClause = buildInferredSelectClause( sqmQuerySpec.getFromClause() );
 		}
 		sqmQuerySpec.setSelectClause( selectClause );

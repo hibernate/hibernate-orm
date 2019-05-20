@@ -33,7 +33,9 @@ public class HqlParseTreeBuilder {
 		return new HqlParser( new CommonTokenStream( hqlLexer ) ) {
 			@Override
 			protected void logUseOfReservedWordAsIdentifier(Token token) {
-				log.debugf( "Encountered use of reserved word as identifier : " + token.getText() );
+				if ( log.isDebugEnabled() ) {
+					log.debugf( "Encountered use of reserved word as identifier : " + token.getText() );
+				}
 			}
 		};
 	}

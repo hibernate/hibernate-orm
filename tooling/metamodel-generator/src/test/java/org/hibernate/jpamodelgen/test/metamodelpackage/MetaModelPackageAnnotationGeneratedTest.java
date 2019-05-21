@@ -22,12 +22,29 @@ public class MetaModelPackageAnnotationGeneratedTest extends CompilationTest {
 
 	private static final String ALT_PACKAGE = "vt.edu";
 
+
+	/** Regression test. */
+	@Test
+	@TestForIssue(jiraKey = "HHH-13408")
+	@WithClasses(TestEntity.class)
+	public void testAnnotationGenerated() {
+		assertMetamodelClassGeneratedFor( TestEntity.class);
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-13408")
 	@WithClasses(TestEntity.class)
 	@WithProcessorOption(key = JPAMetaModelEntityProcessor.META_MODEL_PACKAGE, value = ALT_PACKAGE)
 	public void testMetaModelPackageAnnotationGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class, ALT_PACKAGE );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13408")
+	@WithClasses(TestEntity.class)
+	@WithProcessorOption(key = JPAMetaModelEntityProcessor.META_MODEL_PACKAGE, value = "")
+	public void testMetaModelPackageAnnotationGeneratedWithEmptyPackage() {
+		assertMetamodelClassGeneratedFor( TestEntity.class );
 	}
 
 	@Test

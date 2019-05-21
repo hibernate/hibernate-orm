@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  *
  * @author Steve Ebersole
  */
-public interface PersistentAttributeDescriptor<D, J> extends PersistentAttribute<D, J> {
+public interface PersistentAttributeDescriptor<D,J,B> extends PersistentAttribute<D,J,B> {
 	@Override
 	ManagedTypeDescriptor<D> getDeclaringType();
 

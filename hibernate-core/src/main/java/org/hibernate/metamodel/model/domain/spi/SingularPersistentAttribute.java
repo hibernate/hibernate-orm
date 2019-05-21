@@ -11,9 +11,12 @@ import javax.persistence.metamodel.SingularAttribute;
 /**
  * Hibernate extension to the JPA {@link SingularAttribute} descriptor
  *
+ * todo (6.0) : Create an form of singular attribute (and plural) in the API package (org.hibernate.metamodel.model.domain)
+ * 		and have this extend it
+ *
  * @author Steve Ebersole
  */
-public interface SingularPersistentAttribute<D,J> extends SingularAttribute<D,J>, PersistentAttributeDescriptor<D,J> {
+public interface SingularPersistentAttribute<D,J> extends SingularAttribute<D,J>, PersistentAttributeDescriptor<D,J,J> {
 	@Override
 	SimpleTypeDescriptor<J> getType();
 

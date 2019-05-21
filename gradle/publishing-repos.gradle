@@ -36,7 +36,7 @@ bintray {
 	user = project.bintrayUser
 	key = project.bintrayKey
 
-	publications = ['publishedArtifacts']
+	publications = ['publishedArtifacts','relocationArtifacts']
 
 	pkg {
 		userOrg = 'hibernate'
@@ -47,13 +47,14 @@ bintray {
 
 		version {
 			name = project.version
+			description ="Hibernate ORM ${project.version} release.  See http://hibernate.org/orm/releases/${project.ormVersion.family}"
 			released  = new Date()
 			vcsTag = project.version
 			gpg {
 				sign = true
 			}
 			attributes = [
-					'jpa': project.jpaVersion,
+					'jpa': project.jpaVersion.name,
 					'family': project.ormVersion.family
 			]
 			mavenCentralSync {

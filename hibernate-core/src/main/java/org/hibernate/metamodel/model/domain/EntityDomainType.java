@@ -8,10 +8,13 @@ package org.hibernate.metamodel.model.domain;
 
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.query.sqm.SqmPathSource;
+
 /**
  * Extension to the JPA {@link EntityType} contract
  *
  * @author Steve Ebersole
  */
-public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityType<J> {
+public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityType<J>, SqmPathSource<J,J> {
+	String getHibernateEntityName();
 }

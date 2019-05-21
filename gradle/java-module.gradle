@@ -5,21 +5,23 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
-buildscript {
-	repositories {
-		mavenCentral()
-	}
-	dependencies {
-		classpath 'de.thetaphi:forbiddenapis:2.6'
-	}
-}
-
-import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
-import org.apache.tools.ant.filters.ReplaceTokens
-
 /**
  * Support for modules that contain Java code
  */
+
+
+//
+//buildscript {
+//	repositories {
+//		mavenCentral()
+//	}
+//	dependencies {
+//		classpath 'de.thetaphi:forbiddenapis:2.6'
+//	}
+//}
+
+//import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
+import org.apache.tools.ant.filters.ReplaceTokens
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply from: rootProject.file( 'gradle/libraries.gradle' )
@@ -31,6 +33,13 @@ apply plugin: 'osgi'
 apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
+
+// Attempt to leverage JetBrain's Gradle extension to automatically define 
+// `copyResourcesToIntelliJOutFolder` as a "build trigger" on import.
+//
+// However, see https://github.com/JetBrains/gradle-idea-ext-plugin/issues/8
+
+apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
 
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
@@ -57,7 +66,7 @@ configurations {
 		description = 'Non-exported compile-time dependencies.'
 	}
 	asciidoclet {
-		description = "Dependencies for Asciidoctor Javadoc taglet"
+		description = 'Dependencies for Asciidoctor Javadoc taglet'
 	}
 }
 
@@ -73,7 +82,18 @@ dependencies {
 	annotationProcessor( libraries.logging )
 	annotationProcessor( libraries.logging_annotations )
 
+
+
+	// JUnit dependencies made up of:
+	// 		* JUnit 5
+	// 		* the Jupiter engine which runs JUnit 5 based tests
+	//		* the "vintage" engine - which runs JUnit 3 and 4 based tests
+	testCompile( libraries.junit5_api )
+	testRuntime( libraries.junit5_jupiter )
+	testCompile( libraries.junit5_params )
 	testCompile( libraries.junit )
+	testRuntime( libraries.junit5_vintage )
+
 	testCompile( libraries.byteman )
 	testCompile( libraries.byteman_install )
 	testCompile( libraries.byteman_bmunit )
@@ -92,7 +112,7 @@ dependencies {
 	testRuntime( libraries.informix )
 	testRuntime( libraries.hana )
 
-	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
+	asciidoclet( libraries.asciidoclet )
 
 	if ( db.equalsIgnoreCase( 'oracle' ) ) {
 		testRuntime( libraries.oracle ) {
@@ -161,57 +181,58 @@ if ( ext.toolsJar.exists() ) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Testing
 
-tasks.withType( Test.class ).all { task ->
+tasks.withType( Test.class ).each { test ->
+	test.useJUnitPlatform()
+
 	if ( JavaVersion.current().isJava9Compatible() ) {
 		// Byteman needs this property to be set, https://developer.jboss.org/thread/274997
-		task.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
+		test.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
 	}
-	task.jvmArgs += [
+	test.jvmArgs += [
 			'-XX:+HeapDumpOnOutOfMemoryError',
 			"-XX:HeapDumpPath=${file( "${buildDir}/OOM-dump.hprof" ).absolutePath}",
 			'-XX:MetaspaceSize=512M'
 	]
 
-	task.maxHeapSize = '4G'
+	test.maxHeapSize = '4G'
 
-	task.systemProperties['hibernate.test.validatefailureexpected'] = true
-	task.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
+	test.systemProperties['hibernate.test.validatefailureexpected'] = true
+	test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
+
+	test.enableAssertions = true
+	
+	if ( project.name != 'hibernate-testing' ) {
+		test.dependsOn ':hibernate-testing:test'
+	}
 }
+
+sourceSets {
+	test {
+		resources {
+			// add `src/test/java` as a test-resources dir
+			configure( srcDir('src/test/java') ) {
+				filter {
+					include '**/*.properties'
+					include '**/*.xml'
+				}
+			}
+			configure( srcDir('src/test/resources') ) {
+				filter {
+					include '*.properties'
+					include '*.xml'
+					include '**/*.properties'
+					include '**/*.xml'
+					exclude 'src/test/resources/arquillian.xml'
+				}
+			}
+		}
+	}
+}
+
 
 processTestResources {
 	inputs.property( "db", db )
-	doLast {
-		copy {
-			from( sourceSets.test.java.srcDirs ) {
-				include '**/*.properties'
-				include '**/*.xml'
-			}
-			into sourceSets.test.java.outputDir
-		}
-		copy {
-			from file( 'src/test/resources' )
-			into file( "${buildDir}/resources/test" )
-			exclude 'src/test/resources/arquillian.xml'
-			exclude 'src/test/resources/hibernate.properties'
-		}
-		copy {
-			from file( 'src/test/resources/hibernate.properties' )
-			into file( "${buildDir}/resources/test" )
-			filter( ReplaceTokens, tokens: dbBundle[db] )
-		}
-	}
-}
-
-// Enable the experimental features of ByteBuddy with JDK 12+
-test {
-	//Only safe to attempt to parse the version as an integer since JDK11
-	if ( JavaVersion.current().isJava11Compatible() ) {
-		int majorJVMVersionInt = Integer.valueOf(JavaVersion.current().toString());
-		//Set the -Dnet.bytebuddy.experimental=true property only when we need it:
-		if (majorJVMVersionInt >= 12) {
-			systemProperty 'net.bytebuddy.experimental', true
-		}
-	}
+	filter( ReplaceTokens, tokens: dbBundle[db] )
 }
 
 test {
@@ -259,7 +280,7 @@ test {
  A solution is to enable the 'After Build' Execution of the copyResourcesToIntelliJOutFolder task
  from the 'Gradle project' IntelliJ tool window ( The task can be found under hibernate-orm > Task > other)
  */
-task copyResourcesToIntelliJOutFolder {
+task copyResourcesToIntelliJOutFolder(type: Task, dependsOn: project.tasks.processTestResources) {
 	doLast {
 		copy {
 			from "$buildDir/resources/test"
@@ -325,36 +346,36 @@ task nonFatalCheckstyle(type:Checkstyle) {
 checkstyleMain.exclude '**/org/hibernate/cfg/**'
 checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
-
-task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
-	classesDirs = project.sourceSets.main.output.classesDirs
-	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
-	bundledSignatures += 'jdk-system-out'
-	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
-}
-
-task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
-	classesDirs = project.sourceSets.main.output.classesDirs
-	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
-	bundledSignatures += "jdk-unsafe-${baselineJavaVersion}".toString()
-
-	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
-	// before we can fully enabled this check
-	//
-	// No idea how findbugs was missing these b4
-	ignoreFailures = true
-}
-
-task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
-	classesDirs = project.sourceSets.main.output.classesDirs
-	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
-	bundledSignatures += 'jdk-non-portable'
-}
-
-task forbiddenApis
-project.tasks.withType( CheckForbiddenApis ).each { task -> forbiddenApis.finalizedBy task }
-
-project.tasks.check.finalizedBy forbiddenApis
+//
+//task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
+//	classesDirs = project.sourceSets.main.output.classesDirs
+//	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+//	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
+//	bundledSignatures += 'jdk-system-out'
+//	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
+//}
+//
+//task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
+//	classesDirs = project.sourceSets.main.output.classesDirs
+//	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+//	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
+//	bundledSignatures += "jdk-unsafe-${baselineJavaVersion}".toString()
+//
+//	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
+//	// before we can fully enabled this check
+//	//
+//	// No idea how findbugs was missing these b4
+//	ignoreFailures = true
+//}
+//
+//task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
+//	classesDirs = project.sourceSets.main.output.classesDirs
+//	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+//	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
+//	bundledSignatures += 'jdk-non-portable'
+//}
+//
+//task forbiddenApis
+//project.tasks.withType( CheckForbiddenApis ).each { task -> forbiddenApis.finalizedBy task }
+//
+//project.tasks.check.finalizedBy forbiddenApis

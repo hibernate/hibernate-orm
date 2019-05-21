@@ -8,20 +8,28 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Member;
+import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.graph.spi.GraphHelper;
+import org.hibernate.metamodel.model.AttributeClassification;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class SingularAttributeImpl<D, J>
-		extends AbstractAttribute<D, J>
-		implements SingularPersistentAttribute<D, J>, Serializable {
+public class SingularAttributeImpl<D,J>
+		extends AbstractAttribute<D,J,J>
+		implements SingularPersistentAttribute<D,J>, Serializable {
 	private final boolean isIdentifier;
 	private final boolean isVersion;
 	private final boolean isOptional;
@@ -34,13 +42,13 @@ public class SingularAttributeImpl<D, J>
 	public SingularAttributeImpl(
 			ManagedTypeDescriptor<D> declaringType,
 			String name,
-			PersistentAttributeType attributeNature,
+			AttributeClassification attributeClassification,
 			SimpleTypeDescriptor<J> attributeType,
 			Member member,
 			boolean isIdentifier,
 			boolean isVersion,
 			boolean isOptional) {
-		super( declaringType, name, attributeNature, attributeType, member );
+		super( declaringType, name, attributeType.getJavaTypeDescriptor(), attributeClassification, attributeType, member );
 		this.isIdentifier = isIdentifier;
 		this.isVersion = isVersion;
 		this.isOptional = isOptional;
@@ -59,7 +67,6 @@ public class SingularAttributeImpl<D, J>
 	}
 
 
-
 	/**
 	 * Subclass used to simplify instantiation of singular attributes representing an entity's
 	 * identifier.
@@ -70,8 +77,8 @@ public class SingularAttributeImpl<D, J>
 				String name,
 				SimpleTypeDescriptor<J> attributeType,
 				Member member,
-				PersistentAttributeType attributeNature) {
-			super( declaringType, name, attributeNature, attributeType, member, true, false, false );
+				AttributeClassification attributeClassification) {
+			super( declaringType, name, attributeClassification, attributeType, member, true, false, false );
 		}
 	}
 
@@ -83,10 +90,10 @@ public class SingularAttributeImpl<D, J>
 		public Version(
 				ManagedTypeDescriptor<X> declaringType,
 				String name,
-				PersistentAttributeType attributeNature,
+				AttributeClassification attributeClassification,
 				SimpleTypeDescriptor<Y> attributeType,
 				Member member) {
-			super( declaringType, name, attributeNature, attributeType, member, false, true, false );
+			super( declaringType, name, attributeClassification, attributeType, member, false, true, false );
 		}
 	}
 
@@ -129,6 +136,38 @@ public class SingularAttributeImpl<D, J>
 	@Override
 	public Class<J> getBindableJavaType() {
 		return attributeType.getJavaType();
+	}
+
+	@Override
+	public SqmPath createSqmPath(
+			SqmPath lhs,
+			SqmCreationState creationState) {
+		switch ( getAttributeClassification() ) {
+			case BASIC: {
+				return new SqmBasicValuedSimplePath(  );
+			}
+			case EMBEDDED: {
+				return new SqmEmbeddedValuedSimplePath(  );
+			}
+			case ANY: {
+				return new SqmAnyValuedSimplePath(  );
+			}
+			case ONE_TO_ONE:
+			case MANY_TO_ONE: {
+				return new SqmEntityValuedSimplePath(  );
+			}
+			default: {
+				throw new UnsupportedOperationException(
+						String.format(
+								Locale.ROOT,
+								"Cannot create SqmPath from singular attribute [%s#%s] - unknown classification : %s",
+								getDeclaringType().getName(),
+								getName(),
+								getAttributeClassification()
+						)
+				);
+			}
+		}
 	}
 
 	private class DelayedKeyTypeAccess implements Supplier<SimpleTypeDescriptor<J>>, Serializable {

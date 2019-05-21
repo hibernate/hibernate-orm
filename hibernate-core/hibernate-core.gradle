@@ -7,8 +7,9 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'antlr'
+apply plugin: Antlr4Plugin
 apply plugin: 'hibernate-matrix-testing'
+
 apply plugin: 'org.hibernate.build.gradle.xjc'
 
 description = 'Hibernate\'s core ORM functionality'
@@ -20,11 +21,9 @@ configurations {
 }
 
 dependencies {
-
     compile( libraries.jpa )
     // Javassist is no longer the default enhancer but still required for other purposes, e.g. Scanning
     compile( libraries.javassist )
-    // Could be made optional?
     compile( libraries.byteBuddy )
     compile( libraries.antlr )
     compile( libraries.jta )
@@ -105,30 +104,30 @@ jar {
         mainAttributes( 'Main-Class': 'org.hibernate.Version' )
 
         instructionFirst 'Import-Package',
-            'javax.security.auth;resolution:=optional',
-            'javax.security.jacc;resolution:=optional',
-            'javax.validation;resolution:=optional',
-            'javax.validation.constraints;resolution:=optional',
-            'javax.validation.groups;resolution:=optional',
-            'javax.validation.metadata;resolution:=optional',
-            // TODO: Shouldn't have to explicitly list this, but the plugin
-            // generates it with a [1.0,2) version.
-            "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-            // optionals
-            'javax.management;resolution:=optional',
-            'javax.naming.event;resolution:=optional',
-            'javax.naming.spi;resolution:=optional',
-            'org.apache.tools.ant;resolution:=optional',
-            'org.apache.tools.ant.taskdefs;resolution:=optional',
-            'org.apache.tools.ant.types;resolution:=optional',
-            '!javax.enterprise*',
-            'javax.enterprise.context.spi;resolution:=optional',
-            'javax.enterprise.inject.spi;resolution:=optional',
-            'javax.inject;resolution:=optional',
-            'net.bytebuddy.*;resolution:=optional',
-            // We must specify the version explicitly to allow Karaf
-            // to use an older version of JAXB (the only one we can use in Karaf)
-            "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\""
+                         'javax.security.auth;resolution:=optional',
+                         'javax.security.jacc;resolution:=optional',
+                         'javax.validation;resolution:=optional',
+                         'javax.validation.constraints;resolution:=optional',
+                         'javax.validation.groups;resolution:=optional',
+                         'javax.validation.metadata;resolution:=optional',
+                         // TODO: Shouldn't have to explicitly list this, but the plugin
+                         // generates it with a [1.0,2) version.
+                         "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
+                         // optionals
+                         'javax.management;resolution:=optional',
+                         'javax.naming.event;resolution:=optional',
+                         'javax.naming.spi;resolution:=optional',
+                         'org.apache.tools.ant;resolution:=optional',
+                         'org.apache.tools.ant.taskdefs;resolution:=optional',
+                         'org.apache.tools.ant.types;resolution:=optional',
+                         '!javax.enterprise*',
+                         'javax.enterprise.context.spi;resolution:=optional',
+                         'javax.enterprise.inject.spi;resolution:=optional',
+                         'javax.inject;resolution:=optional',
+                         'net.bytebuddy.*;resolution:=optional',
+                         // We must specify the version explicitly to allow Karaf
+                         // to use an older version of JAXB (the only one we can use in Karaf)
+                         "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\""
 
 //        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
 //        // uses ClassLoaderServiceImpl.
@@ -139,7 +138,7 @@ jar {
 }
 
 ext {
-	jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
+    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
 }
 
 sourceSets.main {
@@ -151,11 +150,11 @@ sourceSets.test.resources {
     setSrcDirs( ['src/test/java','src/test/resources'] )
 }
 
-//idea {
-//	module {
-//		sourceDirs += file( "${buildDir}/generated-src/antlr/main" )
-//	}
-//}
+idea {
+    module {
+        sourceDirs += file( "${buildDir}/generated-src/antlr/main" )
+    }
+}
 
 xjc {
     outputDir = project.jaxbTargetDir
@@ -175,8 +174,11 @@ xjc {
 
 
 //sourceSets.main.sourceGeneratorsTask.dependsOn xjc
-//sourceSets.main.sourceGeneratorsTask.dependsOn generateGrammarSource
-tasks.compile.dependsOn generateGrammarSource
+//sourceSets.main.sourceGeneratorsTask.dependsOn antlr
+tasks.compile.dependsOn antlr
+
+// todo (6.0) : remove this once we get 6.0 stable-ish
+tasks.withType( JavaCompile ).forEach({ JavaCompile c -> c.options.compilerArgs += ["-Xmaxerrs", "4999"]})
 
 task copyBundleResources (type: Copy) {
     ext {
@@ -204,25 +206,191 @@ artifacts {
     tests testJar
 }
 
-processTestResources {
-    doLast {
-        copy {
-            from file( 'src/test/resources' )
-            into file( "${buildDir}/resources/test" )
-            include 'arquillian.xml'
-            include 'org/hibernate/test/wf/ddl/manifest.mf'
-            expand wildFlyInstallDir: project( ':hibernate-orm-modules' ).wildFlyInstallDir,
-                   hibernateMajorMinorVersion: "${project.ormVersion.family}",
-                   arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
-        }
-    }
-}
+task generateEnversStaticMetamodel(
+        type: JavaCompile,
+        description: "Generate the Hibernate Envers revision entity static metamodel classes." ) {
+    source = sourceSets.main.java
+    // we only want to include these specific classes for metamodel generation.
+    // if envers adds any additional revision entity classes, they must be listed here.
+    include 'org/hibernate/envers/DefaultRevisionEntity.java'
+    include 'org/hibernate/envers/DefaultTrackingModifiedEntitiesRevisionEntity.java'
+    include 'org/hibernate/envers/enhanced/SequenceIdRevisionEntity.java'
+    include 'org/hibernate/envers/enhanced/SequenceIdTrackingModifiedEntitiesRevisionEntity.java'
 
-test.dependsOn ':hibernate-orm-modules:prepareWildFlyForTests'
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.compileClasspath
+    options.compilerArgs = [
+            "-proc:only",
+            "-processor",
+            "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor"
+    ]
+
+    // put static metamodel classes back out to the source tree since they're version controlled.
+    destinationDir = new File( "${projectDir}/src/main/java" )
+}
+//
+//if ( JavaVersion.current().isJava9Compatible() ) {
+//    logger.warn( '[WARN] Skipping Javassist-related tests for hibernate-core due to Javassist JDK 9 incompatibility' )
+//
+//    // we need to exclude tests using Javassist enhancement, which does not properly support
+//    // Java 9 yet - https://issues.jboss.org/browse/JASSIST-261
+//    test {
+//        // rather than wild-cards, keep an explicit list
+//        exclude 'org/hibernate/jpa/test/enhancement/InterceptFieldClassFileTransformerTest.class'
+//        exclude 'org/hibernate/jpa/test/enhancement/runtime/JpaRuntimeEnhancementTest.class'
+//        exclude 'org/hibernate/test/bytecode/enhancement/EnhancerTest.class'
+//        exclude 'org/hibernate/test/bytecode/enhancement/basic/BasicInSessionTest.class'
+//
+//        // also, any tests using Arquillian for in-container testing with WildFly currently
+//        // need to be excluded because WildFly does not yet work with Java 9
+//        exclude 'org/hibernate/test/wf/ddl/**'
+//        exclude 'org/hibernate/jpa/test/cdi/**'
+//        exclude 'org/hibernate/envers/internal/tools/MapProxyTest.class'
+//        exclude 'org/hibernate/envers/test/integration/components/dynamic/AuditedDynamicComponentTest.class'
+//        exclude 'org/hibernate/envers/test/integration/components/dynamic/AuditedDynamicComponentsAdvancedCasesTest.class'
+//    }
+//}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// todo (6.0) : fix after fixing hibernate-spatial
+//processTestResources {
+//    doLast {
+//        copy {
+//            from file( 'src/test/resources' )
+//            into file( "${buildDir}/resources/test" )
+//            include 'arquillian.xml'
+//            include 'org/hibernate/test/wf/ddl/manifest.mf'
+//            expand wildFlyInstallDir: project( ':hibernate-orm-modules' ).wildFlyInstallDir,
+//                   hibernateMajorMinorVersion: "${project.ormVersion.family}",
+//                   arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
+//        }
+//    }
+//}
+//
+//test.dependsOn ':hibernate-orm-modules:prepareWildFlyForTests'
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 test {
     systemProperty 'file.encoding', 'utf-8'
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor
+    }
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Custom Antlr v4 Plugin (to work with Gradle 3)
+
+ext {
+    baseAntlrInputPath = 'src/main/antlr'
+    baseAntlrOutputPath = 'generated-src/antlr/main'
+}
+
+class GrammarDescriptor {
+    String packageName
+    String grammarName
+
+    GrammarDescriptor(String packageName, String grammarName) {
+        this.packageName = packageName
+        this.grammarName = grammarName
+    }
+
+    File resolveSourceFile(Project project) {
+        return project.file(
+                project.baseAntlrInputPath +
+                        '/' + packageName.replace( '.', '/' ) +
+                        '/' + grammarName + '.g4'
+        )
+    }
+
+    File resolveOutputFile(Project project) {
+        final File baseOutputDir = project.file( "${project.buildDir}/${project.baseAntlrOutputPath}/" )
+        final File packagedOutputDirectory = new File( baseOutputDir, packageName.replace( '.', '/' ) )
+
+        return new File( packagedOutputDirectory, grammarName + '.g4' )
+    }
+}
+
+class Antlr4Plugin implements Plugin<Project> {
+    void apply(Project project) {
+        project.with {
+            apply plugin : 'java'
+
+            configurations.maybeCreate 'antlr'
+
+            Antlr4GenerationTask genTask = tasks.create 'antlr', Antlr4GenerationTask
+            genTask.group = 'Build'
+            genTask.description = 'Generate source code from ANTLR grammar'
+
+            tasks.getByName('compileJava').dependsOn genTask
+
+            SourceSet mainSourceSet = project.convention.getPlugin( JavaPluginConvention ).sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
+            mainSourceSet.compileClasspath += configurations.antlr
+
+            SourceSet testSourceSet = project.convention.getPlugin( JavaPluginConvention ).sourceSets.getByName( SourceSet.TEST_SOURCE_SET_NAME );
+            testSourceSet.compileClasspath += configurations.antlr
+
+            project.afterEvaluate({
+                mainSourceSet.java.srcDir( genTask.outputDirectory )
+            })
+
+        }
+    }
+}
+
+class Antlr4GenerationTask extends DefaultTask {
+    static final String HQL_PCKG = 'org.hibernate.query.hql.internal'
+    static final String IMPORT_SQL_PCKG = 'org.hibernate.tool.hbm2ddl.grammar'
+    static final String GRAPH_PCKG = 'org.hibernate.graph.internal.parse'
+
+    List<GrammarDescriptor> grammarDescriptors = [
+            new GrammarDescriptor( HQL_PCKG, 'HqlLexer' ),
+            new GrammarDescriptor( HQL_PCKG, 'HqlParser' ),
+            new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlStatementLexer' ),
+            new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlStatementParser' ),
+            new GrammarDescriptor( GRAPH_PCKG, 'GraphLanguageLexer' ),
+            new GrammarDescriptor( GRAPH_PCKG, 'GraphLanguageParser' )
+    ]
+
+    @InputFiles
+    @SkipWhenEmpty
+    FileCollection getSource() {
+        // only used for UP-TO-DATE checking
+        return project.files( grammarDescriptors*.resolveSourceFile( project ) )
+    }
+
+    @OutputDirectory
+    File getOutputDirectory() {
+        // only used for UP-TO-DATE checking
+        return project.file( "${project.buildDir}/${project.baseAntlrOutputPath}" )
+    }
+
+    @TaskAction
+    void antlrGeneration() {
+        logger.lifecycle( "Starting custom Antlr (v4) grammar generation" )
+
+        grammarDescriptors.forEach( { grammarDescriptor -> generate( grammarDescriptor ) } )
+    }
+
+    def generate(GrammarDescriptor grammarDescriptor) {
+        final File sourceFile = grammarDescriptor.resolveSourceFile( project )
+        final File outputFile = grammarDescriptor.resolveOutputFile( project )
+
+        logger.lifecycle( "Starting Antlr grammar generation `${grammarDescriptor.grammarName} : [${sourceFile.absolutePath}] -> [${outputFile.absolutePath}]" )
+
+        outputFile.parentFile.mkdirs()
+
+        project.javaexec {
+            main 'org.antlr.v4.Tool'
+            classpath project.configurations.antlr
+            args '-o', outputFile.parentFile.absolutePath
+//            args '-lib', sourceFile.parentFile.absolutePath
+            args '-long-messages'
+            args '-listener'
+            args '-visitor'
+            args sourceFile.absolutePath
+        }
     }
 }

@@ -11,12 +11,11 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.testing.TestForIssue;

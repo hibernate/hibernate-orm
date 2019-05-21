@@ -31,7 +31,8 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
@@ -45,6 +46,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+
 
 /**
  * Defines the internal contract between the <tt>SessionFactory</tt> and other parts of
@@ -73,6 +75,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * @return The name for the SessionFactory
 	 */
 	String getName();
+
+	QueryEngine getQueryEngine();
+
+	@Override
+	NodeBuilder getCriteriaBuilder();
 
 	@Override
 	SessionBuilderImplementor withOptions();

@@ -1,12 +1,13 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.query.criteria;
 
 import org.hibernate.HibernateException;
+import org.hibernate.query.QueryLiteralRendering;
 
 /**
  * This enum defines how literals are handled by JPA Criteria.
@@ -22,12 +23,24 @@ import org.hibernate.HibernateException;
  * Always use constants with the {@code INLINE} mode.
  *
  * @author Vlad Mihalcea
+ *
+ * @deprecated since 6.0, Use {@link QueryLiteralRendering} instead.
  */
+@Deprecated
 public enum LiteralHandlingMode {
+	AUTO( QueryLiteralRendering.AUTO ),
+	BIND( QueryLiteralRendering.AS_PARAM_OUTSIDE_SELECT ),
+	INLINE( QueryLiteralRendering.AS_LITERAL );
 
-	AUTO,
-	BIND,
-	INLINE;
+	private final QueryLiteralRendering counterpart;
+
+	LiteralHandlingMode(QueryLiteralRendering counterpart) {
+		this.counterpart = counterpart;
+	}
+
+	public QueryLiteralRendering getCounterpart() {
+		return counterpart;
+	}
 
 	/**
 	 * Interpret the configured literalHandlingMode value.

@@ -51,6 +51,11 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
+	public String getHibernateEntityName() {
+		return super.getTypeName();
+	}
+
+	@Override
 	public BindableType getBindableType() {
 		return BindableType.ENTITY_TYPE;
 	}

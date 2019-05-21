@@ -8,7 +8,9 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.spi.BasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Emmanuel Bernard
@@ -33,5 +35,15 @@ public class BasicTypeImpl<J> implements BasicTypeDescriptor<J>, Serializable {
 	@Override
 	public String getTypeName() {
 		return clazz.getName();
+	}
+
+	@Override
+	public DomainType<J> getType() {
+		return this;
+	}
+
+	@Override
+	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+		return getType().getJavaTypeDescriptor();
 	}
 }

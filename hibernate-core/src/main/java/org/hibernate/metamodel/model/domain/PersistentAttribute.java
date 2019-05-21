@@ -8,14 +8,19 @@ package org.hibernate.metamodel.model.domain;
 
 import javax.persistence.metamodel.Attribute;
 
+import org.hibernate.metamodel.model.AttributeClassification;
+import org.hibernate.query.sqm.SqmPathSource;
+
 /**
  * Hibernate extension to the JPA {@link Attribute} contract
  *
  * @author Steve Ebersole
  */
-public interface PersistentAttribute<D,J> extends Attribute<D,J> {
+public interface PersistentAttribute<D,J,B> extends Attribute<D,J>, SqmPathSource<J,B> {
 	@Override
 	ManagedDomainType<D> getDeclaringType();
+
+	AttributeClassification getAttributeClassification();
 
 	SimpleDomainType<?> getValueGraphType();
 	SimpleDomainType<?> getKeyGraphType();

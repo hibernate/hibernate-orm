@@ -1,0 +1,47 @@
+= Type System
+
+The Hibernate "type system" is multi-layered....
+
+
+== JavaTypeDescriptor
+
+At the lowest level we have `JavaTypeDescriptor` which describes very rudimentary information about
+Java types (`Class`).  This level makes no distinctions based about the nature of the type.  E.g.
+it does not understand that `Person` is an entity.
+
+
+== JPA type system (SQM)
+
+[plantuml,SqmTypeSystem,png]
+.SqmTypeSystem
+....
+@startuml
+skinparam handwritten true
+
+interface SqmExpressable
+interface SqmPathSource
+interface EntityDomainType
+interface BasicDomainType
+interface PeristentAttribute
+interface SingularePersistentAttribute
+interface PluralPersistentAttribute
+
+
+SqmExpressable <|-- SqmPathSource
+SqmExpressable <|-- BasicDomainType
+
+SqmPathSource <|-- EntityDomainType
+SqmPathSource <|-- PeristentAttribute
+
+PeristentAttribute <|-- SingularePersistentAttribute
+PeristentAttribute <|-- PluralPersistentAttribute
+
+@enduml
+....
+
+
+== Mapping model
+
+- persisters, etc...
+
+todo : document this one

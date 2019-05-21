@@ -11,6 +11,10 @@ import java.util.Collection;
 
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @param <D> The (D)eclaring type
@@ -20,28 +24,25 @@ import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public abstract class AbstractPluralAttribute<D, C, E>
-		extends AbstractAttribute<D,C>
+public abstract class AbstractPluralAttribute<D,C,E>
+		extends AbstractAttribute<D,C,E>
 		implements PluralPersistentAttribute<D,C,E>, Serializable {
-
-	private final Class<C> collectionClass;
 
 	protected AbstractPluralAttribute(PluralAttributeBuilder<D,C,E,?> builder) {
 		super(
 				builder.getDeclaringType(),
 				builder.getProperty().getName(),
-				builder.getAttributeNature(),
+				builder.getCollectionJavaTypeDescriptor(),
+				builder.getAttributeClassification(),
 				builder.getValueType(),
 				builder.getMember()
 		);
-
-		this.collectionClass = builder.getCollectionClass();
 	}
 
 	public static <X,C,E,K> PluralAttributeBuilder<X,C,E,K> create(
 			AbstractManagedType<X> ownerType,
 			SimpleTypeDescriptor<E> attrType,
-			Class<C> collectionClass,
+			JavaTypeDescriptor<C> collectionClass,
 			SimpleTypeDescriptor<K> keyType) {
 		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, keyType );
 	}
@@ -86,7 +87,13 @@ public abstract class AbstractPluralAttribute<D, C, E>
 
 	@Override
 	public Class<C> getJavaType() {
-		return collectionClass;
+		return getJavaTypeDescriptor().getJavaType();
 	}
 
+	@Override
+	public SqmPath createSqmPath(
+			SqmPath<?> lhs,
+			SqmCreationState creationState) {
+		return new SqmPluralValuedSimplePath(  );
+	}
 }

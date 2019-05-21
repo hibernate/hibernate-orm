@@ -15,9 +15,12 @@ import java.lang.reflect.Method;
 import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.metamodel.model.AttributeClassification;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Models the commonality of the JPA {@link Attribute} hierarchy.
@@ -27,14 +30,15 @@ import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractAttribute<D, J>
-		implements PersistentAttributeDescriptor<D, J>, Serializable {
+public abstract class AbstractAttribute<D,J,B>
+		implements PersistentAttributeDescriptor<D,J,B>, Serializable {
 	private final ManagedTypeDescriptor<D> declaringType;
 	private final String name;
+	private final JavaTypeDescriptor<J> attributeType;
 
-	private final PersistentAttributeType attributeNature;
+	private final AttributeClassification attributeClassification;
 
-	private final SimpleTypeDescriptor<?> valueType;
+	private final SimpleTypeDescriptor<B> valueType;
 	private transient Member member;
 
 
@@ -42,12 +46,14 @@ public abstract class AbstractAttribute<D, J>
 	protected AbstractAttribute(
 			ManagedTypeDescriptor<D> declaringType,
 			String name,
-			PersistentAttributeType attributeNature,
-			SimpleTypeDescriptor<?> valueType,
+			JavaTypeDescriptor<J> attributeType,
+			AttributeClassification attributeClassification,
+			SimpleTypeDescriptor<B> valueType,
 			Member member) {
 		this.declaringType = declaringType;
 		this.name = name;
-		this.attributeNature = attributeNature;
+		this.attributeType = attributeType;
+		this.attributeClassification = attributeClassification;
 		this.valueType = valueType;
 		this.member = member;
 	}
@@ -55,6 +61,26 @@ public abstract class AbstractAttribute<D, J>
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public String getNavigableName() {
+		return getName();
+	}
+
+	@Override
+	public Class<J> getJavaType() {
+		return attributeType.getJavaType();
+	}
+
+	@Override
+	public DomainType<B> getSqmNodeType() {
+		return valueType;
+	}
+
+	@Override
+	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+		return attributeType;
 	}
 
 	@Override
@@ -68,8 +94,13 @@ public abstract class AbstractAttribute<D, J>
 	}
 
 	@Override
+	public AttributeClassification getAttributeClassification() {
+		return attributeClassification;
+	}
+
+	@Override
 	public PersistentAttributeType getPersistentAttributeType() {
-		return attributeNature;
+		return getAttributeClassification().getJpaClassification();
 	}
 
 	@Override
@@ -79,7 +110,7 @@ public abstract class AbstractAttribute<D, J>
 
 	@Override
 	public String toString() {
-		return declaringType.getName() + '#' + name + '(' + attributeNature + ')';
+		return declaringType.getName() + '#' + name + '(' + attributeClassification + ')';
 	}
 
 	/**

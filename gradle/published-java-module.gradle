@@ -87,6 +87,8 @@ javadoc {
 	final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
 
 	configure( options ) {
+//		docletpath = configurations.asciidoclet.files.asType(List)
+//		doclet = 'org.asciidoctor.Asciidoclet'
 		windowTitle = "$project.name JavaDocs"
 		docTitle = "$project.name JavaDocs ($project.version)"
 		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
@@ -110,13 +112,20 @@ javadoc {
 		}
 
 		if ( JavaVersion.current().isJava8Compatible() ) {
-			options.addStringOption( 'Xdoclint:none', '-quiet' )
+			addStringOption( 'Xdoclint:none', '-quiet' )
 		}
 
-		doFirst {
-			// ordering problems if we try to do this during config phase :(
-			classpath += project.sourceSets.main.output + project.sourceSets.main.compileClasspath + project.configurations.provided
-		}
+		tags(
+				'todo:X"',
+				'apiNote:a:"API Note:"',
+				'implSpec:a:"Implementation Requirements:"',
+				'implNote:a:"Implementation Note:"'
+		)
+	}
+
+	doFirst {
+		// ordering problems if we try to do this during config phase :(
+		classpath += project.sourceSets.main.output + project.sourceSets.main.compileClasspath + project.configurations.provided
 	}
 }
 
@@ -143,7 +152,75 @@ publishing {
 	}
 }
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Relocation for the published artifacts based on the old groupId
+
+publishing {
+	publications {
+		relocationArtifacts( MavenPublication ) {
+			pom {
+				name = project.name + ' - relocation'
+				groupId = 'org.hibernate'
+				artifactId = project.name
+				version = project.version
+
+				description = project.description
+				url = 'http://hibernate.org/orm'
+
+				organization {
+					name = 'Hibernate.org'
+					url = 'http://hibernate.org'
+				}
+
+				licenses {
+					license {
+						name = 'GNU Library General Public License v2.1 or later'
+						url = 'http://www.opensource.org/licenses/LGPL-2.1'
+						comments = 'See discussion at http://hibernate.org/community/license/ for more details.'
+						distribution = 'repo'
+					}
+				}
+
+				scm {
+					url = 'http://github.com/hibernate/hibernate-orm'
+					connection = 'scm:git:http://github.com/hibernate/hibernate-orm.git'
+					developerConnection = 'scm:git:git@github.com:hibernate/hibernate-orm.git'
+				}
+
+				developers {
+					developer {
+						id = 'hibernate-team'
+						name = 'The Hibernate Development Team'
+						organization = 'Hibernate.org'
+						organizationUrl = 'http://hibernate.org'
+					}
+				}
+
+				issueManagement {
+					system = 'jira'
+					url = 'https://hibernate.atlassian.net/browse/HHH'
+				}
+
+				distributionManagement {
+					relocation {
+						groupId = 'org.hibernate.orm'
+						artifactId = project.name
+						version = project.version
+					}
+				}
+			}
+		}
+	}
+}
+
 task ciBuild( dependsOn: [test, publish] )
 
 task release( dependsOn: [test, bintrayUpload] )
 
+afterEvaluate { Project project ->
+	project.rootProject.subprojects { Project subproject ->
+		// NOTE : we want this even when `project == subproject`
+		project.tasks.bintrayUpload.dependsOn( subproject.tasks.build )
+	}
+}

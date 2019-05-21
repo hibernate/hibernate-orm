@@ -25,6 +25,7 @@ import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.DomainModelHelper;
@@ -73,6 +74,11 @@ public abstract class AbstractManagedType<J>
 	@Override
 	public String getName() {
 		return getTypeName();
+	}
+
+	@Override
+	public DomainType<J> getType() {
+		return this;
 	}
 
 	@Override

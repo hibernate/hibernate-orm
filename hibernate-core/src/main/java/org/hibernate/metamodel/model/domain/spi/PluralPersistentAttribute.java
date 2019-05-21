@@ -11,9 +11,12 @@ import javax.persistence.metamodel.PluralAttribute;
 /**
  * Hibernate extension to the JPA {@link PluralAttribute} descriptor
  *
+ * todo (6.0) : Create an form of plural attribute (and singular) in the API package (org.hibernate.metamodel.model.domain)
+ * 		and have this extend it
+ *
  * @author Steve Ebersole
  */
-public interface PluralPersistentAttribute<D,C,E> extends PluralAttribute<D,C,E>, PersistentAttributeDescriptor<D,C> {
+public interface PluralPersistentAttribute<D,C,E> extends PluralAttribute<D,C,E>, PersistentAttributeDescriptor<D,C,E> {
 	@Override
 	ManagedTypeDescriptor<D> getDeclaringType();
 

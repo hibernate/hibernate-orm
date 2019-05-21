@@ -11,5 +11,5 @@ import javax.persistence.metamodel.ManagedType;
 /**
  * @author Steve Ebersole
  */
-public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J> {
+public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J>, Navigable<J,J> {
 }

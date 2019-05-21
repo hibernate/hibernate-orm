@@ -6,25 +6,21 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 /**
- * Base contract for Hibernate's extension of the JPA type system.
+ * Describes any type that occurs in the application's domain model.
  *
- * @apiNote The "real" JPA type system is more akin to
- * {@link SimpleDomainType}.  We begin our JPA type system extension
- * a "level above" that.  This is to allow for:
- * 		1) JPA does not define a Type for collections.  It's
- * 			understandable why, but leads to limitations in
- * 			regards to being able to understand the type of an
- * 			attribute - in JPA, when the attribute is plural the
- * 			only descriptor info available is for the the collection
- * 			is its Java type (Class).
- * 		2) specialized types like ANY
+ * The base for Hibernate's extension of the JPA type system.
  *
+ * Encapsulates a {@link JavaTypeDescriptor} describing the more rudimentary
+ * aspects of the Java type.  The DomainType is a higher-level construct
+ * incorporating information such as bean properties, constructors, etc
  *
- * @param <J> The Java type for this JPA Type
- *
- * @apiNote The `*DomainType` naming pattern is used to more easily (visually)
- * differentiate these extensions from the JPA ones in application use.
+ * @implNote The actual JPA type system is more akin to {@link SimpleDomainType}.
+ * This contract represents a "higher level" than JPA
+ * including descriptors for collections (which JPA does not define) as well as
+ * Hibernate-specific features (like dynamic models or ANY mappings).
  *
  * @author Steve Ebersole
  */
@@ -34,4 +30,6 @@ public interface DomainType<J> extends javax.persistence.metamodel.Type<J> {
 	 * non-pojo mappings, etc.
 	 */
 	String getTypeName();
+
+	JavaTypeDescriptor<J> getJavaTypeDescriptor();
 }

@@ -22,7 +22,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  *
  * @author Steve Ebersole
  */
-public interface ManagedTypeDescriptor<J> extends SimpleTypeDescriptor<J>, ManagedDomainType<J> {
+public interface ManagedTypeDescriptor<J> extends SimpleTypeDescriptor<J>, ManagedDomainType<J>, NavigableDescriptor<J,J> {
 	/**
 	 * Get this ManagedType's super type descriptor.  ATM only supported for the
 	 * {@link IdentifiableTypeDescriptor} branch of the ManagedType tree

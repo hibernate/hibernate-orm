@@ -248,9 +248,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Object immediateLoad(String entityName, Serializable id)
-			throws HibernateException {
-		throw new SessionException( "proxies cannot be fetched by a stateless session" );
+	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
+		if ( getPersistenceContext().isLoadFinished() ) {
+			throw new SessionException( "proxies cannot be fetched by a stateless session" );
+		}
+		// unless we are still in the process of handling a top-level load
+		return get( entityName, id );
 	}
 
 	@Override
@@ -275,19 +278,55 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean eager,
 			boolean nullable) throws HibernateException {
 		checkOpen();
+
 		EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
+		final EntityKey entityKey = generateEntityKey( id, persister );
+
 		// first, try to load it from the temp PC associated to this SS
-		Object loaded = temporaryPersistenceContext.getEntity( generateEntityKey( id, persister ) );
+		Object loaded = temporaryPersistenceContext.getEntity( entityKey );
 		if ( loaded != null ) {
 			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
 			// containing eager fetches via join fetch
 			return loaded;
 		}
-		if ( !eager && persister.hasProxy() ) {
-			// if the metadata allowed proxy creation and caller did not request forceful eager loading,
-			// generate a proxy
-			return persister.createProxy( id, this );
+
+		if ( !eager ) {
+			// caller did not request forceful eager loading, see if we can create
+			// some form of proxy
+
+			// first, check to see if we can use "bytecode proxies"
+
+			final boolean allowBytecodeProxy = getFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled();
+			if ( allowBytecodeProxy
+					&& persister.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+
+				// we cannot use bytecode proxy for entities with subclasses
+				if ( !persister.getEntityMetamodel().hasSubclasses() ) {
+					final Object entity = persister.getEntityTuplizer().instantiate( id, this );
+
+					persister.getEntityMetamodel()
+							.getBytecodeEnhancementMetadata()
+							.injectEnhancedEntityAsProxyInterceptor( entity, entityKey, this );
+
+					getPersistenceContext().addEntity( entityKey, entity );
+					return entity;
+				}
+			}
+
+			// we could not use bytecode proxy, check to see if we can use HibernateProxy
+			if ( persister.hasProxy() ) {
+				final Object existingProxy = getPersistenceContext().getProxy( entityKey );
+				if ( existingProxy != null ) {
+					return getPersistenceContext().narrowProxy( existingProxy, persister, entityKey, null );
+				}
+				else {
+					final Object proxy = persister.createProxy( id, this );
+					getPersistenceContext().addProxy( entityKey, proxy );
+					return proxy;
+				}
+			}
 		}
+
 		// otherwise immediately materialize it
 		return get( entityName, id );
 	}
@@ -424,6 +463,18 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
 		checkOpen();
+
+		final Object result = getPersistenceContext().getEntity( key );
+		if ( result != null ) {
+			return result;
+		}
+
+		final Object newObject = getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() );
+		if ( newObject != null ) {
+			getPersistenceContext().addEntity( key, newObject );
+			return newObject;
+		}
+
 		return null;
 	}
 

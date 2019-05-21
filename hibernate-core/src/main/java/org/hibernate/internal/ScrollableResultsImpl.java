@@ -189,21 +189,27 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return;
 		}
 
-		final Object result = getLoader().loadSingleRow(
-				getResultSet(),
-				getSession(),
-				getQueryParameters(),
-				true
-		);
-		if ( result != null && result.getClass().isArray() ) {
-			currentRow = (Object[]) result;
-		}
-		else {
-			currentRow = new Object[] {result};
-		}
+		getSession().getPersistenceContext().beforeLoad();
+		try {
+			final Object result = getLoader().loadSingleRow(
+					getResultSet(),
+					getSession(),
+					getQueryParameters(),
+					true
+			);
+			if ( result != null && result.getClass().isArray() ) {
+				currentRow = (Object[]) result;
+			}
+			else {
+				currentRow = new Object[] {result};
+			}
 
-		if ( getHolderInstantiator() != null ) {
-			currentRow = new Object[] {getHolderInstantiator().instantiate( currentRow )};
+			if ( getHolderInstantiator() != null ) {
+				currentRow = new Object[] {getHolderInstantiator().instantiate( currentRow )};
+			}
+		}
+		finally {
+			getSession().getPersistenceContext().afterLoad();
 		}
 
 		afterScrollOperation();

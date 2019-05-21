@@ -11,8 +11,7 @@ import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.TeradataTimestampaddEmulation;
-import org.hibernate.dialect.function.TeradataTimestampdiffEmulation;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
@@ -79,6 +78,110 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		//TODO: TOTALLY UNTESTED CODE!
+		switch (unit) {
+			case MILLISECOND:
+				sqlAppender.append("1e3*");
+				break;
+			case MICROSECOND:
+				sqlAppender.append("1e6*");
+				break;
+			case NANOSECOND:
+				sqlAppender.append("1e9*");
+				break;
+		}
+		sqlAppender.append("((");
+		to.render();
+		sqlAppender.append(" - ");
+		from.render();
+		sqlAppender.append(") ");
+		switch (unit) {
+			case MILLISECOND:
+				sqlAppender.append("second(19,3)");
+				break;
+			case MICROSECOND:
+				sqlAppender.append("second(19,6)");
+				break;
+			case NANOSECOND:
+				sqlAppender.append("second(19,9)");
+				break;
+			case WEEK:
+				sqlAppender.append("day(19,0)");
+				break;
+			case QUARTER:
+				sqlAppender.append("month(19,0)");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+				sqlAppender.append("(19,0)");
+		}
+		sqlAppender.append(")");
+		switch (unit) {
+			case WEEK:
+				sqlAppender.append("/7");
+				break;
+			case QUARTER:
+				sqlAppender.append("/3");
+				break;
+		}
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		//TODO: TOTALLY UNTESTED CODE!
+		sqlAppender.append("(");
+		to.render();
+		boolean subtract = false;
+//		if ( magnitude.startsWith("-") ) {
+//			subtract = true;
+//			magnitude = magnitude.substring(1);
+//		}
+		sqlAppender.append(subtract ? " - " : " + ");
+		switch ( unit ) {
+			case MILLISECOND:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(")/1e3 * interval '1' second");
+				break;
+			case MICROSECOND:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(")/1e6 * interval '1' second");
+				break;
+			case NANOSECOND:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(")/1e9 * interval '1' second");
+				break;
+			case QUARTER:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(") * interval '3' month");
+				break;
+			case WEEK:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(") * interval '7' day");
+				break;
+			default:
+//				if ( magnitude.matches("\\d+") ) {
+//					sqlAppender.append("interval '");
+//					sqlAppender.append( magnitude );
+//					sqlAppender.append("'");
+//				}
+//				else {
+					sqlAppender.append("(");
+					magnitude.render();
+					sqlAppender.append(") * interval '1'");
+//				}
+				sqlAppender.append(" ");
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
@@ -88,10 +191,6 @@ public class TeradataDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerPattern( "substring", "substring(?1 from ?2 for ?3)", StandardSpiBasicTypes.STRING );
 //		queryEngine.getSqmFunctionRegistry().registerPattern( "locate", "position(?1 in ?2)", StandardSpiBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "(?1 mod ?2)", StandardSpiBasicTypes.STRING );
-
-		//TODO: TOTALLY UNTESTED CODE!
-		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new TeradataTimestampdiffEmulation() );
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new TeradataTimestampaddEmulation() );
 
 	}
 

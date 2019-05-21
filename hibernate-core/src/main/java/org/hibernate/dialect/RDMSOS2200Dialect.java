@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
@@ -30,6 +31,9 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.TemporalUnit.MICROSECOND;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -192,17 +196,54 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
-		//TODO: dateadd()/datediff() do not support microseconds but
-		//      SQL_TSI_FRAC_SECOND in timestampadd()/timestampdiff()
-		//      does measures microseconds
-		CommonFunctionFactory.timestampadd_dateaddQuoted( queryEngine );
-		CommonFunctionFactory.timestampdiff_datediffQuoted( queryEngine );
 
 		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 
 	}
 
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		if ( unit == MICROSECOND || unit == NANOSECOND ) {
+			sqlAppender.append("timestampadd('SQL_TSI_FRAC_SECOND'"); //micros
+		}
+		else {
+			sqlAppender.append("dateadd('");
+			sqlAppender.append( unit.toString() );
+			sqlAppender.append("'");
+		}
+		sqlAppender.append(", ");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("(");
+		}
+		magnitude.render();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append(")/1e3");
+		}
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		if ( unit == MICROSECOND || unit == NANOSECOND ) {
+			sqlAppender.append("timestampdiff('SQL_TSI_FRAC_SECOND'"); //micros
+		}
+		else {
+			sqlAppender.append("datediff('");
+			sqlAppender.append( unit.toString() );
+			sqlAppender.append("'");
+		}
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("*1e3");
+		}
+	}
 
 	// Dialect method overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -316,10 +316,43 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select e.theTimestamp - (4 day + 2 hour) from EntityOfBasics e")
 							.list();
+					//TODO: reenable this test after updating h2 to h2-1.4.199.jar
+//					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
+//							.list();
 				}
 		);
 	}
 
+	@Test
+	public void testIntervalScaleExpressions() {
+		inTransaction(
+				session -> {
+					session.createQuery("select e.theTimestamp + 3 * 1 week from EntityOfBasics e")
+							.list();
+					session.createQuery("select e.theTimestamp + 3 * (4 day - 1 week) from EntityOfBasics e")
+							.list();
+					session.createQuery("select e.theTimestamp + 3.5 * (4 day - 1 week) from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select 4 day by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (4 day + 2 hour) by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (2 * 4 day) by second from EntityOfBasics e")
+							.list();
+//					session.createQuery("select (1 year - 1 month) by day from EntityOfBasics e")
+//							.list();
+
+					session.createQuery("select (2 * (e.theTimestamp - e.theTimestamp) + 3 * (4 day + 2 hour)) by second from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select e.theDuration by second from EntityOfBasics e")
+							.list();
+					session.createQuery("select (2 * e.theDuration + 3 day) by hour from EntityOfBasics e")
+							.list();
+				}
+		);
+	}
 
 	@Test
 	public void testIntervalDiffExpressions() {
@@ -370,9 +403,6 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select (e.theTimestamp - e.theTimestamp + (4 day + 2 hour)) by second from EntityOfBasics e")
 							.list();
 					session.createQuery("select (e.theTimestamp - (e.theTimestamp + (4 day + 2 hour))) by second from EntityOfBasics e")
-							.list();
-
-					session.createQuery("select 4 day by second from EntityOfBasics e")
 							.list();
 				}
 		);

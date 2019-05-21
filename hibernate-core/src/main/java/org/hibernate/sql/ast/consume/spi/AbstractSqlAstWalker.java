@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.consume.spi;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,12 +18,15 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 
+import org.hibernate.sql.ast.tree.expression.Conversion;
 import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
@@ -69,6 +73,10 @@ import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.query.BinaryArithmeticOperator.ADD;
+import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.conversionFactor;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.CLOSE_PARENTHESIS;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.COMA_SEPARATOR;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.DISTINCT_KEYWORD;
@@ -77,6 +85,8 @@ import static org.hibernate.sql.ast.consume.spi.SqlAppender.FROM_KEYWORD;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.NO_SEPARATOR;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.OPEN_PARENTHESIS;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.SELECT_KEYWORD;
+import static org.hibernate.type.spi.TypeConfiguration.isTemporalType;
+import static org.hibernate.type.spi.TypeConfiguration.isTimestampType;
 
 /**
  * @author Steve Ebersole
@@ -460,11 +470,136 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
+	public void visitDuration(Duration duration) {
+		duration.getMagnitude().accept( this );
+		sqlAppender.appendSql(
+			conversionFactor( duration.getUnit(), NANOSECOND )
+		);
+	}
+
+	@Override
+	public void visitConversion(Conversion conversion) {
+
+		Expression magnitude = conversion.getDuration().getMagnitude();
+
+		if (magnitude instanceof BinaryArithmeticExpression) {
+			BinaryArithmeticExpression arithmeticExpression =
+					(BinaryArithmeticExpression) magnitude;
+			Expression leftOperand = arithmeticExpression.getLeftHandOperand();
+			Expression rightOperand = arithmeticExpression.getRightHandOperand();
+
+			if (arithmeticExpression.getOperator() == SUBTRACT
+					&& isTemporalType( leftOperand.getType() )
+					&& isTemporalType( rightOperand.getType() ) ) {
+
+				// we have 'by unit' operator applied directly
+				// to a subtraction expressing the difference
+				// between two dates or two times
+
+				getJdbcServices().getDialect().timestampdiff(
+						conversion.getUnit(),
+						() -> rightOperand.accept(this),
+						() -> leftOperand.accept(this),
+						sqlAppender::appendSql,
+						isTimestampType( rightOperand.getType() ) ,
+						isTimestampType( leftOperand.getType() )
+				);
+
+				return;
+			}
+		}
+
+		// we have a 'by unit' operator applied to something
+		// else of type Duration, so just convert the units
+
+		magnitude.accept( this );
+		sqlAppender.appendSql(
+				conversionFactor(
+						conversion.getDuration().getUnit(),
+						conversion.getUnit()
+				)
+		);
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		arithmeticExpression.getLeftHandOperand().accept( this );
+		Expression leftOperand = arithmeticExpression.getLeftHandOperand();
+		Expression rightOperand = arithmeticExpression.getRightHandOperand();
+
+		if (arithmeticExpression.getOperator() == SUBTRACT
+				&& isTemporalType( leftOperand.getType() )
+				&& isTemporalType( rightOperand.getType() ) ) {
+			getJdbcServices().getDialect().timestampdiff(
+					NANOSECOND,
+					() -> rightOperand.accept( this ),
+					() -> leftOperand.accept( this ),
+					sqlAppender::appendSql,
+					isTimestampType( rightOperand.getType() ),
+					isTimestampType( leftOperand.getType() )
+			);
+			return;
+		}
+
+		if (arithmeticExpression.getOperator() == ADD
+				&& isTemporalType( leftOperand.getType() )
+				&& rightOperand instanceof Duration ) {
+			Duration duration = (Duration) rightOperand;
+			getJdbcServices().getDialect().timestampadd(
+					duration.getUnit(),
+					() -> duration.getMagnitude().accept( this ),
+					() -> leftOperand.accept( this ),
+					sqlAppender::appendSql,
+					isTimestampType( leftOperand.getType() )
+			);
+			return;
+		}
+
+		if ( leftOperand instanceof BinaryArithmeticExpression
+				&& !isMultiplicative( leftOperand ) && isMultiplicative( arithmeticExpression ) ) {
+			sqlAppender.appendSql("(");
+			leftOperand.accept( this );
+			sqlAppender.appendSql(")");
+		}
+		else {
+			leftOperand.accept( this );
+		}
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		arithmeticExpression.getRightHandOperand().accept( this );
+		if ( rightOperand instanceof BinaryArithmeticExpression
+				&& ( !isMultiplicative( rightOperand ) && isMultiplicative( arithmeticExpression )
+						|| isSubtractionOrDivision( arithmeticExpression ) ) ) {
+			sqlAppender.appendSql("(");
+			rightOperand.accept( this );
+			sqlAppender.appendSql(")");
+		}
+		else {
+			rightOperand.accept( this );
+		}
+	}
+
+	private boolean isSubtractionOrDivision(Expression expression) {
+		if ( expression instanceof BinaryArithmeticExpression ) {
+			BinaryArithmeticOperator operator = ((BinaryArithmeticExpression) expression).getOperator();
+			return operator == BinaryArithmeticOperator.SUBTRACT
+				|| operator == BinaryArithmeticOperator.DIVIDE;
+				//MODULE maps to mod(x,y)
+				//|| operator == BinaryArithmeticOperator.MODULO;
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean isMultiplicative(Expression expression) {
+		if ( expression instanceof BinaryArithmeticExpression ) {
+			BinaryArithmeticOperator operator = ((BinaryArithmeticExpression) expression).getOperator();
+			return operator == BinaryArithmeticOperator.MULTIPLY
+				|| operator == BinaryArithmeticOperator.DIVIDE
+				|| operator == BinaryArithmeticOperator.MODULO;
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override

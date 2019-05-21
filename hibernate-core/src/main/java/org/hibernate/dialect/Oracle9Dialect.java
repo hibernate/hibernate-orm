@@ -13,6 +13,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;

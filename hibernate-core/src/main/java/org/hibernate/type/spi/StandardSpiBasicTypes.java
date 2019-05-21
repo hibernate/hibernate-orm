@@ -80,6 +80,7 @@ import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.DateSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.DoubleSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.FloatSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
@@ -501,7 +502,7 @@ public final class StandardSpiBasicTypes {
 	 */
 	public static final StandardBasicType<Duration> DURATION = new StandardBasicTypeImpl(
 			DurationJavaDescriptor.INSTANCE,
-			BigIntSqlDescriptor.INSTANCE
+			NumericSqlDescriptor.INSTANCE
 	);
 
 

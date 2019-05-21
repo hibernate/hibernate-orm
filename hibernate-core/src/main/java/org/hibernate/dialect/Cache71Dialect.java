@@ -14,6 +14,7 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.dialect.identity.Chache71IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -42,6 +43,10 @@ import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.MICROSECOND;
+import static org.hibernate.query.TemporalUnit.MILLISECOND;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * Cach&eacute; 2007.1 dialect.
@@ -273,11 +278,6 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.extract_datepart( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.timestampadd_dateadd( queryEngine );
-		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
-		//these accept sql_tsi_<unit>, which we can't pass
-//		CommonFunctionFactory.timestampadd( queryEngine );
-//		CommonFunctionFactory.timestampdiff( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
 
@@ -308,12 +308,43 @@ public class Cache71Dialect extends Dialect {
 		useJdbcEscape(queryEngine, "dayofmonth");
 		useJdbcEscape(queryEngine, "dayofyear");
 
-		useJdbcEscape(queryEngine, "timestampadd");
-		useJdbcEscape(queryEngine, "timestampdiff");
 	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("dateadd(");
+		if ( unit == NANOSECOND || unit == MICROSECOND ) {
+			sqlAppender.append("millisecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		magnitude.render();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("/1e6");
+		}
+		if ( unit == MICROSECOND ) {
+			sqlAppender.append("/1e3");
+		}
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("datediff(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
 
 	@Override
 	public boolean hasAlterTable() {

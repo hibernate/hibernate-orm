@@ -130,8 +130,6 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
-		CommonFunctionFactory.timestampadd( queryEngine );
-		CommonFunctionFactory.timestampdiff( queryEngine );
 		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
@@ -167,6 +165,28 @@ public class IngresDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitnot", "bit_not");
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("timestampadd(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("timestampdiff(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
 	}
 
 	@Override

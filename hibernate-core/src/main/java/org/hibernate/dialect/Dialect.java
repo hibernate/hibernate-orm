@@ -36,6 +36,8 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.TimestampaddFunction;
+import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -279,13 +281,6 @@ public abstract class Dialect implements ConversionContext {
 	 *      * sin, cos, tan, asin, acos, atan, atan2
 	 *      * round
 	 *
-	 * 	Finally, each Dialect is required to support:
-	 *
-	 * 	    * timestampdiff (aliased to diff)
-	 * 	    * timestampadd (aliased to add)
-	 *
-	 * 	(These can be implemented based on intervals where necessary.)
-	 *
 	 *  In addition to the above functions, HQL implements the
 	 *  following additional "standard" functions as synonyms:
 	 *
@@ -362,6 +357,59 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.formatdatetime_toChar(queryEngine);
 
+		//timestampadd/timestampdiff implemented by Dialect itself
+
+		queryEngine.getSqmFunctionRegistry().register("timestampadd", new TimestampaddFunction(this) );
+		queryEngine.getSqmFunctionRegistry().register("timestampdiff", new TimestampdiffFunction(this) );
+
+	}
+
+	public interface Renderer {
+		void render();
+	}
+
+	public interface Appender {
+		void append(String text);
+	}
+
+	/**
+	 * Write SQL equivalent to a timestampdiff() function
+	 * to the given {@link Appender}.
+	 *
+	 * @param unit the first argument of timestampdiff()
+	 * @param from the second argument of timestampdiff()
+	 * @param to the third argument of timestampdiff()
+	 * @param sqlAppender an {@link Appender} to write to
+	 * @param fromTimestamp true if the first argument is
+	 *                      a timestamp, false if a date
+	 * @param toTimestamp true if the second argument is
+	 *                    a timestamp, false if a date
+	 */
+	public void timestampdiff(
+			TemporalUnit unit,
+			Renderer from, Renderer to,
+			Appender sqlAppender,
+			boolean fromTimestamp, boolean toTimestamp) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	/**
+	 * Write SQL equivalent to a timestampadd() function
+	 * to the given {@link Appender}.
+	 *
+	 * @param unit the first argument of timestampdiff()
+	 * @param magnitude the second argument of timestampdiff()
+	 * @param to the third argument of timestampdiff()
+	 * @param sqlAppender an {@link Appender} to write to
+	 * @param timestamp true if the second argument is a
+	 *                  timestamp, false if a date
+	 */
+	public void timestampadd(
+			TemporalUnit unit,
+			Renderer magnitude, Renderer to,
+			Appender sqlAppender,
+			boolean timestamp) {
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	/**
@@ -3290,4 +3338,5 @@ public abstract class Dialect implements ConversionContext {
 			default: return unit.toString();
 		}
 	}
+
 }

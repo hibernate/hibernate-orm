@@ -16,8 +16,6 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.MySQLTimestampaddEmulation;
-import org.hibernate.dialect.function.MySQLTimestampdiffEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -31,6 +29,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.model.relational.spi.Size;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -40,6 +39,9 @@ import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.MILLISECOND;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * An SQL dialect for MySQL (prior to 5.x).
@@ -216,16 +218,9 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
-		CommonFunctionFactory.datediff2( queryEngine );
+		CommonFunctionFactory.datediff( queryEngine );
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
 		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
-		//these do not support 'millisecond' as an argument
-		//(but they do support 'microsecond')
-//		CommonFunctionFactory.timestampadd( queryEngine );
-//		CommonFunctionFactory.timestampdiff( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new MySQLTimestampdiffEmulation() );
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new MySQLTimestampaddEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -243,6 +238,53 @@ public class MySQLDialect extends Dialect {
 				.setUseParenthesesWhenNoArgs(true)
 				.register();
 
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("timestampadd(");
+		if ( unit == MILLISECOND || unit == NANOSECOND ) {
+			sqlAppender.append("microsecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		if ( unit == MILLISECOND || unit == NANOSECOND ) {
+			sqlAppender.append("(");
+		}
+		magnitude.render();
+		if ( unit == MILLISECOND ) {
+			sqlAppender.append(")*1e3");
+		}
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append(")/1e3");
+		}
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("timestampdiff(");
+		if ( unit == MILLISECOND || unit == NANOSECOND ) {
+			sqlAppender.append("microsecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+		if ( unit == MILLISECOND ) {
+			sqlAppender.append("/1e3");
+		}
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("*1e3");
+		}
 	}
 
 	protected void registerVarcharTypes() {

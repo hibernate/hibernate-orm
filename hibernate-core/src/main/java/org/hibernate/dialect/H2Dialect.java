@@ -28,6 +28,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -172,19 +173,34 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.formatdatetime( queryEngine );
-		//dateadd() / timestampadd() are synonyms
-		//datediff() / timestampdiff() are synonyms
-		//all support either <unit> or sql_tsi_<unit>
-		CommonFunctionFactory.timestampadd_dateadd( queryEngine );
-		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
-		CommonFunctionFactory.timestampadd( queryEngine );
-		CommonFunctionFactory.timestampdiff( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setUseParenthesesWhenNoArgs(true)
 				.register();
 
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("dateadd(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("datediff(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
 	}
 
 	@Override

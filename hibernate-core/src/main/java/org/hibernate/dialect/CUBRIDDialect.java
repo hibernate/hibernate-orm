@@ -126,7 +126,7 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.sha1sha2( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
-		CommonFunctionFactory.datediff2( queryEngine );
+		CommonFunctionFactory.datediff( queryEngine );
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );

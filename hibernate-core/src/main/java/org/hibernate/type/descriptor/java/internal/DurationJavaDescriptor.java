@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java.internal;
 
+import java.math.BigDecimal;
 import java.sql.Types;
 import java.time.Duration;
 
@@ -31,7 +32,7 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BIGINT );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NUMERIC );
 	}
 
 	@Override
@@ -39,7 +40,7 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 		if ( value == null ) {
 			return null;
 		}
-		return String.valueOf( value.toNanos() );
+		return String.valueOf( value.getSeconds() ) + String.valueOf( value.toNanos() );
 	}
 
 	@Override
@@ -47,7 +48,11 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 		if ( string == null ) {
 			return null;
 		}
-		return Duration.ofNanos( Long.valueOf( string ) );
+		int cutoff = string.length() - 9;
+		return Duration.ofSeconds(
+				Long.parseLong( string.substring(0, cutoff) ),
+				Long.parseLong( string.substring(cutoff) )
+		);
 	}
 
 	@Override
@@ -59,6 +64,10 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 
 		if ( Duration.class.isAssignableFrom( type ) ) {
 			return (X) duration;
+		}
+
+		if ( BigDecimal.class.isAssignableFrom( type ) ) {
+			return (X) new BigDecimal( duration.getSeconds() ).movePointRight(9).add( new BigDecimal( duration.getNano() ) );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
@@ -82,8 +91,9 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 			return (Duration) value;
 		}
 
-		if ( Long.class.isInstance( value ) ) {
-			return Duration.ofNanos( (Long) value );
+		if ( BigDecimal.class.isInstance( value ) ) {
+			BigDecimal[] secondsAndNanos = ((BigDecimal) value).divideAndRemainder( BigDecimal.ONE.movePointRight(9) );
+			return Duration.ofSeconds( secondsAndNanos[0].longValueExact(), secondsAndNanos[1].intValueExact() );
 		}
 
 		if ( String.class.isInstance( value ) ) {

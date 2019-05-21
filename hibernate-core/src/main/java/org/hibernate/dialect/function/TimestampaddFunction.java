@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -23,21 +24,22 @@ import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 
 import java.util.List;
 
-import static org.hibernate.query.TemporalUnit.MILLISECOND;
+import static org.hibernate.type.spi.TypeConfiguration.isTimestampType;
 
 /**
- * MySQL timestampadd() does not support 'millisecond' as an argument.
- *
  * @author Gavin King
  */
-public class MySQLTimestampaddEmulation
+public class TimestampaddFunction
 		extends AbstractSqmFunctionTemplate implements SelfRenderingFunctionSupport {
 
-	public MySQLTimestampaddEmulation() {
+	private Dialect dialect;
+
+	public TimestampaddFunction(Dialect dialect) {
 		super(
 				StandardArgumentsValidators.exactly( 3 ),
 				StandardFunctionReturnTypeResolvers.useArgType( 3 )
 		);
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -47,24 +49,15 @@ public class MySQLTimestampaddEmulation
 			SqlAstWalker walker) {
 		ExtractUnit field = (ExtractUnit) arguments.get(0);
 		Expression magnitude = (Expression) arguments.get(1);
-		Expression datetime = (Expression) arguments.get(2);
+		Expression to = (Expression) arguments.get(2);
 		TemporalUnit unit = field.getUnit();
-		sqlAppender.appendSql("timestampadd(");
-		if ( MILLISECOND == unit ) {
-			sqlAppender.appendSql("microsecond,1e3*(");
-
-		}
-		else {
-			sqlAppender.appendSql( unit.toString() );
-			sqlAppender.appendSql(",");
-		}
-		magnitude.accept(walker);
-		if ( MILLISECOND == unit ) {
-			sqlAppender.appendSql(")");
-		}
-		sqlAppender.appendSql(",");
-		datetime.accept(walker);
-		sqlAppender.appendSql(")");
+		dialect.timestampadd(
+				unit,
+				() -> magnitude.accept( walker ),
+				() -> to.accept( walker ),
+				sqlAppender::appendSql,
+				isTimestampType( to.getType() )
+		);
 	}
 
 	@Override
@@ -72,7 +65,7 @@ public class MySQLTimestampaddEmulation
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		return new SelfRenderingSqmFunction<T>(
+		return new SelfRenderingSqmFunction<>(
 				this,
 				arguments,
 				impliedResultType,

@@ -24,6 +24,7 @@ import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -96,10 +97,61 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
-		//TODO: Supports neither milliseconds nor microseconds
-		//      but SQL_TSI_FRAC_SECOND measures nanoseconds
-		CommonFunctionFactory.timestampaddSqlTsi( queryEngine );
-		CommonFunctionFactory.timestampdiffSqlTsi( queryEngine );
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("timestampadd(sql_tsi_");
+		switch (unit) {
+			case MILLISECOND:
+			case MICROSECOND:
+			case NANOSECOND:
+				sqlAppender.append("frac_second");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		//TODO: millisecond, microsecond
+		sqlAppender.append(", ");
+		magnitude.render();
+		switch (unit) {
+			case MILLISECOND:
+				sqlAppender.append("*1e6");
+				break;
+			case MICROSECOND:
+				sqlAppender.append("*1e3");
+				break;
+		}
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("timestampdiff(sql_tsi_");
+		switch (unit) {
+			case MILLISECOND:
+			case MICROSECOND:
+			case NANOSECOND:
+				sqlAppender.append("frac_second");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+		switch (unit) {
+			case MILLISECOND:
+				sqlAppender.append("/1e6");
+				break;
+			case MICROSECOND:
+				sqlAppender.append("/1e3");
+				break;
+		}
 	}
 
 	@Override

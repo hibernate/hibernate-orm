@@ -18,7 +18,6 @@ import org.hibernate.MappingException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.HSQLTimestampdiffEmulation;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -55,6 +54,9 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.TemporalUnit.MICROSECOND;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -210,14 +212,6 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
-		CommonFunctionFactory.timestampadd_dateadd( queryEngine );
-		//datediff() does not support 'microsecond' for some reason
-//		CommonFunctionFactory.timestampdiff_datediff( queryEngine );
-		//these accept sql_tsi_<unit>, which we can't pass
-//		CommonFunctionFactory.timestampadd( queryEngine );
-//		CommonFunctionFactory.timestampdiff( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new HSQLTimestampdiffEmulation() );
 
 		if ( hsqldbVersion >= 200 ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
@@ -232,6 +226,68 @@ public class HSQLDialect extends Dialect {
 					.register();
 		}
 
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		boolean castTo = !timestamp && !unit.isDateUnit();
+		if ( unit == MICROSECOND || unit == NANOSECOND ) {
+			sqlAppender.append("timestampadd(sql_tsi_frac_second"); //nanos
+		}
+		else {
+			sqlAppender.append("dateadd(");
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		if ( unit == MICROSECOND ) {
+			sqlAppender.append("1e3*(");
+		}
+		magnitude.render();
+		if ( unit == MICROSECOND ) {
+			sqlAppender.append(")");
+		}
+		sqlAppender.append(", ");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
+		boolean castTo = !toTimestamp && !unit.isDateUnit();
+		if ( unit == MICROSECOND || unit == NANOSECOND ) {
+			sqlAppender.append("timestampdiff(sql_tsi_frac_second"); //nanos
+		}
+		else {
+			sqlAppender.append("datediff(");
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		if (castFrom) {
+			sqlAppender.append("cast(");
+		}
+		from.render();
+		if (castFrom) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(", ");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(")");
+		if ( unit == MICROSECOND ) {
+			sqlAppender.append("/1e3");
+		}
 	}
 
 	@Override

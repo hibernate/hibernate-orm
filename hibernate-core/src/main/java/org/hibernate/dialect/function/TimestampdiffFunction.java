@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -24,21 +25,22 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import java.util.List;
 
-import static org.hibernate.query.TemporalUnit.MILLISECOND;
+import static org.hibernate.type.spi.TypeConfiguration.isTimestampType;
 
 /**
- * MySQL timestampdiff() does not support 'millisecond' as an argument.
- *
  * @author Gavin King
  */
-public class MySQLTimestampdiffEmulation
+public class TimestampdiffFunction
 		extends AbstractSqmFunctionTemplate implements SelfRenderingFunctionSupport {
 
-	public MySQLTimestampdiffEmulation() {
+	private Dialect dialect;
+
+	public TimestampdiffFunction(Dialect dialect) {
 		super(
 				StandardArgumentsValidators.exactly( 3 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.LONG )
 		);
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -47,24 +49,17 @@ public class MySQLTimestampdiffEmulation
 			List<SqlAstNode> arguments,
 			SqlAstWalker walker) {
 		ExtractUnit field = (ExtractUnit) arguments.get(0);
-		Expression datetime1 = (Expression) arguments.get(1);
-		Expression datetime2 = (Expression) arguments.get(2);
+		Expression from = (Expression) arguments.get(1);
+		Expression to = (Expression) arguments.get(2);
 		TemporalUnit unit = field.getUnit();
-		sqlAppender.appendSql("timestampdiff(");
-		if ( MILLISECOND == unit ) {
-			sqlAppender.appendSql("microsecond");
-		}
-		else {
-			sqlAppender.appendSql( unit.toString() );
-		}
-		sqlAppender.appendSql(",");
-		datetime1.accept(walker);
-		sqlAppender.appendSql(",");
-		datetime2.accept(walker);
-		sqlAppender.appendSql(")");
-		if ( MILLISECOND == unit ) {
-			sqlAppender.appendSql("/1e3");
-		}
+		dialect.timestampdiff(
+				unit,
+				() -> from.accept( walker ),
+				() -> to.accept( walker ),
+				sqlAppender::appendSql,
+				isTimestampType( from.getType() ),
+				isTimestampType( to.getType() )
+		);
 	}
 
 	@Override
@@ -72,7 +67,7 @@ public class MySQLTimestampdiffEmulation
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		return new SelfRenderingSqmFunction<T>(
+		return new SelfRenderingSqmFunction<>(
 				this,
 				arguments,
 				impliedResultType,

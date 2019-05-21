@@ -78,6 +78,7 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
+import org.hibernate.query.sqm.tree.expression.function.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.function.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
@@ -1415,13 +1416,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				(SqmExpression<?>) ctx.expression( 1 ).accept(this),
 				creationContext.getDomainModel().getTypeConfiguration(),
 				creationContext.getNodeBuilder()
-		)
-				.evaluateDurationAddition(
-						false,
-						null,
-						getCreationContext().getQueryEngine(),
-						getCreationContext().getNodeBuilder()
-				);
+		);
 	}
 
 	@Override
@@ -2179,41 +2174,27 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public Object visitToDurationExpression(HqlParser.ToDurationExpressionContext ctx) {
-		final SqmExtractUnit<?> unit = (SqmExtractUnit) ctx.intervalField().accept(this);
-		final SqmExpression<?> magnitude = (SqmExpression) ctx.expression().accept(this);
 		return new SqmToDuration<>(
-				magnitude,
-				unit,
+				(SqmExpression<?>) ctx.expression().accept(this),
+				(SqmExtractUnit<?>) ctx.intervalField().accept(this),
 				basicType( Duration.class ),
-				getCreationContext().getNodeBuilder()
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
+	public Object visitFromDurationExpression(HqlParser.FromDurationExpressionContext ctx) {
+		return new SqmByUnit(
+				(SqmExtractUnit<?>) ctx.intervalField().accept(this),
+				(SqmExpression<?>) ctx.expression().accept(this),
+				basicType( Long.class ),
+				creationContext.getNodeBuilder()
 		);
 	}
 
 	@Override
 	public Object visitGroupedExpression(HqlParser.GroupedExpressionContext ctx) {
 		return ctx.expression().accept(this);
-	}
-
-	@Override
-	public Object visitFromDurationExpression(HqlParser.FromDurationExpressionContext ctx) {
-		final SqmExtractUnit<?> unit = (SqmExtractUnit) ctx.intervalField().accept(this);
-		final SqmExpression<?> duration = (SqmExpression) ctx.expression().accept(this);
-
-		return duration.evaluateDuration(
-				getCreationContext().getQueryEngine(),
-				unit,
-				basicType( Long.class ),
-				getCreationContext().getNodeBuilder()
-		);
-
-//		SqmFromDuration<Long> fromDuration = new SqmFromDuration<>(
-//				duration,
-//				unit,
-//				basicType(Long.class),
-//				getCreationContext().getNodeBuilder()
-//		);
-
-//		return fromDuration;
 	}
 
 	@Override

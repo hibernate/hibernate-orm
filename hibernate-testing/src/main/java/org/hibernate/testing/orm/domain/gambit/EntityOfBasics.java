@@ -8,6 +8,7 @@ package org.hibernate.testing.orm.domain.gambit;
 
 import java.net.URL;
 import java.sql.Clob;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import javax.persistence.AttributeConverter;
@@ -45,6 +46,7 @@ public class EntityOfBasics {
 	private Gender gender;
 	private Gender convertedGender;
 	private Gender ordinalGender;
+	private Duration theDuration;
 
 	@Id
 	public Integer getId() {
@@ -165,6 +167,14 @@ public class EntityOfBasics {
 
 	public void setTheInstant(Instant theInstant) {
 		this.theInstant = theInstant;
+	}
+
+	public Duration getTheDuration() {
+		return theDuration;
+	}
+
+	public void setTheDuration(Duration theDuration) {
+		this.theDuration = theDuration;
 	}
 
 	public static class GenderConverter implements AttributeConverter<Gender,Character> {

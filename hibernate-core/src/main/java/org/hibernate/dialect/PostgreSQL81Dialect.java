@@ -20,9 +20,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.PostgresTimestampaddEmulation;
-import org.hibernate.dialect.function.PostgresTimestampdiffEmulation;
 import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -46,6 +45,16 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+
+import static org.hibernate.query.TemporalUnit.DAY;
+import static org.hibernate.query.TemporalUnit.HOUR;
+import static org.hibernate.query.TemporalUnit.MICROSECOND;
+import static org.hibernate.query.TemporalUnit.MINUTE;
+import static org.hibernate.query.TemporalUnit.MONTH;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.QUARTER;
+import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.query.TemporalUnit.conversionFactor;
 
 /**
  * An SQL dialect for Postgres
@@ -108,6 +117,186 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
+	public void timestampadd(
+			TemporalUnit unit,
+			Renderer magnitude, Renderer to,
+			Appender sqlAppender,
+			boolean timestamp) {
+		sqlAppender.append("(");
+		to.render();
+		boolean subtract = false;
+		//TODO: do something nicer for negative magnitude
+//		if ( magnitude.startsWith("-") ) {
+//			subtract = true;
+//			magnitude = magnitude.substring(1);
+//		}
+		sqlAppender.append(subtract ? " - " : " + ");
+		switch ( unit ) {
+			case NANOSECOND:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(")/1e3 * interval '1 microsecond'");
+				break;
+			case QUARTER: //quarter is not supported in interval literals
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(") * interval '3 month'");
+				break;
+			default:
+				//TODO: do something nicer for literal magnitude
+//				if ( magnitude.matches("\\d+") ) {
+//					sqlAppender.append("interval '");
+//					sqlAppender.append( magnitude );
+//				}
+//				else {
+					sqlAppender.append("(");
+					magnitude.render();
+					sqlAppender.append(") * interval '1");
+//				}
+				sqlAppender.append(" ");
+				sqlAppender.append( unit.toString() );
+				sqlAppender.append("'");
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(
+			TemporalUnit unit,
+			Renderer from, Renderer to,
+			Appender sqlAppender,
+			boolean fromTimestamp, boolean toTimestamp) {
+		boolean timestamp = toTimestamp || fromTimestamp;
+		if ( !timestamp && unit==DAY ) {
+			// special case: subtraction of two dates
+			// results in an integer number of days
+			// instead of an INTERVAL
+			sqlAppender.append("(");
+			to.render();
+			sqlAppender.append("-");
+			from.render();
+			sqlAppender.append(")");
+		}
+		else {
+			switch (unit) {
+				case YEAR:
+					extractField(sqlAppender, from, to, YEAR, fromTimestamp, toTimestamp, unit);
+					break;
+				case QUARTER:
+					sqlAppender.append("(");
+					extractField(sqlAppender, from, to, YEAR, fromTimestamp, toTimestamp, unit);
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, QUARTER, fromTimestamp, toTimestamp, unit);
+					sqlAppender.append(")");
+					break;
+				case MONTH:
+					sqlAppender.append("(");
+					extractField(sqlAppender, from, to, YEAR, fromTimestamp, toTimestamp, unit);
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, MONTH, fromTimestamp, toTimestamp, unit);
+					sqlAppender.append(")");
+					break;
+				case WEEK: //week is not supported by extract() when the argument is a duration
+				case DAY:
+					extractField(sqlAppender, from, to, DAY, fromTimestamp, toTimestamp, unit);
+					break;
+				case HOUR:
+					sqlAppender.append("(");
+					extractField(sqlAppender, from, to, DAY, fromTimestamp, toTimestamp, unit);
+					if (timestamp) {
+						sqlAppender.append("+");
+						extractField(sqlAppender, from, to, HOUR, fromTimestamp, toTimestamp, unit);
+					}
+					sqlAppender.append(")");
+					break;
+				case MINUTE:
+					sqlAppender.append("(");
+					extractField(sqlAppender, from, to, DAY, fromTimestamp, toTimestamp, unit);
+					if (timestamp) {
+						sqlAppender.append("+");
+						extractField(sqlAppender, from, to, HOUR, fromTimestamp, toTimestamp, unit);
+						sqlAppender.append("+");
+						extractField(sqlAppender, from, to, MINUTE, fromTimestamp, toTimestamp, unit);
+					}
+					sqlAppender.append(")");
+					break;
+				case MICROSECOND:
+				case MILLISECOND:
+				case NANOSECOND:
+				case SECOND:
+					sqlAppender.append("(");
+					extractField(sqlAppender, from, to, DAY, fromTimestamp, toTimestamp, unit);
+					if (timestamp) {
+						sqlAppender.append("+");
+						extractField(sqlAppender, from, to, HOUR, fromTimestamp, toTimestamp, unit);
+						sqlAppender.append("+");
+						extractField(sqlAppender, from, to, MINUTE, fromTimestamp, toTimestamp, unit);
+						sqlAppender.append("+");
+						if (unit == NANOSECOND) {
+							extractField(sqlAppender, from, to, MICROSECOND, fromTimestamp, toTimestamp, unit);
+						}
+						else {
+							extractField(sqlAppender, from, to, unit, fromTimestamp, toTimestamp, unit);
+						}
+					}
+					sqlAppender.append(")");
+					break;
+				default:
+					throw new SemanticException("unrecognized field: " + unit);
+			}
+		}
+	}
+
+	void extractField(
+			Appender sqlAppender,
+			Renderer from, Renderer to,
+			TemporalUnit unit,
+			boolean fromTimestamp, boolean toTimestamp,
+			TemporalUnit toUnit) {
+		sqlAppender.append("extract(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(" from ");
+		boolean timestamp = toTimestamp || fromTimestamp;
+		if ( !timestamp ) {
+			// special case subtraction of two
+			// dates results in an integer not
+			// an Interval
+			sqlAppender.append("age(");
+			to.render();
+			sqlAppender.append(",");
+			from.render();
+			sqlAppender.append(")");
+		}
+		else {
+			switch (unit) {
+				case YEAR:
+				case MONTH:
+				case QUARTER:
+					sqlAppender.append("age(");
+					to.render();
+					sqlAppender.append(",");
+					from.render();
+					sqlAppender.append(")");
+					break;
+				case DAY:
+				case HOUR:
+				case MINUTE:
+				case SECOND:
+				case MILLISECOND:
+				case MICROSECOND:
+					to.render();
+					sqlAppender.append("-");
+					from.render();
+					break;
+				default:
+					throw new SemanticException(unit + " is not a legal field");
+			}
+		}
+		sqlAppender.append(")");
+		sqlAppender.append( conversionFactor(unit, toUnit) );
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
@@ -142,9 +331,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				.register();
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
-
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new PostgresTimestampaddEmulation() );
-		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new PostgresTimestampdiffEmulation() );
 
 	}
 

@@ -18,8 +18,6 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DB2FormatEmulation;
-import org.hibernate.dialect.function.DB2TimestampaddEmulation;
-import org.hibernate.dialect.function.DB2TimestampdiffEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -50,7 +48,6 @@ import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-
 
 /**
  * An SQL dialect for DB2.
@@ -178,9 +175,6 @@ public class DB2Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "formatdatetime", new DB2FormatEmulation() );
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new DB2TimestampdiffEmulation() );
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new DB2TimestampaddEmulation() );
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 3 )
@@ -195,6 +189,133 @@ public class DB2Dialect extends Dialect {
 //				.setExactArgumentCount( 2 )
 //				.register();
 
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
+		boolean castTo = !toTimestamp && !unit.isDateUnit();
+		switch (unit) {
+			case MILLISECOND:
+			case MICROSECOND:
+			case NANOSECOND:
+				sqlAppender.append("(second");
+				break;
+			//note: DB2 does have weeks_between()
+			case MONTH:
+			case QUARTER:
+				// the months_between() function results
+				// in a non-integral value, so trunc() it
+				sqlAppender.append("trunc(month");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append("s_between(");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(",");
+		if (castFrom) {
+			sqlAppender.append("cast(");
+		}
+		from.render();
+		if (castFrom) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(")");
+		switch (unit) {
+			case MILLISECOND:
+				sqlAppender.append("*1e3+(microsecond(");
+				to.render();
+				sqlAppender.append(")-microsecond(");
+				from.render();
+				sqlAppender.append("))/1e3)");
+				break;
+			case MICROSECOND:
+				sqlAppender.append("*1e6+microsecond(");
+				to.render();
+				sqlAppender.append(")-microsecond(");
+				from.render();
+				sqlAppender.append("))");
+				break;
+			case NANOSECOND:
+				sqlAppender.append("*1e9+(microsecond(");
+				to.render();
+				sqlAppender.append(")-microsecond(");
+				from.render();
+				sqlAppender.append("))*1e3)");
+				break;
+			case MONTH:
+				sqlAppender.append(")");
+				break;
+			case QUARTER:
+				sqlAppender.append("/3)");
+				break;
+		}
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		boolean castTo = !timestamp && !unit.isDateUnit();
+		sqlAppender.append("add_");
+		switch (unit) {
+			case NANOSECOND:
+			case MILLISECOND:
+			case MICROSECOND:
+				sqlAppender.append("second");
+				break;
+			case WEEK:
+				//note: DB2 does not have add_weeks()
+				sqlAppender.append("day");
+				break;
+			case QUARTER:
+				sqlAppender.append("month");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append("s(");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(",");
+		switch (unit) {
+			case MILLISECOND:
+			case MICROSECOND:
+			case NANOSECOND:
+			case WEEK:
+			case QUARTER:
+				sqlAppender.append("(");
+				break;
+		}
+		magnitude.render();
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append(")/1e9");
+				break;
+			case MILLISECOND:
+				sqlAppender.append(")/1e3");
+				break;
+			case MICROSECOND:
+				sqlAppender.append(")/1e6");
+				break;
+			case WEEK:
+				sqlAppender.append(")*7");
+				break;
+			case QUARTER:
+				sqlAppender.append(")*3");
+				break;
+		}
+		sqlAppender.append(")");
 	}
 
 	@Override

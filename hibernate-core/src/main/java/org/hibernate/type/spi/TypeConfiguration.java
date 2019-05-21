@@ -477,18 +477,26 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			boolean isDivision) {
 
 		if ( isTemporalType( firstType ) ) {
-			if ( isTemporalType( secondType ) ) {
-				// special case for subtraction resulting in a duration
+			if ( secondType==null || isTemporalType( secondType ) ) {
+				// special case for subtraction of two dates
+				// or timestamps resulting in a duration
 				return getBasicTypeRegistry().getBasicType( Duration.class );
 			}
 			else {
-				// must be addition or subtraction of a Duration
+				// must be postfix addition/subtraction of
+				// a duration to/from a date or timestamp
 				return firstType;
 			}
 		}
-
-		if ( isDuration( firstType ) && isDuration( secondType) ) {
-			return firstType;
+		else if ( isDuration( secondType ) ) {
+			// it's either addition/subtraction of durations
+			// or prefix scalar multiplication of a duration
+			return secondType;
+		}
+		else if ( firstType==null && isTemporalType( secondType ) ) {
+			// subtraction of a date or timestamp from
+			// a parameter (which
+			return getBasicTypeRegistry().getBasicType( Duration.class );
 		}
 
 		if ( isDivision ) {
@@ -553,6 +561,21 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public static boolean isDuration(ExpressableType<?> type) {
 		return matchesJavaType( type, Duration.class );
+	}
+
+	public static boolean isTimestampType(SqlExpressableType type) {
+		int jdbcTypeCode = type.getSqlTypeDescriptor().getJdbcTypeCode();
+		return jdbcTypeCode == Types.TIMESTAMP
+			|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE;
+	}
+
+	public static boolean isTemporalType(SqlExpressableType type) {
+		int jdbcTypeCode = type.getSqlTypeDescriptor().getJdbcTypeCode();
+		return jdbcTypeCode == Types.TIMESTAMP
+			|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE
+			|| jdbcTypeCode == Types.TIME
+			|| jdbcTypeCode == Types.TIME_WITH_TIMEZONE
+			|| jdbcTypeCode == Types.DATE;
 	}
 
 	@SuppressWarnings("unchecked")

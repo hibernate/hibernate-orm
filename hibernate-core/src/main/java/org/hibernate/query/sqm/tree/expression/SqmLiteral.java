@@ -9,6 +9,9 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+
+import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
 /**
  * Represents a literal value in the sqm, e.g.<ul>

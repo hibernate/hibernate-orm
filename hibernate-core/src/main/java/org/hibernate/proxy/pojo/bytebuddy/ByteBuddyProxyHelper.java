@@ -10,6 +10,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -18,6 +19,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
+import org.hibernate.bytecode.internal.javassist.BulkAccessorException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -142,6 +144,53 @@ public class ByteBuddyProxyHelper implements Serializable {
 							serializableProxy.getIdentifierSetterMethodClass()
 					)
 			);
+		}
+	}
+
+	public static void findAccessors(
+			Class clazz,
+			String[] getterNames,
+			String[] setterNames,
+			Class[] types,
+			Method[] getters,
+			Method[] setters) {
+		final int length = types.length;
+		if ( setterNames.length != length || getterNames.length != length ) {
+			throw new BulkAccessorException( "bad number of accessors" );
+		}
+
+		final Class[] getParam = new Class[0];
+		final Class[] setParam = new Class[1];
+		for ( int i = 0; i < length; i++ ) {
+			if ( getterNames[i] != null ) {
+				final Method getter = findAccessor( clazz, getterNames[i], getParam, i );
+				if ( getter.getReturnType() != types[i] ) {
+					throw new BulkAccessorException( "wrong return type: " + getterNames[i], i );
+				}
+
+				getters[i] = getter;
+			}
+
+			if ( setterNames[i] != null ) {
+				setParam[0] = types[i];
+				setters[i] = findAccessor( clazz, setterNames[i], setParam, i );
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Method findAccessor(Class clazz, String name, Class[] params, int index)
+			throws BulkAccessorException {
+		try {
+			final Method method = clazz.getDeclaredMethod( name, params );
+			if ( Modifier.isPrivate( method.getModifiers() ) ) {
+				throw new BulkAccessorException( "private property", index );
+			}
+
+			return method;
+		}
+		catch ( NoSuchMethodException e ) {
+			throw new BulkAccessorException( "cannot find an accessor", index );
 		}
 	}
 }

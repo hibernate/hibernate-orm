@@ -6,17 +6,15 @@
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-
 import org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl;
-import org.hibernate.bytecode.internal.bytebuddy.ProxyFactoryFactoryImpl;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CompositeType;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
 
 public final class SerializableProxy extends AbstractSerializableProxy {
 	private final Class persistentClass;

@@ -1073,6 +1073,10 @@ public final class SessionImpl
 
 		fireLoad( event, LoadEventListener.RELOAD );
 
+		checkLoadEvent(event);
+	}
+
+	private void checkLoadEvent(LoadEvent event) {
 		if ( loadEvent == null ) {
 			event.setEntityClassName( null );
 			event.setEntityId( null );
@@ -1118,13 +1122,7 @@ public final class SessionImpl
 		event = recycleEventInstance( event, id, entityName );
 		fireLoad( event, LoadEventListener.IMMEDIATE_LOAD );
 		Object result = event.getResult();
-		if ( loadEvent == null ) {
-			event.setEntityClassName( null );
-			event.setEntityId( null );
-			event.setInstanceToLoad( null );
-			event.setResult( null );
-			loadEvent = event;
-		}
+		checkLoadEvent(event);
 		return result;
 	}
 
@@ -1166,13 +1164,7 @@ public final class SessionImpl
 			if ( !nullable ) {
 				UnresolvableObjectException.throwIfNull( result, id, entityName );
 			}
-			if ( loadEvent == null ) {
-				event.setEntityClassName( null );
-				event.setEntityId( null );
-				event.setInstanceToLoad( null );
-				event.setResult( null );
-				loadEvent = event;
-			}
+			checkLoadEvent(event);
 			return result;
 		}
 		finally {

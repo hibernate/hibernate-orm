@@ -71,17 +71,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
 			TypePool classPool) {
-		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
-		for ( FieldDescription ctField : managedCtClass.getDeclaredFields() ) {
-			// skip static fields and skip fields added by enhancement and  outer reference in inner classes
-			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
-				continue;
-			}
-			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
-			if ( !ctField.isStatic() && enhancementContext.isPersistentField( annotatedField ) ) {
-				persistentFieldList.add( annotatedField );
-			}
-		}
+		List<AnnotatedFieldDescription> persistentFieldList = addPersistentFields(enhancementContext, managedCtClass);
 		// HHH-10646 Add fields inherited from @MappedSuperclass
 		// HHH-10981 There is no need to do it for @MappedSuperclass
 		if ( !enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
@@ -107,9 +97,15 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 		log.debugf( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass );
 
-		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
+		List<AnnotatedFieldDescription> persistentFieldList = addPersistentFields(enhancementContext, managedCtSuperclass);
+		persistentFieldList.addAll( collectInheritPersistentFields( managedCtSuperclass, enhancementContext ) );
+		return persistentFieldList;
+	}
 
+	private static List<AnnotatedFieldDescription> addPersistentFields(ByteBuddyEnhancementContext enhancementContext, TypeDefinition managedCtSuperclass) {
+		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 		for ( FieldDescription ctField : managedCtSuperclass.getDeclaredFields() ) {
+			// skip static fields and skip fields added by enhancement and  outer reference in inner classes
 			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
 				continue;
 			}
@@ -118,7 +114,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 				persistentFieldList.add( annotatedField );
 			}
 		}
-		persistentFieldList.addAll( collectInheritPersistentFields( managedCtSuperclass, enhancementContext ) );
+
 		return persistentFieldList;
 	}
 

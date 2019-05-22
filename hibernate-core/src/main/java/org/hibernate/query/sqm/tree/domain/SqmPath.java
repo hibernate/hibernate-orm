@@ -15,6 +15,7 @@ import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -44,7 +45,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 *
 	 * @see SqmPathSource#createSqmPath
 	 */
-	SqmPathSource<?, T> getReferencedPathSource();
+	SqmPathSource<?> getReferencedPathSource();
 
 	/**
 	 * Retrieve the explicit alias, if one.  May return null
@@ -63,7 +64,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	DomainType<T> getNodeType();
 
 	@Override
-	default void applyInferableType(DomainType<T> type) {
+	default void applyInferableType(SqmExpressable<T> type) {
 		// do nothing
 	}
 
@@ -133,7 +134,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 * 	todo (6.0) : ideally we'd delay this until SQM -> SQL AST conversion : criteria-as-SQM
 	 */
 	default void prepareForSubNavigableReference(
-			SqmPathSource<?,?> subNavigable,
+			SqmPathSource<?> subNavigable,
 			boolean isSubReferenceTerminal,
 			SqmCreationState creationState) {
 		SqmCreationHelper.resolveAsLhs( getLhs(), this, subNavigable, isSubReferenceTerminal, creationState );

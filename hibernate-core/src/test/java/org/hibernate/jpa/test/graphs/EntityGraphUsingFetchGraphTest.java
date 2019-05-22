@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -177,7 +177,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 		em.getTransaction().begin();
 
 		final EntityGraph<CustomerOrder> entityGraph = em.createEntityGraph( CustomerOrder.class );
-		EntityTypeDescriptor<CustomerOrder> customerOrderEntityType =
+		EntityDomainType<CustomerOrder> customerOrderEntityType =
 			entityManagerFactory().getMetamodel().entity( CustomerOrder.class );
 		entityGraph.addAttributeNodes(
 			(Attribute) customerOrderEntityType.getAttribute( "shippingAddress" ),
@@ -187,14 +187,14 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 
 		final Subgraph<OrderPosition> orderProductsSubgraph =
 			entityGraph.addSubgraph( (Attribute) customerOrderEntityType.getAttribute( "orderPosition" ) );
-		EntityTypeDescriptor<OrderPosition> positionEntityType =
+		EntityDomainType<OrderPosition> positionEntityType =
 			entityManagerFactory().getMetamodel().entity( OrderPosition.class );
 		orderProductsSubgraph.addAttributeNodes( (Attribute) positionEntityType.getAttribute( "amount" ) );
 		orderProductsSubgraph.addAttributeNodes( (Attribute) positionEntityType.getAttribute( "product" ) );
 
 		final Subgraph<Product> productSubgraph =
 			orderProductsSubgraph.addSubgraph( (Attribute) positionEntityType.getAttribute( "product" ) );
-		EntityTypeDescriptor<Product> productEntityType = entityManagerFactory().getMetamodel().entity( Product.class );
+		EntityDomainType<Product> productEntityType = entityManagerFactory().getMetamodel().entity( Product.class );
 		productSubgraph.addAttributeNodes( (Attribute) productEntityType.getAttribute( "productName" ) );
 
 		TypedQuery<CustomerOrder> query = em.createQuery(

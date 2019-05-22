@@ -49,7 +49,10 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 * Retrieve the natural comparator for this type.
 	 */
 	default Comparator<T> getComparator() {
-		return Comparable.class.isAssignableFrom( Comparable.class ) ? ComparableComparator.INSTANCE : null;
+		//noinspection unchecked
+		return Comparable.class.isAssignableFrom( getJavaType() )
+				? ComparableComparator.INSTANCE
+				: null;
 	}
 
 	/**

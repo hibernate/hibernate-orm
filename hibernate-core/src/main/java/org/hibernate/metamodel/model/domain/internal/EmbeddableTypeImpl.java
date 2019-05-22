@@ -7,13 +7,16 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.AbstractManagedType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Standard Hibernate implementation of JPA's {@link javax.persistence.metamodel.EmbeddableType}
@@ -24,17 +27,33 @@ import org.hibernate.type.ComponentType;
  */
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
-		implements EmbeddedTypeDescriptor<J>, Serializable {
+		implements EmbeddableDomainType<J>, Serializable {
 
-	private final ManagedTypeDescriptor<?> parent;
+	private final ManagedDomainType<?> parent;
 	private final ComponentType hibernateType;
 
 	public EmbeddableTypeImpl(
-			Class<J> javaType,
-			ManagedTypeDescriptor<?> parent,
+			JavaTypeDescriptor<J> javaTypeDescriptor,
+			ManagedDomainType<?> parent,
 			ComponentType hibernateType,
 			SessionFactoryImplementor sessionFactory) {
-		super( javaType, null, null, sessionFactory );
+		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, sessionFactory );
+		this.parent = parent;
+		this.hibernateType = hibernateType;
+	}
+
+	public EmbeddableTypeImpl(
+			String name,
+			ManagedDomainType<?> parent,
+			ComponentType hibernateType,
+			SessionFactoryImplementor sessionFactory) {
+		//noinspection unchecked
+		super(
+				name,
+				(JavaTypeDescriptor) sessionFactory.getMetamodel().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Map.class ),
+				null,
+				sessionFactory
+		);
 		this.parent = parent;
 		this.hibernateType = hibernateType;
 	}
@@ -44,7 +63,7 @@ public class EmbeddableTypeImpl<J>
 		return PersistenceType.EMBEDDABLE;
 	}
 
-	public ManagedTypeDescriptor<?> getParent() {
+	public ManagedDomainType<?> getParent() {
 		return parent;
 	}
 

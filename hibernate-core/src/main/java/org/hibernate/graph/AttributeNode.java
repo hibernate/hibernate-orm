@@ -8,7 +8,8 @@ package org.hibernate.graph;
 
 import java.util.Map;
 import javax.persistence.Subgraph;
-import javax.persistence.metamodel.Attribute;
+
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
  * Hibernate extension to the JPA entity-graph AttributeNode contract.
@@ -18,7 +19,7 @@ import javax.persistence.metamodel.Attribute;
  * @author Andrea Boriero
  */
 public interface AttributeNode<J> extends GraphNode<J>, javax.persistence.AttributeNode<J> {
-	Attribute<?, J> getAttributeDescriptor();
+	PersistentAttribute<?, J> getAttributeDescriptor();
 
 	Map<Class<? extends J>, SubGraph<? extends J>> getSubGraphs();
 	Map<Class<? extends J>, SubGraph<? extends J>> getKeySubGraphs();

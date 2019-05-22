@@ -7,8 +7,9 @@
 package org.hibernate.graph;
 
 import java.util.List;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
+
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
  * A container for {@link AttributeNode}s.
@@ -24,7 +25,7 @@ public interface Graph<J> extends GraphNode<J> {
 	/**
 	 * Graphs apply only to ManagedTypes.  Returns the ManagedType being graphed here.
 	 */
-	ManagedType<J> getGraphedType();
+	ManagedDomainType<J> getGraphedType();
 
 	/**
 	 * Create a named (if passed `name` != null) root Graph.  The `mutable`
@@ -63,7 +64,7 @@ public interface Graph<J> extends GraphNode<J> {
 	 * Find an already existing AttributeNode by corresponding attribute
 	 * reference, within this container
 	 */
-	<AJ> AttributeNode<AJ> findAttributeNode(Attribute<? extends J, AJ> attribute);
+	<AJ> AttributeNode<AJ> findAttributeNode(PersistentAttribute<? extends J, AJ> attribute);
 
 	/**
 	 * Get a list of all existing AttributeNodes within this container
@@ -80,7 +81,7 @@ public interface Graph<J> extends GraphNode<J> {
 	 * Add an AttributeNode (with no associated SubGraphNode) to this container
 	 * by Attribute reference
 	 */
-	<AJ> AttributeNode<AJ> addAttributeNode(Attribute<? extends J,AJ> attribute);
+	<AJ> AttributeNode<AJ> addAttributeNode(PersistentAttribute<? extends J,AJ> attribute);
 
 
 
@@ -103,9 +104,9 @@ public interface Graph<J> extends GraphNode<J> {
 	 *
 	 * @apiNote If no such AttributeNode exists yet, it is created.
 	 */
-	<AJ> SubGraph<AJ> addSubGraph(Attribute<? extends J, AJ> attribute) throws CannotContainSubGraphException;
+	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? extends J, AJ> attribute) throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<? extends AJ> addSubGraph(Attribute<? extends J, AJ> attribute, Class<? extends AJ> type) throws CannotContainSubGraphException;
+	<AJ> SubGraph<? extends AJ> addSubGraph(PersistentAttribute<? extends J, AJ> attribute, Class<? extends AJ> type) throws CannotContainSubGraphException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,6 +115,6 @@ public interface Graph<J> extends GraphNode<J> {
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName) throws CannotContainSubGraphException;
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type) throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addKeySubGraph(Attribute<? extends J,AJ> attribute) throws CannotContainSubGraphException;
-	<AJ> SubGraph<? extends AJ> addKeySubGraph(Attribute<? extends J,AJ> attribute, Class<? extends AJ> type) throws CannotContainSubGraphException;
+	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? extends J,AJ> attribute) throws CannotContainSubGraphException;
+	<AJ> SubGraph<? extends AJ> addKeySubGraph(PersistentAttribute<? extends J,AJ> attribute, Class<? extends AJ> type) throws CannotContainSubGraphException;
 }

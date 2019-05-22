@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.mapping.spi.CollectionElement;
 import org.hibernate.metamodel.model.mapping.spi.CollectionIndex;
 import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
@@ -25,7 +26,7 @@ import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
-			PluralValuedNavigable referencedNavigable,
+			PluralPersistentAttribute referencedNavigable,
 			SqmPath lhs,
 			NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
@@ -33,7 +34,7 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
-			PluralValuedNavigable referencedNavigable,
+			PluralPersistentAttribute referencedNavigable,
 			SqmPath lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {

@@ -14,8 +14,8 @@ import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 
 /**
  * The Hibernate implementation of the JPA EntityGraph contract.
@@ -27,14 +27,14 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 
 	public RootGraphImpl(
 			String name,
-			EntityTypeDescriptor<J> entityType,
+			EntityDomainType<J> entityType,
 			boolean mutable,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityType, mutable, sessionFactory );
 		this.name = name;
 	}
 
-	public RootGraphImpl(String name, EntityTypeDescriptor<J> entityType, SessionFactoryImplementor sessionFactory) {
+	public RootGraphImpl(String name, EntityDomainType<J> entityType, SessionFactoryImplementor sessionFactory) {
 		this(
 				name,
 				entityType,
@@ -78,12 +78,12 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 	}
 
 	@Override
-	public boolean appliesTo(EntityTypeDescriptor<? super J> entityType) {
+	public boolean appliesTo(EntityDomainType<? super J> entityType) {
 		if ( this.getGraphedType().equals( entityType ) ) {
 			return true;
 		}
 
-		IdentifiableTypeDescriptor superType = entityType.getSupertype();
+		IdentifiableDomainType superType = entityType.getSupertype();
 		while ( superType != null ) {
 			if ( superType.equals( entityType ) ) {
 				return true;

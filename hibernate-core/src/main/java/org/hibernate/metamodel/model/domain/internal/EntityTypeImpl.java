@@ -13,8 +13,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
+import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Defines the Hibernate implementation of the JPA {@link EntityType} contract.
@@ -24,18 +31,18 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
  */
 public class EntityTypeImpl<J>
 		extends AbstractIdentifiableType<J>
-		implements EntityTypeDescriptor<J>, Serializable {
+		implements EntityDomainType<J>, Serializable {
 	private final String jpaEntityName;
 
 	@SuppressWarnings("unchecked")
 	public EntityTypeImpl(
-			Class javaType,
-			IdentifiableTypeDescriptor<? super J> superType,
+			JavaTypeDescriptor<J> javaTypeDescriptor,
+			IdentifiableDomainType<? super J> superType,
 			PersistentClass persistentClass,
 			SessionFactoryImplementor sessionFactory) {
 		super(
-				javaType,
 				persistentClass.getEntityName(),
+				javaTypeDescriptor,
 				superType,
 				persistentClass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
 				persistentClass.hasIdentifierProperty(),
@@ -56,6 +63,30 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
+	public String getPathName() {
+		return getHibernateEntityName();
+	}
+
+	@Override
+	public DomainType<?> getSqmNodeType() {
+		return this;
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name) {
+		return findAttribute( name );
+	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		return findAttribute( name );
+	}
+
+	@Override
 	public BindableType getBindableType() {
 		return BindableType.ENTITY_TYPE;
 	}
@@ -66,12 +97,17 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
+	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+		return null;
+	}
+
+	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.ENTITY;
 	}
 
 	@Override
-	public IdentifiableTypeDescriptor<? super J> getSuperType() {
+	public IdentifiableDomainType<? super J> getSuperType() {
 		return super.getSuperType();
 	}
 
@@ -99,5 +135,14 @@ public class EntityTypeImpl<J>
 	@Override
 	public String toString() {
 		return getName();
+	}
+
+	@Override
+	public SqmPath<J> createSqmPath(
+			SqmPath<?> lhs,
+			SqmCreationState creationState) {
+		throw new UnsupportedOperationException(
+				"EntityType cannot be used to create an SqmPath - that would be an SqmFrom which are created directly"
+		);
 	}
 }

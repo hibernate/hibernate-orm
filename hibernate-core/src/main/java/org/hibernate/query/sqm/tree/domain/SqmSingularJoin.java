@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Locale;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmJoinable;
@@ -31,7 +31,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 
 	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityTypeDescriptor<S> targetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
+		final EntityDomainType<S> targetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
 		return new SqmTreatedSingularJoin<>( this, targetDescriptor, null );
 	}
 

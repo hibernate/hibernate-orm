@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.spi.Navigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmPathSource;
 
 /**
  * @author Steve Ebersole
@@ -18,19 +18,19 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 
 	public AbstractSqmSimplePath(
 			NavigablePath navigablePath,
-			Navigable<T> referencedNavigable,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath lhs,
 			NodeBuilder nodeBuilder) {
-		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
+		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
 	public AbstractSqmSimplePath(
 			NavigablePath navigablePath,
-			Navigable<T> referencedNavigable,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
-		super( referencedNavigable, lhs, nodeBuilder );
+		super( referencedPathSource, lhs, nodeBuilder );
 		this.navigablePath = navigablePath;
 
 		setExplicitAlias( explicitAlias );

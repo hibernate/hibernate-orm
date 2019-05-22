@@ -12,8 +12,7 @@ import javax.persistence.Subgraph;
 
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.SubGraph;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
  * Integration version of the AttributeNode contract
@@ -22,9 +21,6 @@ import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNodeImplementor<J> {
-	@Override
-	PersistentAttributeDescriptor<?, J> getAttributeDescriptor();
-
 	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubGraphMap();
 	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getKeySubGraphMap();
 
@@ -75,9 +71,9 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 	@Override
 	<S extends J> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype);
 
-	<S extends J> SubGraphImplementor<S> makeSubGraph(ManagedTypeDescriptor<S> subtype);
+	<S extends J> SubGraphImplementor<S> makeSubGraph(ManagedDomainType<S> subtype);
 
-	<S extends J> SubGraphImplementor<S> makeKeySubGraph(ManagedTypeDescriptor<S> subtype);
+	<S extends J> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype);
 
 	void merge(AttributeNodeImplementor<?> attributeNode);
 }

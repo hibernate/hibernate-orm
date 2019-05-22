@@ -6,11 +6,11 @@
  */
 package org.hibernate.graph.spi;
 
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 
 /**
  * Helper containing utilities useful for graph handling
@@ -19,25 +19,25 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
  */
 public class GraphHelper {
 	@SuppressWarnings("unchecked")
-	public static <J> SimpleTypeDescriptor<J> resolveKeyTypeDescriptor(SingularPersistentAttribute attribute) {
+	public static <J> SimpleDomainType<J> resolveKeyTypeDescriptor(SingularPersistentAttribute attribute) {
 		// only valid for entity-valued attributes where the entity has a
 		// composite id
-		final SimpleTypeDescriptor attributeType = attribute.getType();
-		if ( attributeType instanceof IdentifiableTypeDescriptor ) {
-			return ( (IdentifiableTypeDescriptor) attributeType ).getIdType();
+		final SimpleDomainType attributeType = attribute.getType();
+		if ( attributeType instanceof IdentifiableDomainType ) {
+			return ( (IdentifiableDomainType) attributeType ).getIdType();
 		}
 
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <J> SimpleTypeDescriptor<J> resolveKeyTypeDescriptor(PluralPersistentAttribute attribute) {
+	@SuppressWarnings({"unchecked", "ConstantConditions"})
+	public static <J> SimpleDomainType<J> resolveKeyTypeDescriptor(PluralPersistentAttribute attribute) {
 		if ( attribute instanceof SingularPersistentAttribute ) {
 			// only valid for entity-valued attributes where the entity has a
 			// composite id
-			final SimpleTypeDescriptor attributeType = ( (SingularPersistentAttribute) attribute ).getType();
-			if ( attributeType instanceof IdentifiableTypeDescriptor ) {
-				return ( (IdentifiableTypeDescriptor) attributeType ).getIdType();
+			final SimpleDomainType attributeType = ( (SingularPersistentAttribute) attribute ).getType();
+			if ( attributeType instanceof IdentifiableDomainType ) {
+				return ( (IdentifiableDomainType) attributeType ).getIdType();
 			}
 
 			return null;

@@ -8,16 +8,14 @@ package org.hibernate.graph.spi;
 
 import java.util.List;
 import java.util.function.Consumer;
-import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.Graph;
-import org.hibernate.graph.SubGraph;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
  * Integration version of the Graph contract
@@ -27,7 +25,7 @@ import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
  * @author Andrea Boriero
  */
 public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
-	boolean appliesTo(ManagedTypeDescriptor<? super J> managedType);
+	boolean appliesTo(ManagedDomainType<? super J> managedType);
 
 	boolean appliesTo(Class<? super J> javaType);
 
@@ -39,9 +37,6 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Co-variant returns
-
-	@Override
-	ManagedTypeDescriptor<J> getGraphedType();
 
 	@Override
 	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) throws CannotBecomeEntityGraphException;
@@ -73,32 +68,22 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	@Override
 	<AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName);
 
-	<AJ> AttributeNodeImplementor<AJ> findAttributeNode(PersistentAttributeDescriptor<? extends J, AJ> attribute);
-
 	@Override
-	@SuppressWarnings("unchecked")
-	default <AJ> AttributeNodeImplementor<AJ> findAttributeNode(Attribute<? extends J, AJ> attribute) {
-		return (AttributeNodeImplementor) findAttributeNode( (PersistentAttributeDescriptor) attribute );
-	}
+	<AJ> AttributeNodeImplementor<AJ> findAttributeNode(PersistentAttribute<? extends J, AJ> attribute);
 
 	@Override
 	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(String attributeName) throws CannotContainSubGraphException;
 
-	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttributeDescriptor<? extends J, AJ> attribute) throws CannotContainSubGraphException;
-
 	@Override
-	@SuppressWarnings("unchecked")
-	default <AJ> AttributeNodeImplementor<AJ> addAttributeNode(Attribute<? extends J, AJ> attribute)
-			throws CannotContainSubGraphException {
-		return addAttributeNode( (PersistentAttributeDescriptor) attribute );
-	}
+	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? extends J, AJ> attribute)
+			throws CannotContainSubGraphException;
 
 	@SuppressWarnings("unchecked")
 	default <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(String name) {
-		return findOrCreateAttributeNode( (PersistentAttributeDescriptor) getGraphedType().getAttribute( name ) );
+		return findOrCreateAttributeNode( (PersistentAttribute) getGraphedType().getAttribute( name ) );
 	}
 
-	<AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttributeDescriptor<? extends J, AJ> attribute);
+	<AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttribute<? extends J, AJ> attribute);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,33 +96,22 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	default <AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName, Class<AJ> subType) throws CannotContainSubGraphException {
+	default <AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName, Class<AJ> subType)
+			throws CannotContainSubGraphException {
 		return findOrCreateAttributeNode( attributeName ).makeSubGraph( subType );
 	}
 
-	default <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttributeDescriptor<? extends J, AJ> attribute)
+	@Override
+	default <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? extends J, AJ> attribute)
 			throws CannotContainSubGraphException {
 		return findOrCreateAttributeNode( attribute ).makeSubGraph();
 	}
 
-	default <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttributeDescriptor<? extends J, AJ> attribute, Class<AJ> subType)
-			throws CannotContainSubGraphException {
+	@Override
+	default <AJ> SubGraphImplementor<? extends AJ> addSubGraph(
+			PersistentAttribute<? extends J, AJ> attribute,
+			Class<? extends AJ> subType) throws CannotContainSubGraphException {
 		return findOrCreateAttributeNode( attribute ).makeSubGraph( subType );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	default <AJ> SubGraphImplementor<AJ> addSubGraph(Attribute<? extends J, AJ> attribute)
-			throws CannotContainSubGraphException {
-		return addSubGraph( (PersistentAttributeDescriptor) attribute );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	default <AJ> SubGraph<? extends AJ> addSubGraph(Attribute<? extends J, AJ> attribute, Class<? extends AJ> type)
-			throws CannotContainSubGraphException {
-		return addSubGraph( (PersistentAttributeDescriptor) attribute, type );
 	}
 
 
@@ -151,35 +125,19 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	default <AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName, Class<AJ> subtype) {
 		return findOrCreateAttributeNode( attributeName ).makeKeySubGraph( subtype );
 	}
 
-	@SuppressWarnings("unchecked")
-	default <AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttributeDescriptor<? extends J, AJ> attribute) {
+	@Override
+	default <AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttribute<? extends J, AJ> attribute) {
 		return findOrCreateAttributeNode( attribute ).makeKeySubGraph();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	default <AJ> SubGraphImplementor<AJ> addKeySubGraph(Attribute<? extends J, AJ> attribute) {
-		return addKeySubGraph( (PersistentAttributeDescriptor) attribute );
-	}
-
-	@SuppressWarnings("unchecked")
 	default <AJ> SubGraphImplementor<? extends AJ> addKeySubGraph(
-			PersistentAttributeDescriptor<? extends J, AJ> attribute,
+			PersistentAttribute<? extends J, AJ> attribute,
 			Class<? extends AJ> subType) throws CannotContainSubGraphException {
 		return findOrCreateAttributeNode( attribute ).makeKeySubGraph( subType );
 	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	default <AJ> SubGraphImplementor<? extends AJ> addKeySubGraph(
-			Attribute<? extends J, AJ> attribute,
-			Class<? extends AJ> subType) throws CannotContainSubGraphException {
-		return addKeySubGraph( (PersistentAttributeDescriptor) attribute, subType );
-	}
-
 }

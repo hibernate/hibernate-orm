@@ -10,6 +10,7 @@ import java.io.Serializable;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.metamodel.model.domain.spi.DomainTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Defines commonality for the JPA {@link Type} hierarchy of interfaces.
@@ -18,36 +19,44 @@ import org.hibernate.metamodel.model.domain.spi.DomainTypeDescriptor;
  * @author Brad Koehn
  */
 public abstract class AbstractType<X> implements DomainTypeDescriptor<X>, Serializable {
-	private final Class<X> javaType;
+	private final JavaTypeDescriptor<X> javaTypeDescriptor;
 	private final String typeName;
 
 	/**
 	 * Instantiates the type based on the given Java type.
-	 *
-	 * @param javaType The Java type of the JPA model type.
 	 */
-	protected AbstractType(Class<X> javaType) {
-		this( javaType, javaType != null ? javaType.getName() : null );
+	protected AbstractType(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		this(
+				javaTypeDescriptor,
+				javaTypeDescriptor.getJavaType() != null
+						? javaTypeDescriptor.getJavaType().getName()
+						: null
+		);
 	}
 
 	/**
 	 * Instantiates the type based on the given Java type.
 	 */
-	protected AbstractType(Class<X> javaType, String typeName) {
-		this.javaType = javaType;
+	protected AbstractType(JavaTypeDescriptor<X> javaTypeDescriptor, String typeName) {
+		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.typeName = typeName == null ? "unknown" : typeName;
+	}
+
+	@Override
+	public JavaTypeDescriptor<X> getJavaTypeDescriptor() {
+		return javaTypeDescriptor;
 	}
 
 	/**
 	 * {@inheritDoc}
-	 * <p/>
-	 * IMPL NOTE : The Hibernate version may return {@code null} here in the case of either dynamic models or
-	 * entity classes mapped multiple times using entity-name.  In these cases, the {@link #getTypeName()} value
-	 * should be used.
+	 *
+	 * @implNote The Hibernate impl may return {@code null} here in the case of either
+	 * dynamic models or entity classes mapped multiple times using entity-name.  In
+	 * these cases, the {@link #getTypeName()} value should be used.
 	 */
 	@Override
 	public Class<X> getJavaType() {
-		return javaType;
+		return javaTypeDescriptor.getJavaType();
 	}
 
 	/**

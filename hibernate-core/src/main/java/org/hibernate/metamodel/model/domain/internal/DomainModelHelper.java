@@ -4,10 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.model.domain.spi;
+package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -17,31 +20,23 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class DomainModelHelper {
-	public static EntityPersister resolveEntityPersister(
-			EntityTypeDescriptor<?> entityType,
-			SessionFactoryImplementor sessionFactory) {
-		// Our EntityTypeImpl#getType impl returns the Hibernate entity-name
-		// which is exactly what we want
-		final String hibernateEntityName = entityType.getName();
-		return sessionFactory.getMetamodel().entityPersister( hibernateEntityName );
-	}
 
 	@SuppressWarnings("unchecked")
-	public static <T, S extends T> ManagedTypeDescriptor<S> resolveSubType(
-			ManagedTypeDescriptor<T> baseType,
+	public static <T, S extends T> ManagedDomainType<S> resolveSubType(
+			ManagedDomainType<T> baseType,
 			String subTypeName,
 			SessionFactoryImplementor sessionFactory) {
 		final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
 
-		if ( baseType instanceof EmbeddedTypeDescriptor<?> ) {
+		if ( baseType instanceof EmbeddableDomainType<?> ) {
 			// todo : at least validate the string is a valid sub-type of the embeddable class?
-			return (ManagedTypeDescriptor) baseType;
+			return (ManagedDomainType) baseType;
 		}
 
 		final String importedClassName = metamodel.getImportedClassName( subTypeName );
 		if ( importedClassName != null ) {
 			// first, try to find it by name directly..
-			ManagedTypeDescriptor<S> subManagedType = metamodel.entity( importedClassName );
+			ManagedDomainType<S> subManagedType = metamodel.entity( importedClassName );
 			if ( subManagedType != null ) {
 				return subManagedType;
 			}
@@ -58,15 +53,30 @@ public class DomainModelHelper {
 			}
 		}
 
-		throw new IllegalArgumentException( "Unknown sub-type name (" + baseType.getName() + ") : " + subTypeName );
+		throw new IllegalArgumentException( "Unknown sub-type name (" + baseType.getTypeName() + ") : " + subTypeName );
 	}
 
-	public static <S> ManagedTypeDescriptor<S> resolveSubType(
-			ManagedTypeDescriptor<? super S> baseType,
+	public static <S> ManagedDomainType<S> resolveSubType(
+			ManagedDomainType<? super S> baseType,
 			Class<S> subTypeClass,
 			SessionFactoryImplementor sessionFactory) {
 		// todo : validate the hierarchy-ness...
 		final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
 		return metamodel.managedType( subTypeClass );
 	}
+
+
+	/**
+	 * Resolve a JPA EntityType descriptor to it's corresponding EntityPersister
+	 * in the Hibernate mapping type system
+	 */
+	public static EntityPersister resolveEntityPersister(
+			EntityDomainType<?> entityType,
+			SessionFactoryImplementor sessionFactory) {
+		// Our EntityTypeImpl#getType impl returns the Hibernate entity-name
+		// which is exactly what we want
+		final String hibernateEntityName = entityType.getName();
+		return sessionFactory.getMetamodel().entityPersister( hibernateEntityName );
+	}
+
 }

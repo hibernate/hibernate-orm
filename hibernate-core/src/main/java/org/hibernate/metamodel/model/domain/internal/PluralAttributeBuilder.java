@@ -13,39 +13,40 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.model.AttributeClassification;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * A "parameter object" for creating a plural attribute
  */
 public class PluralAttributeBuilder<D, C, E, K> {
-	private final ManagedTypeDescriptor<D> declaringType;
-	private final SimpleTypeDescriptor<E> valueType;
+	private final ManagedDomainType<D> declaringType;
+	private final SimpleDomainType<E> valueType;
 
-	private SimpleTypeDescriptor<K> keyType;
-
-	private JavaTypeDescriptor<C> collectionJavaTypeDescriptor;
+	private SimpleDomainType<K> keyType;
 
 	private AttributeClassification attributeClassification;
+	private CollectionClassification collectionClassification;
+	private JavaTypeDescriptor<C> collectionJavaTypeDescriptor;
 
 	private Property property;
 	private Member member;
 
 	public PluralAttributeBuilder(
-			ManagedTypeDescriptor<D> ownerType,
-			SimpleTypeDescriptor<E> elementType,
+			ManagedDomainType<D> ownerType,
+			SimpleDomainType<E> elementType,
 			JavaTypeDescriptor<C> collectionJavaTypeDescriptor,
-			SimpleTypeDescriptor<K> keyType) {
+			SimpleDomainType<K> keyType) {
 		this.declaringType = ownerType;
 		this.valueType = elementType;
 		this.collectionJavaTypeDescriptor = collectionJavaTypeDescriptor;
 		this.keyType = keyType;
 	}
 
-	public ManagedTypeDescriptor<D> getDeclaringType() {
+	public ManagedDomainType<D> getDeclaringType() {
 		return declaringType;
 	}
 
@@ -53,7 +54,11 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return attributeClassification;
 	}
 
-	public SimpleTypeDescriptor<K> getKeyType() {
+	public CollectionClassification getCollectionClassification() {
+		return collectionClassification;
+	}
+
+	public SimpleDomainType<K> getKeyType() {
 		return keyType;
 	}
 
@@ -61,7 +66,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return collectionJavaTypeDescriptor;
 	}
 
-	public SimpleTypeDescriptor<E> getValueType() {
+	public SimpleDomainType<E> getValueType() {
 		return valueType;
 	}
 

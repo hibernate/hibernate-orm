@@ -8,15 +8,20 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
-		implements MapPersistentAttribute<X, K, V> {
-	private final SimpleTypeDescriptor<K> keyType;
+class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V> implements MapPersistentAttribute<X, K, V> {
+	private final SimpleDomainType<K> keyType;
 
 	MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder) {
 		super( xceBuilder );
@@ -34,12 +39,35 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	}
 
 	@Override
-	public SimpleTypeDescriptor<K> getKeyType() {
+	public SimpleDomainType<K> getKeyType() {
 		return keyType;
 	}
 
 	@Override
-	public SimpleTypeDescriptor<K> getKeyGraphType() {
+	public SimpleDomainType<K> getKeyGraphType() {
 		return getKeyType();
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public SqmPath resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		throw new NotYetImplementedFor6Exception();
 	}
 }

@@ -8,7 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.spi.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 
 /**
  * @author Steve Ebersole

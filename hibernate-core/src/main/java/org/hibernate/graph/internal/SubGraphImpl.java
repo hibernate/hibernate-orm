@@ -11,15 +11,15 @@ import javax.persistence.metamodel.Attribute;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
 public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImplementor<J> {
 	public SubGraphImpl(
-			ManagedTypeDescriptor<J> managedType,
+			ManagedDomainType<J> managedType,
 			boolean mutable,
 			SessionFactoryImplementor sessionFactory) {
 		super( managedType, mutable, sessionFactory );
@@ -51,16 +51,16 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	@Override
 	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(Attribute<? extends J, AJ> attribute) {
-		return addAttributeNode( (PersistentAttributeDescriptor) attribute );
+		return addAttributeNode( (PersistentAttribute) attribute );
 	}
 
 	@Override
-	public boolean appliesTo(ManagedTypeDescriptor<? super J> managedType) {
+	public boolean appliesTo(ManagedDomainType<? super J> managedType) {
 		if ( this.getGraphedType().equals( managedType ) ) {
 			return true;
 		}
 
-		ManagedTypeDescriptor superType = managedType.getSuperType();
+		ManagedDomainType superType = managedType.getSuperType();
 		while ( superType != null ) {
 			if ( superType.equals( managedType ) ) {
 				return true;

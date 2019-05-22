@@ -6,25 +6,25 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	public SqmRoot(
-			EntityTypeDescriptor<E> entityTypeDescriptor,
+			EntityDomainType<E> entityType,
 			String alias,
 			NodeBuilder nodeBuilder) {
-		super( entityTypeDescriptor, alias, nodeBuilder );
+		super( entityType, alias, nodeBuilder );
 	}
 
 	@Override
@@ -39,16 +39,16 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Override
-	public SqmPathSource<?, E> getReferencedPathSource() {
-		return (EntityTypeDescriptor<E>) super.getReferencedPathSource();
+	public EntityDomainType<E> getReferencedPathSource() {
+		return (EntityDomainType<E>) super.getReferencedPathSource();
 	}
 
 	public String getEntityName() {
-		return getReferencedPathSource().getEntityName();
+		return getReferencedPathSource().getHibernateEntityName();
 	}
 
 	@Override
-	public EntityJavaDescriptor<E> getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
 		return getReferencedPathSource().getJavaTypeDescriptor();
 	}
 
@@ -69,18 +69,18 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	// JPA
 
 	@Override
-	public EntityTypeDescriptor<E> getManagedType() {
+	public EntityDomainType<E> getManagedType() {
 		return getReferencedPathSource();
 	}
 
 	@Override
-	public EntityTypeDescriptor<E> getModel() {
+	public EntityDomainType<E> getModel() {
 		return getReferencedPathSource();
 	}
 
 	@Override
 	public <S extends E> SqmTreatedRoot<E, S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityTypeDescriptor<S> typeDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
+		final EntityDomainType<S> typeDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
 		return new SqmTreatedRoot<>( this, typeDescriptor, nodeBuilder() );
 	}
 }

@@ -4,31 +4,31 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.model.domain.spi;
+package org.hibernate.metamodel.model.domain;
 
 import javax.persistence.metamodel.SingularAttribute;
 
 /**
  * Hibernate extension to the JPA {@link SingularAttribute} descriptor
  *
- * todo (6.0) : Create an form of singular attribute (and plural) in the API package (org.hibernate.metamodel.model.domain)
- * 		and have this extend it
- *
  * @author Steve Ebersole
  */
-public interface SingularPersistentAttribute<D,J> extends SingularAttribute<D,J>, PersistentAttributeDescriptor<D,J,J> {
+public interface SingularPersistentAttribute<D,J> extends SingularAttribute<D,J>, PersistentAttribute<D,J> {
 	@Override
-	SimpleTypeDescriptor<J> getType();
+	SimpleDomainType<J> getType();
 
 	@Override
-	ManagedTypeDescriptor<D> getDeclaringType();
+	ManagedDomainType<D> getDeclaringType();
+
+	@Override
+	SimpleDomainType<J> getSqmNodeType();
 
 	/**
 	 * For a singular attribute, the value type is defined as the
 	 * attribute type
 	 */
 	@Override
-	default SimpleTypeDescriptor<?> getValueGraphType() {
+	default SimpleDomainType<?> getValueGraphType() {
 		return getType();
 	}
 

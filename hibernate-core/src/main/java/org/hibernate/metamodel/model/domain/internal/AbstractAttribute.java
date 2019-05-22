@@ -16,10 +16,9 @@ import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.model.AttributeClassification;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -31,24 +30,24 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class AbstractAttribute<D,J,B>
-		implements PersistentAttributeDescriptor<D,J,B>, Serializable {
-	private final ManagedTypeDescriptor<D> declaringType;
+		implements PersistentAttribute<D,J>, Serializable {
+	private final ManagedDomainType<D> declaringType;
 	private final String name;
 	private final JavaTypeDescriptor<J> attributeType;
 
 	private final AttributeClassification attributeClassification;
 
-	private final SimpleTypeDescriptor<B> valueType;
+	private final SimpleDomainType<B> valueType;
 	private transient Member member;
 
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractAttribute(
-			ManagedTypeDescriptor<D> declaringType,
+			ManagedDomainType<D> declaringType,
 			String name,
 			JavaTypeDescriptor<J> attributeType,
 			AttributeClassification attributeClassification,
-			SimpleTypeDescriptor<B> valueType,
+			SimpleDomainType<B> valueType,
 			Member member) {
 		this.declaringType = declaringType;
 		this.name = name;
@@ -64,7 +63,7 @@ public abstract class AbstractAttribute<D,J,B>
 	}
 
 	@Override
-	public String getNavigableName() {
+	public String getPathName() {
 		return getName();
 	}
 
@@ -74,7 +73,7 @@ public abstract class AbstractAttribute<D,J,B>
 	}
 
 	@Override
-	public DomainType<B> getSqmNodeType() {
+	public SimpleDomainType<B> getSqmNodeType() {
 		return valueType;
 	}
 
@@ -84,7 +83,7 @@ public abstract class AbstractAttribute<D,J,B>
 	}
 
 	@Override
-	public ManagedTypeDescriptor<D> getDeclaringType() {
+	public ManagedDomainType<D> getDeclaringType() {
 		return declaringType;
 	}
 
@@ -104,13 +103,13 @@ public abstract class AbstractAttribute<D,J,B>
 	}
 
 	@Override
-	public SimpleTypeDescriptor<?> getValueGraphType() {
+	public SimpleDomainType<?> getValueGraphType() {
 		return valueType;
 	}
 
 	@Override
 	public String toString() {
-		return declaringType.getName() + '#' + name + '(' + attributeClassification + ')';
+		return declaringType.getTypeName() + '#' + name + '(' + attributeClassification + ')';
 	}
 
 	/**

@@ -8,11 +8,10 @@ package org.hibernate.query.sqm.produce.function;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.sql.Template;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;

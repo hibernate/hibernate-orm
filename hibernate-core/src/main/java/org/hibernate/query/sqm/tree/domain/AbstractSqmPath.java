@@ -16,10 +16,10 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -38,7 +38,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqmPath(
 			NavigablePath navigablePath,
-			SqmPathSource<?,T> referencedPathSource,
+			SqmPathSource<?> referencedPathSource,
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( referencedPathSource, nodeBuilder );
@@ -47,7 +47,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected AbstractSqmPath(SqmPathSource<?,T> referencedPathSource, SqmPath lhs, NodeBuilder nodeBuilder) {
+	protected AbstractSqmPath(SqmPathSource<?> referencedPathSource, SqmPath lhs, NodeBuilder nodeBuilder) {
 		this(
 				lhs == null
 						? new NavigablePath( referencedPathSource.getPathName() )
@@ -90,8 +90,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@SuppressWarnings("unchecked")
 	public SqmExpression<Class<? extends T>> type() {
 		if ( pathTypeExpression == null ) {
-			final DomainType<T> sqmNodeType = getReferencedPathSource().getSqmNodeType();
-			if ( sqmNodeType instanceof EntityTypeDescriptor ) {
+			final DomainType sqmNodeType = getReferencedPathSource().getSqmNodeType();
+			if ( sqmNodeType instanceof EntityDomainType ) {
 				pathTypeExpression = new SqmBasicValuedSimplePath(
 						getNavigablePath().append( "{type}" ),
 						???,

@@ -16,11 +16,16 @@ import org.hibernate.query.sqm.SqmPathSource;
  *
  * @author Steve Ebersole
  */
-public interface PersistentAttribute<D,J,B> extends Attribute<D,J>, SqmPathSource<J,B> {
+public interface PersistentAttribute<D,J> extends Attribute<D,J>, SqmPathSource<J> {
 	@Override
 	ManagedDomainType<D> getDeclaringType();
 
+	/**
+	 * The classification of the attribute (is it a basic type, entity, etc)
+	 */
 	AttributeClassification getAttributeClassification();
+
+	DomainType<?> getType();
 
 	SimpleDomainType<?> getValueGraphType();
 	SimpleDomainType<?> getKeyGraphType();

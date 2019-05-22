@@ -15,6 +15,6 @@ import org.hibernate.query.sqm.SqmPathSource;
  *
  * @author Steve Ebersole
  */
-public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityType<J>, SqmPathSource<J,J> {
+public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityType<J>, SqmPathSource<J> {
 	String getHibernateEntityName();
 }

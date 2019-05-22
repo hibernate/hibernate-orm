@@ -22,9 +22,9 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
  *  Base class for {@link RootGraph} and {@link SubGraph} implementations.
@@ -32,11 +32,12 @@ import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements GraphImplementor<J> {
-	private final ManagedTypeDescriptor<J> managedType;
-	private Map<PersistentAttributeDescriptor<?,?>, AttributeNodeImplementor<?>> attrNodeMap;
+	private final ManagedDomainType<J> managedType;
+	private Map<PersistentAttribute<?,?>, AttributeNodeImplementor<?>> attrNodeMap;
 
+	@SuppressWarnings("WeakerAccess")
 	public AbstractGraph(
-			ManagedTypeDescriptor<J> managedType,
+			ManagedDomainType<J> managedType,
 			boolean mutable,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutable, sessionFactory );
@@ -62,14 +63,14 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public ManagedTypeDescriptor<J> getGraphedType() {
+	public ManagedDomainType<J> getGraphedType() {
 		return managedType;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) {
-		if ( getGraphedType() instanceof EntityTypeDescriptor ) {
+		if ( getGraphedType() instanceof EntityDomainType ) {
 			return new RootGraphImpl( name, mutable, this );
 		}
 
@@ -88,7 +89,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		for ( GraphImplementor<J> other : others ) {
 			for ( AttributeNodeImplementor<?> attributeNode : other.getAttributeNodeImplementors() ) {
 				final AttributeNodeImplementor localAttributeNode = findAttributeNode(
-						(PersistentAttributeDescriptor) attributeNode.getAttributeDescriptor()
+						(PersistentAttribute) attributeNode.getAttributeDescriptor()
 				);
 				if ( localAttributeNode != null ) {
 					// keep the local one, but merge in the incoming one
@@ -139,17 +140,17 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName) {
-		final PersistentAttributeDescriptor<? super J, ?> attribute = managedType.findAttribute( attributeName );
+		final PersistentAttribute<? super J, ?> attribute = managedType.findAttribute( attributeName );
 		if ( attribute == null ) {
 			return null;
 		}
 
-		return findAttributeNode( (PersistentAttributeDescriptor) attribute );
+		return findAttributeNode( (PersistentAttribute) attribute );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(PersistentAttributeDescriptor<? extends J, AJ> attribute) {
+	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(PersistentAttribute<? extends J, AJ> attribute) {
 		if ( attrNodeMap == null ) {
 			return null;
 		}
@@ -176,14 +177,14 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttributeDescriptor<? extends J, AJ> attribute)
+	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? extends J, AJ> attribute)
 			throws CannotContainSubGraphException {
 		return findOrCreateAttributeNode( attribute );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttributeDescriptor<? extends J, AJ> attribute) {
+	public <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttribute<? extends J, AJ> attribute) {
 		verifyMutability();
 
 		AttributeNodeImplementor attrNode = null;

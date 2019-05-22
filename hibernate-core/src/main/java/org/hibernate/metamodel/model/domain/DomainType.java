@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -24,12 +25,24 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface DomainType<J> extends javax.persistence.metamodel.Type<J> {
+public interface DomainType<J> extends SqmExpressable<J> {
 	/**
-	 * The name of the type - this is Hibernate notion of the type name including
-	 * non-pojo mappings, etc.
+	 * The name of the type.
+	 *
+	 * @apiNote This is the Hibernate notion of the type name.  For most types
+	 * this will simply be the Java type (i.e. {@link Class}) name.  However
+	 * using the String allows for Hibernate's dynamic model feature.
 	 */
-	String getTypeName();
+	default String getTypeName() {
+		// default impl to handle the general case returning the Java type name
+		return getJavaTypeDescriptor().getJavaType().getName();
+	}
 
+	/**
+	 * The descriptor for the Java type (i.e. {@link Class}) represented by this
+	 * DomainType.
+	 *
+	 * @see #getTypeName
+	 */
 	JavaTypeDescriptor<J> getJavaTypeDescriptor();
 }

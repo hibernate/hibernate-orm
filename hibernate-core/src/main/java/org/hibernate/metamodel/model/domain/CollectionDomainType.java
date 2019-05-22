@@ -4,12 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.model.domain.spi;
+package org.hibernate.metamodel.model.domain;
+
+import org.hibernate.metamodel.CollectionClassification;
 
 /**
- * Specialization of DomainType for types that can be used as query parameter bind values
+ * DomainType for a plural attribute
  *
  * @author Steve Ebersole
  */
-public interface AllowableParameterType<J> extends SimpleTypeDescriptor<J> {
+public interface CollectionDomainType<C,E> extends DomainType<C> {
+	CollectionClassification getCollectionClassification();
 }

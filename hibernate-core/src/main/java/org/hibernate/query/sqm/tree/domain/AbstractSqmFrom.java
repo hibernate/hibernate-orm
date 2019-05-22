@@ -24,13 +24,14 @@ import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.domain.spi.BagPersistentAttribute;
+import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.ListPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.MapPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.SetPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSubQuery;
@@ -61,7 +62,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
-			SqmPathSource<?,T> referencedNavigable,
+			SqmPathSource<T> referencedNavigable,
 			SqmFrom lhs,
 			String alias,
 			NodeBuilder nodeBuilder) {
@@ -77,14 +78,14 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	 * Intended for use with {@link SqmRoot}
 	 */
 	protected AbstractSqmFrom(
-			EntityTypeDescriptor<T> entityTypeDescriptor,
+			EntityDomainType<T> entityType,
 			String alias,
 			NodeBuilder nodeBuilder) {
 		super(
 				alias == null
-						? new NavigablePath( entityTypeDescriptor.getHibernateEntityName() )
-						: new NavigablePath( entityTypeDescriptor.getHibernateEntityName() + '(' + alias + ')' ),
-				entityTypeDescriptor,
+						? new NavigablePath( entityType.getHibernateEntityName() )
+						: new NavigablePath( entityType.getHibernateEntityName() + '(' + alias + ')' ),
+				entityType,
 				null,
 				nodeBuilder
 		);

@@ -4,25 +4,29 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.model.domain.internal;
+package org.hibernate.metamodel.model.domain;
 
-import java.io.Serializable;
-
-import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
+public abstract class AbstractDomainType<J> implements DomainType<J> {
+	private final SessionFactoryImplementor sessionFactory;
+
 	private final JavaTypeDescriptor<J> javaTypeDescriptor;
 
-	public BasicTypeImpl(JavaTypeDescriptor<J> javaTypeDescriptor) {
+	@SuppressWarnings("WeakerAccess")
+	public AbstractDomainType(
+			JavaTypeDescriptor<J> javaTypeDescriptor,
+			SessionFactoryImplementor sessionFactory) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.sessionFactory = sessionFactory;
 	}
 
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+	protected SessionFactoryImplementor sessionFactory() {
+		return sessionFactory;
 	}
 
 	@Override
@@ -30,6 +34,7 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
 		return javaTypeDescriptor;
 	}
 
+	@Override
 	public Class<J> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
 	}

@@ -6,16 +6,16 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import javax.persistence.metamodel.EmbeddableType;
-
 /**
  * Hibernate extension to the JPA {@link } contract.
  *
- * @apiNote Notice that this describes {@link javax.persistence.Embedded}, not
- * {@link javax.persistence.Embeddable} - like {@link CollectionDomainType}, it includes
- * mapping information per usage (attribute)
+ * @deprecated (since 6.0) Use {@link EmbeddableDomainType} instead.  Originally intended
+ * to describe the actual usage of an embeddable (the embedded) because it was intended
+ * to include the mapping (column, etc) information.  However, that causes us to need
+ * multiple embeddable instances per embeddable class.
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedDomainType<J> extends SimpleDomainType<J>, EmbeddableType<J> {
+@Deprecated
+public interface EmbeddedDomainType<J> extends EmbeddableDomainType<J> {
 }

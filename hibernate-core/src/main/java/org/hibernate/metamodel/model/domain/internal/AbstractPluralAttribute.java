@@ -9,8 +9,11 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.SimpleTypeDescriptor;
+import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.model.domain.AbstractManagedType;
+import org.hibernate.metamodel.model.domain.CollectionDomainType;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
@@ -26,7 +29,17 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public abstract class AbstractPluralAttribute<D,C,E>
 		extends AbstractAttribute<D,C,E>
-		implements PluralPersistentAttribute<D,C,E>, Serializable {
+		implements PluralPersistentAttribute<D,C,E>, CollectionDomainType<C,E>, Serializable {
+
+	public static <X,C,E,K> PluralAttributeBuilder<X,C,E,K> create(
+			AbstractManagedType<X> ownerType,
+			SimpleDomainType<E> attrType,
+			JavaTypeDescriptor<C> collectionClass,
+			SimpleDomainType<K> keyType) {
+		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, keyType );
+	}
+
+	private final CollectionClassification classification;
 
 	protected AbstractPluralAttribute(PluralAttributeBuilder<D,C,E,?> builder) {
 		super(
@@ -37,29 +50,45 @@ public abstract class AbstractPluralAttribute<D,C,E>
 				builder.getValueType(),
 				builder.getMember()
 		);
-	}
 
-	public static <X,C,E,K> PluralAttributeBuilder<X,C,E,K> create(
-			AbstractManagedType<X> ownerType,
-			SimpleTypeDescriptor<E> attrType,
-			JavaTypeDescriptor<C> collectionClass,
-			SimpleTypeDescriptor<K> keyType) {
-		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, keyType );
+		this.classification = builder.getCollectionClassification();
 	}
 
 	@Override
-	public SimpleTypeDescriptor<E> getElementType() {
+	public CollectionClassification getCollectionClassification() {
+		return classification;
+	}
+
+	@Override
+	public CollectionType getCollectionType() {
+		return getCollectionClassification().toJpaClassification();
+	}
+
+	@Override
+	public CollectionDomainType<C, E> getType() {
+		return this;
+	}
+
+	@Override
+	public String getTypeName() {
+		// todo (6.0) : this should return the "role"
+		//		- for now just return the name of the collection type
+		return getCollectionType().name();
+	}
+
+	@Override
+	public SimpleDomainType<E> getElementType() {
 		return getValueGraphType();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SimpleTypeDescriptor<E> getValueGraphType() {
-		return (SimpleTypeDescriptor<E>) super.getValueGraphType();
+	public SimpleDomainType<E> getValueGraphType() {
+		return (SimpleDomainType<E>) super.getValueGraphType();
 	}
 
 	@Override
-	public SimpleTypeDescriptor<?> getKeyGraphType() {
+	public SimpleDomainType<?> getKeyGraphType() {
 		return null;
 	}
 
@@ -84,16 +113,13 @@ public abstract class AbstractPluralAttribute<D,C,E>
 		return getElementType().getJavaType();
 	}
 
-
 	@Override
 	public Class<C> getJavaType() {
 		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
-	public SqmPath createSqmPath(
-			SqmPath<?> lhs,
-			SqmCreationState creationState) {
+	public SqmPath<C> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState) {
 		return new SqmPluralValuedSimplePath(  );
 	}
 }

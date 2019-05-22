@@ -8,7 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Set;
 
-import org.hibernate.metamodel.model.domain.spi.SetPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 
 /**
  * @author Steve Ebersole

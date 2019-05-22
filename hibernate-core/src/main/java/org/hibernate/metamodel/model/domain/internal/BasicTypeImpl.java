@@ -26,11 +26,11 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 
 	public Class<J> getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
+		return getExpressableJavaTypeDescriptor().getJavaType();
 	}
 }

@@ -21,7 +21,7 @@ public interface AttributeContainer<J> {
 	 * Used during creation of the type
 	 */
 	interface InFlightAccess<J> {
-		void addAttribute(PersistentAttribute<J,?,?> attribute);
+		void addAttribute(PersistentAttribute<J,?> attribute);
 
 		default void applyIdAttribute(SingularPersistentAttribute<J, ?> idAttribute) {
 			throw new UnsupportedOperationException(

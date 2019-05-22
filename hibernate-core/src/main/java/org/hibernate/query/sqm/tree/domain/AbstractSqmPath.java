@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
-import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
@@ -23,8 +22,11 @@ import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -38,7 +40,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqmPath(
 			NavigablePath navigablePath,
-			SqmPathSource<?> referencedPathSource,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( referencedPathSource, nodeBuilder );
@@ -46,8 +48,18 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		this.lhs = lhs;
 	}
 
+	@Override
+	public SqmPathSource<T> getNodeType() {
+		return (SqmPathSource<T>) super.getNodeType();
+	}
+
+	@Override
+	public SqmPathSource<T> getReferencedPathSource() {
+		return (SqmPathSource<T>) super.getNodeType();
+	}
+
 	@SuppressWarnings("WeakerAccess")
-	protected AbstractSqmPath(SqmPathSource<?> referencedPathSource, SqmPath lhs, NodeBuilder nodeBuilder) {
+	protected AbstractSqmPath(SqmPathSource<T> referencedPathSource, SqmPath lhs, NodeBuilder nodeBuilder) {
 		this(
 				lhs == null
 						? new NavigablePath( referencedPathSource.getPathName() )
@@ -79,9 +91,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Bindable<T> getModel() {
-		return (Bindable<T>) getReferencedPathSource();
+	public SqmPathSource<T> getModel() {
+		return getReferencedPathSource();
 	}
 
 	private SqmExpression pathTypeExpression;
@@ -90,19 +101,70 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@SuppressWarnings("unchecked")
 	public SqmExpression<Class<? extends T>> type() {
 		if ( pathTypeExpression == null ) {
-			final DomainType sqmNodeType = getReferencedPathSource().getSqmNodeType();
+			final String discriminatorPathName = "{type}";
+			final NavigablePath discriminatorNavigablePath = getNavigablePath().append( discriminatorPathName );
+
+			final DomainType sqmNodeType = getReferencedPathSource().getSqmPathType();
+
 			if ( sqmNodeType instanceof EntityDomainType ) {
+				final SqmPathSource discriminatorPathSource = new SqmPathSource() {
+					@Override
+					public String getPathName() {
+						return discriminatorPathName;
+					}
+
+					@Override
+					public DomainType<?> getSqmPathType() {
+						return null;
+					}
+
+					@Override
+					public SqmPathSource<?> findSubPathSource(String name) {
+						throw new UnsupportedOperationException( "Entity discriminator cannot be de-referenced" );
+					}
+
+					@Override
+					public SqmPath createSqmPath(SqmPath lhs, SqmCreationState creationState) {
+						return new SqmBasicValuedSimplePath( discriminatorNavigablePath, this, AbstractSqmPath.this, nodeBuilder() );
+					}
+
+					@Override
+					public BindableType getBindableType() {
+						return BindableType.SINGULAR_ATTRIBUTE;
+					}
+
+					@Override
+					public Class getBindableJavaType() {
+						return null;
+					}
+
+					@Override
+					public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+						return null;
+					}
+
+					@Override
+					public SemanticPathPart resolvePathPart(
+							String name,
+							String currentContextKey,
+							boolean isTerminal,
+							SqmCreationState creationState) {
+						return findSubPathSource( name );
+					}
+				};
 				pathTypeExpression = new SqmBasicValuedSimplePath(
-						getNavigablePath().append( "{type}" ),
-						???,
+						discriminatorNavigablePath,
+						discriminatorPathSource,
 						this,
 						nodeBuilder()
 				);
 			}
 			else {
-				throw new ...
+				// todo (6.0) : not sure this is strictly true
+				throw new UnsupportedOperationException( "SqmPath [" + getClass().getName() + "] cannot be typed" );
 			}
 		}
+
 		return pathTypeExpression;
 	}
 
@@ -121,39 +183,40 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 					final SqmPathSource subNavigable = getReferencedPathSource().findSubPathSource( attributeName );
 
 					if ( subNavigable instanceof SingularPersistentAttribute ) {
-						return createSingularPath( pathSource, (SingularPersistentAttribute) subNavigable );
+						return createSingularPath( (SingularPersistentAttribute) subNavigable );
 					}
 					else {
 						assert subNavigable instanceof PluralPersistentAttribute;
-						return createPluralPath( pathSource, (PluralPersistentAttribute) subNavigable );
+						return createPluralPath( (PluralPersistentAttribute) subNavigable );
 					}
 				}
 		);
 	}
 
-	private SqmPath createSingularPath(SqmPath lhs, SingularPersistentAttribute attribute) {
+	@SuppressWarnings("unchecked")
+	private SqmPath createSingularPath(SingularPersistentAttribute attribute) {
 		final NavigablePath subNavPath = getNavigablePath().append( attribute.getPathName() );
 
 		switch ( attribute.getAttributeClassification() ) {
 			case BASIC: {
-				return new SqmBasicValuedSimplePath( subNavPath, );
+				return new SqmBasicValuedSimplePath( subNavPath, attribute, this, nodeBuilder() );
 			}
 			case EMBEDDED: {
-				return new SqmEmbeddedValuedSimplePath( subNavPath, );
+				return new SqmEmbeddedValuedSimplePath( subNavPath, attribute, this, nodeBuilder() );
 			}
 			case ANY: {
-				return new SqmAnyValuedSimplePath( subNavPath, );
+				return new SqmAnyValuedSimplePath( subNavPath, attribute, this, nodeBuilder() );
 			}
 			case ONE_TO_ONE:
 			case MANY_TO_ONE: {
-				return new SqmEntityValuedSimplePath( subNavPath, );
+				return new SqmEntityValuedSimplePath( subNavPath, attribute, this, nodeBuilder() );
 			}
 			default: {
 				throw new UnsupportedOperationException(
 						String.format(
 								Locale.ROOT,
 								"Cannot create SqmPath from singular attribute [%s#%s] - unknown classification : %s",
-								attribute.getDeclaringType().getName(),
+								attribute.getDeclaringType().getTypeName(),
 								attribute.getName(),
 								attribute.getAttributeClassification()
 						)
@@ -162,11 +225,12 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		}
 	}
 
-	private SqmPath createPluralPath(
-			SqmPath lhs,
-			PluralPersistentAttribute pluralAttribute) {
+	private SqmPath createPluralPath(PluralPersistentAttribute pluralAttribute) {
 		return new SqmPluralValuedSimplePath(
-				getNavigablePath().append( pluralAttribute.getPathName(),
+				getNavigablePath().append( pluralAttribute.getPathName() ),
+				pluralAttribute,
+				this,
+				nodeBuilder()
 		);
 	}
 
@@ -194,7 +258,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		final SingularPersistentAttribute attribute = (SingularPersistentAttribute) jpaAttribute;
 		return resolvePath(
 				attribute.getName(),
-				(pathSource, name) -> createSingularPath( pathSource, attribute )
+				(pathSource, name) -> createSingularPath( attribute )
 		);
 	}
 
@@ -203,7 +267,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	public SqmPath get(PluralAttribute attribute) {
 		return resolvePath(
 				attribute.getName(),
-				(pathSource, name) -> createPluralPath( pathSource, (PluralPersistentAttribute) attribute )
+				(pathSource, name) -> createPluralPath( (PluralPersistentAttribute) attribute )
 		);
 	}
 
@@ -212,7 +276,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	public SqmPath get(MapAttribute map) {
 		return resolvePath(
 				map.getName(),
-				(pathSource, name) -> createPluralPath( pathSource, (MapPersistentAttribute) map )
+				(pathSource, name) -> createPluralPath( (MapPersistentAttribute) map )
 		);
 	}
 }

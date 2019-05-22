@@ -14,24 +14,24 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.spi.BasicValuedNavigable;
-import org.hibernate.metamodel.model.mapping.spi.CollectionIndex;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmListJoin<O,E> extends AbstractSqmPluralJoin<O,List<E>, E> implements JpaListJoin<O, E> {
+	@SuppressWarnings("WeakerAccess")
 	public SqmListJoin(
 			SqmFrom<?,O> lhs,
 			ListPersistentAttribute<O, E> listAttribute,
@@ -43,21 +43,24 @@ public class SqmListJoin<O,E> extends AbstractSqmPluralJoin<O,List<E>, E> implem
 	}
 
 	@Override
-	public SqmPathSource<?, E> getReferencedPathSource() {
-		return (ListPersistentAttribute) super.getReferencedPathSource();
-	}
-
-	@Override
 	public ListPersistentAttribute<O, E> getModel() {
-		return getReferencedPathSource();
+		return (ListPersistentAttribute<O, E>) super.getModel();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
+		return getNodeJavaTypeDescriptor();
+	}
+
+	@Override
 	public SqmPath<Integer> index() {
+		final String navigableName = "{index}";
+		final NavigablePath navigablePath = getNavigablePath().append( navigableName );
+
+		//noinspection unchecked
 		return new SqmBasicValuedSimplePath<>(
-				getNavigablePath().append( CollectionIndex.NAVIGABLE_NAME ),
-				(BasicValuedNavigable<Integer>) getReferencedPathSource().getCollectionDescriptor().getIndexDescriptor(),
+				navigablePath,
+				( (ListPersistentAttribute) getReferencedPathSource() ).getIndexPathSource(),
 				this,
 				nodeBuilder()
 		);
@@ -91,7 +94,7 @@ public class SqmListJoin<O,E> extends AbstractSqmPluralJoin<O,List<E>, E> implem
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(Class<S> treatAsType) {
-		final EntityTypeDescriptor<S> entityTypeDescriptor = nodeBuilder().getDomainModel().entity( treatAsType );
+		final EntityDomainType<S> entityTypeDescriptor = nodeBuilder().getDomainModel().entity( treatAsType );
 		return new SqmTreatedListJoin( this, entityTypeDescriptor, null );
 	}
 

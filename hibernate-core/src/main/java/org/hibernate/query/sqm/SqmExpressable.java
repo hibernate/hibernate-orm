@@ -15,5 +15,5 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface SqmExpressable<J> {
-	JavaTypeDescriptor<J> getJavaTypeDescriptor();
+	JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor();
 }

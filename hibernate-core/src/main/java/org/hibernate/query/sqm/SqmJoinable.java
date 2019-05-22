@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm;
 
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -20,7 +19,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  *
  * @author Steve Ebersole
  */
-public interface SqmJoinable<O,T,B> extends PersistentAttributeDescriptor<O,T,B> {
+public interface SqmJoinable {
 	SqmAttributeJoin createSqmJoin(
 			SqmFrom lhs,
 			SqmJoinType joinType,

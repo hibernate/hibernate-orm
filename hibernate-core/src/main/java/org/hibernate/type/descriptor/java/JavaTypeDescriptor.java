@@ -10,8 +10,10 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 /**
  * Descriptor for the Java side of a value mapping.
@@ -19,16 +21,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  */
 public interface JavaTypeDescriptor<T> extends Serializable {
-	/**
-	 * Retrieve the Java type handled here.
-	 *
-	 * @return The Java type.
-	 *
-	 * @deprecated Use {@link #getJavaType()} instead
-	 */
-	@Deprecated
-	Class<T> getJavaTypeClass();
-
 	/**
 	 * Get the Java type described
 	 */
@@ -44,6 +36,16 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	default MutabilityPlan<T> getMutabilityPlan() {
 		return ImmutableMutabilityPlan.INSTANCE;
 	}
+
+	/**
+	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended
+	 * aspect comes from the JDBC spec (mostly).
+	 *
+	 * @param context Contextual information
+	 *
+	 * @return The recommended SQL type descriptor
+	 */
+	SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context);
 
 	/**
 	 * Retrieve the natural comparator for this type.
@@ -114,7 +116,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 *
 	 * @return The unwrapped value.
 	 */
-	<X> X unwrap(T value, Class<X> type, WrapperOptions options);
+	<X> X unwrap(T value, Class<X> type, SharedSessionContractImplementor options);
 
 	/**
 	 * Wrap a value as our handled Java type.
@@ -127,5 +129,15 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 *
 	 * @return The wrapped value.
 	 */
-	<X> T wrap(X value, WrapperOptions options);
+	<X> T wrap(X value, SharedSessionContractImplementor options);
+
+	/**
+	 * Retrieve the Java type handled here.
+	 *
+	 * @return The Java type.
+	 *
+	 * @deprecated Use {@link #getJavaType()} instead
+	 */
+	@Deprecated
+	Class<T> getJavaTypeClass();
 }

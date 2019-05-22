@@ -8,9 +8,18 @@ package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
+import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.TypeConfigurationAware;
 
 import org.jboss.logging.Logger;
 
@@ -22,15 +31,45 @@ import org.jboss.logging.Logger;
  *
  * @since 5.3
  */
-public class JavaTypeDescriptorRegistry implements Serializable {
+public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.BaselineTarget, Serializable {
 	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRegistry.class );
 
-
+	private final TypeConfiguration typeConfiguration;
 	private ConcurrentHashMap<Class, JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<>();
 
 	@SuppressWarnings("unused")
 	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// baseline descriptors
+
+	@Override
+	public void addBaselineDescriptor(JavaTypeDescriptor descriptor) {
+		if ( descriptor.getJavaType() == null ) {
+			throw new IllegalStateException( "Illegal to add BasicJavaTypeDescriptor with null Java type" );
+		}
+		addBaselineDescriptor( descriptor.getJavaType(), descriptor );
+	}
+
+	@Override
+	public void addBaselineDescriptor(Class describedJavaType, JavaTypeDescriptor descriptor) {
+		performInjections( descriptor );
+		descriptorsByClass.put( describedJavaType, descriptor );
+	}
+
+	private void performInjections(JavaTypeDescriptor descriptor) {
+		if ( descriptor instanceof TypeConfigurationAware ) {
+			// would be nice to make the JavaTypeDescriptor for an entity, e.g., aware of the the TypeConfiguration
+			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration );
+		}
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// descriptor access
 
 	public <T> JavaTypeDescriptor<T> getDescriptor(Class<T> javaType) {
 		return RegistryHelper.INSTANCE.resolveDescriptor(
@@ -57,6 +96,103 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 					descriptor,
 					old
 			);
+		}
+		performInjections( descriptor );
+	}
+
+	public <J> JavaTypeDescriptor<J> resolveDescriptor(Class<J> javaType, Supplier<JavaTypeDescriptor<J>> creator) {
+		//noinspection unchecked
+		return descriptorsByClass.computeIfAbsent(
+				javaType,
+				jt -> {
+					final JavaTypeDescriptor<J> jtd = creator.get();
+					performInjections( jtd );
+					return jtd;
+				}
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <J> JavaTypeDescriptor<J> resolveDescriptor(Class<J> javaType) {
+		return resolveDescriptor(
+				javaType,
+				() -> {
+					// the fallback will always be a basic type
+					final JavaTypeDescriptor<J> fallbackDescriptor;
+
+					if ( javaType.isEnum() ) {
+						fallbackDescriptor = new EnumJavaDescriptor( javaType );
+					}
+					else if ( Serializable.class.isAssignableFrom( javaType ) ) {
+						fallbackDescriptor = new OnTheFlySerializableJavaDescriptor( javaType );
+					}
+					else {
+						fallbackDescriptor = new JavaTypeDescriptorBasicAdaptor( javaType );
+					}
+
+					return fallbackDescriptor;
+				}
+		);
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private class OnTheFlySerializableJavaDescriptor<T extends Serializable> extends AbstractTypeDescriptor<T> {
+		private final SqlTypeDescriptor sqlTypeDescriptor;
+
+		public OnTheFlySerializableJavaDescriptor(Class<T> type) {
+			super( type );
+
+			// todo (6.0) : would be nice to expose for config by user
+			// todo (6.0) : ^^ might also be nice to allow them to plug in a "JavaTypeDescriptorResolver"
+			// 		- that allows them to hook into the #getDescriptor call either as the primary or as a fallback
+
+
+			log.debugf(
+					"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback via its Serializable interface.  " +
+							"This means Hibernate does not know how to perform certain basic operations in relation to this Java type" +
+							"which can lead to those operations having a large performance impact.  Consider registering these " +
+							"JavaTypeDescriptors with the %s during bootstrap, either directly or through a registered %s " +
+							"accessing the %s ",
+					getJavaType().getName(),
+					JavaTypeDescriptorRegistry.class.getName(),
+					TypeContributor.class.getName(),
+					TypeConfiguration.class.getName()
+			);
+
+
+			sqlTypeDescriptor = VarbinaryTypeDescriptor.INSTANCE;
+		}
+
+		@Override
+		public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+			return sqlTypeDescriptor;
+		}
+
+		@Override
+		public <X> X unwrap(T value, Class<X> type, SharedSessionContractImplementor session) {
+			if ( type.equals( byte[].class ) ) {
+				throw new UnsupportedOperationException( "Cannot unwrap Serializable to format other than byte[]" );
+			}
+
+			return (X) SerializationHelper.serialize( value );
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public <X> T wrap(X value, SharedSessionContractImplementor session) {
+			if ( value == null ) {
+				return null;
+			}
+
+			if ( value.getClass().equals( byte[].class ) ) {
+				throw new UnsupportedOperationException( "Cannot unwrap Serializable to format other than byte[]" );
+			}
+
+			final byte[] bytes = (byte[]) value;
+
+			return (T) SerializationHelper.deserialize( bytes );
 		}
 	}
 }

@@ -11,7 +11,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.mapping.spi.Navigable;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -24,8 +23,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -44,16 +42,18 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 
 	private SqmPredicate onClausePredicate;
 
+	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmAttributeJoin(
 			SqmFrom<?,O> lhs,
-			SqmJoinable<O,T,?> joinedNavigable,
+			SqmJoinable<O,T> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
+		//noinspection unchecked
 		super(
-				SqmCreationHelper.buildSubNavigablePath( lhs, joinedNavigable, alias ),
-				joinedNavigable,
+				SqmCreationHelper.buildSubNavigablePath( lhs, joinedNavigable.getName(), alias ),
+				(SqmPathSource<O>) joinedNavigable,
 				lhs,
 				alias,
 				joinType,
@@ -69,13 +69,8 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	}
 
 	@Override
-	public SqmJoinable getReferencedPathSource() {
-		return (SqmJoinable) super.getReferencedPathSource();
-	}
-
-	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getReferencedPathSource().getJavaTypeDescriptor();
+	public JavaTypeDescriptor<T> getNodeJavaTypeDescriptor() {
+		return getJavaTypeDescriptor();
 	}
 
 	public boolean isFetched() {
@@ -113,7 +108,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 
 	@Override
 	public void prepareForSubNavigableReference(
-			Navigable subNavigable,
+			SqmPathSource subNavigable,
 			boolean isSubReferenceTerminal,
 			SqmCreationState creationState) {
 		// nothing to prepare
@@ -125,7 +120,8 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 
 	@Override
 	public PersistentAttribute<? super O, ?> getAttribute() {
-		return getReferencedPathSource();
+		//noinspection unchecked
+		return (PersistentAttribute<? super O, ?>) getReferencedPathSource();
 	}
 
 	@Override

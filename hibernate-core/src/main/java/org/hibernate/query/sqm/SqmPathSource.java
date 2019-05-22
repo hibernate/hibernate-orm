@@ -6,11 +6,11 @@
  */
 package org.hibernate.query.sqm;
 
+import javax.persistence.metamodel.Bindable;
+
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * Represents parts of the application's domain model that can be used
@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  *
  * @author Steve Ebersole
  */
-public interface SqmPathSource<J> extends SqmExpressable<J>, SemanticPathPart {
+public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J> {
 	/**
 	 * The name of this thing.  Mainly used in logging and when creating a
 	 * {@link org.hibernate.query.NavigablePath}
@@ -29,9 +29,10 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, SemanticPathPart {
 	String getPathName();
 
 	/**
-	 * The type of SqmPaths this source creates
+	 * The type of SqmPaths this source creates.  Corollary to JPA's
+	 * {@link Bindable#getBindableJavaType()}
 	 */
-	DomainType<?> getSqmNodeType();
+	DomainType<?> getSqmPathType();
 
 	SqmPathSource<?> findSubPathSource(String name);
 
@@ -39,13 +40,4 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, SemanticPathPart {
 	 * Create an SQM path for this source relative to the given left-hand side
 	 */
 	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState);
-
-	@Override
-	default SqmPath resolveIndexedAccess(
-			SqmExpression selector,
-			String currentContextKey,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		throw new UnsupportedOperationException( "SqmPathSource [" + getClass().getName() + "] cannot be index accessed" );
-	}
 }

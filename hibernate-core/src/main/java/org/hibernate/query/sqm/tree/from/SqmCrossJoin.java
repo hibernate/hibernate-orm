@@ -6,15 +6,14 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.PathException;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.query.sqm.produce.SqmCreationHelper.buildRootNavigablePath;
 
@@ -25,11 +24,11 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T,T> implements SqmJoin<T,T
 	private final SqmRoot sqmRoot;
 
 	public SqmCrossJoin(
-			EntityTypeDescriptor<T> joinedEntityDescriptor,
+			EntityDomainType<T> joinedEntityDescriptor,
 			String alias,
 			SqmRoot sqmRoot) {
 		super(
-				buildRootNavigablePath( alias, joinedEntityDescriptor.getEntityName() ),
+				buildRootNavigablePath( alias, joinedEntityDescriptor.getHibernateEntityName() ),
 				joinedEntityDescriptor,
 				sqmRoot,
 				alias,
@@ -49,12 +48,12 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T,T> implements SqmJoin<T,T
 	}
 
 	@Override
-	public SqmPathSource<?, T> getReferencedPathSource() {
-		return (EntityTypeDescriptor<T>) super.getReferencedPathSource();
+	public EntityDomainType<T> getReferencedPathSource() {
+		return (EntityDomainType<T>) super.getReferencedPathSource();
 	}
 
 	public String getEntityName() {
-		return getReferencedPathSource().getEntityName();
+		return getReferencedPathSource().getHibernateEntityName();
 	}
 
 	@Override
@@ -69,7 +68,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T,T> implements SqmJoin<T,T
 
 	@Override
 	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getReferencedPathSource().getJavaTypeDescriptor();
+		return getReferencedPathSource().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override
@@ -83,7 +82,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T,T> implements SqmJoin<T,T
 
 	@Override
 	public <S extends T> SqmTreatedCrossJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityTypeDescriptor<S> treatTarget = nodeBuilder().getDomainModel().entity( treatJavaType );
+		final EntityDomainType<S> treatTarget = nodeBuilder().getDomainModel().entity( treatJavaType );
 		return new SqmTreatedCrossJoin<>( this, null, treatTarget );
 	}
 }

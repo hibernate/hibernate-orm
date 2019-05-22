@@ -6,11 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.spi.EmbeddedValuedNavigable;
-import org.hibernate.metamodel.model.mapping.spi.Navigable;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -20,8 +20,6 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
-import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -29,19 +27,24 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
-			EmbeddedValuedNavigable<T> referencedNavigable,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath lhs,
 			NodeBuilder nodeBuilder) {
-		super( navigablePath, referencedNavigable, lhs, nodeBuilder );
+		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
+
+		assert referencedPathSource.getSqmPathType() instanceof EmbeddableDomainType;
 	}
 
+	@SuppressWarnings("unused")
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
-			EmbeddedValuedNavigable<T> referencedNavigable,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
-		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
+		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
+
+		assert referencedPathSource.getSqmPathType() instanceof EmbeddableDomainType;
 	}
 
 	@Override
@@ -50,33 +53,14 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final Navigable subNavigable = getReferencedPathSource().findNavigable( name );
-		if ( subNavigable == null ) {
+		final SqmPathSource<?> subPathSource = getReferencedPathSource().findSubPathSource( name );
+		if ( subPathSource == null ) {
 			throw UnknownPathException.unknownSubPath( this, name );
 		}
 
-		prepareForSubNavigableReference( subNavigable, isTerminal, creationState );
+		prepareForSubNavigableReference( subPathSource, isTerminal, creationState );
 
-		//noinspection unchecked
-		return subNavigable.createSqmExpression(
-				this,
-				creationState
-		);
-	}
-
-	@Override
-	public SqmPathSource<?, T> getReferencedPathSource() {
-		return (EmbeddedValuedNavigable<T>) super.getReferencedPathSource();
-	}
-
-	@Override
-	public EmbeddedValuedNavigable<T> getNodeType() {
-		return getReferencedPathSource();
-	}
-
-	@Override
-	public EmbeddableJavaDescriptor<T> getJavaTypeDescriptor() {
-		return getReferencedPathSource().getJavaTypeDescriptor();
+		return subPathSource.createSqmPath( this, creationState );
 	}
 
 	@Override
@@ -88,7 +72,7 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 
 	@Override
 	public void prepareForSubNavigableReference(
-			Navigable subNavigable,
+			SqmPathSource subNavigable,
 			boolean isSubReferenceTerminal,
 			SqmCreationState creationState) {
 		if ( dereferenced ) {
@@ -99,7 +83,7 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		log.tracef(
 				"`SqmEmbeddedValuedSimplePath#prepareForSubNavigableReference` : %s -> %s",
 				getNavigablePath().getFullPath(),
-				subNavigable.getNavigableName()
+				subNavigable.getPathName()
 		);
 
 		final SqmPathRegistry pathRegistry = creationState.getProcessingStateStack().getCurrent().getPathRegistry();
@@ -109,10 +93,10 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		if ( fromByPath == null ) {
 			getLhs().prepareForSubNavigableReference( getReferencedPathSource(), false, creationState );
 
-			final SqmFrom lhsFrom = pathRegistry.findFromByPath( getLhs().getNavigablePath() );
+			final SqmFrom<?,?> lhsFrom = pathRegistry.findFromByPath( getLhs().getNavigablePath() );
 
-			if ( getReferencedPathSource() instanceof Joinable ) {
-				final SqmAttributeJoin sqmJoin = ( (Joinable) getReferencedPathSource() ).createSqmJoin(
+			if ( getReferencedPathSource() instanceof SqmJoinable ) {
+				final SqmAttributeJoin sqmJoin = ( (SqmJoinable) getReferencedPathSource() ).createSqmJoin(
 						lhsFrom,
 						SqmJoinType.INNER,
 						null,
@@ -120,6 +104,7 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 						creationState
 				);
 				pathRegistry.register( sqmJoin );
+				//noinspection unchecked
 				lhsFrom.addSqmJoin( sqmJoin );
 			}
 		}

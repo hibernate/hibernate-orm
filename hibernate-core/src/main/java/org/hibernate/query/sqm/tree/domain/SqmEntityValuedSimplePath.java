@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.EntityValuedNavigable;
-import org.hibernate.metamodel.model.mapping.spi.Navigable;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -17,7 +15,6 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -25,10 +22,10 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	public SqmEntityValuedSimplePath(
 			NavigablePath navigablePath,
-			EntityValuedNavigable<T> referencedNavigable,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath lhs,
 			NodeBuilder nodeBuilder) {
-		super( navigablePath, referencedNavigable, lhs, nodeBuilder );
+		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 	}
 
 	@Override
@@ -37,17 +34,18 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final EntityValuedNavigable referencedNavigable = getReferencedPathSource();
-		final Navigable navigable = referencedNavigable.findNavigable( name );
+		final SqmPathSource referencedPathSource = getReferencedPathSource();
+		final SqmPathSource subPathSource = referencedPathSource.findSubPathSource( name );
 
-		prepareForSubNavigableReference( referencedNavigable, isTerminal, creationState );
+		prepareForSubNavigableReference( subPathSource, isTerminal, creationState );
 
 		assert getLhs() == null || creationState.getProcessingStateStack()
 				.getCurrent()
 				.getPathRegistry()
 				.findPath( getLhs().getNavigablePath() ) != null;
 
-		return navigable.createSqmExpression( this, creationState );
+		//noinspection unchecked
+		return subPathSource.createSqmPath( this, creationState );
 	}
 
 	@Override
@@ -55,16 +53,11 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		return walker.visitEntityValuedPath( this );
 	}
 
-	@Override
-	public SqmPathSource<?, T> getReferencedPathSource() {
-		return (EntityValuedNavigable<T>) super.getReferencedPathSource();
-	}
-
 	private boolean dereferenced;
 
 	@Override
 	public void prepareForSubNavigableReference(
-			Navigable subNavigable,
+			SqmPathSource subNavigable,
 			boolean isSubReferenceTerminal,
 			SqmCreationState creationState) {
 		if ( dereferenced ) {
@@ -75,7 +68,7 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		log.tracef(
 				"`SqmEntityValuedSimplePath#prepareForSubNavigableReference` : %s -> %s",
 				getNavigablePath().getFullPath(),
-				subNavigable.getNavigableName()
+				subNavigable.getPathName()
 		);
 
 		SqmCreationHelper.resolveAsLhs( getLhs(), this, subNavigable, isSubReferenceTerminal, creationState );
@@ -84,24 +77,16 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	}
 
 	@Override
-	public EntityValuedNavigable<T> getNodeType() {
-		return getReferencedPathSource();
-	}
-
-	@Override
-	public EntityJavaDescriptor<T> getJavaTypeDescriptor() {
-		return getReferencedPathSource().getJavaTypeDescriptor();
+	public EntityDomainType<T> getNodeType() {
+		//noinspection unchecked
+		return (EntityDomainType<T>) getReferencedPathSource().getSqmPathType();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S extends T> SqmTreatedSimplePath<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityTypeDescriptor<S> treatTargetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
-		return new SqmTreatedSimplePath(
-				this,
-				treatTargetDescriptor,
-				nodeBuilder()
-		);
+		final EntityDomainType<S> treatTargetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
+		return new SqmTreatedSimplePath( this, treatTargetDescriptor, nodeBuilder() );
 	}
 
 }

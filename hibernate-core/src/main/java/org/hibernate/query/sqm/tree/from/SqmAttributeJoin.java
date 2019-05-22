@@ -6,10 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.hibernate.HibernateException;
 import org.hibernate.query.criteria.JpaFetch;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Models a join based on a mapped attribute reference.
@@ -21,7 +23,7 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	SqmFrom<?,O> getLhs();
 
 	@Override
-	SqmPathSource<?,T> getReferencedPathSource();
+	SqmPathSource<T> getReferencedPathSource();
 
 	@Override
 	JavaTypeDescriptor<T> getJavaTypeDescriptor();
@@ -33,4 +35,13 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 
 	void setJoinPredicate(SqmPredicate predicate);
 
+	class NotJoinableException extends HibernateException {
+		public NotJoinableException(String message) {
+			super( message );
+		}
+
+		public NotJoinableException(String message, Throwable cause) {
+			super( message, cause );
+		}
+	}
 }

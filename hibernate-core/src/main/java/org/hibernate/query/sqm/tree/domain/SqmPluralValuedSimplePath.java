@@ -6,21 +6,23 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.mapping.spi.CollectionElement;
-import org.hibernate.metamodel.model.mapping.spi.CollectionIndex;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.PluralValuedNavigable;
+import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.type.descriptor.java.internal.CollectionJavaDescriptor;
 
 /**
+ * An SqmPath for plural attribute paths
+ *
+ * @param <E> The collection element type, which is the "bindable" type in the SQM tree
+ *
  * @author Steve Ebersole
  */
 public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
@@ -32,16 +34,35 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
 			PluralPersistentAttribute referencedNavigable,
 			SqmPath lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
+		//noinspection unchecked
 		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
 	}
 
 	@Override
+	public PluralPersistentAttribute<?,?,E> getReferencedPathSource() {
+		//noinspection unchecked
+		return (PluralPersistentAttribute) super.getReferencedPathSource();
+	}
+
+	@Override
+	public PluralPersistentAttribute<?,?,E> getNodeType() {
+		return getReferencedPathSource();
+	}
+
+	@Override
+	public <T> T accept(SemanticQueryWalker<T> walker) {
+		return walker.visitPluralValuedPath( this );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public SemanticPathPart resolvePathPart(
 			String name,
 			String currentContextKey,
@@ -62,25 +83,43 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 				navigablePath,
 				np -> {
-					if ( CollectionElement.NAVIGABLE_NAME.equals( name ) ) {
-						return getReferencedPathSource().getCollectionDescriptor().getElementDescriptor().createSqmExpression(
+					final PluralPersistentAttribute<?, ?, E> referencedPathSource = getReferencedPathSource();
+
+					if ( CollectionPropertyNames.COLLECTION_ELEMENTS.equals( name ) ) {
+						return referencedPathSource.getElementPathSource().createSqmPath(
 								this,
 								creationState
 						);
 					}
 
-					if ( CollectionIndex.NAVIGABLE_NAME.equals( name ) ) {
-						return getReferencedPathSource().getCollectionDescriptor().getIndexDescriptor().createSqmExpression(
-								this,
-								creationState
-						);
+					if ( CollectionPropertyNames.COLLECTION_INDEX.equals( name )
+							|| CollectionPropertyNames.COLLECTION_INDICES.equals( name ) ) {
+						if ( referencedPathSource instanceof MapPersistentAttribute ) {
+							return ( (MapPersistentAttribute) referencedPathSource ).getKeyPathSource().createSqmPath( this, creationState );
+						}
+						else if ( referencedPathSource instanceof ListPersistentAttribute ) {
+							return ( (ListPersistentAttribute) referencedPathSource ).getIndexPathSource().createSqmPath( this, creationState );
+						}
+
+						throw new UnsupportedOperationException(  );
 					}
 
-					return getReferencedPathSource().getCollectionDescriptor().getElementDescriptor().createSqmExpression(
+					return referencedPathSource.getElementPathSource().createSqmPath(
 							this,
 							creationState
 					);
 				}
+		);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <S extends E> SqmTreatedSimplePath<E,S> treatAs(Class<S> treatJavaType) throws PathException {
+		final EntityDomainType<S> treatTargetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
+		return new SqmTreatedSimplePath(
+				this,
+				treatTargetDescriptor,
+				nodeBuilder()
 		);
 	}
 
@@ -90,11 +129,11 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 //			DomainResultCreationState creationState,
 //			DomainResultCreationContext creationContext) {
 //		return new CollectionResultImpl(
-//				getReferencedNavigable().getCollectionDescriptor().getDescribedAttribute(),
+//				getReferencedNavigable().getPluralAttribute().getDescribedAttribute(),
 //				getNavigablePath(),
 //				resultVariable,
 //				LockMode.NONE,
-//				getReferencedNavigable().getCollectionDescriptor().getCollectionKeyDescriptor().createDomainResult(
+//				getReferencedNavigable().getPluralAttribute().getCollectionKeyDescriptor().createDomainResult(
 //						getNavigablePath().append( "{id}" ),
 //						null,
 //						creationState,
@@ -104,34 +143,4 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 //		);
 //	}
 
-	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitPluralValuedPath( this );
-	}
-
-	@Override
-	public SqmPathSource<?, E> getReferencedPathSource() {
-		return (PluralValuedNavigable<E>) super.getReferencedPathSource();
-	}
-
-	@Override
-	public PluralValuedNavigable<E> getNodeType() {
-		return getReferencedPathSource();
-	}
-
-	@Override
-	public CollectionJavaDescriptor getJavaTypeDescriptor() {
-		return (CollectionJavaDescriptor) super.getJavaTypeDescriptor();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <S extends E> SqmTreatedSimplePath<E,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityTypeDescriptor<S> treatTargetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
-		return new SqmTreatedSimplePath(
-				this,
-				treatTargetDescriptor,
-				nodeBuilder()
-		);
-	}
 }

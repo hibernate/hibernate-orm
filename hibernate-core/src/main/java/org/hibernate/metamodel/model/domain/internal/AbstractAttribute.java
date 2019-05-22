@@ -15,7 +15,7 @@ import java.lang.reflect.Method;
 import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.metamodel.model.AttributeClassification;
+import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -29,8 +29,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractAttribute<D,J,B>
-		implements PersistentAttribute<D,J>, Serializable {
+public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,J>, Serializable {
 	private final ManagedDomainType<D> declaringType;
 	private final String name;
 	private final JavaTypeDescriptor<J> attributeType;
@@ -72,13 +71,12 @@ public abstract class AbstractAttribute<D,J,B>
 		return attributeType.getJavaType();
 	}
 
-	@Override
-	public SimpleDomainType<B> getSqmNodeType() {
+	public SimpleDomainType<B> getSqmPathType() {
 		return valueType;
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<J> getAttributeJavaTypeDescriptor() {
 		return attributeType;
 	}
 

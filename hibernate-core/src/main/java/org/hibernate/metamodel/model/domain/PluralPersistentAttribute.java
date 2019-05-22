@@ -8,6 +8,10 @@ package org.hibernate.metamodel.model.domain;
 
 import javax.persistence.metamodel.PluralAttribute;
 
+import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.query.sqm.SqmJoinable;
+import org.hibernate.query.sqm.SqmPathSource;
+
 /**
  * Hibernate extension to the JPA {@link PluralAttribute} descriptor
  *
@@ -16,12 +20,14 @@ import javax.persistence.metamodel.PluralAttribute;
  *
  * @author Steve Ebersole
  */
-public interface PluralPersistentAttribute<D,C,E> extends PluralAttribute<D,C,E>, PersistentAttribute<D,C> {
+public interface PluralPersistentAttribute<D,C,E>
+		extends PersistentAttribute<D,C>, SqmPathSource<E>, SqmJoinable, PluralAttribute<D,C,E> {
 	@Override
 	ManagedDomainType<D> getDeclaringType();
 
-	@Override
-	CollectionDomainType<C,E> getType();
+	CollectionClassification getCollectionClassification();
+
+	SqmPathSource getElementPathSource();
 
 	@Override
 	SimpleDomainType<E> getElementType();

@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -27,10 +27,15 @@ public interface BasicJavaDescriptor<T> extends JavaTypeDescriptor<T> {
 	 *
 	 * @return The recommended SQL type descriptor
 	 */
-	default SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+	default SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 		// match legacy behavior
 		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaType() )
 		);
+	}
+
+	@Override
+	default T fromString(String string) {
+		throw new UnsupportedOperationException();
 	}
 }

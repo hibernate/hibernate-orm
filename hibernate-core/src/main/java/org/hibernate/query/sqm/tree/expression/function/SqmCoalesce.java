@@ -45,7 +45,7 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 			return null;
 		}
 
-		return getNodeType().getJavaTypeDescriptor();
+		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 
 	public void value(SqmExpression<? extends T> expression) {

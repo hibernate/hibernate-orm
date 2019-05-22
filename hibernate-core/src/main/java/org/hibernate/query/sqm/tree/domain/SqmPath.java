@@ -6,10 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.Locale;
-import java.util.function.Supplier;
-
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.PathException;
@@ -61,7 +57,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	SqmPath<?> getLhs();
 
 	@Override
-	DomainType<T> getNodeType();
+	SqmPathSource<T> getNodeType();
 
 	@Override
 	default void applyInferableType(SqmExpressable<T> type) {
@@ -70,7 +66,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 
 	@Override
 	default JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getNodeType().getJavaTypeDescriptor();
+		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override
@@ -140,45 +136,48 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 		SqmCreationHelper.resolveAsLhs( getLhs(), this, subNavigable, isSubReferenceTerminal, creationState );
 	}
 
-	/**
-	 * Treat this path as the given type.  "Cast it" to the target type.
-	 *
-	 * May throw an exception if the Path is not treatable as the requested type.
-	 *
-	 * Also recognizes any {@link Navigable} target type and applies it to the
-	 * {@link #getReferencedPathSource()}.
-	 *
-	 * @apiNote This is very different from JPA's {@link #as} (and variants like
-	 * {@link #asInteger()}, etc) which are equivalent to SQL CAST function calls.
-	 *
-	 * @return The "casted" reference
-	 */
-	@SuppressWarnings("unchecked")
-	default <X> X sqmAs(Class<X> targetType) {
-		if ( targetType.isInstance( this ) ) {
-			return (X) this;
-		}
-
-		if ( Navigable.class.isAssignableFrom( targetType ) ) {
-			return (X) ( (Navigable) getReferencedPathSource() ).as( targetType );
-		}
-
-		throw new IllegalArgumentException(
-				String.format(
-						Locale.ROOT,
-						"`%s` cannot be treated as `%s`",
-						getClass().getName(),
-						targetType.getName()
-				)
-		);
-	}
-
-	default <X> X sqmAs(Class<X> targetType, Supplier<RuntimeException> exceptionSupplier) {
-		try {
-			return sqmAs( targetType );
-		}
-		catch (IllegalArgumentException e) {
-			throw exceptionSupplier.get();
-		}
-	}
+//	/**
+//	 * Treat this path as the given type.  "Cast it" to the target type.
+//	 *
+//	 * May throw an exception if the Path is not treatable as the requested type.
+//	 *
+//	 * Also recognizes any {@link Navigable} target type and applies it to the
+//	 * {@link #getReferencedPathSource()}.
+//	 *
+//	 * @apiNote This is very different from JPA's {@link #as} (and variants like
+//	 * {@link #asInteger()}, etc) which are equivalent to SQL CAST function calls.
+//	 *
+//	 * @return The "casted" reference
+//	 */
+//	@SuppressWarnings("unchecked")
+//	default <X> X sqmAs(Class<X> targetType) {
+//		if ( targetType.isInstance( this ) ) {
+//			return (X) this;
+//		}
+//
+//		if ( getReferencedPathSource().getSqmPathType()
+//				.getExpressableJavaTypeDescriptor()
+//				.getJavaType()
+//				.isAssignableFrom( targetType ) ) {
+//			return (X) ( (Navigable) getReferencedPathSource() ).as( targetType );
+//		}
+//
+//		throw new IllegalArgumentException(
+//				String.format(
+//						Locale.ROOT,
+//						"`%s` cannot be treated as `%s`",
+//						getClass().getName(),
+//						targetType.getName()
+//				)
+//		);
+//	}
+//
+//	default <X> X sqmAs(Class<X> targetType, Supplier<RuntimeException> exceptionSupplier) {
+//		try {
+//			return sqmAs( targetType );
+//		}
+//		catch (IllegalArgumentException e) {
+//			throw exceptionSupplier.get();
+//		}
+//	}
 }

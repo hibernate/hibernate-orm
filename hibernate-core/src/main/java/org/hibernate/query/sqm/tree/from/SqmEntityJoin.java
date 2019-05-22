@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.PathException;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -16,7 +15,6 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -26,12 +24,12 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifi
 	private SqmPredicate joinPredicate;
 
 	public SqmEntityJoin(
-			EntityTypeDescriptor<T> joinedEntityDescriptor,
+			EntityDomainType<T> joinedEntityDescriptor,
 			String alias,
 			SqmJoinType joinType,
 			SqmRoot sqmRoot) {
 		super(
-				SqmCreationHelper.buildRootNavigablePath( joinedEntityDescriptor.getEntityName(), alias ),
+				SqmCreationHelper.buildRootNavigablePath( joinedEntityDescriptor.getHibernateEntityName(), alias ),
 				joinedEntityDescriptor,
 				sqmRoot,
 				alias,
@@ -57,17 +55,12 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifi
 	}
 
 	@Override
-	public SqmPathSource<?, T> getReferencedPathSource() {
-		return (EntityTypeDescriptor<T>) super.getReferencedPathSource();
-	}
-
-	@Override
-	public EntityJavaDescriptor<T> getJavaTypeDescriptor() {
-		return getReferencedPathSource().getJavaTypeDescriptor();
+	public EntityDomainType<T> getReferencedPathSource() {
+		return (EntityDomainType<T>) super.getReferencedPathSource();
 	}
 
 	public String getEntityName() {
-		return getReferencedPathSource().getEntityName();
+		return getReferencedPathSource().getHibernateEntityName();
 	}
 
 	@Override
@@ -90,7 +83,7 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifi
 
 	@Override
 	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityTypeDescriptor<S> treatTarget = nodeBuilder().getDomainModel().entity( treatJavaType );
+		final EntityDomainType<S> treatTarget = nodeBuilder().getDomainModel().entity( treatJavaType );
 		return new SqmTreatedEntityJoin<>( this, treatTarget, null, getSqmJoinType() );
 	}
 }

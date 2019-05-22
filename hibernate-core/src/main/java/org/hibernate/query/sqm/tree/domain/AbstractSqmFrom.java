@@ -26,8 +26,8 @@ import javax.persistence.metamodel.SingularAttribute;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
@@ -37,7 +37,6 @@ import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticException;
-import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -113,7 +112,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 				subNavPath,
 				snp -> {
-					final SqmPathSource subSource = getReferencedPathSource().findSubPathSource( name );
+					final SqmPathSource<?> subSource = getReferencedPathSource().findSubPathSource( name );
 					if ( subSource == null ) {
 						throw UnknownPathException.unknownSubPath( this, name );
 					}
@@ -249,7 +248,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmAttributeJoin join(String attributeName, JoinType jt) {
-		final SqmPathSource<?,?> subPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> subPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 
 		return buildJoin( subPathSource, SqmJoinType.from( jt ), false );
 	}
@@ -263,7 +262,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmBagJoin joinCollection(String attributeName, JoinType jt) {
-		final SqmPathSource<?,?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof BagPersistentAttribute ) {
 			return buildBagJoin( (BagPersistentAttribute) joinedPathSource, SqmJoinType.from( jt ), false );
@@ -289,7 +288,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmSetJoin joinSet(String attributeName, JoinType jt) {
-		final SqmPathSource<?,?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof SetPersistentAttribute ) {
 			return buildSetJoin( (SetPersistentAttribute) joinedPathSource, SqmJoinType.from( jt ), false );
@@ -315,7 +314,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmListJoin joinList(String attributeName, JoinType jt) {
-		final SqmPathSource<?,?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof ListPersistentAttribute ) {
 			return buildListJoin( (ListPersistentAttribute) joinedPathSource, SqmJoinType.from( jt ), false );
@@ -341,7 +340,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmMapJoin joinMap(String attributeName, JoinType jt) {
-		final SqmPathSource<?,?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof MapPersistentAttribute ) {
 			return buildMapJoin( (MapPersistentAttribute) joinedPathSource, SqmJoinType.from( jt ), false );
@@ -404,12 +403,12 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X,A> SqmAttributeJoin<X,A> fetch(String attributeName, JoinType jt) {
-		final SqmPathSource<?,?> fetchedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> fetchedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
 		return buildJoin( fetchedPathSource, SqmJoinType.from( jt ), true );
 	}
 
 	private <A> SqmAttributeJoin buildJoin(
-			SqmPathSource<?,A> joinedPathSource,
+			SqmPathSource<A> joinedPathSource,
 			SqmJoinType joinType,
 			boolean fetched) {
 		if ( joinedPathSource instanceof SingularPersistentAttribute ) {
@@ -463,21 +462,22 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	private <A> SqmSingularJoin<T,A> buildSingularJoin(
 			SingularPersistentAttribute<T,A> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
-		if ( attribute instanceof SqmJoinable ) {
-			return new SqmSingularJoin<>(
+		if ( attribute.getSqmPathType() instanceof ManagedDomainType ) {
+			//noinspection unchecked
+			return new SqmSingularJoin(
 					this,
-					(SqmJoinable<T,A,A>) attribute,
+					attribute,
 					null,
 					joinType,
 					fetched,
 					nodeBuilder()
 			);
 		}
+
 		throw new SemanticException( "Attribute [" + attribute + "] is not joinable" );
 
 	}

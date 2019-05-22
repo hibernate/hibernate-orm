@@ -6,26 +6,26 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.internal.SingularPersistentAttributeEntity;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,S> implements SqmTreatedPath<T,S> {
 	private final SqmSingularJoin<O,T> wrappedPath;
-	private final EntityTypeDescriptor<S> treatTarget;
+	private final EntityDomainType<S> treatTarget;
 
 
 	public SqmTreatedSingularJoin(
 			SqmSingularJoin<O,T> wrappedPath,
-			EntityTypeDescriptor<S> treatTarget,
+			EntityDomainType<S> treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				(SingularPersistentAttributeEntity) wrappedPath.getAttribute(),
+				(SingularPersistentAttribute) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),
@@ -41,13 +41,18 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	}
 
 	@Override
-	public EntityTypeDescriptor<S> getTreatTarget() {
+	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmPathSource<?, S> getReferencedPathSource() {
-		return (SingularPersistentAttributeEntity) super.getReferencedPathSource();
+	public SingularPersistentAttribute getReferencedPathSource() {
+		return (SingularPersistentAttribute) super.getReferencedPathSource();
+	}
+
+	@Override
+	public JavaTypeDescriptor<S> getJavaTypeDescriptor() {
+		return treatTarget.getExpressableJavaTypeDescriptor();
 	}
 }

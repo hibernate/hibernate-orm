@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.spi.BasicValuedNavigable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -15,7 +14,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -23,19 +22,19 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 public class SqmBasicValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
-			BasicValuedNavigable<T> referencedNavigable,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath lhs,
 			NodeBuilder nodeBuilder) {
-		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
+		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
-			BasicValuedNavigable referencedNavigable,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
-		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
+		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 	}
 
 	@Override
@@ -53,17 +52,16 @@ public class SqmBasicValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	}
 
 	@Override
-	public SqmPathSource<?, T> getReferencedPathSource() {
-		return (BasicValuedNavigable<T>) super.getReferencedPathSource();
+	public SqmPathSource<T> getReferencedPathSource() {
+		return super.getReferencedPathSource();
 	}
 
 	@Override
-	public BasicValuedNavigable<T> getNodeType() {
+	public SqmPathSource<T> getNodeType() {
 		return getReferencedPathSource();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public BasicJavaDescriptor<T> getJavaTypeDescriptor() {
 		return (BasicJavaDescriptor<T>) super.getJavaTypeDescriptor();
 	}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import java.util.function.Consumer;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.graph.spi.SubGraphImplementor;
@@ -38,6 +39,9 @@ public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J
 	ManagedDomainType<? super J> getSuperType();
 
 	RepresentationMode getRepresentationMode();
+
+	void visitAttributes(Consumer<PersistentAttribute<? super J,?>> action);
+	void visitDeclaredAttributes(Consumer<PersistentAttribute<J,?>> action);
 
 	@Override
 	PersistentAttribute<? super J,?> getAttribute(String name);

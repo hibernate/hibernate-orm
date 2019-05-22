@@ -34,13 +34,4 @@ class BagAttributeImpl<X, E>
 	public SqmPathSource<?> findSubPathSource(String name) {
 		throw new NotYetImplementedFor6Exception();
 	}
-
-	@Override
-	public SemanticPathPart resolvePathPart(
-			String name,
-			String currentContextKey,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		throw new NotYetImplementedFor6Exception();
-	}
 }

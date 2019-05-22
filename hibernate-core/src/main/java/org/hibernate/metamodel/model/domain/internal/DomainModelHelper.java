@@ -6,13 +6,21 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import javax.persistence.metamodel.Bindable;
+
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.ValueClassification;
+import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmPathSource;
 
 /**
  * Helper containing utilities useful for domain model handling
@@ -79,4 +87,48 @@ public class DomainModelHelper {
 		return sessionFactory.getMetamodel().entityPersister( hibernateEntityName );
 	}
 
+	public static <J> SqmPathSource<J> resolveSqmPathSource(
+			ValueClassification classification,
+			String name,
+			DomainType<J> valueDomainType,
+			Bindable.BindableType jpaBindableType,
+			NodeBuilder nodeBuilder) {
+		switch ( classification ) {
+			case BASIC: {
+				return new BasicSqmPathSource<>(
+						name,
+						(BasicDomainType<J>) valueDomainType,
+						jpaBindableType,
+						nodeBuilder
+				);
+			}
+			case ANY: {
+				return new AnyMappingSqmPathSource<>(
+						name,
+						(AnyMappingDomainType<J>) valueDomainType,
+						jpaBindableType,
+						nodeBuilder
+				);
+			}
+			case EMBEDDED: {
+				return new EmbeddedSqmPathSource<>(
+						name,
+						(EmbeddableDomainType<J>) valueDomainType,
+						jpaBindableType,
+						nodeBuilder
+				);
+			}
+			case ENTITY: {
+				return new EntitySqmPathSource<>(
+						name,
+						(EntityDomainType<J>) valueDomainType,
+						jpaBindableType,
+						nodeBuilder
+				);
+			}
+			default: {
+				throw new IllegalArgumentException( "Unrecognized ValueClassification : " + classification );
+			}
+		}
+	}
 }

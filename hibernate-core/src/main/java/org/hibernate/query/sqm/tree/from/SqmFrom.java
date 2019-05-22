@@ -19,7 +19,6 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.metamodel.model.domain.Navigable;
 import org.hibernate.query.criteria.JpaFrom;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -44,7 +43,7 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 	 * @return
 	 */
 	@Override
-	SqmPathSource<?, T> getReferencedPathSource();
+	SqmPathSource<T> getReferencedPathSource();
 
 	boolean hasJoins();
 
@@ -65,7 +64,7 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 
 	@Override
 	default void prepareForSubNavigableReference(
-			Navigable subNavigable,
+			SqmPathSource subNavigableSource,
 			boolean isSubReferenceTerminal,
 			SqmCreationState creationState) {
 		// nothing to do, already prepared

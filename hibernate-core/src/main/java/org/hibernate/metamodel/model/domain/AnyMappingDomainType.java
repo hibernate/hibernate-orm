@@ -6,13 +6,12 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.metamodel.CollectionClassification;
-
 /**
- * DomainType for a plural attribute
+ * Models Hibernate's ANY mapping (reverse discrimination) as a JPA domain model type
+ *
+ * @param <J> The base Java type defined for the any mapping
  *
  * @author Steve Ebersole
  */
-public interface CollectionDomainType<C,E> extends DomainType<C> {
-	CollectionClassification getCollectionClassification();
+public interface AnyMappingDomainType<J> extends SimpleDomainType<J> {
 }

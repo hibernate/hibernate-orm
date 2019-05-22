@@ -6,15 +6,22 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.mapping.spi.PluralValuedNavigable;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
+
+import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 
 /**
  * Represents the reference to a Map attribute's {@link Map.Entry} entries
@@ -23,58 +30,114 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
  * @author Gunnar Morling
  * @author Steve Ebersole
  */
-public class SqmMapEntryReference<K,V> extends AbstractSqmExpression<Map.Entry<K,V>> implements SqmExpression<Map.Entry<K,V>>, ExpressableType<Map.Entry<K,V>> {
+public class SqmMapEntryReference<K,V> implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>> {
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	private final SqmPath<?> mapPath;
-	private final BasicJavaDescriptor<Map.Entry<K,V>> mapEntryTypeDescriptor;
+	private final NodeBuilder nodeBuilder;
+
+	private final JavaTypeDescriptor<Map.Entry<K,V>> mapEntryTypeDescriptor;
+
+	private String explicitAlias;
 
 	public SqmMapEntryReference(
 			SqmPath<?> mapPath,
-			BasicJavaDescriptor<Map.Entry<K,V>> mapEntryTypeDescriptor,
 			NodeBuilder nodeBuilder) {
-		super(
-				mapPath.sqmAs( PluralValuedNavigable.class ).getCollectionDescriptor().getDescribedAttribute(),
-				nodeBuilder
-		);
 		this.mapPath = mapPath;
-		this.mapEntryTypeDescriptor = mapEntryTypeDescriptor;
-	}
+		this.nodeBuilder = nodeBuilder;
 
-	public SqmPath getMapPath() {
-		return mapPath;
-	}
-
-	public PluralValuedNavigable getMapNavigable() {
-		return mapPath.sqmAs( PluralValuedNavigable.class );
-	}
-
-	@Override
-	public BasicJavaDescriptor<Map.Entry<K,V>> getJavaTypeDescriptor() {
-		return mapEntryTypeDescriptor;
+		//noinspection unchecked
+		this.mapEntryTypeDescriptor = (JavaTypeDescriptor) nodeBuilder.getDomainModel()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( Map.Entry.class );
 	}
 
 	@Override
-	public ExpressableType<Map.Entry<K,V>> getNodeType() {
+	public String getAlias() {
+		return explicitAlias;
+	}
+
+	@Override
+	public JpaSelection<Map.Entry<K, V>> alias(String name) {
+		this.explicitAlias = name;
 		return this;
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public JavaTypeDescriptor<Map.Entry<K, V>> getJavaTypeDescriptor() {
+		return mapEntryTypeDescriptor;
+	}
+
+	@Override
+	public JavaTypeDescriptor<Map.Entry<K, V>> getNodeJavaTypeDescriptor() {
+		return mapEntryTypeDescriptor;
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMapEntryFunction( this );
 	}
 
 	@Override
-	public String asLoggableText() {
-		return "MAP_ENTRY(" + getMapNavigable().asLoggableText() + ")";
+	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+	public boolean isCompoundSelection() {
+		return false;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Class<Map.Entry<K,V>> getJavaType() {
-		return (Class) Map.Entry.class;
+	public List<? extends JpaSelection<?>> getSelectionItems() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public SqmExpressable<Map.Entry<K, V>> getNodeType() {
+		return null;
+	}
+
+	@Override
+	public NodeBuilder nodeBuilder() {
+		return nodeBuilder;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA (ugh)
+
+	@Override
+	public Predicate isNull() {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate isNotNull() {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate in(Object... values) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate in(Expression<?>... values) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate in(Collection<?> values) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate in(Expression<Collection<?>> values) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public <X> Expression<X> as(Class<X> type) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 }

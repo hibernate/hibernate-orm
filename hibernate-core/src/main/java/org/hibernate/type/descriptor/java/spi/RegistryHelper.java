@@ -6,13 +6,11 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 
 import org.jboss.logging.Logger;
 

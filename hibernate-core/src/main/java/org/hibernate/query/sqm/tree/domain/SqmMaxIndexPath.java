@@ -6,10 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.spi.Navigable;
-import org.hibernate.metamodel.model.mapping.spi.NavigableContainer;
-import org.hibernate.metamodel.model.mapping.PersistentCollectionDescriptor;
-import org.hibernate.query.sqm.SemanticException;
+import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -21,12 +20,27 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 public class SqmMaxIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	public static final String NAVIGABLE_NAME = "{max-index}";
 
+	private final SqmPathSource<T> indexPathSource;
+
 	public SqmMaxIndexPath(SqmPath<?> pluralDomainPath) {
+		//noinspection unchecked
 		super(
 				pluralDomainPath.getNavigablePath().append( NAVIGABLE_NAME ),
 				pluralDomainPath,
-				pluralDomainPath.sqmAs( PersistentCollectionDescriptor.class ).getIndexDescriptor()
+				(PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource()
 		);
+
+		if ( getPluralAttribute() instanceof ListPersistentAttribute ) {
+			//noinspection unchecked
+			this.indexPathSource = ( (ListPersistentAttribute) getPluralAttribute() ).getIndexPathSource();
+		}
+		else if ( getPluralAttribute() instanceof MapPersistentAttribute ) {
+			//noinspection unchecked
+			this.indexPathSource = ( (MapPersistentAttribute) getPluralAttribute() ).getKeyPathSource();
+		}
+		else {
+			throw new UnsupportedOperationException( "Plural attribute [" + getPluralAttribute() + "] is not indexed" );
+		}
 	}
 
 	@Override
@@ -35,18 +49,12 @@ public class SqmMaxIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		if ( getReferencedPathSource() instanceof NavigableContainer<?> ) {
-			final Navigable subNavigable = ( (NavigableContainer) getReferencedPathSource() ).findNavigable( name );
-			getPluralDomainPath().prepareForSubNavigableReference( subNavigable, isTerminal, creationState );
-			return subNavigable.createSqmExpression( this, creationState );
-		}
-
-		throw new SemanticException( "Collection index cannot be de-referenced : " + getPluralDomainPath().getNavigablePath() );
+		return indexPathSource.createSqmPath( this, creationState );
 	}
 
 	@Override
-	public SqmPathSource<?, T> getReferencedPathSource() {
-		return getCollectionDescriptor().getIndexDescriptor();
+	public SqmPathSource<T> getReferencedPathSource() {
+		return indexPathSource;
 	}
 
 	@Override

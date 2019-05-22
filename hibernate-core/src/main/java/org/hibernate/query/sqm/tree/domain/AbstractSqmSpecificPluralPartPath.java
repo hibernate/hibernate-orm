@@ -7,9 +7,8 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.spi.EntityValuedNavigable;
-import org.hibernate.metamodel.model.mapping.spi.Navigable;
-import org.hibernate.metamodel.model.mapping.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.PathException;
 
@@ -19,33 +18,34 @@ import org.hibernate.query.criteria.PathException;
 public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPath<T> implements SqmPath<T> {
 	private final NavigablePath navigablePath;
 	private final SqmPath pluralDomainPath;
-	private final PersistentCollectionDescriptor<?,?,T> collectionDescriptor;
+	private final PluralPersistentAttribute<?,?,T> pluralAttribute;
 
 	private String alias;
 
+	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmSpecificPluralPartPath(
 			NavigablePath navigablePath,
 			SqmPath<?> pluralDomainPath,
-			Navigable<T> referencedNavigable) {
+			PluralPersistentAttribute<?,?,T> referencedAttribute) {
 		super(
 				navigablePath,
-				referencedNavigable,
+				referencedAttribute,
 				pluralDomainPath,
 				pluralDomainPath.nodeBuilder()
 		);
 		this.navigablePath = navigablePath;
 		this.pluralDomainPath = pluralDomainPath;
-
-		//noinspection unchecked
-		this.collectionDescriptor = pluralDomainPath.sqmAs( PersistentCollectionDescriptor.class );
+		this.pluralAttribute = referencedAttribute;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public SqmPath getPluralDomainPath() {
 		return pluralDomainPath;
 	}
 
-	public PersistentCollectionDescriptor<?,?,T> getCollectionDescriptor() {
-		return collectionDescriptor;
+	@SuppressWarnings("WeakerAccess")
+	public PluralPersistentAttribute<?,?,T> getPluralAttribute() {
+		return pluralAttribute;
 	}
 
 	@Override
@@ -70,7 +70,7 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
-		if ( getReferencedPathSource() instanceof EntityValuedNavigable ) {
+		if ( getReferencedPathSource().getSqmPathType() instanceof EntityDomainType ) {
 			throw new NotYetImplementedFor6Exception();
 		}
 

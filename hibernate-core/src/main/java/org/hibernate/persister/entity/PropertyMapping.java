@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.persister.SqlExpressableType;
@@ -33,29 +34,19 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface PropertyMapping {
-	/**
-	 * Get the type of the thing containing the properties
-	 *
-	 * todo (6.0) : this really should be defined in terms of the Hibernate mapping model, not (just?) the JPA model
-	 * 		- meaning maybe it exposes both
-	 */
-	DomainType getDomainType();
 
-	SqlExpressableType getMappingType();
-
-	//
 	/**
-	 * @asciidoc
-	 *
-	 * Resolve a sub-reference relative to this PropertyMapping.  E.g.,
+	 * @asciidoc Resolve a sub-reference relative to this PropertyMapping.  E.g.,
 	 * given the PropertyMapping for an entity named `Person` with an embedded
 	 * property `#name` calling this method with `"name"` returns the
 	 * PropertyMapping for the `Name` embeddable
-	 *
+	 * <p>
 	 * todo (6.0) : define an exception in the signature for cases where the PropertyMapping
-	 * 		cannot be de-referenced (basic values)
+	 * cannot be de-referenced (basic values)
 	 */
-	PropertyMapping resolveSubMapping(String name);
+	default PropertyMapping resolveSubMapping(String name) {
+		throw new NotYetImplementedFor6Exception();
+	}
 
 	// todo (6.0) : add capability to create SqmPath, i.e.
 	// SqmPath createSqmPath(SqmPath<?> lhs, SqmCreationState creationState);

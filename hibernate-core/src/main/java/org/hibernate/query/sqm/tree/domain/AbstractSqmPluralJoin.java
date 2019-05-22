@@ -8,19 +8,19 @@ package org.hibernate.query.sqm.tree.domain;
 
 import javax.persistence.criteria.PluralJoin;
 
-import org.hibernate.metamodel.model.mapping.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJoin<O,E> implements JpaJoin<O,E>, PluralJoin<O,C,E> {
 
+	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmPluralJoin(
 			SqmFrom<?, O> lhs,
 			PluralPersistentAttribute<O,C,E> joinedNavigable,
@@ -28,9 +28,10 @@ public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJ
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
+		//noinspection unchecked
 		super(
 				lhs,
-				(Joinable<O, E>) joinedNavigable,
+				(SqmJoinable<O, E>) joinedNavigable,
 				alias,
 				joinType,
 				fetched,
@@ -39,8 +40,8 @@ public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJ
 	}
 
 	@Override
-	public SqmPathSource<?, E> getReferencedPathSource() {
-		return (PluralPersistentAttribute) super.getReferencedPathSource();
+	public PluralPersistentAttribute<O,C,E> getReferencedPathSource() {
+		return (PluralPersistentAttribute<O, C, E>) super.getReferencedPathSource();
 	}
 
 	@Override

@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.spi.NavigableContainer;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
@@ -46,11 +44,4 @@ public abstract class AbstractSqmCorrelatedFrom<O,T>
 	public boolean isCorrelated() {
 		return true;
 	}
-
-	@Override
-	public SqmPathSource<?, T> getReferencedPathSource() {
-		return correlationParent.getReferencedPathSource();
-	}
-
-
 }

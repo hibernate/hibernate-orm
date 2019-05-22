@@ -14,17 +14,17 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.SetPersistentAttribute;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -32,6 +32,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 public class SqmSetJoin<O, E>
 		extends AbstractSqmPluralJoin<O,Set<E>, E>
 		implements JpaSetJoin<O, E> {
+	@SuppressWarnings("WeakerAccess")
 	public SqmSetJoin(
 			SqmFrom<?,O> lhs,
 			SetPersistentAttribute<O, E> pluralValuedNavigable,
@@ -43,8 +44,14 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SqmPathSource<?, E> getReferencedPathSource() {
+	public SetPersistentAttribute<O,E> getReferencedPathSource() {
+		//noinspection unchecked
 		return (SetPersistentAttribute) super.getReferencedPathSource();
+	}
+
+	@Override
+	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
+		return getReferencedPathSource().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override
@@ -84,7 +91,7 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatAsType) {
-		final EntityTypeDescriptor<S> entityTypeDescriptor = nodeBuilder().getDomainModel().entity( treatAsType );
+		final EntityDomainType<S> entityTypeDescriptor = nodeBuilder().getDomainModel().entity( treatAsType );
 		return new SqmTreatedSetJoin<>( this, entityTypeDescriptor, null );
 	}
 

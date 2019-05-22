@@ -11,13 +11,10 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 
-import org.hibernate.metamodel.model.mapping.spi.BasicValuedNavigable;
-import org.hibernate.metamodel.model.mapping.spi.CollectionElement;
-import org.hibernate.metamodel.model.mapping.spi.CollectionIndex;
-import org.hibernate.metamodel.model.mapping.spi.EmbeddedValuedNavigable;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.EntityValuedNavigable;
-import org.hibernate.metamodel.model.mapping.spi.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
@@ -28,12 +25,13 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmMapJoin<O,K,V> extends AbstractSqmPluralJoin<O,Map<K,V>,V> implements JpaMapJoin<O,K,V> {
+	@SuppressWarnings("WeakerAccess")
 	public SqmMapJoin(
 			SqmFrom<?,O> lhs,
 			MapPersistentAttribute<O,K,V> pluralValuedNavigable,
@@ -45,8 +43,14 @@ public class SqmMapJoin<O,K,V> extends AbstractSqmPluralJoin<O,Map<K,V>,V> imple
 	}
 
 	@Override
-	public SqmPathSource<?, V> getReferencedPathSource() {
+	public MapPersistentAttribute<O,K,V> getReferencedPathSource() {
+		//noinspection unchecked
 		return(MapPersistentAttribute) super.getReferencedPathSource();
+	}
+
+	@Override
+	public JavaTypeDescriptor<V> getJavaTypeDescriptor() {
+		return getNodeJavaTypeDescriptor();
 	}
 
 	@Override
@@ -61,86 +65,79 @@ public class SqmMapJoin<O,K,V> extends AbstractSqmPluralJoin<O,Map<K,V>,V> imple
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmPath<K> key() {
-		final CollectionIndex mapKeyDescriptor = getReferencedPathSource().getCollectionDescriptor().getIndexDescriptor();
-		final NavigablePath navigablePath = getNavigablePath().append( mapKeyDescriptor.getNavigableName() );
+		final SqmPathSource keyPathSource = getReferencedPathSource().getKeyPathSource();
+		final NavigablePath navigablePath = getNavigablePath().append( keyPathSource.getPathName() );
 
-		if ( mapKeyDescriptor instanceof BasicValuedNavigable ) {
+		if ( keyPathSource.getSqmPathType() instanceof BasicDomainType ) {
 			return new SqmBasicValuedSimplePath(
 					navigablePath,
-					(BasicValuedNavigable) mapKeyDescriptor,
+					keyPathSource,
 					this,
 					null
 			);
 		}
 
-		if ( mapKeyDescriptor instanceof EmbeddedValuedNavigable ) {
+		if ( keyPathSource.getSqmPathType() instanceof EmbeddableDomainType ) {
 			return new SqmEmbeddedValuedSimplePath(
 					navigablePath,
-					(EmbeddedValuedNavigable) mapKeyDescriptor,
+					keyPathSource,
 					this,
 					null
 			);
 		}
 
-		if ( mapKeyDescriptor instanceof EntityValuedNavigable ) {
+		if ( keyPathSource.getSqmPathType() instanceof EntityDomainType ) {
 			return new SqmEntityValuedSimplePath(
 					navigablePath,
-					(EntityValuedNavigable) mapKeyDescriptor,
+					keyPathSource,
 					this,
 					null
 			);
 		}
 
-		throw new UnsupportedOperationException( "Unrecognized Map key descriptor : " + mapKeyDescriptor );
+		throw new UnsupportedOperationException( "Unrecognized Map key descriptor : " + keyPathSource );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Path<V> value() {
-		final CollectionElement valueDescriptor = getReferencedPathSource().getCollectionDescriptor().getElementDescriptor();
-		final NavigablePath navigablePath = getNavigablePath().append( valueDescriptor.getNavigableName() );
+		final SqmPathSource elementPathSource = getReferencedPathSource().getElementPathSource();
+		final NavigablePath navigablePath = getNavigablePath().append( elementPathSource.getPathName() );
 
-		if ( valueDescriptor instanceof BasicValuedNavigable ) {
+		if ( elementPathSource.getSqmPathType() instanceof BasicDomainType ) {
 			return new SqmBasicValuedSimplePath(
 					navigablePath,
-					(BasicValuedNavigable) valueDescriptor,
+					elementPathSource,
 					this,
 					null
 			);
 		}
 
-		if ( valueDescriptor instanceof EmbeddedValuedNavigable ) {
+		if ( elementPathSource.getSqmPathType() instanceof EmbeddableDomainType ) {
 			return new SqmEmbeddedValuedSimplePath(
 					navigablePath,
-					(EmbeddedValuedNavigable) valueDescriptor,
+					elementPathSource,
 					this,
 					null
 			);
 		}
 
-		if ( valueDescriptor instanceof EntityValuedNavigable ) {
+		if ( elementPathSource.getSqmPathType() instanceof EntityDomainType ) {
 			return new SqmEntityValuedSimplePath(
 					navigablePath,
-					(EntityValuedNavigable) valueDescriptor,
+					elementPathSource,
 					this,
 					null
 			);
 		}
 
-		throw new UnsupportedOperationException( "Unrecognized Map value descriptor : " + valueDescriptor );
+		throw new UnsupportedOperationException( "Unrecognized Map value descriptor : " + elementPathSource );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Expression<Map.Entry<K, V>> entry() {
-		return new SqmMapEntryReference<>(
-				this,
-				(BasicJavaDescriptor) nodeBuilder().getDomainModel()
-						.getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
-						.getDescriptor( Map.Entry.class ),
-				nodeBuilder()
-		);
+		return new SqmMapEntryReference( this, nodeBuilder() );
 	}
 
 	@Override
@@ -171,7 +168,7 @@ public class SqmMapJoin<O,K,V> extends AbstractSqmPluralJoin<O,Map<K,V>,V> imple
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S extends V> SqmTreatedMapJoin<O,K,V,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityTypeDescriptor<S> targetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
+		final EntityDomainType<S> targetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
 		return new SqmTreatedMapJoin( this, targetDescriptor, null );
 	}
 }

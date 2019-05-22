@@ -6,20 +6,21 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.ListPersistentAttribute;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> implements SqmTreatedPath<T,S> {
 	private final SqmListJoin<O,T> wrappedPath;
-	private final EntityTypeDescriptor<S> treatTarget;
+	private final EntityDomainType<S> treatTarget;
 
 	public SqmTreatedListJoin(
 			SqmListJoin<O,T> wrappedPath,
-			EntityTypeDescriptor<S> treatTarget,
+			EntityDomainType<S> treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
@@ -40,19 +41,21 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public EntityTypeDescriptor<S> getTreatTarget() {
+	public ListPersistentAttribute<O, S> getModel() {
+		return (ListPersistentAttribute<O, S>) super.getModel();
+	}
+
+	@Override
+	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmPathSource<?, S> getReferencedPathSource() {
-		return super.getReferencedPathSource();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public ListPersistentAttribute getModel() {
-		return getReferencedPathSource();
+	public SqmPath resolveIndexedAccess(
+			SqmExpression selector,
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		return getWrappedPath().resolveIndexedAccess( selector, currentContextKey, isTerminal, creationState );
 	}
 }

@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.spi.Navigable;
-import org.hibernate.metamodel.model.mapping.spi.NavigableContainer;
-import org.hibernate.metamodel.model.mapping.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -22,10 +21,11 @@ public class SqmMaxElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	public static final String NAVIGABLE_NAME = "{max-element}";
 
 	public SqmMaxElementPath(SqmPath<?> pluralDomainPath) {
+		//noinspection unchecked
 		super(
 				pluralDomainPath.getNavigablePath().append( NAVIGABLE_NAME ),
 				pluralDomainPath,
-				pluralDomainPath.sqmAs( PersistentCollectionDescriptor.class ).getElementDescriptor()
+				(PluralPersistentAttribute) pluralDomainPath.getReferencedPathSource()
 		);
 	}
 
@@ -35,18 +35,18 @@ public class SqmMaxElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		if ( getReferencedPathSource() instanceof NavigableContainer<?> ) {
-			final Navigable subNavigable = ( (NavigableContainer) getReferencedPathSource() ).findNavigable( name );
-			getPluralDomainPath().prepareForSubNavigableReference( subNavigable, isTerminal, creationState );
-			return subNavigable.createSqmExpression( this, creationState );
+		if ( getPluralAttribute().getElementPathSource().getSqmPathType() instanceof ManagedDomainType ) {
+			//noinspection unchecked
+			return getPluralAttribute().getElementPathSource().createSqmPath( this, creationState );
 		}
 
 		throw new SemanticException( "Collection element cannot be de-referenced : " + getPluralDomainPath().getNavigablePath() );
 	}
 
 	@Override
-	public SqmPathSource<?, T> getReferencedPathSource() {
-		return getCollectionDescriptor().getElementDescriptor();
+	public SqmPathSource<T> getReferencedPathSource() {
+		//noinspection unchecked
+		return getPluralAttribute().getElementPathSource();
 	}
 
 	@Override

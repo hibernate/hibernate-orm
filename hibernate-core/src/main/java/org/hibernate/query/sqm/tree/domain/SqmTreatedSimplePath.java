@@ -6,8 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.EntityValuedNavigable;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -19,17 +18,17 @@ public class SqmTreatedSimplePath<T, S extends T>
 		extends SqmEntityValuedSimplePath<S>
 		implements SqmNavigableReference<S>, SqmTreatedPath<T,S> {
 
-	private final EntityTypeDescriptor<S> treatTarget;
+	private final EntityDomainType<S> treatTarget;
 	private final SqmPath<T> wrappedPath;
 
+	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedSimplePath(
 			SqmEntityValuedSimplePath<T> wrappedPath,
-			EntityTypeDescriptor<S> treatTarget,
+			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		super(
 				wrappedPath.getNavigablePath(),
-				(EntityValuedNavigable<S>) wrappedPath.getReferencedPathSource(),
+				(EntityDomainType<S>) wrappedPath.getReferencedPathSource(),
 				wrappedPath.getLhs(),
 				nodeBuilder
 		);
@@ -37,14 +36,14 @@ public class SqmTreatedSimplePath<T, S extends T>
 		this.wrappedPath = wrappedPath;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public SqmTreatedSimplePath(
 			SqmPluralValuedSimplePath<T> wrappedPath,
-			EntityTypeDescriptor<S> treatTarget,
+			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		super(
 				wrappedPath.getNavigablePath(),
-				wrappedPath.sqmAs( EntityValuedNavigable.class ),
+				(EntityDomainType<S>) wrappedPath.getReferencedPathSource(),
 				wrappedPath.getLhs(),
 				nodeBuilder
 		);
@@ -53,7 +52,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public EntityTypeDescriptor<S> getTreatTarget() {
+	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -64,7 +63,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 
 	@Override
 	public <S1 extends S> SqmTreatedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) throws PathException {
-		return (SqmTreatedSimplePath<S, S1>) super.treatAs( treatJavaType );
+		return super.treatAs( treatJavaType );
 	}
 
 	@Override

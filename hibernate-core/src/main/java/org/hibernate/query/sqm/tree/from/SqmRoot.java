@@ -49,7 +49,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	@Override
 	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
-		return getReferencedPathSource().getJavaTypeDescriptor();
+		return getReferencedPathSource().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override

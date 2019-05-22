@@ -33,6 +33,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -41,8 +42,11 @@ import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
+import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -143,7 +147,7 @@ class MetadataContext {
 	}
 
 	/*package*/ void registerEmbeddableType(EmbeddableDomainType<?> embeddableType) {
-		if ( !( ignoreUnsupported && Map.class.isAssignableFrom( embeddableType.getJavaTypeDescriptor().getJavaType() ) ) ) {
+		if ( !( ignoreUnsupported && Map.class.isAssignableFrom( embeddableType.getExpressableJavaTypeDescriptor().getJavaType() ) ) ) {
 			embeddables.add( embeddableType );
 		}
 	}
@@ -548,5 +552,20 @@ class MetadataContext {
 
 	public Set<MappedSuperclass> getUnusedMappedSuperclasses() {
 		return new HashSet<MappedSuperclass>( knownMappedSuperclasses );
+	}
+
+	private final Map<Class<?>,BasicDomainType<?>> basicDomainTypeMap = new HashMap<>();
+
+	public <J> BasicDomainType<J> resolveBasicType(Class<J> javaType) {
+		return basicDomainTypeMap.computeIfAbsent(
+				javaType,
+				jt -> {
+					final JavaTypeDescriptorRegistry registry = getSessionFactory()
+							.getMetamodel()
+							.getTypeConfiguration()
+							.getJavaTypeDescriptorRegistry();
+					return new BasicTypeImpl<>( registry.resolveDescriptor( javaType ) );
+				}
+		)
 	}
 }

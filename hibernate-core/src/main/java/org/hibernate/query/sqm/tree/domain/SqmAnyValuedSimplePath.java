@@ -6,10 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.persister.entity.PropertyMapping;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -18,33 +20,40 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
  * @author Steve Ebersole
  */
 public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
+	@SuppressWarnings("WeakerAccess")
 	public SqmAnyValuedSimplePath(
 			NavigablePath navigablePath,
-			Navigable<T> referencedNavigable,
-			SqmPath lhs, NodeBuilder nodeBuilder) {
-		super( navigablePath, referencedNavigable, lhs, nodeBuilder );
+			SqmPathSource<T> referencedPathSource,
+			SqmPath lhs,
+			NodeBuilder nodeBuilder) {
+		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
+
+		assert referencedPathSource.getSqmPathType() instanceof AnyMappingDomainType;
 	}
 
+	@SuppressWarnings("unused")
 	public SqmAnyValuedSimplePath(
 			NavigablePath navigablePath,
-			Navigable<T> referencedNavigable,
-			SqmPath lhs, String explicitAlias, NodeBuilder nodeBuilder) {
-		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
-	}
+			SqmPathSource<T> referencedPathSource,
+			SqmPath lhs,
+			String explicitAlias,
+			NodeBuilder nodeBuilder) {
+		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 
-	@Override
-	public PropertyMapping getReferencedPropertyMapping() {
-		return null;
+		assert referencedPathSource.getSqmPathType() instanceof AnyMappingDomainType;
 	}
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
-		return null;
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override
 	public SemanticPathPart resolvePathPart(
-			String name, String currentContextKey, boolean isTerminal, SqmCreationState creationState) {
+			String name,
+			String currentContextKey,
+			boolean isTerminal,
+			SqmCreationState creationState) {
 		return null;
 	}
 

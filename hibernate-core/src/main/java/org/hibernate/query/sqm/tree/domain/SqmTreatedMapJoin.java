@@ -6,25 +6,24 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.MapPersistentAttribute;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmTreatedMapJoin<O,K,V, S extends V> extends SqmMapJoin<O,K,S> implements SqmTreatedPath<V,S> {
 	private final SqmMapJoin<O,K,V> wrappedPath;
-	private final EntityTypeDescriptor<S> treatTarget;
+	private final EntityDomainType<S> treatTarget;
 
 	public SqmTreatedMapJoin(
 			SqmMapJoin<O,K,V> wrappedPath,
-			EntityTypeDescriptor<S> treatTarget,
+			EntityDomainType<S> treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				(MapPersistentAttribute) wrappedPath.getAttribute(),
+				( (SqmMapJoin) wrappedPath ).getModel(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),
@@ -40,13 +39,12 @@ public class SqmTreatedMapJoin<O,K,V, S extends V> extends SqmMapJoin<O,K,S> imp
 	}
 
 	@Override
-	public EntityTypeDescriptor<S> getTreatTarget() {
+	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmPathSource<?, S> getReferencedPathSource() {
-		return super.getReferencedPathSource();
+	public JavaTypeDescriptor<S> getJavaTypeDescriptor() {
+		return null;
 	}
 }

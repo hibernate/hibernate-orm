@@ -8,23 +8,23 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Member;
-import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.graph.spi.GraphHelper;
-import org.hibernate.metamodel.model.AttributeClassification;
+import org.hibernate.metamodel.AttributeClassification;
+import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Emmanuel Bernard
@@ -37,7 +37,7 @@ public class SingularAttributeImpl<D,J>
 	private final boolean isVersion;
 	private final boolean isOptional;
 
-	private final SimpleDomainType<J> attributeType;
+	private final SqmPathSource<J> sqmPathSource;
 
 	// NOTE : delay access for timing reasons
 	private final DelayedKeyTypeAccess graphKeyTypeAccess = new DelayedKeyTypeAccess();
@@ -50,18 +50,55 @@ public class SingularAttributeImpl<D,J>
 			Member member,
 			boolean isIdentifier,
 			boolean isVersion,
-			boolean isOptional) {
-		super( declaringType, name, attributeType.getJavaTypeDescriptor(), attributeClassification, attributeType, member );
+			boolean isOptional,
+			NodeBuilder nodeBuilder) {
+		super( declaringType, name, attributeType.getExpressableJavaTypeDescriptor(), attributeClassification, attributeType, member );
 		this.isIdentifier = isIdentifier;
 		this.isVersion = isVersion;
 		this.isOptional = isOptional;
 
-		this.attributeType = attributeType;
+
+		this.sqmPathSource = DomainModelHelper.resolveSqmPathSource(
+				determineValueClassification( attributeClassification ),
+				name,
+				attributeType,
+				BindableType.SINGULAR_ATTRIBUTE,
+				nodeBuilder
+		);
+	}
+
+	private static ValueClassification determineValueClassification(AttributeClassification attributeClassification) {
+		switch ( attributeClassification ) {
+			case BASIC: {
+				return ValueClassification.BASIC;
+			}
+			case ANY: {
+				return ValueClassification.ANY;
+			}
+			case EMBEDDED: {
+				return ValueClassification.EMBEDDED;
+			}
+			case ONE_TO_ONE:
+			case MANY_TO_ONE: {
+				return ValueClassification.ENTITY;
+			}
+			default: {
+				throw new IllegalArgumentException(
+						"Unrecognized AttributeClassification (for singular attribute): " + attributeClassification
+				);
+			}
+		}
+	}
+
+	@Override
+	public SimpleDomainType<J> getSqmPathType() {
+		//noinspection unchecked
+		return (SimpleDomainType<J>) sqmPathSource.getSqmPathType();
 	}
 
 	@Override
 	public SimpleDomainType<J> getValueGraphType() {
-		return attributeType;
+		return getSqmPathType();
 	}
 
 	@Override
@@ -70,42 +107,41 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SimpleDomainType<J> getSqmNodeType() {
-		return super.getSqmNodeType();
+	public SimpleDomainType<J> getType() {
+		return getSqmPathType();
+	}
+
+	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
+		return sqmPathSource.getExpressableJavaTypeDescriptor();
+	}
+
+	@Override
+	public Class<J> getBindableJavaType() {
+		return getExpressableJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		switch ( getAttributeClassification() ) {
-			case EMBEDDED:
-			case ONE_TO_ONE:
-			case MANY_TO_ONE: {
-				return ( (SqmPathSource) getSqmNodeType() ).findSubPathSource( name );
-			}
-			default: {
-				throw new UnsupportedOperationException( "Attribute does not contain sub-paths" );
-			}
-		}
+		return sqmPathSource.findSubPathSource( name );
 	}
 
 	@Override
-	public SemanticPathPart resolvePathPart(
-			String name,
-			String currentContextKey,
-			boolean isTerminal,
+	public SqmAttributeJoin<D,J> createSqmJoin(
+			SqmFrom lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
 			SqmCreationState creationState) {
-		return findSubPathSource( name );
+		//noinspection unchecked
+		return new SqmSingularJoin(
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState.getCreationContext().getNodeBuilder()
+		);
 	}
-
-	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
-			String currentContextKey,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		throw new UnsupportedOperationException( "Singular attribute cannot be index-accessed" );
-	}
-
 
 	/**
 	 * Subclass used to simplify instantiation of singular attributes representing an entity's
@@ -117,8 +153,19 @@ public class SingularAttributeImpl<D,J>
 				String name,
 				SimpleDomainType<J> attributeType,
 				Member member,
-				AttributeClassification attributeClassification) {
-			super( declaringType, name, attributeClassification, attributeType, member, true, false, false );
+				AttributeClassification attributeClassification,
+				NodeBuilder nodeBuilder) {
+			super(
+					declaringType,
+					name,
+					attributeClassification,
+					attributeType,
+					member,
+					true,
+					false,
+					false,
+					nodeBuilder
+			);
 		}
 	}
 
@@ -132,8 +179,19 @@ public class SingularAttributeImpl<D,J>
 				String name,
 				AttributeClassification attributeClassification,
 				SimpleDomainType<Y> attributeType,
-				Member member) {
-			super( declaringType, name, attributeClassification, attributeType, member, false, true, false );
+				Member member,
+				NodeBuilder nodeBuilder) {
+			super(
+					declaringType,
+					name,
+					attributeClassification,
+					attributeType,
+					member,
+					false,
+					true,
+					false,
+					nodeBuilder
+			);
 		}
 	}
 
@@ -153,11 +211,6 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SimpleDomainType<J> getType() {
-		return attributeType;
-	}
-
-	@Override
 	public boolean isAssociation() {
 		return getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE
 				|| getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
@@ -174,40 +227,10 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public Class<J> getBindableJavaType() {
-		return attributeType.getJavaType();
-	}
-
-	@Override
-	public SqmPath createSqmPath(
+	public SqmPath<J> createSqmPath(
 			SqmPath lhs,
 			SqmCreationState creationState) {
-		switch ( getAttributeClassification() ) {
-			case BASIC: {
-				return new SqmBasicValuedSimplePath(  );
-			}
-			case EMBEDDED: {
-				return new SqmEmbeddedValuedSimplePath(  );
-			}
-			case ANY: {
-				return new SqmAnyValuedSimplePath(  );
-			}
-			case ONE_TO_ONE:
-			case MANY_TO_ONE: {
-				return new SqmEntityValuedSimplePath(  );
-			}
-			default: {
-				throw new UnsupportedOperationException(
-						String.format(
-								Locale.ROOT,
-								"Cannot create SqmPath from singular attribute [%s#%s] - unknown classification : %s",
-								getDeclaringType().getTypeName(),
-								getName(),
-								getAttributeClassification()
-						)
-				);
-			}
-		}
+		return sqmPathSource.createSqmPath( lhs, creationState );
 	}
 
 	private class DelayedKeyTypeAccess implements Supplier<SimpleDomainType<J>>, Serializable {

@@ -68,7 +68,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public DomainType<?> getSqmNodeType() {
+	public DomainType<?> getSqmPathType() {
 		return this;
 	}
 
@@ -97,7 +97,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
 		return null;
 	}
 

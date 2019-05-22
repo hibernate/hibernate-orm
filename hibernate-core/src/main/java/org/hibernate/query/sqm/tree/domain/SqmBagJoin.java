@@ -14,22 +14,23 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.spi.BagPersistentAttribute;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> implements JpaCollectionJoin<O, E> {
+	@SuppressWarnings("WeakerAccess")
 	public SqmBagJoin(
 			SqmFrom<?,O> lhs,
 			BagPersistentAttribute<O,E> attribute,
@@ -41,18 +42,19 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public SqmPathSource<?, E> getReferencedPathSource() {
-		return (BagPersistentAttribute) super.getReferencedPathSource();
+	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
+		return getModel().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override
 	public BagPersistentAttribute<O,E> getModel() {
-		return getReferencedPathSource();
+		return (BagPersistentAttribute<O, E>) getReferencedPathSource();
 	}
 
 	@Override
 	public BagPersistentAttribute<O,E> getAttribute() {
-		return getReferencedPathSource();
+		//noinspection unchecked
+		return (BagPersistentAttribute<O, E>) super.getAttribute();
 	}
 
 	@Override
@@ -114,7 +116,8 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public <S extends E> SqmTreatedBagJoin<O, E, S> treatAs(Class<S> treatAsType) {
-		final EntityTypeDescriptor<S> entityTypeDescriptor = nodeBuilder().getDomainModel().entity( treatAsType );
-		return new SqmTreatedBagJoin<>( this, entityTypeDescriptor, null );
+		final EntityDomainType<S> entityTypeDescriptor = nodeBuilder().getDomainModel().entity( treatAsType );
+		//noinspection unchecked
+		return new SqmTreatedBagJoin( this, entityTypeDescriptor, null );
 	}
 }

@@ -9,11 +9,12 @@ package org.hibernate.query.sqm.tree.domain;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -21,7 +22,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 	public SqmSingularJoin(
 			SqmFrom<?,O> lhs,
-			SqmJoinable<O,T,T> joinedNavigable,
+			SingularPersistentAttribute<O, T> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -30,9 +31,15 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 	}
 
 	@Override
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+		return getNodeJavaTypeDescriptor();
+	}
+
+	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType) throws PathException {
 		final EntityDomainType<S> targetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
-		return new SqmTreatedSingularJoin<>( this, targetDescriptor, null );
+		//noinspection unchecked
+		return new SqmTreatedSingularJoin( this, targetDescriptor, null );
 	}
 
 	@Override

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.type.descriptor.spi;
+package org.hibernate.type.descriptor.sql;
 
 import java.sql.Types;
 import javax.persistence.EnumType;
@@ -19,7 +19,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public interface JdbcRecommendedSqlTypeMappingContext {
+public interface SqlTypeDescriptorIndicators {
 	/**
 	 * Was nationalized character datatype requested for the given Java type?
 	 *

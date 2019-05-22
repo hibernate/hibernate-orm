@@ -6,8 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 
@@ -16,11 +15,11 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
  */
 public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> implements SqmTreatedPath<T,S> {
 	private final SqmEntityJoin<T> wrapped;
-	private final EntityTypeDescriptor<S> treatTarget;
+	private final EntityDomainType<S> treatTarget;
 
 	public SqmTreatedEntityJoin(
 			SqmEntityJoin<T> wrapped,
-			EntityTypeDescriptor<S> treatTarget,
+			EntityDomainType<S> treatTarget,
 			String alias,
 			SqmJoinType joinType) {
 		super(
@@ -34,7 +33,7 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 	}
 
 	@Override
-	public EntityTypeDescriptor<S> getTreatTarget() {
+	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -44,7 +43,8 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 	}
 
 	@Override
-	public SqmPathSource<?, S> getReferencedPathSource() {
-		return super.getReferencedPathSource();
+	public EntityDomainType<S> getReferencedPathSource() {
+		//noinspection unchecked
+		return (EntityDomainType<S>) wrapped.getReferencedPathSource();
 	}
 }

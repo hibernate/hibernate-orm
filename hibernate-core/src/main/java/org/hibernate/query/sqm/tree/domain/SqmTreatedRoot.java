@@ -6,10 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.EntityValuedNavigable;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -17,15 +15,15 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  */
 public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTreatedPath<T,S> {
 	private final SqmRoot<T> wrappedPath;
-	private final EntityTypeDescriptor<S> treatTarget;
+	private final EntityDomainType<S> treatTarget;
 
 	public SqmTreatedRoot(
 			SqmRoot<T> wrappedPath,
-			EntityTypeDescriptor<S> treatTarget,
+			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				( (EntityValuedNavigable) wrappedPath.getReferencedPathSource() ).getEntityDescriptor(),
+				(EntityDomainType) wrappedPath.getReferencedPathSource(),
 				null,
 				nodeBuilder
 		);
@@ -34,12 +32,12 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	}
 
 	@Override
-	public EntityTypeDescriptor<S> getTreatTarget() {
+	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	public EntityTypeDescriptor<S> getManagedType() {
+	public EntityDomainType<S> getManagedType() {
 		return getTreatTarget();
 	}
 
@@ -49,8 +47,9 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	}
 
 	@Override
-	public SqmPathSource<?, S> getReferencedPathSource() {
-		return (EntityTypeDescriptor<S>) wrappedPath.getReferencedPathSource();
+	public EntityDomainType<S> getReferencedPathSource() {
+		//noinspection unchecked
+		return (EntityDomainType) wrappedPath.getReferencedPathSource();
 	}
 
 	@Override

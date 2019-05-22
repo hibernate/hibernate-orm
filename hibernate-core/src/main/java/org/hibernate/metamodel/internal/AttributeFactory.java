@@ -29,7 +29,7 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.model.AttributeClassification;
+import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -38,7 +38,6 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MapMember;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
@@ -107,7 +106,8 @@ public class AttributeFactory {
 				attributeMetadata.getMember(),
 				false,
 				false,
-				property.isOptional()
+				property.isOptional(),
+				context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 
@@ -149,7 +149,8 @@ public class AttributeFactory {
 				property.getName(),
 				determineSimpleType( attributeMetadata.getValueContext() ),
 				attributeMetadata.getMember(),
-				attributeMetadata.getAttributeClassification()
+				attributeMetadata.getAttributeClassification(),
+				context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 
@@ -179,7 +180,8 @@ public class AttributeFactory {
 				property.getName(),
 				attributeMetadata.getAttributeClassification(),
 				determineSimpleType( attributeMetadata.getValueContext() ),
-				attributeMetadata.getMember()
+				attributeMetadata.getMember(),
+				context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 
@@ -195,9 +197,8 @@ public class AttributeFactory {
 				attributeMetadata.getOwnerType(),
 				determineSimpleType( attributeMetadata.getElementValueContext() ),
 				javaTypeDescriptor,
-				java.util.Map.class.isAssignableFrom( attributeMetadata.getJavaType() )
-						? determineSimpleType( attributeMetadata.getMapKeyValueContext() )
-						: null
+				determineListIndexOrMapKeyType( attributeMetadata ),
+				context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
 		);
 
 		return info
@@ -207,16 +208,24 @@ public class AttributeFactory {
 				.build();
 	}
 
+	private <X, Y, E> SimpleDomainType determineListIndexOrMapKeyType(PluralAttributeMetadata<X, Y, E> attributeMetadata) {
+		if ( java.util.Map.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
+			return determineSimpleType( attributeMetadata.getMapKeyValueContext() );
+		}
+
+		if ( java.util.List.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
+
+		}
+		return java.util.Map.class.isAssignableFrom( attributeMetadata.getJavaType() )
+				? determineSimpleType( attributeMetadata.getMapKeyValueContext() )
+				: null;
+	}
+
 	@SuppressWarnings("unchecked")
 	private <Y> SimpleDomainType<Y> determineSimpleType(ValueContext typeContext) {
-		final JavaTypeDescriptor<Y> javaTypeDescriptor = context.getSessionFactory()
-				.getMetamodel()
-				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( typeContext.getJpaBindableType() );
 		switch ( typeContext.getValueClassification() ) {
 			case BASIC: {
-				return new BasicTypeImpl<>( javaTypeDescriptor );
+				return context.resolveBasicType( typeContext.getJpaBindableType() );
 			}
 			case ENTITY: {
 				final org.hibernate.type.EntityType type = (EntityType) typeContext.getHibernateValue().getType();
@@ -237,7 +246,7 @@ public class AttributeFactory {
 						javaType,
 						typeContext.getAttributeMetadata().getOwnerType(),
 						(ComponentType) typeContext.getHibernateValue().getType(),
-						context.getSessionFactory()
+						context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
 				);
 				context.registerEmbeddableType( embeddableType );
 

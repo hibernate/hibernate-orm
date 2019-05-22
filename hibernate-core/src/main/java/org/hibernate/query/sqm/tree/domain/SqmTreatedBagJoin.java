@@ -6,21 +6,20 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.mapping.spi.BagPersistentAttribute;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> implements SqmTreatedPath<T,S> {
 	private final SqmBagJoin<O, T> wrappedPath;
-	private final EntityTypeDescriptor<S> treatTarget;
+	private final EntityDomainType<S> treatTarget;
 
 	@SuppressWarnings("unchecked")
 	public SqmTreatedBagJoin(
 			SqmBagJoin<O,T> wrappedPath,
-			EntityTypeDescriptor<S> treatTarget,
+			EntityDomainType<S> treatTarget,
 			String alias) {
 		super(
 				wrappedPath.getLhs(),
@@ -40,19 +39,7 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	}
 
 	@Override
-	public EntityTypeDescriptor<S> getTreatTarget() {
+	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public SqmPathSource<?, S> getReferencedPathSource() {
-		return super.getReferencedPathSource();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public BagPersistentAttribute getModel() {
-		return getReferencedPathSource();
 	}
 }

@@ -30,12 +30,12 @@ public abstract class AbstractDomainType<J> implements DomainType<J> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 
 	@Override
 	public Class<J> getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
+		return getExpressableJavaTypeDescriptor().getJavaType();
 	}
 }

@@ -7,7 +7,6 @@
 package org.hibernate.bytecode.internal.javassist;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.security.ProtectionDomain;
 
 import javassist.CannotCompileException;

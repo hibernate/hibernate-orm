@@ -12,7 +12,8 @@ import java.util.Map;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
@@ -100,7 +101,7 @@ public class QuerySplitter {
 		final SqmSelectStatement[] expanded = new SqmSelectStatement[ unmappedPolymorphicDescriptor.getImplementors().size() ];
 
 		int i = -1;
-		for ( EntityTypeDescriptor<?> mappedDescriptor : unmappedPolymorphicDescriptor.getImplementors() ) {
+		for ( EntityDomainType<?> mappedDescriptor : unmappedPolymorphicDescriptor.getImplementors() ) {
 			i++;
 			final UnmappedPolymorphismReplacer replacer = new UnmappedPolymorphismReplacer(
 					unmappedPolymorphicReference,
@@ -116,14 +117,14 @@ public class QuerySplitter {
 	@SuppressWarnings("unchecked")
 	private static class UnmappedPolymorphismReplacer extends BaseSemanticQueryWalker implements SqmCreationState {
 		private final SqmRoot unmappedPolymorphicFromElement;
-		private final EntityTypeDescriptor mappedDescriptor;
+		private final EntityDomainType mappedDescriptor;
 
 		private Map<NavigablePath, SqmPath> sqmPathCopyMap = new HashMap<>();
 		private Map<SqmFrom,SqmFrom> sqmFromCopyMap = new HashMap<>();
 
 		private UnmappedPolymorphismReplacer(
 				SqmRoot unmappedPolymorphicFromElement,
-				EntityTypeDescriptor mappedDescriptor,
+				EntityDomainType mappedDescriptor,
 				SessionFactoryImplementor sessionFactory) {
 			super( sessionFactory.getServiceRegistry() );
 			this.unmappedPolymorphicFromElement = unmappedPolymorphicFromElement;
@@ -231,7 +232,7 @@ public class QuerySplitter {
 						}
 						else {
 							copy = new SqmRoot(
-									sqmRoot.getReferencedPathSource().getEntityDescriptor(),
+									sqmRoot.getReferencedPathSource(),
 									sqmRoot.getExplicitAlias(),
 									sqmRoot.nodeBuilder()
 							);
@@ -249,7 +250,7 @@ public class QuerySplitter {
 					join.getNavigablePath(),
 					navigablePath -> {
 						final SqmCrossJoin copy = new SqmCrossJoin(
-								join.getReferencedPathSource().getEntityDescriptor(),
+								join.getReferencedPathSource(),
 								join.getExplicitAlias(),
 								(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
 						);
@@ -266,7 +267,8 @@ public class QuerySplitter {
 					join.getNavigablePath(),
 					navigablePath -> {
 						final SqmEntityJoin copy = new SqmEntityJoin(
-								join.getReferencedPathSource().getEntityDescriptor(), join.getExplicitAlias(),
+								join.getReferencedPathSource(),
+								join.getExplicitAlias(),
 								join.getSqmJoinType(),
 								(SqmRoot) sqmFromCopyMap.get( join.findRoot() )
 						);
@@ -282,16 +284,17 @@ public class QuerySplitter {
 			return (SqmAttributeJoin) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 					join.getNavigablePath(),
 					navigablePath -> {
-						final SqmAttributeJoin copy = new SqmSingularJoin(
-								getProcessingStateStack().getCurrent()
-										.getPathRegistry()
-										.findFromByPath( join.getLhs().getNavigablePath() ),
-								join.getReferencedPathSource(),
-								join.getExplicitAlias(),
-								join.getSqmJoinType(),
-								join.isFetched(),
-								join.nodeBuilder()
-						);
+						SqmAttributeJoin copy = join.makeCopy(getProcessingStateStack().getCurrent());
+//						final SqmAttributeJoin copy = new SqmSingularJoin(
+//								getProcessingStateStack().getCurrent()
+//										.getPathRegistry()
+//										.findFromByPath( join.getLhs().getNavigablePath() ),
+//								(SingularPersistentAttribute) join.getReferencedPathSource(),
+//								join.getExplicitAlias(),
+//								join.getSqmJoinType(),
+//								join.isFetched(),
+//								join.nodeBuilder()
+//						);
 						sqmFromCopyMap.put( join, copy );
 						sqmPathCopyMap.put( join.getNavigablePath(), copy );
 						return copy;

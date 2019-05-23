@@ -40,7 +40,7 @@ public class QueryEngine {
 			SessionFactoryImplementor sessionFactory,
 			NamedQueryRepository namedQueryRepository) {
 		return new QueryEngine(
-				sessionFactory.getDomainModel(),
+				sessionFactory.getMetamodel(),
 				sessionFactory.getServiceRegistry(),
 				sessionFactory.getSessionFactoryOptions(),
 				sessionFactory,

@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.query.criteria.JpaFetch;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -34,6 +35,8 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	SqmPredicate getJoinPredicate();
 
 	void setJoinPredicate(SqmPredicate predicate);
+
+	SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState);
 
 	class NotJoinableException extends HibernateException {
 		public NotJoinableException(String message) {

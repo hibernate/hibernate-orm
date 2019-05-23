@@ -168,10 +168,14 @@ public class SqmMapJoin<O,K,V> extends AbstractSqmPluralJoin<O,Map<K,V>,V> imple
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <S extends V> SqmTreatedMapJoin<O,K,V,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityDomainType<S> targetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
-		return new SqmTreatedMapJoin( this, targetDescriptor, null );
+		return (SqmTreatedMapJoin<O,K,V,S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends V> SqmTreatedPath<V, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		//noinspection unchecked
+		return new SqmTreatedMapJoin( this, treatTarget, null );
 	}
 
 	@Override

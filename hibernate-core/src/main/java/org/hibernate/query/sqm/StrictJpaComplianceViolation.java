@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm;
 
+import org.hibernate.query.SemanticException;
+
 /**
  * Indicates violations of strict JPQL syntax while strict JPQL syntax checking was enabled.
  *

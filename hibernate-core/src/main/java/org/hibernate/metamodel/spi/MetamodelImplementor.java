@@ -29,6 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface MetamodelImplementor extends Metamodel {
 	/**
 	 * Access to the TypeConfiguration in effect for this SessionFactory/Metamodel

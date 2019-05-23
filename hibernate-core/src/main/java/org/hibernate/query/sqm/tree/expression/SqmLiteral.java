@@ -7,8 +7,8 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * Represents a literal value in the sqm, e.g.<ul>
@@ -23,18 +23,13 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 public class SqmLiteral<T> extends AbstractSqmExpression<T> implements SqmExpression<T> {
 	private T value;
 
-	public SqmLiteral(T value, BasicValuedExpressableType<T> inherentType, NodeBuilder nodeBuilder) {
+	public SqmLiteral(T value, SqmExpressable<T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.value = value;
 	}
 
 	public T getLiteralValue() {
 		return value;
-	}
-
-	@Override
-	public BasicValuedExpressableType<T> getNodeType() {
-		return (BasicValuedExpressableType<T>) super.getNodeType();
 	}
 
 	@Override

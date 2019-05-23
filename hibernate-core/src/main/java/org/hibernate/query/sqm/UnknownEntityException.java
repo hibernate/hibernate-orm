@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm;
 
+import org.hibernate.query.SemanticException;
+
 /**
  * Indicates we were not able to resolve a given "path structure" as an entity name.
  * <p/>

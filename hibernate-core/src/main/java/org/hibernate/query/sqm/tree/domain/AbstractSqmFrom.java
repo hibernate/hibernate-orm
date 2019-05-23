@@ -36,7 +36,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SemanticException;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;

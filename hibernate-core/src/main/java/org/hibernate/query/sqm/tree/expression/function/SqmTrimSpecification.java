@@ -6,14 +6,13 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
+import org.hibernate.query.TrimSpec;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.sql.TrimSpec;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Needed to pass TrimSpecification as an SqmExpression when we call out to
@@ -22,7 +21,6 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNode, SqmVisitableNode {
-
 	private final TrimSpec specification;
 
 	public SqmTrimSpecification(TrimSpec specification, NodeBuilder nodeBuilder) {
@@ -45,7 +43,7 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	}
 
 	@Override
-	public ExpressableType getNodeType() {
+	public SqmExpressable getNodeType() {
 		return null;
 	}
 }

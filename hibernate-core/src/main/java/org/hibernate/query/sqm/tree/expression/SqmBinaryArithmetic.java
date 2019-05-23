@@ -6,12 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -25,13 +24,13 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			MetamodelImplementor domainModel,
+			JpaMetamodel domainModel,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
 				(SqmExpressable<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
-						(BasicValuedExpressableType) lhsOperand.getNodeType(),
-						(BasicValuedExpressableType) rhsOperand.getNodeType(),
+						lhsOperand.getNodeType(),
+						rhsOperand.getNodeType(),
 						operator
 				),
 				nodeBuilder
@@ -49,7 +48,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			BasicValuedExpressableType<T> expressableType,
+			SqmExpressable<T> expressableType,
 			NodeBuilder nodeBuilder) {
 		super( expressableType, nodeBuilder );
 
@@ -62,12 +61,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public BasicValuedExpressableType<T> getNodeType() {
-		return (BasicValuedExpressableType<T>) super.getNodeType();
-	}
-
-	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitBinaryArithmeticExpression( this );
 	}
 

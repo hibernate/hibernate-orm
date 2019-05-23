@@ -14,12 +14,12 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 /**
  * @author Steve Ebersole
  *
- * @deprecated (since 6.0) Access to JPA's type system and Hibernate's type
- * system has been separated into {@link JpaMetamodel}
- * and {@link org.hibernate.metamodel.spi.RuntimeModel} respectively.
+ * @deprecated (since 6.0) Prefer {@link JpaMetamodel}
+ *
+ * @see JpaMetamodel
  */
 @Deprecated
-public interface Metamodel extends JpaMetamodel {
+public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	/**
 	 * Access to the SessionFactory that this Metamodel instance is bound to.
 	 *

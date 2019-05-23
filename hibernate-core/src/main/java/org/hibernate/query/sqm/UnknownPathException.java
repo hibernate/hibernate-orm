@@ -8,6 +8,7 @@ package org.hibernate.query.sqm;
 
 import java.util.Locale;
 
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**

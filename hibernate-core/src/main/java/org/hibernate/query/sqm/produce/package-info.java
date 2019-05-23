@@ -41,7 +41,7 @@
  *
  * Generally, the interpretation will throw exceptions as one of 3 types:
  *
- *  * {@link org.hibernate.query.sqm.SemanticException} and derivatives represent problems with the
+ *  * {@link org.hibernate.query.SemanticException} and derivatives represent problems with the
  *  		query itself.
  *  * {@link org.hibernate.query.sqm.ParsingException} and derivatives represent errors (potential
  *  		bugs) during parsing.

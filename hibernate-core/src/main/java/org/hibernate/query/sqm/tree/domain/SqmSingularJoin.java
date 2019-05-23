@@ -44,9 +44,13 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 
 	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityDomainType<S> targetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
+		return (SqmTreatedSingularJoin<O,T,S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		//noinspection unchecked
-		return new SqmTreatedSingularJoin( this, targetDescriptor, null );
+		return new SqmTreatedSingularJoin( this, treatTarget, null );
 	}
 
 	@Override

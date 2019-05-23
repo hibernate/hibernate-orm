@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain;
 import javax.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.query.NotIndexedCollectionException;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 
@@ -29,9 +30,21 @@ public interface PluralPersistentAttribute<D,C,E>
 
 	SqmPathSource getElementPathSource();
 
+	default SqmPathSource getIndexPathSource() {
+		throw new NotIndexedCollectionException(
+				"Plural attribute [" +  getPathName() + "] is not indexed (list / map)"
+		);
+	}
+
 	@Override
 	SimpleDomainType<E> getElementType();
 
 	@Override
 	SimpleDomainType<E> getValueGraphType();
+
+	default SimpleDomainType<E> getKeyGraphType() {
+		throw new NotIndexedCollectionException(
+				"Plural attribute [" +  getPathName() + "] is not indexed (list / map)"
+		);
+	}
 }

@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -21,8 +22,15 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public interface RuntimeModel {
+public interface DomainMetamodel {
 	TypeConfiguration getTypeConfiguration();
+	JpaMetamodel getJpaMetamodel();
+
+	default EntityPersister resolveEntityPersister(EntityDomainType domainType) {
+		return findEntityDescriptor( domainType.getHibernateEntityName() );
+	}
+
+	EntityPersister resolveEntityPersister(Object entity);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

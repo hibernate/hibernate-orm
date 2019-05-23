@@ -29,7 +29,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.metamodel.internal.MetamodelImpl;
+import org.hibernate.metamodel.internal.DomainMetamodelImpl;
 
 import org.junit.Test;
 
@@ -94,7 +94,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 				.addAnnotatedClass( WithGenericCollection.class )
 				.buildMetadata();
 		SessionFactoryImplementor sfi = (SessionFactoryImplementor) metadata.buildSessionFactory();
-		MetamodelImpl metamodel = new MetamodelImpl( sfi, ( (MetadataImplementor) metadata ).getTypeConfiguration() );
+		DomainMetamodelImpl metamodel = new DomainMetamodelImpl( sfi, ( (MetadataImplementor) metadata ).getTypeConfiguration() );
 		metamodel.initialize( (MetadataImplementor) metadata, JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED );
 		sfi.close();
 	}

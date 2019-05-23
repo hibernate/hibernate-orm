@@ -6,11 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.ParsingException;
-import org.hibernate.query.sqm.SemanticException;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
@@ -71,6 +72,9 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 
 	@Override
 	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType) throws PathException;
+
+	@Override
+	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException;
 
 	default SqmRoot findRoot() {
 		final SqmPath lhs = getLhs();

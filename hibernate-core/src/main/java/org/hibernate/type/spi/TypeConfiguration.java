@@ -8,6 +8,8 @@ package org.hibernate.type.spi;
 
 import java.io.InvalidObjectException;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -28,20 +31,26 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.metamodel.internal.MetamodelImpl;
+import org.hibernate.metamodel.internal.DomainMetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.internal.QueryHelper;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.internal.StandardBasicTypeImpl;
 import org.hibernate.type.internal.TypeConfigurationRegistry;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
 
 /**
  * Defines a set of available Type instances as isolated from other configurations.  The
@@ -175,7 +184,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		scope.setSessionFactory( sessionFactory );
 		sessionFactory.addObserver( this );
-		return new MetamodelImpl( sessionFactory, this );
+		return new DomainMetamodelImpl( sessionFactory, this );
 	}
 
 	/**
@@ -408,5 +417,128 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private Object readResolve() throws InvalidObjectException {
 		log.trace( "Resolving serialized TypeConfiguration - readResolve" );
 		return TypeConfigurationRegistry.INSTANCE.findTypeConfiguration( getUuid() );
+	}
+
+
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	/**
+	 * @see QueryHelper#highestPrecedenceType2
+	 */
+	public SqmExpressable<?> resolveArithmeticType(
+			SqmExpressable<?> firstType,
+			SqmExpressable<?> secondType,
+			BinaryArithmeticOperator operator) {
+		return resolveArithmeticType( firstType, secondType, operator == DIVIDE );
+	}
+
+	/**
+	 * Determine the result type of an arithmetic operation as defined by the
+	 * rules in section 6.5.7.1.
+	 *
+	 * @see QueryHelper#highestPrecedenceType2
+	 */
+	public SqmExpressable<?> resolveArithmeticType(
+			SqmExpressable<?> firstType,
+			SqmExpressable<?> secondType,
+			boolean isDivision) {
+
+		if ( isDivision ) {
+			// covered under the note in 6.5.7.1 discussing the unportable
+			// "semantics of the SQL division operation"..
+			return getBasicTypeRegistry().getRegisteredType( Number.class.getName() );
+		}
+
+
+		// non-division
+
+		if ( matchesJavaType( firstType, Double.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Double.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Float.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Float.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, BigDecimal.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, BigDecimal.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, BigInteger.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, BigInteger.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Long.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Long.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Integer.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Integer.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Short.class ) ) {
+			return getBasicTypeRegistry().getRegisteredType( Integer.class.getName() );
+		}
+		else if ( matchesJavaType( secondType, Short.class ) ) {
+			return getBasicTypeRegistry().getRegisteredType( Integer.class.getName() );
+		}
+		else {
+			return getBasicTypeRegistry().getRegisteredType( Number.class.getName() );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static boolean matchesJavaType(SqmExpressable type, Class javaType) {
+		assert javaType != null;
+		return type != null && javaType.isAssignableFrom( type.getExpressableJavaTypeDescriptor().getJavaType() );
+	}
+
+
+	private final ConcurrentHashMap<Class,BasicType> basicTypeByJavaType = new ConcurrentHashMap<>();
+
+	public BasicType standardBasicTypeForJavaType(Class<?> javaType) {
+		if ( javaType == null ) {
+			return null;
+		}
+
+		//noinspection unchecked
+		return standardBasicTypeForJavaType(
+				javaType,
+				javaTypeDescriptor -> new StandardBasicTypeImpl(
+						javaTypeDescriptor,
+						javaTypeDescriptor.getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() )
+				)
+		);
+	}
+
+	public BasicType standardBasicTypeForJavaType(
+			Class<?> javaType,
+			Function<JavaTypeDescriptor<?>,BasicType> creator) {
+		if ( javaType == null ) {
+			return null;
+		}
+		return basicTypeByJavaType.computeIfAbsent(
+				javaType,
+				jt -> {
+					final JavaTypeDescriptor javaTypeDescriptor = javaTypeDescriptorRegistry.resolveDescriptor( javaType );
+					return creator.apply( javaTypeDescriptor );
+				}
+		);
 	}
 }

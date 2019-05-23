@@ -49,7 +49,7 @@ import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SemanticException;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;

@@ -21,6 +21,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
+import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -99,12 +100,15 @@ public class SqmListJoin<O,E> extends AbstractSqmPluralJoin<O,List<E>, E> implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(Class<S> treatAsType) {
-		final EntityDomainType<S> entityTypeDescriptor = nodeBuilder().getDomainModel().entity( treatAsType );
-		return new SqmTreatedListJoin( this, entityTypeDescriptor, null );
+		return (SqmTreatedListJoin<O,E,S>) treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
 	}
 
+	@Override
+	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		//noinspection unchecked
+		return new SqmTreatedListJoin( this, treatTarget, null );
+	}
 
 	@Override
 	public <A> SqmSingularJoin<E, A> fetch(SingularAttribute<? super E, A> attribute) {

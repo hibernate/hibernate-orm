@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -80,7 +81,11 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	@Override
 	public <S extends E> SqmTreatedRoot<E, S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityDomainType<S> typeDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
-		return new SqmTreatedRoot<>( this, typeDescriptor, nodeBuilder() );
+		return (SqmTreatedRoot<E, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		return new SqmTreatedRoot<>( this, treatTarget, nodeBuilder() );
 	}
 }

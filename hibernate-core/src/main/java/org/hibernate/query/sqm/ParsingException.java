@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm;
 
+import org.hibernate.query.SemanticException;
+
 /**
  * The root exception for errors (potential bugs) in the sqm parser code itself, as opposed
  * to {@link SemanticException} which indicates problems with the sqm.

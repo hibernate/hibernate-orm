@@ -8,14 +8,13 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Represents the {@code SIZE()} function.
@@ -27,21 +26,17 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements
 	private final SqmPath pluralPath;
 
 	public SqmCollectionSize(SqmPath<?> pluralPath, NodeBuilder nodeBuilder) {
-		this( pluralPath, StandardSpiBasicTypes.INTEGER, nodeBuilder );
+		//noinspection unchecked
+		this( pluralPath, StandardBasicTypes.INTEGER, nodeBuilder );
 	}
 
-	public SqmCollectionSize(SqmPath<?> pluralPath, BasicValuedExpressableType<Integer> sizeType, NodeBuilder nodeBuilder) {
+	public SqmCollectionSize(SqmPath<?> pluralPath, SqmExpressable<Integer> sizeType, NodeBuilder nodeBuilder) {
 		super( sizeType, nodeBuilder );
 		this.pluralPath = pluralPath;
 	}
 
 	public SqmPath getPluralPath() {
 		return pluralPath;
-	}
-
-	@Override
-	public BasicValuedExpressableType<Integer> getNodeType() {
-		return (BasicValuedExpressableType<Integer>) super.getNodeType();
 	}
 
 	@Override
@@ -64,10 +59,5 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements
 //				creationContext.getSqlExpressionResolver().resolveSqlSelection( expression ),
 //				getNodeType()
 //		);
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getNodeType().getJavaTypeDescriptor();
 	}
 }

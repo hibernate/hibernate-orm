@@ -48,7 +48,7 @@ import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
- * Defines a context for storing information during the building of the {@link MetamodelImpl}.
+ * Defines a context for storing information during the building of the {@link DomainMetamodelImpl}.
  * <p/>
  * This contextual information includes data needing to be processed in a second pass as well as
  * cross-references into the built metamodel classes.

@@ -65,6 +65,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
+import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -82,27 +83,43 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
+ * @author Andrea Boriero
  */
-public class MetamodelImpl implements MetamodelImplementor, Serializable {
+public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MetamodelImpl.class );
+	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( DomainMetamodelImpl.class );
+
 	private static final Object ENTITY_NAME_RESOLVER_MAP_VALUE = new Object();
 	private static final String INVALID_IMPORT = "";
 	private static final String[] EMPTY_IMPLEMENTORS = new String[0];
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Map<String,String> imports = new ConcurrentHashMap<>();
-	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
-	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
-	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
-	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
-	private final ConcurrentMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<>();
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JpaMetamodel
+
 
 	private final Map<Class<?>, EntityDomainType<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
 	private final Map<String, EntityDomainType<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
-
 	private final Map<Class<?>, MappedSuperclassType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
+	private final Set<EmbeddableDomainType<?>> jpaEmbeddableTypes = new CopyOnWriteArraySet<>();
+	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
+	private final Map<String,String> imports = new ConcurrentHashMap<>();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// RuntimeModel
+
+	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// DomainMetamodel
+
+	private final ConcurrentMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<>();
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// NOTE : Relational/mapping information is not part of the JPA metamodel
@@ -124,7 +141,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	/**
 	 * There can be multiple instances of an Embeddable type, each one being relative to its parent entity.
 	 */
-	private final Set<EmbeddableDomainType<?>> jpaEmbeddableTypes = new CopyOnWriteArraySet<>();
 
 	/**
 	 * That's not strictly correct in the JPA standard since for a given Java type we could have
@@ -143,7 +159,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
 
-	public MetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
+	public DomainMetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
 		this.typeConfiguration = typeConfiguration;
 	}
@@ -353,7 +369,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			final RootGraphImpl entityGraph = new RootGraphImpl(
 					definition.getRegisteredName(),
 					entityType,
-					this
+					getJpaMetamodel()
 			);
 
 			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();

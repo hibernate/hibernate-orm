@@ -20,6 +20,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.criteria.JpaSubQuery;
+import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -92,8 +93,12 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatAsType) {
-		final EntityDomainType<S> entityTypeDescriptor = nodeBuilder().getDomainModel().entity( treatAsType );
-		return new SqmTreatedSetJoin<>( this, entityTypeDescriptor, null );
+		return (SqmTreatedSetJoin<O,E,S>) treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		return new SqmTreatedSetJoin<>( this, treatTarget, null );
 	}
 
 	// todo (6.0) : need to resolve these fetches against the element/index descriptors

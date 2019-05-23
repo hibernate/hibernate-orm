@@ -6,8 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.sql.ObjectSqlTypeDescriptor;
-
 /**
  * Centralizes access to the standard set of basic {@link Type types}.
  * <p/>

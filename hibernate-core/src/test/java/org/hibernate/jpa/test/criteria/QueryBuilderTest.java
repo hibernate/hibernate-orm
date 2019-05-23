@@ -34,7 +34,7 @@ import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.ShelfLife;
 import org.hibernate.jpa.test.metamodel.Spouse;
-import org.hibernate.metamodel.internal.MetamodelImpl;
+import org.hibernate.metamodel.internal.DomainMetamodelImpl;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.predicate.ComparisonPredicate;
 
@@ -77,7 +77,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().begin();
 
 		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();
-		MetamodelImpl mm = (MetamodelImpl) em.getMetamodel();
+		DomainMetamodelImpl mm = (DomainMetamodelImpl) em.getMetamodel();
 
         CriteriaQuery<Integer> cquery = cb.createQuery( Integer.class );
 		Root<Product> product = cquery.from( Product.class );
@@ -135,7 +135,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().begin();
 
 		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();
-		MetamodelImpl mm = (MetamodelImpl) em.getMetamodel();
+		DomainMetamodelImpl mm = (DomainMetamodelImpl) em.getMetamodel();
 		EntityType<Phone> Phone_ = mm.entity( Phone.class );
 
 		CriteriaQuery<Phone> cquery = cb.createQuery( Phone.class );
@@ -157,7 +157,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();
-		MetamodelImpl mm = (MetamodelImpl) em.getMetamodel();
+		DomainMetamodelImpl mm = (DomainMetamodelImpl) em.getMetamodel();
 		EntityType<Product> Product_ = mm.entity( Product.class );
 
 		// toFloat
@@ -189,7 +189,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();
-		MetamodelImpl mm = (MetamodelImpl) em.getMetamodel();
+		DomainMetamodelImpl mm = (DomainMetamodelImpl) em.getMetamodel();
 
         CriteriaQuery<Customer> cquery = cb.createQuery(Customer.class);
 		Root<Customer> customer = cquery.from(Customer.class);
@@ -236,7 +236,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();
-		MetamodelImpl mm = (MetamodelImpl) em.getMetamodel();
+		DomainMetamodelImpl mm = (DomainMetamodelImpl) em.getMetamodel();
 
         CriteriaQuery<java.sql.Date> dateQuery = cb.createQuery(java.sql.Date.class);
 		dateQuery.from( Customer.class );

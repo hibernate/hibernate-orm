@@ -12,13 +12,14 @@ import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 
+import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Hibernate extension to the JPA {@link javax.persistence.metamodel.Metamodel} contract
  *
- * @see org.hibernate.metamodel.spi.RuntimeModel
+ * @see DomainMetamodel
  *
  * @author Steve Ebersole
  */

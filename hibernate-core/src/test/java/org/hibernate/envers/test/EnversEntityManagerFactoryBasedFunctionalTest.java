@@ -7,6 +7,7 @@
 package org.hibernate.envers.test;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.transaction.SystemException;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Remove;
@@ -29,16 +31,20 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.boot.AuditService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.junit.jupiter.api.Tag;
 
-import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.jboss.logging.Logger;
+
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
 import org.hibernate.testing.junit5.StandardTags;
 import org.hibernate.testing.junit5.dynamictests.DynamicAfterAll;
@@ -55,10 +61,12 @@ import org.hibernate.testing.junit5.envers.EnversEntityManagerFactoryScope;
 public class EnversEntityManagerFactoryBasedFunctionalTest
 		extends AbstractEnversDynamicTest
 		implements EnversEntityManagerFactoryProducer {
+	private static final Logger LOG = Logger.getLogger( EnversEntityManagerFactoryBasedFunctionalTest.class );
 
 	private EnversEntityManagerFactoryScope entityManagerFactoryScope;
 	private AuditReader auditReader;
 	private EntityManager entityManager;
+	private List<EntityManager> isolatedEntityManagers;
 	private boolean useJta = false;
 
 	protected EntityManagerFactory entityManagerFactory() {
@@ -120,8 +128,14 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 		}
 
 		if ( entityManager != null ) {
-			entityManager.close();
-			entityManager = null;
+			releaseEntityManagerInternal( entityManager );
+		}
+
+		if ( isolatedEntityManagers != null && !isolatedEntityManagers.isEmpty() ) {
+			for ( EntityManager isolatedEntityManager : isolatedEntityManagers ) {
+				releaseEntityManagerInternal( isolatedEntityManager );
+			}
+			isolatedEntityManagers.clear();
 		}
 	}
 
@@ -160,6 +174,15 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 		if ( entityManager == null || !entityManager.isOpen() ) {
 			entityManager = entityManagerFactoryScope.getEntityManagerFactory().createEntityManager();
 		}
+		return entityManager;
+	}
+
+	protected EntityManager createIsolatedEntityManager() {
+		EntityManager entityManager = entityManagerFactoryScope.getEntityManagerFactory().createEntityManager();
+		if ( isolatedEntityManagers == null ) {
+			this.isolatedEntityManagers = new ArrayList<>();
+		}
+		isolatedEntityManagers.add( entityManager );
 		return entityManager;
 	}
 
@@ -213,6 +236,50 @@ public class EnversEntityManagerFactoryBasedFunctionalTest
 				.unwrap( SessionFactoryImplementor.class )
 				.getServiceRegistry()
 				.getService( AuditService.class );
+	}
+
+	/**
+	 * Get the audit entity descriptor for a given entity class.
+	 *
+	 * @param entityClass The entity class reference.
+	 */
+	protected EntityTypeDescriptor<?> getAuditEntityDescriptor(Class<?> entityClass) {
+		final String entityName = getMetamodel().getEntityDescriptor( entityClass ).getEntityName();
+		return getMetamodel().getEntityDescriptor( getAuditService().getAuditEntityName( entityName ) );
+	}
+
+	private void releaseEntityManagerInternal(EntityManager entityManager) {
+		if ( entityManager == null ) {
+			return;
+		}
+
+		if ( !entityManager.isOpen() ) {
+			return;
+		}
+
+		if ( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) ) {
+			LOG.warn( "Cleaning up unfinished JTA transaction" );
+			try {
+				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+			}
+			catch ( SystemException e ) {
+			}
+		}
+
+		try {
+			if ( entityManager.getTransaction().isActive() ) {
+				LOG.warn( "You left an open transaction, fix your test case." );
+				LOG.warn( "For now we're going to rollback the transaction for you." );
+				entityManager.getTransaction().rollback();
+			}
+		}
+		catch ( IllegalStateException e ) {
+		}
+
+		if ( entityManager.isOpen() ) {
+			LOG.warn( "EntityManager is not closed, closing it for you." );
+			entityManager.close();
+		}
 	}
 
 	private class PersistenceUnitDescriptorAdapter implements PersistenceUnitDescriptor {

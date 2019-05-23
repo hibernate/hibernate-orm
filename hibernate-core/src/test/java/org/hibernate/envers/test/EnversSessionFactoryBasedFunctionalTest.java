@@ -21,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.boot.AuditService;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.junit.jupiter.api.Tag;
 
@@ -119,6 +120,16 @@ public class EnversSessionFactoryBasedFunctionalTest
 
 	protected AuditService getAuditService() {
 		return sessionFactoryScope.getSessionFactory().getServiceRegistry().getService( AuditService.class );
+	}
+
+	/**
+	 * Get the audit entity descriptor for a given entity class.
+	 *
+	 * @param entityClass The entity class reference.
+	 */
+	protected EntityTypeDescriptor<?> getAuditEntityDescriptor(Class<?> entityClass) {
+		final String entityName = getMetamodel().getEntityDescriptor( entityClass ).getEntityName();
+		return getMetamodel().getEntityDescriptor( getAuditService().getAuditEntityName( entityName ) );
 	}
 
 	private void applyMetadataSources(MetadataSources metadataSources) {

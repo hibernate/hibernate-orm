@@ -37,6 +37,10 @@ public class EmbeddedMutabilityPlanImpl implements EmbeddedMutabilityPlan {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Object deepCopy(Object value) {
+		if ( value == null ) {
+			return null;
+		}
+
 		final Object[] values = embeddedTypeDescriptor.getPropertyValues( value );
 		embeddedTypeDescriptor.visitStateArrayContributors(
 				contributor -> {

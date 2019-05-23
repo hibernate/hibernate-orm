@@ -261,7 +261,7 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 		final AtomicInteger position = new AtomicInteger();
 		getEmbeddedDescriptor().visitStateArrayContributors(
 				contributor -> contributor.dehydrate(
-						values[position.getAndIncrement()],
+						values != null ? values[position.getAndIncrement()] : null,
 						jdbcValueCollector,
 						clause,
 						session

@@ -105,13 +105,12 @@ public interface EmbeddedTypeDescriptor<T>
 		visitStateArrayContributors(
 				contributor -> {
 					final Object value = values[ contributor.getStateArrayPosition() ];
-					if ( value != null ) {
-						contributor.getPropertyAccess().getSetter().set(
-								object,
-								value,
-								getTypeConfiguration().getSessionFactory()
-						);
-					}
+					// NOTE: The value must be set even if null to override potential default values
+					contributor.getPropertyAccess().getSetter().set(
+							object,
+							value,
+							getTypeConfiguration().getSessionFactory()
+					);
 				}
 		);
 	}

@@ -391,7 +391,7 @@ public class  SingularPersistentAttributeEmbedded<O,J>
 				contributor -> {
 					if ( clause.getInclusionChecker().test( contributor ) ) {
 						contributor.dehydrate(
-								values[contributor.getStateArrayPosition()],
+								values != null ? values[contributor.getStateArrayPosition()] : null,
 								jdbcValueCollector,
 								clause,
 								session

@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -22,6 +23,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
  * The base contract for any kind of expression node in the SQM tree.
  * An expression might be a reference to an attribute, a literal,
  * a function, etc.
+ *
+ * @param <T> The Java type of the expression
  *
  * @author Steve Ebersole
  */
@@ -37,8 +40,12 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	/**
 	 * Used to apply type information based on the expression's usage
 	 * within the query.
+	 *
+	 * @apiNote The SqmExpressable type parameter is dropped here because
+	 * the inference could technically cause a change in Java type (i.e.
+	 * an implicit cast)
 	 */
-	void applyInferableType(SqmExpressable<T> type);
+	void applyInferableType(SqmExpressable<?> type);
 
 	@Override
 	default void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
@@ -88,8 +95,10 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	SqmPredicate in(Expression<Collection<?>> values);
 
 	default <X> SqmExpression<X> castAs(DomainType<X> type) {
-		return nodeBuilder().getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate( "cast" )
-				.makeSqmFunctionExpression( this, type, nodeBuilder().getQueryEngine() );
+		return nodeBuilder().getQueryEngine()
+				.getSqmFunctionRegistry()
+				.findFunctionTemplate( "cast" )
+				.makeSqmFunctionExpression( this, ( AllowableFunctionReturnType<X>) type, nodeBuilder().getQueryEngine() );
 	}
 
 

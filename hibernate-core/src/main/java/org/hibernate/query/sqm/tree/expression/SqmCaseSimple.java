@@ -14,9 +14,8 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -30,7 +29,7 @@ public class SqmCaseSimple<T,R> extends AbstractSqmExpression<R> implements JpaS
 		this( fixture, null, nodeBuilder );
 	}
 
-	public SqmCaseSimple(SqmExpression<T> fixture, ExpressableType<R> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressable<R> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.fixture = fixture;
 	}
@@ -60,12 +59,7 @@ public class SqmCaseSimple<T,R> extends AbstractSqmExpression<R> implements JpaS
 	}
 
 	@Override
-	public BasicValuedExpressableType<R> getNodeType() {
-		return (BasicValuedExpressableType<R>) super.getNodeType();
-	}
-
-	@Override
-	protected void internalApplyInferableType(ExpressableType<?> newType) {
+	protected void internalApplyInferableType(SqmExpressable newType) {
 		super.internalApplyInferableType( newType );
 
 		if ( otherwise != null ) {

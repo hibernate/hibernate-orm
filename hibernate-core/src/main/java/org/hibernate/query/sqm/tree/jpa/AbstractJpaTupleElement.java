@@ -58,8 +58,9 @@ public abstract class AbstractJpaTupleElement<T>
 		return expressableType;
 	}
 
-	protected final void setExpressableType(SqmExpressable<T> expressableType) {
-		this.expressableType = expressableType;
+	protected final void setExpressableType(SqmExpressable<?> expressableType) {
+		//noinspection unchecked
+		this.expressableType = (SqmExpressable) expressableType;
 	}
 
 	/**

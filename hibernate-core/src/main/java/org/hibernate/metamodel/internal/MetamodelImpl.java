@@ -353,7 +353,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			final RootGraphImpl entityGraph = new RootGraphImpl(
 					definition.getRegisteredName(),
 					entityType,
-					this.getSessionFactory()
+					this
 			);
 
 			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();
@@ -478,7 +478,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 				javaTypeDescriptor,
 				superType,
 				persistentClass,
-				context.getSessionFactory()
+				context.getSessionFactory().getMetamodel()
 		);
 
 		context.registerEntityType( persistentClass, entityType );
@@ -520,7 +520,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 				javaTypeDescriptor,
 				mappedSuperclass,
 				superType,
-				context.getSessionFactory()
+				context.getSessionFactory().getMetamodel()
 		);
 		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
 		return mappedSuperclassType;

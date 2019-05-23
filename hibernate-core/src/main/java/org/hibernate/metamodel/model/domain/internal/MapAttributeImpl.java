@@ -9,23 +9,33 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Map;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
  */
 class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V> implements MapPersistentAttribute<X, K, V> {
-	private final SimpleDomainType<K> keyType;
+	private final SqmPathSource<K> keyPathSource;
 
 	MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder) {
 		super( xceBuilder );
-		this.keyType = xceBuilder.getKeyType();
+
+		//noinspection unchecked
+		this.keyPathSource = (SqmPathSource) DomainModelHelper.resolveSqmPathSource(
+				ValueClassification.BASIC,
+				getName(),
+				xceBuilder.getListIndexOrMapKeyType(),
+				BindableType.PLURAL_ATTRIBUTE,
+				xceBuilder.getNodeBuilder()
+		);
 	}
 
 	@Override
@@ -35,12 +45,17 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 
 	@Override
 	public Class<K> getKeyJavaType() {
-		return keyType.getJavaType();
+		return keyPathSource.getBindableJavaType();
+	}
+
+	@Override
+	public SqmPathSource getKeyPathSource() {
+		return keyPathSource;
 	}
 
 	@Override
 	public SimpleDomainType<K> getKeyType() {
-		return keyType;
+		return (SimpleDomainType<K>) keyPathSource.getSqmPathType();
 	}
 
 	@Override
@@ -54,20 +69,15 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	}
 
 	@Override
-	public SemanticPathPart resolvePathPart(
-			String name,
-			String currentContextKey,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
-			String currentContextKey,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		throw new NotYetImplementedFor6Exception();
+	public SqmAttributeJoin createSqmJoin(
+			SqmFrom lhs, SqmJoinType joinType, String alias, boolean fetched, SqmCreationState creationState) {
+		return new SqmMapJoin(
+				lhs,
+				this,
+				alias,
+				joinType,
+				fetched,
+				creationState.getCreationContext().getNodeBuilder()
+		);
 	}
 }

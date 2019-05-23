@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.produce.function;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.mapping.spi.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
 /**

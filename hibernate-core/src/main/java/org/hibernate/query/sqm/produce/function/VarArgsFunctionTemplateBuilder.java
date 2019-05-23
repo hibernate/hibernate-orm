@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.metamodel.model.mapping.spi.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
 
 import org.jboss.logging.Logger;

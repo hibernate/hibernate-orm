@@ -7,13 +7,12 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Entity type expression based on a parameter - `TYPE( :someParam )`
@@ -35,7 +34,7 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	}
 
 	@Override
-	public void internalApplyInferableType(ExpressableType<?> type) {
+	public void internalApplyInferableType(SqmExpressable<?> type) {
 		setExpressableType( type );
 
 		//noinspection unchecked
@@ -60,8 +59,4 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
 	}
 
-	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getNodeType().getJavaTypeDescriptor();
-	}
 }

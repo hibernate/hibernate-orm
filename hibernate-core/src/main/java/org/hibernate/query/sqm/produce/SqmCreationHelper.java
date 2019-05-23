@@ -48,7 +48,7 @@ public class SqmCreationHelper {
 	public static void resolveAsLhs(
 			SqmPath lhs,
 			SqmPath processingPath,
-			SqmPathSource<?,?> subNavigable,
+			SqmPathSource<?> subNavigable,
 			boolean isSubRefTerminal,
 			SqmCreationState creationState) {
 		SqmTreeCreationLogger.LOGGER.tracef(

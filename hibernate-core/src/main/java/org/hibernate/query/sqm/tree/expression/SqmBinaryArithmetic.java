@@ -9,9 +9,9 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -29,7 +29,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(ExpressableType<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
+				(SqmExpressable<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
 						(BasicValuedExpressableType) lhsOperand.getNodeType(),
 						(BasicValuedExpressableType) rhsOperand.getNodeType(),
 						operator
@@ -99,7 +99,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	protected void internalApplyInferableType(ExpressableType<?> type) {
+	protected void internalApplyInferableType(SqmExpressable<?> type) {
 		rhsOperand.applyInferableType( type );
 		lhsOperand.applyInferableType( type );
 

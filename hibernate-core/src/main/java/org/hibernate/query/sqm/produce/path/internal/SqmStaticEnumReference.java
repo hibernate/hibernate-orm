@@ -13,6 +13,7 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.metamodel.model.mapping.spi.BasicValuedNavigable;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -22,7 +23,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -65,7 +65,7 @@ public class SqmStaticEnumReference<T extends Enum<T>>
 	}
 
 	@Override
-	protected void internalApplyInferableType(ExpressableType<?> newType) {
+	protected void internalApplyInferableType(SqmExpressable<?> newType) {
 		//noinspection StatementWithEmptyBody
 		if ( newType instanceof BasicValuedNavigable ) {
 			final BasicValuedNavigable basicValuedNavigable = (BasicValuedNavigable) newType;

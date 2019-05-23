@@ -45,7 +45,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmAttributeJoin(
 			SqmFrom<?,O> lhs,
-			SqmJoinable<O,T> joinedNavigable,
+			SqmJoinable joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,

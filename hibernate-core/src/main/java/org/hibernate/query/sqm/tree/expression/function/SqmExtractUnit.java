@@ -6,13 +6,13 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.metamodel.model.mapping.spi.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Gavin King
@@ -41,7 +41,7 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	}
 
 	@Override
-	public ExpressableType getNodeType() {
+	public SqmExpressable<T> getNodeType() {
 		return type;
 	}
 }

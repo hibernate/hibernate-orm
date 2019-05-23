@@ -11,10 +11,10 @@ import java.util.List;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @asciidoctor
@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public class SqmJpaCompoundSelection<T>
 		extends AbstractSqmExpression<T>
-		implements JpaCompoundSelection<T>, ExpressableType<T> {
+		implements JpaCompoundSelection<T>, SqmExpressable<T> {
 	private final List<SqmSelectableNode<?>> selectableNodes;
 	private final JavaTypeDescriptor<T> javaTypeDescriptor;
 

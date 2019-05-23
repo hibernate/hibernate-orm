@@ -13,10 +13,9 @@ import org.hibernate.QueryException;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Models a tuple of values, generally defined as a series of values
@@ -37,7 +36,7 @@ public class SqmTuple<T> extends AbstractSqmExpression<T> implements JpaCompound
 		this( Arrays.asList( groupedExpressions ), nodeBuilder );
 	}
 
-	public SqmTuple(NodeBuilder nodeBuilder, ExpressableType<T> type, SqmExpression<?>... groupedExpressions) {
+	public SqmTuple(NodeBuilder nodeBuilder, SqmExpressable<T> type, SqmExpression<?>... groupedExpressions) {
 		this( Arrays.asList( groupedExpressions ), nodeBuilder );
 		applyInferableType( type );
 	}
@@ -50,21 +49,21 @@ public class SqmTuple<T> extends AbstractSqmExpression<T> implements JpaCompound
 		this.groupedExpressions = groupedExpressions;
 	}
 
-	public SqmTuple(List<SqmExpression<?>> groupedExpressions, ExpressableType<T> type, NodeBuilder nodeBuilder) {
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmExpressable<T> type, NodeBuilder nodeBuilder) {
 		this( groupedExpressions, nodeBuilder );
 		applyInferableType( type );
 	}
 
 	@Override
-	public ExpressableType<T> getNodeType() {
-		final ExpressableType<T> expressableType = super.getNodeType();
+	public SqmExpressable<T> getNodeType() {
+		final SqmExpressable<T> expressableType = super.getNodeType();
 		if ( expressableType != null ) {
 			return expressableType;
 		}
 
 		for ( SqmExpression groupedExpression : groupedExpressions ) {
 			//noinspection unchecked
-			final ExpressableType<T> groupedExpressionExpressableType = groupedExpression.getNodeType();
+			final SqmExpressable<T> groupedExpressionExpressableType = groupedExpression.getNodeType();
 			if ( groupedExpressionExpressableType != null ) {
 				return groupedExpressionExpressableType;
 			}
@@ -85,7 +84,7 @@ public class SqmTuple<T> extends AbstractSqmExpression<T> implements JpaCompound
 
 	@Override
 	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getNodeType().getJavaTypeDescriptor();
+		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override

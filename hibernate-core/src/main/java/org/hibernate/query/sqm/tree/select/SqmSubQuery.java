@@ -22,10 +22,10 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
@@ -37,8 +37,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -47,7 +46,7 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSelectQuery<T>, JpaSubQuery<T>, SqmExpression<T> {
 	private final SqmQuery<?> parent;
 
-	private ExpressableType<T> expressableType;
+	private SqmExpressable<T> expressableType;
 	private String alias;
 
 	public SqmSubQuery(
@@ -226,15 +225,15 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public ExpressableType<T> getNodeType() {
+	public SqmExpressable<T> getNodeType() {
 		return expressableType;
 	}
 
 	@Override
-	public void applyInferableType(DomainType<T> type) {
+	public void applyInferableType(SqmExpressable<?> type) {
 		//noinspection unchecked
-		this.expressableType = (ExpressableType<T>) type;
-		setResultType( type == null ? null : type.getJavaType() );
+		this.expressableType = (SqmExpressable) type;
+		setResultType( type == null ? null : type.getExpressableJavaTypeDescriptor().getJavaType() );
 	}
 
 	@Override
@@ -282,7 +281,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		if ( getNodeType() == null ) {
 			return null;
 		}
-		return getNodeType().getJavaTypeDescriptor();
+		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override

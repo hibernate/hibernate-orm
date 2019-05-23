@@ -14,10 +14,9 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -53,7 +52,7 @@ public class SqmCaseSearched<R> extends AbstractSqmExpression<R> implements JpaS
 	}
 
 	@Override
-	protected void internalApplyInferableType(ExpressableType<?> newType) {
+	protected void internalApplyInferableType(SqmExpressable<?> newType) {
 		super.internalApplyInferableType( newType );
 
 		if ( otherwise != null ) {

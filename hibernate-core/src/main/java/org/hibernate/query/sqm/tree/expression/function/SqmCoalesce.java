@@ -11,7 +11,7 @@ import java.util.List;
 
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.metamodel.model.mapping.spi.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -19,7 +19,6 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -37,15 +36,6 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	public SqmCoalesce(AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		coalesceFunction = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate("coalesce");
-	}
-
-	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		if ( getNodeType() == null ) {
-			return null;
-		}
-
-		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 
 	public void value(SqmExpression<? extends T> expression) {

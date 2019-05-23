@@ -60,7 +60,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	SqmPathSource<T> getNodeType();
 
 	@Override
-	default void applyInferableType(SqmExpressable<T> type) {
+	default void applyInferableType(SqmExpressable<?> type) {
 		// do nothing
 	}
 

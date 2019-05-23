@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.produce.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 
@@ -129,5 +130,10 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	public JpaSelection<T> alias(String name) {
 		setAlias( name );
 		return this;
+	}
+
+	@Override
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 }

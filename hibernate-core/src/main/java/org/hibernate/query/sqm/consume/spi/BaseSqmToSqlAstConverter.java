@@ -20,7 +20,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.model.mapping.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.mapping.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.mapping.spi.NavigableContainer;

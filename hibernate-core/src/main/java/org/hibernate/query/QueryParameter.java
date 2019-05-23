@@ -10,7 +10,7 @@ package org.hibernate.query;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.mapping.spi.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 
 /**
  * Represents a parameter defined in the source (HQL/JPQL or criteria) query.

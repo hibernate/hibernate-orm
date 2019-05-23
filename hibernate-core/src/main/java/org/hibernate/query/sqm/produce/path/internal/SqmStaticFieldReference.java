@@ -12,6 +12,7 @@ import java.math.BigInteger;
 
 import org.hibernate.metamodel.model.mapping.spi.BasicValuedNavigable;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
@@ -21,7 +22,6 @@ import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 /**
@@ -78,7 +78,7 @@ public class SqmStaticFieldReference<T>
 	}
 
 	@Override
-	protected void internalApplyInferableType(ExpressableType<?> newType) {
+	protected void internalApplyInferableType(SqmExpressable<?> newType) {
 		//noinspection StatementWithEmptyBody
 		if ( newType instanceof BasicValuedNavigable ) {
 			// basic valued navigable may have a ValueConverter associated

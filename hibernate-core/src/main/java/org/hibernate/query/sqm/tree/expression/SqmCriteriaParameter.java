@@ -6,14 +6,13 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.model.mapping.spi.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.named.spi.ParameterMemento;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * SqmParameter created via JPA {@link javax.persistence.criteria.CriteriaBuilder}
@@ -102,13 +101,8 @@ public class SqmCriteriaParameter<T>
 	}
 
 	@Override
-	protected void internalApplyInferableType(ExpressableType<?> newType) {
+	protected void internalApplyInferableType(SqmExpressable<?> newType) {
 		super.internalApplyInferableType( newType );
-	}
-
-	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return this.getNodeType().getJavaTypeDescriptor();
 	}
 
 	@Override

@@ -7,9 +7,9 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier appplied to a subquery as
@@ -42,7 +42,7 @@ public class SqmRestrictedSubQueryExpression<T> extends AbstractSqmExpression<T>
 	public SqmRestrictedSubQueryExpression(
 			SqmSubQuery<T> subQuery,
 			Modifier modifier,
-			ExpressableType<T> resultType,
+			SqmExpressable<T> resultType,
 			NodeBuilder builder) {
 		super( resultType, builder );
 		this.subQuery = subQuery;

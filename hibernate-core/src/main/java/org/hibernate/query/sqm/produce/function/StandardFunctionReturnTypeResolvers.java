@@ -10,10 +10,10 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.metamodel.model.mapping.spi.AllowableFunctionReturnType;
 import org.hibernate.QueryException;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -107,7 +107,7 @@ public class StandardFunctionReturnTypeResolvers {
 
 	private static AllowableFunctionReturnType extractArgumentType(List<SqmTypedNode<?>> arguments, int position) {
 		final SqmTypedNode specifiedArgument = arguments.get( position-1 );
-		final ExpressableType specifiedArgType = specifiedArgument.getNodeType();
+		final SqmExpressable specifiedArgType = specifiedArgument.getNodeType();
 		if ( !(specifiedArgType instanceof AllowableFunctionReturnType) ) {
 			throw new QueryException(
 					String.format(

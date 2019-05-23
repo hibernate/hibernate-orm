@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.function.spi;
 
-import org.hibernate.metamodel.model.mapping.spi.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -35,7 +35,8 @@ public class PairedFunctionTemplate extends AbstractSqmFunctionTemplate {
 			QueryEngine queryEngine,
 			String name,
 			AllowableFunctionReturnType type,
-			String pattern2, String pattern3) {
+			String pattern2,
+			String pattern3) {
 		queryEngine.getSqmFunctionRegistry().register(
 				name,
 				new PairedFunctionTemplate(
@@ -52,6 +53,7 @@ public class PairedFunctionTemplate extends AbstractSqmFunctionTemplate {
 				)
 		);
 	}
+
 
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(

@@ -12,7 +12,9 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -28,6 +30,11 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+	}
+
+	@Override
+	public SingularPersistentAttribute<O, T> getReferencedPathSource() {
+		return (SingularPersistentAttribute<O, T>) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -49,6 +56,18 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 				"SqmSingularJoin(%s : %s)",
 				getNavigablePath().getFullPath(),
 				getReferencedPathSource().getPathName()
+		);
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmSingularJoin(
+				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				isFetched(),
+				nodeBuilder()
 		);
 	}
 }

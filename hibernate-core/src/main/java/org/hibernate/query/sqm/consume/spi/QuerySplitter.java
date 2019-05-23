@@ -13,7 +13,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmPathRegistry;
@@ -29,7 +28,6 @@ import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
-import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -37,22 +35,23 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
@@ -72,7 +71,6 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 
 /**
  * Handles splitting queries containing unmapped polymorphic references.
@@ -285,16 +283,6 @@ public class QuerySplitter {
 					join.getNavigablePath(),
 					navigablePath -> {
 						SqmAttributeJoin copy = join.makeCopy(getProcessingStateStack().getCurrent());
-//						final SqmAttributeJoin copy = new SqmSingularJoin(
-//								getProcessingStateStack().getCurrent()
-//										.getPathRegistry()
-//										.findFromByPath( join.getLhs().getNavigablePath() ),
-//								(SingularPersistentAttribute) join.getReferencedPathSource(),
-//								join.getExplicitAlias(),
-//								join.getSqmJoinType(),
-//								join.isFetched(),
-//								join.nodeBuilder()
-//						);
 						sqmFromCopyMap.put( join, copy );
 						sqmPathCopyMap.put( join.getNavigablePath(), copy );
 						return copy;

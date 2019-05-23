@@ -8,6 +8,8 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -48,11 +50,16 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	@Override
 	@SuppressWarnings("unchecked")
 	public SingularPersistentAttribute getReferencedPathSource() {
-		return (SingularPersistentAttribute) super.getReferencedPathSource();
+		return super.getReferencedPathSource();
 	}
 
 	@Override
 	public JavaTypeDescriptor<S> getJavaTypeDescriptor() {
 		return treatTarget.getExpressableJavaTypeDescriptor();
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmTreatedSingularJoin( wrappedPath, treatTarget, getAlias() );
 	}
 }

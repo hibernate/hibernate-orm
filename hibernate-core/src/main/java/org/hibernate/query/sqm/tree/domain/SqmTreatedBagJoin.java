@@ -8,6 +8,8 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**
  * @author Steve Ebersole
@@ -41,5 +43,10 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	@Override
 	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmTreatedBagJoin( wrappedPath, treatTarget, getAlias() );
 	}
 }

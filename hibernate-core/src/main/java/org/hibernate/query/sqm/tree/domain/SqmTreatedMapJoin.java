@@ -7,6 +7,8 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -46,5 +48,14 @@ public class SqmTreatedMapJoin<O,K,V, S extends V> extends SqmMapJoin<O,K,S> imp
 	@Override
 	public JavaTypeDescriptor<S> getJavaTypeDescriptor() {
 		return null;
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmTreatedMapJoin(
+				wrappedPath,
+				treatTarget,
+				getAlias()
+		);
 	}
 }

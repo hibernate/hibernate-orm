@@ -8,8 +8,10 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**
  * @author Steve Ebersole
@@ -57,5 +59,10 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		return getWrappedPath().resolveIndexedAccess( selector, currentContextKey, isTerminal, creationState );
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmTreatedListJoin( wrappedPath, treatTarget, getAlias() );
 	}
 }

@@ -23,7 +23,9 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -170,5 +172,17 @@ public class SqmMapJoin<O,K,V> extends AbstractSqmPluralJoin<O,Map<K,V>,V> imple
 	public <S extends V> SqmTreatedMapJoin<O,K,V,S> treatAs(Class<S> treatJavaType) throws PathException {
 		final EntityDomainType<S> targetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
 		return new SqmTreatedMapJoin( this, targetDescriptor, null );
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmMapJoin(
+				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				isFetched(),
+				nodeBuilder()
+		);
 	}
 }

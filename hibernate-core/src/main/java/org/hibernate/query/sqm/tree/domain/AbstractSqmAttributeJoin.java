@@ -53,7 +53,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		//noinspection unchecked
 		super(
 				SqmCreationHelper.buildSubNavigablePath( lhs, joinedNavigable.getName(), alias ),
-				(SqmPathSource<O>) joinedNavigable,
+				(SqmPathSource<T>) joinedNavigable,
 				lhs,
 				alias,
 				joinType,

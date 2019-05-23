@@ -21,6 +21,7 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -125,5 +126,17 @@ public class SqmSetJoin<O, E>
 	@Override
 	public <X,Y> SqmAttributeJoin<X,Y> fetch(String attributeName, JoinType jt) {
 		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmSetJoin(
+				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				isFetched(),
+				nodeBuilder()
+		);
 	}
 }

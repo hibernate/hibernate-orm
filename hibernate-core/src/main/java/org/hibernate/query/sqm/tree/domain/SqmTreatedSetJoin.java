@@ -8,6 +8,8 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -58,5 +60,10 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	public JavaTypeDescriptor<S> getJavaTypeDescriptor() {
 		//noinspection unchecked
 		return (JavaTypeDescriptor) wrappedPath.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmTreatedSetJoin( wrappedPath, treatTarget, getAlias() );
 	}
 }

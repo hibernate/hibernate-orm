@@ -26,4 +26,6 @@ public interface SqmJoinable {
 			String alias,
 			boolean fetched,
 			SqmCreationState creationState);
+
+	String getName();
 }

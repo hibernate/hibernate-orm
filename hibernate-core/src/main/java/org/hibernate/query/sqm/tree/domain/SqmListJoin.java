@@ -22,6 +22,7 @@ import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -45,6 +46,12 @@ public class SqmListJoin<O,E> extends AbstractSqmPluralJoin<O,List<E>, E> implem
 	@Override
 	public ListPersistentAttribute<O, E> getModel() {
 		return (ListPersistentAttribute<O, E>) super.getModel();
+	}
+
+	@Override
+	public ListPersistentAttribute<O,E> getReferencedPathSource() {
+		//noinspection unchecked
+		return (ListPersistentAttribute) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -127,5 +134,17 @@ public class SqmListJoin<O,E> extends AbstractSqmPluralJoin<O,List<E>, E> implem
 	@Override
 	public <X,Y> SqmAttributeJoin<X,Y> fetch(String attributeName, JoinType jt) {
 		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmListJoin(
+				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				isFetched(),
+				nodeBuilder()
+		);
 	}
 }

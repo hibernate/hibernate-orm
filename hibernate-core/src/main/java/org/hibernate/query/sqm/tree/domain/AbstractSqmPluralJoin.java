@@ -31,7 +31,7 @@ public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJ
 		//noinspection unchecked
 		super(
 				lhs,
-				(SqmJoinable<O, E>) joinedNavigable,
+				joinedNavigable,
 				alias,
 				joinType,
 				fetched,

@@ -21,6 +21,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -39,6 +40,12 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
+	}
+
+	@Override
+	public BagPersistentAttribute<O,E> getReferencedPathSource() {
+		//noinspection unchecked
+		return (BagPersistentAttribute) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -119,5 +126,17 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 		final EntityDomainType<S> entityTypeDescriptor = nodeBuilder().getDomainModel().entity( treatAsType );
 		//noinspection unchecked
 		return new SqmTreatedBagJoin( this, entityTypeDescriptor, null );
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmBagJoin(
+				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				isFetched(),
+				nodeBuilder()
+		);
 	}
 }

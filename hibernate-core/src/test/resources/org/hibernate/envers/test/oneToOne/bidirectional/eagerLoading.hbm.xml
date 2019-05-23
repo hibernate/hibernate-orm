@@ -9,7 +9,7 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <!-- Test class for issue HHH-3854. Restricting creation of proxy objects is essential. -->
-<hibernate-mapping package="org.hibernate.envers.test.entities.onetoone" default-lazy="false">
+<hibernate-mapping package="org.hibernate.envers.test.support.domains.onetoone" default-lazy="false">
     <class name="BidirectionalEagerHbmRefIngPK" table="REFERENCING">
         <id name="id" type="long" column="REFERENCING_ID">
             <generator class="native" />

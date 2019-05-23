@@ -13,7 +13,6 @@ import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.naming.ids.EmbIdNaming;
 import org.hibernate.envers.test.support.domains.naming.ids.JoinEmbIdNamingRefEdEntity;
 import org.hibernate.envers.test.support.domains.naming.ids.JoinEmbIdNamingRefIngEntity;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 
@@ -108,7 +107,6 @@ public class JoinEmbeddedIdNamingTest extends EnversEntityManagerFactoryBasedFun
 
 	@SuppressWarnings({"unchecked"})
 	private List<Column> getAttributeColumns(Class<?> clazz, String attributeName) {
-		final EntityTypeDescriptor descriptor = getMetamodel().getEntityDescriptor( clazz.getName() + "_AUD" );
-		return ( (NonIdPersistentAttribute) descriptor.getAttribute( attributeName ) ).getColumns();
+		return ( (NonIdPersistentAttribute) getAuditEntityDescriptor( clazz ).getAttribute( attributeName ) ).getColumns();
 	}
 }

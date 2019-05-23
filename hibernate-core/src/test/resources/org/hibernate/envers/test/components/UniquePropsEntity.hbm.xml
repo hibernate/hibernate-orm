@@ -7,7 +7,7 @@
   -->
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
-    <class name="org.hibernate.envers.test.entities.components.UniquePropsEntity" table="UniqueProps">
+    <class name="org.hibernate.envers.test.support.domains.components.UniquePropsEntity" table="UniqueProps">
         <id name="id" column="ID" type="long">
             <generator class="native"/>
         </id>

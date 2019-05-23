@@ -88,7 +88,7 @@ public class BasicNamingTest extends EnversEntityManagerFactoryBasedFunctionalTe
 
 	@DynamicTest
 	public void testTableName() {
-		final EntityTypeDescriptor descriptor = getMetamodel().getEntityDescriptor( NamingTestEntity1.class.getName() + "_AUD" );
+		final EntityTypeDescriptor descriptor = getAuditEntityDescriptor( NamingTestEntity1.class );
 		assertThat( descriptor, notNullValue() );
 		assertThat( descriptor.getPrimaryTable().getTableExpression(), is( "naming_test_entity_1_versions" ) );
 	}

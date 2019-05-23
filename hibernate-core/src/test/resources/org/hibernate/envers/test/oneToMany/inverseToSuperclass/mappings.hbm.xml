@@ -9,7 +9,7 @@
 <hibernate-mapping>
 
 	<class
-		name="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.Master"
+		name="org.hibernate.envers.test.support.domains.onetomany.inversetosuperclass.Master"
 		table="HIB_MASTER_ENTITY">
 
 		<id name="id" column="ID" type="long">
@@ -22,13 +22,13 @@
 			inverse="true">
 			<key column="ID_MASTER" />
 			<one-to-many
-				class="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSubclass2" />
+				class="org.hibernate.envers.test.support.domains.onetomany.inversetosuperclass.DetailSubclass2" />
 		</bag>
 	</class>
 
 
 	<class
-		name="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSuperclass"
+		name="org.hibernate.envers.test.support.domains.onetomany.inversetosuperclass.DetailSuperclass"
 		table="HIB_DETAIL_ENTITY" abstract="true">
 		<id name="id" column="ID" type="long">
 			<generator class="increment" />
@@ -36,16 +36,16 @@
 		<discriminator column="DISCRIMINATOR" type="string" />
 
 		<many-to-one name="parent" column="ID_MASTER" 
-			class="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.Master" />
+			class="org.hibernate.envers.test.support.domains.onetomany.inversetosuperclass.Master" />
 
 		<subclass
-			name="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSubclass"
+			name="org.hibernate.envers.test.support.domains.onetomany.inversetosuperclass.DetailSubclass"
 			discriminator-value="SUB">
 			<property name="str2" column="STR2" />
 
 			<subclass
-				name="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSubclass2"
-				discriminator-value="SUB2" extends="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass.DetailSubclass">
+				name="org.hibernate.envers.test.support.domains.onetomany.inversetosuperclass.DetailSubclass2"
+				discriminator-value="SUB2" extends="org.hibernate.envers.test.support.domains.onetomany.inversetosuperclass.DetailSubclass">
 				<property name="str3" column="STR3" />
 	
 			</subclass>

@@ -9,7 +9,7 @@
 <hibernate-mapping>
 
 	<class
-		name="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.Master"
+		name="org.hibernate.envers.test.support.domains.manytomany.inversetosuperclass.Master"
 		table="HIB_MASTER_ENTITY">
 
 		<id name="id" column="ID" type="long">
@@ -22,14 +22,14 @@
 			table="HIB_MASTER_DETAIL">
 			<key column="ID_MASTER" />
 			<many-to-many
-				class="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.DetailSubclass2"
+				class="org.hibernate.envers.test.support.domains.manytomany.inversetosuperclass.DetailSubclass2"
 				column="ID_DETAIL" />
 		</bag>
 	</class>
 
 
 	<class
-		name="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.DetailSuperclass"
+		name="org.hibernate.envers.test.support.domains.manytomany.inversetosuperclass.DetailSuperclass"
 		table="HIB_DETAIL_ENTITY" abstract="true">
 		<id name="id" column="ID" type="long">
 			<generator class="increment" />
@@ -39,19 +39,19 @@
 		<bag name="masters" lazy="true" access="property" table="HIB_MASTER_DETAIL">
 			<key column="ID_DETAIL" />
 			<many-to-many
-				class="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.Master"
+				class="org.hibernate.envers.test.support.domains.manytomany.inversetosuperclass.Master"
 				column="ID_MASTER" />
 		</bag>
 
 		<subclass
-			name="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.DetailSubclass"
+			name="org.hibernate.envers.test.support.domains.manytomany.inversetosuperclass.DetailSubclass"
 			discriminator-value="SUB">
 			<property name="str2" column="STR2" />
 
 			<subclass
-				name="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.DetailSubclass2"
+				name="org.hibernate.envers.test.support.domains.manytomany.inversetosuperclass.DetailSubclass2"
 				discriminator-value="SUB2"
-				extends="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.DetailSubclass">
+				extends="org.hibernate.envers.test.support.domains.manytomany.inversetosuperclass.DetailSubclass">
 				<property name="str3" column="STR3" />
 
 			</subclass>

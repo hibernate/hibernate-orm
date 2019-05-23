@@ -107,7 +107,7 @@ public class JoinNamingTest extends EnversEntityManagerFactoryBasedFunctionalTes
 	@SuppressWarnings({"unchecked"})
 	@DynamicTest
 	public void testJoinColumnName() {
-		final EntityTypeDescriptor descriptor = getMetamodel().getEntityDescriptor( JoinNamingRefIngEntity.class.getName() + "_AUD" );
+		final EntityTypeDescriptor descriptor = getAuditEntityDescriptor( JoinNamingRefIngEntity.class );
 		List<Column> columns = descriptor.findPersistentAttribute( "reference_id" ).getColumns();
 		assertThat( columns, CollectionMatchers.isNotEmpty() );
 		assertThat( columns.stream().map( Column::getExpression ).collect( Collectors.toList() ), contains( "jnree_column_reference" ) );

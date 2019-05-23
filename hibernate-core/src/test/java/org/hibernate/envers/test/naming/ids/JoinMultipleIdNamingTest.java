@@ -13,7 +13,6 @@ import org.hibernate.envers.test.EnversEntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.envers.test.support.domains.naming.ids.JoinMulIdNamingRefEdEntity;
 import org.hibernate.envers.test.support.domains.naming.ids.JoinMulIdNamingRefIngEntity;
 import org.hibernate.envers.test.support.domains.naming.ids.MulIdNaming;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NonIdPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.junit.jupiter.api.Disabled;
@@ -110,7 +109,6 @@ public class JoinMultipleIdNamingTest extends EnversEntityManagerFactoryBasedFun
 
 	@SuppressWarnings({"unchecked"})
 	private List<Column> getAttributeColumns(Class<?> clazz, String attributeName) {
-		final EntityTypeDescriptor descriptor = getMetamodel().getEntityDescriptor( clazz.getName() + "_AUD" );
-		return ( (NonIdPersistentAttribute) descriptor.getAttribute( attributeName ) ).getColumns();
+		return ( (NonIdPersistentAttribute) getAuditEntityDescriptor( clazz ).getAttribute( attributeName ) ).getColumns();
 	}
 }

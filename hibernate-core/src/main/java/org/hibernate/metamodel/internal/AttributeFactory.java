@@ -20,10 +20,12 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
@@ -46,10 +48,10 @@ import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
@@ -233,22 +235,49 @@ public class AttributeFactory {
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getHibernateValue();
+				final EmbeddableTypeImpl<Y> embeddableType;
 
-				Class javaType;
-				if ( component.getComponentClassName() == null ) {
-					javaType = typeContext.getJpaBindableType();
+				if ( component.getComponentClass() != null
+						|| component.getComponentClassName() != null ) {
+					// we should have a non-dynamic embeddable
+
+					final Class embeddableClass;
+					if ( component.getComponentClass() != null ) {
+						embeddableClass = component.getComponentClass();
+					}
+					else {
+						embeddableClass = context.getSessionFactory()
+								.getServiceRegistry()
+								.getService( ClassLoaderService.class )
+								.classForName( component.getComponentClassName() );
+					}
+
+					final EmbeddableDomainType cached = context.locateEmbeddable( embeddableClass );
+					if ( cached != null ) {
+						return cached;
+					}
+
+					final JavaTypeDescriptorRegistry registry = context.getSessionFactory()
+							.getMetamodel()
+							.getTypeConfiguration()
+							.getJavaTypeDescriptorRegistry();
+					final JavaTypeDescriptor javaTypeDescriptor = registry.resolveDescriptor( embeddableClass );
+
+					embeddableType = new EmbeddableTypeImpl<Y>(
+							javaTypeDescriptor,
+							context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
+					);
+
+					context.registerEmbeddableType( embeddableType );
+
+					return embeddableType;
 				}
 				else {
-					javaType = component.getComponentClass();
+					embeddableType = new EmbeddableTypeImpl(
+							component.getRoleName(),
+							context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
+					);
 				}
-
-				final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<Y>(
-						javaType,
-						typeContext.getAttributeMetadata().getOwnerType(),
-						(ComponentType) typeContext.getHibernateValue().getType(),
-						context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
-				);
-				context.registerEmbeddableType( embeddableType );
 
 				final EmbeddableTypeImpl.InFlightAccess<Y> inFlightAccess = embeddableType.getInFlightAccess();
 				final Iterator<Property> subProperties = component.getPropertyIterator();
@@ -548,6 +577,9 @@ public class AttributeFactory {
 						indexClassification = AttributeClassification.BASIC;
 					}
 				}
+				else if ( value instanceof List ) {
+					indexClassification = AttributeClassification.BASIC;
+				}
 				else {
 					indexClassification = null;
 				}
@@ -780,7 +812,7 @@ public class AttributeFactory {
 			implements PluralAttributeMetadata<X, Y, E> {
 		private final PluralAttribute.CollectionType attributeCollectionType;
 		private final AttributeClassification elementClassification;
-		private final AttributeClassification keyClassification;
+		private final AttributeClassification listIndexOrMapKeyClassification;
 		private final Class elementJavaType;
 		private final Class keyJavaType;
 		private final ValueContext elementValueContext;
@@ -792,14 +824,14 @@ public class AttributeFactory {
 				Member member,
 				AttributeClassification attributeClassification,
 				AttributeClassification elementClassification,
-				AttributeClassification keyClassification) {
+				AttributeClassification listIndexOrMapKeyClassification) {
 			super( propertyMapping, ownerType, member, attributeClassification );
 			this.attributeCollectionType = determineCollectionType( getJavaType() );
 			this.elementClassification = elementClassification;
-			this.keyClassification = keyClassification;
+			this.listIndexOrMapKeyClassification = listIndexOrMapKeyClassification;
 
 			ParameterizedType signatureType = getSignatureType( member );
-			if ( this.keyClassification == null ) {
+			if ( this.listIndexOrMapKeyClassification == null ) {
 				elementJavaType = signatureType != null ?
 						getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] ) :
 						Object.class; //FIXME and honor targetEntity?
@@ -843,7 +875,7 @@ public class AttributeFactory {
 			};
 
 			// interpret the key, if one
-			if ( this.keyClassification != null ) {
+			if ( this.listIndexOrMapKeyClassification != null ) {
 				this.keyValueContext = new ValueContext() {
 					public Value getHibernateValue() {
 						return ( (Map) getPropertyMapping().getValue() ).getIndex();
@@ -854,7 +886,7 @@ public class AttributeFactory {
 					}
 
 					public ValueClassification getValueClassification() {
-						switch ( PluralAttributeMetadataImpl.this.keyClassification ) {
+						switch ( PluralAttributeMetadataImpl.this.listIndexOrMapKeyClassification ) {
 							case EMBEDDED: {
 								return ValueClassification.EMBEDDABLE;
 							}
@@ -967,6 +999,8 @@ public class AttributeFactory {
 	private final MemberResolver embeddedMemberResolver = attributeContext -> {
 		final EmbeddableDomainType embeddableType = (EmbeddableDomainType<?>) attributeContext.getOwnerType();
 		final String attributeName = attributeContext.getPropertyMapping().getName();
+
+		final Component component = (Component) attributeContext.getPropertyMapping().getValue();
 
 		final Getter getter = embeddableType.getHibernateType()
 				.getComponentTuplizer()

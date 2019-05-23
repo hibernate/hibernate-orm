@@ -45,7 +45,6 @@ import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
@@ -73,7 +72,7 @@ class MetadataContext {
 	private Map<String, EntityDomainType<?>> entityTypesByEntityName = new HashMap<>();
 	private Map<PersistentClass, EntityDomainType<?>> entityTypesByPersistentClass = new HashMap<>();
 
-	private Set<EmbeddableDomainType<?>> embeddables = new HashSet<>();
+	private Map<Class, EmbeddableDomainType<?>> embeddables = new HashMap<>();
 
 	private Map<MappedSuperclass, MappedSuperclassDomainType<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
 	private Map<MappedSuperclassDomainType<?>, PersistentClass> mappedSuperClassTypeToPersistentClass = new HashMap<>();
@@ -113,7 +112,7 @@ class MetadataContext {
 	}
 
 	public Set<EmbeddableDomainType<?>> getEmbeddableTypeSet() {
-		return Collections.unmodifiableSet( embeddables );
+		return new HashSet<>( embeddables.values() );
 	}
 
 	public Map<Class<?>, MappedSuperclassType<?>> getMappedSuperclassTypeMap() {
@@ -147,9 +146,10 @@ class MetadataContext {
 	}
 
 	/*package*/ void registerEmbeddableType(EmbeddableDomainType<?> embeddableType) {
-		if ( !( ignoreUnsupported && Map.class.isAssignableFrom( embeddableType.getExpressableJavaTypeDescriptor().getJavaType() ) ) ) {
-			embeddables.add( embeddableType );
-		}
+		assert embeddableType.getJavaType() != null;
+		assert ! Map.class.isAssignableFrom( embeddableType.getJavaType() );
+
+		embeddables.put( embeddableType.getJavaType(), embeddableType );
 	}
 
 	/*package*/ void registerMappedSuperclassType(
@@ -170,6 +170,7 @@ class MetadataContext {
 	 *
 	 * @return Tne corresponding JPA {@link org.hibernate.type.EntityType}, or null if not yet processed.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public EntityDomainType<?> locateEntityType(PersistentClass persistentClass) {
 		return entityTypesByPersistentClass.get( persistentClass );
 	}
@@ -194,16 +195,17 @@ class MetadataContext {
 	 *
 	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
 	 */
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public <E> EntityDomainType<E> locateEntityType(String entityName) {
 		return (EntityDomainType) entityTypesByEntityName.get( entityName );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public Map<String, EntityDomainType<?>> getEntityTypesByEntityName() {
 		return Collections.unmodifiableMap( entityTypesByEntityName );
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public void wrapUp() {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Wrapping up metadata context..." );
@@ -215,7 +217,6 @@ class MetadataContext {
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
 			if ( PersistentClass.class.isAssignableFrom( mapping.getClass() ) ) {
-				@SuppressWarnings("unchecked")
 				final PersistentClass safeMapping = (PersistentClass) mapping;
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
@@ -258,7 +259,6 @@ class MetadataContext {
 				}
 			}
 			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
-				@SuppressWarnings("unchecked")
 				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
@@ -299,7 +299,7 @@ class MetadataContext {
 		}
 
 		if ( staticMetamodelScanEnabled ) {
-			for ( EmbeddableDomainType embeddable : embeddables ) {
+			for ( EmbeddableDomainType embeddable : embeddables.values() ) {
 				populateStaticMetamodel( embeddable );
 			}
 		}
@@ -307,7 +307,7 @@ class MetadataContext {
 
 
 	@SuppressWarnings("unchecked")
-	private <X> void applyIdMetadata(PersistentClass persistentClass, IdentifiableDomainType<?> identifiableType) {
+	private void applyIdMetadata(PersistentClass persistentClass, IdentifiableDomainType<?> identifiableType) {
 		if ( persistentClass.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
@@ -551,13 +551,14 @@ class MetadataContext {
 	}
 
 	public Set<MappedSuperclass> getUnusedMappedSuperclasses() {
-		return new HashSet<MappedSuperclass>( knownMappedSuperclasses );
+		return new HashSet<>( knownMappedSuperclasses );
 	}
 
 	private final Map<Class<?>,BasicDomainType<?>> basicDomainTypeMap = new HashMap<>();
 
 	public <J> BasicDomainType<J> resolveBasicType(Class<J> javaType) {
-		return basicDomainTypeMap.computeIfAbsent(
+		//noinspection unchecked
+		return (BasicDomainType) basicDomainTypeMap.computeIfAbsent(
 				javaType,
 				jt -> {
 					final JavaTypeDescriptorRegistry registry = getSessionFactory()
@@ -566,6 +567,11 @@ class MetadataContext {
 							.getJavaTypeDescriptorRegistry();
 					return new BasicTypeImpl<>( registry.resolveDescriptor( javaType ) );
 				}
-		)
+		);
+	}
+
+	public <J> EmbeddableDomainType<J> locateEmbeddable(Class<J> embeddableClass) {
+		//noinspection unchecked
+		return (EmbeddableDomainType<J>) embeddables.get( embeddableClass );
 	}
 }

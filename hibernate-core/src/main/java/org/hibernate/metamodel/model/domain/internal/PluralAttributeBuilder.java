@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.AttributeClassification;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -29,7 +29,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 
 	private final NodeBuilder nodeBuilder;
 
-	private SimpleDomainType<K> keyType;
+	private SimpleDomainType<K> listIndexOrMapKeyType;
 
 	private AttributeClassification attributeClassification;
 	private CollectionClassification collectionClassification;
@@ -42,12 +42,12 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			ManagedDomainType<D> ownerType,
 			SimpleDomainType<E> elementType,
 			JavaTypeDescriptor<C> collectionJavaTypeDescriptor,
-			SimpleDomainType<K> keyType,
+			SimpleDomainType<K> listIndexOrMapKeyType,
 			NodeBuilder nodeBuilder) {
 		this.declaringType = ownerType;
 		this.valueType = elementType;
 		this.collectionJavaTypeDescriptor = collectionJavaTypeDescriptor;
-		this.keyType = keyType;
+		this.listIndexOrMapKeyType = listIndexOrMapKeyType;
 		this.nodeBuilder = nodeBuilder;
 	}
 
@@ -67,8 +67,8 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return collectionClassification;
 	}
 
-	public SimpleDomainType<K> getKeyType() {
-		return keyType;
+	public SimpleDomainType<K> getListIndexOrMapKeyType() {
+		return listIndexOrMapKeyType;
 	}
 
 	public JavaTypeDescriptor<C> getCollectionJavaTypeDescriptor() {

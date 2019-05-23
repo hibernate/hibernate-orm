@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.ListAttribute;
@@ -21,7 +22,6 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
@@ -49,8 +49,8 @@ public abstract class AbstractManagedType<J>
 			String hibernateTypeName,
 			JavaTypeDescriptor<J> javaTypeDescriptor,
 			ManagedDomainType<? super J> superType,
-			SessionFactoryImplementor sessionFactory) {
-		super( javaTypeDescriptor, sessionFactory );
+			JpaMetamodel jpaMetamodel) {
+		super( javaTypeDescriptor, jpaMetamodel );
 		this.hibernateTypeName = hibernateTypeName;
 		this.superType = superType;
 
@@ -74,6 +74,20 @@ public abstract class AbstractManagedType<J>
 		return representationMode;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public void visitAttributes(Consumer<PersistentAttribute<? super J, ?>> action) {
+		visitDeclaredAttributes( (Consumer) action );
+		if ( getSuperType() != null ) {
+			getSuperType().visitAttributes( (Consumer) action );
+		}
+	}
+
+	@Override
+	public void visitDeclaredAttributes(Consumer<PersistentAttribute<J, ?>> action) {
+		declaredSingularAttributes.values().forEach( action );
+		declaredPluralAttributes.values().forEach( action );
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -555,17 +569,17 @@ public abstract class AbstractManagedType<J>
 	@SuppressWarnings("unchecked")
 	@Override
 	public SubGraphImplementor<J> makeSubGraph() {
-		return new SubGraphImpl( this, true, sessionFactory() );
+		return new SubGraphImpl( this, true, jpaMetamodel() );
 	}
 
 	@Override
 	public <S extends J> ManagedDomainType<S> findSubType(String subTypeName) {
-		return DomainModelHelper.resolveSubType( this, subTypeName, sessionFactory() );
+		return DomainModelHelper.resolveSubType( this, subTypeName, jpaMetamodel() );
 	}
 
 	@Override
 	public <S extends J> ManagedDomainType<S> findSubType(Class<S> subType) {
-		return DomainModelHelper.resolveSubType( this, subType, sessionFactory() );
+		return DomainModelHelper.resolveSubType( this, subType, jpaMetamodel() );
 	}
 
 

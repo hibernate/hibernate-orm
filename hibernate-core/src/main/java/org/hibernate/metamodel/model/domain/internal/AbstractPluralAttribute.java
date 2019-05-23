@@ -42,9 +42,9 @@ public abstract class AbstractPluralAttribute<D,C,E>
 			AbstractManagedType<X> ownerType,
 			SimpleDomainType<E> attrType,
 			JavaTypeDescriptor<C> collectionClass,
-			SimpleDomainType<K> keyType,
+			SimpleDomainType<K> listIndexOrMapKeyType,
 			NodeBuilder nodeBuilder) {
-		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, keyType, nodeBuilder );
+		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, listIndexOrMapKeyType, nodeBuilder );
 	}
 
 	private final CollectionClassification classification;
@@ -92,6 +92,11 @@ public abstract class AbstractPluralAttribute<D,C,E>
 		throw new IllegalArgumentException(
 				"Unrecognized value type Java-type [" + valueType.getTypeName() + "] for plural attribute value"
 		);
+	}
+
+	@Override
+	public String getPathName() {
+		return getName();
 	}
 
 	@Override

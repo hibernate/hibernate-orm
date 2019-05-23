@@ -91,6 +91,11 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
+	public String getPathName() {
+		return getName();
+	}
+
+	@Override
 	public SimpleDomainType<J> getSqmPathType() {
 		//noinspection unchecked
 		return (SimpleDomainType<J>) sqmPathSource.getSqmPathType();

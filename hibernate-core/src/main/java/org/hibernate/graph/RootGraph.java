@@ -12,6 +12,8 @@ import javax.persistence.EntityGraph;
 import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
 
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
+
 /**
  * Hibernate extension to the JPA {@link EntityGraph} contract.
  *
@@ -24,7 +26,7 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 
 	boolean appliesTo(String entityName);
 
-	boolean appliesTo(Class entityType);
+	boolean appliesTo(Class<? super J> entityType);
 
 	@Override
 	RootGraph<J> makeRootGraph(String name, boolean mutable);
@@ -59,18 +61,20 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 		}
 
 		for ( Attribute<J, ?> attribute : attributes ) {
-			addAttributeNode( attribute );
+			addAttributeNode( (PersistentAttribute) attribute );
 		}
 	}
 
 	@Override
 	default <X> SubGraph<X> addSubgraph(Attribute<J, X> attribute) {
-		return addSubGraph( attribute );
+		//noinspection unchecked
+		return addSubGraph( (PersistentAttribute) attribute );
 	}
 
 	@Override
 	default <X> SubGraph<? extends X> addSubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-		return addSubGraph( attribute, type );
+		//noinspection unchecked
+		return addSubGraph( (PersistentAttribute) attribute, type );
 	}
 
 	@Override
@@ -85,12 +89,14 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 
 	@Override
 	default <X> SubGraph<X> addKeySubgraph(Attribute<J, X> attribute) {
-		return addKeySubGraph( attribute );
+		//noinspection unchecked
+		return addKeySubGraph( (PersistentAttribute) attribute );
 	}
 
 	@Override
 	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-		return addKeySubGraph( attribute, type );
+		//noinspection unchecked
+		return addKeySubGraph( (PersistentAttribute) attribute, type );
 	}
 
 	@Override

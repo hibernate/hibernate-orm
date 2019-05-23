@@ -32,6 +32,7 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -71,7 +72,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 @SuppressWarnings("unchecked")
 public interface NodeBuilder extends HibernateCriteriaBuilder {
-	MetamodelImplementor getDomainModel();
+	JpaMetamodel getDomainModel();
 
 	default TypeConfiguration getTypeConfiguration() {
 		return getDomainModel().getTypeConfiguration();

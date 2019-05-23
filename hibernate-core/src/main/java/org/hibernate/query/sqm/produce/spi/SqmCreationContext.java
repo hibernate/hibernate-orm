@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.produce.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.service.ServiceRegistry;
@@ -22,12 +22,14 @@ public interface SqmCreationContext {
 	/**
 	 * Access to the domain model metadata
 	 */
-	MetamodelImplementor getDomainModel();
+	JpaMetamodel getDomainModel();
 
 	/**
 	 * Access to the ServiceRegistry for the context
 	 */
-	ServiceRegistry getServiceRegistry();
+	default ServiceRegistry getServiceRegistry() {
+		return getDomainModel().getServiceRegistry();
+	}
 
 	QueryEngine getQueryEngine();
 

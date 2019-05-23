@@ -12,7 +12,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
- * A container for {@link AttributeNode}s.
+ * A container for {@link AttributeNode} references.
  *
  * Acts as a "bridge" between JPA's {@link javax.persistence.EntityGraph} and {@link javax.persistence.Subgraph}
  *

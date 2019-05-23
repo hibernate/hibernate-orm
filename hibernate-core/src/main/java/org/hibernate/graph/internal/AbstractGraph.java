@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.CannotContainSubGraphException;
@@ -23,6 +22,7 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
@@ -39,14 +39,14 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	public AbstractGraph(
 			ManagedDomainType<J> managedType,
 			boolean mutable,
-			SessionFactoryImplementor sessionFactory) {
-		super( mutable, sessionFactory );
+			JpaMetamodel jpaMetamodel) {
+		super( mutable, jpaMetamodel );
 		this.managedType = managedType;
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractGraph(boolean mutable, GraphImplementor<J> original) {
-		this( original.getGraphedType(), mutable, original.sessionFactory() );
+		this( original.getGraphedType(), mutable, original.jpaMetamodel() );
 
 		this.attrNodeMap = CollectionHelper.concurrentMap( original.getAttributeNodeList().size() );
 		original.visitAttributeNodes(
@@ -58,8 +58,8 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public SessionFactoryImplementor sessionFactory() {
-		return super.sessionFactory();
+	public JpaMetamodel jpaMetamodel() {
+		return super.jpaMetamodel();
 	}
 
 	@Override
@@ -196,7 +196,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		}
 
 		if ( attrNode == null ) {
-			attrNode = new AttributeNodeImpl<>( isMutable(), attribute, sessionFactory() );
+			attrNode = new AttributeNodeImpl<>( isMutable(), attribute, jpaMetamodel() );
 			attrNodeMap.put( attribute, attrNode );
 		}
 

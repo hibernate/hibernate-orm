@@ -21,26 +21,16 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.IdentifiableTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.AllowableFunctionReturnType;
-import org.hibernate.metamodel.model.mapping.spi.BagPersistentAttribute;
-import org.hibernate.metamodel.model.mapping.spi.EntityValuedNavigable;
-import org.hibernate.metamodel.model.mapping.spi.ListPersistentAttribute;
-import org.hibernate.metamodel.model.mapping.spi.MapPersistentAttribute;
-import org.hibernate.metamodel.model.mapping.spi.Navigable;
-import org.hibernate.metamodel.model.mapping.spi.NavigableContainer;
-import org.hibernate.metamodel.model.mapping.spi.PluralValuedNavigable;
-import org.hibernate.metamodel.model.mapping.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.QueryLogger;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.hql.DotIdentifierConsumer;
-import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.ParsingException;
@@ -143,12 +133,8 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.TrimSpec;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -326,7 +312,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmInsertSelectStatement visitInsertStatement(HqlParser.InsertStatementContext ctx) {
-		final EntityTypeDescriptor<?> targetType = visitEntityName( ctx.insertSpec().intoSpec().entityName() );
+		final EntityDomainType<?> targetType = visitEntityName( ctx.insertSpec().intoSpec().entityName() );
 
 		final SqmRoot<?> root = new SqmRoot<>( targetType, null, creationContext.getNodeBuilder() );
 		processingStateStack.getCurrent().getPathRegistry().register( root );
@@ -636,7 +622,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				final JavaTypeDescriptor jtd = creationContext.getDomainModel()
 						.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
-						.getOrMakeJavaDescriptor( targetJavaType );
+						.resolveDescriptor( targetJavaType );
 				dynamicInstantiation = SqmDynamicInstantiation.forClassInstantiation(
 						jtd,
 						creationContext.getNodeBuilder()
@@ -837,21 +823,21 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public EntityTypeDescriptor<?> visitEntityName(HqlParser.EntityNameContext parserEntityName) {
+	public EntityDomainType<?> visitEntityName(HqlParser.EntityNameContext parserEntityName) {
 		final String entityName = parserEntityName.dotIdentifierSequence().getText();
-		final EntityValuedExpressableType entityReference = resolveEntityReference( entityName );
+		final EntityDomainType entityReference = resolveEntityReference( entityName );
 		if ( entityReference == null ) {
 			throw new UnknownEntityException( "Could not resolve entity name [" + entityName + "] as DML target", entityName );
 		}
 
-		return entityReference.getEntityDescriptor();
+		return entityReference;
 	}
 
-	private EntityValuedExpressableType resolveEntityReference(String entityName) {
+	private EntityDomainType resolveEntityReference(String entityName) {
 		log.debugf( "Attempting to resolve path [%s] as entity reference...", entityName );
-		EntityValuedExpressableType reference = null;
+		EntityDomainType reference = null;
 		try {
-			reference = creationContext.getDomainModel().resolveEntityReference( entityName );
+			reference = creationContext.getDomainModel().entity( entityName );
 		}
 		catch (Exception ignore) {
 		}
@@ -904,12 +890,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		log.debugf( "Handling root path - %s", name );
 
-		final EntityTypeDescriptor entityDescriptor = getCreationContext().getDomainModel().resolveEntityReference( name );
+		final EntityDomainType entityDescriptor = getCreationContext().getDomainModel().resolveHqlEntityReference( name );
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			if ( getCreationOptions().useStrictJpaCompliance() ) {
 				throw new StrictJpaComplianceViolation(
-						"Encountered unmapped polymorphic reference [" + entityDescriptor.getEntityName()
+						"Encountered unmapped polymorphic reference [" + entityDescriptor.getHibernateEntityName()
 								+ "], but strict JPQL compliance was requested",
 						StrictJpaComplianceViolation.Type.UNMAPPED_POLYMORPHISM
 				);
@@ -974,21 +960,21 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		throw new UnsupportedOperationException( "Unexpected call to #visitCrossJoin, see #consumeCrossJoin" );
 	}
 
+	@SuppressWarnings("unchecked")
 	private void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot sqmRoot) {
 		final String name = parserJoin.pathRoot().entityName().getText();
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
 
-		final EntityValuedExpressableType entityType = getCreationContext().getDomainModel().resolveEntityReference( name );
+		final EntityDomainType entityDescriptor = getCreationContext().getDomainModel().resolveHqlEntityReference( name );
 
-		if ( entityType instanceof SqmPolymorphicRootDescriptor ) {
+		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a CROSS JOIN target" );
 		}
 
-		final EntityTypeDescriptor entityDescriptor = entityType.getEntityDescriptor();
-
 		final SqmCrossJoin join = new SqmCrossJoin(
-				entityDescriptor, visitIdentificationVariableDef( parserJoin.pathRoot().identificationVariableDef() ),
+				entityDescriptor,
+				visitIdentificationVariableDef( parserJoin.pathRoot().identificationVariableDef() ),
 				sqmRoot
 		);
 
@@ -1236,7 +1222,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmPredicate visitMemberOfPredicate(HqlParser.MemberOfPredicateContext ctx) {
 		final SqmPath sqmPluralPath = consumeDomainPath( ctx.path() );
 
-		if ( sqmPluralPath.getReferencedPathSource() instanceof PluralValuedNavigable ) {
+		if ( sqmPluralPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
 			return new SqmMemberOfPredicate( sqmPluralPath, creationContext.getNodeBuilder() );
 		}
 		else {

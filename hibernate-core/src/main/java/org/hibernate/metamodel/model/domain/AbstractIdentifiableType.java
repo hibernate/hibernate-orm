@@ -13,8 +13,6 @@ import java.util.function.Consumer;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -48,8 +46,8 @@ public abstract class AbstractIdentifiableType<J>
 			boolean hasIdClass,
 			boolean hasIdentifierProperty,
 			boolean versioned,
-			SessionFactoryImplementor sessionFactory) {
-		super( typeName, javaTypeDescriptor, superType, sessionFactory );
+			JpaMetamodel jpaMetamodel) {
+		super( typeName, javaTypeDescriptor, superType, jpaMetamodel );
 		this.hasIdClass = hasIdClass;
 		this.hasIdentifierProperty = hasIdentifierProperty;
 		this.isVersioned = versioned;

@@ -21,10 +21,9 @@ public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J
 	/**
 	 * Get the type name.
 	 *
-	 * For dynamic models ({@link RepresentationMode#MAP}), this returns the symbolic name
+	 * Generally speaking, this returns the name of the Java class.  However, for
+	 * dynamic models ({@link RepresentationMode#MAP}), this returns the symbolic name
 	 * since the Java type is {@link java.util.Map}
-	 *
-	 * For typed models, this returns the name of the Java class
 	 *
 	 * @return The type name.
 	 *
@@ -32,13 +31,13 @@ public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J
 	 */
 	String getTypeName();
 
+	RepresentationMode getRepresentationMode();
+
 	/**
 	 * This type's super type descriptor.  Note : we define this on the managed
 	 * type descriptor in anticipation of supporting embeddable inheritance
 	 */
 	ManagedDomainType<? super J> getSuperType();
-
-	RepresentationMode getRepresentationMode();
 
 	void visitAttributes(Consumer<PersistentAttribute<? super J,?>> action);
 	void visitDeclaredAttributes(Consumer<PersistentAttribute<J,?>> action);

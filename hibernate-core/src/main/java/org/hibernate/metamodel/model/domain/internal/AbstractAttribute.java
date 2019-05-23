@@ -62,11 +62,6 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	}
 
 	@Override
-	public String getPathName() {
-		return getName();
-	}
-
-	@Override
 	public Class<J> getJavaType() {
 		return attributeType.getJavaType();
 	}

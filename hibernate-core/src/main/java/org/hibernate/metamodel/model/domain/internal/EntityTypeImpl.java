@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.PersistentClass;
@@ -17,8 +16,8 @@ import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -34,12 +33,11 @@ public class EntityTypeImpl<J>
 		implements EntityDomainType<J>, Serializable {
 	private final String jpaEntityName;
 
-	@SuppressWarnings("unchecked")
 	public EntityTypeImpl(
 			JavaTypeDescriptor<J> javaTypeDescriptor,
 			IdentifiableDomainType<? super J> superType,
 			PersistentClass persistentClass,
-			SessionFactoryImplementor sessionFactory) {
+			JpaMetamodel jpaMetamodel) {
 		super(
 				persistentClass.getEntityName(),
 				javaTypeDescriptor,
@@ -47,7 +45,7 @@ public class EntityTypeImpl<J>
 				persistentClass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
 				persistentClass.hasIdentifierProperty(),
 				persistentClass.isVersioned(),
-				sessionFactory
+				jpaMetamodel
 		);
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 	}
@@ -74,16 +72,7 @@ public class EntityTypeImpl<J>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return findAttribute( name );
-	}
-
-	@Override
-	public SemanticPathPart resolvePathPart(
-			String name,
-			String currentContextKey,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		return findAttribute( name );
+		return (SqmPathSource<?>) findAttribute( name );
 	}
 
 	@Override
@@ -124,7 +113,7 @@ public class EntityTypeImpl<J>
 			);
 		}
 
-		return new SubGraphImpl( this, true, sessionFactory() );
+		return new SubGraphImpl( this, true, jpaMetamodel() );
 	}
 
 	@Override

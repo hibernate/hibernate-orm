@@ -37,8 +37,8 @@ import org.hibernate.QueryException;
 import org.hibernate.SortOrder;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.mapping.spi.AllowableFunctionReturnType;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -97,9 +97,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.TrimSpec;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
@@ -112,12 +110,12 @@ import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
  */
 public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	private final QueryEngine queryEngine;
-	private final MetamodelImplementor domainModel;
+	private final JpaMetamodel domainModel;
 	private final ServiceRegistry serviceRegistry;
 
 	public SqmCriteriaNodeBuilder(
 			QueryEngine queryEngine,
-			MetamodelImplementor domainModel,
+			JpaMetamodel domainModel,
 			ServiceRegistry serviceRegistry) {
 		this.queryEngine = queryEngine;
 		this.domainModel = domainModel;
@@ -125,7 +123,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public MetamodelImplementor getDomainModel() {
+	public JpaMetamodel getDomainModel() {
 		return domainModel;
 	}
 

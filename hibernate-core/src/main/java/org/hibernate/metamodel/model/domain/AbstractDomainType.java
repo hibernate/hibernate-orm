@@ -6,27 +6,26 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractDomainType<J> implements DomainType<J> {
-	private final SessionFactoryImplementor sessionFactory;
+public abstract class AbstractDomainType<J> implements SimpleDomainType<J> {
+	private final JpaMetamodel jpaMetamodel;
 
 	private final JavaTypeDescriptor<J> javaTypeDescriptor;
 
 	@SuppressWarnings("WeakerAccess")
 	public AbstractDomainType(
 			JavaTypeDescriptor<J> javaTypeDescriptor,
-			SessionFactoryImplementor sessionFactory) {
+			JpaMetamodel jpaMetamodel) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
-		this.sessionFactory = sessionFactory;
+		this.jpaMetamodel = jpaMetamodel;
 	}
 
-	protected SessionFactoryImplementor sessionFactory() {
-		return sessionFactory;
+	protected JpaMetamodel jpaMetamodel() {
+		return jpaMetamodel;
 	}
 
 	@Override

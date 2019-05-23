@@ -8,6 +8,7 @@ package org.hibernate.type.spi;
 
 import java.io.InvalidObjectException;
 import java.io.Serializable;
+import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.internal.TypeConfigurationRegistry;
 
@@ -66,9 +68,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 
 	private final Scope scope;
-	private final transient TypeFactory typeFactory;
 
-	// things available during both boot and runtime ("active") lifecycle phases
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// things available during both boot and runtime lifecycle phases
 	private final transient JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
 	private final transient SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final transient BasicTypeRegistry basicTypeRegistry;
@@ -78,14 +80,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
 
 	// temporarily needed to support deprecations
+	private final transient TypeFactory typeFactory;
 	private final transient TypeResolver typeResolver;
 
 	public TypeConfiguration() {
-		this.scope = new Scope();
+		this.scope = new Scope( this );
+
 		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
 		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
 
 		this.basicTypeRegistry = new BasicTypeRegistry();
+
 		this.typeFactory = new TypeFactory( this );
 		this.typeResolver = new TypeResolver( this, typeFactory );
 
@@ -125,6 +130,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public Map<String, String> getImportMap() {
 		return Collections.unmodifiableMap( importMap );
+	}
+
+	public SqlTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+		return scope.getCurrentBaseSqlTypeIndicators();
 	}
 
 	public Map<Integer, Set<String>> getJdbcToHibernateTypeContributionMap() {
@@ -271,15 +280,33 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * Each stage or phase is consider a "scope" for the TypeConfiguration.
 	 */
 	private static class Scope implements Serializable {
+		private final TypeConfiguration typeConfiguration;
 
-		// todo (6.0) : consider a proper contract implemented by both SessionFactory (or its metamodel) and boot's MetadataImplementor
-		//		1) type-related info from MetadataBuildingOptions
-		//		2) ServiceRegistry
 		private transient MetadataBuildingContext metadataBuildingContext;
 		private transient SessionFactoryImplementor sessionFactory;
 
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
+
+		private transient SqlTypeDescriptorIndicators currentSqlTypeIndicators = new SqlTypeDescriptorIndicators() {
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForBoolean() {
+				return Types.BOOLEAN;
+			}
+		};
+
+		public Scope(TypeConfiguration typeConfiguration) {
+			this.typeConfiguration = typeConfiguration;
+		}
+
+		public SqlTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+			return currentSqlTypeIndicators;
+		}
 
 		public MetadataBuildingContext getMetadataBuildingContext() {
 			if ( metadataBuildingContext == null ) {

@@ -11,21 +11,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature.CLASS;
-import static org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature.LIST;
-import static org.hibernate.sql.ast.tree.expression.instantiation.DynamicInstantiationNature.MAP;
+import static org.hibernate.query.DynamicInstantiationNature.CLASS;
+import static org.hibernate.query.DynamicInstantiationNature.LIST;
+import static org.hibernate.query.DynamicInstantiationNature.MAP;
 
 /**
  * Represents a dynamic instantiation ({@code select new XYZ(...) ...}) as part of the SQM.
@@ -166,13 +165,12 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitDynamicInstantiation( this );
 	}
 
-	public SqmDynamicInstantiation makeShallowCopy() {
-		return new SqmDynamicInstantiation( getInstantiationTarget(), nodeBuilder() );
+	public SqmDynamicInstantiation<T> makeShallowCopy() {
+		return new SqmDynamicInstantiation<>( getInstantiationTarget(), nodeBuilder() );
 	}
 
 	private static class DynamicInstantiationTargetImpl<T> implements SqmDynamicInstantiationTarget<T> {
@@ -196,13 +194,8 @@ public class SqmDynamicInstantiation<T>
 		}
 
 		@Override
-		public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+		public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
 			return getTargetTypeDescriptor();
-		}
-
-		@Override
-		public PersistenceType getPersistenceType() {
-			return PersistenceType.BASIC;
 		}
 	}
 
@@ -225,6 +218,11 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
+	public String getAlias() {
+		return null;
+	}
+
+	@Override
 	public JpaSelection<T> alias(String name) {
 		return null;
 	}
@@ -232,20 +230,5 @@ public class SqmDynamicInstantiation<T>
 	@Override
 	public boolean isCompoundSelection() {
 		return false;
-	}
-
-	@Override
-	public String getAlias() {
-		return null;
-	}
-
-	@Override
-	public NodeBuilder nodeBuilder() {
-		return null;
-	}
-
-	@Override
-	public ExpressableType getNodeType() {
-		return null;
 	}
 }

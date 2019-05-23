@@ -23,14 +23,12 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -38,7 +36,6 @@ import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Acts as the EntityValuedNavigable for a "polymorphic query" grouping
@@ -49,17 +46,12 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	private final Set<EntityDomainType<?>> implementors;
 	private final Map<String, PersistentAttribute<? super T, ?>> commonAttributes;
 
-	private final NavigableRole navigableRole;
 	private final JavaTypeDescriptor<T> polymorphicJavaDescriptor;
-	private final SessionFactoryImplementor sessionFactory;
 
 	public SqmPolymorphicRootDescriptor(
 			JavaTypeDescriptor<T> polymorphicJavaDescriptor,
-			Set<EntityDomainType<?>> implementors,
-			SessionFactoryImplementor sessionFactory) {
+			Set<EntityDomainType<?>> implementors) {
 		this.polymorphicJavaDescriptor = polymorphicJavaDescriptor;
-		this.navigableRole = new NavigableRole( polymorphicJavaDescriptor.getJavaType().getName() );
-		this.sessionFactory = sessionFactory;
 
 		this.implementors = implementors;
 
@@ -97,14 +89,6 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	public Set<EntityDomainType<?>> getImplementors() {
 		return new HashSet<>( implementors );
-	}
-
-	public SessionFactoryImplementor getFactory() {
-		return sessionFactory;
-	}
-
-	public TypeConfiguration getTypeConfiguration() {
-		return getFactory().getMetamodel().getTypeConfiguration();
 	}
 
 	@Override

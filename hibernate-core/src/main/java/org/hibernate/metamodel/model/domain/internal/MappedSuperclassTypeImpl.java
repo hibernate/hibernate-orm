@@ -7,12 +7,11 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -25,7 +24,7 @@ public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> imp
 			JavaTypeDescriptor<X> javaTypeDescriptor,
 			MappedSuperclass mappedSuperclass,
 			IdentifiableDomainType<? super X> superType,
-			SessionFactoryImplementor sessionFactory) {
+			JpaMetamodel jpaMetamodel) {
 		super(
 				javaTypeDescriptor.getJavaType().getName(),
 				javaTypeDescriptor,
@@ -33,7 +32,7 @@ public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> imp
 				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
 				mappedSuperclass.hasIdentifierProperty(),
 				mappedSuperclass.isVersioned(),
-				sessionFactory
+				jpaMetamodel
 		);
 	}
 

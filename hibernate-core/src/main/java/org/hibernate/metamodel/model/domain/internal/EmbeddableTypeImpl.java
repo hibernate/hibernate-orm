@@ -9,13 +9,11 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.type.ComponentType;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -29,33 +27,20 @@ public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
 		implements EmbeddableDomainType<J>, Serializable {
 
-	private final ManagedDomainType<?> parent;
-	private final ComponentType hibernateType;
-
-	public EmbeddableTypeImpl(
-			JavaTypeDescriptor<J> javaTypeDescriptor,
-			ManagedDomainType<?> parent,
-			ComponentType hibernateType,
-			SessionFactoryImplementor sessionFactory) {
-		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, sessionFactory );
-		this.parent = parent;
-		this.hibernateType = hibernateType;
+	public EmbeddableTypeImpl(JavaTypeDescriptor<J> javaTypeDescriptor, NodeBuilder nodeBuilder) {
+		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, nodeBuilder.getDomainModel() );
 	}
 
 	public EmbeddableTypeImpl(
 			String name,
-			ManagedDomainType<?> parent,
-			ComponentType hibernateType,
-			SessionFactoryImplementor sessionFactory) {
+			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
 				name,
-				(JavaTypeDescriptor) sessionFactory.getMetamodel().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Map.class ),
+				(JavaTypeDescriptor) nodeBuilder.getDomainModel().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Map.class ),
 				null,
-				sessionFactory
+				nodeBuilder.getDomainModel()
 		);
-		this.parent = parent;
-		this.hibernateType = hibernateType;
 	}
 
 	@Override
@@ -63,17 +48,9 @@ public class EmbeddableTypeImpl<J>
 		return PersistenceType.EMBEDDABLE;
 	}
 
-	public ManagedDomainType<?> getParent() {
-		return parent;
-	}
-
-	public ComponentType getHibernateType() {
-		return hibernateType;
-	}
-
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
-		return new SubGraphImpl( this, true, sessionFactory() );
+		return new SubGraphImpl( this, true, jpaMetamodel() );
 	}
 }

@@ -11,12 +11,12 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -40,8 +40,8 @@ public class AttributeNodeImpl<J>
 	public <X> AttributeNodeImpl(
 			boolean mutable,
 			PersistentAttribute<X, J> attribute,
-			SessionFactoryImplementor sessionFactory) {
-		this( mutable, attribute, null, null, sessionFactory );
+			JpaMetamodel jpaMetamodel) {
+		this( mutable, attribute, null, null, jpaMetamodel );
 	}
 
 	/**
@@ -52,8 +52,8 @@ public class AttributeNodeImpl<J>
 			PersistentAttribute<?, J> attribute,
 			Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap,
 			Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap,
-			SessionFactoryImplementor sessionFactory) {
-		super( mutable, sessionFactory );
+			JpaMetamodel jpaMetamodel) {
+		super( mutable, jpaMetamodel );
 		this.attribute = attribute;
 		this.subGraphMap = subGraphMap;
 		this.keySubGraphMap = keySubGraphMap;
@@ -152,7 +152,7 @@ public class AttributeNodeImpl<J>
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <S extends J> void internalAddSubGraph(Class<S> subType, SubGraphImplementor<S> subGraph) {
-		log.tracef( "Adding sub-graph : ( (%s) %s )", subGraph.getGraphedType().getName(), getAttributeName() );
+		log.tracef( "Adding sub-graph : ( (%s) %s )", subGraph.getGraphedType().getTypeName(), getAttributeName() );
 
 		if ( subGraphMap == null ) {
 			subGraphMap = new HashMap<>();
@@ -265,7 +265,7 @@ public class AttributeNodeImpl<J>
 				this.attribute,
 				makeMapCopy( mutable, (Map) subGraphMap ),
 				makeMapCopy( mutable, (Map) keySubGraphMap ),
-				sessionFactory()
+				jpaMetamodel()
 		);
 	}
 

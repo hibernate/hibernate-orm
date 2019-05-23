@@ -16,8 +16,8 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -33,32 +33,26 @@ public class DomainModelHelper {
 	public static <T, S extends T> ManagedDomainType<S> resolveSubType(
 			ManagedDomainType<T> baseType,
 			String subTypeName,
-			SessionFactoryImplementor sessionFactory) {
-		final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
-
+			JpaMetamodel jpaMetamodel) {
 		if ( baseType instanceof EmbeddableDomainType<?> ) {
 			// todo : at least validate the string is a valid sub-type of the embeddable class?
 			return (ManagedDomainType) baseType;
 		}
 
-		final String importedClassName = metamodel.getImportedClassName( subTypeName );
-		if ( importedClassName != null ) {
-			// first, try to find it by name directly..
-			ManagedDomainType<S> subManagedType = metamodel.entity( importedClassName );
-			if ( subManagedType != null ) {
-				return subManagedType;
-			}
+		// first, try to find it by name directly..
+		ManagedDomainType<S> subManagedType = jpaMetamodel.entity( subTypeName );
+		if ( subManagedType != null ) {
+			return subManagedType;
+		}
 
-			// it could still be a mapped-superclass
-			try {
-				final Class<S> subTypeClass = sessionFactory.getServiceRegistry()
-						.getService( ClassLoaderService.class )
-						.classForName( importedClassName );
-
-				return metamodel.managedType( subTypeClass );
-			}
-			catch (Exception ignore) {
-			}
+		// it could still be a mapped-superclass
+		try {
+			final Class javaType = jpaMetamodel.getServiceRegistry()
+					.getService( ClassLoaderService.class )
+					.classForName( subTypeName );
+			return jpaMetamodel.managedType( javaType );
+		}
+		catch (Exception ignore) {
 		}
 
 		throw new IllegalArgumentException( "Unknown sub-type name (" + baseType.getTypeName() + ") : " + subTypeName );
@@ -67,10 +61,9 @@ public class DomainModelHelper {
 	public static <S> ManagedDomainType<S> resolveSubType(
 			ManagedDomainType<? super S> baseType,
 			Class<S> subTypeClass,
-			SessionFactoryImplementor sessionFactory) {
+			JpaMetamodel jpaMetamodel) {
 		// todo : validate the hierarchy-ness...
-		final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
-		return metamodel.managedType( subTypeClass );
+		return jpaMetamodel.managedType( subTypeClass );
 	}
 
 

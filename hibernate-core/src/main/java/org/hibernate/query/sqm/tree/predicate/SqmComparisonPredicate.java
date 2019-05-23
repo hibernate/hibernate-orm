@@ -6,12 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.internal.QueryHelper;
-import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -31,12 +31,14 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.rightHandExpression = rightHandExpression;
 		this.operator = operator;
 
-		final ExpressableType<?> expressableType = QueryHelper.highestPrecedenceType(
+		final SqmExpressable expressableType = QueryHelper.highestPrecedenceType(
 				leftHandExpression.getNodeType(),
 				rightHandExpression.getNodeType()
 		);
 
+		//noinspection unchecked
 		leftHandExpression.applyInferableType( expressableType );
+		//noinspection unchecked
 		rightHandExpression.applyInferableType( expressableType );
 	}
 

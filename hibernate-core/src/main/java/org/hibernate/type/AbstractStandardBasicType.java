@@ -52,6 +52,16 @@ public abstract class AbstractStandardBasicType<T>
 		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
+	@Override
+	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+		return getJavaTypeDescriptor();
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getExpressableJavaTypeDescriptor().getJavaType();
+	}
+
 	public T fromString(String string) {
 		return javaTypeDescriptor.fromString( string );
 	}
@@ -172,18 +182,12 @@ public abstract class AbstractStandardBasicType<T>
 		return false;
 	}
 
-	public final boolean isXMLElement() {
-		return false;
-	}
-
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public final boolean isSame(Object x, Object y) {
 		return isEqual( x, y );
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public final boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
 		return isEqual( x, y );
 	}
@@ -262,7 +266,6 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public final void nullSafeSet(
 			PreparedStatement st,
 			Object value,

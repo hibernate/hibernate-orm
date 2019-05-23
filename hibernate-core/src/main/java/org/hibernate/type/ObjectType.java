@@ -7,6 +7,9 @@
 package org.hibernate.type;
 
 
+import org.hibernate.type.descriptor.java.JavaObjectTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 /**
  * Specific adaptation of the "any" type to the old deprecated "object" type
  *
@@ -26,6 +29,16 @@ public class ObjectType extends AnyType implements BasicType {
 	@Override
 	public String getName() {
 		return "object";
+	}
+
+	@Override
+	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+		return JavaObjectTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return Object.class;
 	}
 
 	@Override

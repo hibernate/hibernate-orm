@@ -11,6 +11,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Base support for {@link JpaTupleElement} impls
@@ -38,7 +39,7 @@ public abstract class AbstractJpaTupleElement<T>
 			setJavaType( javaType );
 		}
 		else {
-			setExpressableType( StandardSpiBasicTypes.OBJECT_TYPE );
+			setExpressableType( StandardBasicTypes.OBJECT_TYPE );
 		}
 	}
 

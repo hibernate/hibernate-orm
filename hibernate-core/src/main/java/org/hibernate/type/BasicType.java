@@ -6,12 +6,14 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.metamodel.model.domain.BasicDomainType;
+
 /**
  * Marker interface for basic types.
  *
  * @author Steve Ebersole
  */
-public interface BasicType extends Type {
+public interface BasicType extends Type, BasicDomainType {
 	/**
 	 * Get the names under which this type should be registered in the type registry.
 	 *

@@ -6,6 +6,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.type.descriptor.sql.ObjectSqlTypeDescriptor;
+
 /**
  * Centralizes access to the standard set of basic {@link Type types}.
  * <p/>
@@ -19,7 +21,6 @@ package org.hibernate.type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration"})
 public final class StandardBasicTypes {
 	private StandardBasicTypes() {
 	}
@@ -336,4 +337,6 @@ public final class StandardBasicTypes {
 	 * @see SerializableType
 	 */
 	public static final SerializableType SERIALIZABLE = SerializableType.INSTANCE;
+
+	public static final JavaObjectType OBJECT_TYPE = JavaObjectType.INSTANCE;
 }

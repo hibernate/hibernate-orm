@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
@@ -116,7 +117,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 *
 	 * @return The unwrapped value.
 	 */
-	<X> X unwrap(T value, Class<X> type, SharedSessionContractImplementor options);
+	<X> X unwrap(T value, Class<X> type, WrapperOptions options);
 
 	/**
 	 * Wrap a value as our handled Java type.
@@ -129,7 +130,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 *
 	 * @return The wrapped value.
 	 */
-	<X> T wrap(X value, SharedSessionContractImplementor options);
+	<X> T wrap(X value, WrapperOptions options);
 
 	/**
 	 * Retrieve the Java type handled here.

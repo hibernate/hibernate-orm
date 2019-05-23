@@ -139,6 +139,10 @@ public abstract class AbstractDynamicTest<T extends DynamicExecutionContext> {
 							dynamicTest(
 									method.getName(),
 									() -> {
+										if ( method.isAnnotationPresent( FailureExpected.class ) ) {
+											throw new TestAbortedException( "Test ignored." );
+										}
+
 										// invoke @DynamicBeforeEach
 										for ( Method beforeEachMethod : beforeEachMethods ) {
 											beforeEachMethod.invoke( testInstance );
@@ -158,23 +162,17 @@ public abstract class AbstractDynamicTest<T extends DynamicExecutionContext> {
 											);
 										}
 										catch ( InvocationTargetException t ) {
-											// Check if FailureExpected annotation is present.
-											if ( method.isAnnotationPresent( FailureExpected.class ) ) {
-												// We do nothing
-											}
-											else {
-												// only throw if the exception was not expected.
-												if ( !expectedException.isInstance( t.getTargetException() ) ) {
-													if ( t.getTargetException() != null ) {
-														// in this use case, we only really care about the cause
-														// we can safely ignore the wrapper exception here.
-														exception = t.getTargetException();
-														throw t.getTargetException();
-													}
-													else {
-														exception = t;
-														throw t;
-													}
+											// only throw if the exception was not expected.
+											if ( !expectedException.isInstance( t.getTargetException() ) ) {
+												if ( t.getTargetException() != null ) {
+													// in this use case, we only really care about the cause
+													// we can safely ignore the wrapper exception here.
+													exception = t.getTargetException();
+													throw t.getTargetException();
+												}
+												else {
+													exception = t;
+													throw t;
 												}
 											}
 										}

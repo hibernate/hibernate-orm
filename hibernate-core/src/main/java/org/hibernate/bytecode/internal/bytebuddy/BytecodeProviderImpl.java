@@ -18,6 +18,7 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
 import net.bytebuddy.NamingStrategy;
@@ -84,7 +85,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 		final Method[] getters = new Method[getterNames.length];
 		final Method[] setters = new Method[setterNames.length];
-		byteBuddyProxyHelper.findAccessors( clazz, getterNames, setterNames, types, getters, setters );
+		ReflectHelper.findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 
 		final Class bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 				.with( new NamingStrategy.SuffixingRandom( OPTIMIZER_PROXY_NAMING_SUFFIX,

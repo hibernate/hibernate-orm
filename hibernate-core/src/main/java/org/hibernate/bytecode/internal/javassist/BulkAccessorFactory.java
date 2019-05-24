@@ -20,8 +20,8 @@ import javassist.bytecode.Opcode;
 import javassist.bytecode.StackMapTable;
 import javassist.util.proxy.FactoryHelper;
 import javassist.util.proxy.RuntimeSupport;
+import org.hibernate.internal.util.ReflectHelper;
 
-import static org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper.findAccessors;
 
 /**
  * A factory of bulk accessors.
@@ -62,7 +62,7 @@ class BulkAccessorFactory {
 	BulkAccessor create() {
 		final Method[] getters = new Method[getterNames.length];
 		final Method[] setters = new Method[setterNames.length];
-		findAccessors( targetBean, getterNames, setterNames, types, getters, setters );
+		ReflectHelper.findAccessors( targetBean, getterNames, setterNames, types, getters, setters );
 
 		final Class beanClass;
 		try {

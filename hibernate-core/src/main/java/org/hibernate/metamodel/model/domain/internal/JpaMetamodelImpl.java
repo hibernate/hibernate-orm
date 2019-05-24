@@ -65,16 +65,16 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	private final Map<String, EntityDomainType<?>> entityDescriptorMap = new ConcurrentHashMap<>();
 	private final Map<Class, EntityDomainType<?>> strictEntityDescriptorMap = new ConcurrentHashMap<>();
+
 	private final Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap = new ConcurrentHashMap<>();
 
 	private final Map<Class, EmbeddableDomainType<?>> embeddableDescriptorMap = new ConcurrentHashMap<>();
-	private final Set<EmbeddableDomainType<?>> embeddableDescriptors = new CopyOnWriteArraySet<>();
-
-	private final Map<Class, SqmPolymorphicRootDescriptor<?>> polymorphicEntityReferenceMap = new ConcurrentHashMap<>();
 
 	private final Map<String, String> nameToImportNameMap = new ConcurrentHashMap<>();
 
 	private final transient Map<String, RootGraphImplementor> entityGraphMap = new ConcurrentHashMap<>();
+
+	private final Map<Class, SqmPolymorphicRootDescriptor<?>> polymorphicEntityReferenceMap = new ConcurrentHashMap<>();
 
 	public JpaMetamodelImpl(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
@@ -85,8 +85,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			MetadataImplementor mappingMetadata,
 			SqmCriteriaNodeBuilder criteriaBuilder,
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
-			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting
-	) {
+			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
 		if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.DISABLED ) {
 			MetadataContext context = new MetadataContext(
 					metamodel,
@@ -104,13 +103,15 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 			context.wrapUp();
 
-			strictEntityDescriptorMap.putAll( context.getEntityTypeMap() );
-			this.embeddableDescriptors.addAll( context.getEmbeddableTypeSet() );
-			for ( EmbeddableDomainType<?> embeddable : embeddableDescriptors ) {
-				this.embeddableDescriptorMap.put( embeddable.getJavaType(), embeddable );
-			}
+			this.nameToImportNameMap.putAll( mappingMetadata.getImports() );
+
+			this.strictEntityDescriptorMap.putAll( context.getEntityTypeMap() );
 			this.entityDescriptorMap.putAll( context.getEntityTypesByEntityName() );
 			this.mappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
+
+			for ( EmbeddableDomainType<?> embeddable : context.getEmbeddableTypeSet() ) {
+				this.embeddableDescriptorMap.put( embeddable.getJavaType(), embeddable );
+			}
 
 			applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
 		}
@@ -297,6 +298,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <X> EntityDomainType<X> entity(String entityName) {
+		//noinspection unchecked
 		return (EntityDomainType) entityDescriptorMap.get( entityName );
 	}
 
@@ -321,6 +323,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void visitManagedTypes(Consumer<ManagedDomainType<?>> action) {
 		visitEntityTypes( (Consumer) action );
 		visitEmbeddables( (Consumer) action );
@@ -334,16 +337,18 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public void visitRootEntityTypes(Consumer<EntityDomainType<?>> action) {
-		entityDescriptorMap.values().forEach( entityDomainType -> {
-			if ( entityDomainType.getSuperType() == null ) {
-				action.accept( entityDomainType );
-			}
-		} );
+		entityDescriptorMap.values().forEach(
+				entityDomainType -> {
+					if ( entityDomainType.getSuperType() == null ) {
+						action.accept( entityDomainType );
+					}
+				}
+		);
 	}
 
 	@Override
 	public void visitEmbeddables(Consumer<EmbeddableDomainType<?>> action) {
-		embeddableDescriptors.forEach( action );
+		embeddableDescriptorMap.values().forEach( action );
 	}
 
 	@Override
@@ -358,6 +363,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Not a managed type: " + cls );
 		}
+		//noinspection unchecked
 		return (ManagedDomainType<X>) type;
 	}
 
@@ -367,6 +373,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		if ( entityType == null ) {
 			throw new IllegalArgumentException( "Not an entity: " + cls );
 		}
+		//noinspection unchecked
 		return (EntityDomainType<X>) entityType;
 	}
 
@@ -376,18 +383,19 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		if ( embeddableType == null ) {
 			throw new IllegalArgumentException( "Not an embeddable: " + cls );
 		}
+		//noinspection unchecked
 		return (EmbeddableDomainType<X>) embeddableType;
 	}
 
 	@Override
 	public Set<ManagedType<?>> getManagedTypes() {
 		final int setSize = CollectionHelper.determineProperSizing(
-				entityDescriptorMap.size() + mappedSuperclassTypeMap.size() + embeddableDescriptors.size()
+				entityDescriptorMap.size() + mappedSuperclassTypeMap.size() + embeddableDescriptorMap.size()
 		);
 		final Set<ManagedType<?>> managedTypes = new HashSet<>( setSize );
 		managedTypes.addAll( entityDescriptorMap.values() );
 		managedTypes.addAll( mappedSuperclassTypeMap.values() );
-		managedTypes.addAll( embeddableDescriptors );
+		managedTypes.addAll( embeddableDescriptorMap.values() );
 		return managedTypes;
 	}
 
@@ -398,7 +406,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
-		return new HashSet<>( embeddableDescriptors );
+		return new HashSet<>( embeddableDescriptorMap.values() );
 	}
 
 	@Override
@@ -415,6 +423,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <T> RootGraphImplementor<T> findEntityGraphByName(String name) {
+		//noinspection unchecked
 		return entityGraphMap.get( name );
 	}
 
@@ -428,12 +437,14 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		final List<RootGraphImplementor<? super T>> results = new ArrayList<>();
 
 		for ( EntityGraph entityGraph : entityGraphMap.values() ) {
-			if ( !RootGraphImplementor.class.isInstance( entityGraph ) ) {
+			if ( !(entityGraph instanceof RootGraphImplementor) ) {
 				continue;
 			}
 
 			final RootGraphImplementor egi = (RootGraphImplementor) entityGraph;
+			//noinspection unchecked
 			if ( egi.appliesTo( entityType ) ) {
+				//noinspection unchecked
 				results.add( egi );
 			}
 		}

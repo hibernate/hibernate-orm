@@ -592,7 +592,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		if ( ctx.dynamicInstantiationTarget().MAP() != null ) {
 			if ( mapJavaTypeDescriptor == null ) {
-				mapJavaTypeDescriptor = creationContext.getDomainModel()
+				mapJavaTypeDescriptor = creationContext.getJpaMetamodel()
 						.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( Map.class );
@@ -604,7 +604,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 		else if ( ctx.dynamicInstantiationTarget().LIST() != null ) {
 			if ( listJavaTypeDescriptor == null ) {
-				listJavaTypeDescriptor = creationContext.getDomainModel()
+				listJavaTypeDescriptor = creationContext.getJpaMetamodel()
 						.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( List.class );
@@ -618,7 +618,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			final String className = ctx.dynamicInstantiationTarget().dotIdentifierSequence().getText();
 			try {
 				final Class<?> targetJavaType = classForName( className );
-				final JavaTypeDescriptor jtd = creationContext.getDomainModel()
+				final JavaTypeDescriptor jtd = creationContext.getJpaMetamodel()
 						.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.resolveDescriptor( targetJavaType );
@@ -836,7 +836,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		log.debugf( "Attempting to resolve path [%s] as entity reference...", entityName );
 		EntityDomainType reference = null;
 		try {
-			reference = creationContext.getDomainModel().entity( entityName );
+			reference = creationContext.getJpaMetamodel().entity( entityName );
 		}
 		catch (Exception ignore) {
 		}
@@ -889,7 +889,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		log.debugf( "Handling root path - %s", name );
 
-		final EntityDomainType entityDescriptor = getCreationContext().getDomainModel().resolveHqlEntityReference( name );
+		final EntityDomainType entityDescriptor = getCreationContext().getJpaMetamodel().resolveHqlEntityReference(
+				name
+		);
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			if ( getCreationOptions().useStrictJpaCompliance() ) {
@@ -965,7 +967,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
 
-		final EntityDomainType entityDescriptor = getCreationContext().getDomainModel().resolveHqlEntityReference( name );
+		final EntityDomainType entityDescriptor = getCreationContext().getJpaMetamodel().resolveHqlEntityReference( name );
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a CROSS JOIN target" );
@@ -1339,7 +1341,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				BinaryArithmeticOperator.ADD,
 				(SqmExpression) ctx.expression( 0 ).accept( this ),
 				(SqmExpression) ctx.expression( 1 ).accept( this ),
-				creationContext.getDomainModel(),
+				creationContext.getJpaMetamodel(),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -1354,7 +1356,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				BinaryArithmeticOperator.SUBTRACT,
 				(SqmExpression) ctx.expression( 0 ).accept( this ),
 				(SqmExpression) ctx.expression( 1 ).accept( this ),
-				creationContext.getDomainModel(),
+				creationContext.getJpaMetamodel(),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -1369,7 +1371,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				BinaryArithmeticOperator.MULTIPLY,
 				(SqmExpression) ctx.expression( 0 ).accept( this ),
 				(SqmExpression) ctx.expression( 1 ).accept( this ),
-				creationContext.getDomainModel(),
+				creationContext.getJpaMetamodel(),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -1385,7 +1387,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				BinaryArithmeticOperator.DIVIDE,
 				(SqmExpression) ctx.expression( 0 ).accept( this ),
 				(SqmExpression) ctx.expression( 1 ).accept( this ),
-				creationContext.getDomainModel(),
+				creationContext.getJpaMetamodel(),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -1790,7 +1792,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	private <J> BasicDomainType<J> resolveExpressableTypeBasic(Class<J> javaType) {
 		//noinspection unchecked
-		return creationContext.getDomainModel().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+		return creationContext.getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 	}
 
 	@Override
@@ -2736,7 +2738,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmPath<?> visitTreatedNavigablePath(HqlParser.TreatedNavigablePathContext ctx) {
 		final SqmPath<?> sqmPath = consumeManagedTypeReference( ctx.path() );
 		final String treatTargetName = ctx.dotIdentifierSequence().getText();
-		final EntityDomainType<?> treatTarget = getCreationContext().getDomainModel().entity( treatTargetName );
+		final EntityDomainType<?> treatTarget = getCreationContext().getJpaMetamodel().entity( treatTargetName );
 
 		SqmPath<?> result = resolveTreatedPath( sqmPath, treatTarget );
 

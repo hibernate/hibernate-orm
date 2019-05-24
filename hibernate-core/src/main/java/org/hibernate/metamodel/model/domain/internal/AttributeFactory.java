@@ -302,7 +302,7 @@ public class AttributeFactory {
 			PersistentClass persistentClass =
 					context.getPersistentClassHostingProperties( (MappedSuperclassTypeImpl<?>) ownerType );
 			return context.getMetamodel()
-					.resolveEntityPersister( persistentClass.getClassName() )
+					.findEntityDescriptor( persistentClass.getClassName() )
 					.getEntityMetamodel();
 		}
 		else {

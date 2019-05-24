@@ -22,13 +22,13 @@ public interface SqmCreationContext {
 	/**
 	 * Access to the domain model metadata
 	 */
-	JpaMetamodel getDomainModel();
+	JpaMetamodel getJpaMetamodel();
 
 	/**
 	 * Access to the ServiceRegistry for the context
 	 */
 	default ServiceRegistry getServiceRegistry() {
-		return getDomainModel().getServiceRegistry();
+		return getJpaMetamodel().getServiceRegistry();
 	}
 
 	QueryEngine getQueryEngine();

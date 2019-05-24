@@ -15,6 +15,8 @@ import java.time.LocalTime;
 
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -22,12 +24,12 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 public class LiteralHelper {
 	public static SqmLiteral<Timestamp> timestampLiteralFrom(String literalText, SqmCreationState creationState) {
 		final Timestamp literal = Timestamp.valueOf(
-				LocalDateTime.from( JdbcTimestampJavaDescriptor.FORMATTER.parse( literalText ) )
+				LocalDateTime.from( JdbcTimestampTypeDescriptor.FORMATTER.parse( literalText ) )
 		);
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getDomainModel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Timestamp.class ),
+				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Timestamp.class ),
 				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
@@ -43,7 +45,7 @@ public class LiteralHelper {
 	public static SqmLiteral<Integer> integerLiteral(int value, QueryEngine queryEngine) {
 		return new SqmLiteral<>(
 				value,
-				StandardSpiBasicTypes.INTEGER,
+				StandardBasicTypes.INTEGER,
 				queryEngine.getCriteriaBuilder()
 		);
 	}
@@ -54,7 +56,7 @@ public class LiteralHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getDomainModel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Date.class ),
+				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Date.class ),
 				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
@@ -65,7 +67,7 @@ public class LiteralHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getDomainModel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Time.class ),
+				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Time.class ),
 				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}

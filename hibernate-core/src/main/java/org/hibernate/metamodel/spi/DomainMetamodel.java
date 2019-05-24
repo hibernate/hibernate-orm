@@ -24,30 +24,32 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface DomainMetamodel {
-	TypeConfiguration getTypeConfiguration();
 	JpaMetamodel getJpaMetamodel();
 
-	default EntityPersister resolveEntityPersister(EntityDomainType domainType) {
-		return findEntityDescriptor( domainType.getHibernateEntityName() );
+	default TypeConfiguration getTypeConfiguration() {
+		return getJpaMetamodel().getTypeConfiguration();
 	}
 
-	EntityPersister resolveEntityPersister(Object entity);
+	/**
+	 * Given an (assumed) entity instance, determine its descriptor
+	 *
+	 * @see org.hibernate.EntityNameResolver
+	 */
+	EntityPersister determineEntityPersister(Object entity);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity descriptors
 
 	/**
-	 * Given a JPA entity domain type, get the associated Hibernate entity descriptor
-	 */
-	default EntityPersister resolveEntityDescriptor(EntityDomainType<?> entityDomainType){
-		return resolveEntityPersister( entityDomainType );
-	}
-
-	/**
 	 * Visit all entity mapping descriptors defined in the model
 	 */
 	void visitEntityDescriptors(Consumer<EntityPersister> action);
+
+	/**
+	 * Given a JPA entity domain type, get the associated Hibernate entity descriptor
+	 */
+	EntityPersister resolveEntityDescriptor(EntityDomainType<?> entityDomainType);
 
 	/**
 	 * Get an entity mapping descriptor based on its Hibernate entity-name

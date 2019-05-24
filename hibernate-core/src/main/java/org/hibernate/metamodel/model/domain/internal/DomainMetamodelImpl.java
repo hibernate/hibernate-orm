@@ -91,7 +91,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 //	private final Map<Class<?>, MappedSuperclassType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
 //	private final Set<EmbeddableDomainType<?>> jpaEmbeddableTypes = new CopyOnWriteArraySet<>();
 	private final Map<Class, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
-	private final Map<String, String> imports = new ConcurrentHashMap<>();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,7 +159,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	public void initialize(
 			MetadataImplementor mappingMetadata,
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
-		this.imports.putAll( mappingMetadata.getImports() );
 
 		primeSecondLevelCacheRegions( mappingMetadata );
 
@@ -405,7 +403,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	}
 
 	@Override
-	public EntityPersister resolveEntityPersister(Object entity) {
+	public EntityPersister determineEntityPersister(Object entity) {
 		return findEntityDescriptor(entity.getClass());
 	}
 
@@ -512,32 +510,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	}
 
 	@Override
-	public String getImportedClassName(String className) {
-		String result = imports.get( className );
-		if ( result == null ) {
-			try {
-				sessionFactory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
-				imports.put( className, className );
-				return className;
-			}
-			catch (ClassLoadingException cnfe) {
-				imports.put( className, INVALID_IMPORT );
-				return null;
-			}
-		}
-		else {
-			// explicitly check for same instance
-			//noinspection StringEquality
-			if ( result == INVALID_IMPORT ) {
-				return null;
-			}
-			else {
-				return result;
-			}
-		}
-	}
-
-	@Override
 	public String[] getImplementors(String className) throws MappingException {
 		// computeIfAbsent() can be a contention point and we expect all the values to be in the map at some point so
 		// let's do an optimistic check first
@@ -604,10 +576,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 			throw new UnknownEntityTypeException( "Unable to locate persister: " + byName );
 		}
 		return entityPersister;
-	}
-
-	public String getImportedName(String name){
-		return imports.get( name );
 	}
 
 	@Override

@@ -28,9 +28,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Hibernate extension to the JPA {@link Metamodel} contract
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 6.0) - Prefer {@link org.hibernate.metamodel.spi.DomainMetamodel}
  */
 @Deprecated
-public interface MetamodelImplementor extends Metamodel {
+public interface MetamodelImplementor extends DomainMetamodel, Metamodel {
 	/**
 	 * Access to the TypeConfiguration in effect for this SessionFactory/Metamodel
 	 *

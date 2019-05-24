@@ -82,7 +82,6 @@ dependencies {
 	testRuntime( libraries.log4j )
 	testRuntime( libraries.javassist )
 	testRuntime( libraries.byteBuddy )
-	testRuntime( libraries.woodstox )
 
 	//Databases
 	testRuntime( libraries.h2 )

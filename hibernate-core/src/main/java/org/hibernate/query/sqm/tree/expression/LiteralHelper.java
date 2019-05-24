@@ -15,10 +15,6 @@ import java.time.LocalTime;
 
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.type.descriptor.java.internal.JdbcDateJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.JdbcTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.JdbcTimestampJavaDescriptor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Steve Ebersole

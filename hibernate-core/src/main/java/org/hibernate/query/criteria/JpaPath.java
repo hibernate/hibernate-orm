@@ -10,6 +10,7 @@ import javax.persistence.criteria.Path;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.PathException;
 
 /**
  * API extension to the JPA {@link Path} contract

@@ -20,7 +20,7 @@ import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -124,11 +124,11 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public <S extends E> SqmTreatedBagJoin<O, E, S> treatAs(Class<S> treatAsType) {
-		return (SqmTreatedBagJoin<O, E, S>) treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
+		return treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		//noinspection unchecked
 		return new SqmTreatedBagJoin( this, treatTarget, null );
 	}

@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -83,7 +83,10 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifi
 
 	@Override
 	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityDomainType<S> treatTarget = nodeBuilder().getDomainModel().entity( treatJavaType );
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+	@Override
+	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		return new SqmTreatedEntityJoin<>( this, treatTarget, null, getSqmJoinType() );
 	}
 }

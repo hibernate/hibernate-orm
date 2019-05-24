@@ -6,10 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
@@ -19,18 +20,18 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> implements DomainResultProducer {
-	private final SqmParameter parameterExpression;
+public class SqmEntityType<T> extends AbstractSqmExpression<T> implements DomainResultProducer {
+	private final SqmExpression discriminatorSource;
 
-	public SqmParameterizedEntityType(SqmParameter<T> parameterExpression, NodeBuilder nodeBuilder) {
+	public SqmEntityType(SqmParameter<T> parameterExpression, NodeBuilder nodeBuilder) {
 		super( parameterExpression.getAnticipatedType(), nodeBuilder );
-		this.parameterExpression = parameterExpression;
+		this.discriminatorSource = parameterExpression;
 	}
 
-	@Override
-	public EntityValuedExpressableType<T> getNodeType() {
+	public SqmEntityType(SqmPath<T> entityValuedPath, NodeBuilder nodeBuilder) {
 		//noinspection unchecked
-		return (EntityValuedExpressableType<T>) parameterExpression.getNodeType();
+		super( entityValuedPath.getReferencedPathSource().sqmAs( EntityDomainType.class ), nodeBuilder );
+		this.discriminatorSource = entityValuedPath;
 	}
 
 	@Override
@@ -38,17 +39,12 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 		setExpressableType( type );
 
 		//noinspection unchecked
-		parameterExpression.applyInferableType( type );
+		discriminatorSource.applyInferableType( type );
 	}
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitParameterizedEntityTypeExpression( this );
-	}
-
-	@Override
-	public String asLoggableText() {
-		return "TYPE(" + parameterExpression.asLoggableText() + ")";
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;

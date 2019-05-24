@@ -29,7 +29,7 @@ public class SqmCaseSearched<R> extends AbstractSqmExpression<R> implements JpaS
 		this( null, nodeBuilder );
 	}
 
-	public SqmCaseSearched(BasicValuedExpressableType<R> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCaseSearched(SqmExpressable<R> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 	}
 

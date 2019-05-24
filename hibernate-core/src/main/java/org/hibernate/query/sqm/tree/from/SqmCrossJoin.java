@@ -7,12 +7,13 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.query.sqm.produce.SqmCreationHelper.buildRootNavigablePath;
@@ -82,7 +83,11 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T,T> implements SqmJoin<T,T
 
 	@Override
 	public <S extends T> SqmTreatedCrossJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityDomainType<S> treatTarget = nodeBuilder().getDomainModel().entity( treatJavaType );
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedCrossJoin<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		return new SqmTreatedCrossJoin<>( this, null, treatTarget );
 	}
 }

@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -44,11 +44,11 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 
 	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return (SqmTreatedSingularJoin<O,T,S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		//noinspection unchecked
 		return new SqmTreatedSingularJoin( this, treatTarget, null );
 	}
@@ -65,6 +65,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 
 	@Override
 	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		//noinspection unchecked
 		return new SqmSingularJoin(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),

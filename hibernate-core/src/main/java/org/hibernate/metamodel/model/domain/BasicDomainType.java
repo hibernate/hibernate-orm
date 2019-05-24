@@ -17,7 +17,8 @@ import org.hibernate.query.sqm.SqmExpressable;
  *
  * @author Steve Ebersole
  */
-public interface BasicDomainType<J> extends SimpleDomainType<J>, BasicType<J>, SqmExpressable<J> {
+public interface BasicDomainType<J>
+		extends SimpleDomainType<J>, BasicType<J>, SqmExpressable<J>, AllowableOutputParameterType<J>, AllowableFunctionReturnType<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;

@@ -9,6 +9,7 @@ package org.hibernate.query.sqm;
 import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -40,4 +41,6 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J> {
 	 * Create an SQM path for this source relative to the given left-hand side
 	 */
 	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState);
+
+	<X extends DomainType> X sqmAs(Class<X> type);
 }

@@ -20,7 +20,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
@@ -169,17 +169,18 @@ public class SqmMapJoin<O,K,V> extends AbstractSqmPluralJoin<O,Map<K,V>,V> imple
 
 	@Override
 	public <S extends V> SqmTreatedMapJoin<O,K,V,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return (SqmTreatedMapJoin<O,K,V,S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedPath<V, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends V> SqmTreatedMapJoin<O,K,V,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		//noinspection unchecked
 		return new SqmTreatedMapJoin( this, treatTarget, null );
 	}
 
 	@Override
 	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		//noinspection unchecked
 		return new SqmMapJoin(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),

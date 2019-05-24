@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;

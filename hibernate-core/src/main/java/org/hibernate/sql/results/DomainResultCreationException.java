@@ -4,21 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.criteria;
+package org.hibernate.sql.results;
 
 import org.hibernate.HibernateException;
 
 /**
- * Indicates an attempt to use a path in an unsupported way
+ * Base for problems creating {@link org.hibernate.sql.results.spi.DomainResult}
+ * instances
  *
  * @author Steve Ebersole
  */
-public class PathException extends HibernateException {
-	public PathException(String message) {
+public class DomainResultCreationException extends HibernateException {
+	public DomainResultCreationException(String message) {
 		super( message );
 	}
 
-	public PathException(String message, Throwable cause) {
+	public DomainResultCreationException(String message, Throwable cause) {
 		super( message, cause );
 	}
 }

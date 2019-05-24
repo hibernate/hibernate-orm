@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.produce.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
@@ -52,43 +53,49 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 				newType
 		);
 
-		//noinspection unchecked
-		setExpressableType( (SqmExpressable) highestPrecedenceType( newType, getNodeType() ) );
+		setExpressableType( highestPrecedenceType( newType, getNodeType() ) );
 	}
 
 	@Override
 	public SqmExpression<Long> asLong() {
-		return castAs( StandardSpiBasicTypes.LONG );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.LONG );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		return castAs( StandardSpiBasicTypes.INTEGER );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.INTEGER );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		return castAs( StandardSpiBasicTypes.FLOAT );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.FLOAT );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		return castAs( StandardSpiBasicTypes.DOUBLE );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.DOUBLE );
 	}
 
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		return castAs( StandardSpiBasicTypes.BIG_DECIMAL );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.BIG_DECIMAL );
 	}
 
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
-		return castAs( StandardSpiBasicTypes.BIG_INTEGER );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.BIG_INTEGER );
 	}
 
 	@Override
 	public SqmExpression<String> asString() {
-		return castAs( StandardSpiBasicTypes.STRING );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.STRING );
 	}
 
 	@Override

@@ -10,7 +10,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.PathException;
 
 /**
  * @author Steve Ebersole

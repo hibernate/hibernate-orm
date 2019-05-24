@@ -18,7 +18,7 @@ import org.hibernate.Incubating;
  * @author Steve Ebersole
  */
 @Incubating
-public interface ParameterMetadata<P extends QueryParameter<?>> {
+public interface ParameterMetadata {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 	// General purpose
 
@@ -35,7 +35,7 @@ public interface ParameterMetadata<P extends QueryParameter<?>> {
 	 *
 	 * @throws IllegalArgumentException if no parameter is registered under that name
 	 */
-	P getQueryParameter(String name);
+	<T> QueryParameter<T> getQueryParameter(String name);
 
 	/**
 	 * Resolve the QueryParameter reference registered here under the
@@ -45,7 +45,7 @@ public interface ParameterMetadata<P extends QueryParameter<?>> {
 	 *
 	 * @throws IllegalArgumentException if no parameter is registered under that label
 	 */
-	P getQueryParameter(int positionLabel);
+	<T> QueryParameter<T> getQueryParameter(int positionLabel);
 
 	/**
 	 * A deeper resolution attempt from a JPA parameter reference to Hibernate's
@@ -54,19 +54,19 @@ public interface ParameterMetadata<P extends QueryParameter<?>> {
 	 * According to the spec, only Parameter references obtained from the provider
 	 * are valid.
 	 */
-	P resolve(Parameter param);
+	<T> QueryParameter<T> resolve(Parameter<T> param);
 
 	/**
 	 * Is this parameter reference registered in this collection?
 	 */
-	boolean containsReference(P parameter);
+	boolean containsReference(QueryParameter<?> parameter);
 
-	Set<P> getRegistrations();
+	Set<? extends QueryParameter<?>> getRegistrations();
 
 	/**
 	 * General purpose visitation using functional
 	 */
-	void visitRegistrations(Consumer<P> action);
+	void visitRegistrations(Consumer<? extends QueryParameter<?>> action);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`

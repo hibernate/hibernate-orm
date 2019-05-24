@@ -20,7 +20,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.criteria.PathException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -93,11 +93,11 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatAsType) {
-		return (SqmTreatedSetJoin<O,E,S>) treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
+		return treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		return new SqmTreatedSetJoin<>( this, treatTarget, null );
 	}
 

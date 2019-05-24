@@ -1,8 +1,16 @@
 language: java
 
-jdk:
-  - oraclejdk8
-install:
+jobs:
+  include:
+    - stage: Oracle JDK 8
+      jdk: oraclejdk8
+    - stage: AdoptOpenJDK 11.0.3
+      install:
+        - curl -L -o install-jdk.sh https://github.com/sormuras/bach/raw/master/install-jdk.sh
+        - source ./install-jdk.sh --target ./openjdk11 --url https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.3%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.3_7.tar.gz
+
+before_script:
+  - java -version
   - ./gradlew assemble
 script:
   - travis_wait 45 ./gradlew check

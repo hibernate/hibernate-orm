@@ -19,7 +19,6 @@ import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -41,7 +40,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private static final String CLASS_PATH_SCHEME = "classpath://";
 
-	private final ConcurrentMap<Class, ServiceLoader> serviceLoaders = new ConcurrentHashMap<Class, ServiceLoader>();
+	private final ConcurrentMap<Class, AggregatedServiceLoader<?>> serviceLoaders = new ConcurrentHashMap<>();
 	private volatile AggregatedClassLoader aggregatedClassLoader;
 
 	/**
@@ -246,16 +245,12 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S> Collection<S> loadJavaServices(Class<S> serviceContract) {
-		ServiceLoader<S> serviceLoader = serviceLoaders.get( serviceContract );
+		AggregatedServiceLoader<S> serviceLoader = (AggregatedServiceLoader<S>) serviceLoaders.get( serviceContract );
 		if ( serviceLoader == null ) {
-			serviceLoader = ServiceLoader.load( serviceContract, getAggregatedClassLoader() );
+			serviceLoader = new AggregatedServiceLoader( getAggregatedClassLoader(), serviceContract );
 			serviceLoaders.put( serviceContract, serviceLoader );
 		}
-		final LinkedHashSet<S> services = new LinkedHashSet<S>();
-		for ( S service : serviceLoader ) {
-			services.add( service );
-		}
-		return services;
+		return serviceLoader.getAll();
 	}
 
 	@Override
@@ -273,7 +268,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		return work.doWork( getAggregatedClassLoader() );
 	}
 
-	private ClassLoader getAggregatedClassLoader() {
+	private AggregatedClassLoader getAggregatedClassLoader() {
 		final AggregatedClassLoader aggregated = this.aggregatedClassLoader;
 		if ( aggregated == null ) {
 			throw log.usingStoppedClassLoaderService();
@@ -295,8 +290,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public void stop() {
-		for ( ServiceLoader serviceLoader : serviceLoaders.values() ) {
-			serviceLoader.reload(); // clear service loader providers
+		for ( AggregatedServiceLoader<?> serviceLoader : serviceLoaders.values() ) {
+			serviceLoader.close();
 		}
 		serviceLoaders.clear();
 		//Avoid ClassLoader leaks

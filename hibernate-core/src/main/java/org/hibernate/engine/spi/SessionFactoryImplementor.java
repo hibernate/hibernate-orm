@@ -42,11 +42,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-
 
 /**
  * Defines the internal contract between the <tt>SessionFactory</tt> and other parts of

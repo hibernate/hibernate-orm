@@ -136,7 +136,7 @@ public abstract class AbstractPluralAttribute<D,C,E>
 	}
 
 	@Override
-	public SimpleDomainType<?> getKeyGraphType() {
+	public SimpleDomainType getKeyGraphType() {
 		return null;
 	}
 

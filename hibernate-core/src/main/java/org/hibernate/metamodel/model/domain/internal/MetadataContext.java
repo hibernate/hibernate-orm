@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.metamodel.internal;
+package org.hibernate.metamodel.model.domain.internal;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -18,6 +18,7 @@ import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.MappedSuperclassType;
+import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
@@ -32,20 +33,23 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
+import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
-import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
-import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
-import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
+import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines a context for storing information during the building of the {@link DomainMetamodelImpl}.
@@ -63,9 +67,11 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 class MetadataContext {
 	private static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( MetadataContext.class );
 
-	private final SessionFactoryImplementor sessionFactory;
+	private final SqmCriteriaNodeBuilder criteriaBuilder;
 	private Set<MappedSuperclass> knownMappedSuperclasses;
+	private TypeConfiguration typeConfiguration;
 	private final boolean ignoreUnsupported;
+	private final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
 	private Map<Class<?>, EntityDomainType<?>> entityTypes = new HashMap<>();
@@ -84,18 +90,38 @@ class MetadataContext {
 	 * Stack of PersistentClass being process. Last in the list is the highest in the stack.
 	 */
 	private List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
+	private DomainMetamodel metamodel;
 
 	public MetadataContext(
-			SessionFactoryImplementor sessionFactory,
+			DomainMetamodel metamodel,
+			SqmCriteriaNodeBuilder criteriaBuilder,
 			Set<MappedSuperclass> mappedSuperclasses,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
-		this.sessionFactory = sessionFactory;
+			TypeConfiguration typeConfiguration,
+			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
+			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting
+	) {
+		this.metamodel = metamodel;
+		this.criteriaBuilder = criteriaBuilder;
 		this.knownMappedSuperclasses = mappedSuperclasses;
+		this.typeConfiguration = typeConfiguration;
 		this.ignoreUnsupported = jpaMetaModelPopulationSetting == JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED;
+		this.jpaStaticMetaModelPopulationSetting = jpaStaticMetaModelPopulationSetting;
 	}
 
-	/*package*/ SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+	public SqmCriteriaNodeBuilder getCriteriaBuilder() {
+		return criteriaBuilder;
+	}
+
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
+	}
+
+	public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry(){
+		return typeConfiguration.getJavaTypeDescriptorRegistry();
+	}
+
+	DomainMetamodel getMetamodel() {
+		return metamodel;
 	}
 
 	/*package*/ boolean isIgnoreUnsupported() {
@@ -211,8 +237,7 @@ class MetadataContext {
 			LOG.trace( "Wrapping up metadata context..." );
 		}
 
-		boolean staticMetamodelScanEnabled = JpaStaticMetaModelPopulationSetting
-				.determineJpaMetaModelPopulationSetting( sessionFactory.getProperties() ) != JpaStaticMetaModelPopulationSetting.DISABLED;
+		boolean staticMetamodelScanEnabled = this.jpaStaticMetaModelPopulationSetting != JpaStaticMetaModelPopulationSetting.DISABLED;
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
@@ -561,9 +586,8 @@ class MetadataContext {
 		return (BasicDomainType) basicDomainTypeMap.computeIfAbsent(
 				javaType,
 				jt -> {
-					final JavaTypeDescriptorRegistry registry = getSessionFactory()
-							.getMetamodel()
-							.getTypeConfiguration()
+					final JavaTypeDescriptorRegistry registry =
+							getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry();
 					return new BasicTypeImpl<>( registry.resolveDescriptor( javaType ) );
 				}

@@ -34,7 +34,7 @@ import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.ShelfLife;
 import org.hibernate.jpa.test.metamodel.Spouse;
-import org.hibernate.metamodel.internal.DomainMetamodelImpl;
+import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.predicate.ComparisonPredicate;
 

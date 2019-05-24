@@ -59,7 +59,7 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	}
 
 	@Override
-	public SimpleDomainType<K> getKeyGraphType() {
+	public SimpleDomainType getKeyGraphType() {
 		return getKeyType();
 	}
 

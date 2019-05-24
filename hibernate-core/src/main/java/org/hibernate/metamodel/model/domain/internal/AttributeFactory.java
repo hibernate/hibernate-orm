@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.metamodel.internal;
+package org.hibernate.metamodel.model.domain.internal;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -40,11 +40,6 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
-import org.hibernate.metamodel.model.domain.internal.MapMember;
-import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
-import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
-import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -109,7 +104,7 @@ public class AttributeFactory {
 				false,
 				false,
 				property.isOptional(),
-				context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
+				context.getCriteriaBuilder()
 		);
 	}
 
@@ -152,7 +147,7 @@ public class AttributeFactory {
 				determineSimpleType( attributeMetadata.getValueContext() ),
 				attributeMetadata.getMember(),
 				attributeMetadata.getAttributeClassification(),
-				context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
+				context.getCriteriaBuilder()
 		);
 	}
 
@@ -183,14 +178,13 @@ public class AttributeFactory {
 				attributeMetadata.getAttributeClassification(),
 				determineSimpleType( attributeMetadata.getValueContext() ),
 				attributeMetadata.getMember(),
-				context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
+				context.getCriteriaBuilder()
 		);
 	}
 
 	@SuppressWarnings("unchecked")
 	private <X, Y, E, K> PluralPersistentAttribute<X,Y,E> buildPluralAttribute(PluralAttributeMetadata<X, Y, E> attributeMetadata) {
-		final JavaTypeDescriptor<Y> javaTypeDescriptor = context.getSessionFactory()
-				.getMetamodel()
+		final JavaTypeDescriptor<Y> javaTypeDescriptor = context
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( attributeMetadata.getJavaType() );
@@ -200,7 +194,7 @@ public class AttributeFactory {
 				determineSimpleType( attributeMetadata.getElementValueContext() ),
 				javaTypeDescriptor,
 				determineListIndexOrMapKeyType( attributeMetadata ),
-				context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
+				context.getCriteriaBuilder()
 		);
 
 		return info
@@ -246,7 +240,7 @@ public class AttributeFactory {
 						embeddableClass = component.getComponentClass();
 					}
 					else {
-						embeddableClass = context.getSessionFactory()
+						embeddableClass = context.getTypeConfiguration()
 								.getServiceRegistry()
 								.getService( ClassLoaderService.class )
 								.classForName( component.getComponentClassName() );
@@ -257,15 +251,13 @@ public class AttributeFactory {
 						return cached;
 					}
 
-					final JavaTypeDescriptorRegistry registry = context.getSessionFactory()
-							.getMetamodel()
-							.getTypeConfiguration()
+					final JavaTypeDescriptorRegistry registry = context.getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry();
 					final JavaTypeDescriptor javaTypeDescriptor = registry.resolveDescriptor( embeddableClass );
 
 					embeddableType = new EmbeddableTypeImpl<Y>(
 							javaTypeDescriptor,
-							context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
+							context.getCriteriaBuilder()
 					);
 
 					context.registerEmbeddableType( embeddableType );
@@ -275,7 +267,7 @@ public class AttributeFactory {
 				else {
 					embeddableType = new EmbeddableTypeImpl(
 							component.getRoleName(),
-							context.getSessionFactory().getQueryEngine().getCriteriaBuilder()
+							context.getCriteriaBuilder()
 					);
 				}
 
@@ -309,9 +301,8 @@ public class AttributeFactory {
 		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS ) {
 			PersistentClass persistentClass =
 					context.getPersistentClassHostingProperties( (MappedSuperclassTypeImpl<?>) ownerType );
-			return context.getSessionFactory()
-					.getMetamodel()
-					.entityPersister( persistentClass.getClassName() )
+			return context.getMetamodel()
+					.resolveEntityPersister( persistentClass.getClassName() )
 					.getEntityMetamodel();
 		}
 		else {

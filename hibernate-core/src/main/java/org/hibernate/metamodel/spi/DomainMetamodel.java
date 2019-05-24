@@ -9,6 +9,7 @@ package org.hibernate.metamodel.spi;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -39,7 +40,9 @@ public interface DomainMetamodel {
 	/**
 	 * Given a JPA entity domain type, get the associated Hibernate entity descriptor
 	 */
-	EntityPersister resolveEntityDescriptor(EntityDomainType<?> entityDomainType);
+	default EntityPersister resolveEntityDescriptor(EntityDomainType<?> entityDomainType){
+		return resolveEntityPersister( entityDomainType );
+	}
 
 	/**
 	 * Visit all entity mapping descriptors defined in the model

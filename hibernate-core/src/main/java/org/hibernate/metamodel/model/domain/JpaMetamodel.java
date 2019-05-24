@@ -6,12 +6,14 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -19,9 +21,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Hibernate extension to the JPA {@link javax.persistence.metamodel.Metamodel} contract
  *
- * @see DomainMetamodel
- *
  * @author Steve Ebersole
+ * @see DomainMetamodel
  */
 public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
 
@@ -55,6 +56,7 @@ public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
 	void visitManagedTypes(Consumer<ManagedDomainType<?>> action);
 
 	void visitEntityTypes(Consumer<EntityDomainType<?>> action);
+
 	void visitRootEntityTypes(Consumer<EntityDomainType<?>> action);
 
 	void visitEmbeddables(Consumer<EmbeddableDomainType<?>> action);
@@ -84,4 +86,10 @@ public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
 
 	@Override
 	Set<EmbeddableType<?>> getEmbeddables();
+
+	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
+
+	<T> RootGraphImplementor<T> findEntityGraphByName(String name);
+
+	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
 }

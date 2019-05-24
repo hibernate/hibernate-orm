@@ -29,7 +29,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.metamodel.internal.DomainMetamodelImpl;
+import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
 
 import org.junit.Test;
 

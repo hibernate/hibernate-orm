@@ -45,7 +45,6 @@ Otherwise, the no-arg form is used.
 `hibernate.connection.url`:: The JDBC connection url
 Any settings prefixed with `hibernate.connection.` (other than the "special ones"):: All such setting names will have the `hibernate.connection.` prefix stripped. The remaining name and the original value will be passed to the driver as a JDBC connection property
 
-
 [[database-connectionprovider-c3p0]]
 === Using c3p0
 
@@ -58,7 +57,6 @@ Hibernate also provides support for applications to use http://www.mchange.com/p
 When c3p0 support is enabled, a number of c3p0-specific configuration settings are recognized in addition to the general ones described in <<database-connectionprovider-driver>>.
 
 Transaction isolation of the Connections is managed by the `ConnectionProvider` itself. See <<database-connectionprovider-isolation>>.
-
 
 `hibernate.c3p0.min_size` or `c3p0.minPoolSize`:: The minimum size of the c3p0 pool. See http://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 minPoolSize]
 `hibernate.c3p0.max_size` or `c3p0.maxPoolSize`:: The maximum size of the c3p0 pool. See http://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 maxPoolSize]

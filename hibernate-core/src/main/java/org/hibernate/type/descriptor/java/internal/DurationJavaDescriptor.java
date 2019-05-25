@@ -6,9 +6,11 @@
  */
 package org.hibernate.type.descriptor.java.internal;
 
+import java.math.BigDecimal;
 import java.sql.Types;
 import java.time.Duration;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
@@ -16,7 +18,17 @@ import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
+ * Descriptor for {@link Duration}, which is represented internally
+ * as (`long` seconds, `int nanoseconds`), approximately 28 decimal
+ * digits of precision.
+ *
+ * In practice, the 19 decimal digits of a bigint are capable of
+ * representing six centuries in nanoseconds and are sufficient
+ * for many applications. However, by default, we use numeric(21)
+ * here, which comfortably represents 60 millenia of nanos.
+ *
  * @author Steve Ebersole
+ * @author Gavin King
  */
 public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration> {
 	/**
@@ -31,7 +43,7 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BIGINT );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NUMERIC );
 	}
 
 	@Override
@@ -39,7 +51,7 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 		if ( value == null ) {
 			return null;
 		}
-		return String.valueOf( value.toNanos() );
+		return String.valueOf( value.getSeconds() ) + String.valueOf( value.toNanos() );
 	}
 
 	@Override
@@ -47,7 +59,11 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 		if ( string == null ) {
 			return null;
 		}
-		return Duration.ofNanos( Long.valueOf( string ) );
+		int cutoff = string.length() - 9;
+		return Duration.ofSeconds(
+				Long.parseLong( string.substring(0, cutoff) ),
+				Long.parseLong( string.substring(cutoff) )
+		);
 	}
 
 	@Override
@@ -59,6 +75,10 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 
 		if ( Duration.class.isAssignableFrom( type ) ) {
 			return (X) duration;
+		}
+
+		if ( BigDecimal.class.isAssignableFrom( type ) ) {
+			return (X) new BigDecimal( duration.getSeconds() ).movePointRight(9).add( new BigDecimal( duration.getNano() ) );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
@@ -82,8 +102,9 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 			return (Duration) value;
 		}
 
-		if ( Long.class.isInstance( value ) ) {
-			return Duration.ofNanos( (Long) value );
+		if ( BigDecimal.class.isInstance( value ) ) {
+			BigDecimal[] secondsAndNanos = ((BigDecimal) value).divideAndRemainder( BigDecimal.ONE.movePointRight(9) );
+			return Duration.ofSeconds( secondsAndNanos[0].longValueExact(), secondsAndNanos[1].intValueExact() );
 		}
 
 		if ( String.class.isInstance( value ) ) {
@@ -91,5 +112,20 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		// 19+9 = 28 digits is the maximum possible Duration
+		// precision, but is an unnecessarily large default,
+		// except for cosmological applications. Thirty
+		// millenia in both timelike directions should be
+		// sufficient time for most businesses!
+		return 21;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
 	}
 }

@@ -494,11 +494,11 @@ public final class StandardSpiBasicTypes {
 	// Date / time data
 
 	/**
-	 * The standard Hibernate type for mapping {@link Duration} to JDBC {@link java.sql.Types#BIGINT BIGINT}.
+	 * The standard Hibernate type for mapping {@link Duration} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
 	 */
 	public static final StandardBasicType<Duration> DURATION = new StandardBasicTypeImpl(
 			DurationJavaDescriptor.INSTANCE,
-			BigIntSqlDescriptor.INSTANCE
+			NumericSqlDescriptor.INSTANCE
 	);
 
 

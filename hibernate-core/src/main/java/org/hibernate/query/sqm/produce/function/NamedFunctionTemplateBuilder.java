@@ -25,7 +25,8 @@ public class NamedFunctionTemplateBuilder {
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver;
 
-	private boolean useParenthesesWhenNoArgs;
+	private boolean useParenthesesWhenNoArgs = true;
+	private String argumentListSignature;
 
 	public NamedFunctionTemplateBuilder(SqmFunctionRegistry registry, String registrationKey, String functionName) {
 		this.registry = registry;
@@ -61,6 +62,11 @@ public class NamedFunctionTemplateBuilder {
 		return this;
 	}
 
+	public NamedFunctionTemplateBuilder setArgumentListSignature(String argumentListSignature) {
+		this.argumentListSignature = argumentListSignature;
+		return this;
+	}
+
 	public SqmFunctionTemplate register() {
 		return registry.register(
 				registrationKey,
@@ -74,7 +80,8 @@ public class NamedFunctionTemplateBuilder {
 				useParenthesesWhenNoArgs,
 				argumentsValidator,
 				returnTypeResolver,
-				registrationKey
+				registrationKey,
+				argumentListSignature
 		);
 	}
 }

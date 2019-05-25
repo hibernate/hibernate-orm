@@ -180,6 +180,7 @@ public class SpannerDialect extends Dialect {
 		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "byte_length" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )

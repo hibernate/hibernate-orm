@@ -78,6 +78,7 @@ public class SAPDBDialect extends Dialect {
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
@@ -89,7 +90,7 @@ public class SAPDBDialect extends Dialect {
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.week_weekofyear( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.coalesce_value( queryEngine );
 		//since lpad/rpad are not actually useful padding
 		//functions, map them to lfill/rfill

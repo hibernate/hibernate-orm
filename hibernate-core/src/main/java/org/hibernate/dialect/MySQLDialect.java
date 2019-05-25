@@ -211,6 +211,10 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		//also natively supports ANSI-style substring()
+		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
 

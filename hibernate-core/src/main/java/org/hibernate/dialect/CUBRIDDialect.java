@@ -103,7 +103,8 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.log2( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.pi( queryEngine );
-		CommonFunctionFactory.rand( queryEngine );
+		//rand() returns an integer between 0 and 231 on CUBRID
+//		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.systimestamp( queryEngine );
@@ -119,7 +120,8 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
@@ -129,7 +131,8 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.sha2( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
-//		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.position( queryEngine );
+//		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		IngresDialect.bitwiseFunctions( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 

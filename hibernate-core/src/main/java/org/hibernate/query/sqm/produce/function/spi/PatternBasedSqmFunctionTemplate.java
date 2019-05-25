@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -37,6 +36,7 @@ public class PatternBasedSqmFunctionTemplate
 		extends AbstractSelfRenderingFunctionTemplate
 		implements SelfRenderingFunctionSupport {
 	private final PatternRenderer renderer;
+	private final String argumentListSignature;
 
 	/**
 	 * Constructs a pattern-based function template
@@ -45,7 +45,8 @@ public class PatternBasedSqmFunctionTemplate
 			PatternRenderer renderer,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
-			String name) {
+			String name,
+			String argumentListSignature) {
 		super(
 				name,
 				returnTypeResolver,
@@ -56,6 +57,7 @@ public class PatternBasedSqmFunctionTemplate
 						: StandardArgumentsValidators.exactly( renderer.getParamCount() )
 		);
 		this.renderer = renderer;
+		this.argumentListSignature = argumentListSignature;
 	}
 
 	@Override
@@ -75,4 +77,8 @@ public class PatternBasedSqmFunctionTemplate
 		renderer.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return argumentListSignature==null ? super.getArgumentListSignature() : argumentListSignature;
+	}
 }

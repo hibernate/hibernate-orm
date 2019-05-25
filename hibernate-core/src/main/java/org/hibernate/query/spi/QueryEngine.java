@@ -12,6 +12,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -80,6 +82,17 @@ public class QueryEngine {
 				.getDialect()
 				.initializeFunctionRegistry( this );
 		runtimeOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
+
+		final boolean showSQLFunctions = ConfigurationHelper.getBoolean(
+				Environment.SHOW_SQL_FUNCTIONS,
+				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				false
+		);
+		if ( showSQLFunctions ) {
+			sqmFunctionRegistry.getFunctionsByName().forEach(
+					entry -> System.out.println( entry.getValue().getSignature( entry.getKey() ) )
+			);
+		}
 	}
 
 	private static QueryPlanCache buildQueryPlanCache(Map properties) {

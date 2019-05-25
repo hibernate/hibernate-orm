@@ -108,13 +108,14 @@ public class Oracle9Dialect extends Dialect {
 		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.bitand( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.systimestamp( queryEngine );

@@ -183,13 +183,17 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		//also natively supports ANSI-style substring()
+		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 
 		if ( hsqldbVersion >= 200 ) {
@@ -297,7 +301,7 @@ public class HSQLDialect extends Dialect {
 	
 	/**
 	 * Because of the overridden {@link #getCreateSequenceString(String)}, we must also override
-	 * {@link #getCreateSequenceString(String, int, int)} to prevent 2 instances of "start with".
+	 * {@link Dialect#getCreateSequenceString(String, int, int)} to prevent 2 instances of "start with".
 	 */
 	@Override
 	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {

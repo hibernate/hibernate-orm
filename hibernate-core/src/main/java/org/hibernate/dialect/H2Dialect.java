@@ -153,8 +153,12 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		//also natively supports ANSI-style substring()
+		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
 

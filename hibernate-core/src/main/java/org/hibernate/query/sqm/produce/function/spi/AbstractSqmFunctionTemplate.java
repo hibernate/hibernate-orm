@@ -44,6 +44,20 @@ public abstract class AbstractSqmFunctionTemplate implements SqmFunctionTemplate
 				: returnTypeResolver;
 	}
 
+	public String getSignature(String name) {
+		return getReturnSignature() + name + getArgumentListSignature();
+	}
+
+	public String getReturnSignature() {
+		String result = returnTypeResolver.getResult();
+		return result.isEmpty() ? "" : result + " ";
+	}
+
+	public String getArgumentListSignature() {
+		String args = argumentsValidator.getSignature();
+		return alwaysIncludesParentheses() ? args : "()".equals(args) ? "" : "[" + args + "]";
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public final <T> SelfRenderingSqmFunction<T> makeSqmFunctionExpression(

@@ -178,7 +178,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
@@ -187,7 +187,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );

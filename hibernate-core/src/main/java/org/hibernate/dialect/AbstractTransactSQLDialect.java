@@ -67,7 +67,10 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.ln_log( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.mod_operator( queryEngine );
+		CommonFunctionFactory.square( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
@@ -77,29 +80,17 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.ascii(queryEngine);
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.concat_plusOperator( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.characterLength_len( queryEngine );
 		CommonFunctionFactory.extract_datepart( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "square" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "mod", "(?1 % ?2)" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 2 )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2", "atn2")
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )
 				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "+", ")" );
-
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ln", "log" );
 
 	}
 

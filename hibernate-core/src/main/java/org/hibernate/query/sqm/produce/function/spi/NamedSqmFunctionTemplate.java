@@ -33,13 +33,14 @@ public class NamedSqmFunctionTemplate
 		implements SelfRenderingFunctionSupport {
 	private final String functionName;
 	private final boolean useParenthesesWhenNoArgs;
+	private final String argumentListSignature;
 
 	public NamedSqmFunctionTemplate(
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver) {
-		this( functionName, useParenthesesWhenNoArgs, argumentsValidator, returnTypeResolver, functionName );
+		this( functionName, useParenthesesWhenNoArgs, argumentsValidator, returnTypeResolver, functionName, null );
 	}
 
 	public NamedSqmFunctionTemplate(
@@ -47,11 +48,13 @@ public class NamedSqmFunctionTemplate
 			boolean useParenthesesWhenNoArgs,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
-			String name) {
+			String name,
+			String argumentListSignature) {
 		super( name, returnTypeResolver, argumentsValidator );
 
 		this.functionName = functionName;
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
+		this.argumentListSignature = argumentListSignature;
 	}
 
 	/**
@@ -61,6 +64,16 @@ public class NamedSqmFunctionTemplate
 	 */
 	public String getName() {
 		return functionName;
+	}
+
+	@Override
+	public String getArgumentListSignature() {
+		return argumentListSignature==null ? super.getArgumentListSignature() : argumentListSignature;
+	}
+
+	@Override
+	public boolean alwaysIncludesParentheses() {
+		return useParenthesesWhenNoArgs;
 	}
 
 	@Override

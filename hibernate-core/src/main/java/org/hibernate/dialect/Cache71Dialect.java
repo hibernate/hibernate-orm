@@ -245,8 +245,9 @@ public class Cache71Dialect extends Dialect {
 
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		//also natively supports ANSI-style substring()
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.log( queryEngine );

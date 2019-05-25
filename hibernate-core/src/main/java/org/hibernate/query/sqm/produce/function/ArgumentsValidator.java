@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.produce.function;
 import java.util.List;
 
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
@@ -19,5 +18,9 @@ public interface ArgumentsValidator {
 	 * The main (functional) operation defining validation
 	 */
 	void validate(List<SqmTypedNode<?>> arguments);
+
+	default String getSignature() {
+		return "( ... )";
+	}
 
 }

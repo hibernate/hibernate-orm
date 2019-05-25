@@ -131,18 +131,20 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
+		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
+		CommonFunctionFactory.position( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
 

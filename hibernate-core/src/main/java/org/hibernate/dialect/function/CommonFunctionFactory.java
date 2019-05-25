@@ -7,7 +7,6 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -49,6 +48,13 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "log" )
 				.setArgumentCountBetween( 1, 2 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+	}
+
+	public static void ln_log(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ln", "log" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
 				.register();
 	}
 
@@ -119,20 +125,15 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Returns double between 0.0 and 1.0. First call may specify a seed value.
+	 */
 	public static void rand(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rand" )
 				.setArgumentCountBetween( 0, 1 )
 				.setUseParenthesesWhenNoArgs( true )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
-	}
-
-	public static void rand_random(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "random")
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setUseParenthesesWhenNoArgs(true)
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "rand", "random" );
 	}
 
 	public static void stddev(QueryEngine queryEngine) {
@@ -150,7 +151,10 @@ public class CommonFunctionFactory {
 	}
 
 	public static void pi(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "pi", StandardSpiBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "pi" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,22 +266,12 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void substring_substr(QueryEngine queryEngine) {
+	public static void substr(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substr" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "substring", "substr" );
 	}
-
-	public static void locate_charindex(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charindex" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "locate", "charindex" );
-	}
-
 
 	public static void translate(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "translate" )
@@ -455,8 +449,21 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "week", "weekofyear" );
 	}
 
-	public static void concat_operator(QueryEngine queryEngine) {
+	/**
+	 * Almost every database
+	 */
+	public static void concat_pipeOperator(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "concat", "(", "||", ")" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setMinArgumentCount( 1 )
+				.register();
+	}
+
+	/**
+	 * Transact SQL-style
+	 */
+	public static void concat_plusOperator(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "concat", "(", "+", ")" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setMinArgumentCount( 1 )
 				.register();
@@ -544,6 +551,9 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * SAP DB
+	 */
 	public static void coalesce_value(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("value")
 				.setArgumentsValidator( min(1) )
@@ -557,11 +567,38 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void characterLength(QueryEngine queryEngine) {
+	/**
+	 * ANSI SQL-style
+	 */
+	public static void length_characterLength(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("character_length")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 1 )
 				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "length", "character_length" );
+	}
+
+	/**
+	 * Transact SQL-style
+	 */
+	public static void characterLength_len(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "len" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "len" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "length", "len" );
+	}
+
+	/**
+	 * Oracle-style
+	 */
+	public static void characterLength_length(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "length" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "length" );
 	}
 
 	public static void octetLength(QueryEngine queryEngine) {
@@ -571,26 +608,21 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void characterLength_len(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "len" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "len" );
-	}
-
-	public static void characterLength_length(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "length" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "character_length", "length" );
-	}
-
 	public static void bitLength(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("bit_length")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount(1)
+				.register();
+	}
+
+	/**
+	 * ANSI-style
+	 */
+	public static void position(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("position", "position(?1 in ?2)")
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount(2)
+				.setArgumentListSignature("(arg0 in arg1)")
 				.register();
 	}
 
@@ -601,10 +633,36 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Transact SQL-style
+	 */
+	public static void locate_charindex(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charindex" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "locate", "charindex" );
+	}
+
+	/**
+	 * Transact SQL-style (not the same as ANSI-style substring!)
+	 */
 	public static void substring(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("substring")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween(2, 3)
+				.setArgumentListSignature("(arg0{ from|,} arg1[{ for|,} arg3])")
+				.register();
+	}
+
+	/**
+	 * Oracle, and many others
+	 */
+	public static void substring_substr(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
+				.setArgumentListSignature("(arg0{ from|,} arg1[{ for|,} arg3])")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentCountBetween( 2, 3 )
 				.register();
 	}
 
@@ -615,6 +673,9 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Sybase
+	 */
 	public static void replace_strReplace(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("str_replace")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -669,21 +730,30 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("extract", "extract(?1 from ?2)")
 				.setExactArgumentCount(2)
 				.setReturnTypeResolver( useArgType(1) )
+				.setArgumentListSignature("(field from arg)")
 				.register();
 	}
 
+	/**
+	 * Transact SQL-style
+	 */
 	public static void extract_datepart(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datepart" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "extract", "datepart ");
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "extract", "datepart" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(field from arg)")
+				.register();
 	}
 
 	public static void cast(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("cast", "cast(?1 as ?2)")
 				.setExactArgumentCount(2)
 				.setReturnTypeResolver( useArgType(2) )
+				.setArgumentListSignature("(arg as type)")
 				.register();
 	}
 
@@ -691,6 +761,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("trim", "trim(?1 ?2 from ?3)")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(3)
+				.setArgumentListSignature("([[{leading|trailing|both} ][arg0 ]from] arg1)")
 				.register();
 	}
 
@@ -759,6 +830,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("count")
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount(1)
+				.setArgumentListSignature("([distinct ]{arg|*})")
 				.register();
 	}
 
@@ -805,6 +877,19 @@ public class CommonFunctionFactory {
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("power")
 				.setExactArgumentCount(2)
+				.register();
+	}
+
+	public static void mod_operator(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "mod", "(?1 % ?2)" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register();
+	}
+
+	public static void square(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "square" )
+				.setExactArgumentCount( 1 )
 				.register();
 	}
 

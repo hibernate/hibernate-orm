@@ -27,7 +27,6 @@ public class PatternRenderer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PatternRenderer.class );
 
 	private final String pattern;
-	private final boolean useParenthesisIfNoArgs;
 	private final String[] chunks;
 	private final int[] paramIndexes;
 	private final int paramCount;
@@ -36,11 +35,9 @@ public class PatternRenderer {
 	 * Constructs a template renderer
 	 *
 	 * @param pattern The template
-	 * @param useParenthesisIfNoArgs
 	 */
-	public PatternRenderer(String pattern, boolean useParenthesisIfNoArgs) {
+	public PatternRenderer(String pattern) {
 		this.pattern = pattern;
-		this.useParenthesisIfNoArgs = useParenthesisIfNoArgs;
 
 		final Set<Integer> paramNumbers = new HashSet<>();
 		final List<String> chunkList = new ArrayList<>();

@@ -34,4 +34,8 @@ public interface FunctionReturnTypeResolver {
 	AllowableFunctionReturnType<?> resolveFunctionReturnType(
 			AllowableFunctionReturnType<?> impliedType,
 			List<SqmTypedNode<?>> arguments);
+
+	default String getResult() {
+		return "";
+	}
 }

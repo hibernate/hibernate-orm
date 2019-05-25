@@ -85,4 +85,8 @@ public interface SqmFunctionTemplate {
 	default boolean alwaysIncludesParentheses() {
 		return true;
 	}
+
+	default String getSignature(String name) {
+		return name;
+	}
 }

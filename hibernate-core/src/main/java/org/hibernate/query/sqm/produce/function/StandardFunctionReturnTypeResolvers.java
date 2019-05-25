@@ -38,7 +38,17 @@ public class StandardFunctionReturnTypeResolvers {
 			throw new IllegalArgumentException( "Passed `invariantType` for function return cannot be null" );
 		}
 
-		return (impliedType, arguments) -> useImpliedTypeIfPossible( invariantType, impliedType );
+		return new FunctionReturnTypeResolver() {
+			@Override
+			public AllowableFunctionReturnType<?> resolveFunctionReturnType(AllowableFunctionReturnType<?> impliedType, List<SqmTypedNode<?>> arguments) {
+				return useImpliedTypeIfPossible(invariantType, impliedType);
+			}
+
+			@Override
+			public String getResult() {
+				return invariantType.getJavaType().getSimpleName();
+			}
+		};
 	}
 
 	public static FunctionReturnTypeResolver useArgType(int argPosition) {

@@ -34,7 +34,9 @@ import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -317,7 +319,6 @@ public abstract class Dialect implements ConversionContext {
 	 * 		* month			- defined as `extract(month from ?1)`
 	 * 		* year			- defined as `extract(year from ?1)`
 	 *
-	 * @param queryEngine
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 
@@ -333,34 +334,36 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.trigonometry(queryEngine);
 
-		//coalesce function, must be redefined in terms of nvl where not supported
+		//coalesce() function, must be redefined in terms of nvl() where not supported
 
 		CommonFunctionFactory.coalesce(queryEngine);
 
-		//nullif function, supported on almost every database
+		//nullif() function, supported on almost every database
 
 		CommonFunctionFactory.nullif(queryEngine);
 
 		//string functions, must be redefined where not supported
 
-		CommonFunctionFactory.characterLength(queryEngine);
 		CommonFunctionFactory.locate(queryEngine);
 		CommonFunctionFactory.substring(queryEngine);
 		CommonFunctionFactory.replace(queryEngine);
 		CommonFunctionFactory.concat(queryEngine);
 		CommonFunctionFactory.lowerUpper(queryEngine);
 
+		//JPA string length() function, a synonym for ANSI SQL character_length()
+
+		CommonFunctionFactory.length_characterLength(queryEngine);
+
+		//Very few databases support ANSI-style position() function, so define
+		//it here as an alias for locate()
+
+		queryEngine.getSqmFunctionRegistry().register("position", new LocatePositionEmulation());
+
 		//ANSI SQL functions with weird syntax, not supported on every database
 
 		CommonFunctionFactory.trim(queryEngine);
 		CommonFunctionFactory.cast(queryEngine);
 		CommonFunctionFactory.extract(queryEngine);
-
-		//TODO: currently not used because concrete Dialects don't redefine it
-//		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("position", "position(?1 in ?2)")
-//				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-//				.setExactArgumentCount(2)
-//				.register();
 
 		//ANSI current date/time functions, supported on almost every database
 
@@ -369,6 +372,10 @@ public abstract class Dialect implements ConversionContext {
 		//comparison functions supported on every known database
 
 		CommonFunctionFactory.leastGreatest(queryEngine);
+
+		//legacy Hibernate convenience function for casting to string
+
+		queryEngine.getSqmFunctionRegistry().register("str", new CastStrEmulation());
 
 	}
 

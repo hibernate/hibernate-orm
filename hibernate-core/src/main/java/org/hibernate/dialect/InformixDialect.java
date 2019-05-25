@@ -26,8 +26,10 @@ import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Informix dialect.<br>
@@ -90,8 +92,10 @@ public class InformixDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.pad( queryEngine );
@@ -108,15 +112,14 @@ public class InformixDialect extends Dialect {
 		CommonFunctionFactory.initcap( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 
+		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
+
 		//coalesce() and nullif() both supported since Informix 12
-
-//		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
-
 	}
 
 	@Override

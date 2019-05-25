@@ -151,7 +151,8 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.bitand( queryEngine );
 		CommonFunctionFactory.bitor( queryEngine );
@@ -165,11 +166,12 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.position( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -180,10 +182,10 @@ public class DB2Dialect extends Dialect {
 				.setArgumentCountBetween( 1, 3 )
 				.register();
 
-//		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "posstr" )
-//				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-//				.setExactArgumentCount( 2 )
-//				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "posstr" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register();
 
 	}
 

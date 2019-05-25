@@ -37,6 +37,7 @@ public abstract class ExternalSessionFactoryConfig {
 	private String reflectionOptimizationEnabled;
 	private String querySubstitutions;
 	private String showSqlEnabled;
+	private String showSqlFunctionsEnabled;
 	private String commentsEnabled;
 	private String cacheRegionFactory;
 	private String cacheProviderConfig;
@@ -176,6 +177,14 @@ public abstract class ExternalSessionFactoryConfig {
 		this.showSqlEnabled = showSqlEnabled;
 	}
 
+	public String getShowSqlFunctionsEnabled() {
+		return showSqlFunctionsEnabled;
+	}
+
+	public void setShowSqlFunctionsEnabled(String showSqlFunctionsEnabled) {
+		this.showSqlFunctionsEnabled = showSqlFunctionsEnabled;
+	}
+
 	public final String getCommentsEnabled() {
 		return commentsEnabled;
 	}
@@ -269,6 +278,7 @@ public abstract class ExternalSessionFactoryConfig {
 		setUnlessNull( props, Environment.USE_REFLECTION_OPTIMIZER, reflectionOptimizationEnabled );
 		setUnlessNull( props, Environment.QUERY_SUBSTITUTIONS, querySubstitutions );
 		setUnlessNull( props, Environment.SHOW_SQL, showSqlEnabled );
+		setUnlessNull( props, Environment.SHOW_SQL_FUNCTIONS, showSqlFunctionsEnabled );
 		setUnlessNull( props, Environment.USE_SQL_COMMENTS, commentsEnabled );
 		setUnlessNull( props, Environment.CACHE_REGION_FACTORY, cacheRegionFactory );
 		setUnlessNull( props, Environment.CACHE_PROVIDER_CONFIG, cacheProviderConfig );

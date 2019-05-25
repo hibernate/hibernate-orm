@@ -16,7 +16,6 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A SQL dialect for Ingres 9.3 and later versions.
@@ -76,7 +75,7 @@ public class Ingres9Dialect extends IngresDialect {
 		super.initializeFunctionRegistry( queryEngine );
 		registerColumnType( Types.DATE, "ansidate" );
 		registerColumnType( Types.TIMESTAMP, "timestamp($p) with time zone" );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 	}
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

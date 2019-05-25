@@ -6,8 +6,10 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import java.util.AbstractMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 
@@ -28,6 +30,18 @@ public class SqmFunctionRegistry {
 
 	public SqmFunctionRegistry() {
 		log.tracef( "SqmFunctionRegistry created" );
+	}
+
+	public Stream<Map.Entry<String,SqmFunctionTemplate>> getFunctionsByName() {
+		return Stream.concat(
+				functionMap.entrySet().stream(),
+				alternateKeyMap.entrySet().stream().map(
+						entry -> new AbstractMap.SimpleEntry<>(
+								entry.getKey(),
+								functionMap.get( entry.getValue() )
+						)
+				)
+		);
 	}
 
 	/**

@@ -121,17 +121,19 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.md5( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
+		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.translate( queryEngine );
-		CommonFunctionFactory.rand_random( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.position( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )

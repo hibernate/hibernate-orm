@@ -155,7 +155,7 @@ public class LtrimRtrimReplaceTrimEmulation extends AbstractSqmFunctionTemplate 
 	}
 
 	@Override
-	public String getSignature(String name) {
-		return name + "([[{leading|trailing|both} ][arg0 ]from] arg1)";
+	public String getArgumentListSignature() {
+		return "([[{leading|trailing|both} ][arg0 ]from] arg1)";
 	}
 }

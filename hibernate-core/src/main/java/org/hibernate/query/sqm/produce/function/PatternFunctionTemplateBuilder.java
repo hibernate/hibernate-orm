@@ -17,11 +17,10 @@ public class PatternFunctionTemplateBuilder {
 	private final SqmFunctionRegistry registry;
 	private final String registrationKey;
 	private final String pattern;
+	private String argumentListSignature;
 
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver;
-
-	private boolean useParenthesesWhenNoArgs;
 
 	public PatternFunctionTemplateBuilder(SqmFunctionRegistry registry, String registrationKey, String pattern) {
 		this.registry = registry;
@@ -52,8 +51,8 @@ public class PatternFunctionTemplateBuilder {
 		return this;
 	}
 
-	public PatternFunctionTemplateBuilder setUseParenthesesWhenNoArgs(boolean useParenthesesWhenNoArgs) {
-		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
+	public PatternFunctionTemplateBuilder setArgumentListSignature(String argumentListSignature) {
+		this.argumentListSignature = argumentListSignature;
 		return this;
 	}
 
@@ -63,10 +62,11 @@ public class PatternFunctionTemplateBuilder {
 
 	public SqmFunctionTemplate template() {
 		return new PatternBasedSqmFunctionTemplate(
-				new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
+				new PatternRenderer( pattern ),
 				argumentsValidator,
 				returnTypeResolver,
-				registrationKey
+				registrationKey,
+				argumentListSignature
 		);
 	}
 }

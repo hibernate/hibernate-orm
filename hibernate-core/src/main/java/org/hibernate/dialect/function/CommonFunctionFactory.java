@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -455,23 +456,49 @@ public class CommonFunctionFactory {
 	}
 
 	public static void concat_operator(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardSpiBasicTypes.STRING, "(", "||", ")" );
+		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "concat", "(", "||", ")" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setMinArgumentCount( 1 )
+				.register();
 	}
 
 	public static void rownumRowid(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rowid", StandardSpiBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rowid" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
 	}
 
-	public static void sysdateSystimestamp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "sysdate", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "systimestamp", StandardSpiBasicTypes.TIMESTAMP );
+	public static void sysdate(QueryEngine queryEngine) {
+		// returns a local timestamp
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "sysdate" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+	}
+
+	public static void systimestamp( QueryEngine queryEngine ) {
+		// returns a timestamp with timezone
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "systimestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
 	}
 
 	public static void localtimeLocaltimestamp(QueryEngine queryEngine) {
 		//these functions return times without timezones
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "localtime" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "localtimestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
 	}
 
 	public static void trigonometry(QueryEngine queryEngine) {
@@ -599,6 +626,7 @@ public class CommonFunctionFactory {
 	public static void concat(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("concat")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setArgumentsValidator( min(1) )
 				.register();
 	}
 
@@ -667,20 +695,38 @@ public class CommonFunctionFactory {
 	}
 
 	public static void currentDateTimeTimestamp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_time")
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
 				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setUseParenthesesWhenNoArgs( false )
 				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_date")
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs( false )
 				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_timestamp") //current_instant uses this
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" ) //current_instant uses this
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( false )
 				.register();
+	}
 
-		//these are synonyms on many databases, so for convenience register them here
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey("now", "current_timestamp");
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey("curdate", "current_date");
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey("curtime", "current_time");
+	// No real consistency in the semantics of these functions:
+	// H2, HSQL: now()/curtime()/curdate() mean localtimestamp/localtime/current_date
+	// MySQL, Cache: now()/curtime()/curdate() mean current_timestamp/current_time/current_date
+	// CUBRID: now()/curtime()/curdate() mean current_datetime/current_time/current_date
+	// Postgres: now() means current_timestamp
+	public static void nowCurdateCurtime(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "curtime" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "curdate" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "now" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
 	}
 
 	public static void leastGreatest(QueryEngine queryEngine) {

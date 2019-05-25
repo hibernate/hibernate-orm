@@ -106,7 +106,8 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
-		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
+		CommonFunctionFactory.systimestamp( queryEngine );
+		//TODO: CUBRID also has systime()/sysdate() returning TIME/DATE
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
@@ -130,6 +131,7 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 //		CommonFunctionFactory.concat_operator( queryEngine );
 		IngresDialect.bitwiseFunctions( queryEngine );
+		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
 	}

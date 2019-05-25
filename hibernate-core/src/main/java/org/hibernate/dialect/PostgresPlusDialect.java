@@ -33,7 +33,8 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
-		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
+		CommonFunctionFactory.sysdate( queryEngine );
+		CommonFunctionFactory.systimestamp( queryEngine );
 
 //		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 

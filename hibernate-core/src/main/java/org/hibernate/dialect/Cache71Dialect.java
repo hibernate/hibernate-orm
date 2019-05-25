@@ -264,6 +264,8 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.extract_datepart( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
+		CommonFunctionFactory.sysdate( queryEngine );
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
 

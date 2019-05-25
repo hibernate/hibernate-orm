@@ -116,7 +116,8 @@ public class Oracle9Dialect extends Dialect {
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
-		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
+		CommonFunctionFactory.sysdate( queryEngine );
+		CommonFunctionFactory.systimestamp( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );

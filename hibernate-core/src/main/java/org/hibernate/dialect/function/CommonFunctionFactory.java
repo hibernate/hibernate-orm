@@ -441,6 +441,36 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void utcDateTimeTimestamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "utc_date" )
+				.setUseParenthesesWhenNoArgs( false )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "utc_time" )
+				.setUseParenthesesWhenNoArgs( false )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "utc_timestamp" )
+				.setUseParenthesesWhenNoArgs( false )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.register();
+	}
+
+	public static void currentUtcdatetimetimestamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_utcdate" )
+				.setUseParenthesesWhenNoArgs( false )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_utctime" )
+				.setUseParenthesesWhenNoArgs( false )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_utctimestamp" )
+				.setUseParenthesesWhenNoArgs( false )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.register();
+	}
+
 	public static void week_weekofyear(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "weekofyear" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
@@ -465,7 +495,7 @@ public class CommonFunctionFactory {
 
 	public static void localtimeLocaltimestamp(QueryEngine queryEngine) {
 		//these functions return times without timezones
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtime", StandardSpiBasicTypes.TIME );
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP );
 	}
 
@@ -903,7 +933,7 @@ public class CommonFunctionFactory {
 	/**
 	 * H2-style (uses Java's SimpleDateFormat directly so no need to translate format)
 	 */
-	public static final void formatdatetime(QueryEngine queryEngine) {
+	public static void formatdatetime(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
@@ -916,7 +946,7 @@ public class CommonFunctionFactory {
 	 * @see org.hibernate.dialect.Oracle8iDialect#datetimeFormat
 	 * @see org.hibernate.dialect.InformixDialect#datetimeFormat
 	 */
-	public static final void formatdatetime_toChar(QueryEngine queryEngine) {
+	public static void formatdatetime_toChar(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "to_char")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
@@ -928,7 +958,7 @@ public class CommonFunctionFactory {
 	 *
 	 * @see org.hibernate.dialect.MySQLDialect#datetimeFormat
 	 */
-	public static final void formatdatetime_dateFormat(QueryEngine queryEngine) {
+	public static void formatdatetime_dateFormat(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "date_format")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
@@ -940,7 +970,7 @@ public class CommonFunctionFactory {
 	 *
 	 * @see org.hibernate.dialect.SQLServerDialect#datetimeFormat
 	 */
-	public static final void formatdatetime_format(QueryEngine queryEngine) {
+	public static void formatdatetime_format(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "format")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
@@ -952,9 +982,16 @@ public class CommonFunctionFactory {
 	 *
 	 *  @see org.hibernate.dialect.Oracle8iDialect#datetimeFormat
 	 */
-	public static final void formatdatetime_toVarchar(QueryEngine queryEngine) {
+	public static void formatdatetime_toVarchar(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "to_varchar")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(2)
+				.register();
+	}
+
+	public static void dateTrunc(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("date_trunc", "date_trunc('?1',?2)")
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount(2)
 				.register();
 	}

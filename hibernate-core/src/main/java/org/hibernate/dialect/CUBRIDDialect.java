@@ -134,6 +134,15 @@ public class CUBRIDDialect extends Dialect {
 		IngresDialect.bitwiseFunctions( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "makedate" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "maketime" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.register();
 	}
 
 	@Override

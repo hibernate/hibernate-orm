@@ -172,6 +172,7 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
 		CommonFunctionFactory.yearsMonthsDaysHoursMinutesSecondsBetween( queryEngine );
+		CommonFunctionFactory.dateTrunc( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "formatdatetime", new DB2FormatEmulation() );
 

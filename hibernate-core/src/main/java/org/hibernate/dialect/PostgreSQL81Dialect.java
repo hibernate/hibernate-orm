@@ -320,6 +320,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+		CommonFunctionFactory.dateTrunc( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
@@ -328,6 +329,23 @@ public class PostgreSQL81Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_date" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_time" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 6 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamptz" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setArgumentCountBetween( 6, 7 )
 				.register();
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");

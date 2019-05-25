@@ -209,6 +209,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
+		CommonFunctionFactory.utcDateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.crc32( queryEngine );
@@ -238,6 +239,14 @@ public class MySQLDialect extends Dialect {
 				.setUseParenthesesWhenNoArgs(true)
 				.register();
 
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "makedate" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "maketime" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.register();
 	}
 
 	@Override

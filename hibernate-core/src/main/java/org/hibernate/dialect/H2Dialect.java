@@ -155,10 +155,12 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
+		CommonFunctionFactory.sysdate( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setUseParenthesesWhenNoArgs(true)
+				.setUseParenthesesWhenNoArgs( true ) //H2 requires the parens
 				.register();
 
 	}

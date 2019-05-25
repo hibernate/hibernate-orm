@@ -112,6 +112,7 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
+		CommonFunctionFactory.sysdate( queryEngine );
 	}
 
 	@Override

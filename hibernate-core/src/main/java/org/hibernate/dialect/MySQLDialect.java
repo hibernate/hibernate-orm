@@ -209,8 +209,10 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.sha( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
-		CommonFunctionFactory.ascii(queryEngine);
-		CommonFunctionFactory.chr_char(queryEngine);
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
+		CommonFunctionFactory.sysdate( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -224,8 +226,8 @@ public class MySQLDialect extends Dialect {
 
 		//sysdate is different
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "sysdate" )
-				.setInvariantType(StandardSpiBasicTypes.TIMESTAMP )
-				.setUseParenthesesWhenNoArgs(true)
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( true ) //MySQL requires the parens
 				.register();
 
 	}

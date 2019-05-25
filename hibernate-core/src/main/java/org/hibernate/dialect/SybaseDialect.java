@@ -70,20 +70,20 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				)
 		);
 
-		//these functions need parens
+		//these functions need parens on Sybase
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setUseParenthesesWhenNoArgs(true)
+				.setUseParenthesesWhenNoArgs( true )
 				.setExactArgumentCount( 0 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setUseParenthesesWhenNoArgs(true)
+				.setUseParenthesesWhenNoArgs( true )
 				.setExactArgumentCount( 0 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setUseParenthesesWhenNoArgs(true)
+				.setUseParenthesesWhenNoArgs( true )
 				.setExactArgumentCount( 0 )
 				.register();
 

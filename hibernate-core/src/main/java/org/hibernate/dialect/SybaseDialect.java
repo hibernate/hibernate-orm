@@ -9,8 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.TransactSQLTrimEmulation;
-import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
+import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
@@ -62,13 +61,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 		CommonFunctionFactory.replace_strReplace( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().register(
-				"trim", new TransactSQLTrimEmulation(
-						TransactSQLTrimEmulation.LTRIM,
-						TransactSQLTrimEmulation.RTRIM,
-						"str_replace"
-				)
-		);
+		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation("str_replace") );
 
 		//these functions need parens on Sybase
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )

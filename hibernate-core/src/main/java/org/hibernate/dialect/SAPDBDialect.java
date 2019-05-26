@@ -12,7 +12,7 @@ import java.sql.Types;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
-import org.hibernate.dialect.function.TransactSQLTrimEmulation;
+import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -108,7 +108,7 @@ public class SAPDBDialect extends Dialect {
 
 		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "index(?2, ?1)", "index(?2, ?1, ?3)");
 
-		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation() );
 
 	}
 

@@ -8,9 +8,6 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.dialect.function.TransactSQLTrimEmulation;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 

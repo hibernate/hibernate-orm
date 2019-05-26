@@ -11,7 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.TransactSQLTrimEmulation;
+import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
@@ -57,7 +57,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation() );
 	}
 
 	@Override

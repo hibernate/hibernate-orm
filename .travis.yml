@@ -13,7 +13,7 @@ before_script:
   - java -version
   - ./gradlew assemble
 script:
-  - travis_wait 45 ./gradlew check
+  - ./gradlew check
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/

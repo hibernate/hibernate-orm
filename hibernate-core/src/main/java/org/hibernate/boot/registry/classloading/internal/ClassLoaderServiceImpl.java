@@ -247,7 +247,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	public <S> Collection<S> loadJavaServices(Class<S> serviceContract) {
 		AggregatedServiceLoader<S> serviceLoader = (AggregatedServiceLoader<S>) serviceLoaders.get( serviceContract );
 		if ( serviceLoader == null ) {
-			serviceLoader = new AggregatedServiceLoader( getAggregatedClassLoader(), serviceContract );
+			serviceLoader = AggregatedServiceLoader.create( getAggregatedClassLoader(), serviceContract );
 			serviceLoaders.put( serviceContract, serviceLoader );
 		}
 		return serviceLoader.getAll();

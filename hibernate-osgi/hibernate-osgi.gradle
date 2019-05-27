@@ -17,10 +17,28 @@ ext {
 	paxExamVersion = '4.12.0'
 }
 
+/*
+ * With the current karaf/pax-exam versions and with JDK11.0.3,
+ * we get errors like "java.lang.IllegalStateException: Unknown protocol: jrt".
+ *
+ * This is suspiciously similar to the problems we had on Hibernate Search,
+ * and we gave up the idea of fixing those after a few hours.
+ *
+ * Copy-pasting the explanation from Search (not sure it applies here, but it's likely):
+ * > Upgrading to Karaf 4.2.5 fixes that, but then we get errors about "/karaf.log" not being accessible.
+ * > Upgrading once again to Pax-exam 4.13.1 fixes that, but then startup looks stuck at some point,
+ * > without any particular error even if we raise all the different log levels to "trace".
+ * > Upgrading pax-url to 2.6.1 to be in line with the versions in the Karaf pom doesn't change anything.
+ * > Strangely, with these upgrades, everything still works fine with JDK8,
+ * > but we get in trouble with JDK11.0.0 and above.
+ * > A bit ironic since the problems we were trying to solve initially only affected JDK11.0.3,
+ * > not JDK11.0.0.
+ */
 if ( JavaVersion.current().isJava11Compatible() ) {
 	logger.warn( '[WARN] Skipping all tests for hibernate-osgi due to Karaf/Pax-Exam issues with latest JDK 11' )
 	test.enabled = false
 }
+
 
 sourceSets {
 	test {

@@ -22,7 +22,7 @@ public final class DateTimeUtils {
 	private DateTimeUtils() {
 	}
 
-	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss.S";
+	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss.SSSSSS";
 	public static final String FORMAT_STRING_DATE = "yyyy-MM-dd";
 	public static final String FORMAT_STRING_TIME = "HH:mm:ss";
 

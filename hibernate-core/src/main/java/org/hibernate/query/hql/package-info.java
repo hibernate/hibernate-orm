@@ -6,8 +6,14 @@
  */
 
 /**
- * Package defining support for transforming an HQL query string into an
- * SQM tree.  The main entry point into HQL -> SQM transformation is
- * {@link org.hibernate.query.hql.SemanticQueryProducer}
+ * Package defining support for HQL queries (including supprt for JPQL
+ * as a subset of HQL).
+ *
+ * This includes transformation via Antlr, {@link org.hibernate.query.Query}
+ * manipulation and execution
+ *
+ * @see org.hibernate.query.hql.SemanticQueryProducer
+ * @see org.hibernate.query.hql.spi.HqlQueryImplementor
+ * @see org.hibernate.query.hql.spi.NamedHqlQueryMemento
  */
 package org.hibernate.query.hql;

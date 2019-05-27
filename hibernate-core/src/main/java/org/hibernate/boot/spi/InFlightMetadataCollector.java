@@ -25,7 +25,6 @@ import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.cfg.AnnotatedClassType;
@@ -36,11 +35,12 @@ import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.FetchProfile;
@@ -140,7 +140,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedQuery(NamedQueryDefinition query) throws DuplicateMappingException;
+	void addNamedQuery(NamedHqlQueryMementoImpl query) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named SQL query to this repository.
@@ -149,7 +149,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedNativeQuery(NamedSQLQueryDefinition query) throws DuplicateMappingException;
+	void addNamedNativeQuery(NamedNativeQueryMemento query) throws DuplicateMappingException;
 
 	/**
 	 * Adds the metadata for a named SQL result set mapping to this repository.
@@ -159,7 +159,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 * @throws DuplicateMappingException If metadata for another SQL result mapping was
 	 * already found under the given name.
 	 */
-	void addResultSetMapping(ResultSetMappingDefinition sqlResultSetMapping) throws DuplicateMappingException;
+	void addResultSetMapping(NamedResultSetMappingMemento sqlResultSetMapping) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named stored procedure call to this repository.
@@ -269,11 +269,11 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-	void addDefaultQuery(NamedQueryDefinition queryDefinition);
+	void addDefaultQuery(NamedHqlQueryMementoImpl queryDefinition);
 
 	void addDefaultNamedNativeQuery(NamedSQLQueryDefinition query);
 
-	void addDefaultResultSetMapping(ResultSetMappingDefinition definition);
+	void addDefaultResultSetMapping(ResultSetMappingDescriptor definition);
 
 	void addDefaultNamedProcedureCallDefinition(NamedProcedureCallDefinition procedureCallDefinition);
 

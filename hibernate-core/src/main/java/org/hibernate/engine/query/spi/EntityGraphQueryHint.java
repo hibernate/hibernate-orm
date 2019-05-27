@@ -40,7 +40,10 @@ import antlr.SemanticException;
  * once our AST is improved and this "hack" is no longer needed.
  *
  * @author Brett Meyer
+ *
+ * @deprecated (6.0) - use {@link AppliedGraph} instead
  */
+@Deprecated
 public class EntityGraphQueryHint implements AppliedGraph {
 	private final RootGraphImplementor<?> graph;
 	private final GraphSemantic semantic;

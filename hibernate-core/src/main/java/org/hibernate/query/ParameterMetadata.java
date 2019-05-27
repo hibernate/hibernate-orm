@@ -19,8 +19,6 @@ import org.hibernate.Incubating;
  */
 @Incubating
 public interface ParameterMetadata {
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-	// General purpose
 
 	/**
 	 * The total number of registered parameters.
@@ -35,7 +33,7 @@ public interface ParameterMetadata {
 	 *
 	 * @throws IllegalArgumentException if no parameter is registered under that name
 	 */
-	<T> QueryParameter<T> getQueryParameter(String name);
+	QueryParameter<?> getQueryParameter(String name);
 
 	/**
 	 * Resolve the QueryParameter reference registered here under the
@@ -45,7 +43,7 @@ public interface ParameterMetadata {
 	 *
 	 * @throws IllegalArgumentException if no parameter is registered under that label
 	 */
-	<T> QueryParameter<T> getQueryParameter(int positionLabel);
+	QueryParameter<?> getQueryParameter(int positionLabel);
 
 	/**
 	 * A deeper resolution attempt from a JPA parameter reference to Hibernate's
@@ -54,7 +52,7 @@ public interface ParameterMetadata {
 	 * According to the spec, only Parameter references obtained from the provider
 	 * are valid.
 	 */
-	<T> QueryParameter<T> resolve(Parameter<T> param);
+	QueryParameter<?> resolve(Parameter param);
 
 	/**
 	 * Is this parameter reference registered in this collection?

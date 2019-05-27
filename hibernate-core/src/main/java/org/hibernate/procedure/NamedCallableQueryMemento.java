@@ -8,6 +8,7 @@ package org.hibernate.procedure;
 
 import java.util.Map;
 
+import org.hibernate.Incubating;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -17,7 +18,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface ProcedureCallMemento {
+@Incubating
+public interface NamedCallableQueryMemento {
 	/**
 	 * Convert the memento back into an executable (connected) form.
 	 *

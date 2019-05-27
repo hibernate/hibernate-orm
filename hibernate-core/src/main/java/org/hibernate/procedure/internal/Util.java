@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -89,7 +89,7 @@ public class Util {
 		 *
 		 * @return The ResultSetMappingDefinition
 		 */
-		public ResultSetMappingDefinition findResultSetMapping(String name);
+		public ResultSetMappingDescriptor findResultSetMapping(String name);
 
 		/**
 		 * Callback to add query returns indicated by the result set mapping(s)
@@ -115,7 +115,7 @@ public class Util {
 	public static void resolveResultSetMappings(ResultSetMappingResolutionContext context, String... resultSetMappingNames) {
 		for ( String resultSetMappingName : resultSetMappingNames ) {
 			log.tracef( "Starting attempt resolve named result-set-mapping : %s", resultSetMappingName );
-			final ResultSetMappingDefinition mapping = context.findResultSetMapping( resultSetMappingName );
+			final ResultSetMappingDescriptor mapping = context.findResultSetMapping( resultSetMappingName );
 			if ( mapping == null ) {
 				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
 			}

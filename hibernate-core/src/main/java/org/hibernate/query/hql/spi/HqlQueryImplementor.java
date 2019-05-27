@@ -7,8 +7,7 @@
 package org.hibernate.query.hql.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.named.spi.NameableQuery;
-import org.hibernate.query.named.spi.NamedHqlQueryMemento;
+import org.hibernate.query.spi.NameableQuery;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 

@@ -13,6 +13,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 
+import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
+
 /**
  * Responsible for interpreting the Hibernate boot metamodel into
  * its runtime metamodel
@@ -94,6 +96,11 @@ public class RuntimeModelCreationProcess {
 
 	public MetamodelImplementor execute() {
 		final InflightRuntimeMetamodel inflightRuntimeMetamodel = new InflightRuntimeMetamodel( bootstrapContext.getTypeConfiguration() );
+
+		final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting(
+				sessionFactory.getProperties()
+		);
+
 		throw new NotYetImplementedFor6Exception();
 	}
 }

@@ -75,10 +75,9 @@ import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
@@ -136,10 +135,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private Database database;
 
-	private final Map<String, NamedQueryDefinition> namedQueryMap = new HashMap<>();
+	private final Map<String, NamedHqlQueryMementoImpl> namedQueryMap = new HashMap<>();
 	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryMap = new HashMap<>();
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
-	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap = new HashMap<>();
+	private final Map<String, ResultSetMappingDescriptor> sqlResultSetMappingMap = new HashMap<>();
 
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
 	private final Map<String, FetchProfile> fetchProfileMap = new HashMap<>();
@@ -526,7 +525,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named query handling
 
-	public NamedQueryDefinition getNamedQueryDefinition(String name) {
+	public NamedHqlQueryMementoImpl getNamedQueryDefinition(String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid query name" );
 		}
@@ -534,12 +533,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public java.util.Collection<NamedQueryDefinition> getNamedQueryDefinitions() {
+	public java.util.Collection<NamedHqlQueryMementoImpl> getNamedQueryDefinitions() {
 		return namedQueryMap.values();
 	}
 
 	@Override
-	public void addNamedQuery(NamedQueryDefinition def) {
+	public void addNamedQuery(NamedHqlQueryMementoImpl def) {
 		if ( def == null ) {
 			throw new IllegalArgumentException( "Named query definition is null" );
 		}
@@ -554,7 +553,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		applyNamedQuery( def.getName(), def );
 	}
 
-	private void applyNamedQuery(String name, NamedQueryDefinition query) {
+	private void applyNamedQuery(String name, NamedHqlQueryMementoImpl query) {
 		checkQueryName( name );
 		namedQueryMap.put( name.intern(), query );
 	}
@@ -566,7 +565,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void addDefaultQuery(NamedQueryDefinition queryDefinition) {
+	public void addDefaultQuery(NamedHqlQueryMementoImpl queryDefinition) {
 		applyNamedQuery( queryDefinition.getName(), queryDefinition );
 		defaultNamedQueryNames.add( queryDefinition.getName() );
 	}
@@ -649,48 +648,48 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// result-set mapping handling
 
 	@Override
-	public Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions() {
+	public Map<String, ResultSetMappingDescriptor> getResultSetMappingDefinitions() {
 		return sqlResultSetMappingMap;
 	}
 
 	@Override
-	public ResultSetMappingDefinition getResultSetMapping(String name) {
+	public ResultSetMappingDescriptor getResultSetMapping(String name) {
 		return sqlResultSetMappingMap.get( name );
 	}
 
 	@Override
-	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition) {
-		if ( resultSetMappingDefinition == null ) {
+	public void addResultSetMapping(ResultSetMappingDescriptor resultSetMappingDescriptor) {
+		if ( resultSetMappingDescriptor == null ) {
 			throw new IllegalArgumentException( "Result-set mapping was null" );
 		}
 
-		final String name = resultSetMappingDefinition.getName();
+		final String name = resultSetMappingDescriptor.getName();
 		if ( name == null ) {
-			throw new IllegalArgumentException( "Result-set mapping name is null: " + resultSetMappingDefinition );
+			throw new IllegalArgumentException( "Result-set mapping name is null: " + resultSetMappingDescriptor );
 		}
 
 		if ( defaultSqlResultSetMappingNames.contains( name ) ) {
 			return;
 		}
 
-		applyResultSetMapping( resultSetMappingDefinition );
+		applyResultSetMapping( resultSetMappingDescriptor );
 	}
 
-	public void applyResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition) {
-		final ResultSetMappingDefinition old = sqlResultSetMappingMap.put(
-				resultSetMappingDefinition.getName(),
-				resultSetMappingDefinition
+	public void applyResultSetMapping(ResultSetMappingDescriptor resultSetMappingDescriptor) {
+		final ResultSetMappingDescriptor old = sqlResultSetMappingMap.put(
+				resultSetMappingDescriptor.getName(),
+				resultSetMappingDescriptor
 		);
 		if ( old != null ) {
 			throw new DuplicateMappingException(
 					DuplicateMappingException.Type.RESULT_SET_MAPPING,
-					resultSetMappingDefinition.getName()
+					resultSetMappingDescriptor.getName()
 			);
 		}
 	}
 
 	@Override
-	public void addDefaultResultSetMapping(ResultSetMappingDefinition definition) {
+	public void addDefaultResultSetMapping(ResultSetMappingDescriptor definition) {
 		final String name = definition.getName();
 		if ( !defaultSqlResultSetMappingNames.contains( name ) && sqlResultSetMappingMap.containsKey( name ) ) {
 			sqlResultSetMappingMap.remove( name );

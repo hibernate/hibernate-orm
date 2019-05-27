@@ -7,7 +7,6 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.named.spi.ParameterMemento;
 
 /**
  * @author Steve Ebersole

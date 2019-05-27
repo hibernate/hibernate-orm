@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
+import javax.persistence.criteria.AbstractQuery;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -22,18 +23,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
 import org.hibernate.query.Query;
-import org.hibernate.query.internal.AbstractQuery;
+import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
-import org.hibernate.query.named.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.query.named.spi.NamedHqlQueryMemento;
-import org.hibernate.query.named.spi.ParameterMemento;
-import org.hibernate.query.spi.EntityGraphQueryHint;
-import org.hibernate.query.spi.HqlQueryImplementor;
-import org.hibernate.query.spi.MutableQueryOptions;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.spi.ParameterMemento;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryOptions;
@@ -50,9 +45,6 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * {@link Query} implementation based on an SQM

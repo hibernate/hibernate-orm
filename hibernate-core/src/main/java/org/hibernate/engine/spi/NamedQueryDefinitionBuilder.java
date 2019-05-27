@@ -12,6 +12,9 @@ import java.util.Map;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
+import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
 public class NamedQueryDefinitionBuilder {
 	protected String name;
@@ -114,8 +117,8 @@ public class NamedQueryDefinitionBuilder {
 		return this;
 	}
 
-	public NamedQueryDefinition createNamedQueryDefinition() {
-		return new NamedQueryDefinition(
+	public NamedNativeQueryMemento createNamedQueryDefinition() {
+		return new NamedNativeQueryMementoImpl(
 				name,
 				query,
 				cacheable,

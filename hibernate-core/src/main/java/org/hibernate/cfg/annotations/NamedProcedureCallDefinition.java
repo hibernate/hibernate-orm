@@ -18,17 +18,17 @@ import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.procedure.ProcedureCallMemento;
-import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
+import org.hibernate.procedure.NamedCallableQueryMemento;
+import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.ParameterStrategy;
 
-import static org.hibernate.procedure.internal.ProcedureCallMementoImpl.ParameterMemento;
+import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMemento;
 
 /**
  * Holds all the information needed from a named procedure call declaration in order to create a
@@ -76,9 +76,9 @@ public class NamedProcedureCallDefinition {
 		return procedureName;
 	}
 
-	public ProcedureCallMemento toMemento(
+	public NamedCallableQueryMemento toMemento(
 			final SessionFactoryImpl sessionFactory,
-			final Map<String,ResultSetMappingDefinition> resultSetMappingDefinitions) {
+			final Map<String, ResultSetMappingDescriptor> resultSetMappingDefinitions) {
 		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
 		final Set<String> collectedQuerySpaces = new HashSet<String>();
 
@@ -115,7 +115,7 @@ public class NamedProcedureCallDefinition {
 						}
 
 						@Override
-						public ResultSetMappingDefinition findResultSetMapping(String name) {
+						public ResultSetMappingDescriptor findResultSetMapping(String name) {
 							return resultSetMappingDefinitions.get( name );
 						}
 
@@ -133,7 +133,7 @@ public class NamedProcedureCallDefinition {
 			);
 		}
 
-		return new ProcedureCallMementoImpl(
+		return new NamedCallableQueryMementoImpl(
 				procedureName,
 				collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] ),
 				parameterDefinitions.getParameterStrategy(),

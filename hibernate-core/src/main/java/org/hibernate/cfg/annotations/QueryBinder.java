@@ -28,9 +28,8 @@ import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
-import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -55,7 +54,7 @@ public abstract class QueryBinder {
 		//EJBQL Query
 		QueryHintDefinition hints = new QueryHintDefinition( queryAnn.hints() );
 		String queryName = queryAnn.query();
-		NamedQueryDefinition queryDefinition = new NamedQueryDefinitionBuilder( queryAnn.name() )
+		NamedHqlQueryMementoImpl queryDefinition = new NamedQueryDefinitionBuilder( queryAnn.name() )
 				.setLockOptions( hints.determineLockOptions( queryAnn ) )
 				.setQuery( queryName )
 				.setCacheable( hints.getBoolean( queryName, QueryHints.CACHEABLE ) )
@@ -258,7 +257,7 @@ public abstract class QueryBinder {
 		FlushMode flushMode;
 		flushMode = getFlushMode( queryAnn.flushMode() );
 
-		NamedQueryDefinition query = new NamedQueryDefinitionBuilder().setName( queryAnn.name() )
+		NamedHqlQueryMementoImpl query = new NamedQueryDefinitionBuilder().setName( queryAnn.name() )
 				.setQuery( queryAnn.query() )
 				.setCacheable( queryAnn.cacheable() )
 				.setCacheRegion(

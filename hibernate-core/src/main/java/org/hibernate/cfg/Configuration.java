@@ -43,9 +43,8 @@ import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.XmlDocument;
@@ -94,10 +93,10 @@ public class Configuration {
 	private PhysicalNamingStrategy physicalNamingStrategy;
 	private List<BasicType> basicTypes = new ArrayList<BasicType>();
 	private List<TypeContributor> typeContributorRegistrations = new ArrayList<TypeContributor>();
-	private Map<String, NamedQueryDefinition> namedQueries;
+	private Map<String, NamedHqlQueryMementoImpl> namedQueries;
 	private Map<String, NamedSQLQueryDefinition> namedSqlQueries;
 	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
-	private Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
+	private Map<String, ResultSetMappingDescriptor> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
 	private Map<String, SQLFunction> sqlFunctions;
@@ -149,9 +148,9 @@ public class Configuration {
 	protected void reset() {
 		implicitNamingStrategy = ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
 		physicalNamingStrategy = PhysicalNamingStrategyStandardImpl.INSTANCE;
-		namedQueries = new HashMap<String,NamedQueryDefinition>();
+		namedQueries = new HashMap<String, NamedHqlQueryMementoImpl>();
 		namedSqlQueries = new HashMap<String,NamedSQLQueryDefinition>();
-		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
+		sqlResultSetMappings = new HashMap<String, ResultSetMappingDescriptor>();
 		namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>();
 		namedProcedureCallMap = new HashMap<String, NamedProcedureCallDefinition>(  );
 
@@ -826,7 +825,7 @@ public class Configuration {
 	}
 
 
-	public Map<String, NamedQueryDefinition> getNamedQueries() {
+	public Map<String, NamedHqlQueryMementoImpl> getNamedQueries() {
 		return namedQueries;
 	}
 

@@ -86,7 +86,7 @@ import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -158,7 +158,7 @@ import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.ProcedureCallMemento;
+import org.hibernate.procedure.NamedCallableQueryMemento;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -3575,7 +3575,7 @@ public final class SessionImpl
 	}
 
 	@Override
-	protected void initQueryFromNamedDefinition(Query query, NamedQueryDefinition namedQueryDefinition) {
+	protected void initQueryFromNamedDefinition(Query query, NamedHqlQueryMementoImpl namedQueryDefinition) {
 		super.initQueryFromNamedDefinition( query, namedQueryDefinition );
 
 		if ( namedQueryDefinition.getLockOptions() != null ) {
@@ -3591,7 +3591,7 @@ public final class SessionImpl
 	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
 		checkOpen();
 		try {
-			final ProcedureCallMemento memento = getFactory().getNamedQueryRepository().getNamedProcedureCallMemento( name );
+			final NamedCallableQueryMemento memento = getFactory().getNamedQueryRepository().getNamedProcedureCallMemento( name );
 			if ( memento == null ) {
 				throw new IllegalArgumentException( "No @NamedStoredProcedureQuery was found with that name : " + name );
 			}

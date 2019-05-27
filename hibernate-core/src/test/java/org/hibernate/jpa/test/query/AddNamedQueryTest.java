@@ -14,7 +14,7 @@ import javax.persistence.Query;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
-import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -69,7 +69,7 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 		// first, lets check the underlying stored query def
 		SessionFactoryImplementor sfi = entityManagerFactory().unwrap( SessionFactoryImplementor.class );
-		NamedQueryDefinition def = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
+		NamedHqlQueryMementoImpl def = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
 		assertEquals( LockMode.OPTIMISTIC, def.getLockOptions().getLockMode() );
 
 		// then lets create a query by name and check its setting
@@ -96,7 +96,7 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 		// first, lets check the underlying stored query def
 		SessionFactoryImplementor sfi = entityManagerFactory().unwrap( SessionFactoryImplementor.class );
-		NamedQueryDefinition def = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
+		NamedHqlQueryMementoImpl def = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
 		assertEquals( FlushMode.COMMIT, def.getFlushMode() );
 
 		// then lets create a query by name and check its setting

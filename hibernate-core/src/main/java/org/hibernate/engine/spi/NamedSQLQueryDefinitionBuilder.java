@@ -15,6 +15,8 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
 public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder {
 	private NativeSQLQueryReturn[] queryReturns;
@@ -150,7 +152,7 @@ public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder 
 	}
 
 	@Override
-	public NamedSQLQueryDefinition createNamedQueryDefinition() {
+	public NamedNativeQueryMemento createNamedQueryDefinition() {
 		return new NamedSQLQueryDefinition(
 				name,
 				query,

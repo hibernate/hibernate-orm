@@ -22,10 +22,11 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.cfg.SecondPass;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.util.StringHelper;
 
@@ -171,11 +172,10 @@ public class NamedQueryBinder {
 					new SecondPass() {
 						@Override
 						public void doSecondPass(Map persistentClasses) throws MappingException {
-							final ResultSetMappingDefinition resultSetMappingDefinition =
-									ResultSetMappingBinder.bind( implicitResultSetMappingDefinition, context );
-							context.getMetadataCollector().addResultSetMapping( resultSetMappingDefinition );
-							NativeSQLQueryReturn[] newQueryReturns = resultSetMappingDefinition.getQueryReturns();
-							final NamedSQLQueryDefinition queryDefinition =
+							final NamedResultSetMappingMemento resultSetMappingDescriptor = ResultSetMappingBinder.bind( implicitResultSetMappingDefinition, context );
+							context.getMetadataCollector().addResultSetMapping( resultSetMappingDescriptor );
+							NativeSQLQueryReturn[] newQueryReturns = resultSetMappingDescriptor.getQueryReturns();
+							final NamedNativeQueryMemento queryDefinition =
 									context.getMetadataCollector().getNamedNativeQueryDefinition( queryName );
 							if ( queryDefinition != null ) {
 								queryDefinition.addQueryReturns( newQueryReturns );

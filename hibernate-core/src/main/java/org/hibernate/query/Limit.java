@@ -8,6 +8,8 @@
 package org.hibernate.query;
 
 /**
+ * Paging limits
+ *
  * @author Steve Ebersole
  */
 public class Limit {

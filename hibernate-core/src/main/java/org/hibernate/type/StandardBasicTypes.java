@@ -132,8 +132,16 @@ public final class StandardBasicTypes {
 	public static final UrlType URL = UrlType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Time}) to JDBC
+	 * The standard Hibernate type for mapping {@link java.time.Instant} to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
+	 *
+	 * @see TimeType
+	 */
+	public static final InstantType INSTANT = InstantType.INSTANCE;
+
+	/**
+	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Time}) to JDBC
+	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 *
 	 * @see TimeType
 	 */

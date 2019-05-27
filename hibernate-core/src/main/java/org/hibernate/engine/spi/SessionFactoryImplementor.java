@@ -27,10 +27,11 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
@@ -43,6 +44,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
@@ -58,7 +60,7 @@ import org.hibernate.type.TypeResolver;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactoryImplementor extends Mapping, SessionFactory, QueryParameterBindingTypeResolver {
+public interface SessionFactoryImplementor extends Mapping, SessionFactory, SqmCreationContext, QueryParameterBindingTypeResolver {
 	/**
 	 * Get the UUID for this SessionFactory.  The value is generated as a {@link java.util.UUID}, but kept
 	 * as a String.
@@ -236,7 +238,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getNamedQueryDefinition(java.lang.String)} instead.
 	 */
 	@Deprecated
-	default NamedQueryDefinition getNamedQuery(String queryName) {
+	default NamedHqlQueryMementoImpl getNamedQuery(String queryName) {
 		return getNamedQueryRepository().getNamedQueryDefinition( queryName );
 	}
 
@@ -244,7 +246,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerNamedQueryDefinition} instead.
 	 */
 	@Deprecated
-	default void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
+	default void registerNamedQueryDefinition(String name, NamedHqlQueryMementoImpl definition) {
 		getNamedQueryRepository().registerNamedQueryDefinition( name, definition );
 	}
 
@@ -268,7 +270,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getResultSetMappingDefinition} instead.
 	 */
 	@Deprecated
-	default ResultSetMappingDefinition getResultSetMapping(String name) {
+	default ResultSetMappingDescriptor getResultSetMapping(String name) {
 		return getNamedQueryRepository().getResultSetMappingDefinition( name );
 	}
 

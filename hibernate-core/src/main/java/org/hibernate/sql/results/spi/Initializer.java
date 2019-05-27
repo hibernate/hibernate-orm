@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.query.NavigablePath;
+
 /**
  * Defines a multi-step process for initializing entity, collection and
  * composite state.  Each step is performed on each initializer
@@ -14,4 +16,7 @@ package org.hibernate.sql.results.spi;
  * @author Steve Ebersole
  */
 public interface Initializer {
+	Object getInitializedInstance();
+
+	NavigablePath getNavigablePath();
 }

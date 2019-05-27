@@ -27,7 +27,7 @@ import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -39,7 +39,7 @@ import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.ProcedureCallMemento;
+import org.hibernate.procedure.NamedCallableQueryMemento;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -170,7 +170,7 @@ public class ProcedureCallImpl<R>
 					}
 
 					@Override
-					public ResultSetMappingDefinition findResultSetMapping(String name) {
+					public ResultSetMappingDescriptor findResultSetMapping(String name) {
 						return session.getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
 					}
 
@@ -201,7 +201,7 @@ public class ProcedureCallImpl<R>
 	 * @param memento The named/stored memento
 	 */
 	@SuppressWarnings("unchecked")
-	ProcedureCallImpl(SharedSessionContractImplementor session, ProcedureCallMementoImpl memento) {
+	ProcedureCallImpl(SharedSessionContractImplementor session, NamedCallableQueryMementoImpl memento) {
 		super( session, null );
 		this.procedureName = memento.getProcedureName();
 		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
@@ -212,7 +212,7 @@ public class ProcedureCallImpl<R>
 		this.parameterMetadata = new ProcedureParameterMetadata( this );
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, this );
 
-		for ( ProcedureCallMementoImpl.ParameterMemento storedRegistration : memento.getParameterDeclarations() ) {
+		for ( NamedCallableQueryMementoImpl.ParameterMemento storedRegistration : memento.getParameterDeclarations() ) {
 			final ProcedureParameterImplementor<?> registration;
 
 			if ( StringHelper.isNotEmpty( storedRegistration.getName() ) ) {
@@ -522,8 +522,8 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallMemento extractMemento(Map<String, Object> hints) {
-		return new ProcedureCallMementoImpl(
+	public NamedCallableQueryMemento extractMemento(Map<String, Object> hints) {
+		return new NamedCallableQueryMementoImpl(
 				procedureName,
 				Util.copy( queryReturns ),
 				getParameterMetadata().getParameterStrategy(),
@@ -534,8 +534,8 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallMemento extractMemento() {
-		return new ProcedureCallMementoImpl(
+	public NamedCallableQueryMemento extractMemento() {
+		return new NamedCallableQueryMementoImpl(
 				procedureName,
 				Util.copy( queryReturns ),
 				getParameterMetadata().getParameterStrategy(),
@@ -545,18 +545,18 @@ public class ProcedureCallImpl<R>
 		);
 	}
 
-	private static List<ProcedureCallMementoImpl.ParameterMemento> toParameterMementos(ProcedureParameterMetadata parameterMetadata) {
+	private static List<NamedCallableQueryMementoImpl.ParameterMemento> toParameterMementos(ProcedureParameterMetadata parameterMetadata) {
 		if ( parameterMetadata.getParameterStrategy() == ParameterStrategy.UNKNOWN ) {
 			// none...
 			return Collections.emptyList();
 		}
 
-		final List<ProcedureCallMementoImpl.ParameterMemento> copy = new ArrayList<>();
+		final List<NamedCallableQueryMementoImpl.ParameterMemento> copy = new ArrayList<>();
 
 		parameterMetadata.visitRegistrations(
 				queryParameter -> {
 					final ParameterRegistrationImplementor registration = (ParameterRegistrationImplementor) queryParameter;
-					copy.add( ProcedureCallMementoImpl.ParameterMemento.fromRegistration( registration ) );
+					copy.add( NamedCallableQueryMementoImpl.ParameterMemento.fromRegistration( registration ) );
 				}
 		);
 

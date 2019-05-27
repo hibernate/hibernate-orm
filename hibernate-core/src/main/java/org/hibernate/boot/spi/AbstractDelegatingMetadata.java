@@ -17,14 +17,12 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.FetchProfile;
@@ -120,12 +118,12 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public NamedQueryDefinition getNamedQueryDefinition(String name) {
+	public NamedHqlQueryMementoImpl getNamedQueryDefinition(String name) {
 		return delegate.getNamedQueryDefinition( name );
 	}
 
 	@Override
-	public Collection<NamedQueryDefinition> getNamedQueryDefinitions() {
+	public Collection<NamedHqlQueryMementoImpl> getNamedQueryDefinitions() {
 		return delegate.getNamedQueryDefinitions();
 	}
 
@@ -145,12 +143,12 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public ResultSetMappingDefinition getResultSetMapping(String name) {
+	public ResultSetMappingDescriptor getResultSetMapping(String name) {
 		return delegate.getResultSetMapping( name );
 	}
 
 	@Override
-	public Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions() {
+	public Map<String, ResultSetMappingDescriptor> getResultSetMappingDefinitions() {
 		return delegate.getResultSetMappingDefinitions();
 	}
 

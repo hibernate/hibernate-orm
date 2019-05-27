@@ -17,8 +17,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.QueryLogger;
-import org.hibernate.query.internal.DisabledQueryPlanCache;
-import org.hibernate.query.internal.QueryPlanCacheImpl;
+import org.hibernate.query.internal.QueryPlanCacheDisabledImpl;
+import org.hibernate.query.internal.QueryPlanCacheStandardImpl;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.hql.SemanticQueryProducer;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
@@ -68,7 +68,7 @@ public class QueryEngine {
 		this.semanticQueryProducer = new SemanticQueryProducerImpl( sqmCreationContext, sqmCreationOptions );
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				this,
-				domainModel,
+				domainModel.getJpaMetamodel(),
 				serviceRegistry
 		);
 
@@ -95,22 +95,23 @@ public class QueryEngine {
 		);
 
 		if ( explicitUseCache || ( explicitMaxPlanCount != null && explicitMaxPlanCount > 0 ) ) {
-			return new QueryPlanCacheImpl(
+			return new QueryPlanCacheStandardImpl(
 					explicitMaxPlanCount != null
 							? explicitMaxPlanCount
-							: QueryPlanCacheImpl.DEFAULT_QUERY_PLAN_MAX_COUNT
+							: QueryPlanCacheStandardImpl.DEFAULT_QUERY_PLAN_MAX_COUNT
 			);
 		}
 		else {
 			// disabled
-			return DisabledQueryPlanCache.INSTANCE;
+			return QueryPlanCacheDisabledImpl.INSTANCE;
 		}
 	}
 
 	public void prepare(SessionFactoryImplementor sessionFactory) {
 		//checking for named queries
 		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {
-			final Map<String, HibernateException> errors = namedQueryRepository.checkNamedQueries( this );
+			final Map<String, HibernateException> errors = namedQueryRepository.checkNamedQueries( queryPlanCache );
+
 			if ( !errors.isEmpty() ) {
 				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
 				String sep = "";

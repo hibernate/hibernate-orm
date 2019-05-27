@@ -14,7 +14,7 @@ import javax.persistence.ParameterMode;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.ProcedureCallMemento;
+import org.hibernate.procedure.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.type.Type;
@@ -24,7 +24,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class ProcedureCallMementoImpl implements ProcedureCallMemento {
+public class NamedCallableQueryMementoImpl implements NamedCallableQueryMemento {
 	private final String procedureName;
 	private final NativeSQLQueryReturn[] queryReturns;
 
@@ -45,7 +45,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 	 * @param synchronizedQuerySpaces Any query spaces to synchronize on execution
 	 * @param hintsMap Map of JPA query hints
 	 */
-	public ProcedureCallMementoImpl(
+	public NamedCallableQueryMementoImpl(
 			String procedureName,
 			NativeSQLQueryReturn[] queryReturns,
 			ParameterStrategy parameterStrategy,

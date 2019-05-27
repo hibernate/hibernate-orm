@@ -16,11 +16,11 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
@@ -117,9 +117,9 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named query metadata, or {@code null}.
 	 */
-	NamedQueryDefinition getNamedQueryDefinition(String name);
+	NamedHqlQueryMementoImpl getNamedQueryDefinition(String name);
 
-	java.util.Collection<NamedQueryDefinition> getNamedQueryDefinitions();
+	java.util.Collection<NamedHqlQueryMementoImpl> getNamedQueryDefinitions();
 
 	/**
 	 * Retrieve named SQL query metadata.
@@ -128,9 +128,9 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named query metadata, or {@code null}
 	 */
-	NamedSQLQueryDefinition getNamedNativeQueryDefinition(String name);
+	NamedNativeQueryMemento getNamedNativeQueryDefinition(String name);
 
-	java.util.Collection<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions();
+	java.util.Collection<NamedNativeQueryMemento> getNamedNativeQueryDefinitions();
 
 	java.util.Collection<NamedProcedureCallDefinition> getNamedProcedureCallDefinitions();
 
@@ -141,9 +141,9 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named result set mapping metadata, or {@code null} if none found.
 	 */
-	ResultSetMappingDefinition getResultSetMapping(String name);
+	ResultSetMappingDescriptor getResultSetMapping(String name);
 
-	Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions();
+	Map<String, ResultSetMappingDescriptor> getResultSetMappingDefinitions();
 
 	/**
 	 * Retrieve a type definition by name.

@@ -1211,6 +1211,13 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String PREFERRED_POOLED_OPTIMIZER = "hibernate.id.optimizer.pooled.preferred";
 
 	/**
+	 * Should query plan caching be enabled at all?  Default is {@code false}
+	 * unless one of {@link #QUERY_PLAN_CACHE_MAX_SIZE} or
+	 * {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE} is specified
+	 */
+	String QUERY_PLAN_CACHE_ENABLED = "hibernate.query.plan_cache_enabled";
+
+	/**
 	 * The maximum number of strong references maintained by {@link QueryPlanCache}. Default is 128.
 	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE}
 	 */

@@ -141,12 +141,12 @@ public interface ProcedureCall extends BasicQueryContract<CommonQueryContract>, 
 	 *
 	 * @return The memento
 	 */
-	ProcedureCallMemento extractMemento(Map<String, Object> hints);
+	NamedCallableQueryMemento extractMemento(Map<String, Object> hints);
 
 	/**
 	 * Extract the disconnected representation of this call.  Used in HEM to allow redefining a named query
 	 * *
 	 * @return The memento
 	 */
-	ProcedureCallMemento extractMemento();
+	NamedCallableQueryMemento extractMemento();
 }

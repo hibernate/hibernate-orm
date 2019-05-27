@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.internal;
+package org.hibernate.query.sql.internal;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -32,13 +32,18 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.internal.AbstractProducedQuery;
+import org.hibernate.query.internal.NativeQueryReturnBuilder;
+import org.hibernate.query.internal.NativeQueryReturnBuilderFetchImpl;
+import org.hibernate.query.internal.NativeQueryReturnBuilderRootImpl;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -68,41 +73,39 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	private Collection<String> querySpaces;
 
-	private final boolean callable;
 	private final LockOptions lockOptions = new LockOptions();
 	private Serializable collectionKey;
 
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
 	 *
-	 * @param queryDef The representation of the defined <sql-query/>.
+	 * @param memento The representation of the defined <sql-query/>.
 	 * @param session The session to which this NativeQuery belongs.
 	 * @param parameterMetadata Metadata about parameters found in the query.
 	 */
 	public NativeQueryImpl(
-			NamedSQLQueryDefinition queryDef,
+			NamedNativeQueryMemento memento,
 			SharedSessionContractImplementor session,
 			ParameterMetadata parameterMetadata) {
 		super( session, parameterMetadata );
 
-		this.sqlString = queryDef.getQueryString();
-		this.callable = queryDef.isCallable();
-		this.querySpaces = queryDef.getQuerySpaces() == null ? null : new ArrayList<>( queryDef.getQuerySpaces() );
+		this.sqlString = memento.getQueryString();
+		this.querySpaces = memento.getQuerySpaces() == null ? null : new ArrayList<>( memento.getQuerySpaces() );
 
-		if ( queryDef.getResultSetRef() != null ) {
-			ResultSetMappingDefinition definition = session.getFactory()
+		if ( memento.getResultSetRef() != null ) {
+			ResultSetMappingDescriptor definition = session.getFactory()
 					.getNamedQueryRepository()
-					.getResultSetMappingDefinition( queryDef.getResultSetRef() );
+					.getResultSetMappingDefinition( memento.getResultSetRef() );
 			if ( definition == null ) {
 				throw new MappingException(
 						"Unable to find resultset-ref definition: " +
-								queryDef.getResultSetRef()
+								memento.getResultSetRef()
 				);
 			}
 			this.queryReturns = new ArrayList<>( Arrays.asList( definition.getQueryReturns() ) );
 		}
-		else if ( queryDef.getQueryReturns() != null && queryDef.getQueryReturns().length > 0 ) {
-			this.queryReturns = new ArrayList<>( Arrays.asList( queryDef.getQueryReturns() ) );
+		else if ( memento.getQueryReturns() != null && memento.getQueryReturns().length > 0 ) {
+			this.queryReturns = new ArrayList<>( Arrays.asList( memento.getQueryReturns() ) );
 		}
 		else {
 			this.queryReturns = new ArrayList<>();
@@ -142,7 +145,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	@Override
 	public NativeQuery setResultSetMapping(String name) {
-		ResultSetMappingDefinition mapping = getProducer().getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
+		ResultSetMappingDescriptor mapping = getProducer().getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
 		if ( mapping == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}

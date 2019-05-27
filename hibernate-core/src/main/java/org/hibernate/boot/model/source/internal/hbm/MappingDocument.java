@@ -30,7 +30,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 
@@ -233,7 +233,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	@Override
 	public void processResultSetMappings() {
 		for ( ResultSetMappingBindingDefinition resultSetMappingBinding : documentRoot.getResultset() ) {
-			final ResultSetMappingDefinition binding = ResultSetMappingBinder.bind( resultSetMappingBinding, this );
+			final ResultSetMappingDescriptor binding = ResultSetMappingBinder.bind( resultSetMappingBinding, this );
 			getMetadataCollector().addResultSetMapping( binding );
 		}
 	}

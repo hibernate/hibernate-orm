@@ -11,7 +11,7 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
+import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
@@ -30,14 +30,14 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 	public void testNamedStoredProcedureBinding() {
 		EntityManager em = getOrCreateEntityManager();
 		SessionFactoryImplementor sf = em.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
-		final ProcedureCallMementoImpl m1 = (ProcedureCallMementoImpl) sf.getNamedQueryRepository()
+		final NamedCallableQueryMementoImpl m1 = (NamedCallableQueryMementoImpl) sf.getNamedQueryRepository()
 				.getNamedProcedureCallMemento( "s1" );
 		assertNotNull( m1 );
 		assertEquals( "p1", m1.getProcedureName() );
 		assertEquals( ParameterStrategy.NAMED, m1.getParameterStrategy() );
-		List<ProcedureCallMementoImpl.ParameterMemento> list = m1.getParameterDeclarations();
+		List<NamedCallableQueryMementoImpl.ParameterMemento> list = m1.getParameterDeclarations();
 		assertEquals( 2, list.size() );
-		ProcedureCallMementoImpl.ParameterMemento memento = list.get( 0 );
+		NamedCallableQueryMementoImpl.ParameterMemento memento = list.get( 0 );
 		assertEquals( "p11", memento.getName() );
 		assertEquals( javax.persistence.ParameterMode.IN, memento.getMode() );
 		assertEquals( IntegerType.INSTANCE, memento.getHibernateType() );
@@ -51,7 +51,7 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 
 
 
-		final ProcedureCallMementoImpl m2 = (ProcedureCallMementoImpl) sf.getNamedQueryRepository()
+		final NamedCallableQueryMementoImpl m2 = (NamedCallableQueryMementoImpl) sf.getNamedQueryRepository()
 				.getNamedProcedureCallMemento( "s2" );
 		assertNotNull( m2 );
 		assertEquals( "p2", m2.getProcedureName() );

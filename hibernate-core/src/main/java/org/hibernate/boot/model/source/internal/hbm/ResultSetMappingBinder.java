@@ -25,7 +25,8 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.NativeQueryNonScalarRootReturn;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
@@ -57,7 +58,7 @@ public abstract class ResultSetMappingBinder {
 	 *
 	 * @return The ResultSet mapping descriptor
 	 */
-	public static ResultSetMappingDefinition bind(
+	public static NamedResultSetMappingMemento bind(
 			ResultSetMappingBindingDefinition resultSetMappingSource,
 			HbmLocalMetadataBuildingContext context) {
 		if ( resultSetMappingSource.getName() == null ) {
@@ -67,7 +68,7 @@ public abstract class ResultSetMappingBinder {
 			);
 		}
 
-		final ResultSetMappingDefinition binding = new ResultSetMappingDefinition( resultSetMappingSource.getName() );
+		final ResultSetMappingDescriptor binding = new ResultSetMappingDescriptor( resultSetMappingSource.getName() );
 		bind( resultSetMappingSource, binding, context );
 		return binding;
 	}
@@ -83,7 +84,7 @@ public abstract class ResultSetMappingBinder {
 	 *
 	 * @return The ResultSet mapping descriptor
 	 */
-	public static ResultSetMappingDefinition bind(
+	public static ResultSetMappingDescriptor bind(
 			ResultSetMappingBindingDefinition resultSetMappingSource,
 			HbmLocalMetadataBuildingContext context,
 			String prefix) {
@@ -92,14 +93,14 @@ public abstract class ResultSetMappingBinder {
 		}
 
 		final String resultSetName = prefix + '.' + resultSetMappingSource.getName();
-		final ResultSetMappingDefinition binding = new ResultSetMappingDefinition( resultSetName );
+		final ResultSetMappingDescriptor binding = new ResultSetMappingDescriptor( resultSetName );
 		bind( resultSetMappingSource, binding, context );
 		return binding;
 	}
 
 	private static void bind(
 			ResultSetMappingBindingDefinition resultSetMappingSource,
-			ResultSetMappingDefinition binding,
+			ResultSetMappingDescriptor binding,
 			HbmLocalMetadataBuildingContext context) {
 
 		int cnt = 0;

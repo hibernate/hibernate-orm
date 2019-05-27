@@ -28,7 +28,7 @@ public interface QueryPlanCache {
 	NonSelectQueryPlan getNonSelectQueryPlan(Key key);
 	void cacheNonSelectQueryPlan(Key key, NonSelectQueryPlan plan);
 
-	SqmStatement resolveSqmStatement(String queryString, Function<String,SqmStatement<?>> creator);
+	SqmStatement resolveSqmStatement(String queryString, Function<String, SqmStatement<?>> creator);
 	SqmStatement getSqmStatement(String queryString);
 	void cacheSqmStatement(String key, SqmStatement sqmStatement);
 

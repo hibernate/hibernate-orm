@@ -36,10 +36,11 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -283,12 +284,12 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public NamedQueryDefinition getNamedQuery(String queryName) {
+	public NamedHqlQueryMementoImpl getNamedQuery(String queryName) {
 		return delegate.getNamedQuery( queryName );
 	}
 
 	@Override
-	public void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
+	public void registerNamedQueryDefinition(String name, NamedHqlQueryMementoImpl definition) {
 		delegate.registerNamedQueryDefinition( name, definition );
 	}
 
@@ -303,7 +304,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public ResultSetMappingDefinition getResultSetMapping(String name) {
+	public ResultSetMappingDescriptor getResultSetMapping(String name) {
 		return delegate.getResultSetMapping( name );
 	}
 

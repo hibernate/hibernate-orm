@@ -9,6 +9,7 @@ package org.hibernate.metamodel.internal;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
@@ -47,11 +48,45 @@ public enum JpaStaticMetaModelPopulationSetting {
 	}
 
 	public static JpaStaticMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Map configurationValues) {
-		String setting = ConfigurationHelper.getString(
+		return parse( determineSetting( configurationValues ) );
+	}
+
+	private static String determineSetting(Map configurationValues) {
+		final String setting = ConfigurationHelper.getString(
 				AvailableSettings.STATIC_METAMODEL_POPULATION,
 				configurationValues,
 				null
 		);
-		return JpaStaticMetaModelPopulationSetting.parse( setting );
+		if ( setting != null ) {
+			return setting;
+		}
+
+		final String legacySetting1 = ConfigurationHelper.getString(
+				AvailableSettings.JPA_METAMODEL_POPULATION,
+				configurationValues,
+				null
+		);
+		if ( legacySetting1 != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					AvailableSettings.JPA_METAMODEL_POPULATION,
+					AvailableSettings.STATIC_METAMODEL_POPULATION
+			);
+			return legacySetting1;
+		}
+
+		final String legacySetting2 = ConfigurationHelper.getString(
+				AvailableSettings.JPA_METAMODEL_GENERATION,
+				configurationValues,
+				null
+		);
+		if ( legacySetting2 != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					AvailableSettings.JPA_METAMODEL_GENERATION,
+					AvailableSettings.STATIC_METAMODEL_POPULATION
+			);
+			return legacySetting1;
+		}
+
+		return null;
 	}
 }

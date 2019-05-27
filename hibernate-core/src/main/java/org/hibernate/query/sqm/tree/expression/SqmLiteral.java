@@ -49,4 +49,10 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> implements SqmExpres
 	public String asLoggableText() {
 		return "Literal( " + value + ")";
 	}
+
+	@Override
+	protected void internalApplyInferableType(ExpressableType newType) {
+		//never mess with the type, because the original
+		//type is needed for parameter binding!
+	}
 }

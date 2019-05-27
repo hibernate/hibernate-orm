@@ -53,6 +53,7 @@ import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.QueryLogger;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.hql.DotIdentifierConsumer;
 import org.hibernate.query.spi.ComparisonOperator;
@@ -170,6 +171,7 @@ import org.jboss.logging.Logger;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static java.util.Arrays.asList;
+import static org.hibernate.query.TemporalUnit.DATE;
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.DAY_OF_MONTH;
 import static org.hibernate.query.TemporalUnit.DAY_OF_WEEK;
@@ -182,6 +184,7 @@ import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.OFFSET;
 import static org.hibernate.query.TemporalUnit.QUARTER;
 import static org.hibernate.query.TemporalUnit.SECOND;
+import static org.hibernate.query.TemporalUnit.TIME;
 import static org.hibernate.query.TemporalUnit.TIMEZONE_HOUR;
 import static org.hibernate.query.TemporalUnit.TIMEZONE_MINUTE;
 import static org.hibernate.query.TemporalUnit.WEEK;
@@ -2159,6 +2162,18 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public Object visitDateOrTimeField(HqlParser.DateOrTimeFieldContext ctx) {
+		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
+		if (ctx.DATE()!=null) {
+			return new SqmExtractUnit<>(DATE, basicType( Date.class ), nodeBuilder);
+		}
+		if (ctx.TIME()!=null) {
+			return new SqmExtractUnit<>(TIME, basicType( Time.class ), nodeBuilder);
+		}
+		return super.visitDateOrTimeField(ctx);
+	}
+
+	@Override
 	public Object visitTimeZoneField(HqlParser.TimeZoneFieldContext ctx) {
 		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 		if (ctx.HOUR()!=null) {
@@ -2212,26 +2227,42 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return expressionToExtract;
 		}
 
-		if ( extractFieldExpression.getUnit()== OFFSET ) {
-			return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
-					asList(
-							expressionToExtract,
-							new SqmFormat(
-									"XXX",
-									basicType( String.class ),
-									creationContext.getNodeBuilder()
-							)
-					),
-					extractFieldExpression.getType(),
-					creationContext.getQueryEngine()
-			);
-		}
-		else {
-			return getFunctionTemplate("extract").makeSqmFunctionExpression(
-					asList( extractFieldExpression, expressionToExtract ),
-					extractFieldExpression.getType(),
-					creationContext.getQueryEngine()
-			);
+		TemporalUnit unit = extractFieldExpression.getUnit();
+		AllowableFunctionReturnType<?> type = extractFieldExpression.getType();
+
+		switch ( unit ) {
+			case OFFSET:
+				return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
+						asList(
+								expressionToExtract,
+								new SqmFormat(
+										"XXX",
+										basicType( String.class ),
+										creationContext.getNodeBuilder()
+								)
+						),
+						type,
+						creationContext.getQueryEngine()
+				);
+			case DATE:
+			case TIME:
+				return getFunctionTemplate("cast").makeSqmFunctionExpression(
+						asList(
+								expressionToExtract,
+								new SqmCastTarget<>(
+										type,
+										creationContext.getNodeBuilder()
+								)
+						),
+						type,
+						creationContext.getQueryEngine()
+				);
+			default:
+				return getFunctionTemplate("extract").makeSqmFunctionExpression(
+						asList( extractFieldExpression, expressionToExtract ),
+						type,
+						creationContext.getQueryEngine()
+				);
 		}
 	}
 

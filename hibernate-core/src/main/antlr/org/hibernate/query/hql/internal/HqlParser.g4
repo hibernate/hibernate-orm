@@ -829,6 +829,7 @@ extractField
 	| dayField
 	| timeZoneField
 	| secondsField
+	| dateOrTimeField
 	;
 
 datetimeField
@@ -855,6 +856,11 @@ secondsField
 
 timeZoneField
 	: OFFSET (HOUR | MINUTE)?
+	;
+
+dateOrTimeField
+	: DATE
+	| TIME
 	;
 
 positionFunction

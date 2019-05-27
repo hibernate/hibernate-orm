@@ -17,7 +17,8 @@ public enum TemporalUnit {
 	SECOND(false), MILLISECOND(false), MICROSECOND(false),
 	NANOSECOND(false),
 	DAY_OF_WEEK(true), DAY_OF_YEAR(true), DAY_OF_MONTH(true),
-	OFFSET(false), TIMEZONE_HOUR(false), TIMEZONE_MINUTE(false);
+	OFFSET(false), TIMEZONE_HOUR(false), TIMEZONE_MINUTE(false),
+	DATE(false), TIME(false);
 
 	private boolean dateUnit;
 

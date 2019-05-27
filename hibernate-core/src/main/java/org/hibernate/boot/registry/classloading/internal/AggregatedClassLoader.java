@@ -22,7 +22,7 @@ public class AggregatedClassLoader extends ClassLoader {
 		tcclLookupPrecedence = precedence;
 	}
 
-	private Iterator<ClassLoader> newClassLoaderIterator() {
+	Iterator<ClassLoader> newClassLoaderIterator() {
 		final ClassLoader threadClassLoader = locateTCCL();
 		if ( tcclLookupPrecedence == TcclLookupPrecedence.NEVER || threadClassLoader == null ) {
 			return newTcclNeverIterator();

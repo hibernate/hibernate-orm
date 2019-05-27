@@ -15,7 +15,6 @@ import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.TemporalUnit;
-import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.dialect.identity.Chache71IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -45,7 +44,6 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.TemporalUnit.MICROSECOND;
-import static org.hibernate.query.TemporalUnit.MILLISECOND;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
@@ -279,7 +277,7 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.extract_datepart( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 
-		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
 
 		useJdbcEscape(queryEngine, "sin");
 		useJdbcEscape(queryEngine, "cos");

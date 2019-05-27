@@ -34,7 +34,8 @@ public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmF
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> resolvedReturnType,
-			QueryEngine queryEngine, TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
 		return new SelfRenderingSqmFunction(
 				getRenderingFunctionSupport( arguments, resolvedReturnType, queryEngine ),

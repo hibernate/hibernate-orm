@@ -9,8 +9,7 @@ package org.hibernate.query.sqm.produce.function;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-
+import org.hibernate.query.sqm.produce.function.spi.MultipatternSqmFunctionTemplate;
 import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
 
@@ -213,4 +212,64 @@ public class SqmFunctionRegistry {
 		functionMap.clear();
 		alternateKeyMap.clear();
 	}
+
+	/**
+	 * Register a nullary/unary function.
+	 *
+	 * i.e. a function which accepts 0-1 arguments.
+	 */
+	public void registerNullaryUnaryPattern(
+			String name,
+			StandardBasicTypes.StandardBasicType<?> type,
+			String pattern0,
+			String pattern1) {
+		registerPatterns( name, type, pattern0, pattern1 );
+	}
+
+	/**
+	 * Register a unary/binary function.
+	 *
+	 * i.e. a function which accepts 1-2 arguments.
+	 */
+	public void registerUnaryBinaryPattern(
+			String name,
+			StandardBasicTypes.StandardBasicType<?> type,
+			String pattern1,
+			String pattern2) {
+		registerPatterns( name, type, null, pattern1, pattern2 );
+	}
+
+	/**
+	 * Register a binary/ternary function.
+	 *
+	 * i.e. a function which accepts 2-3 arguments.
+	 */
+	public void registerBinaryTernaryPattern(
+			String name,
+			StandardBasicTypes.StandardBasicType<?> type,
+			String pattern2,
+			String pattern3) {
+		registerPatterns( name, type, null, null, pattern2, pattern3 );
+	}
+
+	private void registerPatterns(
+			String name,
+			StandardBasicTypes.StandardBasicType<?> type,
+			String... patterns) {
+		SqmFunctionTemplate[] templates =
+				new SqmFunctionTemplate[patterns.length];
+		for ( int i = 0; i < patterns.length; i++ ) {
+			String pattern = patterns[i];
+			if ( pattern != null ) {
+				templates[i] =
+						patternTemplateBuilder(name, pattern)
+								.setExactArgumentCount(i)
+								.setInvariantType(type)
+								.template();
+			}
+		}
+
+		register( name, new MultipatternSqmFunctionTemplate(templates) );
+	}
+
 }

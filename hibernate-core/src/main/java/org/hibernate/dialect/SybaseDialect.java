@@ -10,7 +10,6 @@ import java.sql.Types;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TransactSQLTrimEmulation;
-import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;

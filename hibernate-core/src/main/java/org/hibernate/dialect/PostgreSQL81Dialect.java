@@ -22,7 +22,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.SemanticException;
-import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -348,7 +347,7 @@ public class PostgreSQL81Dialect extends Dialect {
 				.setArgumentCountBetween( 6, 7 )
 				.register();
 
-		PairedFunctionTemplate.register(queryEngine, "locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
 
 	}
 

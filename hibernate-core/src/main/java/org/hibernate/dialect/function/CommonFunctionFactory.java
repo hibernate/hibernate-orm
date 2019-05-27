@@ -7,7 +7,6 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.produce.function.spi.PairedFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
@@ -182,8 +181,8 @@ public class CommonFunctionFactory {
 	}
 
 	public static void pad_fill(QueryEngine queryEngine) {
-		PairedFunctionTemplate.register(queryEngine, "lpad", StandardSpiBasicTypes.STRING, "lfill(?1,' ',?2)", "lfill(?1,?3,?2)");
-		PairedFunctionTemplate.register(queryEngine, "rpad", StandardSpiBasicTypes.STRING, "rfill(?1,' ',?2)", "rfill(?1,?3,?2)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("lpad", StandardSpiBasicTypes.STRING, "lfill(?1,' ',?2)", "lfill(?1,?3,?2)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("rpad", StandardSpiBasicTypes.STRING, "rfill(?1,' ',?2)", "rfill(?1,?3,?2)");
 	}
 
 	public static void reverse(QueryEngine queryEngine) {

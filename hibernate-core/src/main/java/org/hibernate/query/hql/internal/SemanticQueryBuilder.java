@@ -1938,13 +1938,17 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public List<SqmTypedNode<?>> visitNonStandardFunctionArguments(HqlParser.NonStandardFunctionArgumentsContext ctx) {
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
 
+		if ( ctx.datetimeFieldArgument() != null ) {
+			arguments.add( (SqmTypedNode<?>) ctx.datetimeFieldArgument().accept( this ) );
+		}
+
 		for ( int i=0, size=ctx.expression().size(); i<size; i++ ) {
 			// we handle the final argument differently...
 			if ( i == size-1 ) {
 				arguments.add( visitFinalFunctionArgument( ctx.expression( i ) ) );
 			}
 			else {
-				arguments.add( (SqmTypedNode) ctx.expression( i ).accept( this ) );
+				arguments.add( (SqmTypedNode<?>) ctx.expression( i ).accept( this ) );
 			}
 		}
 

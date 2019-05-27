@@ -547,7 +547,12 @@ nonStandardFunctionName
 	;
 
 nonStandardFunctionArguments
-	: expression (COMMA expression)*
+	: (datetimeFieldArgument COMMA)? expression (COMMA expression)*
+	;
+
+datetimeFieldArgument
+	: datetimeField
+	| secondsField
 	;
 
 jpaCollectionFunction

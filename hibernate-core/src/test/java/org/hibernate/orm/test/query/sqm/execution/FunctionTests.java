@@ -112,6 +112,23 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testTimestampAddDiffFunctions() {
+		inTransaction(
+				session -> {
+					session.createQuery("select function('timestampadd',month,2,current date) from EntityOfBasics e")
+							.list();
+					session.createQuery("select function('timestampdiff',hour,current timestamp, e.theTimestamp) from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select timestampadd(month,2,current date) from EntityOfBasics e")
+							.list();
+					session.createQuery("select timestampdiff(hour,current timestamp, e.theTimestamp) from EntityOfBasics e")
+							.list();
+				}
+		);
+	}
+
+	@Test
 	public void testAsciiChrFunctions() {
 		inTransaction(
 				session -> {
@@ -120,6 +137,13 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("from EntityOfBasics e where function('ascii', 'x') > 0")
 							.list();
 					session.createQuery("from EntityOfBasics e where function('chr', 120) = 'z'")
+							.list();
+
+					session.createQuery("select ascii('x'), chr(120) from EntityOfBasics w")
+							.list();
+					session.createQuery("from EntityOfBasics e where ascii('x') > 0")
+							.list();
+					session.createQuery("from EntityOfBasics e where chr(120) = 'z'")
 							.list();
 				}
 		);
@@ -458,6 +482,9 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 
 					session.createQuery("select extract(offset from e.theTimestamp) from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select extract(time from e.theTimestamp), extract(date from e.theTimestamp) from EntityOfBasics e")
 							.list();
 				}
 		);

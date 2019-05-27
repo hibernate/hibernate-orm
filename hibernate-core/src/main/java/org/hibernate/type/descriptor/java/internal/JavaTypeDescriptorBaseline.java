@@ -69,6 +69,7 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( DurationJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( InstantJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( LocalDateJavaDescriptor.INSTANCE );
+		target.addBaselineDescriptor( LocalTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( LocalDateTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( OffsetDateTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( OffsetTimeJavaDescriptor.INSTANCE );

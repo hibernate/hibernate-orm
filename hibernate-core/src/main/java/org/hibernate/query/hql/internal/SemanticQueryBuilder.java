@@ -2321,12 +2321,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final SqmExpression<?> expressionToCast = (SqmExpression) ctx.expression().accept( this );
 		final SqmLiteral<?> format = (SqmLiteral) ctx.format().accept( this );
 
-		//getSessionFactory().getTypeConfiguration().resolveCastTargetType( ctx.dataType().IDENTIFIER().getText() )
-
-//		if ( !AllowableFunctionReturnType.class.isInstance( castTargetExpression ) ) {
-//			throw new SqmProductionException( "Found cast target expression [%s] which is not allowed as a function return" );
-//		}
-
 		return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
 				asList( expressionToCast, format ),
 				basicType( String.class ),
@@ -2340,12 +2334,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		final SqmExpression<?> expressionToCast = (SqmExpression) ctx.expression().accept( this );
 		final SqmCastTarget<?> castTargetExpression = interpretCastTarget( ctx.castTarget() );
-
-		//getSessionFactory().getTypeConfiguration().resolveCastTargetType( ctx.dataType().IDENTIFIER().getText() )
-
-//		if ( !AllowableFunctionReturnType.class.isInstance( castTargetExpression ) ) {
-//			throw new SqmProductionException( "Found cast target expression [%s] which is not allowed as a function return" );
-//		}
 
 		return getFunctionTemplate("cast").makeSqmFunctionExpression(
 				asList( expressionToCast, castTargetExpression ),

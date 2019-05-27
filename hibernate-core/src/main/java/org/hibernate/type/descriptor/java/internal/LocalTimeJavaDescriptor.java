@@ -56,12 +56,12 @@ public class LocalTimeJavaDescriptor
 
 	@Override
 	public String toString(LocalTime value) {
-		return LocalTimeJavaDescriptor.FORMATTER.format( value );
+		return FORMATTER.format( value );
 	}
 
 	@Override
 	public LocalTime fromString(String string) {
-		return (LocalTime) LocalTimeJavaDescriptor.FORMATTER.parse( string );
+		return (LocalTime) FORMATTER.parse( string );
 	}
 
 	@Override

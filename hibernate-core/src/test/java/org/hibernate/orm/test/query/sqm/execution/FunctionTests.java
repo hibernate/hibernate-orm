@@ -233,6 +233,13 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                     session.createQuery("select cast('ABCDEF' as Character) from EntityOfBasics")
                             .list();
 
+                    session.createQuery("select cast('12:13:14' as Time) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1911-10-09' as Date) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1911-10-09 12:13:14.123' as Timestamp) from EntityOfBasics")
+                            .list();
+
                     session.createQuery("select cast('12:13:14' as LocalTime) from EntityOfBasics")
                             .list();
                     session.createQuery("select cast('1911-10-09' as LocalDate) from EntityOfBasics")

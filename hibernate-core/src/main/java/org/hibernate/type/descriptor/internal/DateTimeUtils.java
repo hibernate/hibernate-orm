@@ -8,12 +8,16 @@ package org.hibernate.type.descriptor.internal;
 
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import javax.persistence.TemporalType;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 /**
  * @author Steve Ebersole
@@ -34,6 +38,24 @@ public final class DateTimeUtils {
 	public static final String JDBC_ESCAPE_START_DATE = "{d '";
 	public static final String JDBC_ESCAPE_START_TIME = "{t '";
 	public static final String JDBC_ESCAPE_END = "'}";
+
+	/**
+	 * Pattern used for parsing literal datetimes in HQL.
+	 *
+	 * Recognizes timestamps consisting of a date and time separated
+	 * by either T or a space, and with an optional offset or time
+	 * zone ID. Ideally we should accept both ISO and SQL standard
+	 * zoned timestamp formats here.
+	 */
+	public static final DateTimeFormatter DATE_TIME = new DateTimeFormatterBuilder()
+			.parseCaseInsensitive()
+			.append( ISO_LOCAL_DATE )
+			.optionalStart().appendLiteral( ' ' ).optionalEnd()
+			.optionalStart().appendLiteral( 'T' ).optionalEnd()
+			.append( ISO_LOCAL_TIME )
+			.optionalStart().appendLiteral( ' ' ).optionalEnd()
+			.optionalStart().appendZoneOrOffsetId().optionalEnd()
+			.toFormatter();
 
 	public static String formatUsingPrecision(TemporalAccessor temporalAccessor, TemporalType precision) {
 		switch ( precision ) {

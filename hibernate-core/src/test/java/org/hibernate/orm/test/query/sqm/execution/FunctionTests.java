@@ -33,11 +33,11 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery("select current_time, current_date, current_timestamp from EntityOfBasics e")
 							.list();
-					session.createQuery("select current time, current date, current timestamp from EntityOfBasics e")
+					session.createQuery("select current time, current date, current datetime from EntityOfBasics e")
 							.list();
 					session.createQuery("from EntityOfBasics e where e.theDate > current_date and e.theTime > current_time and e.theTimestamp > current_timestamp")
 							.list();
-					session.createQuery("from EntityOfBasics e where e.theDate > current date and e.theTime > current time and e.theTimestamp > current timestamp")
+					session.createQuery("from EntityOfBasics e where e.theDate > current date and e.theTime > current time and e.theTimestamp > current datetime")
 							.list();
 					session.createQuery("select current_instant, current instant from EntityOfBasics e")
 							.list();
@@ -117,12 +117,12 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery("select function('timestampadd',month,2,current date) from EntityOfBasics e")
 							.list();
-					session.createQuery("select function('timestampdiff',hour,current timestamp, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select function('timestampdiff',hour,e.theTimestamp,current datetime) from EntityOfBasics e")
 							.list();
 
 					session.createQuery("select timestampadd(month,2,current date) from EntityOfBasics e")
 							.list();
-					session.createQuery("select timestampdiff(hour,current timestamp, e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select timestampdiff(hour,e.theTimestamp,current datetime) from EntityOfBasics e")
 							.list();
 				}
 		);

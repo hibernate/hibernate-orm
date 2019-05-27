@@ -164,6 +164,7 @@ CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] [_] [tT] [iI] [mM] [eE];
 CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] [_] [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
 CROSS				: [cC] [rR] [oO] [sS] [sS];
 DATE				: [dD] [aA] [tT] [eE];
+DATETIME			: [dD] [aA] [tT] [eE] [tT] [iI] [mM] [eE];
 DAY					: [dD] [aA] [yY];
 DELETE				: [dD] [eE] [lL] [eE] [tT] [eE];
 DESC				: [dD] [eE] [sS] [cC];

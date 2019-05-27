@@ -702,8 +702,24 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_date")
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_timestamp") //current_instant uses this
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_timestamp")
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_instant", "current_timestamp")
+				.setInvariantType( StandardSpiBasicTypes.INSTANT )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time", "current_time")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current date", "current_date")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current datetime", "current_timestamp")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current instant", "current_timestamp")
+				.setInvariantType( StandardSpiBasicTypes.INSTANT )
 				.register();
 
 		//these are synonyms on many databases, so for convenience register them here

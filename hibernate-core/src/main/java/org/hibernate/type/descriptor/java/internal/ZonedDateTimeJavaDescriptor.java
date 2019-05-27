@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java.internal;
 
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -44,7 +45,8 @@ public class ZonedDateTimeJavaDescriptor
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		return null;
+		//TODO: should be Types.TIMESTAMP_WITH_TIMEZONE
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
 	}
 
 	@Override

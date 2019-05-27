@@ -479,7 +479,10 @@ literal
 	| NULL
 	| TRUE
 	| FALSE
-	| timestampLiteral
+	| escapedTimestampLiteral
+	| escapedDateLiteral
+	| escapedTimeLiteral
+	| datetimeLiteral
 	| dateLiteral
 	| timeLiteral
 	;
@@ -497,19 +500,28 @@ literal
 //		1) the markers above are just initial thoughts.  They are obviously verbose.  Maybe acronyms or shortened forms would be better
 //		2) we may want to stay away from all of the timezone headaches by not supporting local, zoned and offset forms
 
-timestampLiteral
+escapedTimestampLiteral
 	: TIMESTAMP_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
-	| TIMESTAMP dateTimeLiteralText
+	;
+
+escapedDateLiteral
+	: DATE_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
+	;
+
+escapedTimeLiteral
+	: TIME_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
+	;
+
+datetimeLiteral
+	: DATETIME dateTimeLiteralText
 	;
 
 dateLiteral
-	: DATE_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
-	| DATE dateTimeLiteralText
+	: DATE dateTimeLiteralText
 	;
 
 timeLiteral
-	: TIME_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
-	| TIME dateTimeLiteralText
+	: TIME dateTimeLiteralText
 	;
 
 dateTimeLiteralText
@@ -629,6 +641,10 @@ standardFunction
 	| currentTimeFunction
 	| currentTimestampFunction
 	| currentInstantFunction
+	| currentDate
+	| currentTime
+	| currentDatetime
+	| currentInstant
 	;
 
 
@@ -793,22 +809,35 @@ strFunction
 
 currentDateFunction
 	: CURRENT_DATE (LEFT_PAREN RIGHT_PAREN)?
-	| CURRENT DATE
 	;
 
 currentTimeFunction
 	: CURRENT_TIME (LEFT_PAREN RIGHT_PAREN)?
-	| CURRENT TIME
 	;
 
 currentTimestampFunction
 	: CURRENT_TIMESTAMP (LEFT_PAREN RIGHT_PAREN)?
-	| CURRENT TIMESTAMP
 	;
 
+//deprecated legacy syntax
 currentInstantFunction
 	: CURRENT_INSTANT (LEFT_PAREN RIGHT_PAREN)?
-	| CURRENT INSTANT
+	;
+
+currentDate
+	: CURRENT DATE
+	;
+
+currentTime
+	: CURRENT TIME
+	;
+
+currentDatetime
+	: CURRENT DATETIME
+	;
+
+currentInstant
+	: CURRENT INSTANT
 	;
 
 formatFunction

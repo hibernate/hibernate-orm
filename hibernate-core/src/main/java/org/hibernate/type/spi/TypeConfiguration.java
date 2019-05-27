@@ -14,6 +14,9 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -589,6 +592,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "time": return standardExpressableTypeForJavaType( Time.class );
 			case "date": return standardExpressableTypeForJavaType( Date.class );
 			case "timestamp": return standardExpressableTypeForJavaType( Timestamp.class );
+			case "localtime": return standardExpressableTypeForJavaType( LocalTime.class );
+			case "localdate": return standardExpressableTypeForJavaType( LocalDate.class );
+			case "localdatetime": return standardExpressableTypeForJavaType( LocalDateTime.class );
 			case "biginteger": return standardExpressableTypeForJavaType( BigInteger.class );
 			case "bigdecimal": return standardExpressableTypeForJavaType( BigDecimal.class );
 			case "binary":

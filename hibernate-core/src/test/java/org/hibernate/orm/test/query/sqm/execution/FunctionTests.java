@@ -217,21 +217,28 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
                             .list();
 
                     session.createQuery("select cast('1002342345234523.452435245245243' as BigDecimal) from EntityOfBasics")
-                            .getResultList();
+                            .list();
                     session.createQuery("select cast('1002342345234523.452435245245243' as BigDecimal(30, 10)) from EntityOfBasics")
-                            .getResultList();
+                            .list();
                     session.createQuery("select cast('1234234523452345243524524524' as BigInteger) from EntityOfBasics")
-                            .getResultList();
+                            .list();
                     session.createQuery("select cast('1234234523452345243524524524' as BigInteger(30)) from EntityOfBasics")
-                            .getResultList();
+                            .list();
                     session.createQuery("select cast('3811234234.12312' as Double) from EntityOfBasics")
-                            .getResultList();
+                            .list();
                     session.createQuery("select cast('1234234' as Integer) from EntityOfBasics")
-                            .getResultList();
+                            .list();
                     session.createQuery("select cast(1 as Boolean), cast(0 as Boolean) from EntityOfBasics")
-                            .getResultList();
+                            .list();
                     session.createQuery("select cast('ABCDEF' as Character) from EntityOfBasics")
-                            .getResultList();
+                            .list();
+
+                    session.createQuery("select cast('12:13:14' as LocalTime) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1911-10-09' as LocalDate) from EntityOfBasics")
+                            .list();
+                    session.createQuery("select cast('1911-10-09 12:13:14.123' as LocalDateTime) from EntityOfBasics")
+                            .list();
                 }
         );
     }

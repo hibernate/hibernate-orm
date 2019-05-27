@@ -217,6 +217,13 @@ test {
 	}
 }
 
+// Log a statement for each test, so that Travis doesn't end up panicking because when there's no output for a long time
+test {
+	testLogging {
+		events "passed", "skipped", "failed"
+	}
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // IDE
 

@@ -2141,13 +2141,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		Integer precision = args.size()>0 ? Integer.valueOf( args.get(0).getText() ) : null;
 		Integer scale = args.size()>1 ? Integer.valueOf( args.get(1).getText() ) : null;
 
-		BasicValuedExpressableType<?> targetType = creationContext.getDomainModel().getTypeConfiguration().resolveCastTargetType(targetName);
-		if ( !AllowableFunctionReturnType.class.isInstance( targetType ) ) {
-			throw new SqmProductionException( "Found cast target expression [%s] which is not allowed as a function return" );
-		}
-
 		return new SqmCastTarget<>(
-				(AllowableFunctionReturnType<?>) targetType,
+				(AllowableFunctionReturnType<?>)
+						creationContext.getDomainModel().getTypeConfiguration()
+								.resolveCastTargetType( targetName ),
 				//TODO: is there some way to interpret as length vs precision/scale here at this point?
 				length,
 				precision, scale,

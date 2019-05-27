@@ -115,7 +115,7 @@ public class StandardFunctionReturnTypeResolvers {
 					String.format(
 							Locale.ROOT,
 							"Function argument [%s] at specified position [%d] in call arguments was not typed as an allowable function return type",
-							specifiedArgument,
+							specifiedArgType,
 							position
 					)
 			);

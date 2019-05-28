@@ -827,7 +827,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 
 		for ( HqlParser.JpaCollectionJoinContext parserJoin : parserSpace.jpaCollectionJoin() ) {
-			consumeJpaCollectionJoin( parserJoin );
+			consumeJpaCollectionJoin( parserJoin, sqmRoot );
 		}
 
 		return sqmRoot;
@@ -1021,15 +1021,23 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void consumeJpaCollectionJoin(HqlParser.JpaCollectionJoinContext ctx) {
-		// todo (6.0) : this should always make sure the collection tables are joined
-		//		ideally via specialized DotIdentifierConsumer
-		identifierConsumerStack.push( new BasicDotIdentifierConsumer( processingStateStack::getCurrent ) );
+	protected void consumeJpaCollectionJoin(
+			HqlParser.JpaCollectionJoinContext ctx,
+			SqmRoot sqmRoot) {
+		semanticPathPartStack.push(
+				new SemanticPathPartQualifiedJoinPath(
+						sqmRoot,
+						// todo (6.0) : what kind of join is
+						SqmJoinType.LEFT,
+						false,
+						visitIdentificationVariableDef( ctx.identificationVariableDef() )
+				)
+		);
 		try {
 			consumePluralAttributeReference( ctx.path() );
 		}
 		finally {
-			identifierConsumerStack.pop();
+			semanticPathPartStack.pop();
 		}
 	}
 

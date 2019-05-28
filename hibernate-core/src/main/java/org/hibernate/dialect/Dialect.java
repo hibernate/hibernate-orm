@@ -35,6 +35,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastStrEmulation;
+import org.hibernate.dialect.function.CoalesceIfnullEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -304,20 +305,24 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * And a number of additional "standard" functions:
 	 *
-	 * 	    * ifnull (two-argument synonym for coalesce)
 	 *      * replace
 	 *      * least, greatest
 	 *      * sign
 	 *      * sin, cos, tan, asin, acos, atan, atan2
 	 *      * round
 	 * 	    * current_instant
-	 * 		* str 			- defined as `cast(?1 as CHAR )`
-	 * 		* second		- defined as `extract(second from ?1)`
-	 * 		* minute		- defined as `extract(minute from ?1)`
-	 * 		* hour			- defined as `extract(hour from ?1)`
-	 * 		* day			- defined as `extract(day from ?1)`
-	 * 		* month			- defined as `extract(month from ?1)`
-	 * 		* year			- defined as `extract(year from ?1)`
+	 * 	    * ifnull        - two-argument synonym of coalesce(a, b)
+	 * 		* str           - synonym of cast(a as String)
+	 *
+	 * Finally, the following functions are defined as abbreviations
+	 * for extract(), and desugared by the parser:
+	 *
+	 * 		* second		- synonym of extract(second from a)
+	 * 		* minute		- synonym of extract(minute from a)
+	 * 		* hour			- synonym of extract(hour from a)
+	 * 		* day			- synonym of extract(day from a)
+	 * 		* month			- synonym of extract(month from a)
+	 * 		* year			- synonym of extract(year from a)
 	 *
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
@@ -334,7 +339,8 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.trigonometry(queryEngine);
 
-		//coalesce() function, must be redefined in terms of nvl() where not supported
+		//coalesce() function, must be redefined in terms of nvl() for platforms
+		//which don't support it natively
 
 		CommonFunctionFactory.coalesce(queryEngine);
 
@@ -373,7 +379,13 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.leastGreatest(queryEngine);
 
-		//legacy Hibernate convenience function for casting to string
+		//two-argument synonym for coalesce() supported on most but not every
+		//database, so define it here as an alias for coalesce(arg1,arg2)
+
+		queryEngine.getSqmFunctionRegistry().register("ifnull", new CoalesceIfnullEmulation());
+
+		//legacy Hibernate convenience function for casting to string, defined
+		//here as an alias for cast(arg as String)
 
 		queryEngine.getSqmFunctionRegistry().register("str", new CastStrEmulation());
 

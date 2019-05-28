@@ -394,8 +394,6 @@ expression
 	| MINUS expression							# UnaryMinusExpression
 	| PLUS expression							# UnaryPlusExpression
 	| caseStatement								# CaseExpression
-	| coalesce									# CoalesceExpression
-	| nullIf									# NullIfExpression
 	| literal									# LiteralExpression
 	| parameter									# ParameterExpression
 	| entityTypeReference						# EntityTypeExpression
@@ -441,12 +439,15 @@ leastFunction
 	: LEAST LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
 	;
 
-coalesce
+coalesceFunction
 	: COALESCE LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
-	| IFNULL LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
-nullIf
+ifnullFunction
+	: IFNULL LEFT_PAREN expression COMMA expression RIGHT_PAREN
+	;
+
+nullifFunction
 	: NULLIF LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
@@ -575,6 +576,9 @@ countFunction
 standardFunction
 	:	castFunction
 	|	extractFunction
+	|	coalesceFunction
+	|	ifnullFunction
+	|	nullifFunction
 	|	concatFunction
 	|	substringFunction
 	|   replaceFunction

@@ -1560,12 +1560,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmExpression visitCoalesceExpression(HqlParser.CoalesceExpressionContext ctx) {
+	public SqmExpression visitCoalesceFunction(HqlParser.CoalesceFunctionContext ctx) {
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
 
 		ExpressableType<?> type = null;
 
-		for ( HqlParser.ExpressionContext argument : ctx.coalesce().expression() ) {
+		for ( HqlParser.ExpressionContext argument : ctx.expression() ) {
 			SqmTypedNode arg = (SqmTypedNode) argument.accept(this);
 			arguments.add(arg);
 			//TODO: do something better here!
@@ -1582,11 +1582,24 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmExpression visitNullIfExpression(HqlParser.NullIfExpressionContext ctx) {
-		final SqmExpression arg1 = (SqmExpression) ctx.nullIf().expression( 0 ).accept( this );
-		final SqmExpression arg2 = (SqmExpression) ctx.nullIf().expression( 1 ).accept( this );
+	public SqmExpression visitNullifFunction(HqlParser.NullifFunctionContext ctx) {
+		final SqmExpression arg1 = (SqmExpression) ctx.expression( 0 ).accept( this );
+		final SqmExpression arg2 = (SqmExpression) ctx.expression( 1 ).accept( this );
 
 		return getFunctionTemplate("nullif").makeSqmFunctionExpression(
+				asList( arg1, arg2 ),
+				(AllowableFunctionReturnType) arg1.getExpressableType(),
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmExpression visitIfnullFunction(HqlParser.IfnullFunctionContext ctx) {
+		final SqmExpression arg1 = (SqmExpression) ctx.expression( 0 ).accept( this );
+		final SqmExpression arg2 = (SqmExpression) ctx.expression( 1 ).accept( this );
+
+		return getFunctionTemplate("ifnull").makeSqmFunctionExpression(
 				asList( arg1, arg2 ),
 				(AllowableFunctionReturnType) arg1.getExpressableType(),
 				creationContext.getQueryEngine(),

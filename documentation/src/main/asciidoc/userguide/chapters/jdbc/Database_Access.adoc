@@ -43,7 +43,9 @@ Otherwise, the no-arg form is used.
 === Driver Configuration
 `hibernate.connection.driver_class`:: The name of the JDBC Driver class to use
 `hibernate.connection.url`:: The JDBC connection url
-Any settings prefixed with `hibernate.connection.` (other than the "special ones"):: All such setting names will have the `hibernate.connection.` prefix stripped. The remaining name and the original value will be passed to the driver as a JDBC connection property
+`hibernate.connection.*`:: All such setting names (except the <<appendices/Configurations.adoc#configurations-database-connection,predefined ones>>) will have the `hibernate.connection.` prefix stripped. The remaining name and the original value will be passed to the driver as a JDBC connection property
+
+NOTE: Not all properties apply to all situations. For example, if you are providing a data source, `hibernate.connection.driver_class` setting will not be used.
 
 [[database-connectionprovider-c3p0]]
 === Using c3p0

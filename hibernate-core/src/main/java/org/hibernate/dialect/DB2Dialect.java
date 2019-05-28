@@ -27,8 +27,6 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.QueryEngine;
@@ -53,7 +51,6 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * @author Gavin King
  */
 public class DB2Dialect extends Dialect {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DB2Dialect.class );
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override

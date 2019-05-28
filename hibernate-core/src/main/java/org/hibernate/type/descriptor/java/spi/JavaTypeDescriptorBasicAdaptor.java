@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
@@ -42,14 +42,14 @@ public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractTypeDescriptor<T>
 	}
 
 	@Override
-	public <X> X unwrap(T value, Class<X> type, SharedSessionContractImplementor session) {
+	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException(
 				"Unwrap strategy not known for this Java type : " + getJavaType().getName()
 		);
 	}
 
 	@Override
-	public <X> T wrap(X value, SharedSessionContractImplementor session) {
+	public <X> T wrap(X value, WrapperOptions options) {
 		throw new UnsupportedOperationException(
 				"Wrap strategy not known for this Java type : " + getJavaType().getName()
 		);

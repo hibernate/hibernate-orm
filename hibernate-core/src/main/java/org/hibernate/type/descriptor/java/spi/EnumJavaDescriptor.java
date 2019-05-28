@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java.spi;
 import java.sql.Types;
 import javax.persistence.EnumType;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -52,13 +52,13 @@ public class EnumJavaDescriptor<E extends Enum> extends AbstractTypeDescriptor<E
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X> X unwrap(E value, Class<X> type, SharedSessionContractImplementor session) {
+	public <X> X unwrap(E value, Class<X> type, WrapperOptions options) {
 		return (X) value;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X> E wrap(X value, SharedSessionContractImplementor session) {
+	public <X> E wrap(X value, WrapperOptions options) {
 		return (E) value;
 	}
 

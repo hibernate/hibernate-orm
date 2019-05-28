@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.java.spi;
 
 import java.util.Map;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
@@ -37,12 +37,12 @@ public class MapEntryJavaDescriptor extends AbstractTypeDescriptor<Map.Entry> {
 	}
 
 	@Override
-	public <X> X unwrap(Map.Entry value, Class<X> type, SharedSessionContractImplementor session) {
+	public <X> X unwrap(Map.Entry value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException( "Unsupported attempt to unwrap Map.Entry value" );
 	}
 
 	@Override
-	public <X> Map.Entry wrap(X value, SharedSessionContractImplementor session) {
+	public <X> Map.Entry wrap(X value, WrapperOptions options) {
 		throw new UnsupportedOperationException( "Unsupported attempt to wrap Map.Entry value" );
 	}
 }

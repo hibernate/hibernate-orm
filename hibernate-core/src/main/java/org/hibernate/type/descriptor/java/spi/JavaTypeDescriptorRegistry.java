@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -171,7 +171,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		}
 
 		@Override
-		public <X> X unwrap(T value, Class<X> type, SharedSessionContractImplementor session) {
+		public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 			if ( type.equals( byte[].class ) ) {
 				throw new UnsupportedOperationException( "Cannot unwrap Serializable to format other than byte[]" );
 			}
@@ -181,7 +181,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public <X> T wrap(X value, SharedSessionContractImplementor session) {
+		public <X> T wrap(X value, WrapperOptions options) {
 			if ( value == null ) {
 				return null;
 			}

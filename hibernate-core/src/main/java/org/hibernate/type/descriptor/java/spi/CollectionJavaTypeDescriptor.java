@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
@@ -48,12 +48,12 @@ public class CollectionJavaTypeDescriptor<C> extends AbstractTypeDescriptor<C> {
 	}
 
 	@Override
-	public <X> X unwrap(C value, Class<X> type, SharedSessionContractImplementor session) {
+	public <X> X unwrap(C value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
-	public <X> C wrap(X value, SharedSessionContractImplementor session) {
+	public <X> C wrap(X value, WrapperOptions options) {
 		throw new UnsupportedOperationException(  );
 	}
 

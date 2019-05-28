@@ -2533,7 +2533,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final SqmPathSource<?> pluralAttribute = sqmFrom.getReferencedPathSource();
 
 		if ( !( pluralAttribute instanceof PluralPersistentAttribute ) ) {
-			throw new ParsingException( "Could not resolve identification variable [" + alias + "] as plural-attribute" )
+			throw new ParsingException( "Could not resolve identification variable [" + alias + "] as plural-attribute" );
 		}
 
 		//noinspection unchecked

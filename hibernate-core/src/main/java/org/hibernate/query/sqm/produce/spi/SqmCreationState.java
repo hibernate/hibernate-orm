@@ -7,10 +7,8 @@
 package org.hibernate.query.sqm.produce.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.annotations.Remove;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
-import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
 
 /**
  * Models the state pertaining to the creation of a single SQM.
@@ -38,31 +36,7 @@ public interface SqmCreationState {
 	 */
 	Stack<SqmCreationProcessingState> getProcessingStateStack();
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Would prefer to use NavigablePath to serve the role that uid currently
-	// serves
-
-	String generateUniqueIdentifier();
-
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Below are the methods we want to re-think in terms of how SQM creation
-	// happens - SqmPath, etc
-
-
-	/**
-	 * @deprecated we want to re-think in terms of how SQM creation happens
-	 */
-	@Remove
-	@Deprecated
-	ImplicitAliasGenerator getImplicitAliasGenerator();
-
-	/**
-	 * @deprecated we want to re-think in terms of how SQM creation happens
-	 */
-	@Remove
-	@Deprecated
-	SqmQuerySpecCreationProcessingState getCurrentQuerySpecProcessingState();
+	default SqmCreationProcessingState getCurrentProcessingState() {
+		return getProcessingStateStack().getCurrent();
+	}
 }

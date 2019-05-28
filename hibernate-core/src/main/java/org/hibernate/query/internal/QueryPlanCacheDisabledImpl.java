@@ -55,6 +55,11 @@ public class QueryPlanCacheDisabledImpl implements QueryPlanCache {
 	}
 
 	@Override
+	public boolean isEnabled() {
+		return false;
+	}
+
+	@Override
 	public void close() {
 	}
 }

@@ -73,12 +73,12 @@ import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.ReturnMetadata;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
-import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
+import org.hibernate.boot.spi.NamedNativeQueryMementoBuilder;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -894,8 +894,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		);
 	}
 
-	private NamedSQLQueryDefinition extractSqlQueryDefinition(NativeQuery nativeSqlQuery, String name) {
-		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder( name );
+	private NamedSQLQueryDefinition extractSqlQueryDefinition(org.hibernate.query.NativeQuery nativeSqlQuery, String name) {
+		final NamedNativeQueryMementoBuilder builder = new NamedNativeQueryMementoBuilder( name );
 		fillInNamedQueryBuilder( builder, nativeSqlQuery );
 		builder.setCallable( nativeSqlQuery.isCallable() )
 				.setQuerySpaces( nativeSqlQuery.getSynchronizedQuerySpaces() )
@@ -904,14 +904,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	private NamedHqlQueryMementoImpl extractHqlQueryDefinition(org.hibernate.query.Query hqlQuery, String name) {
-		final NamedQueryDefinitionBuilder builder = new NamedQueryDefinitionBuilder( name );
+		final NamedHqlQueryMemento.Builder builder = new NamedHqlQueryMemento.Builder( name );
 		fillInNamedQueryBuilder( builder, hqlQuery );
 		// LockOptions only valid for HQL/JPQL queries...
 		builder.setLockOptions( hqlQuery.getLockOptions().makeCopy() );
 		return builder.createNamedQueryDefinition();
 	}
 
-	private void fillInNamedQueryBuilder(NamedQueryDefinitionBuilder builder, org.hibernate.query.Query query) {
+	private void fillInNamedQueryBuilder(NamedHqlQueryMemento.Builder builder, org.hibernate.query.Query query) {
 		builder.setQuery( query.getQueryString() )
 				.setComment( query.getComment() )
 				.setCacheable( query.isCacheable() )

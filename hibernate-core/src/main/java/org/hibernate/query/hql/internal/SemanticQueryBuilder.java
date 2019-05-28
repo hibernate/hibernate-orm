@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -38,7 +39,8 @@ import org.hibernate.query.QueryLogger;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.UnaryArithmeticOperator;
-import org.hibernate.query.hql.DotIdentifierConsumer;
+import org.hibernate.query.hql.HqlInterpretationException;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.ParsingException;
@@ -47,15 +49,12 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
-import org.hibernate.query.sqm.produce.SqmProductionException;
-import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.internal.SqmDmlCreationProcessingState;
 import org.hibernate.query.sqm.produce.internal.SqmQuerySpecCreationProcessingStateStandardImpl;
 import org.hibernate.query.sqm.produce.internal.UniqueIdGenerator;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.produce.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
@@ -93,7 +92,6 @@ import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.DowncastLocation;
-import org.hibernate.query.sqm.tree.from.MutableUsageDetails;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -169,7 +167,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	private final ImplicitAliasGenerator implicitAliasGenerator;
 	private final UniqueIdGenerator uidGenerator;
 
-	private final Stack<DotIdentifierConsumer> identifierConsumerStack;
+	private final Stack<SemanticPathPart> semanticPathPartStack;
 
 	private final Stack<TreatHandler> treatHandlerStack = new StandardStack<>( new TreatHandlerNormal() );
 
@@ -190,9 +188,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		this.implicitAliasGenerator = new ImplicitAliasGenerator();
 		this.uidGenerator = new UniqueIdGenerator();
 
-		this.identifierConsumerStack = new StandardStack<>(
-				new BasicDotIdentifierConsumer( processingStateStack::getCurrent )
-		);
+		this.semanticPathPartStack = new StandardStack<>( new SemanticPathPartRoot() );
 	}
 
 	@Override
@@ -205,37 +201,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return creationOptions;
 	}
 
-	@Override
-	public ImplicitAliasGenerator getImplicitAliasGenerator() {
-		return implicitAliasGenerator;
-	}
-
-	@Override
-	public String generateUniqueIdentifier() {
-		return uidGenerator.generateUniqueId();
-	}
-
-	@Override
-	public SqmQuerySpecCreationProcessingState getCurrentQuerySpecProcessingState() {
-		final SqmCreationProcessingState current = processingStateStack.getCurrent();
-		if ( current instanceof SqmQuerySpecCreationProcessingState ) {
-			return (SqmQuerySpecCreationProcessingState) current;
-		}
-
-		throw new UnsupportedOperationException( "Current processing state is not related to a SqmQuerySpec : " + current );
-	}
-
-	protected <T> void primeStack(Stack<T> stack, T initialValue) {
-		stack.push( initialValue );
-	}
-
 	protected Stack<ParameterDeclarationContext> getParameterDeclarationContextStack() {
 		return parameterDeclarationContextStack;
 	}
 
-	protected Stack<DotIdentifierConsumer> getIdentifierConsumerStack() {
-		return identifierConsumerStack;
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grammar rules
@@ -322,13 +291,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		processingStateStack.push( new SqmDmlCreationProcessingState( insertStatement, this ) );
 
 		try {
-			String alias = getImplicitAliasGenerator().generateUniqueImplicitAlias();
-			log.debugf(
-					"Generated implicit alias [%s] for INSERT target [%s]",
-					alias,
-					targetType.getHibernateEntityName()
-			);
-
 			insertStatement.setSelectQuerySpec( visitQuerySpec( ctx.querySpec() ) );
 
 			for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.insertSpec().targetFieldsSpec().dotIdentifierSequence() ) {
@@ -498,9 +460,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmSelectClause visitSelectClause(HqlParser.SelectClauseContext ctx) {
 		treatHandlerStack.push( new TreatHandlerNormal( DowncastLocation.SELECT ) );
 
-		identifierConsumerStack.push(
-				new SelectClauseDotIdentifierConsumer( this::getCurrentQuerySpecProcessingState )
-		);
+		// todo (6.0) : primer a select-clause-specific SemanticPathPart into the stack
 
 		try {
 			final SqmSelectClause selectClause = new SqmSelectClause(
@@ -513,7 +473,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return selectClause;
 		}
 		finally {
-			identifierConsumerStack.pop();
 			treatHandlerStack.pop();
 		}
 	}
@@ -530,7 +489,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				creationContext.getNodeBuilder()
 		);
 
-		getCurrentQuerySpecProcessingState().registerSelection( selection );
+		getProcessingStateStack().getCurrent().getPathRegistry().register( selection );
 
 		return selection;
 	}
@@ -737,7 +696,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmExpression visitSortExpression(HqlParser.SortExpressionContext ctx) {
 		if ( ctx.INTEGER_LITERAL() != null ) {
 			final int position = Integer.parseInt( ctx.INTEGER_LITERAL().getText() );
-			final SqmSelection selection = getCurrentQuerySpecProcessingState().findSelectionByPosition( position );
+			final SqmSelection selection = getCurrentProcessingState().getPathRegistry().findSelectionByPosition( position );
 			if ( selection != null ) {
 				final SqmSelectableNode selectableNode = selection.getSelectableNode();
 				if ( selectableNode instanceof SqmExpression ) {
@@ -749,22 +708,13 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 
 		if ( ctx.identifier() != null ) {
-			final SqmSelection selection = getCurrentQuerySpecProcessingState().findSelectionByAlias( ctx.identifier().getText() );
+			final SqmSelection selection = getCurrentProcessingState().getPathRegistry().findSelectionByAlias( ctx.identifier().getText() );
 			if ( selection != null ) {
 				final SqmSelectableNode selectableNode = selection.getSelectableNode();
 				if ( selectableNode instanceof SqmExpression ) {
 					return (SqmExpression) selectableNode;
 				}
 			}
-
-			final DotIdentifierConsumer dotIdentifierConsumer = identifierConsumerStack.getCurrent();
-			dotIdentifierConsumer.consumeIdentifier(
-					ctx.identifier().getText(),
-					true,
-					true
-			);
-
-			return (SqmExpression) dotIdentifierConsumer.getConsumedPart();
 		}
 
 		return (SqmExpression) ctx.expression().accept( this );
@@ -1012,15 +962,14 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		final String alias = visitIdentificationVariableDef( parserJoin.qualifiedJoinRhs().identificationVariableDef() );
 
-		final DotIdentifierConsumer identifierConsumer = new QualifiedJoinPathIdentifierConsumer(
-				joinType,
-				parserJoin.FETCH() != null,
-				alias,
-				sqmRoot,
-				processingStateStack.getCurrent()
-		);
-
-		identifierConsumerStack.push( identifierConsumer );
+		semanticPathPartStack.push(
+				new SemanticPathPartQualifiedJoinPath(
+						sqmRoot,
+						joinType,
+						parserJoin.FETCH() != null,
+						alias
+				)
+		 );
 
 		try {
 			final SqmQualifiedJoin join = (SqmQualifiedJoin) parserJoin.qualifiedJoinRhs().path().accept( this );
@@ -1052,23 +1001,17 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			processingStateStack.getCurrent().getPathRegistry().register( join );
 
 			if ( parserJoin.qualifiedJoinPredicate() != null ) {
-				identifierConsumerStack.push(
-						new QualifiedJoinPredicateDotIdentifierConsumer(
-								processingStateStack::getCurrent,
-								join,
-								parserJoin.qualifiedJoinPredicate().getText()
-						)
-				);
+				semanticPathPartStack.push( new SemanticPathPartJoinPredicate( join ) );
 				try {
 					join.setJoinPredicate( (SqmPredicate) parserJoin.qualifiedJoinPredicate().predicate().accept( this ) );
 				}
 				finally {
-					identifierConsumerStack.pop();
+					semanticPathPartStack.pop();
 				}
 			}
 		}
 		finally {
-			identifierConsumerStack.pop();
+			semanticPathPartStack.pop();
 		}
 	}
 
@@ -2258,7 +2201,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				);
 			}
 			default: {
-				throw new SqmProductionException( "unrecognized cast target type: " + text);
+				throw new HqlInterpretationException( "unrecognized cast target type: " + text);
 			}
 		}
 	}
@@ -2649,18 +2592,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		if ( ctx.syntacticDomainPath() != null ) {
 			final SemanticPathPart syntacticNavigablePathResult = visitSyntacticDomainPath( ctx.syntacticDomainPath() );
 			if ( ctx.pathContinuation() != null ) {
-				identifierConsumerStack.push(
-						new BasicDotIdentifierConsumer( syntacticNavigablePathResult, processingStateStack::getCurrent ) {
-							@Override
-							protected void reset() {
-							}
-						}
-				);
+				semanticPathPartStack.push( syntacticNavigablePathResult );
 				try {
 					return (SemanticPathPart) ctx.pathContinuation().accept( this );
 				}
 				finally {
-					identifierConsumerStack.pop();
+					semanticPathPartStack.pop();
 				}
 			}
 			return syntacticNavigablePathResult;
@@ -2706,26 +2643,26 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final int numberOfContinuations = ctx.dotIdentifierSequenceContinuation().size();
 		final boolean hasContinuations = numberOfContinuations != 0;
 
-		final DotIdentifierConsumer dotIdentifierConsumer = identifierConsumerStack.getCurrent();
+		final SemanticPathPart currentPathPart = semanticPathPartStack.getCurrent();
 
-		dotIdentifierConsumer.consumeIdentifier(
+		SemanticPathPart result = currentPathPart.resolvePathPart(
 				ctx.identifier().getText(),
-				true,
-				! hasContinuations
+				!hasContinuations,
+				this
 		);
 
 		if ( hasContinuations ) {
 			int i = 1;
 			for ( HqlParser.DotIdentifierSequenceContinuationContext continuation : ctx.dotIdentifierSequenceContinuation() ) {
-				dotIdentifierConsumer.consumeIdentifier(
+				result = result.resolvePathPart(
 						continuation.identifier().getText(),
-						false,
-						i++ >= numberOfContinuations
+						i++ >= numberOfContinuations,
+						this
 				);
 			}
 		}
 
-		return dotIdentifierConsumer.getConsumedPart();
+		return result;
 	}
 
 	@Override
@@ -2743,15 +2680,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		SqmPath<?> result = resolveTreatedPath( sqmPath, treatTarget );
 
 		if ( ctx.pathContinuation() != null ) {
-			identifierConsumerStack.push(
-					new BasicDotIdentifierConsumer( sqmPath, processingStateStack::getCurrent )
-			);
-
+			semanticPathPartStack.push( result );
 			try {
 				result = consumeDomainPath( ctx.pathContinuation().dotIdentifierSequence() );
 			}
 			finally {
-				identifierConsumerStack.pop();
+				semanticPathPartStack.pop();
 			}
 		}
 
@@ -2820,9 +2754,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 
 	private SqmPath consumeDomainPath(HqlParser.PathContext parserPath) {
-		parserPath.accept( this );
-		final DotIdentifierConsumer dotIdentifierConsumer = identifierConsumerStack.getCurrent();
-		final SemanticPathPart consumedPart = dotIdentifierConsumer.getConsumedPart();
+		final SemanticPathPart consumedPart = (SemanticPathPart) parserPath.accept( this );
 		if ( consumedPart instanceof SqmPath ) {
 			return (SqmPath) consumedPart;
 		}
@@ -2832,9 +2764,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 
 	private SqmPath consumeDomainPath(HqlParser.DotIdentifierSequenceContext sequence) {
-		sequence.accept( this );
-		final DotIdentifierConsumer dotIdentifierConsumer = identifierConsumerStack.getCurrent();
-		final SemanticPathPart consumedPart = dotIdentifierConsumer.getConsumedPart();
+		final SemanticPathPart consumedPart = (SemanticPathPart) sequence.accept( this );
 		if ( consumedPart instanceof SqmPath ) {
 			return (SqmPath) consumedPart;
 		}
@@ -2886,7 +2816,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		public void addDowncast(
 				SqmFrom sqmFrom,
 				IdentifiableDomainType downcastTarget) {
-			( (MutableUsageDetails) sqmFrom.getUsageDetails() ).addDownCast( false, downcastTarget, downcastLocation );
+//			( (MutableUsageDetails) sqmFrom.getUsageDetails() ).addDownCast( false, downcastTarget, downcastLocation );
+			throw new NotYetImplementedFor6Exception();
 		}
 	}
 
@@ -2895,7 +2826,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		public void addDowncast(
 				SqmFrom sqmFrom,
 				IdentifiableDomainType downcastTarget) {
-			( (MutableUsageDetails) sqmFrom.getUsageDetails() ).addDownCast( true, downcastTarget, DowncastLocation.FROM );
+//			( (MutableUsageDetails) sqmFrom.getUsageDetails() ).addDownCast( true, downcastTarget, DowncastLocation.FROM );
+			throw new NotYetImplementedFor6Exception();
 		}
 	}
 }

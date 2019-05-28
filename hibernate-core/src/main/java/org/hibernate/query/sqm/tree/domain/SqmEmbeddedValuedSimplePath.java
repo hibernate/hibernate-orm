@@ -14,8 +14,8 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.SqmPathRegistry;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -50,7 +50,6 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		final SqmPathSource<?> subPathSource = getReferencedPathSource().findSubPathSource( name );

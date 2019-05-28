@@ -15,7 +15,7 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -88,7 +88,6 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	@Override
 	default SqmPath resolveIndexedAccess(
 			SqmExpression selector,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new SemanticException( "Non-plural path [" + currentContextKey + "] cannot be index-accessed" );

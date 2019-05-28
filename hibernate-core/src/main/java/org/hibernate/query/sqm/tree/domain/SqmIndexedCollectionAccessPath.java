@@ -13,7 +13,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -57,7 +57,6 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		final SqmPathSource subPathSource = getReferencedPathSource().getElementPathSource().findSubPathSource( name );

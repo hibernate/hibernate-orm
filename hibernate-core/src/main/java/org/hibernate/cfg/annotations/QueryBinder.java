@@ -23,15 +23,19 @@ import org.hibernate.LockMode;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.QueryHints;
+import org.hibernate.boot.internal.NamedHqlQueryMappingImpl;
+import org.hibernate.boot.internal.NamedNativeQueryMappingImpl;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.NamedHqlQueryMapping;
+import org.hibernate.boot.spi.NamedNativeQueryMapping;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
-import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
+import org.hibernate.boot.spi.NamedNativeQueryMementoBuilder;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 
 import org.jboss.logging.Logger;
 
@@ -47,36 +51,40 @@ public abstract class QueryBinder {
 			NamedQuery queryAnn,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		if ( queryAnn == null ) return;
+		if ( queryAnn == null ) {
+			return;
+		}
+
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
-		//EJBQL Query
-		QueryHintDefinition hints = new QueryHintDefinition( queryAnn.hints() );
-		String queryName = queryAnn.query();
-		NamedHqlQueryMementoImpl queryDefinition = new NamedQueryDefinitionBuilder( queryAnn.name() )
-				.setLockOptions( hints.determineLockOptions( queryAnn ) )
-				.setQuery( queryName )
-				.setCacheable( hints.getBoolean( queryName, QueryHints.CACHEABLE ) )
-				.setCacheRegion( hints.getString( queryName, QueryHints.CACHE_REGION ) )
-				.setTimeout( hints.getTimeout( queryName ) )
-				.setFetchSize( hints.getInteger( queryName, QueryHints.FETCH_SIZE ) )
-				.setFlushMode( hints.getFlushMode( queryName ) )
-				.setCacheMode( hints.getCacheMode( queryName ) )
-				.setReadOnly( hints.getBoolean( queryName, QueryHints.READ_ONLY ) )
-				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
-				.setParameterTypes( null )
-				.createNamedQueryDefinition();
 
-		if ( isDefault ) {
-			context.getMetadataCollector().addDefaultQuery( queryDefinition );
-		}
-		else {
-			context.getMetadataCollector().addNamedQuery( queryDefinition );
-		}
+		final String queryName = queryAnn.name();
+		final String queryString = queryAnn.query();
 
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding named query: %s => %s", queryDefinition.getName(), queryDefinition.getQueryString() );
+			LOG.debugf( "Binding named query: %s => %s", queryName, queryString );
+		}
+
+		final QueryHintDefinition hints = new QueryHintDefinition( queryName, queryAnn.hints() );
+
+		final NamedHqlQueryMapping queryMapping = new NamedHqlQueryMappingImpl.Builder( queryName, queryString )
+				.setCacheable( hints.getCacheability() )
+				.setCacheMode( hints.getCacheMode() )
+				.setCacheRegion( hints.getString( QueryHints.CACHE_REGION ) )
+				.setTimeout( hints.getTimeout() )
+				.setFetchSize( hints.getInteger( QueryHints.FETCH_SIZE ) )
+				.setFlushMode( hints.getFlushMode() )
+				.setReadOnly( hints.getBoolean( QueryHints.READ_ONLY ) )
+				.setLockOptions( hints.determineLockOptions( queryAnn ) )
+				.setComment( hints.getString( QueryHints.COMMENT ) )
+				.build();
+
+		if ( isDefault ) {
+			context.getMetadataCollector().addDefaultQuery( queryMapping );
+		}
+		else {
+			context.getMetadataCollector().addNamedQuery( queryMapping );
 		}
 	}
 
@@ -86,28 +94,35 @@ public abstract class QueryBinder {
 			NamedNativeQuery queryAnn,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		if ( queryAnn == null ) return;
-		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
+		if ( queryAnn == null ) {
+			return;
+		}
+
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
+
+		final String queryName = queryAnn.name();
+		final String queryString = queryAnn.query();
+
+		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
 		String resultSetMapping = queryAnn.resultSetMapping();
-		QueryHintDefinition hints = new QueryHintDefinition( queryAnn.hints() );
-		String queryName = queryAnn.query();
-		
-		NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder( queryAnn.name() )
-				.setQuery( queryName )
+		QueryHintDefinition hints = new QueryHintDefinition( queryName, queryAnn.hints() );
+
+		new NamedNativeQueryMappingImpl.Builder( queryName )
+				.setSqlString( queryString )
+				// todo (6.0) : add support for supplying synchronized query-spaces
 				.setQuerySpaces( null )
-				.setCacheable( hints.getBoolean( queryName, QueryHints.CACHEABLE ) )
-				.setCacheRegion( hints.getString( queryName, QueryHints.CACHE_REGION ) )
-				.setTimeout( hints.getTimeout( queryName ) )
-				.setFetchSize( hints.getInteger( queryName, QueryHints.FETCH_SIZE ) )
-				.setFlushMode( hints.getFlushMode( queryName ) )
-				.setCacheMode( hints.getCacheMode( queryName ) )
-				.setReadOnly( hints.getBoolean( queryName, QueryHints.READ_ONLY ) )
+				.setCacheable( hints.getCacheability() )
+				.setCacheMode( hints.getCacheMode() )
+				.setCacheRegion( hints.getString( QueryHints.CACHE_REGION ) )
+				.setTimeout( hints.getTimeout() )
+				.setFetchSize( hints.getInteger( QueryHints.FETCH_SIZE ) )
+				.setFlushMode( hints.getFlushMode() )
+				.setReadOnly( hints.getBoolean( QueryHints.READ_ONLY ) )
 				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
 				.setParameterTypes( null )
-				.setCallable( hints.getBoolean( queryName, QueryHints.CALLABLE ) );
+				.bu
 		
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
@@ -124,9 +139,9 @@ public abstract class QueryBinder {
 		else {
 			builder.setQueryReturns( new NativeSQLQueryReturn[0] );
 		}
-		
+
 		NamedSQLQueryDefinition query = builder.createNamedQueryDefinition();
-		
+
 		if ( isDefault ) {
 			context.getMetadataCollector().addDefaultNamedNativeQuery( query );
 		}
@@ -154,7 +169,7 @@ public abstract class QueryBinder {
 		String resultSetMapping = queryAnn.resultSetMapping();
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
-			query = new NamedSQLQueryDefinitionBuilder().setName( queryAnn.name() )
+			query = new NamedNativeQueryMementoBuilder().setName( queryAnn.name() )
 					.setQuery( queryAnn.query() )
 					.setResultSetRef( resultSetMapping )
 					.setQuerySpaces( null )
@@ -179,7 +194,7 @@ public abstract class QueryBinder {
 			//FIXME should be done in a second pass due to entity name?
 			final NativeSQLQueryRootReturn entityQueryReturn =
 					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
-			query = new NamedSQLQueryDefinitionBuilder().setName( queryAnn.name() )
+			query = new NamedNativeQueryMementoBuilder().setName( queryAnn.name() )
 					.setQuery( queryAnn.query() )
 					.setQueryReturns( new NativeSQLQueryReturn[] {entityQueryReturn} )
 					.setQuerySpaces( null )
@@ -257,7 +272,7 @@ public abstract class QueryBinder {
 		FlushMode flushMode;
 		flushMode = getFlushMode( queryAnn.flushMode() );
 
-		NamedHqlQueryMementoImpl query = new NamedQueryDefinitionBuilder().setName( queryAnn.name() )
+		NamedHqlQueryMementoImpl query = new NamedHqlQueryMemento.Builder().setName( queryAnn.name() )
 				.setQuery( queryAnn.query() )
 				.setCacheable( queryAnn.cacheable() )
 				.setCacheRegion(

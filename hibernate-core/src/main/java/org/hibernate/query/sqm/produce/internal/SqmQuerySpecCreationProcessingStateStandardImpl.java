@@ -45,7 +45,7 @@ public class SqmQuerySpecCreationProcessingStateStandardImpl
 
 	@Override
 	public void registerSelection(SqmSelection selection) {
-		getProcessingIndex().registerSelection( selection );
+		getProcessingIndex().register( selection );
 	}
 
 	@Override

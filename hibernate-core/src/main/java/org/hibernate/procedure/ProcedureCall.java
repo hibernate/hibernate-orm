@@ -14,6 +14,7 @@ import javax.persistence.StoredProcedureQuery;
 import org.hibernate.BasicQueryContract;
 import org.hibernate.MappingException;
 import org.hibernate.SynchronizeableQuery;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.CommonQueryContract;
 
 /**

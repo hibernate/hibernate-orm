@@ -15,7 +15,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 
 /**
@@ -65,7 +65,6 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	@SuppressWarnings("unchecked")
 	public SemanticPathPart resolvePathPart(
 			String name,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		// this is a reference to a collection outside of the from-clause...

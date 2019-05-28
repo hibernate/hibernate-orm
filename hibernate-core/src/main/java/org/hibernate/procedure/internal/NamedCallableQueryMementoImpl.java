@@ -11,53 +11,73 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.ParameterMode;
 
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.NamedCallableQueryMemento;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.query.QueryParameter;
+import org.hibernate.query.spi.AbstractNamedQueryMemento;
+import org.hibernate.query.spi.ParameterMemento;
 import org.hibernate.type.Type;
 
 /**
- * Implementation of ProcedureCallMemento
+ * Implementation of NamedCallableQueryMemento
  *
  * @author Steve Ebersole
  */
-public class NamedCallableQueryMementoImpl implements NamedCallableQueryMemento {
-	private final String procedureName;
-	private final NativeSQLQueryReturn[] queryReturns;
-
+public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento implements NamedCallableQueryMemento {
+	private final String callableName;
 	private final ParameterStrategy parameterStrategy;
-	private final List<ParameterMemento> parameterDeclarations;
+	private final Class[] resultClasses;
+	private final String[] resultSetMappingNames;
+	private final Set<String> querySpaces;
 
-	private final Set<String> synchronizedQuerySpaces;
-
-	private final Map<String, Object> hintsMap;
 
 	/**
 	 * Constructs a ProcedureCallImpl
-	 *
-	 * @param procedureName The name of the procedure to be called
-	 * @param queryReturns The result mappings
-	 * @param parameterStrategy Are parameters named or positional?
-	 * @param parameterDeclarations The parameters registrations
-	 * @param synchronizedQuerySpaces Any query spaces to synchronize on execution
-	 * @param hintsMap Map of JPA query hints
 	 */
 	public NamedCallableQueryMementoImpl(
-			String procedureName,
-			NativeSQLQueryReturn[] queryReturns,
+			String name,
+			String callableName,
 			ParameterStrategy parameterStrategy,
-			List<ParameterMemento> parameterDeclarations,
-			Set<String> synchronizedQuerySpaces,
-			Map<String, Object> hintsMap) {
-		this.procedureName = procedureName;
-		this.queryReturns = queryReturns;
+			List<CallableParameterMemento> parameterMementos,
+			Class[] resultClasses,
+			String[] resultSetMappingNames,
+			Set<String> querySpaces,
+			Boolean cacheable,
+			String cacheRegion,
+			CacheMode cacheMode,
+			FlushMode flushMode,
+			Boolean readOnly,
+			LockOptions lockOptions,
+			Integer timeout,
+			Integer fetchSize,
+			String comment,
+			Map<String, Object> hints) {
+		super(
+				name,
+				parameterMementos,
+				cacheable,
+				cacheRegion,
+				cacheMode,
+				flushMode,
+				readOnly,
+				lockOptions,
+				timeout,
+				fetchSize,
+				comment,
+				hints
+		);
+		this.callableName = callableName;
 		this.parameterStrategy = parameterStrategy;
-		this.parameterDeclarations = parameterDeclarations;
-		this.synchronizedQuerySpaces = synchronizedQuerySpaces;
-		this.hintsMap = hintsMap;
+		this.resultClasses = resultClasses;
+		this.resultSetMappingNames = resultSetMappingNames;
+		this.querySpaces = querySpaces;
 	}
 
 	@Override
@@ -65,8 +85,8 @@ public class NamedCallableQueryMementoImpl implements NamedCallableQueryMemento 
 		return new ProcedureCallImpl( session, this );
 	}
 
-	public String getProcedureName() {
-		return procedureName;
+	public String getCallableName() {
+		return callableName;
 	}
 
 	public NativeSQLQueryReturn[] getQueryReturns() {
@@ -93,7 +113,7 @@ public class NamedCallableQueryMementoImpl implements NamedCallableQueryMemento 
 	/**
 	 * A "disconnected" copy of the metadata for a parameter, that can be used in ProcedureCallMementoImpl.
 	 */
-	public static class ParameterMemento {
+	public static class CallableParameterMemento implements ParameterMemento {
 		private final Integer position;
 		private final String name;
 		private final ParameterMode mode;
@@ -111,7 +131,7 @@ public class NamedCallableQueryMementoImpl implements NamedCallableQueryMemento 
 		 * @param hibernateType The Hibernate Type.
 		 * @param passNulls Should NULL values to passed to the database?
 		 */
-		public ParameterMemento(
+		public CallableParameterMemento(
 				int position,
 				String name,
 				ParameterMode mode,
@@ -148,6 +168,11 @@ public class NamedCallableQueryMementoImpl implements NamedCallableQueryMemento 
 
 		public boolean isPassNullsEnabled() {
 			return passNulls;
+		}
+
+		@Override
+		public QueryParameter toQueryParameter(SharedSessionContractImplementor session) {
+			return null;
 		}
 
 		/**

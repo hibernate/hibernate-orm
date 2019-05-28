@@ -55,10 +55,9 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	@Override
 	public SqmPath resolveIndexedAccess(
 			SqmExpression selector,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		return getWrappedPath().resolveIndexedAccess( selector, currentContextKey, isTerminal, creationState );
+		return getWrappedPath().resolveIndexedAccess( selector, isTerminal, creationState );
 	}
 
 	@Override

@@ -15,7 +15,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
-import org.hibernate.query.sqm.produce.SqmPathRegistry;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;

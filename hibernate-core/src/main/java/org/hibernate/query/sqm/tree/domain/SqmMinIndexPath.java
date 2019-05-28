@@ -11,7 +11,7 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 
 /**
@@ -46,7 +46,6 @@ public class SqmMinIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		return indexPathSource.createSqmPath( this, creationState );

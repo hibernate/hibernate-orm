@@ -9,7 +9,6 @@ package org.hibernate.query;
 import java.util.Objects;
 
 import org.hibernate.DotIdentifierSequence;
-import org.hibernate.internal.util.Loggable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
@@ -21,7 +20,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
  *
  * @author Steve Ebersole
  */
-public class NavigablePath implements DotIdentifierSequence, Loggable {
+public class NavigablePath implements DotIdentifierSequence {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 
 	private final NavigablePath parent;

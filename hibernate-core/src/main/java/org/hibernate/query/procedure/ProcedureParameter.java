@@ -34,7 +34,14 @@ public interface ProcedureParameter<T> extends QueryParameter<T> {
 	 * that it is ignored.
 	 *
 	 * @see ParameterRegistrationImplementor#isPassNullsEnabled()
+	 *
+	 * @deprecated (since 6.0) : Passing null or not is now triggered by whether
+	 * setting the parameter was called at all.  In other words a distinction is
+	 * made between calling `setParameter` passing {@code null} versus not calling
+	 * `setParameter` at all.  In the first case, we pass along the {@code null}; in
+	 * the second we do not pass {@code null}.
 	 */
+	@Deprecated
 	boolean isPassNullsEnabled();
 
 	/**
@@ -44,6 +51,9 @@ public interface ProcedureParameter<T> extends QueryParameter<T> {
 	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
 	 *
 	 * @see org.hibernate.procedure.ParameterRegistration#enablePassingNulls
+	 *
+	 * @deprecated (since 6.0) : see {@link #isPassNullsEnabled}
 	 */
+	@Deprecated
 	void enablePassingNulls(boolean enabled);
 }

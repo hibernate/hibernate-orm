@@ -23,7 +23,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.procedure.NamedCallableQueryMemento;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -49,7 +49,7 @@ public class NamedProcedureCallDefinition {
 	NamedProcedureCallDefinition(NamedStoredProcedureQuery annotation) {
 		this.registeredName = annotation.name();
 		this.procedureName = annotation.procedureName();
-		this.hints = new QueryHintDefinition( annotation.hints() ).getHintsMap();
+		this.hints = new QueryHintDefinition( queryName, annotation.hints() ).getHintsMap();
 		this.resultClasses = annotation.resultClasses();
 		this.resultSetMappings = annotation.resultSetMappings();
 

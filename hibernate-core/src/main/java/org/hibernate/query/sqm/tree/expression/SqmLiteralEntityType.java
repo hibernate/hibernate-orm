@@ -6,15 +6,19 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.query.hql.HqlInterpretationException;
+import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Represents an reference to an entity type as a literal.  This is the JPA
@@ -25,26 +29,28 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqmLiteralEntityType<T> extends AbstractSqmExpression<T> implements DomainResultProducer {
-	private final EntityValuedExpressableType<T> entityType;
+public class SqmLiteralEntityType<T>
+		extends AbstractSqmExpression<T>
+		implements DomainResultProducer, SemanticPathPart {
+	private final EntityDomainType<T> entityType;
 
-	public SqmLiteralEntityType(EntityValuedExpressableType<T> entityType, NodeBuilder nodeBuilder) {
+	public SqmLiteralEntityType(EntityDomainType<T> entityType, NodeBuilder nodeBuilder) {
 		super( entityType, nodeBuilder );
 		this.entityType = entityType;
 	}
 
 	@Override
 	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getNodeType().getJavaTypeDescriptor();
+		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override
-	public EntityValuedExpressableType<T> getNodeType() {
+	public EntityDomainType<T> getNodeType() {
 		return entityType;
 	}
 
 	@Override
-	public void internalApplyInferableType(ExpressableType<?> type) {
+	public void internalApplyInferableType(SqmExpressable<?> type) {
 	}
 
 	@Override
@@ -64,5 +70,21 @@ public class SqmLiteralEntityType<T> extends AbstractSqmExpression<T> implements
 	@Override
 	public String asLoggableText() {
 		return "TYPE(" + entityType + ")";
+	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		throw new HqlInterpretationException( "Cannot dereference an entity name" );
+	}
+
+	@Override
+	public SqmPath resolveIndexedAccess(
+			SqmExpression selector,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		throw new HqlInterpretationException( "Cannot dereference an entity name" );
 	}
 }

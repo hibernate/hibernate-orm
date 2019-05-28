@@ -9,7 +9,6 @@ package org.hibernate.procedure;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
-import org.hibernate.query.QueryParameter;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.type.Type;
 
@@ -72,8 +71,11 @@ public interface ParameterRegistration<T> extends ProcedureParameter<T> {
 	 * The (global) default this setting is defined by {@link org.hibernate.cfg.AvailableSettings#PROCEDURE_NULL_PARAM_PASSING}
 	 *
 	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
+	 *
+	 * @deprecated (since 6.0) : see {@link #isPassNullsEnabled}
 	 */
 	@Override
+	@Deprecated
 	void enablePassingNulls(boolean enabled);
 
 	/**

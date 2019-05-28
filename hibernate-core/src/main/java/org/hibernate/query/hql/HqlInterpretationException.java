@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce;
+package org.hibernate.query.hql;
 
 import org.hibernate.HibernateException;
 
@@ -14,12 +14,12 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public class SqmProductionException extends HibernateException {
-	public SqmProductionException(String message) {
+public class HqlInterpretationException extends HibernateException {
+	public HqlInterpretationException(String message) {
 		super( message );
 	}
 
-	public SqmProductionException(String message, Throwable cause) {
+	public HqlInterpretationException(String message, Throwable cause) {
 		super( message, cause );
 	}
 }

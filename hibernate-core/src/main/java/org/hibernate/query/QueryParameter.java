@@ -4,10 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.query;
-
-import javax.persistence.ParameterMode;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -21,18 +18,6 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
  */
 @Incubating
 public interface QueryParameter<T> extends javax.persistence.Parameter<T> {
-	/**
-	 * Is this a {@code IN}, {@code OUT} or {@code INOUT} parameter.
-	 * <p/>
-	 * Only really pertinent in regards to procedure/function calls.  In all
-	 * other cases the mode would be {@link ParameterMode#IN}
-	 *
-	 * @return The parameter mode.
-	 */
-	default ParameterMode getMode() {
-		return ParameterMode.IN;
-	}
-
 	/**
 	 * Does this parameter allow multi-valued (collection, array, etc) binding?
 	 * <p/>

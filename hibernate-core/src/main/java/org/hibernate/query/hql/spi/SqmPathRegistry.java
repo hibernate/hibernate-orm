@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce;
+package org.hibernate.query.hql.spi;
 
 import java.util.function.Function;
 
@@ -12,6 +12,7 @@ import org.hibernate.Incubating;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 /**
  * Registry for SqmPath references providing the ability to access them
@@ -23,6 +24,12 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 @Incubating
 public interface SqmPathRegistry {
 	void register(SqmPath sqmPath);
+
+	SqmSelection findSelectionByAlias(String alias);
+
+	SqmSelection findSelectionByPosition(int position);
+
+	void register(SqmSelection selection);
 
 	/**
 	 * Find a SqmFrom by its identification variable (alias).  Will search any

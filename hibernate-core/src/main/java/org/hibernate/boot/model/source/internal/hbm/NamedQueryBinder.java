@@ -22,12 +22,11 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.cfg.SecondPass;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
-import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
+import org.hibernate.boot.spi.NamedNativeQueryMementoBuilder;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -74,7 +73,7 @@ public class NamedQueryBinder {
 			);
 		}
 		context.getMetadataCollector().addNamedQuery(
-				new NamedQueryDefinitionBuilder()
+				new NamedHqlQueryMemento.Builder()
 						.setName( prefix + namedQueryBinding.getName() )
 						.setQuery( query )
 						.setComment( namedQueryBinding.getComment() )
@@ -101,7 +100,7 @@ public class NamedQueryBinder {
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			String prefix) {
 		final String queryName = prefix + namedQueryBinding.getName();
-		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder()
+		final NamedNativeQueryMementoBuilder builder = new NamedNativeQueryMementoBuilder()
 				.setName( queryName )
 				.setComment( namedQueryBinding.getComment() )
 				.setCacheable( namedQueryBinding.isCacheable() )
@@ -190,7 +189,7 @@ public class NamedQueryBinder {
 
 	private static boolean processNamedQueryContentItem(
 			Object content,
-			NamedSQLQueryDefinitionBuilder builder,
+			NamedNativeQueryMementoBuilder builder,
 			ImplicitResultSetMappingDefinition.Builder implicitResultSetMappingBuilder,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			HbmLocalMetadataBuildingContext context) {

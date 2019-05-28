@@ -21,19 +21,23 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.QueryHints;
 import org.hibernate.internal.util.LockModeConverter;
+import org.hibernate.internal.util.config.ConfigurationException;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
 public class QueryHintDefinition {
+	private final String queryName;
 	private final Map<String, Object> hintsMap;
 
-	public QueryHintDefinition(final QueryHint[] hints) {
+	public QueryHintDefinition(String queryName, final QueryHint[] hints) {
+		this.queryName = queryName;
 		if ( hints == null || hints.length == 0 ) {
 			hintsMap = Collections.emptyMap();
 		}
 		else {
-			final Map<String, Object> hintsMap = new HashMap<String, Object>();
+			final Map<String, Object> hintsMap = new HashMap<>();
 			for ( QueryHint hint : hints ) {
 				hintsMap.put( hint.name(), hint.value() );
 			}
@@ -42,31 +46,74 @@ public class QueryHintDefinition {
 	}
 
 
-	public CacheMode getCacheMode(String query) {
-		String hitName = QueryHints.CACHE_MODE;
-		String value =(String) hintsMap.get( hitName );
-		if ( value == null ) {
-			return null;
-		}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Generic access
+
+	public Map<String, Object> getHintsMap() {
+		return hintsMap;
+	}
+
+	public String getString(String hintName) {
+		return (String) hintsMap.get( hintName );
+	}
+
+	public boolean getBoolean(String hintName) {
 		try {
-			return CacheMode.interpretExternalSetting( value );
+			return ConfigurationHelper.getBoolean( hintName, hintsMap );
 		}
-		catch ( MappingException e ) {
-			throw new AnnotationException( "Unknown CacheMode in hint: " + query + ":" + hitName, e );
+		catch (Exception e) {
+			throw new AnnotationException( "Named query hint [" + hintName + "] is not a boolean: " + queryName, e );
 		}
 	}
 
-	public FlushMode getFlushMode(String query) {
-		String hitName = QueryHints.FLUSH_MODE;
-		String value =(String)  hintsMap.get( hitName );
-		if ( value == null ) {
-			return null;
-		}
+	public Integer getInteger(String hintName) {
 		try {
-			return FlushMode.interpretExternalSetting( value );
+			return ConfigurationHelper.getInteger( hintName, hintsMap );
 		}
-		catch ( MappingException e ) {
-			throw new AnnotationException( "Unknown FlushMode in hint: " + query + ":" + hitName, e );
+		catch (Exception e) {
+			throw new AnnotationException( "Named query hint [" + hintName + "] is not an integer: " + queryName, e );
+		}
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Specialized access
+
+	public Integer getTimeout() {
+		final Integer jpaTimeout = getInteger( QueryHints.TIMEOUT_JPA );
+		if ( jpaTimeout != null ) {
+			// convert milliseconds to seconds
+			return (int) Math.round( jpaTimeout.doubleValue() / 1000.0 );
+		}
+
+		return getInteger( QueryHints.TIMEOUT_HIBERNATE );
+	}
+
+	public boolean getCacheability() {
+		return getBoolean( QueryHints.CACHEABLE );
+	}
+
+	public CacheMode getCacheMode() {
+		final String value = getString( QueryHints.CACHE_MODE );
+		try {
+			return value == null
+					? null
+					: CacheMode.interpretExternalSetting( value );
+		}
+		catch (Exception e) {
+			throw new AnnotationException( "Unable to interpret CacheMode in named query hint: " + queryName, e );
+		}
+	}
+
+	public FlushMode getFlushMode() {
+		final String value = getString( QueryHints.FLUSH_MODE );
+		try {
+			return value == null
+					? null
+					: FlushMode.interpretExternalSetting( value );
+		}
+		catch (MappingException e) {
+			throw new AnnotationException( "Unable to interpret FlushMode in named query hint: " + queryName, e );
 		}
 	}
 
@@ -84,58 +131,10 @@ public class QueryHintDefinition {
 		}
 	}
 
-	public boolean getBoolean(String query, String hintName) {
-		String value =(String)  hintsMap.get( hintName );
-		if ( value == null ) {
-			return false;
-		}
-		if ( value.equalsIgnoreCase( "true" ) ) {
-			return true;
-		}
-		else if ( value.equalsIgnoreCase( "false" ) ) {
-			return false;
-		}
-		else {
-			throw new AnnotationException( "Not a boolean in hint: " + query + ":" + hintName );
-		}
-
-	}
-
-	public String getString(String query, String hintName) {
-		return (String) hintsMap.get( hintName );
-	}
-
-	public Integer getInteger(String query, String hintName) {
-		String value = (String) hintsMap.get( hintName );
-		if ( value == null ) {
-			return null;
-		}
-		try {
-			return Integer.decode( value );
-		}
-		catch ( NumberFormatException nfe ) {
-			throw new AnnotationException( "Not an integer in hint: " + query + ":" + hintName, nfe );
-		}
-	}
-
-	public Integer getTimeout(String queryName) {
-		Integer timeout = getInteger( queryName, QueryHints.TIMEOUT_JPA );
-
-		if ( timeout != null ) {
-			// convert milliseconds to seconds
-			timeout = (int) Math.round( timeout.doubleValue() / 1000.0 );
-		}
-		else {
-			// timeout is already in seconds
-			timeout = getInteger( queryName, QueryHints.TIMEOUT_HIBERNATE );
-		}
-		return timeout;
-	}
-
 	public LockOptions determineLockOptions(NamedQuery namedQueryAnnotation) {
 		LockModeType lockModeType = namedQueryAnnotation.lockMode();
-		Integer lockTimeoutHint = getInteger( namedQueryAnnotation.name(), "javax.persistence.lock.timeout" );
-		Boolean followOnLocking = getBoolean( namedQueryAnnotation.name(), QueryHints.FOLLOW_ON_LOCKING );
+		Integer lockTimeoutHint = getInteger( "javax.persistence.lock.timeout" );
+		Boolean followOnLocking = getBoolean( QueryHints.FOLLOW_ON_LOCKING );
 
 		return determineLockOptions(lockModeType, lockTimeoutHint, followOnLocking);
 	}
@@ -149,9 +148,5 @@ public class QueryHintDefinition {
 		}
 
 		return lockOptions;
-	}
-
-	public Map<String, Object> getHintsMap() {
-		return hintsMap;
 	}
 }

@@ -14,8 +14,8 @@ import org.hibernate.metamodel.model.mapping.spi.BasicValuedNavigable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.SqmProductionException;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.hql.HqlInterpretationException;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -43,7 +43,7 @@ public class SqmStaticFieldReference<T>
 			this.fieldValue = referencedField.get( null );
 		}
 		catch (IllegalAccessException e) {
-			throw new SqmProductionException(
+			throw new HqlInterpretationException(
 					"Could not access field value : `"
 							+ referencedField.getDeclaringClass().getTypeName() + "."
 							+ referencedField.getName() + "`",
@@ -62,7 +62,6 @@ public class SqmStaticFieldReference<T>
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new UnsupportedOperationException(  );
@@ -71,7 +70,6 @@ public class SqmStaticFieldReference<T>
 	@Override
 	public SqmPath resolveIndexedAccess(
 			SqmExpression selector,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new UnsupportedOperationException(  );
@@ -111,7 +109,7 @@ public class SqmStaticFieldReference<T>
 			);
 		}
 		catch (IllegalAccessException e) {
-			throw new SqmProductionException(
+			throw new HqlInterpretationException(
 					"Could not access field value : `"
 							+ referencedField.getDeclaringClass().getTypeName() + "."
 							+ referencedField.getName() + "`",
@@ -131,7 +129,7 @@ public class SqmStaticFieldReference<T>
 			);
 		}
 		catch (IllegalAccessException e) {
-			throw new SqmProductionException(
+			throw new HqlInterpretationException(
 					"Could not access field value : `"
 							+ referencedField.getDeclaringClass().getTypeName() + "."
 							+ referencedField.getName() + "`",
@@ -151,7 +149,7 @@ public class SqmStaticFieldReference<T>
 			);
 		}
 		catch (IllegalAccessException e) {
-			throw new SqmProductionException(
+			throw new HqlInterpretationException(
 					"Could not access field value : `"
 							+ referencedField.getDeclaringClass().getTypeName() + "."
 							+ referencedField.getName() + "`",
@@ -171,7 +169,7 @@ public class SqmStaticFieldReference<T>
 			);
 		}
 		catch (IllegalAccessException e) {
-			throw new SqmProductionException(
+			throw new HqlInterpretationException(
 					"Could not access field value : `"
 							+ referencedField.getDeclaringClass().getTypeName() + "."
 							+ referencedField.getName() + "`",

@@ -18,7 +18,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.SQLQuery;
@@ -30,7 +29,7 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
+import org.hibernate.boot.spi.NamedNativeQueryMementoBuilder;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
@@ -155,7 +154,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testRegisteredNamedSQLQueryWithScalar()
 	{
-		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder();
+		final NamedNativeQueryMementoBuilder builder = new NamedNativeQueryMementoBuilder();
 		builder.setName("namedQuery");
 		builder.setQuery("select count(*) AS c from ORGANIZATION");
 		builder.setQueryReturns(new NativeSQLQueryReturn[1]);

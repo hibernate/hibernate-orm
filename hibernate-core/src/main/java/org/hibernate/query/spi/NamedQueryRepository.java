@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.procedure.NamedCallableQueryMemento;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 

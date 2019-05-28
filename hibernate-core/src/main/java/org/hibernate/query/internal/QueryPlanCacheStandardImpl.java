@@ -100,6 +100,11 @@ public class QueryPlanCacheStandardImpl implements QueryPlanCache {
 	}
 
 	@Override
+	public boolean isEnabled() {
+		return true;
+	}
+
+	@Override
 	public void close() {
 		// todo (6.0) : clear maps/caches and LOG
 		queryPlanCache.clear();

@@ -35,6 +35,7 @@ import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
@@ -140,7 +141,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedQuery(NamedHqlQueryMementoImpl query) throws DuplicateMappingException;
+	void addNamedQuery(NamedHqlQueryMapping query) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named SQL query to this repository.
@@ -149,7 +150,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedNativeQuery(NamedNativeQueryMemento query) throws DuplicateMappingException;
+	void addNamedNativeQuery(NamedNativeQueryMapping query) throws DuplicateMappingException;
 
 	/**
 	 * Adds the metadata for a named SQL result set mapping to this repository.
@@ -269,9 +270,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-	void addDefaultQuery(NamedHqlQueryMementoImpl queryDefinition);
+	void addDefaultQuery(NamedHqlQueryMapping queryDefinition);
 
-	void addDefaultNamedNativeQuery(NamedSQLQueryDefinition query);
+	void addDefaultNamedNativeQuery(NamedNativeQueryMapping query);
 
 	void addDefaultResultSetMapping(ResultSetMappingDescriptor definition);
 

@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -14,12 +13,13 @@ import java.util.function.Consumer;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
-import org.hibernate.procedure.NamedCallableQueryMemento;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.SemanticQueryProducer;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
@@ -131,6 +131,8 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 		Map<String,HibernateException> errors = new HashMap<>();
 
 		final SemanticQueryProducer sqmProducer = queryEngine.getSemanticQueryProducer();
+		final QueryPlanCache queryPlanCache = queryEngine.getQueryPlanCache();
+		final boolean cachingEnabled = queryPlanCache.isEnabled();
 
 		// Check named HQL queries
 		log.debugf( "Checking %s named HQL queries", hqlMementoMap.size() );
@@ -139,8 +141,11 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 			try {
 				log.debugf( "Checking named query: %s", hqlMemento.getName() );
 				final SqmStatement sqmStatement = sqmProducer.interpret( hqlMemento.getQueryString() );
-				// todo (6.0) : need to cache these; however atm that requires producing a SqmQueryImpl
-				// queryEngine.getQueryPlanCache().getHQLQueryPlan( hqlMemento.getQueryString(), false, Collections.EMPTY_MAP );
+
+				if ( cachingEnabled ) {
+					// todo (6.0) : need to cache these; however atm that requires producing a SqmQueryImpl
+					// queryEngine.getQueryPlanCache().getHQLQueryPlan( hqlMemento.getQueryString(), false, Collections.EMPTY_MAP );
+				}
 			}
 			catch ( HibernateException e ) {
 				errors.put( hqlMemento.getName(), e );

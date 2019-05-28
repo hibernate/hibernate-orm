@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce.path.spi;
+package org.hibernate.query.hql.spi;
 
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -27,13 +27,11 @@ import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
 public interface SemanticPathPart {
 	SemanticPathPart resolvePathPart(
 			String name,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState);
 
 	SqmPath resolveIndexedAccess(
 			SqmExpression selector,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState);
 }

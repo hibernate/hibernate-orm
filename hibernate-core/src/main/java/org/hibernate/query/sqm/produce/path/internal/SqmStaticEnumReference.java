@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.mapping.spi.BasicValuedNavigable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.path.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -49,7 +49,6 @@ public class SqmStaticEnumReference<T extends Enum<T>>
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new UnsupportedOperationException(  );
@@ -58,7 +57,6 @@ public class SqmStaticEnumReference<T extends Enum<T>>
 	@Override
 	public SqmPath resolveIndexedAccess(
 			SqmExpression selector,
-			String currentContextKey,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new UnsupportedOperationException(  );

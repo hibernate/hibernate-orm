@@ -21,8 +21,10 @@ import org.hibernate.query.spi.ParameterMemento;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 
 /**
- * Definition of a named query, defined in the mapping metadata.  Additional, as of JPA 2.1, named query definition
- * can also come from a compiled query.
+ * Definition of a named query, defined in the mapping metadata.
+ *
+ * Additionally, as of JPA 2.1, named query definition can also come
+ * from a compiled query.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -34,8 +36,8 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 
 	public NamedHqlQueryMementoImpl(
 			String name,
-			List<ParameterMemento> parameterMementos,
 			String hqlString,
+			List<ParameterMemento> parameterMementos,
 			Integer firstResult,
 			Integer maxResults,
 			Boolean cacheable,

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.produce;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmQuery;
 

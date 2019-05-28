@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.produce.internal;
 
-import org.hibernate.query.hql.internal.SqmProcessingIndex;
+import org.hibernate.query.hql.internal.SqmPathRegistryImpl;
 import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
-import org.hibernate.query.sqm.produce.SqmPathRegistry;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmQuery;
 
@@ -19,7 +19,7 @@ public class SqmCreationProcessingStateImpl implements SqmCreationProcessingStat
 	private final SqmCreationState creationState;
 	private final SqmQuery<?> processingQuery;
 
-	private final SqmProcessingIndex processingIndex = new SqmProcessingIndex( this );
+	private final SqmPathRegistryImpl processingIndex = new SqmPathRegistryImpl( this );
 
 	public SqmCreationProcessingStateImpl(
 			SqmQuery<?> processingQuery,
@@ -38,7 +38,7 @@ public class SqmCreationProcessingStateImpl implements SqmCreationProcessingStat
 		return processingQuery;
 	}
 
-	protected SqmProcessingIndex getProcessingIndex() {
+	protected SqmPathRegistryImpl getProcessingIndex() {
 		return processingIndex;
 	}
 

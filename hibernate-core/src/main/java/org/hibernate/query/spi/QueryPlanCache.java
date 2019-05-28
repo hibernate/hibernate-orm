@@ -32,6 +32,8 @@ public interface QueryPlanCache {
 	SqmStatement getSqmStatement(String queryString);
 	void cacheSqmStatement(String key, SqmStatement sqmStatement);
 
+	boolean isEnabled();
+
 	/**
 	 * Close the cache when the SessionFactory is closed.
 	 * <p>

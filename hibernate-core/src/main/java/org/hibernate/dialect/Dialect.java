@@ -121,9 +121,14 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
- * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
- * with different systems.  Subclasses should provide a public default constructor that register a set of type
- * mappings and default Hibernate properties.  Subclasses should be immutable.
+ * Represents a dialect of SQL implemented by a particular RDBMS. Subclasses
+ * implement Hibernate compatibility with different database platforms.
+ *
+ * Subclasses should provide a public default constructor that registers a
+ * set of type mappings from JDBC type codes to database native type names,
+ * along with default Hibernate properties.
+ *
+ * Subclasses should be immutable.
  *
  * @author Gavin King, David Channon
  */

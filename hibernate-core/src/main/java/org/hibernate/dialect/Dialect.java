@@ -281,8 +281,15 @@ public abstract class Dialect implements ConversionContext {
 	 *      * sin, cos, tan, asin, acos, atan, atan2
 	 *      * round
 	 *
-	 *  In addition to the above functions, HQL implements the
-	 *  following additional "standard" functions as synonyms:
+	 * And the following functions for working with java.time types:
+	 *
+	 *      * current date
+	 *      * current time
+	 *      * current datetime
+	 *      * current instant
+	 *
+	 * In addition to the above functions, HQL implements the
+	 * following additional "standard" functions as synonyms:
 	 *
 	 *      * format
 	 *
@@ -298,8 +305,6 @@ public abstract class Dialect implements ConversionContext {
 	 * 		* day			- defined as `extract(day from arg)`
 	 * 		* month			- defined as `extract(month from arg)`
 	 * 		* year			- defined as `extract(year from arg)`
-	 *
-	 *      * current_instant
 	 *
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {

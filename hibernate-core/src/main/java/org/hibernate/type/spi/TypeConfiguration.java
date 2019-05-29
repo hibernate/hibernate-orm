@@ -554,6 +554,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
+	public static boolean isJDBCTemporalType(ExpressableType<?> type) {
+		return matchesJavaType( type, Date.class );
+	}
+
 	public static boolean isTemporalType(ExpressableType<?> type) {
 		return matchesJavaType( type, Date.class )
 			|| matchesJavaType( type, Temporal.class );

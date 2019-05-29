@@ -489,6 +489,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 
 					session.createQuery("select extract(time from e.theTimestamp), extract(date from e.theTimestamp) from EntityOfBasics e")
 							.list();
+					session.createQuery("select extract(time from current datetime), extract(date from current datetime) from EntityOfBasics e")
+							.list();
 				}
 		);
 	}

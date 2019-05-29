@@ -698,8 +698,12 @@ public class MySQLDialect extends Dialect {
 				.replace("M", "%c")
 
 				//week of year
-				.replace("ww", "%V")
-				.replace("w", "%V")
+				.replace("ww", "%v")
+				.replace("w", "%v")
+				//year for week
+				.replace("YYYY", "%x")
+				.replace("YYY", "%x")
+				.replace("Y", "%x")
 
 				//week of month
 				//????

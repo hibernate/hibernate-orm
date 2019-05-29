@@ -228,6 +228,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 				//w no equivalent
 				//W no equivalent
+				//Y no equivalent
 
 				//day of week
 				.replace("EEEE", "dddd")

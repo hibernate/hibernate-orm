@@ -930,8 +930,13 @@ public class Oracle8iDialect extends Dialect {
 				.replace("M", fm + "MM")
 
 				//week of year
-				.replace("ww", "WW")
-				.replace("w", fm + "WW")
+				.replace("ww", "IW")
+				.replace("w", fm + "IW")
+				//year for week
+				.replace("YYYY", "IYYY")
+				.replace("YYY", fm + "IYYY")
+				.replace("YY", "IW")
+				.replace("Y", fm + "IYYY")
 
 				//week of month
 				.replace("W", "W")

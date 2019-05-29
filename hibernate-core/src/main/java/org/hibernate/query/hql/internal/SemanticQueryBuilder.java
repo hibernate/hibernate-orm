@@ -162,7 +162,6 @@ import org.hibernate.sql.TrimSpec;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.descriptor.internal.DateTimeUtils;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.jboss.logging.Logger;
@@ -2373,11 +2372,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	// G era
 	// y year in era
+	// Y week year (ISO)
 	// M month in year
-	// w week in year
+	// w week in year (ISO)
 	// W week in month
 	// E day name in week
-	// e day number in week
+	// e day number in week (*very* inconsistent across DBs)
 	// d day in month
 	// D day in year
 	// a AM/PM
@@ -2390,7 +2390,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	// x zone offset e.g. +03, +0300, +03:00
 	// Z zone offset e.g. +0300
 	// see https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
-	private static final Pattern FORMAT = Pattern.compile("('[^']+'|[:;/,.!@#$^&?~`|()\\[\\]{}<>\\-+*=]|\\s|G{1,2}|y{1,4}|M{1,4}|w{1,2}|W|E{3,4}|e{1,2}|d{1,2}|D{1,3}|a{1,2}|[Hhms]{1,2}|S{1,6}|[zZx]{1,3})*");
+	private static final Pattern FORMAT = Pattern.compile("('[^']+'|[:;/,.!@#$^&?~`|()\\[\\]{}<>\\-+*=]|\\s|G{1,2}|[yY]{1,4}|M{1,4}|w{1,2}|W|E{3,4}|e{1,2}|d{1,2}|D{1,3}|a{1,2}|[Hhms]{1,2}|S{1,6}|[zZx]{1,3})*");
 
 	@Override
 	public Object visitFormat(HqlParser.FormatContext ctx) {

@@ -827,6 +827,9 @@ public class PostgreSQL81Dialect extends Dialect {
 				.replace("SSS", "MS")
 				.replace("SS", "MS")
 				.replace("S", "MS")
+				//use ISO day in week, as per DateTimeFormatter
+				.replace("ee", "ID")
+				.replace("e", "fmID")
 				//TZR is TZ in Postgres
 				.replace("zzz", "TZ")
 				.replace("zz", "TZ")

@@ -53,7 +53,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.spi.NativeQueryImplementor;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.transform.ResultTransformer;

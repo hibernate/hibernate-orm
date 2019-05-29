@@ -22,7 +22,6 @@ import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
-import org.hibernate.query.spi.ParameterMemento;
 import org.hibernate.type.Type;
 
 /**

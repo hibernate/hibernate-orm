@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.ParameterMode;
 
-import org.hibernate.BasicQueryContract;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
@@ -19,7 +18,6 @@ import org.hibernate.boot.spi.AbstractNamedQueryMapping;
 import org.hibernate.boot.spi.NamedNativeQueryMapping;
 import org.hibernate.boot.spi.NamedQueryParameterMapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.ParameterMemento;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 

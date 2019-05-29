@@ -28,7 +28,6 @@ import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
-import org.hibernate.query.spi.ParameterMemento;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryOptions;

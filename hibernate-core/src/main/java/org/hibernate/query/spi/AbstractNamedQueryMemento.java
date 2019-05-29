@@ -12,61 +12,51 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.ParameterMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.internal.Util;
 
 /**
  * @author Steve Ebersole
  * @author Gavin King
  */
 public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
-	private final String name;
+	protected final String name;
 
-	private final List<? extends ParameterMemento> parameterMementos;
+	protected final Boolean cacheable;
+	protected final String cacheRegion;
+	protected final CacheMode cacheMode;
 
-	private final Boolean cacheable;
-	private final String cacheRegion;
-	private final CacheMode cacheMode;
+	protected final FlushMode flushMode;
+	protected final Boolean readOnly;
 
-	private final FlushMode flushMode;
-	private final Boolean readOnly;
+	protected final Integer timeout;
+	protected final Integer fetchSize;
 
-	private final LockOptions lockOptions;
+	protected final String comment;
 
-	private final Integer timeout;
-	private final Integer fetchSize;
+	protected final Map<String, Object> hints;
 
-	private final String comment;
-
-	private final Map<String, Object> hints;
-
-	public AbstractNamedQueryMemento(
+	protected AbstractNamedQueryMemento(
 			String name,
-			List<? extends ParameterMemento> parameterMementos,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
 			FlushMode flushMode,
 			Boolean readOnly,
-			LockOptions lockOptions,
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
 			Map<String, Object> hints) {
 		this.name = name;
-		this.parameterMementos = parameterMementos;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.cacheMode = cacheMode;
 		this.flushMode = flushMode;
 		this.readOnly = readOnly;
-		this.lockOptions = lockOptions;
 		this.timeout = timeout;
 		this.fetchSize = fetchSize;
 		this.comment = comment;
@@ -78,66 +68,10 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 		return name;
 	}
 
-	public List<ParameterMemento> getParameterMementos() {
-		return parameterMementos;
-	}
-
-	@Override
-	public Boolean getCacheable() {
-		return cacheable;
-	}
-
-	@Override
-	public String getCacheRegion() {
-		return cacheRegion;
-	}
-
-	@Override
-	public CacheMode getCacheMode() {
-		return cacheMode;
-	}
-
-	@Override
-	public FlushMode getFlushMode() {
-		return flushMode;
-	}
-
-	@Override
-	public Boolean getReadOnly() {
-		return readOnly;
-	}
-
-	@Override
-	public LockOptions getLockOptions() {
-		return lockOptions;
-	}
-
-	@Override
-	public Integer getTimeout() {
-		return timeout;
-	}
-
-	@Override
-	public Integer getFetchSize() {
-		return fetchSize;
-	}
-
-	@Override
-	public String getComment() {
-		return comment;
-	}
-
-	@Override
-	public Map<String, Object> getHints() {
-		return hints;
-	}
-
-	protected Map<String, Object> getHintsCopy() {
-		return Util.copy( hints );
-	}
-
 	protected void applyBaseOptions(QueryImplementor query, SharedSessionContractImplementor session) {
-		getHints().forEach( query::setHint );
+		if ( hints != null ) {
+			hints.forEach( query::setHint );
+		}
 
 		if ( cacheable != null ) {
 			query.setCacheable( cacheable );
@@ -159,10 +93,6 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 			query.setReadOnly( readOnly );
 		}
 
-		if ( lockOptions != null ) {
-			query.setLockOptions( lockOptions );
-		}
-
 		if ( timeout != null ) {
 			query.setTimeout( timeout );
 		}
@@ -179,8 +109,6 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 	protected static abstract class AbstractBuilder<T extends AbstractBuilder> {
 		private final String name;
 
-		private List<ParameterDefinition> parameterDescriptors;
-
 		private Set<String> querySpaces;
 		private Boolean cacheable;
 		private String cacheRegion;
@@ -188,8 +116,6 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 
 		private FlushMode flushMode;
 		private Boolean readOnly;
-
-		private LockOptions lockOptions;
 
 		private Integer timeout;
 		private Integer fetchSize;
@@ -207,40 +133,6 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 		}
 
 		protected abstract T getThis();
-
-		public T addParameter(Class javaType, ParameterMode mode) {
-			return addParameter(
-					createPositionalParameter(
-							parameterDescriptors.size() + 1,
-							javaType,
-							mode
-					)
-			);
-		}
-
-		protected abstract ParameterDefinition createPositionalParameter(int i, Class javaType, ParameterMode mode);
-
-		public T addParameter(ParameterDefinition parameterDefinition) {
-			if ( parameterDescriptors == null ) {
-				parameterDescriptors = new ArrayList<>();
-			}
-
-			parameterDescriptors.add( parameterDefinition );
-
-			return getThis();
-		}
-
-		public T addParameter(String name, Class javaType, ParameterMode mode) {
-			if ( parameterDescriptors == null ) {
-				parameterDescriptors = new ArrayList<>();
-			}
-
-			parameterDescriptors.add( createNamedParameter( name, javaType, mode ) );
-
-			return getThis();
-		}
-
-		protected abstract ParameterDefinition createNamedParameter(String name, Class javaType, ParameterMode mode);
 
 
 		public T addQuerySpaces(Set<String> querySpaces) {

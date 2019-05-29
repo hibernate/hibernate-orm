@@ -26,28 +26,20 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.spi.NameableQuery;
-import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
  */
 @Incubating
-public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R>, NameableQuery {
+public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R> {
 	NativeQueryImplementor setCollectionKey(Serializable key);
-
-	@Override
-	NamedNativeQueryMemento toMemento(String name, SessionFactoryImplementor factory);
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - NativeQuery
@@ -166,7 +158,6 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 		return setParameter( parameter, val, (AllowableParameterType) type );
 	}
 
-
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType type);
 
@@ -180,9 +171,6 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 
 	@Override
 	NativeQueryImplementor<R> setParameter(String name, Object val, AllowableParameterType type);
-
-	@Override
-	ParameterMetadataImplementor<QueryParameterImplementor<?>> getParameterMetadata();
 
 	@Override
 	default NativeQueryImplementor<R> setParameter(int position, Object val, Type type) {

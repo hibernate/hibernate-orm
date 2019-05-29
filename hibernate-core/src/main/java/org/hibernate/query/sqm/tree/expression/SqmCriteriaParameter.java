@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.ParameterMetadata;
-import org.hibernate.query.spi.ParameterMemento;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;

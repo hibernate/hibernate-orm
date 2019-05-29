@@ -6,18 +6,15 @@
  */
 package org.hibernate.query.sql.internal;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
-import org.hibernate.query.spi.NativeQueryImplementor;
-import org.hibernate.query.spi.ParameterMemento;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 /**
  * Keeps details of a named native-sql query
@@ -34,27 +31,23 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 			String name,
 			String sqlString,
 			String resultSetMappingName,
-			List<ParameterMemento> parameterMementos,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
 			FlushMode flushMode,
 			Boolean readOnly,
-			LockOptions lockOptions,
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
 			Map<String,Object> hints) {
 		super(
 				name,
-				parameterMementos,
 				cacheable,
 				cacheRegion,
 				cacheMode,
 				flushMode,
 				readOnly,
-				lockOptions,
 				timeout,
 				fetchSize,
 				comment,
@@ -68,21 +61,6 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	@Override
 	public String getSqlString() {
 		return sqlString;
-	}
-
-	@Override
-	public String getQueryString() {
-		return sqlString;
-	}
-
-	@Override
-	public String getResultSetMappingName() {
-		return resultSetMappingName;
-	}
-
-	@Override
-	public Set<String> getQuerySpaces() {
-		return querySpaces;
 	}
 
 	@Override

@@ -27,6 +27,8 @@ public interface NamedQueryRepository {
 	NamedHqlQueryMemento getHqlQueryMemento(String queryName);
 	void visitHqlQueryMementos(Consumer<NamedHqlQueryMemento> action);
 	void registerHqlQueryMemento(String name, NamedHqlQueryMemento descriptor);
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// NamedNativeQueryMemento
 

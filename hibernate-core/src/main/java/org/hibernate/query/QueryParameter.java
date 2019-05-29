@@ -12,8 +12,6 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 /**
  * Represents a parameter defined in the source (HQL/JPQL or criteria) query.
  *
- * NOTE: Consider this contract (and its sub-contracts) as incubating as we transition to 6.0 and SQM
- *
  * @author Steve Ebersole
  */
 @Incubating

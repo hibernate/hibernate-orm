@@ -6,45 +6,26 @@
  */
 package org.hibernate.query.spi;
 
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
-import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
+ * Base contract for all named query mementos
+ *
  * @author Steve Ebersole
  */
 public interface NamedQueryMemento {
+	/**
+	 * The name under which the query is registered
+	 */
 	String getName();
 
-	String getQueryString();
-
-	List<ParameterMemento> getParameterMementos();
-
-	Boolean getCacheable();
-
-	String getCacheRegion();
-
-	CacheMode getCacheMode();
-
-	FlushMode getFlushMode();
-
-	Boolean getReadOnly();
-
-	LockOptions getLockOptions();
-
-	Integer getTimeout();
-
-	Integer getFetchSize();
-
-	String getComment();
-
-	Map<String,Object> getHints();
-
+	/**
+	 * Makes a copy of the memento
+	 */
 	NamedQueryMemento makeCopy(String name);
 
+	/**
+	 * Convert the memento into an executable query
+	 */
 	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
 }

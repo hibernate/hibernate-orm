@@ -24,7 +24,6 @@ import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.procedure.internal.ProcedureParameterImpl;
-import org.hibernate.query.spi.ParameterMemento;
 
 /**
  * @author Steve Ebersole

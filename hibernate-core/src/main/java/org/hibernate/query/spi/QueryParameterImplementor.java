@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.spi;
 
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 
 /**
@@ -14,5 +15,5 @@ import org.hibernate.query.QueryParameter;
 public interface QueryParameterImplementor<T> extends QueryParameter<T> {
 	void disallowMultiValuedBinding();
 
-	ParameterMemento toMemento();
+	void applyAnticipatedType(AllowableParameterType type);
 }

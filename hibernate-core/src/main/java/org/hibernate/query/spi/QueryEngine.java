@@ -110,7 +110,7 @@ public class QueryEngine {
 	public void prepare(SessionFactoryImplementor sessionFactory) {
 		//checking for named queries
 		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {
-			final Map<String, HibernateException> errors = namedQueryRepository.checkNamedQueries( queryPlanCache );
+			final Map<String, HibernateException> errors = namedQueryRepository.checkNamedQueries( this );
 
 			if ( !errors.isEmpty() ) {
 				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );

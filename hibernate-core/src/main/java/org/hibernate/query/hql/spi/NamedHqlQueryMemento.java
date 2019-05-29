@@ -17,16 +17,11 @@ import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.spi.NamedQueryMemento;
 
 /**
+ * NamedQueryMemento for HQL queries
+ *
  * @author Steve Ebersole
  */
 public interface NamedHqlQueryMemento extends NamedQueryMemento {
-	String getHqlString();
-
-	@Override
-	default String getQueryString() {
-		return getHqlString();
-	}
-
 	@Override
 	NamedHqlQueryMemento makeCopy(String name);
 
@@ -34,24 +29,27 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 	<T> HqlQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
 
 	/**
-	 * Delegate used in creating named HQL query mementos for queries defined in
-	 * annotations, hbm.xml or orm.xml
+	 * Delegate used in creating named HQL query mementos.
+	 *
+	 * @see org.hibernate.boot.spi.NamedHqlQueryMapping
+	 * @see HqlQueryImplementor#toMemento
 	 */
 	class Builder {
 		protected String name;
-		protected String query;
+		protected String queryString;
 		protected boolean cacheable;
 		protected String cacheRegion;
+		protected CacheMode cacheMode;
 		protected Integer timeout;
 		protected Integer fetchSize;
 		protected FlushMode flushMode;
-		protected CacheMode cacheMode;
 		protected boolean readOnly;
 		protected String comment;
-		protected Map parameterTypes;
 		protected LockOptions lockOptions;
 		protected Integer firstResult;
 		protected Integer maxResults;
+		protected Map<String,String> parameterTypes;
+		protected Map<String,Object> hints;
 
 		public Builder() {
 		}
@@ -65,8 +63,8 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 			return this;
 		}
 
-		public Builder setQuery(String query) {
-			this.query = query;
+		public Builder setQuery(String queryString) {
+			this.queryString = queryString;
 			return this;
 		}
 
@@ -112,13 +110,13 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 
 		public Builder addParameterType(String name, String typeName) {
 			if ( this.parameterTypes == null ) {
-				this.parameterTypes = new HashMap();
+				this.parameterTypes = new HashMap<>();
 			}
 			this.parameterTypes.put( name, typeName );
 			return this;
 		}
 
-		public Builder setParameterTypes(Map parameterTypes) {
+		public Builder setParameterTypes(Map<String,String> parameterTypes) {
 			this.parameterTypes = parameterTypes;
 			return this;
 		}
@@ -141,19 +139,20 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 		public NamedHqlQueryMemento createNamedQueryDefinition() {
 			return new NamedHqlQueryMementoImpl(
 					name,
-					query,
+					queryString,
+					firstResult,
+					maxResults,
 					cacheable,
 					cacheRegion,
-					timeout,
-					lockOptions,
-					fetchSize,
-					flushMode,
 					cacheMode,
+					flushMode,
 					readOnly,
+					lockOptions,
+					timeout,
+					fetchSize,
 					comment,
 					parameterTypes,
-					firstResult,
-					maxResults
+					hints
 			);
 		}
 	}

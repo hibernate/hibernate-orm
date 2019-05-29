@@ -7,7 +7,6 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.ParameterMemento;
 
 /**
  * Describes a parameter defined in the mapping of a {@link NamedQueryMapping}

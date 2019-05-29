@@ -7,7 +7,6 @@
 package org.hibernate.query.hql.internal;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.CacheMode;
@@ -17,8 +16,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
-import org.hibernate.query.spi.ParameterMemento;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.type.BasicType;
 
 /**
  * Definition of a named query, defined in the mapping metadata.
@@ -31,13 +31,16 @@ import org.hibernate.query.sqm.internal.QuerySqmImpl;
  */
 public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implements NamedHqlQueryMemento, Serializable {
 	private final String hqlString;
+
 	private final Integer firstResult;
 	private final Integer maxResults;
+
+	private final LockOptions lockOptions;
+	private final Map<String, String> parameterTypes;
 
 	public NamedHqlQueryMementoImpl(
 			String name,
 			String hqlString,
-			List<ParameterMemento> parameterMementos,
 			Integer firstResult,
 			Integer maxResults,
 			Boolean cacheable,
@@ -49,10 +52,34 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
+			Map<String,String> parameterTypes,
 			Map<String,Object> hints) {
 		super(
 				name,
-				parameterMementos,
+				cacheable,
+				cacheRegion,
+				cacheMode,
+				flushMode,
+				readOnly,
+				timeout,
+				fetchSize,
+				comment,
+				hints
+		);
+		this.hqlString = hqlString;
+		this.firstResult = firstResult;
+		this.maxResults = maxResults;
+		this.lockOptions = lockOptions;
+		this.parameterTypes = parameterTypes;
+	}
+
+	@Override
+	public NamedHqlQueryMemento makeCopy(String name) {
+		return new NamedHqlQueryMementoImpl(
+				name,
+				hqlString,
+				firstResult,
+				maxResults,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -62,36 +89,8 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 				timeout,
 				fetchSize,
 				comment,
+				parameterTypes,
 				hints
-		);
-		this.hqlString = hqlString;
-		this.firstResult = firstResult;
-		this.maxResults = maxResults;
-	}
-
-	@Override
-	public String getHqlString() {
-		return hqlString;
-	}
-
-	@Override
-	public NamedHqlQueryMemento makeCopy(String name) {
-		return new NamedHqlQueryMementoImpl(
-				name,
-				getParameterMementos(),
-				getHqlString(),
-				firstResult,
-				maxResults,
-				getCacheable(),
-				getCacheRegion(),
-				getCacheMode(),
-				getFlushMode(),
-				getReadOnly(),
-				getLockOptions(),
-				getTimeout(),
-				getFetchSize(),
-				getComment(),
-				getHints()
 		);
 	}
 
@@ -103,6 +102,17 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 				resultType,
 				session
 		);
+
+		for ( Map.Entry<String, String> entry : parameterTypes.entrySet() ) {
+			final BasicType hintedType = session.getFactory()
+					.getMetamodel()
+					.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.getRegisteredType( entry.getValue() );
+			final QueryParameterImplementor<Object> queryParameter = query.getParameterMetadata().getQueryParameter( entry.getKey() );
+			queryParameter.applyAnticipatedType( hintedType );
+		}
+
 
 		if ( firstResult != null ) {
 			query.setFirstResult( firstResult );

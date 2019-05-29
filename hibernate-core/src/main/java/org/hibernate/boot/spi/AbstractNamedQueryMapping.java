@@ -17,9 +17,7 @@ import javax.persistence.ParameterMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.boot.internal.NamedNativeQueryMappingImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.ParameterMemento;
 
 /**
  * @author Steve Ebersole

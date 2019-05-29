@@ -129,6 +129,18 @@ task aggregateJavadocs(type: Javadoc) {
 				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
 
+		//Workaround to get the JVM version while ignoring the Gradle Enums for versions,
+		//as they never support upcoming JVM versions (doesn't have a isJava12Compatible() yet )
+		if ( JavaVersion.current().isJava11Compatible() ) {
+			//The need to set `--source 8` applies to all JVMs after 11, and also to 11
+			// but after excluding the first two builds; see also specific comments on
+			// https://bugs.openjdk.java.net/browse/JDK-8212233?focusedCommentId=14245762
+			// For now, let's be compatible with JDK 11.0.3+. We can improve on it if people
+			// complain they cannot build with JDK 11.0.0, 11.0.1 and 11.0.2.
+			System.out.println("Forcing Javadoc in Java 8 compatible mode");
+			options.addStringOption('source', '8')
+		}
+
 		if ( JavaVersion.current().isJava8Compatible() ) {
 			options.addStringOption( 'Xdoclint:none', '-quiet' )
 		}

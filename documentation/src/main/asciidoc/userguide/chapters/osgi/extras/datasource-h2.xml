@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 First install the H2 driver using:
-> install -s mvn:com.h2database/h2/1.3.163
+> install -s mvn:com.h2database/h2/1.4.199
 
 Then copy this file to the deploy folder
 -->

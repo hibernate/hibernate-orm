@@ -47,7 +47,7 @@
     <bundle>mvn:commons-lang/commons-lang/2.6</bundle>
     <bundle>wrap:mvn:net.sourceforge.serp/serp/1.13.1</bundle>
 
-    <bundle>mvn:com.h2database/h2/1.3.170</bundle>
+    <bundle>mvn:com.h2database/h2/1.4.199</bundle>
     <bundle>blueprint:file:/[PATH]/datasource-h2.xml</bundle>
 
     <!-- These do not natively support OSGi, so using 3rd party bundles. -->

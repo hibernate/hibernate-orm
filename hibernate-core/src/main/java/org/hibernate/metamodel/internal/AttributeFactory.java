@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.metamodel.model.domain.internal;
+package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -40,6 +40,11 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
+import org.hibernate.metamodel.model.domain.internal.MapMember;
+import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
+import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
+import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -293,9 +298,8 @@ public class AttributeFactory {
 	private EntityMetamodel getDeclarerEntityMetamodel(AbstractIdentifiableType<?> ownerType) {
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
 		if ( persistenceType == Type.PersistenceType.ENTITY ) {
-			return context.getSessionFactory()
-					.getMetamodel()
-					.entityPersister( ownerType.getTypeName() )
+			return context.getMetamodel()
+					.getEntityDescriptor( ownerType.getTypeName() )
 					.getEntityMetamodel();
 		}
 		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS ) {

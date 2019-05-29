@@ -11,7 +11,6 @@ import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -23,16 +22,14 @@ public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> imp
 	public MappedSuperclassTypeImpl(
 			JavaTypeDescriptor<X> javaTypeDescriptor,
 			MappedSuperclass mappedSuperclass,
-			IdentifiableDomainType<? super X> superType,
-			JpaMetamodel jpaMetamodel) {
+			IdentifiableDomainType<? super X> superType) {
 		super(
 				javaTypeDescriptor.getJavaType().getName(),
 				javaTypeDescriptor,
 				superType,
 				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
 				mappedSuperclass.hasIdentifierProperty(),
-				mappedSuperclass.isVersioned(),
-				jpaMetamodel
+				mappedSuperclass.isVersioned()
 		);
 	}
 

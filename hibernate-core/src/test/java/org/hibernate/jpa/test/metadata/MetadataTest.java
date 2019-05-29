@@ -94,7 +94,9 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 				.addAnnotatedClass( WithGenericCollection.class )
 				.buildMetadata();
 		SessionFactoryImplementor sfi = (SessionFactoryImplementor) metadata.buildSessionFactory();
-		DomainMetamodelImpl metamodel = new DomainMetamodelImpl( sfi, ( (MetadataImplementor) metadata ).getTypeConfiguration() );
+		DomainMetamodelImpl metamodel = new DomainMetamodelImpl( sfi, ( (MetadataImplementor) metadata ).getTypeConfiguration(),
+																 this.jpaMetamodel
+		);
 		metamodel.initialize( (MetadataImplementor) metadata, JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED );
 		sfi.close();
 	}

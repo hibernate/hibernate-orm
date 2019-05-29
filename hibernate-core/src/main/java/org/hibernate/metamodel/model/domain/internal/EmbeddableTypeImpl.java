@@ -28,7 +28,7 @@ public class EmbeddableTypeImpl<J>
 		implements EmbeddableDomainType<J>, Serializable {
 
 	public EmbeddableTypeImpl(JavaTypeDescriptor<J> javaTypeDescriptor, NodeBuilder nodeBuilder) {
-		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, nodeBuilder.getDomainModel() );
+		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null );
 	}
 
 	public EmbeddableTypeImpl(
@@ -37,9 +37,11 @@ public class EmbeddableTypeImpl<J>
 		//noinspection unchecked
 		super(
 				name,
-				(JavaTypeDescriptor) nodeBuilder.getDomainModel().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Map.class ),
-				null,
-				nodeBuilder.getDomainModel()
+				(JavaTypeDescriptor) nodeBuilder.getDomainModel()
+						.getTypeConfiguration()
+						.getJavaTypeDescriptorRegistry()
+						.getDescriptor( Map.class ),
+				null
 		);
 	}
 

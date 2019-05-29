@@ -36,16 +36,14 @@ public class EntityTypeImpl<J>
 	public EntityTypeImpl(
 			JavaTypeDescriptor<J> javaTypeDescriptor,
 			IdentifiableDomainType<? super J> superType,
-			PersistentClass persistentClass,
-			JpaMetamodel jpaMetamodel) {
+			PersistentClass persistentClass) {
 		super(
 				persistentClass.getEntityName(),
 				javaTypeDescriptor,
 				superType,
 				persistentClass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
 				persistentClass.hasIdentifierProperty(),
-				persistentClass.isVersioned(),
-				jpaMetamodel
+				persistentClass.isVersioned()
 		);
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 	}

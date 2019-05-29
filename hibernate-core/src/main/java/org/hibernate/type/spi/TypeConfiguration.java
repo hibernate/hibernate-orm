@@ -184,7 +184,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		scope.setSessionFactory( sessionFactory );
 		sessionFactory.addObserver( this );
-		return new DomainMetamodelImpl( sessionFactory, this );
+		return new DomainMetamodelImpl( sessionFactory, this, this.jpaMetamodel );
 	}
 
 	/**

@@ -6,12 +6,28 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
+import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
+import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.persister.spi.PersisterFactory;
 
 import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 
@@ -19,10 +35,9 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
  * Responsible for interpreting the Hibernate boot metamodel into
  * its runtime metamodel
  *
+ * @author Steve Ebersole
  * @see org.hibernate.boot.model
  * @see org.hibernate.metamodel
- *
- * @author Steve Ebersole
  */
 public class RuntimeModelCreationProcess {
 
@@ -76,31 +91,131 @@ public class RuntimeModelCreationProcess {
 			SessionFactoryImplementor sessionFactory,
 			BootstrapContext bootstrapContext,
 			MetadataBuildingContext metadataBuildingContext,
-			MetadataImplementor bootMetamodel) {
-		return new RuntimeModelCreationProcess( sessionFactory, bootstrapContext, metadataBuildingContext ).execute();
+			MetadataImplementor bootMetamodel,
+			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
+		return new RuntimeModelCreationProcess(
+				sessionFactory,
+				bootstrapContext,
+				metadataBuildingContext,
+				bootMetamodel,
+				jpaMetaModelPopulationSetting
+		).execute();
 	}
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingContext metadataBuildingContext;
+	private final MetadataImplementor bootMetamodel;
+	private final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting;
+
+	private JpaMetamodel jpaMetamodel;
+	private MetamodelImplementor domainMetamodel;
 
 	public RuntimeModelCreationProcess(
 			SessionFactoryImplementor sessionFactory,
 			BootstrapContext bootstrapContext,
-			MetadataBuildingContext metadataBuildingContext) {
+			MetadataBuildingContext metadataBuildingContext,
+			MetadataImplementor bootMetamodel,
+			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
 		this.sessionFactory = sessionFactory;
 		this.bootstrapContext = bootstrapContext;
 		this.metadataBuildingContext = metadataBuildingContext;
+		this.bootMetamodel = bootMetamodel;
+		this.jpaMetaModelPopulationSetting = jpaMetaModelPopulationSetting;
 	}
 
-
 	public MetamodelImplementor execute() {
+		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
+			@Override
+			public SessionFactoryImplementor getSessionFactory() {
+				return sessionFactory;
+			}
+
+			@Override
+			public MetadataImplementor getMetadata() {
+				return bootMetamodel;
+			}
+		};
+
+		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry()
+				.getService( PersisterFactory.class );
 		final InflightRuntimeMetamodel inflightRuntimeMetamodel = new InflightRuntimeMetamodel( bootstrapContext.getTypeConfiguration() );
 
-		final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting(
-				sessionFactory.getProperties()
+
+		primeSecondLevelCacheRegions( bootMetamodel );
+
+		inflightRuntimeMetamodel.processBootMetaModel(
+				bootMetamodel,
+				sessionFactory.getQueryEngine().getCriteriaBuilder(),
+				sessionFactory.getCache(),
+				persisterFactory,
+				persisterCreationContext,
+				jpaMetaModelPopulationSetting,
+				determineJpaMetaModelPopulationSetting(
+						sessionFactory.getProperties() )
+
 		);
 
-		throw new NotYetImplementedFor6Exception();
+		this.jpaMetamodel = new JpaMetamodelImpl(
+				inflightRuntimeMetamodel,
+				bootMetamodel.getNamedEntityGraphs().values()
+		);
+
+		this.domainMetamodel = new DomainMetamodelImpl( sessionFactory, inflightRuntimeMetamodel, this.jpaMetamodel );
+		return domainMetamodel;
+	}
+
+	private void primeSecondLevelCacheRegions(MetadataImplementor mappingMetadata) {
+		final Map<String, DomainDataRegionConfigImpl.Builder> regionConfigBuilders = new ConcurrentHashMap<>();
+
+		// todo : ultimately this code can be made more efficient when we have a better intrinsic understanding of the hierarchy as a whole
+
+		for ( PersistentClass bootEntityDescriptor : mappingMetadata.getEntityBindings() ) {
+			final AccessType accessType = AccessType.fromExternalName( bootEntityDescriptor.getCacheConcurrencyStrategy() );
+
+			if ( accessType != null ) {
+				if ( bootEntityDescriptor.isCached() ) {
+					regionConfigBuilders.computeIfAbsent(
+							bootEntityDescriptor.getRootClass().getCacheRegionName(),
+							DomainDataRegionConfigImpl.Builder::new
+					)
+							.addEntityConfig( bootEntityDescriptor, accessType );
+				}
+
+				if ( RootClass.class.isInstance( bootEntityDescriptor )
+						&& bootEntityDescriptor.hasNaturalId()
+						&& bootEntityDescriptor.getNaturalIdCacheRegionName() != null ) {
+					regionConfigBuilders.computeIfAbsent(
+							bootEntityDescriptor.getNaturalIdCacheRegionName(),
+							DomainDataRegionConfigImpl.Builder::new
+					)
+							.addNaturalIdConfig( (RootClass) bootEntityDescriptor, accessType );
+				}
+			}
+		}
+
+		for ( Collection collection : mappingMetadata.getCollectionBindings() ) {
+			final AccessType accessType = AccessType.fromExternalName( collection.getCacheConcurrencyStrategy() );
+			if ( accessType != null ) {
+				regionConfigBuilders.computeIfAbsent(
+						collection.getCacheRegionName(),
+						DomainDataRegionConfigImpl.Builder::new
+				)
+						.addCollectionConfig( collection, accessType );
+			}
+		}
+
+		final Set<DomainDataRegionConfig> regionConfigs;
+		if ( regionConfigBuilders.isEmpty() ) {
+			regionConfigs = Collections.emptySet();
+		}
+		else {
+			regionConfigs = new HashSet<>();
+			for ( DomainDataRegionConfigImpl.Builder builder : regionConfigBuilders.values() ) {
+				regionConfigs.add( builder.build() );
+			}
+		}
+
+		sessionFactory.getCache().prime( regionConfigs );
 	}
 }

@@ -45,9 +45,8 @@ public abstract class AbstractIdentifiableType<J>
 			IdentifiableDomainType<? super J> superType,
 			boolean hasIdClass,
 			boolean hasIdentifierProperty,
-			boolean versioned,
-			JpaMetamodel jpaMetamodel) {
-		super( typeName, javaTypeDescriptor, superType, jpaMetamodel );
+			boolean versioned) {
+		super( typeName, javaTypeDescriptor, superType );
 		this.hasIdClass = hasIdClass;
 		this.hasIdentifierProperty = hasIdentifierProperty;
 		this.isVersioned = versioned;

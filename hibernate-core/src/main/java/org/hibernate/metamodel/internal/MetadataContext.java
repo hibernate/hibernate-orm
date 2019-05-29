@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.metamodel.model.domain.internal;
+package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -17,13 +17,10 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.ReflectHelper;
@@ -33,20 +30,20 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.spi.DomainMetamodel;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
+import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
+import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
+import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
+import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -90,10 +87,10 @@ class MetadataContext {
 	 * Stack of PersistentClass being process. Last in the list is the highest in the stack.
 	 */
 	private List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
-	private DomainMetamodel metamodel;
+	private InflightRuntimeMetamodel metamodel;
 
 	public MetadataContext(
-			DomainMetamodel metamodel,
+			InflightRuntimeMetamodel metamodel,
 			SqmCriteriaNodeBuilder criteriaBuilder,
 			Set<MappedSuperclass> mappedSuperclasses,
 			TypeConfiguration typeConfiguration,
@@ -120,7 +117,7 @@ class MetadataContext {
 		return typeConfiguration.getJavaTypeDescriptorRegistry();
 	}
 
-	DomainMetamodel getMetamodel() {
+	InflightRuntimeMetamodel getMetamodel() {
 		return metamodel;
 	}
 
@@ -141,9 +138,9 @@ class MetadataContext {
 		return new HashSet<>( embeddables.values() );
 	}
 
-	public Map<Class<?>, MappedSuperclassType<?>> getMappedSuperclassTypeMap() {
+	public Map<Class<?>, MappedSuperclassDomainType<?>> getMappedSuperclassTypeMap() {
 		// we need to actually build this map...
-		final Map<Class<?>, MappedSuperclassType<?>> mappedSuperClassTypeMap = CollectionHelper.mapOfSize(
+		final Map<Class<?>, MappedSuperclassDomainType<?>> mappedSuperClassTypeMap = CollectionHelper.mapOfSize(
 				mappedSuperclassByMappedSuperclassMapping.size()
 		);
 
@@ -267,7 +264,7 @@ class MetadataContext {
 						}
 						final PersistentAttribute attribute = attributeFactory.buildAttribute( jpaMapping, property );
 						if ( attribute != null ) {
-							( ( AttributeContainer) jpaMapping ).getInFlightAccess().addAttribute( attribute );
+							( (AttributeContainer) jpaMapping ).getInFlightAccess().addAttribute( attribute );
 						}
 					}
 

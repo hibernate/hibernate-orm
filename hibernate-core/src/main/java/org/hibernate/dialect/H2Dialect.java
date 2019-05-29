@@ -437,7 +437,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
-		return new Replacer( format, "'", "''" ).result(); //NICE!!
+		return new Replacer( format, "'", "''" ).replace("e", "u").result(); //NICE!!
 	}
 
 	public String translateExtractField(TemporalUnit unit) {

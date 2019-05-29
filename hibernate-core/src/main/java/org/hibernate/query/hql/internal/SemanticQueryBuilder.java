@@ -2371,10 +2371,26 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-
-	//note: no XX, Z..ZZZZ, zzzz because I can't really implement them properly on SQL Server
-	//      no G, GG because I can't implement it on MySQL
-	private static final Pattern FORMAT = Pattern.compile("('[^']+'|[:;/,.!@#$^&?~`|()\\[\\]{}<>\\-+*=]|\\s|y{1,4}|M{1,4}|w{1,2}|W|E{3,4}|u{1,2}|d{1,2}|D{1,3}|a{1,2}|[Hhms]{1,2}|S{1,6}|z{1,3}|X|XXX)*");
+	// G era
+	// y year in era
+	// M month in year
+	// w week in year
+	// W week in month
+	// E day name in week
+	// e day number in week
+	// d day in month
+	// D day in year
+	// a AM/PM
+	// H hour of day (0-23)
+	// h clock hour of am/pm (1-12)
+	// m minute of hour
+	// s second of minute
+	// S fraction of second
+	// z time zone name e.g. PST
+	// x zone offset e.g. +03, +0300, +03:00
+	// Z zone offset e.g. +0300
+	// see https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
+	private static final Pattern FORMAT = Pattern.compile("('[^']+'|[:;/,.!@#$^&?~`|()\\[\\]{}<>\\-+*=]|\\s|G{1,2}|y{1,4}|M{1,4}|w{1,2}|W|E{3,4}|e{1,2}|d{1,2}|D{1,3}|a{1,2}|[Hhms]{1,2}|S{1,6}|[zZx]{1,3})*");
 
 	@Override
 	public Object visitFormat(HqlParser.FormatContext ctx) {

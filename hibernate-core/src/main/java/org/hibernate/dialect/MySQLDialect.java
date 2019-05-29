@@ -707,8 +707,8 @@ public class MySQLDialect extends Dialect {
 				//day of week
 				.replace("EEEE", "%W")
 				.replace("EEE", "%a")
-				.replace("uu", "%w")
-				.replace("u", "%w")
+				.replace("ee", "%w")
+				.replace("e", "%w")
 
 				//day of month
 				.replace("dd", "%d")

@@ -361,8 +361,8 @@ public class InformixDialect extends Dialect {
 				//day of week
 				.replace("EEEE", "%A")
 				.replace("EEE", "%a")
-				.replace("uu", "%w")
-				.replace("u", "%w")
+				.replace("ee", "%w")
+				.replace("e", "%w")
 
 				//day of month
 				.replace("dd", "%d")

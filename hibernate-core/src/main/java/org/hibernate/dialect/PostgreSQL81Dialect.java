@@ -816,9 +816,6 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
-		//TODO: this is a tiny bit fragile
-		//      it breaks if there are escaped double quotes \"
-		//      in the output from Oracle8iDialect.datetimeFormat
 		return datetimeFormat( format ).result();
 	}
 
@@ -831,7 +828,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				.replace("SS", "MS")
 				.replace("S", "MS")
 				//TZR is TZ in Postgres
-				.replace("zzzz", "TZ")
 				.replace("zzz", "TZ")
 				.replace("zz", "TZ")
 				.replace("z", "TZ");

@@ -232,7 +232,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				//day of week
 				.replace("EEEE", "dddd")
 				.replace("EEE", "ddd")
-				//u no equivalent
+				//e no equivalent
 
 				//d nothing to do
 				//D no equivalent
@@ -251,16 +251,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				.replace("S", "F")
 
 				//timezones
-				.replace("zzzz", "\"GMT\"zzz")
-				.replace("zzz", "\"GMT\"zzz")
-				.replace("zz", "\"GMT\"zzz")
-				.replace("z", "\"GMT\"zzz")
-				.replace("ZZZZ", "zz00")
-				.replace("ZZZ", "zz00")
-				.replace("ZZ", "zz00")
-				.replace("Z", "zz00")
-				.replace("XXX", "K") //slightly better than zzz
-				.replace("XX", "zz00")
-				.replace("X", "zz");
+				.replace("XXX", "K") //UTC represented as "Z"
+				.replace("xxx", "zzz")
+				.replace("x", "zz");
 	}
 }

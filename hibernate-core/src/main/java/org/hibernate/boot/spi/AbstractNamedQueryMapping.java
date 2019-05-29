@@ -9,7 +9,6 @@ package org.hibernate.boot.spi;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.ParameterMode;
@@ -17,15 +16,12 @@ import javax.persistence.ParameterMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractNamedQueryMapping implements NamedQueryMapping {
 	private final String name;
-
-	private final List<? extends NamedQueryParameterMapping> parameterMappings;
 
 	private final Boolean cacheable;
 	private final String cacheRegion;
@@ -45,7 +41,6 @@ public abstract class AbstractNamedQueryMapping implements NamedQueryMapping {
 
 	public AbstractNamedQueryMapping(
 			String name,
-			List<? extends NamedQueryParameterMapping> parameterMappings,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
@@ -57,9 +52,6 @@ public abstract class AbstractNamedQueryMapping implements NamedQueryMapping {
 			String comment,
 			Map<String,Object> hints) {
 		this.name = name;
-		this.parameterMappings = parameterMappings == null
-				? new ArrayList<>()
-				: new ArrayList<>( parameterMappings );
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.cacheMode = cacheMode;
@@ -117,16 +109,11 @@ public abstract class AbstractNamedQueryMapping implements NamedQueryMapping {
 		return hints;
 	}
 
-	protected List<? extends ParameterMemento> resolveParameterMappings(SessionFactoryImplementor factory) {
-		final ArrayList<ParameterMemento> descriptors = new ArrayList<>();
-		parameterMappings.forEach( parameterMapping -> descriptors.add( parameterMapping.resolve( factory ) ) );
-		return descriptors;
-	}
-
 	protected static abstract class AbstractBuilder<T extends AbstractBuilder>  {
 		private final String name;
 
 		private Set<String> querySpaces;
+
 		private Boolean cacheable;
 		private String cacheRegion;
 		private CacheMode cacheMode;
@@ -152,40 +139,6 @@ public abstract class AbstractNamedQueryMapping implements NamedQueryMapping {
 		}
 
 		protected abstract T getThis();
-
-		public T addParameter(Class javaType, ParameterMode mode) {
-			return addParameter(
-					createPositionalParameter(
-							parameterMappings.size() + 1,
-							javaType,
-							mode
-					)
-			);
-		}
-
-		protected abstract NamedQueryParameterMapping createPositionalParameter(int i, Class javaType, ParameterMode mode);
-
-		public <P extends NamedQueryParameterMapping> T addParameter(P parameterMapping) {
-			if ( parameterMappings == null ) {
-				parameterMappings = new ArrayList<>();
-			}
-
-			parameterMappings.add( (P) parameterMapping );
-
-			return getThis();
-		}
-
-		public T addParameter(String name, Class javaType, ParameterMode mode) {
-			if ( parameterMappings == null ) {
-				parameterMappings = new ArrayList<>();
-			}
-
-			parameterMappings.add( createNamedParameter( name, javaType, mode ) );
-
-			return getThis();
-		}
-
-		protected abstract <P extends NamedQueryParameterMapping> P createNamedParameter(String name, Class javaType, ParameterMode mode);
 
 
 		public T addQuerySpaces(Set<String> querySpaces) {
@@ -296,10 +249,6 @@ public abstract class AbstractNamedQueryMapping implements NamedQueryMapping {
 
 		public String getComment() {
 			return comment;
-		}
-
-		protected List<? extends NamedQueryParameterMapping> getParameterMappings() {
-			return parameterMappings;
 		}
 
 		public void addHint(String name, Object value) {

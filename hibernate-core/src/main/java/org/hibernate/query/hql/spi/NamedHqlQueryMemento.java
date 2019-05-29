@@ -9,11 +9,10 @@ package org.hibernate.query.hql.spi;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
+import org.hibernate.query.spi.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.NamedQueryMemento;
 
 /**
@@ -22,11 +21,18 @@ import org.hibernate.query.spi.NamedQueryMemento;
  * @author Steve Ebersole
  */
 public interface NamedHqlQueryMemento extends NamedQueryMemento {
-	@Override
-	NamedHqlQueryMemento makeCopy(String name);
+	/**
+	 * Informational access to the HQL query string
+	 */
+	String getHqlString();
+
+	/**
+	 * Convert the memento into an executable query
+	 */
+	<T> HqlQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
 
 	@Override
-	<T> HqlQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
+	NamedHqlQueryMemento makeCopy(String name);
 
 	/**
 	 * Delegate used in creating named HQL query mementos.
@@ -34,77 +40,25 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 	 * @see org.hibernate.boot.spi.NamedHqlQueryMapping
 	 * @see HqlQueryImplementor#toMemento
 	 */
-	class Builder {
-		protected String name;
-		protected String queryString;
-		protected boolean cacheable;
-		protected String cacheRegion;
-		protected CacheMode cacheMode;
-		protected Integer timeout;
-		protected Integer fetchSize;
-		protected FlushMode flushMode;
-		protected boolean readOnly;
-		protected String comment;
+	class Builder extends AbstractNamedQueryMemento.AbstractBuilder<Builder> {
+		protected String hqlString;
 		protected LockOptions lockOptions;
 		protected Integer firstResult;
 		protected Integer maxResults;
 		protected Map<String,String> parameterTypes;
-		protected Map<String,Object> hints;
 
-		public Builder() {
-		}
 
 		public Builder(String name) {
-			this.name = name;
+			super( name );
 		}
 
-		public Builder setName(String name) {
-			this.name = name;
-			return this;
-		}
-
-		public Builder setQuery(String queryString) {
-			this.queryString = queryString;
-			return this;
-		}
-
-		public Builder setCacheable(boolean cacheable) {
-			this.cacheable = cacheable;
-			return this;
-		}
-
-		public Builder setCacheRegion(String cacheRegion) {
-			this.cacheRegion = cacheRegion;
-			return this;
-		}
-
-		public Builder setTimeout(Integer timeout) {
-			this.timeout = timeout;
-			return this;
-		}
-
-		public Builder setFetchSize(Integer fetchSize) {
-			this.fetchSize = fetchSize;
-			return this;
-		}
-
-		public Builder setFlushMode(FlushMode flushMode) {
-			this.flushMode = flushMode;
-			return this;
-		}
-
-		public Builder setCacheMode(CacheMode cacheMode) {
-			this.cacheMode = cacheMode;
+		@Override
+		protected Builder getThis() {
 			return this;
 		}
 
 		public Builder setReadOnly(boolean readOnly) {
 			this.readOnly = readOnly;
-			return this;
-		}
-
-		public Builder setComment(String comment) {
-			this.comment = comment;
 			return this;
 		}
 
@@ -139,7 +93,7 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 		public NamedHqlQueryMemento createNamedQueryDefinition() {
 			return new NamedHqlQueryMementoImpl(
 					name,
-					queryString,
+					hqlString,
 					firstResult,
 					maxResults,
 					cacheable,

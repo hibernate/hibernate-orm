@@ -6,17 +6,13 @@
  */
 package org.hibernate.query.spi;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.ParameterMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -106,23 +102,23 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 		}
 	}
 
-	protected static abstract class AbstractBuilder<T extends AbstractBuilder> {
-		private final String name;
+	public static abstract class AbstractBuilder<T extends AbstractBuilder> {
+		protected final String name;
 
-		private Set<String> querySpaces;
-		private Boolean cacheable;
-		private String cacheRegion;
-		private CacheMode cacheMode;
+		protected Set<String> querySpaces;
+		protected Boolean cacheable;
+		protected String cacheRegion;
+		protected CacheMode cacheMode;
 
-		private FlushMode flushMode;
-		private Boolean readOnly;
+		protected FlushMode flushMode;
+		protected Boolean readOnly;
 
-		private Integer timeout;
-		private Integer fetchSize;
+		protected Integer timeout;
+		protected Integer fetchSize;
 
-		private String comment;
+		protected String comment;
 
-		private Map<String,Object> hints;
+		protected Map<String,Object> hints;
 
 		public AbstractBuilder(String name) {
 			this.name = name;
@@ -170,11 +166,6 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 			return getThis();
 		}
 
-		public T setLockOptions(LockOptions lockOptions) {
-			this.lockOptions = lockOptions;
-			return getThis();
-		}
-
 		public T setTimeout(Integer timeout) {
 			this.timeout = timeout;
 			return getThis();
@@ -186,6 +177,11 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 		}
 
 		public T setReadOnly(Boolean readOnly) {
+			this.readOnly = readOnly;
+			return getThis();
+		}
+
+		public T setReadOnly(boolean readOnly) {
 			this.readOnly = readOnly;
 			return getThis();
 		}
@@ -224,10 +220,6 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 			return readOnly;
 		}
 
-		public LockOptions getLockOptions() {
-			return lockOptions;
-		}
-
 		public Integer getTimeout() {
 			return timeout;
 		}
@@ -240,19 +232,11 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 			return comment;
 		}
 
-		protected List<ParameterDefinition> getParameterDescriptors() {
-			return parameterDescriptors;
-		}
-
 		public void addHint(String name, Object value) {
 			if ( hints == null ) {
 				hints = new HashMap<>();
 			}
 			hints.put( name, value );
-		}
-
-		public Map<String, Object> getHints() {
-			return hints;
 		}
 	}
 }

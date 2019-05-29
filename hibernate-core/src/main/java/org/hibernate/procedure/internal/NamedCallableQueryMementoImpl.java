@@ -13,15 +13,14 @@ import javax.persistence.ParameterMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.LockOptions;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
+import org.hibernate.query.spi.NamedQueryMemento;
 import org.hibernate.type.Type;
 
 /**
@@ -31,9 +30,13 @@ import org.hibernate.type.Type;
  */
 public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento implements NamedCallableQueryMemento {
 	private final String callableName;
+
 	private final ParameterStrategy parameterStrategy;
-	private final Class[] resultClasses;
+	private final List<ParameterMemento> parameterMementos;
+
 	private final String[] resultSetMappingNames;
+	private final Class[] resultSetMappingClasses;
+
 	private final Set<String> querySpaces;
 
 
@@ -44,29 +47,26 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			String name,
 			String callableName,
 			ParameterStrategy parameterStrategy,
-			List<CallableParameterMemento> parameterMementos,
-			Class[] resultClasses,
+			List<ParameterMemento> parameterMementos,
 			String[] resultSetMappingNames,
+			Class[] resultSetMappingClasses,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
 			FlushMode flushMode,
 			Boolean readOnly,
-			LockOptions lockOptions,
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
 			Map<String, Object> hints) {
 		super(
 				name,
-				parameterMementos,
 				cacheable,
 				cacheRegion,
 				cacheMode,
 				flushMode,
 				readOnly,
-				lockOptions,
 				timeout,
 				fetchSize,
 				comment,
@@ -74,9 +74,15 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 		);
 		this.callableName = callableName;
 		this.parameterStrategy = parameterStrategy;
-		this.resultClasses = resultClasses;
+		this.parameterMementos = parameterMementos;
 		this.resultSetMappingNames = resultSetMappingNames;
+		this.resultSetMappingClasses = resultSetMappingClasses;
 		this.querySpaces = querySpaces;
+	}
+
+	@Override
+	public String getCallableName() {
+		return callableName;
 	}
 
 	@Override
@@ -84,35 +90,32 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 		return new ProcedureCallImpl( session, this );
 	}
 
-	public String getCallableName() {
-		return callableName;
-	}
-
-	public NativeSQLQueryReturn[] getQueryReturns() {
-		return queryReturns;
-	}
-
-	public ParameterStrategy getParameterStrategy() {
-		return parameterStrategy;
-	}
-
-	public List<ParameterMemento> getParameterDeclarations() {
-		return parameterDeclarations;
-	}
-
-	public Set<String> getSynchronizedQuerySpaces() {
-		return synchronizedQuerySpaces;
-	}
-
 	@Override
-	public Map<String, Object> getHintsMap() {
-		return hintsMap;
+	public NamedQueryMemento makeCopy(String name) {
+		return new NamedCallableQueryMementoImpl(
+				name,
+				callableName,
+				parameterStrategy,
+				parameterMementos,
+				resultSetMappingNames,
+				resultSetMappingClasses,
+				querySpaces,
+				cacheable,
+				cacheRegion,
+				cacheMode,
+				flushMode,
+				readOnly,
+				timeout,
+				fetchSize,
+				comment,
+				hints
+		);
 	}
 
 	/**
 	 * A "disconnected" copy of the metadata for a parameter, that can be used in ProcedureCallMementoImpl.
 	 */
-	public static class CallableParameterMemento implements ParameterMemento {
+	public static class ParameterMementoImpl implements ParameterMemento {
 		private final Integer position;
 		private final String name;
 		private final ParameterMode mode;
@@ -130,7 +133,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 		 * @param hibernateType The Hibernate Type.
 		 * @param passNulls Should NULL values to passed to the database?
 		 */
-		public CallableParameterMemento(
+		public ParameterMementoImpl(
 				int position,
 				String name,
 				ParameterMode mode,
@@ -170,8 +173,8 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 		}
 
 		@Override
-		public QueryParameter toQueryParameter(SharedSessionContractImplementor session) {
-			return null;
+		public ParameterRegistrationImplementor resolve(SharedSessionContractImplementor session) {
+			throw new NotYetImplementedFor6Exception();
 		}
 
 		/**
@@ -181,8 +184,8 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 		 *
 		 * @return The memento
 		 */
-		public static ParameterMemento fromRegistration(ParameterRegistrationImplementor registration) {
-			return new ParameterMemento(
+		public static ParameterMementoImpl fromRegistration(ParameterRegistrationImplementor registration) {
+			return new ParameterMementoImpl(
 					registration.getPosition(),
 					registration.getName(),
 					registration.getMode(),

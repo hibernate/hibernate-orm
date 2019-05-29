@@ -140,7 +140,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 			// this will throw an error if there's something wrong.
 			try {
 				log.debugf( "Checking named query: %s", hqlMemento.getName() );
-				final SqmStatement sqmStatement = sqmProducer.interpret( hqlMemento.getQueryString() );
+				final SqmStatement sqmStatement = sqmProducer.interpret( hqlMemento.getHqlString() );
 
 				if ( cachingEnabled ) {
 					// todo (6.0) : need to cache these; however atm that requires producing a SqmQueryImpl

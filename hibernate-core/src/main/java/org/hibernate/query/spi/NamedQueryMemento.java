@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-
 /**
  * Base contract for all named query mementos
  *
@@ -23,9 +21,4 @@ public interface NamedQueryMemento {
 	 * Makes a copy of the memento
 	 */
 	NamedQueryMemento makeCopy(String name);
-
-	/**
-	 * Convert the memento into an executable query
-	 */
-	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
 }

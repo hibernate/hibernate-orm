@@ -6,11 +6,10 @@
  */
 package org.hibernate.query.sql.spi;
 
-import java.util.Collection;
+import java.util.Set;
 
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.spi.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.NamedQueryMemento;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 
@@ -20,48 +19,42 @@ import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
  * @author Steve Ebersole
  */
 public interface NamedNativeQueryMemento extends NamedQueryMemento {
+	/**
+	 * Informational access to the SQL query string
+	 */
 	String getSqlString();
+
+	/**
+	 * Convert the memento into an executable query
+	 */
+	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
 
 	@Override
 	NamedNativeQueryMemento makeCopy(String name);
-
-	@Override
-	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
-
 
 	/**
 	 * Delegate used in creating named HQL query mementos.
 	 *
 	 * @see org.hibernate.boot.spi.NamedNativeQueryMapping
 	 */
-	class Builder {
-		protected String name;
+	class Builder extends AbstractNamedQueryMemento.AbstractBuilder<Builder> {
 		protected String queryString;
-		protected boolean cacheable;
-		protected String cacheRegion;
-		protected CacheMode cacheMode;
-		protected Integer timeout;
-		protected Integer fetchSize;
-		protected FlushMode flushMode;
-		protected boolean readOnly;
-		protected String comment;
+
 		protected Integer firstResult;
 		protected Integer maxResults;
 
-		private Collection<String> querySpaces;
-		private String resultSetMappingName;
-		private String resultSetMappingClassName;
+		protected Set<String> querySpaces;
 
+		protected String resultSetMappingName;
+		protected String resultSetMappingClassName;
 
-		public Builder() {
-		}
 
 		public Builder(String name) {
-			this.name = name;
+			super( name );
 		}
 
-		public Builder setName(String name) {
-			this.name = name;
+		@Override
+		protected Builder getThis() {
 			return this;
 		}
 
@@ -75,41 +68,6 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 			return this;
 		}
 
-		public Builder setCacheRegion(String cacheRegion) {
-			this.cacheRegion = cacheRegion;
-			return this;
-		}
-
-		public Builder setCacheMode(CacheMode cacheMode) {
-			this.cacheMode = cacheMode;
-			return this;
-		}
-
-		public Builder setTimeout(Integer timeout) {
-			this.timeout = timeout;
-			return this;
-		}
-
-		public Builder setFetchSize(Integer fetchSize) {
-			this.fetchSize = fetchSize;
-			return this;
-		}
-
-		public Builder setFlushMode(FlushMode flushMode) {
-			this.flushMode = flushMode;
-			return this;
-		}
-
-		public Builder setReadOnly(boolean readOnly) {
-			this.readOnly = readOnly;
-			return this;
-		}
-
-		public Builder setComment(String comment) {
-			this.comment = comment;
-			return this;
-		}
-
 		public Builder setFirstResult(Integer firstResult) {
 			this.firstResult = firstResult;
 			return this;
@@ -120,7 +78,7 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 			return this;
 		}
 
-		public void setQuerySpaces(Collection<String> querySpaces) {
+		public void setQuerySpaces(Set<String> querySpaces) {
 			this.querySpaces = querySpaces;
 		}
 
@@ -132,20 +90,22 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 			this.resultSetMappingClassName = resultSetMappingClassName;
 		}
 
-		public NamedNativeQueryMemento createNamedQueryDefinition() {
+		public NamedNativeQueryMemento build() {
 			return new NamedNativeQueryMementoImpl(
 					name,
 					queryString,
+					resultSetMappingName,
+					resultSetMappingClassName,
+					querySpaces,
 					cacheable,
 					cacheRegion,
+					cacheMode,
+					flushMode,
+					readOnly,
 					timeout,
 					fetchSize,
-					flushMode,
-					cacheMode,
-					readOnly,
 					comment,
-					firstResult,
-					maxResults
+					hints
 			);
 		}
 	}

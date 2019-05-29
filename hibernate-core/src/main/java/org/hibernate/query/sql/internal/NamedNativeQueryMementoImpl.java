@@ -24,13 +24,17 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
  */
 public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento implements NamedNativeQueryMemento {
 	private final String sqlString;
-	private final String resultSetMappingName;
+
+	private String resultSetMappingName;
+	private String resultSetMappingClassName;
+
 	private final Set<String> querySpaces;
 
 	public NamedNativeQueryMementoImpl(
 			String name,
 			String sqlString,
 			String resultSetMappingName,
+			String resultSetMappingClassName,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
@@ -55,6 +59,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 		);
 		this.sqlString = sqlString;
 		this.resultSetMappingName = resultSetMappingName;
+		this.resultSetMappingClassName = resultSetMappingClassName;
 		this.querySpaces = querySpaces;
 	}
 
@@ -67,20 +72,19 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	public NamedNativeQueryMemento makeCopy(String name) {
 		return new NamedNativeQueryMementoImpl(
 				name,
-				getParameterMementos(),
 				sqlString,
 				resultSetMappingName,
-				getQuerySpaces(),
-				getCacheable(),
-				getCacheRegion(),
-				getCacheMode(),
-				getFlushMode(),
-				getReadOnly(),
-				getLockOptions(),
-				getTimeout(),
-				getFetchSize(),
-				getComment(),
-				getHints()
+				resultSetMappingClassName,
+				querySpaces,
+				cacheable,
+				cacheRegion,
+				cacheMode,
+				flushMode,
+				readOnly,
+				timeout,
+				fetchSize,
+				comment,
+				hints
 		);
 	}
 

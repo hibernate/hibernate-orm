@@ -6,8 +6,6 @@
  */
 package org.hibernate.procedure.spi;
 
-import java.util.Map;
-
 import org.hibernate.Incubating;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -22,16 +20,8 @@ import org.hibernate.query.spi.NamedQueryMemento;
  */
 @Incubating
 public interface NamedCallableQueryMemento extends NamedQueryMemento {
-	@Override
-	default String getQueryString() {
-		return getCallableName();
-	}
-
 	/**
-	 * The name of the database callable to execute.  Whereas {@link #getName()}
-	 * describes the name under which the named query is registered with the
-	 * SessionFactory, the callable name is the actual database procedure/function
-	 * name
+	 * Informational access to the name of the database function or procedure
 	 */
 	String getCallableName();
 
@@ -66,12 +56,7 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento {
 	 */
 	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session);
 
-	/**
-	 * Access to any hints associated with the memento.
-	 * <p/>
-	 * IMPL NOTE : exposed separately because only HEM needs access to this.
-	 *
-	 * @return The hints.
-	 */
-	Map<String, Object> getHintsMap();
+	interface ParameterMemento {
+		ParameterRegistrationImplementor resolve(SharedSessionContractImplementor session);
+	}
 }

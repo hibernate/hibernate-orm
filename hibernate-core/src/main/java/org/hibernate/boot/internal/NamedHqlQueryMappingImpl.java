@@ -6,17 +6,13 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.List;
 import java.util.Map;
-import javax.persistence.ParameterMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.AbstractNamedQueryMapping;
 import org.hibernate.boot.spi.NamedHqlQueryMapping;
-import org.hibernate.boot.spi.NamedQueryParameterMapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
@@ -28,11 +24,11 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 	private final String hqlString;
 	private final Integer firstResult;
 	private final Integer maxResults;
+	private final Map<String, String> parameterTypes;
 
 	public NamedHqlQueryMappingImpl(
 			String name,
 			String hqlString,
-			List<NamedQueryParameterMapping> parameterMappings,
 			Integer firstResult,
 			Integer maxResults,
 			Boolean cacheable,
@@ -44,10 +40,10 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
+			Map<String,String> parameterTypes,
 			Map<String,Object> hints) {
 		super(
 				name,
-				parameterMappings,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -62,6 +58,7 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 		this.hqlString = hqlString;
 		this.firstResult = firstResult;
 		this.maxResults = maxResults;
+		this.parameterTypes = parameterTypes;
 	}
 
 	@Override
@@ -74,7 +71,6 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 		return new NamedHqlQueryMementoImpl(
 				getName(),
 				hqlString,
-				resolveParameterMappings( factory ),
 				firstResult,
 				maxResults,
 				getCacheable(),
@@ -86,6 +82,7 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
+				parameterTypes,
 				getHints()
 		);
 	}
@@ -95,6 +92,8 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 
 		private Integer firstResult;
 		private Integer maxResults;
+
+		private Map<String,String> parameterTypes;
 
 		public Builder(String name, String hqlString) {
 			super( name );
@@ -116,33 +115,10 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 			return getThis();
 		}
 
-		@Override
-		protected NamedQueryParameterMapping createPositionalParameter(int i, Class javaType, ParameterMode mode) {
-			/// todo (6.0) : this really ought to just adjust the type, if one...
-			throw new NotYetImplementedFor6Exception();
-//			return new ParameterDefinition() {
-//				@Override
-//				public ParameterDescriptor resolve(SessionFactoryImplementor factory) {
-//					return new ParameterDescriptor() {
-//						@Override
-//						public QueryParameter toQueryParameter(SharedSessionContractImplementor session) {
-//							return new QueryParameterPositionalImpl( i,  );
-//						}
-//					};
-//				}
-//			};
-		}
-
-		@Override
-		protected NamedQueryParameterMapping createNamedParameter(String name, Class javaType, ParameterMode mode) {
-			throw new NotYetImplementedFor6Exception();
-		}
-
 		public NamedHqlQueryMappingImpl build() {
 			return new NamedHqlQueryMappingImpl(
 					getName(),
 					hqlString,
-					getParameterMappings(),
 					firstResult,
 					maxResults,
 					getCacheable(),
@@ -154,6 +130,7 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 					getTimeout(),
 					getFetchSize(),
 					getComment(),
+					parameterTypes,
 					getHints()
 			);
 		}

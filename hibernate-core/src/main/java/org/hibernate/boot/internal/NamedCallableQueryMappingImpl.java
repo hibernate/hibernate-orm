@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.internal;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,12 +16,14 @@ import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AbstractNamedQueryMapping;
 import org.hibernate.boot.spi.NamedCallableQueryMapping;
-import org.hibernate.boot.spi.NamedQueryParameterMapping;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -29,17 +33,20 @@ import org.hibernate.query.procedure.internal.ProcedureParameterImpl;
  * @author Steve Ebersole
  */
 public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping implements NamedCallableQueryMapping {
+	private static final Class[] NO_CLASSES = new Class[0];
+
 	private final String callableName;
+	private final List<ParameterMapping> parameterMappings;
 	private final List<String> resultSetMappingNames;
-	private final List<Class> resultClasses;
+	private final List<String> resultSetMappingClassNames;
 	private final Set<String> querySpaces;
 
 	public NamedCallableQueryMappingImpl(
 			String name,
 			String callableName,
-			List<NamedQueryParameterMapping> parameterMappings,
-			List<Class> resultClasses,
+			List<ParameterMapping> parameterMappings,
 			List<String> resultSetMappingNames,
+			List<String> resultSetMappingClassNames,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
@@ -53,7 +60,6 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 			Map<String,Object> hints) {
 		super(
 				name,
-				parameterMappings,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -67,8 +73,9 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 		);
 
 		this.callableName = callableName;
+		this.parameterMappings = parameterMappings;
 		this.resultSetMappingNames = resultSetMappingNames;
-		this.resultClasses = resultClasses;
+		this.resultSetMappingClassNames = resultSetMappingClassNames;
 		this.querySpaces = querySpaces;
 	}
 
@@ -79,15 +86,14 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 				callableName,
 				ParameterStrategy.UNKNOWN,
 				resolveParameterMappings( factory ),
-				resultClasses,
-				resultSetMappingNames,
+				(String[]) resultSetMappingNames.toArray(),
+				toResultClasses( resultSetMappingClassNames, factory ),
 				querySpaces,
 				getCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
 				getFlushMode(),
 				getReadOnly(),
-				getLockOptions(),
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
@@ -95,20 +101,45 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 		);
 	}
 
-	@Override
-	protected List<? extends NamedCallableQueryMementoImpl.CallableParameterMemento> resolveParameterMappings(SessionFactoryImplementor factory) {
-		//noinspection unchecked
-		return (List) super.resolveParameterMappings( factory );
+	protected List<NamedCallableQueryMemento.ParameterMemento> resolveParameterMappings(SessionFactoryImplementor factory) {
+		if ( parameterMappings == null || parameterMappings.isEmpty() ) {
+			return Collections.emptyList();
+		}
+
+		final ArrayList<NamedCallableQueryMemento.ParameterMemento> mementos = CollectionHelper.arrayList( parameterMappings.size() );
+		parameterMappings.forEach( mapping -> mementos.add( mapping.resolve( factory ) ) );
+		return mementos;
+	}
+
+	private static Class<?>[] toResultClasses(List<String> classNames, SessionFactoryImplementor factory) {
+		if ( classNames == null || classNames.isEmpty() ) {
+			return NO_CLASSES;
+		}
+
+		final ClassLoaderService classLoaderService = factory.getServiceRegistry().getService( ClassLoaderService.class );
+
+		final Class<?>[] classes = new Class[ classNames.size() ];
+		int i = 0;
+		for ( String className : classNames ) {
+			try {
+				classes[ i++ ] = classLoaderService.classForName( className );
+			}
+			catch (Exception e) {
+				throw new HibernateException( "Could not resolve class name given as procedure-call result class: " + className, e );
+			}
+		}
+
+		return classes;
 	}
 
 	public static class Builder extends AbstractBuilder<Builder> {
 		private String callableName;
 
-		private List<Class> resultClasses;
+		private List<String> resultSetMappingClassNames;
 		private List<String> resultSetMappingNames;
 
 		private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
-		private List<NamedCallableQueryParameterMapping> parameterMappings;
+		private List<ParameterMapping> parameterMappings;
 
 		public Builder(String name) {
 			super( name );
@@ -116,6 +147,21 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 
 		@Override
 		protected Builder getThis() {
+			return this;
+		}
+
+		public Builder setCallableName(String callableName) {
+			this.callableName = callableName;
+			return this;
+		}
+
+		public Builder setResultSetMappingClassNames(List<String> resultSetMappingClassNames) {
+			this.resultSetMappingClassNames = resultSetMappingClassNames;
+			return this;
+		}
+
+		public Builder setResultSetMappingNames(List<String> resultSetMappingNames) {
+			this.resultSetMappingNames = resultSetMappingNames;
 			return this;
 		}
 
@@ -132,11 +178,12 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 			if ( BinderHelper.isEmptyAnnotationValue( parameter.name() ) ) {
 				consumeNamedParameter( parameter.name(), parameter.type(), parameter.mode() );
 			}
-			if ( parameter.name() != null ) {
+			else {
+				consumePositionalParameter( parameter.type(), parameter.mode() );
 			}
 		}
 
-		private void consumeNamedParameter(String name, Class type, ParameterMode mode) {
+		private void consumeNamedParameter(String name, Class javaType, ParameterMode mode) {
 			if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
 				throw new IllegalArgumentException(
 						"Named queries cannot mix named and positional parameters: " + getName()
@@ -144,50 +191,44 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 			}
 
 			parameterStrategy = ParameterStrategy.NAMED;
-			final NamedCallableQueryParameterMapping namedParameter = new NamedCallableQueryParameterMapping() {
-				@Override
-				public ParameterMemento resolve(SessionFactoryImplementor factory) {
-					return session -> new ProcedureParameterImpl(
-							label,
-							mode,
-							javaType,
-							factory.getMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType ),
-							factory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled()
-					);
-				}
-			};
-			parameterMappings.add( namedParameter );
-		}
 
-		@Override
-		protected NamedCallableQueryParameterMapping createPositionalParameter(int label, Class javaType, ParameterMode mode) {
-			return
-		}
-
-		@Override
-		protected NamedCallableQueryParameterMapping createNamedParameter(String name, Class javaType, ParameterMode mode) {
-			//noinspection Convert2Lambda
-			return new NamedQueryParameterMapping() {
-				@Override
-				@SuppressWarnings("unchecked")
-				public ParameterMemento resolve(SessionFactoryImplementor factory) {
-					return session -> new ProcedureParameterImpl(
+			parameterMappings.add(
+					(ParameterMapping) factory -> session -> new ProcedureParameterImpl(
 							name,
 							mode,
 							javaType,
 							factory.getMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType ),
 							factory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled()
-					);
-				}
-			};
+					)
+			);
+		}
+
+		private void consumePositionalParameter(Class javaType, ParameterMode mode) {
+			if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
+				throw new IllegalArgumentException(
+						"Named queries cannot mix named and positional parameters: " + getName()
+				);
+			}
+
+			parameterStrategy = ParameterStrategy.POSITIONAL;
+
+			parameterMappings.add(
+					(ParameterMapping) factory -> session -> new ProcedureParameterImpl(
+							parameterMappings.size(),
+							mode,
+							javaType,
+							factory.getMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType ),
+							factory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled()
+					)
+
 		}
 
 		public NamedCallableQueryMapping build() {
 			return new NamedCallableQueryMappingImpl(
 					getName(),
 					callableName,
-					getParameterMappings(),
-					resultClasses,
+					parameterMappings,
+					resultSetMappingClassNames,
 					resultSetMappingNames,
 					getQuerySpaces(),
 					getCacheable(),
@@ -201,19 +242,6 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 					getComment(),
 					getHints()
 			);
-		}
-
-		public Builder setCallableName(String callableName) {
-			this.callableName = callableName;
-			return this;
-		}
-	}
-
-	private static class NamedCallableQueryParameterMapping implements NamedQueryParameterMapping {
-
-		@Override
-		public ParameterMemento resolve(SessionFactoryImplementor factory) {
-			return null;
 		}
 	}
 }

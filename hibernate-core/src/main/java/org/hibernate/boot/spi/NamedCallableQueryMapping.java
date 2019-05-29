@@ -6,9 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.List;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 
 /**
@@ -18,9 +17,10 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
  * @author Gavin King
  */
 public interface NamedCallableQueryMapping extends NamedQueryMapping {
-	List<String> getResultSetMappingNames();
-	List<Class> getResultSetMappingClasses();
-
 	@Override
 	NamedCallableQueryMemento resolve(SessionFactoryImplementor factory);
+
+	interface ParameterMapping {
+		NamedCallableQueryMementoImpl.ParameterMementoImpl resolve(SessionFactoryImplementor factory);
+	}
 }

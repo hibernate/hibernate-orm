@@ -439,4 +439,12 @@ public class H2Dialect extends Dialect {
 	public String translateDatetimeFormat(String format) {
 		return new Replacer( format, "'", "''" ).result(); //NICE!!
 	}
+
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			default: return unit.toString();
+		}
+	}
+
 }

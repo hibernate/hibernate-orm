@@ -341,9 +341,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select e.theTimestamp - (4 day + 2 hour) from EntityOfBasics e")
 							.list();
-					//TODO: reenable this test after updating h2 to h2-1.4.199.jar
-//					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
-//							.list();
+					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
+							.list();
 				}
 		);
 	}
@@ -428,6 +427,10 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select (e.theTimestamp - e.theTimestamp + (4 day + 2 hour)) by second from EntityOfBasics e")
 							.list();
 					session.createQuery("select (e.theTimestamp - (e.theTimestamp + (4 day + 2 hour))) by second from EntityOfBasics e")
+							.list();
+
+
+					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
 							.list();
 				}
 		);

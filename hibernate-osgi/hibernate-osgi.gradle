@@ -17,7 +17,10 @@ ext {
 	paxExamVersion = '4.12.0'
 }
 
-test.enabled = true
+if ( JavaVersion.current().isJava11Compatible() ) {
+	logger.warn( '[WARN] Skipping all tests for hibernate-osgi due to Karaf/Pax-Exam issues with latest JDK 11' )
+	test.enabled = false
+}
 
 sourceSets {
 	test {

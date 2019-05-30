@@ -13,7 +13,6 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.query.sqm.produce.SqmCreationHelper.buildRootNavigablePath;

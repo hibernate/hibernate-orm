@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -67,6 +68,11 @@ public class SqmBasicValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 
 	@Override
 	public <S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType) throws PathException {
+		throw new UnsupportedOperationException( "Basic-value cannot be treated (downcast)" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		throw new UnsupportedOperationException( "Basic-value cannot be treated (downcast)" );
 	}
 }

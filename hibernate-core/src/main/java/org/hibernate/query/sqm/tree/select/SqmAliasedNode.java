@@ -6,10 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Models any aliased expression.  E.g. `select exp as e ...`
@@ -28,12 +27,7 @@ public interface SqmAliasedNode<T> extends SqmTypedNode<T> {
 	String getAlias();
 
 	@Override
-	default JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getSelectableNode().getJavaTypeDescriptor();
-	}
-
-	@Override
-	default ExpressableType<T> getNodeType() {
+	default SqmExpressable<T> getNodeType() {
 		return getSelectableNode().getNodeType();
 	}
 }

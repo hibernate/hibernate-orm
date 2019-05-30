@@ -90,7 +90,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 			SqmExpression selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new SemanticException( "Non-plural path [" + currentContextKey + "] cannot be index-accessed" );
+		throw new SemanticException( "Non-plural path [" + getNavigablePath() + "] cannot be index-accessed" );
 	}
 
 	/**

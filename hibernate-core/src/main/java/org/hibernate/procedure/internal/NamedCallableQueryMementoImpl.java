@@ -100,15 +100,15 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 				resultSetMappingNames,
 				resultSetMappingClasses,
 				querySpaces,
-				cacheable,
-				cacheRegion,
-				cacheMode,
-				flushMode,
-				readOnly,
-				timeout,
-				fetchSize,
-				comment,
-				hints
+				getCacheable(),
+				getCacheRegion(),
+				getCacheMode(),
+				getFlushMode(),
+				getReadOnly(),
+				getTimeout(),
+				getFetchSize(),
+				getComment(),
+				getHints()
 		);
 	}
 

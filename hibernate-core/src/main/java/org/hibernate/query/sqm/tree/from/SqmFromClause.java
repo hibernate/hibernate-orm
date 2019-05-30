@@ -33,6 +33,7 @@ public class SqmFromClause {
 	/**
 	 * Inject the complete set of domain roots
 	 */
+	@SuppressWarnings({"WeakerAccess", "unused"})
 	public void setRoots(List<SqmRoot> domainRoots) {
 		this.domainRoots = domainRoots;
 	}

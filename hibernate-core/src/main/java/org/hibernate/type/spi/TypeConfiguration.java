@@ -536,6 +536,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return basicTypeByJavaType.computeIfAbsent(
 				javaType,
 				jt -> {
+					// See if one exists in the BasicTypeRegistry and use that one if so
+					final BasicType registeredType = basicTypeRegistry.getRegisteredType( javaType );
+					if ( registeredType != null ) {
+						return registeredType;
+					}
+
+					// otherwise, apply the creator
 					final JavaTypeDescriptor javaTypeDescriptor = javaTypeDescriptorRegistry.resolveDescriptor( javaType );
 					return creator.apply( javaTypeDescriptor );
 				}

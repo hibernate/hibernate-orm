@@ -18,14 +18,16 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmPredicate extends AbstractSqmExpression<Boolean> implements SqmPredicate {
+	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmPredicate(NodeBuilder criteriaBuilder) {
-		super( StandardSpiBasicTypes.BOOLEAN, criteriaBuilder );
+		//noinspection unchecked
+		super( StandardBasicTypes.BOOLEAN, criteriaBuilder );
 	}
 
 	@Override

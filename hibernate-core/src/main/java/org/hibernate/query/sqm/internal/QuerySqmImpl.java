@@ -26,6 +26,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.internal.ParameterMetadataImpl;
@@ -41,7 +42,6 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.consume.spi.QuerySplitter;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
 import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
@@ -435,9 +435,11 @@ public class QuerySqmImpl<R>
 		final String entityNameToDelete = sqmDelete.getTarget().getReferencedPathSource().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToDelete );
 
-		final DeleteHandler deleteHandler = entityDescriptor.getHierarchy()
-				.getSqmMutationStrategy()
-				.buildDeleteHandler( sqmDelete, domainParameterXref, this::getSessionFactory );
+		final DeleteHandler deleteHandler = entityDescriptor.getSqmMultiTableMutationStrategy().buildDeleteHandler(
+				sqmDelete,
+				domainParameterXref,
+				this::getSessionFactory
+		);
 
 		return new DeleteQueryPlanImpl( sqmDelete, deleteHandler, this );
 	}
@@ -448,9 +450,11 @@ public class QuerySqmImpl<R>
 		final String entityNameToUpdate = sqmStatement.getTarget().getReferencedPathSource().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
 
-		final UpdateHandler updateHandler = entityDescriptor.getHierarchy()
-				.getSqmMutationStrategy()
-				.buildUpdateHandler( sqmStatement, domainParameterXref, this::getSessionFactory );
+		final UpdateHandler updateHandler = entityDescriptor.getSqmMultiTableMutationStrategy().buildUpdateHandler(
+				sqmStatement,
+				domainParameterXref,
+				this::getSessionFactory
+		);
 
 		return new UpdateQueryPlanImpl( sqmStatement, updateHandler, this );
 	}

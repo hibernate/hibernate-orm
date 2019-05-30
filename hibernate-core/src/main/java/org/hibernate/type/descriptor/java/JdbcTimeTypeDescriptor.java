@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -23,25 +24,42 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public static final JdbcTimeTypeDescriptor INSTANCE = new JdbcTimeTypeDescriptor();
+
+	@SuppressWarnings("WeakerAccess")
 	public static final String TIME_FORMAT = "HH:mm:ss.SSS";
+
+	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( TIME_FORMAT );
+
+	/**
+	 * Alias for {@link java.time.format.DateTimeFormatter#ISO_LOCAL_TIME}.
+	 *
+	 * Intended for use with logging
+	 *
+	 * @see #LITERAL_FORMATTER
+	 */
+	@SuppressWarnings("unused")
+	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 
 	public static class TimeMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final TimeMutabilityPlan INSTANCE = new TimeMutabilityPlan();
 		@Override
 		public Date deepCopyNotNull(Date value) {
-			return Time.class.isInstance( value )
+			return value instanceof Time
 					? new Time( value.getTime() )
 					: new Date( value.getTime() );
 		}
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public JdbcTimeTypeDescriptor() {
 		super( Date.class, TimeMutabilityPlan.INSTANCE );
 	}
+
 	@Override
 	public String toString(Date value) {
 		return new SimpleDateFormat( TIME_FORMAT ).format( value );
 	}
+
 	@Override
 	public java.util.Date fromString(String string) {
 		try {
@@ -95,19 +113,19 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 			return null;
 		}
 		if ( Time.class.isAssignableFrom( type ) ) {
-			final Time rtn = Time.class.isInstance( value )
+			final Time rtn = value instanceof Time
 					? ( Time ) value
 					: new Time( value.getTime() );
 			return (X) rtn;
 		}
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			final java.sql.Date rtn = java.sql.Date.class.isInstance( value )
+			final java.sql.Date rtn = value instanceof java.sql.Date
 					? ( java.sql.Date ) value
 					: new java.sql.Date( value.getTime() );
 			return (X) rtn;
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			final java.sql.Timestamp rtn = java.sql.Timestamp.class.isInstance( value )
+			final java.sql.Timestamp rtn = value instanceof java.sql.Timestamp
 					? ( java.sql.Timestamp ) value
 					: new java.sql.Timestamp( value.getTime() );
 			return (X) rtn;
@@ -130,19 +148,19 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( Time.class.isInstance( value ) ) {
+		if ( value instanceof Time ) {
 			return (Time) value;
 		}
 
-		if ( Long.class.isInstance( value ) ) {
+		if ( value instanceof Long ) {
 			return new Time( (Long) value );
 		}
 
-		if ( Calendar.class.isInstance( value ) ) {
+		if ( value instanceof Calendar ) {
 			return new Time( ( (Calendar) value ).getTimeInMillis() );
 		}
 
-		if ( Date.class.isInstance( value ) ) {
+		if ( value instanceof Date ) {
 			return new Time( ( (Date) value ).getTime() );
 		}
 

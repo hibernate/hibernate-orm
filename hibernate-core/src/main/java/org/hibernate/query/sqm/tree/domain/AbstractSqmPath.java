@@ -22,7 +22,6 @@ import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -124,6 +123,11 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 					}
 
 					@Override
+					public DomainType sqmAs(Class type) {
+						return null;
+					}
+
+					@Override
 					public SqmPath createSqmPath(SqmPath lhs, SqmCreationState creationState) {
 						return new SqmBasicValuedSimplePath( discriminatorNavigablePath, this, AbstractSqmPath.this, nodeBuilder() );
 					}
@@ -142,16 +146,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 					public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
 						return null;
 					}
-
-					@Override
-					public SemanticPathPart resolvePathPart(
-							String name,
-							String currentContextKey,
-							boolean isTerminal,
-							SqmCreationState creationState) {
-						return findSubPathSource( name );
-					}
 				};
+
 				pathTypeExpression = new SqmBasicValuedSimplePath(
 						discriminatorNavigablePath,
 						discriminatorPathSource,

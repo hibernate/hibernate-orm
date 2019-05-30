@@ -30,7 +30,8 @@ import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
 /**
  * @author Steve Ebersole
  */
-public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements JpaCriteriaQuery<T>, SqmStatement<T>, org.hibernate.query.sqm.tree.internal.ParameterCollector {
+public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements JpaCriteriaQuery<T>, SqmStatement<T>,
+		org.hibernate.query.sqm.internal.ParameterCollector {
 	private final SqmQuerySource querySource;
 
 	private Set<SqmParameter<?>> parameters;

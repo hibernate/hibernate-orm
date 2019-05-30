@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -114,6 +115,11 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		return null;
 	}
 
 	//	@Override

@@ -82,10 +82,14 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <S extends T> SqmTreatedSimplePath<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityDomainType<S> treatTargetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
-		return new SqmTreatedSimplePath( this, treatTargetDescriptor, nodeBuilder() );
+		return (SqmTreatedSimplePath<T, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		//noinspection unchecked
+		return new SqmTreatedSimplePath( this, treatTarget, nodeBuilder() );
 	}
 
 }

@@ -27,6 +27,7 @@ import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.QueryParameters;
@@ -67,7 +68,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ProcedureCallImpl<R>
-		extends AbstractProducedQuery<R>
+		extends AbstractQuery<R>
 		implements ProcedureCallImplementor<R>, ResultContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -95,7 +96,7 @@ public class ProcedureCallImpl<R>
 	 * @param procedureName The name of the procedure to call
 	 */
 	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName) {
-		super( session, null );
+		super( session );
 		this.procedureName = procedureName;
 		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
@@ -113,7 +114,7 @@ public class ProcedureCallImpl<R>
 	 * @param resultClasses The classes making up the result
 	 */
 	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, Class... resultClasses) {
-		super( session, null );
+		super( session );
 		this.procedureName = procedureName;
 		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
@@ -155,7 +156,7 @@ public class ProcedureCallImpl<R>
 	 * @param resultSetMappings The names of the result set mappings making up the result
 	 */
 	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, String... resultSetMappings) {
-		super( session, null );
+		super( session );
 		this.procedureName = procedureName;
 		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
@@ -201,9 +202,9 @@ public class ProcedureCallImpl<R>
 	 * @param memento The named/stored memento
 	 */
 	@SuppressWarnings("unchecked")
-	ProcedureCallImpl(SharedSessionContractImplementor session, NamedCallableQueryMementoImpl memento) {
-		super( session, null );
-		this.procedureName = memento.getProcedureName();
+	ProcedureCallImpl(SharedSessionContractImplementor session, NamedCallableQueryMemento memento) {
+		super( session );
+		this.procedureName = memento.getCallableName();
 		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
 		this.queryReturns = memento.getQueryReturns();
@@ -254,11 +255,6 @@ public class ProcedureCallImpl<R>
 		return paramBindings;
 	}
 
-	@Override
-	public SharedSessionContractImplementor getSession() {
-		return getProducer();
-	}
-
 	public ParameterStrategy getParameterStrategy() {
 		return getParameterMetadata().getParameterStrategy();
 	}
@@ -307,7 +303,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ParameterRegistrationImplementor getParameterRegistration(int position) {
-		return getParameterMetadata().getQueryParameter( position );
+		return (ParameterRegistrationImplementor) getParameterMetadata().getQueryParameter( position );
 	}
 
 	@Override
@@ -369,11 +365,11 @@ public class ProcedureCallImpl<R>
 		//		both: (1) add the `? = ` part and also (2) register a REFCURSOR parameter for DBs (Oracle, PGSQL) that
 		//		need it.
 
-		final String call = getProducer().getJdbcServices().getJdbcEnvironment().getDialect().getCallableStatementSupport().renderCallableStatement(
+		final String call = getSession().getJdbcServices().getJdbcEnvironment().getDialect().getCallableStatementSupport().renderCallableStatement(
 				procedureName,
 				getParameterMetadata(),
 				paramBindings,
-				getProducer()
+				getSession()
 		);
 
 		LOG.debugf( "Preparing procedure call : %s", call );
@@ -635,7 +631,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public int executeUpdate() {
-		getProducer().checkTransactionNeededForUpdateOperation(
+		getSession().checkTransactionNeededForUpdateOperation(
 				"javax.persistence.Query.executeUpdate requires active transaction" );
 
 		// the expectation is that there is just one Output, of type UpdateCountOutput
@@ -702,7 +698,7 @@ public class ProcedureCallImpl<R>
 			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
+			getSession().markForRollbackOnly();
 			throw e;
 		}
 	}
@@ -732,7 +728,7 @@ public class ProcedureCallImpl<R>
 			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
+			getSession().markForRollbackOnly();
 			throw e;
 		}
 	}

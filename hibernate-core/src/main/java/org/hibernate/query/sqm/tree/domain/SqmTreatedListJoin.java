@@ -20,6 +20,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	private final SqmListJoin<O,T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
+	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedListJoin(
 			SqmListJoin<O,T> wrappedPath,
 			EntityDomainType<S> treatTarget,
@@ -44,7 +45,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 
 	@Override
 	public ListPersistentAttribute<O, S> getModel() {
-		return (ListPersistentAttribute<O, S>) super.getModel();
+		return super.getModel();
 	}
 
 	@Override
@@ -62,6 +63,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 
 	@Override
 	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		//noinspection unchecked
 		return new SqmTreatedListJoin( wrappedPath, treatTarget, getAlias() );
 	}
 }

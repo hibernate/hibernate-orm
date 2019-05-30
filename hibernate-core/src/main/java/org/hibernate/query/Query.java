@@ -33,6 +33,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
@@ -60,7 +61,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return The producer of this query
 	 */
-	SharedSessionContractImplementor getSession();
+	SharedSessionContract getSession();
 
 	/**
 	 * Get the query string.  Note that this may be {@code null} or some other
@@ -296,7 +297,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind a query parameter using its inferred Type.  If the parameter is
 	 * defined in such a way that the Type cannot be inferred from its usage
 	 * context then use of this form of binding is not allowed, and
-	 * {@link #setParameter(QueryParameter, Object, Type)} should be used instead
+	 * {@link #setParameter(QueryParameter, Object, AllowableParameterType)} should be used instead
 	 *
 	 * @param parameter The query parameter memento
 	 * @param val the possibly-null parameter value
@@ -456,7 +457,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	/**
 	 * Bind a named query parameter using its inferred Type.  If the parameter is
 	 * defined in such a way that the Type cannot be inferred from its usage context then
-	 * use of this form of binding is not allowed, and {@link #setParameter(String, Object, Type)}
+	 * use of this form of binding is not allowed, and {@link #setParameter(String, Object, AllowableParameterType)}
 	 * should be used instead
 	 *
 	 * @param name the parameter name
@@ -470,7 +471,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	/**
 	 * Bind a positional query parameter using its inferred Type.  If the parameter is
 	 * defined in such a way that the Type cannot be inferred from its usage context then
-	 * use of this form of binding is not allowed, and {@link #setParameter(int, Object, Type)}
+	 * use of this form of binding is not allowed, and {@link #setParameter(int, Object, AllowableParameterType)}
 	 * should be used instead
 	 *
 	 * @param position the position of the parameter in the query

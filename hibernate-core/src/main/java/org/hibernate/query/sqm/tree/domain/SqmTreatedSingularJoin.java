@@ -19,7 +19,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	private final SqmSingularJoin<O,T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
-
+	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedSingularJoin(
 			SqmSingularJoin<O,T> wrappedPath,
 			EntityDomainType<S> treatTarget,
@@ -60,6 +60,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 
 	@Override
 	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		//noinspection unchecked
 		return new SqmTreatedSingularJoin( wrappedPath, treatTarget, getAlias() );
 	}
 }

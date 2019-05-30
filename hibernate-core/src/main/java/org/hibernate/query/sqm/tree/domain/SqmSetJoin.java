@@ -34,7 +34,6 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class SqmSetJoin<O, E>
 		extends AbstractSqmPluralJoin<O,Set<E>, E>
 		implements JpaSetJoin<O, E> {
-	@SuppressWarnings("WeakerAccess")
 	public SqmSetJoin(
 			SqmFrom<?,O> lhs,
 			SetPersistentAttribute<O, E> pluralValuedNavigable,
@@ -135,6 +134,7 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		//noinspection unchecked
 		return new SqmSetJoin(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),

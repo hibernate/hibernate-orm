@@ -79,6 +79,7 @@ import org.hibernate.query.internal.QueryImpl;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
@@ -368,6 +369,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	@Override
+	public void prepareForQueryExecution(boolean requiresTxn) {
+		checkOpen();
+		checkTransactionSynchStatus();
+
+		if ( requiresTxn && !isTransactionInProgress() ) {
+			throw new TransactionRequiredException(
+					"Query requires transaction be in progress, but no transaction is known to be in progress"
+			);
+		}
+	}
+
 	protected void checkOpenOrWaitingForAutoClose() {
 		if ( !waitingForAutoClose ) {
 			checkOpen();
@@ -621,26 +634,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
-	protected QueryImplementor createQuery(NamedHqlQueryMementoImpl queryDefinition) {
-		String queryString = queryDefinition.getQueryString();
-		final QueryImpl query = new QueryImpl(
-				this,
-				getQueryPlan( queryString, false ).getParameterMetadata(),
-				queryString
-		);
-		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
-		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getRegistrationName() );
-		if ( queryDefinition.getLockOptions() != null ) {
-			query.setLockOptions( queryDefinition.getLockOptions() );
-		}
-
-		initQueryFromNamedDefinition( query, queryDefinition );
-//		applyQuerySettingsAndHints( query );
-
-		return query;
+	protected QueryImplementor createQuery(NamedHqlQueryMemento memento) {
+		//noinspection unchecked
+		return new QuerySqmImpl( memento, null, this );
 	}
 
-	private NativeQueryImplementor createNativeQuery(NamedSQLQueryDefinition queryDefinition, boolean isOrdinalParameterZeroBased) {
+	private NativeQueryImplementor createNativeQuery(NamedNativeQueryMemento queryDefinition, boolean isOrdinalParameterZeroBased) {
 		final ParameterMetadata parameterMetadata = factory.getQueryPlanCache().getSQLParameterMetadata(
 				queryDefinition.getQueryString(),
 				isOrdinalParameterZeroBased
@@ -649,16 +648,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private NativeQueryImplementor getNativeQueryImplementor(
-			NamedSQLQueryDefinition queryDefinition,
+			NamedNativeQueryMemento memento,
 			ParameterMetadata parameterMetadata) {
-		final NativeQueryImpl query = new NativeQueryImpl(
-				queryDefinition,
-				this,
-				parameterMetadata
-		);
-		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
+		final NativeQueryImpl query = new NativeQueryImpl( memento, this, parameterMetadata );
 
-		initQueryFromNamedDefinition( query, queryDefinition );
+		initQueryFromNamedDefinition( query, memento );
 		applyQuerySettingsAndHints( query );
 
 		return query;
@@ -666,9 +660,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected void initQueryFromNamedDefinition(Query query, NamedHqlQueryMementoImpl nqd) {
 		// todo : cacheable and readonly should be Boolean rather than boolean...
-		query.setCacheable( nqd.isCacheable() );
+		query.setCacheable( nqd.getCacheable() );
 		query.setCacheRegion( nqd.getCacheRegion() );
-		query.setReadOnly( nqd.isReadOnly() );
+		query.setReadOnly( nqd.getReadOnly() );
 
 		if ( nqd.getTimeout() != null ) {
 			query.setTimeout( nqd.getTimeout() );
@@ -737,7 +731,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess", "StatementWithEmptyBody"})
-	protected void resultClassChecking(Class resultClass, org.hibernate.Query hqlQuery) {
+	protected void resultClassChecking(Class resultClass, Query hqlQuery) {
 		// make sure the query is a select -> HHH-7192
 		final HQLQueryPlan queryPlan = getFactory().getQueryPlanCache().getHQLQueryPlan(
 				hqlQuery.getQueryString(),
@@ -800,14 +794,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 			// todo : apply stored setting at the JPA Query level too
 
-			final NamedHqlQueryMementoImpl namedQueryDefinition = getFactory().getNamedQueryRepository().getNamedQueryDefinition( name );
-			if ( namedQueryDefinition != null ) {
-				return createQuery( namedQueryDefinition, resultType );
+			final NamedHqlQueryMemento hqlQueryMemento = getFactory().getQueryEngine().getNamedQueryRepository().getHqlQueryMemento( name );
+			if ( hqlQueryMemento != null ) {
+				return createQuery( hqlQueryMemento, resultType );
 			}
 
-			final NamedSQLQueryDefinition nativeQueryDefinition = getFactory().getNamedQueryRepository().getNamedSQLQueryDefinition( name );
-			if ( nativeQueryDefinition != null ) {
-				return (QueryImplementor<T>) createNativeQuery( nativeQueryDefinition, resultType );
+			final NamedNativeQueryMemento nativeQueryMemento = getFactory().getQueryEngine().getNamedQueryRepository().getNativeQueryMemento( name );
+			if ( nativeQueryMemento != null ) {
+				return (QueryImplementor<T>) createNativeQuery( nativeQueryMemento, resultType );
 			}
 
 			throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
@@ -818,7 +812,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
-	protected <T> QueryImplementor<T> createQuery(NamedHqlQueryMementoImpl namedQueryDefinition, Class<T> resultType) {
+	protected <T> QueryImplementor<T> createQuery(NamedHqlQueryMemento namedQueryDefinition, Class<T> resultType) {
 		final QueryImplementor query = createQuery( namedQueryDefinition );
 		if ( resultType != null ) {
 			resultClassChecking( resultType, query );
@@ -827,7 +821,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
-	protected <T> NativeQueryImplementor createNativeQuery(NamedSQLQueryDefinition queryDefinition, Class<T> resultType) {
+	protected <T> NativeQueryImplementor createNativeQuery(NamedNativeQueryMemento queryDefinition, Class<T> resultType) {
 		if ( resultType != null && !Tuple.class.equals( resultType ) ) {
 			resultClassChecking( resultType, queryDefinition );
 		}
@@ -853,7 +847,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected void resultClassChecking(Class resultType, NamedSQLQueryDefinition namedQueryDefinition) {
+	protected void resultClassChecking(Class resultType, NamedNativeQueryMemento namedQueryDefinition) {
 		final NativeSQLQueryReturn[] queryReturns;
 		if ( namedQueryDefinition.getQueryReturns() != null ) {
 			queryReturns = namedQueryDefinition.getQueryReturns();
@@ -881,7 +875,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			catch ( ClassLoadingException e ) {
 				throw new AssertionFailure(
 						"Unable to load class [" + entityClassName + "] declared on named native query [" +
-								namedQueryDefinition.getName() + "]"
+								namedQueryDefinition.getRegistrationName() + "]"
 				);
 			}
 			if ( !resultType.isAssignableFrom( actualReturnedClass ) ) {
@@ -963,7 +957,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
-		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
+		final NamedNativeQueryMemento nativeQueryDefinition = factory.getQueryEngine().getNamedQueryRepository().getNativeQueryMemento( name );
 		if ( nativeQueryDefinition != null ) {
 			return createNativeQuery( nativeQueryDefinition, true );
 		}
@@ -1009,7 +1003,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public ProcedureCall getNamedProcedureCall(String name) {
 		checkOpen();
 
-		final NamedCallableQueryMemento memento = factory.getNamedQueryRepository().getNamedProcedureCallMemento( name );
+		final NamedCallableQueryMemento memento = factory.getQueryEngine().getNamedQueryRepository().getCallableQueryMemento( name );
 		if ( memento == null ) {
 			throw new IllegalArgumentException(
 					"Could not find named stored procedure call with that registration name : " + name

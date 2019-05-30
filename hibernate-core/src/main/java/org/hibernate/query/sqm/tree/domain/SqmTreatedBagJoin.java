@@ -18,14 +18,15 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	private final SqmBagJoin<O, T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedBagJoin(
 			SqmBagJoin<O,T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			String alias) {
+		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(BagPersistentAttribute) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),
@@ -47,6 +48,7 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 
 	@Override
 	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		//noinspection unchecked
 		return new SqmTreatedBagJoin( wrappedPath, treatTarget, getAlias() );
 	}
 }

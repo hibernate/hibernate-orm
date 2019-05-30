@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.internal;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.CacheMode;
@@ -87,52 +88,4 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 		);
 	}
 
-	public  static class Builder extends AbstractBuilder<Builder> {
-		private final String hqlString;
-
-		private Integer firstResult;
-		private Integer maxResults;
-
-		private Map<String,String> parameterTypes;
-
-		public Builder(String name, String hqlString) {
-			super( name );
-			this.hqlString = hqlString;
-		}
-
-		@Override
-		protected Builder getThis() {
-			return this;
-		}
-
-		public Builder setFirstResult(Integer firstResult) {
-			this.firstResult = firstResult;
-			return getThis();
-		}
-
-		public Builder setMaxResults(Integer maxResults) {
-			this.maxResults = maxResults;
-			return getThis();
-		}
-
-		public NamedHqlQueryDefinitionImpl build() {
-			return new NamedHqlQueryDefinitionImpl(
-					getName(),
-					hqlString,
-					firstResult,
-					maxResults,
-					getCacheable(),
-					getCacheRegion(),
-					getCacheMode(),
-					getFlushMode(),
-					getReadOnly(),
-					getLockOptions(),
-					getTimeout(),
-					getFetchSize(),
-					getComment(),
-					parameterTypes,
-					getHints()
-			);
-		}
-	}
 }

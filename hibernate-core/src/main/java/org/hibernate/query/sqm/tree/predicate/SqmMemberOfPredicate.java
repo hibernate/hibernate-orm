@@ -20,6 +20,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		this( pluralPath, false, nodeBuilder );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public SqmMemberOfPredicate(SqmPath pluralPath, boolean negated, NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 

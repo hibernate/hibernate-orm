@@ -21,6 +21,7 @@ public class SqmOrderByClause {
 	public SqmOrderByClause() {
 	}
 
+	@SuppressWarnings("UnusedReturnValue")
 	public SqmOrderByClause addSortSpecification(SqmSortSpecification sortSpecification) {
 		if ( sortSpecifications == null ) {
 			sortSpecifications = new ArrayList<>();
@@ -29,6 +30,7 @@ public class SqmOrderByClause {
 		return this;
 	}
 
+	@SuppressWarnings("unused")
 	public SqmOrderByClause addSortSpecification(SqmExpression<?> expression) {
 		addSortSpecification( new SqmSortSpecification( expression ) );
 		return this;
@@ -43,6 +45,7 @@ public class SqmOrderByClause {
 		}
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public void setSortSpecifications(List<SqmSortSpecification> sortSpecifications) {
 		this.sortSpecifications = new ArrayList<>();
 		this.sortSpecifications.addAll( sortSpecifications );

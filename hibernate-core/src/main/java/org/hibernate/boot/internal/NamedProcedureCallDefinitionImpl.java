@@ -20,6 +20,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.NamedProcedureCallDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.QueryHintDefinition;
+import org.hibernate.query.spi.NamedQueryMemento;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -81,7 +82,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	}
 
 	@Override
-	public NamedCallableQueryMemento toMemento(SessionFactoryImplementor sessionFactory) {
+	public NamedCallableQueryMemento resolve(SessionFactoryImplementor sessionFactory) {
 		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
 		final Set<String> collectedQuerySpaces = new HashSet<>();
 
@@ -137,6 +138,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		}
 
 		return new NamedCallableQueryMementoImpl(
+				getRegistrationName(),
 				procedureName,
 				collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] ),
 				parameterDefinitions.getParameterStrategy(),
@@ -177,7 +179,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 			return parameterStrategy;
 		}
 
-		public List<ParameterMemento> toMementos(SessionFactoryImpl sessionFactory) {
+		public List<ParameterMemento> toMementos(SessionFactoryImplementor sessionFactory) {
 			final List<ParameterMemento> mementos = new ArrayList<ParameterMemento>();
 			for ( ParameterDefinition definition : parameterDefinitions ) {
 				mementos.add(definition.toMemento( sessionFactory ));

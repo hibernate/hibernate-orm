@@ -36,9 +36,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 				rightHandExpression.getNodeType()
 		);
 
-		//noinspection unchecked
 		leftHandExpression.applyInferableType( expressableType );
-		//noinspection unchecked
 		rightHandExpression.applyInferableType( expressableType );
 	}
 

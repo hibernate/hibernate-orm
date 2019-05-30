@@ -15,10 +15,10 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.NamedHqlQueryDefinition;
 import org.hibernate.boot.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.spi.NamedProcedureCallDefinition;
+import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
@@ -132,7 +132,7 @@ public interface Metadata extends Mapping {
 
 	java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryMappings();
 
-	java.util.Collection<NamedProcedureCallDefinitionImpl> getNamedProcedureCallMappings();
+	java.util.Collection<NamedProcedureCallDefinition> getNamedProcedureCallMappings();
 
 	/**
 	 * Retrieve the metadata for a named SQL result set mapping.
@@ -141,9 +141,9 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named result set mapping metadata, or {@code null} if none found.
 	 */
-	ResultSetMappingDescriptor getResultSetMapping(String name);
+	NamedResultSetMappingDefinition getResultSetMapping(String name);
 
-	Map<String, ResultSetMappingDescriptor> getResultSetMappingDefinitions();
+	Map<String, NamedResultSetMappingDefinition> getResultSetMappingDefinitions();
 
 	/**
 	 * Retrieve a type definition by name.

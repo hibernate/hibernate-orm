@@ -26,7 +26,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	private final String sqlString;
 
 	private String resultSetMappingName;
-	private String resultSetMappingClassName;
+	private Class resultSetMappingClass;
 
 	private final Set<String> querySpaces;
 
@@ -34,7 +34,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 			String name,
 			String sqlString,
 			String resultSetMappingName,
-			String resultSetMappingClassName,
+			Class resultSetMappingClass,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
@@ -59,7 +59,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 		);
 		this.sqlString = sqlString;
 		this.resultSetMappingName = resultSetMappingName;
-		this.resultSetMappingClassName = resultSetMappingClassName;
+		this.resultSetMappingClass = resultSetMappingClass;
 		this.querySpaces = querySpaces;
 	}
 
@@ -67,8 +67,8 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 		return resultSetMappingName;
 	}
 
-	public String getResultSetMappingClassName() {
-		return resultSetMappingClassName;
+	public Class<?> getResultSetMappingClass() {
+		return resultSetMappingClass;
 	}
 
 	public Set<String> getQuerySpaces() {
@@ -86,7 +86,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 				name,
 				sqlString,
 				resultSetMappingName,
-				resultSetMappingClassName,
+				resultSetMappingClass,
 				querySpaces,
 				getCacheable(),
 				getCacheRegion(),
@@ -102,11 +102,13 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public NativeQueryImplementor toQuery(SharedSessionContractImplementor session, Class resultType) {
-		final NativeQueryImpl query = new NativeQueryImpl( this, resultType, session );
+	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
+		return new NativeQueryImpl( this, session, resultType );
+	}
 
-		applyBaseOptions( query, session );
-
-		return query;
+	@Override
+	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+		//noinspection unchecked
+		return toQuery( session, null );
 	}
 }

@@ -24,6 +24,12 @@ public class SqmGroupByClause {
 		return groupings;
 	}
 
+	public void visitGroupings(Consumer<SqmGrouping> consumer) {
+		if ( groupings != null ) {
+			groupings.forEach( consumer );
+		}
+	}
+
 	public void setGroupings(List<SqmGrouping> groupings) {
 		this.groupings = groupings;
 	}
@@ -42,12 +48,6 @@ public class SqmGroupByClause {
 
 	public void addGrouping(SqmExpression groupExpression, String collation) {
 		addGrouping( new SqmGrouping( groupExpression, collation ) );
-	}
-
-	public void visitGroupings(Consumer<SqmGrouping> consumer) {
-		if ( groupings != null ) {
-			groupings.forEach( consumer );
-		}
 	}
 
 	public void clearGroupings() {

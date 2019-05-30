@@ -110,8 +110,6 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 	protected static abstract class AbstractBuilder<T extends AbstractBuilder>  {
 		private final String name;
 
-		private Set<String> querySpaces;
-
 		private Boolean cacheable;
 		private String cacheRegion;
 		private CacheMode cacheMode;
@@ -137,32 +135,6 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 		}
 
 		protected abstract T getThis();
-
-
-		public T addQuerySpaces(Set<String> querySpaces) {
-			if ( querySpaces == null || querySpaces.isEmpty() ) {
-				return getThis();
-			}
-
-			if ( this.querySpaces == null ) {
-				this.querySpaces = new HashSet<>();
-			}
-			this.querySpaces.addAll( querySpaces );
-			return getThis();
-		}
-
-		public T addQuerySpace(String space) {
-			if ( this.querySpaces == null ) {
-				this.querySpaces = new HashSet<>();
-			}
-			this.querySpaces.add( space );
-			return getThis();
-		}
-
-		public T setQuerySpaces(Set<String> spaces) {
-			this.querySpaces = spaces;
-			return getThis();
-		}
 
 		public T setCacheable(Boolean cacheable) {
 			this.cacheable = cacheable;
@@ -209,10 +181,6 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 			return getThis();
 		}
 
-		public Set<String> getQuerySpaces() {
-			return querySpaces;
-		}
-
 		public Boolean getCacheable() {
 			return cacheable;
 		}
@@ -254,6 +222,15 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 				hints = new HashMap<>();
 			}
 			hints.put( name, value );
+		}
+
+		public T addHints(Map<String, Object> hintsMap) {
+			if ( hints == null ) {
+				hints = new HashMap<>();
+			}
+			hints.putAll( hintsMap );
+
+			return getThis();
 		}
 
 		public Map<String, Object> getHints() {

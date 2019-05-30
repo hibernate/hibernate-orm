@@ -16,6 +16,8 @@ import java.time.LocalTime;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimeTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 
 /**
@@ -24,9 +26,10 @@ import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 public class LiteralHelper {
 	public static SqmLiteral<Timestamp> timestampLiteralFrom(String literalText, SqmCreationState creationState) {
 		final Timestamp literal = Timestamp.valueOf(
-				LocalDateTime.from( JdbcTimestampTypeDescriptor.FORMATTER.parse( literalText ) )
+				LocalDateTime.from( JdbcTimestampTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) )
 		);
 
+		//noinspection unchecked
 		return new SqmLiteral<>(
 				literal,
 				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Timestamp.class ),
@@ -43,7 +46,8 @@ public class LiteralHelper {
 	}
 
 	public static SqmLiteral<Integer> integerLiteral(int value, QueryEngine queryEngine) {
-		return new SqmLiteral<>(
+		//noinspection unchecked
+		return new SqmLiteral(
 				value,
 				StandardBasicTypes.INTEGER,
 				queryEngine.getCriteriaBuilder()
@@ -51,23 +55,25 @@ public class LiteralHelper {
 	}
 
 	public static SqmLiteral<Date> dateLiteralFrom(String literalText, SqmCreationState creationState) {
-		final LocalDate localDate = LocalDate.from( JdbcDateJavaDescriptor.FORMATTER.parse( literalText ) );
+		final LocalDate localDate = LocalDate.from( JdbcDateTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
 		final Date literal = new Date( localDate.toEpochDay() );
 
+		//noinspection unchecked
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Date.class ),
+				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Date.class ),
 				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
 
 	public static SqmLiteral<Time> timeLiteralFrom(String literalText, SqmCreationState creationState) {
-		final LocalTime localTime = LocalTime.from( JdbcTimeJavaDescriptor.FORMATTER.parse( literalText ) );
+		final LocalTime localTime = LocalTime.from( JdbcTimeTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
 		final Time literal = Time.valueOf( localTime );
 
+		//noinspection unchecked
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Time.class ),
+				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Time.class ),
 				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}

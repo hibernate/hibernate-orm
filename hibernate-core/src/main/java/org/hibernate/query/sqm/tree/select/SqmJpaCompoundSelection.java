@@ -8,6 +8,8 @@ package org.hibernate.query.sqm.tree.select;
 
 import java.util.List;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -42,6 +44,21 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
+	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+		return javaTypeDescriptor;
+	}
+
+	@Override
+	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+		return getJavaTypeDescriptor();
+	}
+
+	@Override
+	public Class<T> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
 	public List<? extends JpaSelection<?>> getSelectionItems() {
 		return selectableNodes;
 	}
@@ -59,21 +76,6 @@ public class SqmJpaCompoundSelection<T>
 	@Override
 	public boolean isCompoundSelection() {
 		return true;
-	}
-
-	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return javaTypeDescriptor;
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
-
-	@Override
-	public Class<T> getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override

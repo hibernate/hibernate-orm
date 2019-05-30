@@ -16,7 +16,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryCollectionLoadReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryJoinReturnType;
@@ -25,8 +24,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.NativeQueryNonScalarRootReturn;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
+import org.hibernate.boot.spi.HbmResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
@@ -42,100 +40,50 @@ import org.hibernate.mapping.Value;
 import org.hibernate.type.Type;
 
 /**
+ * Handles consuming a top-level SQL result-set mapping defined in `hbm.xnl`
+ *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
 public abstract class ResultSetMappingBinder {
 	/**
-	 * Build a ResultSetMappingDefinition given a containing element for the "return-XXX" elements.
-	 * <p/>
-	 * This form is used for ResultSet mappings defined outside the context of any specific entity.
-	 * For {@code hbm.xml} this means at the root of the document.  For annotations, this means at
-	 * the package level.
+	 * Create the mapping definition and register it
 	 *
 	 * @param resultSetMappingSource The XML data as a JAXB binding
 	 * @param context The mapping state
 	 *
 	 * @return The ResultSet mapping descriptor
 	 */
-	public static NamedResultSetMappingMemento bind(
+	public static HbmResultSetMappingDefinition bind(
 			ResultSetMappingBindingDefinition resultSetMappingSource,
 			HbmLocalMetadataBuildingContext context) {
 		if ( resultSetMappingSource.getName() == null ) {
-			throw new MappingException(
-					"ResultSet mapping did not specify name",
-					context.getOrigin()
-			);
+			throw new MappingException( "ResultSet mapping did not specify name", context.getOrigin() );
 		}
 
-		final ResultSetMappingDescriptor binding = new ResultSetMappingDescriptor( resultSetMappingSource.getName() );
-		bind( resultSetMappingSource, binding, context );
-		return binding;
-	}
-
-	/**
-	 * Build a ResultSetMappingDefinition given a containing element for the "return-XXX" elements
-	 *
-	 * @param resultSetMappingSource The XML data as a JAXB binding
-	 * @param context The mapping state
-	 * @param prefix A prefix to apply to named ResultSet mapping; this is either {@code null} for
-	 * ResultSet mappings defined outside of any entity, or the name of the containing entity
-	 * if defined within the context of an entity
-	 *
-	 * @return The ResultSet mapping descriptor
-	 */
-	public static ResultSetMappingDescriptor bind(
-			ResultSetMappingBindingDefinition resultSetMappingSource,
-			HbmLocalMetadataBuildingContext context,
-			String prefix) {
-		if ( StringHelper.isEmpty( prefix ) ) {
-			throw new AssertionFailure( "Passed prefix was null; perhaps you meant to call the alternate #bind form?" );
-		}
-
-		final String resultSetName = prefix + '.' + resultSetMappingSource.getName();
-		final ResultSetMappingDescriptor binding = new ResultSetMappingDescriptor( resultSetName );
-		bind( resultSetMappingSource, binding, context );
-		return binding;
-	}
-
-	private static void bind(
-			ResultSetMappingBindingDefinition resultSetMappingSource,
-			ResultSetMappingDescriptor binding,
-			HbmLocalMetadataBuildingContext context) {
-
-		int cnt = 0;
+		final HbmResultSetMappingDefinition.Builder builder = new HbmResultSetMappingDefinition.Builder( resultSetMappingSource.getName() );
 
 		for ( Object valueMappingSource : resultSetMappingSource.getValueMappingSources() ) {
-			if ( JaxbHbmNativeQueryReturnType.class.isInstance( valueMappingSource ) ) {
-				binding.addQueryReturn(
-						extractReturnDescription( (JaxbHbmNativeQueryReturnType) valueMappingSource, context, cnt++ )
-				);
+			if ( valueMappingSource instanceof JaxbHbmNativeQueryReturnType ) {
+				builder.addReturn( (JaxbHbmNativeQueryReturnType) valueMappingSource );
 			}
-			else if ( JaxbHbmNativeQueryCollectionLoadReturnType.class.isInstance( valueMappingSource ) ) {
-				binding.addQueryReturn(
-						extractReturnDescription( (JaxbHbmNativeQueryCollectionLoadReturnType) valueMappingSource, context, cnt++ )
-				);
+			else if ( valueMappingSource instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
+				builder.addReturn( (JaxbHbmNativeQueryCollectionLoadReturnType) valueMappingSource );
 			}
-			else if ( JaxbHbmNativeQueryJoinReturnType.class.isInstance( valueMappingSource ) ) {
-				binding.addQueryReturn(
-						extractReturnDescription( (JaxbHbmNativeQueryJoinReturnType) valueMappingSource, context, cnt++ )
-				);
+			else if ( valueMappingSource instanceof JaxbHbmNativeQueryJoinReturnType ) {
+				builder.addReturn( (JaxbHbmNativeQueryJoinReturnType) valueMappingSource );
 			}
-			else if ( JaxbHbmNativeQueryScalarReturnType.class.isInstance( valueMappingSource ) ) {
-				binding.addQueryReturn(
-						extractReturnDescription( (JaxbHbmNativeQueryScalarReturnType) valueMappingSource, context )
-				);
+			else if ( valueMappingSource instanceof JaxbHbmNativeQueryScalarReturnType ) {
+				builder.addReturn( (JaxbHbmNativeQueryScalarReturnType) valueMappingSource );
 			}
 		}
+
+		final HbmResultSetMappingDefinition mappingDefinition = builder.build( context );
+		context.getMetadataCollector().addResultSetMapping( mappingDefinition );
+		return mappingDefinition;
 	}
 
-	// todo : look to add query/resultset-mapping name to exception messages here.
-	// 		needs a kind of "context", i.e.:
-	//		"Unable to resolve type [%s] specified for native query scalar return"
-	//		becomes
-	//		"Unable to resolve type [%s] specified for native query scalar return as part of [query|resultset-mapping] [name]"
-	//
-	//		MappingException already carries origin, adding the query/resultset-mapping name pinpoints the location :)
+	// todo (6.0) : cannibalize this into the builder
 
 	public static NativeSQLQueryScalarReturn extractReturnDescription(
 			JaxbHbmNativeQueryScalarReturnType rtnSource,

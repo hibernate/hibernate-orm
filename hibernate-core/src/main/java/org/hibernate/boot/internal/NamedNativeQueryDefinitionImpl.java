@@ -6,17 +6,16 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.ParameterMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.LockOptions;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
 import org.hibernate.boot.spi.NamedNativeQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
@@ -40,7 +39,6 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 			CacheMode cacheMode,
 			FlushMode flushMode,
 			Boolean readOnly,
-			LockOptions lockOptions,
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
@@ -52,7 +50,7 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 				cacheMode,
 				flushMode,
 				readOnly,
-				lockOptions,
+				null,
 				timeout,
 				fetchSize,
 				comment,
@@ -60,6 +58,7 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 		);
 		this.sqlString = sqlString;
 		this.resultSetMappingName = resultSetMappingName;
+		this.resultSetMappingClassName = resultSetMappingClassName;
 		this.querySpaces = querySpaces;
 	}
 
@@ -74,19 +73,27 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 	}
 
 	@Override
+	public String getResultSetMappingClassName() {
+		return resultSetMappingClassName;
+	}
+
+	@Override
 	public NamedNativeQueryMemento resolve(SessionFactoryImplementor factory) {
+		final Class resultSetMappingClass = StringHelper.isNotEmpty( resultSetMappingClassName )
+				? factory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( resultSetMappingClassName )
+				: null;
+
 		return new NamedNativeQueryMementoImpl(
 				getRegistrationName(),
 				sqlString,
 				resultSetMappingName,
-
+				resultSetMappingClass,
 				querySpaces,
 				getCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
 				getFlushMode(),
 				getReadOnly(),
-				getLockOptions(),
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
@@ -94,70 +101,4 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 		);
 	}
 
-	public static class Builder extends AbstractBuilder<Builder> {
-		private String sqlString;
-
-		private String resultSetMappingName;
-		private Class resultSetMappingClass;
-
-		public Builder(String name) {
-			super( name );
-		}
-
-		public Builder setSqlString(String sqlString) {
-			this.sqlString = sqlString;
-			return getThis();
-		}
-
-		public NamedNativeQueryDefinitionImpl build() {
-			return new NamedNativeQueryDefinitionImpl(
-					getName(),
-					sqlString,
-					getParameterMappings(),
-					resultSetMappingName,
-					getQuerySpaces(),
-					getCacheable(),
-					getCacheRegion(),
-					getCacheMode(),
-					getFlushMode(),
-					getReadOnly(),
-					getLockOptions(),
-					getTimeout(),
-					getFetchSize(),
-					getComment(),
-					getHints()
-			);
-		}
-
-		@Override
-		protected Builder getThis() {
-			return this;
-		}
-
-		@Override
-		protected NamedQueryParameterMapping createPositionalParameter(int i, Class javaType, ParameterMode mode) {
-			//noinspection Convert2Lambda
-			return new NamedQueryParameterMapping() {
-				@Override
-				@SuppressWarnings("unchecked")
-				public ParameterMemento resolve(SessionFactoryImplementor factory) {
-					return session -> new QueryParameterPositionalImpl(
-							i,
-							false,
-							factory.getMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType )
-					);
-				}
-			};
-		}
-
-		@Override
-		protected NamedQueryParameterMapping createNamedParameter(String name, Class javaType, ParameterMode mode) {
-			return null;
-		}
-
-		public Builder setResultSetMappingName(String resultSetMappingName) {
-			this.resultSetMappingName = resultSetMappingName;
-			return this;
-		}
-	}
 }

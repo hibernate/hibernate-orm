@@ -99,11 +99,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		this.session = session;
 	}
 
-	@Override
-	public QueryProducerImplementor getProducer() {
-		return session;
-	}
-
 	protected void applyOptions(NamedQueryMemento memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::setHint );
@@ -1292,7 +1287,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				}
 				else {
 					AllowableParameterType type = determineType( paramName, retType );
-					setParameter( paramName, object, (Type) type );
+					setParameter( paramName, object, type );
 				}
 			}
 			catch (PropertyNotFoundException pnfe) {

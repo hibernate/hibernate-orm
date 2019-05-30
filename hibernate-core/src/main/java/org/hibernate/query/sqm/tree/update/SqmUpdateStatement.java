@@ -14,7 +14,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -83,7 +83,7 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public Root<T> from(Class<T> entityClass) {
-		final EntityTypeDescriptor<T> entity = nodeBuilder().getDomainModel().entity( entityClass );
+		final EntityDomainType<T> entity = nodeBuilder().getDomainModel().entity( entityClass );
 		SqmRoot<T> root = new SqmRoot<>( entity, null, nodeBuilder() );
 		setTarget( root );
 		return root;
@@ -91,7 +91,7 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public Root<T> from(EntityType<T> entity) {
-		SqmRoot<T> root = new SqmRoot<>( (EntityTypeDescriptor<T>) entity, null, nodeBuilder() );
+		SqmRoot<T> root = new SqmRoot<>( (EntityDomainType<T>) entity, null, nodeBuilder() );
 		setTarget( root );
 		return root;
 	}

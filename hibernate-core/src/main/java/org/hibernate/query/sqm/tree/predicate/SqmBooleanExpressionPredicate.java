@@ -10,10 +10,11 @@ import java.util.Collections;
 import java.util.List;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.BasicType;
 
 /**
  * Represents an expression whose type is boolean, and can therefore be used as a predicate.
@@ -27,7 +28,7 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 		super( nodeBuilder );
 
 		assert booleanExpression.getNodeType() != null;
-		final Class expressionJavaType = ( (BasicType) booleanExpression.getNodeType() ).getJavaType();
+		final Class expressionJavaType = ( ( BasicDomainType) booleanExpression.getNodeType() ).getJavaType();
 		assert boolean.class.equals( expressionJavaType ) || Boolean.class.equals( expressionJavaType );
 
 		this.booleanExpression = booleanExpression;

@@ -12,7 +12,7 @@
  * SemanticQueryInterpreter you can:<ul>
  *     <li>
  *         "Split" it (if it is a {@link org.hibernate.query.sqm.tree.select.SqmSelectStatement})
- *         using {@link org.hibernate.query.sqm.consume.spi.QuerySplitter}
+ *         using {@link org.hibernate.query.hql.internal.QuerySplitter}
  *     </li>
  *     <li>
  *         Create a walker/visitor for it using {@link org.hibernate.query.sqm.consume.spi.BaseSemanticQueryWalker}

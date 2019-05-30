@@ -24,11 +24,12 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class ProcedureParameterMetadata implements ParameterMetadata {
+public class ProcedureParameterMetadata implements ParameterMetadataImplementor {
 	private final ProcedureCallImpl procedureCall;
 	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
 	private List<ProcedureParameterImplementor> parameters = new ArrayList<>();

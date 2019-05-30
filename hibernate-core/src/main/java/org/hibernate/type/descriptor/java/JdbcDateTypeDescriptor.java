@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -22,25 +23,48 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class JdbcDateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public static final JdbcDateTypeDescriptor INSTANCE = new JdbcDateTypeDescriptor();
+
+	@SuppressWarnings("WeakerAccess")
 	public static final String DATE_FORMAT = "dd MMMM yyyy";
+
+	/**
+	 * Intended for use in reading HQL literals and writing SQL literals
+	 *
+	 * @see #DATE_FORMAT
+	 */
+	@SuppressWarnings("unused")
+	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( DATE_FORMAT );
+
+	/**
+	 * Alias for {@link java.time.format.DateTimeFormatter#ISO_LOCAL_DATE}.
+	 *
+	 * Intended for use with logging
+	 *
+	 * @see #LITERAL_FORMATTER
+	 */
+	@SuppressWarnings({"unused", "WeakerAccess"})
+	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan();
 		@Override
 		public Date deepCopyNotNull(Date value) {
-			return java.sql.Date.class.isInstance( value )
+			return value instanceof java.sql.Date
 					? new java.sql.Date( value.getTime() )
 					: new Date( value.getTime() );
 		}
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public JdbcDateTypeDescriptor() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
 	}
+
 	@Override
 	public String toString(Date value) {
-		return new SimpleDateFormat( DATE_FORMAT ).format( value );
+		return LOGGABLE_FORMATTER.format( value.toInstant() );
 	}
+
 	@Override
 	public Date fromString(String string) {
 		try {
@@ -92,19 +116,19 @@ public class JdbcDateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 			return null;
 		}
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			final java.sql.Date rtn = java.sql.Date.class.isInstance( value )
+			final java.sql.Date rtn = value instanceof java.sql.Date
 					? ( java.sql.Date ) value
 					: new java.sql.Date( value.getTime() );
 			return (X) rtn;
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			final java.sql.Time rtn = java.sql.Time.class.isInstance( value )
+			final java.sql.Time rtn = value instanceof java.sql.Time
 					? ( java.sql.Time ) value
 					: new java.sql.Time( value.getTime() );
 			return (X) rtn;
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			final java.sql.Timestamp rtn = java.sql.Timestamp.class.isInstance( value )
+			final java.sql.Timestamp rtn = value instanceof java.sql.Timestamp
 					? ( java.sql.Timestamp ) value
 					: new java.sql.Timestamp( value.getTime() );
 			return (X) rtn;
@@ -122,24 +146,25 @@ public class JdbcDateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Date wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		if ( java.sql.Date.class.isInstance( value ) ) {
+		if ( value instanceof java.sql.Date ) {
 			return (Date) value;
 		}
 
-		if ( Long.class.isInstance( value ) ) {
-			return new java.sql.Date( ( (Long) value ).longValue() );
+		if ( value instanceof Long ) {
+			return new java.sql.Date( (Long) value );
 		}
 
-		if ( Calendar.class.isInstance( value ) ) {
+		if ( value instanceof Calendar ) {
 			return new java.sql.Date( ( (Calendar) value ).getTimeInMillis() );
 		}
 
-		if ( Date.class.isInstance( value ) ) {
+		if ( value instanceof Date ) {
 			return new java.sql.Date( ( (Date) value ).getTime() );
 		}
 

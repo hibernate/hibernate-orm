@@ -254,10 +254,6 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFullyQualifiedClass(Class<?> namedClass);
 
-	T visitFullyQualifiedEnum(Enum<?> value);
-
-	T visitFullyQualifiedField(Field field);
-
 	T visitExtractUnit(SqmExtractUnit extractUnit);
 
 	T visitCastTarget(SqmCastTarget sqmCastTarget);

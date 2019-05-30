@@ -8,9 +8,9 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -31,7 +31,7 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
 
-		final ExpressableType<?> expressableType = QueryHelper.highestPrecedenceType(
+		final SqmExpressable<?> expressableType = QueryHelper.highestPrecedenceType(
 				expression.getNodeType(),
 				lowerBound.getNodeType(),
 				upperBound.getNodeType()

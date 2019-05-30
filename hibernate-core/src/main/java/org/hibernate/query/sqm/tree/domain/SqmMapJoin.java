@@ -33,7 +33,6 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SqmMapJoin<O,K,V> extends AbstractSqmPluralJoin<O,Map<K,V>,V> implements JpaMapJoin<O,K,V> {
-	@SuppressWarnings("WeakerAccess")
 	public SqmMapJoin(
 			SqmFrom<?,O> lhs,
 			MapPersistentAttribute<O,K,V> pluralValuedNavigable,

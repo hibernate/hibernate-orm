@@ -97,7 +97,7 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 							return ( (MapPersistentAttribute) referencedPathSource ).getKeyPathSource().createSqmPath( this, creationState );
 						}
 						else if ( referencedPathSource instanceof ListPersistentAttribute ) {
-							return ( (ListPersistentAttribute) referencedPathSource ).getIndexPathSource().createSqmPath( this, creationState );
+							return referencedPathSource.getIndexPathSource().createSqmPath( this, creationState );
 						}
 
 						throw new UnsupportedOperationException(  );
@@ -112,12 +112,15 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <S extends E> SqmTreatedSimplePath<E,S> treatAs(Class<S> treatJavaType) throws PathException {
-		final EntityDomainType<S> treatTargetDescriptor = nodeBuilder().getDomainModel().entity( treatJavaType );
-		return new SqmTreatedSimplePath(
+		return (SqmTreatedSimplePath<E, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		return new SqmTreatedSimplePath<>(
 				this,
-				treatTargetDescriptor,
+				treatTarget,
 				nodeBuilder()
 		);
 	}

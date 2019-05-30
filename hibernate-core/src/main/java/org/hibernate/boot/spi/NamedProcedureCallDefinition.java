@@ -18,7 +18,11 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
  * @author Steve Ebersole
  */
 public interface NamedProcedureCallDefinition extends NamedQueryDefinition {
+	/**
+	 * The name of the underlying database procedure or function name
+	 */
 	String getProcedureName();
 
-	NamedCallableQueryMemento toMemento(SessionFactoryImplementor sessionFactory);
+	@Override
+	NamedCallableQueryMemento resolve(SessionFactoryImplementor factory);
 }

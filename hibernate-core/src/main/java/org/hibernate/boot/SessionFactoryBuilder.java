@@ -21,10 +21,10 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -280,15 +280,15 @@ public interface SessionFactoryBuilder {
 			Class<? extends EntityTuplizer> tuplizerClass);
 
 	/**
-	 * How should updates and deletes that span multiple tables be handled?
+	 * How should Query-based updates and deletes be handled when the target spans multiple tables?
 	 *
 	 * @param strategy The strategy for handling multi-table updates and deletes.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#HQL_BULK_ID_STRATEGY
+	 * @see org.hibernate.cfg.AvailableSettings#ID_TABLE_STRATEGY
 	 */
-	SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy);
+	SessionFactoryBuilder applyMultiTableBulkIdStrategy(SqmMutationStrategy strategy);
 
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 

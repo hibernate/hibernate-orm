@@ -169,6 +169,7 @@ public class SqmDynamicInstantiation<T>
 		return walker.visitDynamicInstantiation( this );
 	}
 
+	@SuppressWarnings("unused")
 	public SqmDynamicInstantiation<T> makeShallowCopy() {
 		return new SqmDynamicInstantiation<>( getInstantiationTarget(), nodeBuilder() );
 	}

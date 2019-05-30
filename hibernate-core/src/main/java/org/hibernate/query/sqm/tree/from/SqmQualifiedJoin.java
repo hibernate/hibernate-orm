@@ -27,6 +27,4 @@ public interface SqmQualifiedJoin<O,T> extends SqmJoin<O,T> {
 	 * @param predicate The join predicate
 	 */
 	void setJoinPredicate(SqmPredicate predicate);
-
-	// todo : specialized Predicate for "mapped attribute join" conditions
 }

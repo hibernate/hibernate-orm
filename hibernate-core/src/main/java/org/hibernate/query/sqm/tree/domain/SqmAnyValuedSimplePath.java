@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -20,7 +21,6 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
  * @author Steve Ebersole
  */
 public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
-	@SuppressWarnings("WeakerAccess")
 	public SqmAnyValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
@@ -45,6 +45,11 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		throw new NotYetImplementedFor6Exception();
 	}
 

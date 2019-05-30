@@ -32,7 +32,6 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> implements JpaCollectionJoin<O, E> {
-	@SuppressWarnings("WeakerAccess")
 	public SqmBagJoin(
 			SqmFrom<?,O> lhs,
 			BagPersistentAttribute<O,E> attribute,

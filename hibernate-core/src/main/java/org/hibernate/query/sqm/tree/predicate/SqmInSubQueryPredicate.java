@@ -6,16 +6,15 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -31,6 +30,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		this( testExpression, subQueryExpression, false, nodeBuilder );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public SqmInSubQueryPredicate(
 			SqmExpression<T> testExpression,
 			SqmSubQuery<T> subQueryExpression,
@@ -40,7 +40,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		this.testExpression = testExpression;
 		this.subQueryExpression = subQueryExpression;
 
-		final ExpressableType<?> expressableType = QueryHelper.highestPrecedenceType2(
+		final SqmExpressable<?> expressableType = QueryHelper.highestPrecedenceType2(
 				testExpression.getNodeType(),
 				subQueryExpression.getNodeType()
 		);
@@ -69,17 +69,17 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public SqmInPredicate value(Object value) {
+	public SqmInPredicate<T> value(Object value) {
 		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
-	public CriteriaBuilder.In value(Expression value) {
+	public SqmInPredicate<T> value(Expression value) {
 		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
-	public SqmInPredicate value(JpaExpression value) {
+	public SqmInPredicate<T> value(JpaExpression value) {
 		throw new UnsupportedOperationException(  );
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.query.spi;
 import java.io.Serializable;
 
 import org.hibernate.Incubating;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
 
 /**
@@ -17,7 +18,7 @@ import org.hibernate.query.Query;
 @Incubating
 public interface QueryImplementor<R> extends Query<R> {
 	@Override
-	QueryProducerImplementor getProducer();
+	SharedSessionContractImplementor getSession();
 
 	void setOptionalId(Serializable id);
 

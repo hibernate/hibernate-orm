@@ -12,7 +12,11 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated (since 6.0) Use {@link org.hibernate.query.hql.LiteralConsumer}
+ * mechanism instead
  */
+@Deprecated
 public interface LiteralType<T> {
 	/**
 	 * Convert the value into a string representation, suitable for embedding in an SQL statement as a

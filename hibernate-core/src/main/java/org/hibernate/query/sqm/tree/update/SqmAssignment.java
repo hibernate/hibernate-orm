@@ -16,10 +16,12 @@ public class SqmAssignment {
 	private final SqmPath targetPath;
 	private final SqmExpression value;
 
+	@SuppressWarnings("WeakerAccess")
 	public SqmAssignment(SqmPath targetPath, SqmExpression value) {
 		this.targetPath = targetPath;
 		this.value = value;
 
+		//noinspection unchecked
 		this.value.applyInferableType( targetPath.getNodeType() );
 	}
 

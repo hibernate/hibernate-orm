@@ -29,7 +29,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Defines the commonality between a root query and a subquery.
@@ -116,7 +116,7 @@ public class SqmQuerySpec<T> implements SqmNode, SqmFromClauseContainer, SqmWher
 
 	public void setLimitExpression(SqmExpression<?> limitExpression) {
 		if ( limitExpression != null ) {
-			limitExpression.applyInferableType( StandardSpiBasicTypes.INTEGER );
+			limitExpression.applyInferableType( StandardBasicTypes.INTEGER );
 		}
 		this.limitExpression = limitExpression;
 	}
@@ -127,7 +127,7 @@ public class SqmQuerySpec<T> implements SqmNode, SqmFromClauseContainer, SqmWher
 
 	public void setOffsetExpression(SqmExpression<?> offsetExpression) {
 		if ( offsetExpression != null ) {
-			offsetExpression.applyInferableType( StandardSpiBasicTypes.INTEGER );
+			offsetExpression.applyInferableType( StandardBasicTypes.INTEGER );
 		}
 		this.offsetExpression = offsetExpression;
 	}

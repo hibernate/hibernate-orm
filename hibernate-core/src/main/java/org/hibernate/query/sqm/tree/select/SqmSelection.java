@@ -47,7 +47,7 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitSelection( this );
 	}
 }

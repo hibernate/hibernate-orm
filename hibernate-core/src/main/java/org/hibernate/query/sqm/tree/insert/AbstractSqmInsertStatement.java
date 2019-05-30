@@ -28,7 +28,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		super( nodeBuilder );
 	}
 
-	protected AbstractSqmInsertStatement(SqmRoot targetRoot, NodeBuilder nodeBuilder) {
+	protected AbstractSqmInsertStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
 		super( targetRoot, nodeBuilder );
 	}
 

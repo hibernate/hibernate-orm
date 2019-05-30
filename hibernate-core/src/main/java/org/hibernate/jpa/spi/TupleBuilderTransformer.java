@@ -13,6 +13,7 @@ import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.query.Query;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.Type;
 
@@ -25,7 +26,7 @@ public class TupleBuilderTransformer extends BasicTransformerAdapter {
 	private List<TupleElement<?>> tupleElements;
 	private Map<String, HqlTupleElementImpl> tupleElementsByAlias;
 
-	public TupleBuilderTransformer(org.hibernate.Query hqlQuery) {
+	public TupleBuilderTransformer(Query hqlQuery) {
 		final Type[] resultTypes = hqlQuery.getReturnTypes();
 		final int tupleSize = resultTypes.length;
 

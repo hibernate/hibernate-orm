@@ -37,6 +37,8 @@ import org.hibernate.query.internal.NativeQueryReturnBuilder;
 import org.hibernate.query.internal.NativeQueryReturnBuilderFetchImpl;
 import org.hibernate.query.internal.NativeQueryReturnBuilderRootImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.spi.AbstractQuery;
+import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
@@ -64,7 +66,7 @@ import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 /**
  * @author Steve Ebersole
  */
-public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements NativeQueryImplementor<T> {
+public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryImplementor<T> {
 	private final String sqlString;
 	private final QueryParameterBindingsImpl queryParameterBindings;
 	private List<NativeSQLQueryReturn> queryReturns;
@@ -88,6 +90,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 			SharedSessionContractImplementor session,
 			ParameterMetadata parameterMetadata) {
 		super( session, parameterMetadata );
+
 
 		this.sqlString = memento.getQueryString();
 		this.querySpaces = memento.getQuerySpaces() == null ? null : new ArrayList<>( memento.getQuerySpaces() );
@@ -117,6 +120,8 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 				session.getFactory(),
 				session.isQueryParametersValidationEnabled()
 		);
+
+		applyOptions( memento );
 	}
 
 	public NativeQueryImpl(
@@ -128,7 +133,6 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 		this.queryReturns = new ArrayList<>();
 		this.sqlString = sqlString;
-		this.callable = callable;
 		this.querySpaces = new ArrayList<>();
 
 		this.queryParameterBindings = QueryParameterBindingsImpl.from(
@@ -145,7 +149,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	@Override
 	public NativeQuery setResultSetMapping(String name) {
-		ResultSetMappingDescriptor mapping = getProducer().getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
+		NamedResultSetMappingMemento mapping = getSession().getFactory().getQueryEngine().getNamedQueryRepository().getResultSetMappingMemento( name );
 		if ( mapping == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}

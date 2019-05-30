@@ -26,6 +26,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		this( matchExpression, pattern, escapeCharacter, false, nodeBuilder );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public SqmLikePredicate(
 			SqmExpression<?> matchExpression,
 			SqmExpression<?> pattern,

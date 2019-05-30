@@ -32,6 +32,7 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
@@ -126,6 +127,13 @@ public interface EntityPersister extends EntityDefinition {
 	 * @return The name of the entity which this persister maps.
 	 */
 	String getEntityName();
+
+	/**
+	 * The strategy to use for SQM mutation statements where the target entity
+	 * has multiple tables.  Returns {@code null} to indicate that the entity
+	 * does not define multiple tables
+	 */
+	SqmMutationStrategy getSqmMultiTableMutationStrategy();
 
 	/**
 	 * Retrieve the underlying entity metamodel instance...

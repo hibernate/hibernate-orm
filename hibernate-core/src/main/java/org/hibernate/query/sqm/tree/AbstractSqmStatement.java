@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.internal.ParameterCollector;
+import org.hibernate.query.sqm.internal.ParameterCollector;
 
 /**
  * @author Steve Ebersole

@@ -33,7 +33,6 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SqmListJoin<O,E> extends AbstractSqmPluralJoin<O,List<E>, E> implements JpaListJoin<O, E> {
-	@SuppressWarnings("WeakerAccess")
 	public SqmListJoin(
 			SqmFrom<?,O> lhs,
 			ListPersistentAttribute<O, E> listAttribute,

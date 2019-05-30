@@ -14,7 +14,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
@@ -33,6 +33,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	private Class resultType;
 
 
+	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmSelectQuery(Class<T> resultType, NodeBuilder builder) {
 		super( builder );
 		this.sqmQuerySpec = new SqmQuerySpec( builder );
@@ -40,6 +41,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 
+	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmSelectQuery(SqmQuerySpec<T> sqmQuerySpec, NodeBuilder builder) {
 		super( builder );
 		this.sqmQuerySpec = sqmQuerySpec;
@@ -74,7 +76,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	public <X> SqmRoot<X> from(Class<X> entityClass) {
 		return addRoot(
 				new SqmRoot<>(
-						nodeBuilder().getDomainModel().getEntityDescriptor( entityClass ),
+						nodeBuilder().getDomainModel().entity( entityClass ),
 						null,
 						nodeBuilder()
 				)
@@ -89,7 +91,7 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public <X> SqmRoot<X> from(EntityType<X> entityType) {
-		return addRoot( new SqmRoot<>( (EntityTypeDescriptor<X>) entityType, null, nodeBuilder() ) );
+		return addRoot( new SqmRoot<>( (EntityDomainType<X>) entityType, null, nodeBuilder() ) );
 	}
 
 

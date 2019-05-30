@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -23,7 +24,27 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public static final JdbcTimestampTypeDescriptor INSTANCE = new JdbcTimestampTypeDescriptor();
+
+	@SuppressWarnings("WeakerAccess")
 	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+
+	/**
+	 * Intended for use in reading HQL literals and writing SQL literals
+	 *
+	 * @see #TIMESTAMP_FORMAT
+	 */
+	@SuppressWarnings("unused")
+	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( TIMESTAMP_FORMAT );
+
+	/**
+	 * Alias for {@link java.time.format.DateTimeFormatter#ISO_LOCAL_DATE_TIME}.
+	 *
+	 * Intended for use with logging
+	 *
+	 * @see #LITERAL_FORMATTER
+	 */
+	@SuppressWarnings({"unused", "WeakerAccess"})
+	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
 	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();
@@ -41,13 +62,16 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public JdbcTimestampTypeDescriptor() {
 		super( Date.class, TimestampMutabilityPlan.INSTANCE );
 	}
+
 	@Override
 	public String toString(Date value) {
-		return new SimpleDateFormat( TIMESTAMP_FORMAT ).format( value );
+		return LOGGABLE_FORMATTER.format( value.toInstant() );
 	}
+
 	@Override
 	public Date fromString(String string) {
 		try {
@@ -70,8 +94,8 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		long t1 = one.getTime();
 		long t2 = another.getTime();
 
-		boolean oneIsTimestamp = Timestamp.class.isInstance( one );
-		boolean anotherIsTimestamp = Timestamp.class.isInstance( another );
+		boolean oneIsTimestamp = one instanceof Timestamp;
+		boolean anotherIsTimestamp = another instanceof Timestamp;
 
 		int n1 = oneIsTimestamp ? ( (Timestamp) one ).getNanos() : 0;
 		int n2 = anotherIsTimestamp ? ( (Timestamp) another ).getNanos() : 0;
@@ -104,19 +128,19 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 			return null;
 		}
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			final Timestamp rtn = Timestamp.class.isInstance( value )
+			final Timestamp rtn = value instanceof Timestamp
 					? ( Timestamp ) value
 					: new Timestamp( value.getTime() );
 			return (X) rtn;
 		}
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			final java.sql.Date rtn = java.sql.Date.class.isInstance( value )
+			final java.sql.Date rtn = value instanceof java.sql.Date
 					? ( java.sql.Date ) value
 					: new java.sql.Date( value.getTime() );
 			return (X) rtn;
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			final java.sql.Time rtn = java.sql.Time.class.isInstance( value )
+			final java.sql.Time rtn = value instanceof java.sql.Time
 					? ( java.sql.Time ) value
 					: new java.sql.Time( value.getTime() );
 			return (X) rtn;
@@ -134,24 +158,25 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Date wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		if ( Timestamp.class.isInstance( value ) ) {
+		if ( value instanceof Timestamp ) {
 			return (Timestamp) value;
 		}
 
-		if ( Long.class.isInstance( value ) ) {
+		if ( value instanceof Long ) {
 			return new Timestamp( (Long) value );
 		}
 
-		if ( Calendar.class.isInstance( value ) ) {
+		if ( value instanceof Calendar ) {
 			return new Timestamp( ( (Calendar) value ).getTimeInMillis() );
 		}
 
-		if ( Date.class.isInstance( value ) ) {
+		if ( value instanceof Date ) {
 			return new Timestamp( ( (Date) value ).getTime() );
 		}
 

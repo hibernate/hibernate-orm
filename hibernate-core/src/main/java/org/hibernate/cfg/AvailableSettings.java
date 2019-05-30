@@ -1641,7 +1641,13 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
+	/**
+	 * @deprecated Use {@link #ID_TABLE_STRATEGY} instead
+	 */
+	@Deprecated
 	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
+
+	String ID_TABLE_STRATEGY = "hibernate.id_table_strategy";
 
 	/**
 	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the

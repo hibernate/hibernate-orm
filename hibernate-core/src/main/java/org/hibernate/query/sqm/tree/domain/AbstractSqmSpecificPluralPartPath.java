@@ -76,4 +76,9 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 
 		throw new UnsupportedOperationException(  );
 	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		return null;
+	}
 }

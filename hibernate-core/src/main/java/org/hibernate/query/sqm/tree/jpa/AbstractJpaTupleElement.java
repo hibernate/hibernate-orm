@@ -25,6 +25,7 @@ public abstract class AbstractJpaTupleElement<T>
 	private SqmExpressable<T> expressableType;
 	private String alias;
 
+	@SuppressWarnings("WeakerAccess")
 	protected AbstractJpaTupleElement(SqmExpressable<T> expressableType, NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
 
@@ -67,17 +68,16 @@ public abstract class AbstractJpaTupleElement<T>
 	/**
 	 * Protected access to set the JavaTypeDescriptor via Java Class
 	 */
-	@SuppressWarnings({ "unchecked" })
 	protected void setJavaType(Class targetType) {
 		if ( targetType != null ) {
 			setExpressableType(
 					nodeBuilder().getDomainModel()
 							.getTypeConfiguration()
-							.standardExpressableTypeForJavaType( targetType )
+							.standardBasicTypeForJavaType( targetType )
 			);
 		}
 		else {
-			setExpressableType( StandardSpiBasicTypes.OBJECT_TYPE );
+			setExpressableType( StandardBasicTypes.OBJECT_TYPE );
 		}
 	}
 

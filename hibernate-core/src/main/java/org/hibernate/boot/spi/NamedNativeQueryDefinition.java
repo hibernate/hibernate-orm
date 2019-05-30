@@ -6,6 +6,12 @@
  */
 package org.hibernate.boot.spi;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.hibernate.boot.internal.NamedNativeQueryDefinitionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
@@ -27,4 +33,97 @@ public interface NamedNativeQueryDefinition extends NamedQueryDefinition {
 
 	@Override
 	NamedNativeQueryMemento resolve(SessionFactoryImplementor factory);
+
+	class Builder extends AbstractNamedQueryDefinition.AbstractBuilder<Builder> {
+		private String sqlString;
+
+		private String resultSetMappingName;
+		private String resultSetMappingClassName;
+
+		private Set<String> querySpaces;
+
+		private Map<String,String> parameterTypes;
+
+		public Builder(String name) {
+			super( name );
+		}
+
+		public Builder setSqlString(String sqlString) {
+			this.sqlString = sqlString;
+			return getThis();
+		}
+
+		public NamedNativeQueryDefinition build() {
+			return new NamedNativeQueryDefinitionImpl(
+					getName(),
+					sqlString,
+					resultSetMappingName,
+					resultSetMappingClassName,
+					getQuerySpaces(),
+					getCacheable(),
+					getCacheRegion(),
+					getCacheMode(),
+					getFlushMode(),
+					getReadOnly(),
+					getTimeout(),
+					getFetchSize(),
+					getComment(),
+					getHints()
+			);
+		}
+
+		@Override
+		protected Builder getThis() {
+			return this;
+		}
+
+		public Set<String> getQuerySpaces() {
+			return querySpaces;
+		}
+
+		public Builder addSynchronizedQuerySpaces(Set<String> querySpaces) {
+			if ( querySpaces == null || querySpaces.isEmpty() ) {
+				return this;
+			}
+
+			if ( this.querySpaces == null ) {
+				this.querySpaces = new HashSet<>();
+			}
+
+			this.querySpaces.addAll( querySpaces );
+
+			return getThis();
+		}
+
+		public Builder addSynchronizedQuerySpace(String space) {
+			if ( this.querySpaces == null ) {
+				this.querySpaces = new HashSet<>();
+			}
+			this.querySpaces.add( space );
+			return getThis();
+		}
+
+		public Builder setQuerySpaces(Set<String> spaces) {
+			this.querySpaces = spaces;
+			return this;
+		}
+
+		public Builder setResultSetMappingName(String resultSetMappingName) {
+			this.resultSetMappingName = resultSetMappingName;
+			return this;
+		}
+
+		public Builder setResultSetMappingClassName(String resultSetMappingClassName) {
+			this.resultSetMappingClassName = resultSetMappingClassName;
+			return this;
+		}
+
+		public void addParameterTypeHint(String name, String type) {
+			if ( parameterTypes == null ) {
+				parameterTypes = new HashMap<>();
+			}
+
+			parameterTypes.put( name, type );
+		}
+	}
 }

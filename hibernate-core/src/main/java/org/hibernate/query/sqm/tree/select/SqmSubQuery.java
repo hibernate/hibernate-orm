@@ -37,8 +37,8 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Steve Ebersole
@@ -238,37 +238,44 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public SqmExpression<Long> asLong() {
-		return castAs( StandardSpiBasicTypes.LONG );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.LONG );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		return castAs( StandardSpiBasicTypes.INTEGER );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.INTEGER );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		return castAs( StandardSpiBasicTypes.FLOAT );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.FLOAT );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		return castAs( StandardSpiBasicTypes.DOUBLE );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.DOUBLE );
 	}
 
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		return castAs( StandardSpiBasicTypes.BIG_DECIMAL );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.BIG_DECIMAL );
 	}
 
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
-		return castAs( StandardSpiBasicTypes.BIG_INTEGER );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.BIG_INTEGER );
 	}
 
 	@Override
 	public SqmExpression<String> asString() {
-		return castAs( StandardSpiBasicTypes.STRING );
+		//noinspection unchecked
+		return castAs( StandardBasicTypes.STRING );
 	}
 
 	@Override
@@ -286,12 +293,13 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public Class<? extends T> getJavaType() {
+		//noinspection unchecked
 		return getResultType();
 	}
 
 	@Override
 	public <U> SqmSubQuery<U> subquery(Class<U> type) {
-		return new SqmSubQuery( this, type, nodeBuilder() );
+		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
 	@Override

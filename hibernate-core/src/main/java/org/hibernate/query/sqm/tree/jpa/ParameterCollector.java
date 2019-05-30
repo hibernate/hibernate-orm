@@ -19,6 +19,8 @@ import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * todo (6.0) : how is this different from {@link org.hibernate.query.sqm.internal.ParameterCollector}?
+ *
  * @author Steve Ebersole
  */
 public class ParameterCollector extends BaseSemanticQueryWalker {

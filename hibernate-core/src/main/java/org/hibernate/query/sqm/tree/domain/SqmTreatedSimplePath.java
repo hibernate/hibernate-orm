@@ -21,9 +21,9 @@ public class SqmTreatedSimplePath<T, S extends T>
 	private final EntityDomainType<S> treatTarget;
 	private final SqmPath<T> wrappedPath;
 
-	@SuppressWarnings("WeakerAccess")
+	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public SqmTreatedSimplePath(
-			SqmEntityValuedSimplePath<T> wrappedPath,
+			SqmPluralValuedSimplePath<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		super(
@@ -38,7 +38,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public SqmTreatedSimplePath(
-			SqmPluralValuedSimplePath<T> wrappedPath,
+			SqmPath<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		super(

@@ -35,8 +35,6 @@ import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
@@ -141,32 +139,19 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addNamedQuery(NamedHqlQueryDefinition query) throws DuplicateMappingException;
 
 	/**
-	 * Adds metadata for a named SQL query to this repository.
-	 *
-	 * @param query The metadata
-	 *
-	 * @throws DuplicateMappingException If a query already exists with that name.
+	 * Adds metadata for a named SQL query to this collector.
 	 */
 	void addNamedNativeQuery(NamedNativeQueryDefinition query) throws DuplicateMappingException;
 
 	/**
-	 * Adds the metadata for a named SQL result set mapping to this repository.
-	 *
-	 * @param sqlResultSetMapping The metadata
-	 *
-	 * @throws DuplicateMappingException If metadata for another SQL result mapping was
-	 * already found under the given name.
+	 * Adds the metadata for a named SQL result set mapping to this collector.
 	 */
-	void addResultSetMapping(NamedResultSetMappingMemento sqlResultSetMapping) throws DuplicateMappingException;
+	void addResultSetMapping(NamedResultSetMappingDefinition resultSetMappingDefinition) throws DuplicateMappingException;
 
 	/**
-	 * Adds metadata for a named stored procedure call to this repository.
-	 *
-	 * @param definition The procedure call information
-	 *
-	 * @throws DuplicateMappingException If a query already exists with that name.
+	 * Adds metadata for a named stored procedure call to this collector.
 	 */
-	void addNamedProcedureCallDefinition(NamedProcedureCallDefinitionImpl definition) throws DuplicateMappingException;
+	void addNamedProcedureCallDefinition(NamedProcedureCallDefinition definition) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named entity graph to this repository
@@ -271,9 +256,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query);
 
-	void addDefaultResultSetMapping(ResultSetMappingDescriptor definition);
+	void addDefaultResultSetMapping(NamedResultSetMappingDefinition definition);
 
-	void addDefaultNamedProcedureCallDefinition(NamedProcedureCallDefinitionImpl procedureCallDefinition);
+	void addDefaultNamedProcedureCall(NamedProcedureCallDefinitionImpl procedureCallDefinition);
 
 	void addAnyMetaDef(AnyMetaDef defAnn);
 	AnyMetaDef getAnyMetaDef(String anyMetaDefName);

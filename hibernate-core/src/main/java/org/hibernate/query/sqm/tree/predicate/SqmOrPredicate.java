@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;

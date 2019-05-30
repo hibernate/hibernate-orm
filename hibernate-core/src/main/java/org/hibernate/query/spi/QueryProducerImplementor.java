@@ -11,6 +11,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryProducer;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 /**
  * The internal contract for QueryProducer implementations.  Acts as the value passed to
@@ -48,21 +49,11 @@ public interface QueryProducerImplementor extends QueryProducer {
 	NativeQueryImplementor createNativeQuery(String sqlString);
 
 	@Override
-	NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass);
+	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
 	@Override
 	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping);
 
 	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);
-
-	@Override
-	default NativeQueryImplementor getNamedSQLQuery(String name) {
-		return (NativeQueryImplementor) QueryProducer.super.getNamedSQLQuery( name );
-	}
-
-	@Override
-	default NativeQueryImplementor createSQLQuery(String queryString) {
-		return (NativeQueryImplementor) QueryProducer.super.createSQLQuery( queryString );
-	}
 }

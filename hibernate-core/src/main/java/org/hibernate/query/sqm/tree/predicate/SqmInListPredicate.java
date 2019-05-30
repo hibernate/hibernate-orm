@@ -29,6 +29,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		this( testExpression, new ArrayList<>(), nodeBuilder );
 	}
 
+	@SuppressWarnings({"unchecked", "unused"})
 	public SqmInListPredicate(
 			SqmExpression<T> testExpression,
 			NodeBuilder nodeBuilder,
@@ -43,6 +44,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		this( testExpression, listExpressions, false, nodeBuilder );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public SqmInListPredicate(
 			SqmExpression<T> testExpression,
 			List<SqmExpression<T>> listExpressions,
@@ -92,10 +94,12 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	public void addExpression(SqmExpression expression) {
 		implyListElementType( expression );
 
+		//noinspection unchecked
 		listExpressions.add( expression );
 	}
 
 	private void implyListElementType(SqmExpression expression) {
+		//noinspection unchecked
 		expression.applyInferableType(
 				QueryHelper.highestPrecedenceType2(
 						getTestExpression().getNodeType(),

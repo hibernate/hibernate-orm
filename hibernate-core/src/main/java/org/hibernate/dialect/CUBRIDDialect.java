@@ -10,14 +10,22 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.CUBRIDLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorCUBRIDDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.HOUR;
+import static org.hibernate.query.TemporalUnit.MILLISECOND;
+import static org.hibernate.query.TemporalUnit.MINUTE;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.SECOND;
 
 /**
  * An SQL dialect for CUBRID (8.3.x and later).
@@ -277,5 +285,86 @@ public class CUBRIDDialect extends Dialect {
 				.replace("SS", "FF")
 				.replace("S", "FF")
 				.result();
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("adddate(");
+		to.render();
+		sqlAppender.append(",interval ");
+		if ( unit == MILLISECOND || unit == NANOSECOND ) {
+			sqlAppender.append("(");
+		}
+		magnitude.render();
+		if ( unit == MILLISECOND ) {
+			sqlAppender.append(")/1e3");
+		}
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append(")/1e6");
+		}
+		sqlAppender.append(" ");
+		if ( unit == MILLISECOND || unit == NANOSECOND ) {
+			sqlAppender.append("microsecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		switch ( unit ) {
+			case DAY:
+				sqlAppender.append("datediff(");
+				to.render();
+				sqlAppender.append(",");
+				from.render();
+				sqlAppender.append(")");
+				break;
+			case HOUR:
+				timediff(from, to, sqlAppender, HOUR);
+				break;
+			case MINUTE:
+				sqlAppender.append("(");
+				timediff(from, to, sqlAppender, MINUTE);
+				sqlAppender.append("+60*");
+				timediff(from, to, sqlAppender, HOUR);
+				sqlAppender.append(")");
+			case SECOND:
+				sqlAppender.append("(");
+				timediff(from, to, sqlAppender, SECOND);
+				sqlAppender.append("+60*");
+				timediff(from, to, sqlAppender, MINUTE);
+				sqlAppender.append("+3600*");
+				timediff(from, to, sqlAppender, HOUR);
+				sqlAppender.append(")");
+			case MILLISECOND:
+			case NANOSECOND:
+				sqlAppender.append("(");
+				timediff(from, to, sqlAppender, MILLISECOND);
+				sqlAppender.append("+1e3*");
+				timediff(from, to, sqlAppender, SECOND);
+				sqlAppender.append("+6e4*");
+				timediff(from, to, sqlAppender, MINUTE);
+				sqlAppender.append("+36e5*");
+				timediff(from, to, sqlAppender, HOUR);
+				sqlAppender.append(")");
+				if (unit==NANOSECOND) {
+					sqlAppender.append("*1e3");
+				}
+			default:
+				throw new SemanticException("unsupported temporal unit for CUBRID: " + unit);
+		}
+	}
+
+	private void timediff(Renderer from, Renderer to, Appender sqlAppender, TemporalUnit unit) {
+		sqlAppender.append("extract(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(",timediff(");
+		to.render();
+		sqlAppender.append(",");
+		from.render();
+		sqlAppender.append("))");
 	}
 }

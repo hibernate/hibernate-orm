@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CUBRIDExtractEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -140,6 +141,8 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.monthsBetween( queryEngine );
 //		CommonFunctionFactory.concat_operator( queryEngine );
 		IngresDialect.bitwiseFunctions( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new CUBRIDExtractEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
 

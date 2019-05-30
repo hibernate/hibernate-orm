@@ -16,6 +16,7 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.MySQLExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -222,6 +223,8 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.datediff( queryEngine );
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
 		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new MySQLExtractEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )

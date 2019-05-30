@@ -14,13 +14,14 @@ import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Gavin King
  */
 public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
 	private TemporalUnit unit;
-	private AllowableFunctionReturnType type;
+	private AllowableFunctionReturnType<T> type;
 
 	public SqmExtractUnit(TemporalUnit unit, AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
@@ -42,7 +43,7 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	}
 
 	@Override
-	public ExpressableType getExpressableType() {
+	public ExpressableType<T> getExpressableType() {
 		return type;
 	}
 }

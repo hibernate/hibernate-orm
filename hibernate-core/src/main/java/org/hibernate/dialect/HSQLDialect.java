@@ -733,6 +733,12 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		return unit.toString();
+		//TODO: does not support MICROSECOND, but on the
+		//      other hand it doesn't support microsecond
+		//      precision in timestamps either so who cares?
+		switch (unit) {
+			case WEEK: return "week_of_year";
+			default: return unit.toString();
+		}
 	}
 }

@@ -716,7 +716,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String getCascadeConstraintsString() {
-		return " CASCADE ";
+		return " cascade ";
 	}
 
 	@Override

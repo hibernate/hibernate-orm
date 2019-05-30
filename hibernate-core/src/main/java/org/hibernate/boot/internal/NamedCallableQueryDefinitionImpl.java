@@ -19,8 +19,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.AbstractNamedQueryMapping;
-import org.hibernate.boot.spi.NamedCallableQueryMapping;
+import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
+import org.hibernate.boot.spi.NamedCallableQueryDefinition;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -32,7 +32,8 @@ import org.hibernate.query.procedure.internal.ProcedureParameterImpl;
 /**
  * @author Steve Ebersole
  */
-public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping implements NamedCallableQueryMapping {
+public class NamedCallableQueryDefinitionImpl
+		extends AbstractNamedQueryDefinition implements NamedCallableQueryDefinition {
 	private static final Class[] NO_CLASSES = new Class[0];
 
 	private final String callableName;
@@ -41,7 +42,7 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 	private final List<String> resultSetMappingClassNames;
 	private final Set<String> querySpaces;
 
-	public NamedCallableQueryMappingImpl(
+	public NamedCallableQueryDefinitionImpl(
 			String name,
 			String callableName,
 			List<ParameterMapping> parameterMappings,
@@ -82,7 +83,7 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 	@Override
 	public NamedCallableQueryMemento resolve(SessionFactoryImplementor factory) {
 		return new NamedCallableQueryMementoImpl(
-				getName(),
+				getRegistrationName(),
 				callableName,
 				ParameterStrategy.UNKNOWN,
 				resolveParameterMappings( factory ),
@@ -223,8 +224,8 @@ public class NamedCallableQueryMappingImpl extends AbstractNamedQueryMapping imp
 
 		}
 
-		public NamedCallableQueryMapping build() {
-			return new NamedCallableQueryMappingImpl(
+		public NamedCallableQueryDefinition build() {
+			return new NamedCallableQueryDefinitionImpl(
 					getName(),
 					callableName,
 					parameterMappings,

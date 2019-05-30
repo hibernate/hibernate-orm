@@ -78,7 +78,6 @@ import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.ReturnMetadata;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.boot.spi.NamedNativeQueryMementoBuilder;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

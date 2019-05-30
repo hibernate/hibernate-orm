@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.cfg.annotations;
+package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +17,9 @@ import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.NamedProcedureCallDefinition;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.annotations.QueryHintDefinition;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -28,7 +30,7 @@ import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.ParameterStrategy;
 
-import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMemento;
+import static org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMemento;
 
 /**
  * Holds all the information needed from a named procedure call declaration in order to create a
@@ -38,7 +40,7 @@ import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.Par
  *
  * @see javax.persistence.NamedStoredProcedureQuery
  */
-public class NamedProcedureCallDefinition {
+public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefinition {
 	private final String registeredName;
 	private final String procedureName;
 	private final Class[] resultClasses;
@@ -46,10 +48,10 @@ public class NamedProcedureCallDefinition {
 	private final ParameterDefinitions parameterDefinitions;
 	private final Map<String, Object> hints;
 
-	NamedProcedureCallDefinition(NamedStoredProcedureQuery annotation) {
+	NamedProcedureCallDefinitionImpl(NamedStoredProcedureQuery annotation) {
 		this.registeredName = annotation.name();
 		this.procedureName = annotation.procedureName();
-		this.hints = new QueryHintDefinition( queryName, annotation.hints() ).getHintsMap();
+		this.hints = new QueryHintDefinition( registeredName, annotation.hints() ).getHintsMap();
 		this.resultClasses = annotation.resultClasses();
 		this.resultSetMappings = annotation.resultSetMappings();
 
@@ -68,19 +70,20 @@ public class NamedProcedureCallDefinition {
 		}
 	}
 
-	public String getRegisteredName() {
+	@Override
+	public String getRegistrationName() {
 		return registeredName;
 	}
 
+	@Override
 	public String getProcedureName() {
 		return procedureName;
 	}
 
-	public NamedCallableQueryMemento toMemento(
-			final SessionFactoryImpl sessionFactory,
-			final Map<String, ResultSetMappingDescriptor> resultSetMappingDefinitions) {
-		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
-		final Set<String> collectedQuerySpaces = new HashSet<String>();
+	@Override
+	public NamedCallableQueryMemento toMemento(SessionFactoryImplementor sessionFactory) {
+		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
+		final Set<String> collectedQuerySpaces = new HashSet<>();
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
@@ -116,7 +119,7 @@ public class NamedProcedureCallDefinition {
 
 						@Override
 						public ResultSetMappingDescriptor findResultSetMapping(String name) {
-							return resultSetMappingDefinitions.get( name );
+							return sessionFactory.getQueryEngine().getNamedQueryRepository().getResultSetMappingMemento( name );
 						}
 
 						@Override

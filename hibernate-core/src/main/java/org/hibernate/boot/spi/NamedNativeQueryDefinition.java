@@ -10,14 +10,20 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
 /**
- * Named query mapping for native queries
+ * Boot-time descriptor of a named native query, as defined in
+ * annotations or xml
+ *
+ * @see javax.persistence.NamedNativeQuery
+ * @see org.hibernate.annotations.NamedNativeQuery
  *
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedNativeQueryMapping extends NamedQueryMapping {
-	String getQueryString();
+public interface NamedNativeQueryDefinition extends NamedQueryDefinition {
+	String getSqlQueryString();
+
 	String getResultSetMappingName();
+	String getResultSetMappingClassName();
 
 	@Override
 	NamedNativeQueryMemento resolve(SessionFactoryImplementor factory);

@@ -11,8 +11,8 @@ import java.util.Map;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.boot.spi.AbstractNamedQueryMapping;
-import org.hibernate.boot.spi.NamedHqlQueryMapping;
+import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
+import org.hibernate.boot.spi.NamedHqlQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
@@ -20,13 +20,13 @@ import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 /**
  * @author Steve Ebersole
  */
-public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implements NamedHqlQueryMapping {
+public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition implements NamedHqlQueryDefinition {
 	private final String hqlString;
 	private final Integer firstResult;
 	private final Integer maxResults;
 	private final Map<String, String> parameterTypes;
 
-	public NamedHqlQueryMappingImpl(
+	public NamedHqlQueryDefinitionImpl(
 			String name,
 			String hqlString,
 			Integer firstResult,
@@ -62,14 +62,14 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 	}
 
 	@Override
-	public String getQueryString() {
+	public String getHqlString() {
 		return hqlString;
 	}
 
 	@Override
 	public NamedHqlQueryMemento resolve(SessionFactoryImplementor factory) {
 		return new NamedHqlQueryMementoImpl(
-				getName(),
+				getRegistrationName(),
 				hqlString,
 				firstResult,
 				maxResults,
@@ -115,8 +115,8 @@ public class NamedHqlQueryMappingImpl extends AbstractNamedQueryMapping implemen
 			return getThis();
 		}
 
-		public NamedHqlQueryMappingImpl build() {
-			return new NamedHqlQueryMappingImpl(
+		public NamedHqlQueryDefinitionImpl build() {
+			return new NamedHqlQueryDefinitionImpl(
 					getName(),
 					hqlString,
 					firstResult,

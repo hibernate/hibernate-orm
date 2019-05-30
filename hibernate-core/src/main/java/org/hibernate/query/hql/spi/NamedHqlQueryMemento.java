@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.LockOptions;
+import org.hibernate.boot.spi.NamedHqlQueryDefinition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
@@ -27,9 +28,22 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 	String getHqlString();
 
 	/**
-	 * Convert the memento into an executable query
+	 * Convert the memento into a typed executable query
 	 */
 	<T> HqlQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
+
+	/**
+	 * Convert the memento into an untyped executable query
+	 */
+	HqlQueryImplementor<?> toQuery(SharedSessionContractImplementor session);
+
+	Integer getFirstResult();
+
+	Integer getMaxResults();
+
+	LockOptions getLockOptions();
+
+	Map<String, String> getParameterTypes();
 
 	@Override
 	NamedHqlQueryMemento makeCopy(String name);
@@ -37,7 +51,7 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 	/**
 	 * Delegate used in creating named HQL query mementos.
 	 *
-	 * @see org.hibernate.boot.spi.NamedHqlQueryMapping
+	 * @see NamedHqlQueryDefinition
 	 * @see HqlQueryImplementor#toMemento
 	 */
 	class Builder extends AbstractNamedQueryMemento.AbstractBuilder<Builder> {

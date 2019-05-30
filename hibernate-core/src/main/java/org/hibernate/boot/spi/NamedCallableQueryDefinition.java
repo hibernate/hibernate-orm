@@ -16,7 +16,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedCallableQueryMapping extends NamedQueryMapping {
+public interface NamedCallableQueryDefinition extends NamedQueryDefinition {
 	@Override
 	NamedCallableQueryMemento resolve(SessionFactoryImplementor factory);
 

@@ -13,11 +13,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
 
+import javax.persistence.TemporalType;
+
+import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.InstantJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.time.LocalDateTime}.
@@ -26,7 +31,7 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
  */
 public class InstantType
 		extends AbstractSingleColumnStandardBasicType<Instant>
-		implements VersionType<Instant>, LiteralType<Instant> {
+		implements VersionType<Instant>, LiteralType<Instant>, AllowableTemporalParameterType {
 	/**
 	 * Singleton access
 	 */
@@ -67,5 +72,23 @@ public class InstantType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
+	}
+
+	@Override
+	public AllowableTemporalParameterType resolveTemporalPrecision(
+			TemporalType temporalPrecision,
+			TypeConfiguration typeConfiguration) {
+		switch ( temporalPrecision ) {
+			case TIMESTAMP: {
+				return this;
+			}
+			case TIME: {
+				return TimeType.INSTANCE;
+			}
+			case DATE: {
+				return DateType.INSTANCE;
+			}
+		}
+		throw new QueryException( "Instant type cannot be treated using `" + temporalPrecision.name() + "` precision" );
 	}
 }

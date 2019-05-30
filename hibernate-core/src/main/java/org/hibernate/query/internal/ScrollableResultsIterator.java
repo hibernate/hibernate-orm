@@ -16,10 +16,10 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
  * @since 5.2
  */
 @Incubating
-class ScrollableResultsIterator<T> implements CloseableIterator {
+public class ScrollableResultsIterator<T> implements CloseableIterator {
 	private final ScrollableResultsImplementor scrollableResults;
 
-	ScrollableResultsIterator(ScrollableResultsImplementor scrollableResults) {
+	public ScrollableResultsIterator(ScrollableResultsImplementor scrollableResults) {
 		this.scrollableResults = scrollableResults;
 	}
 
@@ -36,12 +36,6 @@ class ScrollableResultsIterator<T> implements CloseableIterator {
 	@Override
 	@SuppressWarnings("unchecked")
 	public T next() {
-		Object[] next = scrollableResults.get();
-		if ( next.length == 1 ) {
-			return (T) next[0];
-		}
-		else {
-			return (T) next;
-		}
+		return (T) scrollableResults.get();
 	}
 }

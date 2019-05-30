@@ -17,16 +17,16 @@ import java.util.Set;
  *
  * @author Emmanuel Bernard
  */
-public class IdentitySet implements Set {
+public class IdentitySet<E> implements Set<E> {
 	private static final Object DUMP_VALUE = new Object();
 
-	private final IdentityHashMap map;
+	private final IdentityHashMap<E,Object> map;
 
 	/**
 	 * Create an IdentitySet with default sizing.
 	 */
 	public IdentitySet() {
-		this.map = new IdentityHashMap();
+		this.map = new IdentityHashMap<>();
 	}
 
 	/**
@@ -34,76 +34,87 @@ public class IdentitySet implements Set {
 	 *
 	 * @param sizing The sizing of the set to create.
 	 */
+	@SuppressWarnings("unused")
 	public IdentitySet(int sizing) {
-		this.map = new IdentityHashMap( sizing );
+		this.map = new IdentityHashMap<>( sizing );
 	}
 
+	@Override
 	public int size() {
 		return map.size();
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return map.isEmpty();
 	}
 
+	@Override
+	@SuppressWarnings("SuspiciousMethodCalls")
 	public boolean contains(Object o) {
 		return map.get( o ) == DUMP_VALUE;
 	}
 
-	public Iterator iterator() {
+	@Override
+	public Iterator<E> iterator() {
 		return map.keySet().iterator();
 	}
 
+	@Override
 	public Object[] toArray() {
 		return map.keySet().toArray();
 	}
 
-	public Object[] toArray(Object[] a) {
+	@SuppressWarnings("SuspiciousToArrayCall")
+	public <T> T[] toArray(T[] a) {
 		return map.keySet().toArray( a );
 	}
 
-	public boolean add(Object o) {
+	@Override
+	public boolean add(E o) {
 		return map.put( o, DUMP_VALUE ) == null;
 	}
 
+	@Override
 	public boolean remove(Object o) {
 		return map.remove( o ) == DUMP_VALUE;
 	}
 
-	public boolean containsAll(Collection c) {
-		Iterator it = c.iterator();
-		while ( it.hasNext() ) {
-			if ( !map.containsKey( it.next() ) ) {
+	@Override
+	@SuppressWarnings("SuspiciousMethodCalls")
+	public boolean containsAll(Collection<?> checkValues) {
+		for ( Object checkValue : checkValues ) {
+			if ( ! map.containsKey( checkValue ) ) {
 				return false;
 			}
 		}
+
 		return true;
 	}
 
-	public boolean addAll(Collection c) {
-		Iterator it = c.iterator();
+	@Override
+	public boolean addAll(Collection<? extends E> additions) {
 		boolean changed = false;
-		while ( it.hasNext() ) {
-			if ( this.add( it.next() ) ) {
-				changed = true;
-			}
+
+		for ( E addition : additions ) {
+			changed = add( addition ) || changed;
 		}
+
 		return changed;
 	}
 
-	public boolean retainAll(Collection c) {
+	public boolean retainAll(Collection<?> keepers) {
 		//doable if needed
 		throw new UnsupportedOperationException();
 	}
 
-	public boolean removeAll(Collection c) {
-		Iterator it = c.iterator();
+	public boolean removeAll(Collection<?> removals) {
 		boolean changed = false;
-		while ( it.hasNext() ) {
-			if ( this.remove( it.next() ) ) {
-				changed = true;
-			}
+
+		for ( Object removal : removals ) {
+			changed = remove( removal ) || changed;
 		}
+
 		return changed;
 	}
 

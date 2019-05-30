@@ -10,11 +10,16 @@ import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Date;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.sql.Timestamp}
@@ -24,7 +29,7 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
  */
 public class TimestampType
 		extends AbstractSingleColumnStandardBasicType<Date>
-		implements VersionType<Date>, LiteralType<Date> {
+		implements VersionType<Date>, LiteralType<Date>, AllowableTemporalParameterType {
 
 	public static final TimestampType INSTANCE = new TimestampType();
 
@@ -69,5 +74,23 @@ public class TimestampType
 	@Override
 	public Date fromStringValue(String xml) throws HibernateException {
 		return fromString( xml );
+	}
+
+	@Override
+	public AllowableTemporalParameterType resolveTemporalPrecision(
+			TemporalType temporalPrecision,
+			TypeConfiguration typeConfiguration) {
+		switch ( temporalPrecision ) {
+			case TIMESTAMP: {
+				return this;
+			}
+			case DATE: {
+				return DateType.INSTANCE;
+			}
+			case TIME: {
+				return TimeType.INSTANCE;
+			}
+		}
+		throw new QueryException( "Timestamp type cannot be treated using `" + temporalPrecision.name() + "` precision" );
 	}
 }

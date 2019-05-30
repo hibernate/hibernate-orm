@@ -26,7 +26,6 @@ import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.boot.spi.NamedNativeQueryMementoBuilder;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -175,7 +174,7 @@ public class NamedQueryBinder {
 							context.getMetadataCollector().addResultSetMapping( resultSetMappingDescriptor );
 							NativeSQLQueryReturn[] newQueryReturns = resultSetMappingDescriptor.getQueryReturns();
 							final NamedNativeQueryMemento queryDefinition =
-									context.getMetadataCollector().getNamedNativeQueryDefinition( queryName );
+									context.getMetadataCollector().getNamedNativeQueryMapping( queryName );
 							if ( queryDefinition != null ) {
 								queryDefinition.addQueryReturns( newQueryReturns );
 							}

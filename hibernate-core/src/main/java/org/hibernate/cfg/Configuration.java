@@ -40,7 +40,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
+import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
@@ -95,7 +95,7 @@ public class Configuration {
 	private List<TypeContributor> typeContributorRegistrations = new ArrayList<TypeContributor>();
 	private Map<String, NamedHqlQueryMementoImpl> namedQueries;
 	private Map<String, NamedSQLQueryDefinition> namedSqlQueries;
-	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
+	private Map<String, NamedProcedureCallDefinitionImpl> namedProcedureCallMap;
 	private Map<String, ResultSetMappingDescriptor> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
@@ -152,7 +152,7 @@ public class Configuration {
 		namedSqlQueries = new HashMap<String,NamedSQLQueryDefinition>();
 		sqlResultSetMappings = new HashMap<String, ResultSetMappingDescriptor>();
 		namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>();
-		namedProcedureCallMap = new HashMap<String, NamedProcedureCallDefinition>(  );
+		namedProcedureCallMap = new HashMap<String, NamedProcedureCallDefinitionImpl>(  );
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 		entityTuplizerFactory = new EntityTuplizerFactory();
@@ -829,7 +829,7 @@ public class Configuration {
 		return namedQueries;
 	}
 
-	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
+	public Map<String, NamedProcedureCallDefinitionImpl> getNamedProcedureCallMap() {
 		return namedProcedureCallMap;
 	}
 

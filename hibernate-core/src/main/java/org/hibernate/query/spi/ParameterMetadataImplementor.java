@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.spi;
 
-import java.util.Set;
 import java.util.function.Predicate;
 import javax.persistence.Parameter;
 
@@ -16,24 +15,21 @@ import org.hibernate.query.ParameterMetadata;
  * @author Steve Ebersole
  */
 public interface ParameterMetadataImplementor extends ParameterMetadata {
-	@Override
-	<T> QueryParameterImplementor<T> getQueryParameter(String name);
-
-	@Override
-	<T> QueryParameterImplementor<T> getQueryParameter(int positionLabel);
-
-	@Override
-	<T> QueryParameterImplementor<T> resolve(Parameter<T> param);
-
-	@Override
-	Set<? extends QueryParameterImplementor<?>> getRegistrations();
-
 	@FunctionalInterface
 	interface ParameterCollector {
-		void collect(QueryParameterImplementor<?> queryParameter);
+		<P extends QueryParameterImplementor<?>> void collect(P queryParameter);
 	}
 
 	void collectAllParameters(ParameterCollector collector);
 
 	boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter);
+
+	@Override
+	QueryParameterImplementor<?> getQueryParameter(String name);
+
+	@Override
+	QueryParameterImplementor<?> getQueryParameter(int positionLabel);
+
+	@Override
+	QueryParameterImplementor<?> resolve(Parameter param);
 }

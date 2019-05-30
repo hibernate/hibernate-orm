@@ -6,28 +6,33 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
-import javax.persistence.criteria.AbstractQuery;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
-import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.internal.QueryOptionsImpl;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.spi.AbstractQuery;
+import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryOptions;
@@ -44,6 +49,10 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.type.BasicType;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -54,7 +63,7 @@ public class QuerySqmImpl<R>
 		extends AbstractQuery<R>
 		implements HqlQueryImplementor<R>, ExecutionContext, DomainParameterBindingContext {
 
-	private final String sourceQueryString;
+	private final String hqlString;
 	private final SqmStatement sqmStatement;
 	private final Class resultType;
 
@@ -65,8 +74,70 @@ public class QuerySqmImpl<R>
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
+	/**
+	 * Creates a Query instance from a named HQL memento
+	 */
 	public QuerySqmImpl(
-			String sourceQueryString,
+			NamedHqlQueryMemento memento,
+			Class<R> resultType,
+			SharedSessionContractImplementor producer) {
+		super( producer );
+
+		this.hqlString = memento.getHqlString();
+
+		final SessionFactoryImplementor factory = producer.getFactory();
+
+		this.sqmStatement = factory.getQueryEngine().getSemanticQueryProducer().interpret( hqlString );
+
+		if ( resultType != null ) {
+			if ( sqmStatement instanceof SqmDmlStatement ) {
+				throw new IllegalArgumentException( "Non-select queries cannot be typed" );
+			}
+		}
+		this.resultType = resultType;
+
+		if ( sqmStatement.getSqmParameters().isEmpty() ) {
+			this.domainParameterXref = DomainParameterXref.empty();
+			this.parameterMetadata = ParameterMetadataImpl.EMPTY;
+		}
+		else {
+			this.domainParameterXref = DomainParameterXref.from( sqmStatement );
+			this.parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+		}
+
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+
+		applyOptions( memento );
+	}
+
+	protected void applyOptions(NamedHqlQueryMemento memento) {
+		super.applyOptions( memento );
+
+		if ( memento.getFirstResult() != null ) {
+			setFirstResult( memento.getFirstResult() );
+		}
+
+		if ( memento.getMaxResults() != null ) {
+			setMaxResults( memento.getMaxResults() );
+		}
+
+		if ( memento.getLockOptions() != null ) {
+			setLockOptions( memento.getLockOptions() );
+		}
+
+		if ( memento.getParameterTypes() != null ) {
+			for ( Map.Entry<String, String> entry : memento.getParameterTypes().entrySet() ) {
+				final QueryParameterImplementor<?> parameter = parameterMetadata.getQueryParameter( entry.getKey() );
+				final BasicType type = getSessionFactory().getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.getRegisteredType( entry.getValue() );
+				parameter.applyAnticipatedType( type );
+			}
+		}
+	}
+
+	public QuerySqmImpl(
+			String hqlString,
 			SqmStatement sqmStatement,
 			Class resultType,
 			SharedSessionContractImplementor producer) {
@@ -78,7 +149,7 @@ public class QuerySqmImpl<R>
 			}
 		}
 
-		this.sourceQueryString = sourceQueryString;
+		this.hqlString = hqlString;
 		this.sqmStatement = sqmStatement;
 		this.resultType = resultType;
 
@@ -105,7 +176,7 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public String getQueryString() {
-		return sourceQueryString;
+		return hqlString;
 	}
 
 	@Override
@@ -136,7 +207,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public ParameterMetadataImplementor<QueryParameterImplementor<?>> getParameterMetadata() {
+	public ParameterMetadataImplementor getParameterMetadata() {
 		return parameterMetadata;
 	}
 
@@ -361,10 +432,10 @@ public class QuerySqmImpl<R>
 	private NonSelectQueryPlan buildDeleteQueryPlan() {
 		final SqmDeleteStatement sqmDelete = (SqmDeleteStatement) getSqmStatement();
 
-		final EntityTypeDescriptor entityToDelete = sqmDelete.getTarget()
-				.getReferencedPathSource()
-				.getEntityDescriptor();
-		final DeleteHandler deleteHandler = entityToDelete.getHierarchy()
+		final String entityNameToDelete = sqmDelete.getTarget().getReferencedPathSource().getHibernateEntityName();
+		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToDelete );
+
+		final DeleteHandler deleteHandler = entityDescriptor.getHierarchy()
 				.getSqmMutationStrategy()
 				.buildDeleteHandler( sqmDelete, domainParameterXref, this::getSessionFactory );
 
@@ -374,11 +445,10 @@ public class QuerySqmImpl<R>
 	private NonSelectQueryPlan buildUpdateQueryPlan() {
 		final SqmUpdateStatement sqmStatement = (SqmUpdateStatement) getSqmStatement();
 
-		final EntityTypeDescriptor entityToUpdate = sqmStatement.getTarget()
-				.getReferencedPathSource()
-				.getEntityDescriptor();
+		final String entityNameToUpdate = sqmStatement.getTarget().getReferencedPathSource().getHibernateEntityName();
+		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
 
-		final UpdateHandler updateHandler = entityToUpdate.getHierarchy()
+		final UpdateHandler updateHandler = entityDescriptor.getHierarchy()
 				.getSqmMutationStrategy()
 				.buildUpdateHandler( sqmStatement, domainParameterXref, this::getSessionFactory );
 
@@ -404,8 +474,7 @@ public class QuerySqmImpl<R>
 	public NamedHqlQueryMemento toMemento(String name, SessionFactoryImplementor factory) {
 		return new NamedHqlQueryMementoImpl(
 				name,
-				toParameterMementos( getParameterMetadata() ),
-				sourceQueryString,
+				hqlString,
 				getFirstResult(),
 				getMaxResults(),
 				isCacheable(),
@@ -417,11 +486,8 @@ public class QuerySqmImpl<R>
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
+				Collections.emptyMap(),
 				getHints()
 		);
-	}
-
-	private static List<ParameterMemento> toParameterMementos(ParameterMetadataImplementor<QueryParameterImplementor<?>> parameterMetadata) {
-		throw new NotYetImplementedFor6Exception();
 	}
 }

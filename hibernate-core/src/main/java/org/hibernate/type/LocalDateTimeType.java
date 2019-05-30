@@ -11,11 +11,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
 
+import javax.persistence.TemporalType;
+
+import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.LocalDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link LocalDateTime}.
@@ -24,7 +29,7 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
  */
 public class LocalDateTimeType
 		extends AbstractSingleColumnStandardBasicType<LocalDateTime>
-		implements VersionType<LocalDateTime>, LiteralType<LocalDateTime> {
+		implements VersionType<LocalDateTime>, LiteralType<LocalDateTime>, AllowableTemporalParameterType {
 	/**
 	 * Singleton access
 	 */
@@ -65,5 +70,22 @@ public class LocalDateTimeType
 	@SuppressWarnings("unchecked")
 	public Comparator<LocalDateTime> getComparator() {
 		return ComparableComparator.INSTANCE;
+	}
+
+	@Override
+	public AllowableTemporalParameterType resolveTemporalPrecision(
+			TemporalType temporalPrecision,
+			TypeConfiguration typeConfiguration) {
+		switch ( temporalPrecision ) {
+			case TIMESTAMP: {
+				return this;
+			}
+			case DATE: {
+				return LocalDateType.INSTANCE;
+			}
+			default: {
+				throw new QueryException( "LocalDateTime type cannot be treated using `" + temporalPrecision.name() + "` precision" );
+			}
+		}
 	}
 }

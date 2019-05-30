@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 
 /**
  * A resolver for Type based on a parameter value being bound, when no
@@ -15,6 +15,6 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface QueryParameterBindingTypeResolver {
-	Type resolveParameterBindType(Object bindValue);
-	Type resolveParameterBindType(Class clazz);
+	AllowableParameterType resolveParameterBindType(Object bindValue);
+	AllowableParameterType resolveParameterBindType(Class clazz);
 }

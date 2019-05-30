@@ -20,21 +20,21 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  */
 public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
-	protected final String name;
+	private final String name;
 
-	protected final Boolean cacheable;
-	protected final String cacheRegion;
-	protected final CacheMode cacheMode;
+	private final Boolean cacheable;
+	private final String cacheRegion;
+	private final CacheMode cacheMode;
 
-	protected final FlushMode flushMode;
-	protected final Boolean readOnly;
+	private final FlushMode flushMode;
+	private final Boolean readOnly;
 
-	protected final Integer timeout;
-	protected final Integer fetchSize;
+	private final Integer timeout;
+	private final Integer fetchSize;
 
-	protected final String comment;
+	private final String comment;
 
-	protected final Map<String, Object> hints;
+	private final Map<String, Object> hints;
 
 	protected AbstractNamedQueryMemento(
 			String name,
@@ -60,46 +60,53 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 	}
 
 	@Override
-	public String getName() {
+	public String getRegistrationName() {
 		return name;
 	}
 
-	protected void applyBaseOptions(QueryImplementor query, SharedSessionContractImplementor session) {
-		if ( hints != null ) {
-			hints.forEach( query::setHint );
-		}
+	@Override
+	public Boolean getCacheable() {
+		return cacheable;
+	}
 
-		if ( cacheable != null ) {
-			query.setCacheable( cacheable );
-		}
+	@Override
+	public String getCacheRegion() {
+		return cacheRegion;
+	}
 
-		if ( cacheRegion != null ) {
-			query.setCacheRegion( cacheRegion );
-		}
+	@Override
+	public CacheMode getCacheMode() {
+		return cacheMode;
+	}
 
-		if ( cacheMode != null ) {
-			query.setCacheMode( cacheMode );
-		}
+	@Override
+	public FlushMode getFlushMode() {
+		return flushMode;
+	}
 
-		if ( flushMode != null ) {
-			query.setHibernateFlushMode( flushMode );
-		}
+	@Override
+	public Boolean getReadOnly() {
+		return readOnly;
+	}
 
-		if ( readOnly != null ) {
-			query.setReadOnly( readOnly );
-		}
+	@Override
+	public Integer getTimeout() {
+		return timeout;
+	}
 
-		if ( timeout != null ) {
-			query.setTimeout( timeout );
-		}
+	@Override
+	public Integer getFetchSize() {
+		return fetchSize;
+	}
 
-		if ( fetchSize != null ) {
-			query.setFetchSize( fetchSize );
-		}
+	@Override
+	public String getComment() {
+		return comment;
+	}
 
-		if ( comment != null ) {
-			query.setComment( comment );
-		}
+	@Override
+	public Map<String, Object> getHints() {
+		return hints;
 	}
 
 	public static abstract class AbstractBuilder<T extends AbstractBuilder> {

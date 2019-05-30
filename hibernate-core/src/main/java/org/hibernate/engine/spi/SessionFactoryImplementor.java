@@ -27,28 +27,33 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
+import org.hibernate.query.spi.QueryPlanCache;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines the internal contract between the <tt>SessionFactory</tt> and other parts of
@@ -60,7 +65,8 @@ import org.hibernate.type.TypeResolver;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactoryImplementor extends Mapping, SessionFactory, SqmCreationContext, QueryParameterBindingTypeResolver {
+public interface SessionFactoryImplementor
+		extends Mapping, SessionFactory, SqmCreationContext, SqlAstCreationContext, QueryParameterBindingTypeResolver {
 	/**
 	 * Get the UUID for this SessionFactory.  The value is generated as a {@link java.util.UUID}, but kept
 	 * as a String.
@@ -77,6 +83,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, SqmC
 	 * @return The name for the SessionFactory
 	 */
 	String getName();
+
+	TypeConfiguration getTypeConfiguration();
+
+	@Override
+	default DomainMetamodel getDomainModel() {
+		return getMetamodel();
+	}
 
 	QueryEngine getQueryEngine();
 
@@ -235,43 +248,43 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, SqmC
 	// NamedQueryRepository
 
 	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getNamedQueryDefinition(java.lang.String)} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getHqlQueryMemento} instead.
 	 */
 	@Deprecated
-	default NamedHqlQueryMementoImpl getNamedQuery(String queryName) {
-		return getNamedQueryRepository().getNamedQueryDefinition( queryName );
+	default NamedHqlQueryMemento getNamedQuery(String queryName) {
+		return getNamedQueryRepository().getHqlQueryMemento( queryName );
 	}
 
 	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerNamedQueryDefinition} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerHqlQueryMemento} instead.
 	 */
 	@Deprecated
-	default void registerNamedQueryDefinition(String name, NamedHqlQueryMementoImpl definition) {
-		getNamedQueryRepository().registerNamedQueryDefinition( name, definition );
+	default void registerNamedQueryDefinition(String name, NamedHqlQueryMementoImpl memento) {
+		getNamedQueryRepository().registerHqlQueryMemento( name, memento );
 	}
 
 	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getNamedSQLQueryDefinition} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getNativeQueryMemento} instead.
 	 */
 	@Deprecated
-	default NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
-		return getNamedQueryRepository().getNamedSQLQueryDefinition( queryName );
+	default NamedNativeQueryMemento getNamedSQLQuery(String queryName) {
+		return getNamedQueryRepository().getNativeQueryMemento( queryName );
 	}
 
 	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerNamedSQLQueryDefinition} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerNativeQueryMemento} instead.
 	 */
 	@Deprecated
-	default void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
-		getNamedQueryRepository().registerNamedSQLQueryDefinition( name, definition );
+	default void registerNamedSQLQueryDefinition(String name, NamedNativeQueryMemento memento) {
+		getNamedQueryRepository().registerNativeQueryMemento( name, memento );
 	}
 
 	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getResultSetMappingDefinition} instead.
+	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getResultSetMappingMemento} instead.
 	 */
 	@Deprecated
-	default ResultSetMappingDescriptor getResultSetMapping(String name) {
-		return getNamedQueryRepository().getResultSetMappingDefinition( name );
+	default NamedResultSetMappingMemento getResultSetMapping(String name) {
+		return getNamedQueryRepository().getResultSetMappingMemento( name );
 	}
 
 	/**

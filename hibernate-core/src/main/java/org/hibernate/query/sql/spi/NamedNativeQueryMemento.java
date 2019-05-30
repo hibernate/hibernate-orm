@@ -8,6 +8,7 @@ package org.hibernate.query.sql.spi;
 
 import java.util.Set;
 
+import org.hibernate.boot.spi.NamedNativeQueryDefinition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.NamedQueryMemento;
@@ -25,9 +26,14 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	String getSqlString();
 
 	/**
-	 * Convert the memento into an executable query
+	 * Convert the memento into a typed executable query
 	 */
 	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
+
+	/**
+	 * Convert the memento into an untyped executable query
+	 */
+	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session);
 
 	@Override
 	NamedNativeQueryMemento makeCopy(String name);
@@ -35,7 +41,7 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	/**
 	 * Delegate used in creating named HQL query mementos.
 	 *
-	 * @see org.hibernate.boot.spi.NamedNativeQueryMapping
+	 * @see NamedNativeQueryDefinition
 	 */
 	class Builder extends AbstractNamedQueryMemento.AbstractBuilder<Builder> {
 		protected String queryString;

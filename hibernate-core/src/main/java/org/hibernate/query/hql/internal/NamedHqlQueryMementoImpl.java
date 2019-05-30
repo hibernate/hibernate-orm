@@ -74,34 +74,59 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 	}
 
 	@Override
+	public String getHqlString() {
+		return hqlString;
+	}
+
+	@Override
+	public Integer getFirstResult() {
+		return firstResult;
+	}
+
+	@Override
+	public Integer getMaxResults() {
+		return maxResults;
+	}
+
+	@Override
+	public LockOptions getLockOptions() {
+		return lockOptions;
+	}
+
+	@Override
+	public Map<String, String> getParameterTypes() {
+		return parameterTypes;
+	}
+
+	@Override
 	public NamedHqlQueryMemento makeCopy(String name) {
 		return new NamedHqlQueryMementoImpl(
 				name,
 				hqlString,
 				firstResult,
 				maxResults,
-				cacheable,
-				cacheRegion,
-				cacheMode,
-				flushMode,
-				readOnly,
+				getCacheable(),
+				getCacheRegion(),
+				getCacheMode(),
+				getFlushMode(),
+				getReadOnly(),
 				lockOptions,
-				timeout,
-				fetchSize,
-				comment,
+				getTimeout(),
+				getFetchSize(),
+				getComment(),
 				parameterTypes,
-				hints
+				getHints()
 		);
 	}
 
 	@Override
+	public HqlQueryImplementor<?> toQuery(SharedSessionContractImplementor session) {
+		return null;
+	}
+
+	@Override
 	public <T> HqlQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
-		final QuerySqmImpl<T> query = new QuerySqmImpl<>(
-				hqlString,
-				session.getFactory().getQueryEngine().getSemanticQueryProducer().interpret( hqlString ),
-				resultType,
-				session
-		);
+		final QuerySqmImpl<T> query = new QuerySqmImpl<>( this, resultType, session );
 
 		for ( Map.Entry<String, String> entry : parameterTypes.entrySet() ) {
 			final BasicType hintedType = session.getFactory()

@@ -13,7 +13,8 @@ import java.time.ZonedDateTime;
 import java.util.Calendar;
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.BasicType;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.CalendarDateType;
 import org.hibernate.type.CalendarTimeType;
 import org.hibernate.type.CalendarType;
@@ -21,8 +22,8 @@ import org.hibernate.type.InstantType;
 import org.hibernate.type.OffsetDateTimeType;
 import org.hibernate.type.OffsetTimeType;
 import org.hibernate.type.TimestampType;
-import org.hibernate.type.Type;
 import org.hibernate.type.ZonedDateTimeType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -36,7 +37,19 @@ public class BindingTypeHelper {
 	private BindingTypeHelper() {
 	}
 
-	public BasicType determineTypeForTemporalType(TemporalType temporalType, Type baseType, Object bindValue) {
+	@SuppressWarnings("unchecked")
+	public <T> AllowableParameterType<T> resolveTemporalPrecision(
+			TemporalType precision,
+			AllowableParameterType baseType,
+			TypeConfiguration typeConfiguration) {
+		if ( ! ( baseType instanceof AllowableTemporalParameterType ) ) {
+			throw new UnsupportedOperationException( "Cannot treat non-temporal parameter type with temporal precision" );
+		}
+
+		return ( (AllowableTemporalParameterType) baseType ).resolveTemporalPrecision( precision, typeConfiguration );
+	}
+
+	public AllowableParameterType determineTypeForTemporalType(TemporalType temporalType, AllowableParameterType baseType, Object bindValue) {
 		// todo : for 6.0 make TemporalType part of org.hibernate.type.descriptor.java.JdbcRecommendedSqlTypeMappingContext
 		//		then we can just ask the org.hibernate.type.basic.BasicTypeFactory to handle this based on its registry
 		//
@@ -61,7 +74,7 @@ public class BindingTypeHelper {
 			javaType = bindValue.getClass();
 		}
 		else if ( baseType != null ) {
-			javaType = baseType.getReturnedClass();
+			javaType = baseType.getExpressableJavaTypeDescriptor().getJavaType();
 		}
 		else {
 			javaType = java.sql.Timestamp.class;
@@ -83,10 +96,10 @@ public class BindingTypeHelper {
 		}
 	}
 
-	public BasicType resolveTimestampTemporalTypeVariant(Class javaType, Type baseType) {
-		// prefer to use any Type already known - interprets TIMESTAMP as "no narrowing"
-		if ( baseType != null && baseType instanceof BasicType ) {
-			return (BasicType) baseType;
+	public AllowableParameterType resolveTimestampTemporalTypeVariant(Class javaType, AllowableParameterType baseType) {
+		//noinspection unchecked
+		if ( baseType.getExpressableJavaTypeDescriptor().getJavaType().isAssignableFrom( javaType ) ) {
+			return baseType;
 		}
 
 		if ( Calendar.class.isAssignableFrom( javaType ) ) {
@@ -116,13 +129,9 @@ public class BindingTypeHelper {
 		throw new IllegalArgumentException( "Unsure how to handle given Java type [" + javaType.getName() + "] as TemporalType#TIMESTAMP" );
 	}
 
-	@SuppressWarnings("unchecked")
-	public BasicType resolveDateTemporalTypeVariant(Class javaType, Type baseType) {
-		// prefer to use any Type already known
-		if ( baseType != null && baseType instanceof BasicType ) {
-			if ( baseType.getReturnedClass().isAssignableFrom( javaType ) ) {
-				return (BasicType) baseType;
-			}
+	public AllowableParameterType<?> resolveDateTemporalTypeVariant(Class<?> javaType, AllowableParameterType<?> baseType) {
+		if ( baseType.getExpressableJavaTypeDescriptor().getJavaType().isAssignableFrom( javaType ) ) {
+			return baseType;
 		}
 
 		if ( Calendar.class.isAssignableFrom( javaType ) ) {
@@ -148,7 +157,7 @@ public class BindingTypeHelper {
 		throw new IllegalArgumentException( "Unsure how to handle given Java type [" + javaType.getName() + "] as TemporalType#DATE" );
 	}
 
-	public BasicType resolveTimeTemporalTypeVariant(Class javaType, Type baseType) {
+	public AllowableParameterType resolveTimeTemporalTypeVariant(Class javaType, AllowableParameterType baseType) {
 		if ( Calendar.class.isAssignableFrom( javaType ) ) {
 			return CalendarTimeType.INSTANCE;
 		}

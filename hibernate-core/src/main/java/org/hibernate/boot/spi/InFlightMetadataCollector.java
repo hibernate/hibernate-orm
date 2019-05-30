@@ -18,6 +18,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
@@ -34,14 +35,10 @@ import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.NamedResultSetMappingMemento;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.FetchProfile;
@@ -141,7 +138,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedQuery(NamedHqlQueryMapping query) throws DuplicateMappingException;
+	void addNamedQuery(NamedHqlQueryDefinition query) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named SQL query to this repository.
@@ -150,7 +147,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedNativeQuery(NamedNativeQueryMapping query) throws DuplicateMappingException;
+	void addNamedNativeQuery(NamedNativeQueryDefinition query) throws DuplicateMappingException;
 
 	/**
 	 * Adds the metadata for a named SQL result set mapping to this repository.
@@ -169,7 +166,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedProcedureCallDefinition(NamedProcedureCallDefinition definition) throws DuplicateMappingException;
+	void addNamedProcedureCallDefinition(NamedProcedureCallDefinitionImpl definition) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named entity graph to this repository
@@ -270,13 +267,13 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-	void addDefaultQuery(NamedHqlQueryMapping queryDefinition);
+	void addDefaultQuery(NamedHqlQueryDefinition queryDefinition);
 
-	void addDefaultNamedNativeQuery(NamedNativeQueryMapping query);
+	void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query);
 
 	void addDefaultResultSetMapping(ResultSetMappingDescriptor definition);
 
-	void addDefaultNamedProcedureCallDefinition(NamedProcedureCallDefinition procedureCallDefinition);
+	void addDefaultNamedProcedureCallDefinition(NamedProcedureCallDefinitionImpl procedureCallDefinition);
 
 	void addAnyMetaDef(AnyMetaDef defAnn);
 	AnyMetaDef getAnyMetaDef(String anyMetaDefName);

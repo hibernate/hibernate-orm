@@ -9,17 +9,21 @@ package org.hibernate.type;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import javax.persistence.TemporalType;
 
+import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.LocalDateJavaDescriptor;
 import org.hibernate.type.descriptor.sql.DateTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class LocalDateType
 		extends AbstractSingleColumnStandardBasicType<LocalDate>
-		implements LiteralType<LocalDate> {
+		implements LiteralType<LocalDate>, AllowableTemporalParameterType {
 
 	/**
 	 * Singleton access
@@ -45,5 +49,22 @@ public class LocalDateType
 	@Override
 	public String objectToSQLString(LocalDate value, Dialect dialect) throws Exception {
 		return "{d '" + FORMATTER.format( value ) + "'}";
+	}
+
+	@Override
+	public AllowableTemporalParameterType resolveTemporalPrecision(
+			TemporalType temporalPrecision,
+			TypeConfiguration typeConfiguration) {
+		switch ( temporalPrecision ) {
+			case DATE: {
+				return this;
+			}
+			case TIMESTAMP: {
+				return LocalDateTimeType.INSTANCE;
+			}
+			default: {
+				throw new QueryException( "LocalDate type cannot be treated using `" + temporalPrecision.name() + "` precision" );
+			}
+		}
 	}
 }

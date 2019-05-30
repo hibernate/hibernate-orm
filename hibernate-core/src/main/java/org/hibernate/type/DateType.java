@@ -8,8 +8,13 @@ package org.hibernate.type;
 
 import java.util.Date;
 
+import javax.persistence.TemporalType;
+
+import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link java.sql.Types#DATE DATE} and {@link java.sql.Date}
@@ -19,7 +24,7 @@ import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
  */
 public class DateType
 		extends AbstractSingleColumnStandardBasicType<Date>
-		implements IdentifierType<Date>, LiteralType<Date> {
+		implements IdentifierType<Date>, LiteralType<Date>, AllowableTemporalParameterType {
 
 	public static final DateType INSTANCE = new DateType();
 
@@ -54,5 +59,23 @@ public class DateType
 
 	public Date stringToObject(String xml) {
 		return fromString( xml );
+	}
+
+	@Override
+	public AllowableTemporalParameterType resolveTemporalPrecision(
+			TemporalType temporalPrecision,
+			TypeConfiguration typeConfiguration) {
+		switch ( temporalPrecision ) {
+			case DATE: {
+				return this;
+			}
+			case TIME: {
+				return TimeType.INSTANCE;
+			}
+			case TIMESTAMP: {
+				return TimestampType.INSTANCE;
+			}
+		}
+		throw new QueryException( "Date type cannot be treated using `" + temporalPrecision.name() + "` precision" );
 	}
 }

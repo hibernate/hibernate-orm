@@ -14,11 +14,11 @@ import java.util.UUID;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -118,28 +118,28 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public NamedHqlQueryMementoImpl getNamedQueryDefinition(String name) {
-		return delegate.getNamedQueryDefinition( name );
+	public NamedHqlQueryMementoImpl getNamedHqlQueryMapping(String name) {
+		return delegate.getNamedHqlQueryMapping( name );
 	}
 
 	@Override
-	public Collection<NamedHqlQueryMementoImpl> getNamedQueryDefinitions() {
-		return delegate.getNamedQueryDefinitions();
+	public Collection<NamedHqlQueryMementoImpl> getNamedHqlQueryMappings() {
+		return delegate.getNamedHqlQueryMappings();
 	}
 
 	@Override
-	public NamedSQLQueryDefinition getNamedNativeQueryDefinition(String name) {
-		return delegate.getNamedNativeQueryDefinition( name );
+	public NamedNativeQueryDefinition getNamedNativeQueryMapping(String name) {
+		return delegate.getNamedNativeQueryMapping( name );
 	}
 
 	@Override
-	public Collection<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
-		return delegate.getNamedNativeQueryDefinitions();
+	public Collection<NamedNativeQueryDefinition> getNamedNativeQueryMappings() {
+		return delegate.getNamedNativeQueryMappings();
 	}
 
 	@Override
-	public Collection<NamedProcedureCallDefinition> getNamedProcedureCallDefinitions() {
-		return delegate.getNamedProcedureCallDefinitions();
+	public Collection<NamedProcedureCallDefinitionImpl> getNamedProcedureCallMappings() {
+		return delegate.getNamedProcedureCallMappings();
 	}
 
 	@Override

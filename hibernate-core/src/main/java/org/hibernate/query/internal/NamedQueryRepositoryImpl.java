@@ -139,7 +139,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 		for ( NamedHqlQueryMemento hqlMemento : hqlMementoMap.values() ) {
 			// this will throw an error if there's something wrong.
 			try {
-				log.debugf( "Checking named query: %s", hqlMemento.getName() );
+				log.debugf( "Checking named query: %s", hqlMemento.getRegistrationName() );
 				final SqmStatement sqmStatement = sqmProducer.interpret( hqlMemento.getHqlString() );
 
 				if ( cachingEnabled ) {
@@ -148,7 +148,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 				}
 			}
 			catch ( HibernateException e ) {
-				errors.put( hqlMemento.getName(), e );
+				errors.put( hqlMemento.getRegistrationName(), e );
 			}
 		}
 
@@ -157,7 +157,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 		for ( NamedNativeQueryMemento memento : sqlMementoMap.values() ) {
 			// this will throw an error if there's something wrong.
 			try {
-				log.debugf( "Checking named SQL query: %s", memento.getName() );
+				log.debugf( "Checking named SQL query: %s", memento.getRegistrationName() );
 				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
 				// currently not doable though because of the resultset-ref stuff...
 				NativeSQLQuerySpecification spec;

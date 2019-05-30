@@ -6,11 +6,8 @@
  */
 package org.hibernate.query.sql.spi;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryResultBuilder;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -135,5 +132,5 @@ public interface ResultSetMappingDescriptor {
 	 * @param sessionFactory
 	 * @return The resolved result references
 	 */
-	ResultSetMapping resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory);
+	NamedResultSetMappingMemento resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory);
 }

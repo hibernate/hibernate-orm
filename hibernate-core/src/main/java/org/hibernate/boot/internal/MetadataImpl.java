@@ -28,9 +28,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.spi.NamedNativeQueryDefinition;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -73,7 +74,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap;
 	private final Map<String, NamedHqlQueryMementoImpl> namedQueryMap;
 	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryMap;
-	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
+	private final Map<String, NamedProcedureCallDefinitionImpl> namedProcedureCallMap;
 	private final Map<String, ResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 	private final Map<String, SQLFunction> sqlFunctionMap;
@@ -93,7 +94,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
 			Map<String, NamedHqlQueryMementoImpl> namedQueryMap,
 			Map<String, NamedSQLQueryDefinition> namedNativeQueryMap,
-			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
+			Map<String, NamedProcedureCallDefinitionImpl> namedProcedureCallMap,
 			Map<String, ResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
 			Map<String, SQLFunction> sqlFunctionMap,
@@ -223,27 +224,27 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedHqlQueryMementoImpl getNamedQueryDefinition(String name) {
+	public NamedHqlQueryDefinition getNamedHqlQueryMapping(String name) {
 		return namedQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedHqlQueryMementoImpl> getNamedQueryDefinitions() {
+	public java.util.Collection<NamedHqlQueryMementoImpl> getNamedHqlQueryMappings() {
 		return namedQueryMap.values();
 	}
 
 	@Override
-	public NamedSQLQueryDefinition getNamedNativeQueryDefinition(String name) {
+	public NamedNativeQueryDefinition getNamedNativeQueryMapping(String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public java.util.Collection<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
+	public java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryMappings() {
 		return namedNativeQueryMap.values();
 	}
 
 	@Override
-	public java.util.Collection<NamedProcedureCallDefinition> getNamedProcedureCallDefinitions() {
+	public java.util.Collection<NamedProcedureCallDefinitionImpl> getNamedProcedureCallMappings() {
 		return namedProcedureCallMap.values();
 	}
 
@@ -325,9 +326,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private Map<String, NamedCallableQueryMemento> buildProcedureCallMementos(SessionFactoryImpl sessionFactory) {
 		final Map<String, NamedCallableQueryMemento> rtn = new HashMap<>();
 		if ( namedProcedureCallMap != null ) {
-			for ( NamedProcedureCallDefinition procedureCallDefinition : namedProcedureCallMap.values() ) {
+			for ( NamedProcedureCallDefinitionImpl procedureCallDefinition : namedProcedureCallMap.values() ) {
 				rtn.put(
-						procedureCallDefinition.getRegisteredName(),
+						procedureCallDefinition.getRegistrationName(),
 						procedureCallDefinition.toMemento( sessionFactory,sqlResultSetMappingMap )
 				);
 			}
@@ -424,7 +425,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return namedNativeQueryMap;
 	}
 
-	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
+	public Map<String, NamedProcedureCallDefinitionImpl> getNamedProcedureCallMap() {
 		return namedProcedureCallMap;
 	}
 

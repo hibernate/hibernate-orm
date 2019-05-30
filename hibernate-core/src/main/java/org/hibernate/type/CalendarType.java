@@ -10,9 +10,14 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
+import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Calendar}
@@ -22,7 +27,7 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
  */
 public class CalendarType
 		extends AbstractSingleColumnStandardBasicType<Calendar>
-		implements VersionType<Calendar> {
+		implements VersionType<Calendar>, AllowableTemporalParameterType {
 
 	public static final CalendarType INSTANCE = new CalendarType();
 
@@ -53,5 +58,23 @@ public class CalendarType
 	@Override
 	public Comparator<Calendar> getComparator() {
 		return getJavaTypeDescriptor().getComparator();
+	}
+
+	@Override
+	public AllowableTemporalParameterType resolveTemporalPrecision(
+			TemporalType temporalPrecision,
+			TypeConfiguration typeConfiguration) {
+		switch ( temporalPrecision ) {
+			case TIMESTAMP: {
+				return this;
+			}
+			case DATE: {
+				return CalendarDateType.INSTANCE;
+			}
+			case TIME: {
+				return CalendarTimeType.INSTANCE;
+			}
+		}
+		throw new QueryException( "Calendar type cannot be treated using `" + temporalPrecision.name() + "` precision" );
 	}
 }

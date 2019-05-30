@@ -50,7 +50,7 @@ public class QueryReturnTest extends BaseUnitTestCase {
 		try {
 			metadataSources.addInputStream(new ReaderInputStream(new StringReader(QUERY_RETURN_HBM_XML)));
 			Metadata metadata = metadataSources.buildMetadata();
-			NamedSQLQueryDefinition myQuery = metadata.getNamedNativeQueryDefinition("myQuery");
+			NamedSQLQueryDefinition myQuery = metadata.getNamedNativeQueryMapping( "myQuery");
 			Assert.assertNotNull(myQuery);
 			NativeSQLQueryReturn[] myQueryReturns = myQuery.getQueryReturns();
 			Assert.assertNotNull(myQueryReturns);

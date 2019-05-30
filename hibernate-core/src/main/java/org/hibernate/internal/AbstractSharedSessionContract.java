@@ -39,7 +39,8 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -75,7 +76,7 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.internal.QueryImpl;
-import org.hibernate.query.spi.NativeQueryImplementor;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
@@ -606,15 +607,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		delayedAfterCompletion();
 
 		// look as HQL/JPQL first
-		final NamedHqlQueryMementoImpl queryDefinition = factory.getNamedQueryRepository().getNamedQueryDefinition( name );
-		if ( queryDefinition != null ) {
-			return createQuery( queryDefinition );
+		final NamedHqlQueryMemento hqlQueryMemento = factory.getNamedQueryRepository().getHqlQueryMemento( name );
+		if ( hqlQueryMemento != null ) {
+			return hqlQueryMemento.toQuery( this );
 		}
 
 		// then as a native query
-		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
-		if ( nativeQueryDefinition != null ) {
-			return createNativeQuery( nativeQueryDefinition, true );
+		final NamedNativeQueryMemento nativeQueryMemento = factory.getNamedQueryRepository().getNativeQueryMemento( name );
+		if ( nativeQueryMemento != null ) {
+			return nativeQueryMemento.toQuery( this );
 		}
 
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
@@ -628,7 +629,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				queryString
 		);
 		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
-		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
+		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getRegistrationName() );
 		if ( queryDefinition.getLockOptions() != null ) {
 			query.setLockOptions( queryDefinition.getLockOptions() );
 		}

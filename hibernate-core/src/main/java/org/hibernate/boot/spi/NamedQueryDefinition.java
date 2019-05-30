@@ -16,11 +16,11 @@ import org.hibernate.query.spi.NamedQueryMemento;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedQueryMapping {
+public interface NamedQueryDefinition {
 	/**
-	 * The name of the query
+	 * The name under which the query is to be registered
 	 */
-	String getName();
+	String getRegistrationName();
 
 	/**
 	 * Resolve the mapping definition into its run-time memento form

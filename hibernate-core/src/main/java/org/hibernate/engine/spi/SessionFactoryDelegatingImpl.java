@@ -289,8 +289,8 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public void registerNamedQueryDefinition(String name, NamedHqlQueryMementoImpl definition) {
-		delegate.registerNamedQueryDefinition( name, definition );
+	public void registerNamedQueryDefinition(String name, NamedHqlQueryMementoImpl memento) {
+		delegate.registerNamedQueryDefinition( name, memento );
 	}
 
 	@Override

@@ -23,17 +23,16 @@ import org.hibernate.LockMode;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.QueryHints;
-import org.hibernate.boot.internal.NamedHqlQueryMappingImpl;
-import org.hibernate.boot.internal.NamedNativeQueryMappingImpl;
+import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
+import org.hibernate.boot.internal.NamedNativeQueryDefinitionImpl;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.NamedHqlQueryMapping;
-import org.hibernate.boot.spi.NamedNativeQueryMapping;
+import org.hibernate.boot.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.boot.spi.NamedNativeQueryMementoBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 
@@ -68,7 +67,7 @@ public abstract class QueryBinder {
 
 		final QueryHintDefinition hints = new QueryHintDefinition( queryName, queryAnn.hints() );
 
-		final NamedHqlQueryMapping queryMapping = new NamedHqlQueryMappingImpl.Builder( queryName, queryString )
+		final NamedHqlQueryDefinition queryMapping = new NamedHqlQueryDefinitionImpl.Builder( queryName, queryString )
 				.setCacheable( hints.getCacheability() )
 				.setCacheMode( hints.getCacheMode() )
 				.setCacheRegion( hints.getString( QueryHints.CACHE_REGION ) )
@@ -109,7 +108,7 @@ public abstract class QueryBinder {
 		String resultSetMapping = queryAnn.resultSetMapping();
 		QueryHintDefinition hints = new QueryHintDefinition( queryName, queryAnn.hints() );
 
-		new NamedNativeQueryMappingImpl.Builder( queryName )
+		new NamedNativeQueryDefinitionImpl.Builder( queryName )
 				.setSqlString( queryString )
 				// todo (6.0) : add support for supplying synchronized query-spaces
 				.setQuerySpaces( null )
@@ -120,9 +119,9 @@ public abstract class QueryBinder {
 				.setFetchSize( hints.getInteger( QueryHints.FETCH_SIZE ) )
 				.setFlushMode( hints.getFlushMode() )
 				.setReadOnly( hints.getBoolean( QueryHints.READ_ONLY ) )
-				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
-				.setParameterTypes( null )
-				.bu
+				.setComment( hints.getString( QueryHints.COMMENT ) )
+				.setResultSetMappingName( BinderHelper.getAnnotationValueStringOrNull( resultSetMapping ) )
+				.build();
 		
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
@@ -291,7 +290,7 @@ public abstract class QueryBinder {
 
 		context.getMetadataCollector().addNamedQuery( query );
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
+			LOG.debugf( "Binding named query: %s => %s", query.getRegistrationName(), query.getQueryString() );
 		}
 	}
 
@@ -364,7 +363,7 @@ public abstract class QueryBinder {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 
-		final NamedProcedureCallDefinition def = new NamedProcedureCallDefinition( annotation );
+		final NamedProcedureCallDefinitionImpl def = new NamedProcedureCallDefinitionImpl( annotation );
 
 		if (isDefault) {
 			context.getMetadataCollector().addDefaultNamedProcedureCallDefinition( def );
@@ -372,7 +371,7 @@ public abstract class QueryBinder {
 		else {
 			context.getMetadataCollector().addNamedProcedureCallDefinition( def );
 		}
-		LOG.debugf( "Bound named stored procedure query : %s => %s", def.getRegisteredName(), def.getProcedureName() );
+		LOG.debugf( "Bound named stored procedure query : %s => %s", def.getRegistrationName(), def.getProcedureName() );
 	}
 
 	public static void bindSqlResultSetMappings(

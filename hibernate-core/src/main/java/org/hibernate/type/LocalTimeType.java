@@ -10,9 +10,13 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.time.LocalDateTime}.
@@ -21,7 +25,7 @@ import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
  */
 public class LocalTimeType
 		extends AbstractSingleColumnStandardBasicType<LocalTime>
-		implements LiteralType<LocalTime> {
+		implements LiteralType<LocalTime>, AllowableTemporalParameterType {
 	/**
 	 * Singleton access
 	 */
@@ -46,5 +50,24 @@ public class LocalTimeType
 	@Override
 	public String objectToSQLString(LocalTime value, Dialect dialect) throws Exception {
 		return "{t '" + FORMATTER.format( value ) + "'}";
+	}
+
+	@Override
+	public AllowableTemporalParameterType resolveTemporalPrecision(
+			TemporalType temporalPrecision,
+			TypeConfiguration typeConfiguration) {
+		switch ( temporalPrecision ) {
+			case TIME: {
+				return this;
+			}
+			case TIMESTAMP: {
+				return LocalDateTimeType.INSTANCE;
+			}
+			case DATE: {
+				return LocalDateType.INSTANCE;
+			}
+		}
+		// Why Java?  Why?
+		return null;
 	}
 }

@@ -6,8 +6,15 @@
  */
 package org.hibernate.query.spi;
 
+import java.util.Map;
+
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+
 /**
- * Base contract for all named query mementos
+ * Named Query mementos are stored in the QueryEngine's
+ * {@link NamedQueryRepository}.  This is the base contract
+ * for all specific types of named query mementos
  *
  * @author Steve Ebersole
  */
@@ -15,10 +22,28 @@ public interface NamedQueryMemento {
 	/**
 	 * The name under which the query is registered
 	 */
-	String getName();
+	String getRegistrationName();
 
 	/**
 	 * Makes a copy of the memento
 	 */
 	NamedQueryMemento makeCopy(String name);
+
+	Boolean getCacheable();
+
+	String getCacheRegion();
+
+	CacheMode getCacheMode();
+
+	FlushMode getFlushMode();
+
+	Boolean getReadOnly();
+
+	Integer getTimeout();
+
+	Integer getFetchSize();
+
+	String getComment();
+
+	Map<String, Object> getHints();
 }

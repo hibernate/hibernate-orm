@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Date;
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 
 /**
  * @author Andrea Boriero
@@ -23,16 +23,16 @@ public class QueryParameterBindingValidator {
 	private QueryParameterBindingValidator() {
 	}
 
-	public <P> void validate(Type paramType, Object bind) {
+	public void validate(AllowableParameterType paramType, Object bind) {
 		validate( paramType, bind, null );
 	}
 
-	public <P> void validate(Type paramType, Object bind, TemporalType temporalType) {
+	public void validate(AllowableParameterType paramType, Object bind, TemporalType temporalType) {
 		if ( bind == null || paramType == null ) {
 			// nothing we can check
 			return;
 		}
-		final Class parameterType = paramType.getReturnedClass();
+		final Class parameterType = paramType.getExpressableJavaTypeDescriptor().getJavaType();
 		if ( parameterType == null ) {
 			// nothing we can check
 			return;
@@ -88,28 +88,28 @@ public class QueryParameterBindingValidator {
 	private static boolean isValidBindValue(Class expectedType, Object value, TemporalType temporalType) {
 		if ( expectedType.isPrimitive() ) {
 			if ( expectedType == boolean.class ) {
-				return Boolean.class.isInstance( value );
+				return value instanceof Boolean;
 			}
 			else if ( expectedType == char.class ) {
-				return Character.class.isInstance( value );
+				return value instanceof Character;
 			}
 			else if ( expectedType == byte.class ) {
-				return Byte.class.isInstance( value );
+				return value instanceof Byte;
 			}
 			else if ( expectedType == short.class ) {
-				return Short.class.isInstance( value );
+				return value instanceof Short;
 			}
 			else if ( expectedType == int.class ) {
-				return Integer.class.isInstance( value );
+				return value instanceof Integer;
 			}
 			else if ( expectedType == long.class ) {
-				return Long.class.isInstance( value );
+				return value instanceof Long;
 			}
 			else if ( expectedType == float.class ) {
-				return Float.class.isInstance( value );
+				return value instanceof Float;
 			}
 			else if ( expectedType == double.class ) {
-				return Double.class.isInstance( value );
+				return value instanceof Double;
 			}
 			return false;
 		}
@@ -122,8 +122,8 @@ public class QueryParameterBindingValidator {
 		else if ( temporalType != null ) {
 			final boolean parameterDeclarationIsTemporal = Date.class.isAssignableFrom( expectedType )
 					|| Calendar.class.isAssignableFrom( expectedType );
-			final boolean bindIsTemporal = Date.class.isInstance( value )
-					|| Calendar.class.isInstance( value );
+			final boolean bindIsTemporal = value instanceof Date
+					|| value instanceof Calendar;
 
 			if ( parameterDeclarationIsTemporal && bindIsTemporal ) {
 				return true;

@@ -14,8 +14,8 @@ import javax.persistence.ParameterMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.boot.spi.AbstractNamedQueryMapping;
-import org.hibernate.boot.spi.NamedNativeQueryMapping;
+import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
+import org.hibernate.boot.spi.NamedNativeQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
@@ -23,16 +23,17 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 /**
  * @author Steve Ebersole
  */
-public class NamedNativeQueryMappingImpl extends AbstractNamedQueryMapping implements NamedNativeQueryMapping {
+public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition implements NamedNativeQueryDefinition {
 	private final String sqlString;
 	private final String resultSetMappingName;
+	private final String resultSetMappingClassName;
 	private final Set<String> querySpaces;
 
-	public NamedNativeQueryMappingImpl(
+	public NamedNativeQueryDefinitionImpl(
 			String name,
 			String sqlString,
-			List<NamedQueryParameterMapping> parameterMappings,
 			String resultSetMappingName,
+			String resultSetMappingClassName,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
@@ -46,7 +47,6 @@ public class NamedNativeQueryMappingImpl extends AbstractNamedQueryMapping imple
 			Map<String,Object> hints) {
 		super(
 				name,
-				parameterMappings,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -64,7 +64,7 @@ public class NamedNativeQueryMappingImpl extends AbstractNamedQueryMapping imple
 	}
 
 	@Override
-	public String getQueryString() {
+	public String getSqlQueryString() {
 		return sqlString;
 	}
 
@@ -76,10 +76,10 @@ public class NamedNativeQueryMappingImpl extends AbstractNamedQueryMapping imple
 	@Override
 	public NamedNativeQueryMemento resolve(SessionFactoryImplementor factory) {
 		return new NamedNativeQueryMementoImpl(
-				getName(),
+				getRegistrationName(),
 				sqlString,
 				resultSetMappingName,
-				resolveParameterMappings( factory ),
+
 				querySpaces,
 				getCacheable(),
 				getCacheRegion(),
@@ -109,8 +109,8 @@ public class NamedNativeQueryMappingImpl extends AbstractNamedQueryMapping imple
 			return getThis();
 		}
 
-		public NamedNativeQueryMappingImpl build() {
-			return new NamedNativeQueryMappingImpl(
+		public NamedNativeQueryDefinitionImpl build() {
+			return new NamedNativeQueryDefinitionImpl(
 					getName(),
 					sqlString,
 					getParameterMappings(),

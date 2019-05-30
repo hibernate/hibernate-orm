@@ -21,7 +21,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.QueryHints;
 import org.hibernate.internal.util.LockModeConverter;
-import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**

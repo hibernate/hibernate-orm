@@ -935,6 +935,12 @@ public class BinderHelper {
 		return annotationString == null || annotationString.length() == 0;
 	}
 
+	public static String getAnnotationValueStringOrNull(String value) {
+		return isEmptyOrNullAnnotationValue( value )
+				? null
+				: value;
+	}
+
 	public static Any buildAnyValue(
 			String anyMetaDefName,
 			Ejb3JoinColumn[] columns,

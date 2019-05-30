@@ -6,12 +6,10 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.ParameterMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -20,7 +18,7 @@ import org.hibernate.LockOptions;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractNamedQueryMapping implements NamedQueryMapping {
+public abstract class AbstractNamedQueryDefinition implements NamedQueryDefinition {
 	private final String name;
 
 	private final Boolean cacheable;
@@ -39,7 +37,7 @@ public abstract class AbstractNamedQueryMapping implements NamedQueryMapping {
 
 	private final Map<String,Object> hints;
 
-	public AbstractNamedQueryMapping(
+	public AbstractNamedQueryDefinition(
 			String name,
 			Boolean cacheable,
 			String cacheRegion,
@@ -65,7 +63,7 @@ public abstract class AbstractNamedQueryMapping implements NamedQueryMapping {
 	}
 
 	@Override
-	public String getName() {
+	public String getRegistrationName() {
 		return name;
 	}
 

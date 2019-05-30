@@ -7,7 +7,6 @@
 package org.hibernate.query.internal;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -15,295 +14,234 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-
+import java.util.function.Predicate;
 import javax.persistence.Parameter;
 
 import org.hibernate.QueryException;
-import org.hibernate.QueryParameterException;
-import org.hibernate.engine.query.spi.NamedParameterDescriptor;
-import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.type.Type;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryParameterImplementor;
 
 /**
  * Encapsulates metadata about parameters encountered within a query.
  *
  * @author Steve Ebersole
  */
-public class ParameterMetadataImpl implements ParameterMetadata {
+public class ParameterMetadataImpl implements ParameterMetadataImplementor {
+	/**
+	 * Singleton access
+	 */
+	public static final ParameterMetadataImpl EMPTY = new ParameterMetadataImpl();
 
-	private final Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap;
-	private final Map<String,NamedParameterDescriptor> namedDescriptorMap;
+	private final Set<QueryParameterImplementor<?>> queryParameters;
 
-	//Important: queries with large amounts of parameters need the following
-	//cache to have efficient performance on #containsReference(QueryParameter).
-	private final Set<QueryParameter> ordinalDescriptorValueCache;
-	private final Set<QueryParameter> namedDescriptorValueCache;
+	private final Set<String> names;
+	private final Set<Integer> labels;
+
+
+	private ParameterMetadataImpl() {
+		this.queryParameters = Collections.emptySet();
+		this.names = Collections.emptySet();
+		this.labels = Collections.emptySet();
+	}
+
+	public ParameterMetadataImpl(Set<QueryParameterImplementor<?>> queryParameters) {
+		this.queryParameters = queryParameters;
+
+		// if we have any ordinal parameters, make sure the numbers
+		// start with 1 and are contiguous
+
+		Set<String> names = null;
+		Set<Integer> labels = null;
+
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+			if ( queryParameter.getPosition() != null ) {
+				if ( labels == null ) {
+					labels = new HashSet<>();
+				}
+				labels.add( queryParameter.getPosition() );
+			}
+			else if ( queryParameter.getName() != null ) {
+				if ( names == null ) {
+					names = new HashSet<>();
+				}
+				names.add( queryParameter.getName() );
+			}
+		}
+
+		this.labels = labels == null
+				? Collections.emptySet()
+				: labels;
+
+		this.names = names == null
+				? Collections.emptySet()
+				: names;
+
+		verifyOrdinalParamLabels( labels );
+	}
 
 	public ParameterMetadataImpl(
-			Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap,
-			Map<String, NamedParameterDescriptor> namedDescriptorMap) {
-		this.ordinalDescriptorMap = ordinalDescriptorMap == null
-				? Collections.emptyMap()
-				: Collections.unmodifiableMap( ordinalDescriptorMap );
-		this.ordinalDescriptorValueCache = this.ordinalDescriptorMap.isEmpty()
-				? Collections.emptySet()
-				: Collections.unmodifiableSet( new HashSet<>( this.ordinalDescriptorMap.values() ) );
-		this.namedDescriptorMap = namedDescriptorMap == null
-				? Collections.emptyMap()
-				: Collections.unmodifiableMap( namedDescriptorMap );
-		this.namedDescriptorValueCache = this.namedDescriptorMap.isEmpty()
-				? Collections.emptySet()
-				: Collections.unmodifiableSet( new HashSet<>( this.namedDescriptorMap.values() ) );
+			Map<Integer, QueryParameterImplementor<?>> positionalQueryParameters,
+			Map<String, QueryParameterImplementor<?>> namedQueryParameters) {
+		if ( CollectionHelper.isEmpty( positionalQueryParameters )
+				&& CollectionHelper.isEmpty( namedQueryParameters ) ) {
+			// no parameters
+			this.queryParameters = Collections.emptySet();
+			this.names = Collections.emptySet();
+			this.labels = Collections.emptySet();
+		}
+		else {
+			this.queryParameters = new IdentitySet<>();
+			this.queryParameters.addAll( positionalQueryParameters.values() );
+			this.queryParameters.addAll( namedQueryParameters.values() );
 
-		if (ordinalDescriptorMap != null &&  ! ordinalDescriptorMap.isEmpty() ) {
-			final List<Integer> sortedPositions = new ArrayList<>( ordinalDescriptorMap.keySet() );
-			sortedPositions.sort( ComparableComparator.INSTANCE );
+			this.names = namedQueryParameters.keySet();
+			this.labels = positionalQueryParameters.keySet();
 
-			int lastPosition = -1;
-			for ( Integer sortedPosition : sortedPositions ) {
-				if ( lastPosition == -1 ) {
-					lastPosition = sortedPosition;
-					continue;
-				}
+			verifyOrdinalParamLabels( labels );
+		}
 
-				if ( sortedPosition != lastPosition + 1 ) {
+	}
+
+	private static void verifyOrdinalParamLabels(Set<Integer> labels) {
+		if ( CollectionHelper.isEmpty( labels ) ) {
+			return;
+		}
+
+		final List<Integer> sortedLabels = new ArrayList<>( labels );
+		sortedLabels.sort( ComparableComparator.instance() );
+
+		int lastPosition = -1;
+		for ( Integer sortedPosition : sortedLabels ) {
+			if ( lastPosition == -1 ) {
+				if ( sortedPosition != 1 ) {
 					throw new QueryException(
 							String.format(
 									Locale.ROOT,
-									"Unexpected gap in ordinal parameter labels [%s -> %s] : [%s]",
-									lastPosition,
-									sortedPosition,
-									StringHelper.join( ",", sortedPositions.iterator() )
+									"Expected ordinal parameter labels to start with 1, but found - %s",
+									sortedPosition
 							)
 					);
 				}
 
 				lastPosition = sortedPosition;
+				continue;
 			}
 
+			if ( sortedPosition != lastPosition + 1 ) {
+				throw new QueryException(
+						String.format(
+								Locale.ROOT,
+								"Unexpected gap in ordinal parameter labels [%s -> %s] : [%s]",
+								lastPosition,
+								sortedPosition,
+								StringHelper.join( ",", sortedLabels.iterator() )
+						)
+				);
+			}
+
+			lastPosition = sortedPosition;
 		}
-	}
-
-	@Override
-	public Collection<QueryParameter> getPositionalParameters() {
-		return ordinalDescriptorValueCache;
-	}
-
-	@Override
-	public Collection<QueryParameter> getNamedParameters() {
-		return namedDescriptorValueCache;
 	}
 
 	@Override
 	public int getParameterCount() {
-		return ordinalDescriptorMap.size() + namedDescriptorMap.size();
+		return queryParameters.size();
 	}
 
 	@Override
-	@SuppressWarnings("SuspiciousMethodCalls")
-	public boolean containsReference(QueryParameter parameter) {
-		return ordinalDescriptorValueCache.contains( parameter )
-				|| namedDescriptorValueCache.contains( parameter );
+	public boolean containsReference(QueryParameter<?> parameter) {
+		//noinspection SuspiciousMethodCalls
+		return queryParameters.contains( parameter );
 	}
 
 	@Override
-	public boolean hasNamedParameters() {
-		return !namedDescriptorMap.isEmpty();
-	}
-
-	@Override
-	public boolean hasPositionalParameters() {
-		return getOrdinalParameterCount() > 0;
-	}
-
-	@Override
-	public int getPositionalParameterCount() {
-		return getOrdinalParameterCount();
-	}
-
-	public int getOrdinalParameterCount() {
-		return ordinalDescriptorMap.size();
-	}
-
-	@Override
-	public Set<String> getNamedParameterNames() {
-		return  namedDescriptorMap.keySet();
-	}
-
-	public Set<Integer> getOrdinalParameterLabels() {
-		return ordinalDescriptorMap.keySet();
-	}
-
-	/**
-	 * Get the descriptor for an ordinal parameter given its position
-	 *
-	 * @param position The position (0 based)
-	 *
-	 * @return The ordinal parameter descriptor
-	 *
-	 * @throws QueryParameterException If the position is out of range
-	 */
-	public OrdinalParameterDescriptor getOrdinalParameterDescriptor(int position) {
-		final OrdinalParameterDescriptor descriptor = ordinalDescriptorMap.get( position );
-		if ( descriptor == null ) {
-			throw new IllegalArgumentException(
-					String.format(
-							Locale.ROOT,
-							"Could not locate ordinal parameter [%s], expecting one of [%s]",
-							position,
-							StringHelper.join( ", ", ordinalDescriptorMap.keySet().iterator())
-					)
-			);
-		}
-		return descriptor;
-	}
-
-	/**
-	 * Deprecated.
-	 *
-	 * @param position The position
-	 *
-	 * @return The type
-	 *
-	 * @deprecated Use {@link OrdinalParameterDescriptor#getExpectedType()} from the
-	 * {@link #getOrdinalParameterDescriptor} return instead
-	 */
-	@Deprecated
-	public Type getOrdinalParameterExpectedType(int position) {
-		return getOrdinalParameterDescriptor( position ).getExpectedType();
-	}
-
-	/**
-	 * Deprecated.
-	 *
-	 * @param position The position
-	 *
-	 * @return The source location
-	 *
-	 * @deprecated Use {@link OrdinalParameterDescriptor#getPosition()} from the
-	 * {@link #getOrdinalParameterDescriptor} return instead
-	 */
-	@Deprecated
-	public int getOrdinalParameterSourceLocation(int position) {
-		return getOrdinalParameterDescriptor( position ).getPosition();
-	}
-
-	@Override
-	public <T> QueryParameter<T> getQueryParameter(String name) {
+	public void visitRegistrations(Consumer<? extends QueryParameter<?>> action) {
 		//noinspection unchecked
-		return getNamedParameterDescriptor( name );
+		queryParameters.forEach( (Consumer) action );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> QueryParameter<T> getQueryParameter(Integer position) {
-		return getOrdinalParameterDescriptor( position );
+	public void collectAllParameters(ParameterCollector collector) {
+		queryParameters.forEach( collector::collect );
 	}
 
 	@Override
-	public <T> QueryParameter<T> resolve(Parameter<T> param) {
-		if ( param instanceof QueryParameter ) {
-			return (QueryParameter<T>) param;
+	public Set<QueryParameterImplementor<?>> getRegistrations() {
+		return Collections.unmodifiableSet( queryParameters );
+	}
+
+	@Override
+	public boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter) {
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+			if ( filter.test( queryParameter ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
+	public QueryParameterImplementor<?> resolve(Parameter param) {
+		if ( param instanceof QueryParameterImplementor ) {
+			return (QueryParameterImplementor) param;
 		}
 
 		throw new IllegalArgumentException( "Could not resolve javax.persistence.Parameter to org.hibernate.query.QueryParameter" );
 	}
 
-	/**
-	 * Get the descriptor for a named parameter given the name
-	 *
-	 * @param name The name of the parameter to locate
-	 *
-	 * @return The named parameter descriptor
-	 *
-	 * @throws QueryParameterException If the name could not be resolved to a named parameter
-	 */
-	public NamedParameterDescriptor getNamedParameterDescriptor(String name) {
-		final NamedParameterDescriptor descriptor = namedDescriptorMap.get( name );
-		if ( descriptor == null ) {
-			throw new IllegalArgumentException(
-					String.format(
-							Locale.ROOT,
-							"Could not locate named parameter [%s], expecting one of [%s]",
-							name,
-							String.join( ", ", namedDescriptorMap.keySet() )
-					)
-			);
-		}
-		return descriptor;
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Named parameter handling
+
+	@Override
+	public boolean hasNamedParameters() {
+		return ! names.isEmpty();
 	}
 
 	@Override
-	public void visitRegistrations(Consumer<QueryParameter> action) {
-		if ( hasPositionalParameters() ) {
-			for ( OrdinalParameterDescriptor descriptor : ordinalDescriptorMap.values() ) {
-				action.accept( descriptor );
+	public Set<String> getNamedParameterNames() {
+		return  names;
+	}
+
+	@Override
+	public QueryParameterImplementor<?> getQueryParameter(String name) {
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+			if ( name.equals( queryParameter.getName() ) ) {
+				return queryParameter;
 			}
 		}
-		else if ( hasNamedParameters() ) {
-			for ( NamedParameterDescriptor descriptor : namedDescriptorMap.values() ) {
-				action.accept( descriptor );
+
+		return null;
+	}
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Positional parameter handling
+
+	@Override
+	public boolean hasPositionalParameters() {
+		return ! labels.isEmpty();
+	}
+
+	public Set<Integer> getOrdinalParameterLabels() {
+		return labels;
+	}
+
+	@Override
+	public QueryParameterImplementor<?> getQueryParameter(int positionLabel) {
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+			if ( queryParameter.getPosition() != null && queryParameter.getPosition() == positionLabel ) {
+				return queryParameter;
 			}
 		}
-	}
 
-	/**
-	 * Deprecated.
-	 *
-	 * @param name The name of the parameter
-	 *
-	 * @return The type
-	 *
-	 * @deprecated Use {@link NamedParameterDescriptor#getExpectedType()} from the
-	 * {@link #getNamedParameterDescriptor} return instead
-	 */
-	@Deprecated
-	public Type getNamedParameterExpectedType(String name) {
-		return getNamedParameterDescriptor( name ).getExpectedType();
-	}
-
-	/**
-	 * Deprecated.
-	 *
-	 * @param name The name of the parameter
-	 *
-	 * @return The type
-	 *
-	 * @deprecated Use {@link NamedParameterDescriptor#getPosition()} from the
-	 * {@link #getNamedParameterDescriptor} return instead
-	 */
-	@Deprecated
-	public int[] getNamedParameterSourceLocations(String name) {
-		return getNamedParameterDescriptor( name ).getSourceLocations();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Set<QueryParameter<?>> collectAllParameters() {
-		if ( hasNamedParameters() || hasPositionalParameters() ) {
-			final HashSet allParameters = new HashSet();
-			allParameters.addAll( namedDescriptorMap.values() );
-			allParameters.addAll( ordinalDescriptorMap.values() );
-			return allParameters;
-		}
-
-		return Collections.emptySet();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Set<Parameter<?>> collectAllParametersJpa() {
-		if ( hasNamedParameters() || hasPositionalParameters() ) {
-			final HashSet allParameters = new HashSet();
-			allParameters.addAll( namedDescriptorMap.values() );
-			allParameters.addAll( ordinalDescriptorMap.values() );
-			return allParameters;
-		}
-
-		return Collections.emptySet();
+		return null;
 	}
 }

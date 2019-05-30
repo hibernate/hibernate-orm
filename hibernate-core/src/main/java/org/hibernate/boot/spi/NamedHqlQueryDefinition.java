@@ -10,13 +10,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 
 /**
- * Named query mapping for HQL queries
+ * Boot-time descriptor of a named HQL query, as defined in
+ * annotations or xml
+ *
+ * @see javax.persistence.NamedQuery
+ * @see org.hibernate.annotations.NamedQuery
  *
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedHqlQueryMapping extends NamedQueryMapping {
-	String getQueryString();
+public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
+	String getHqlString();
 
 	@Override
 	NamedHqlQueryMemento resolve(SessionFactoryImplementor factory);

@@ -18,6 +18,11 @@ import java.util.Comparator;
 public class ComparableComparator<T extends Comparable> implements Comparator<T>, Serializable {
 	public static final Comparator INSTANCE = new ComparableComparator();
 
+	@SuppressWarnings("unchecked")
+	public static <T extends Comparable> Comparator<T> instance() {
+		return INSTANCE;
+	}
+
 	@SuppressWarnings({ "unchecked" })
 	public int compare(Comparable one, Comparable another) {
 		return one.compareTo( another );

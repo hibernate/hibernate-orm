@@ -12,6 +12,7 @@ import javax.persistence.Parameter;
 
 import org.hibernate.Incubating;
 
+
 /**
  * Access to known information about the parameters for a query.
  *
@@ -19,6 +20,8 @@ import org.hibernate.Incubating;
  */
 @Incubating
 public interface ParameterMetadata {
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+	// General purpose
 
 	/**
 	 * The total number of registered parameters.

@@ -63,6 +63,18 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 		this.querySpaces = querySpaces;
 	}
 
+	public String getResultSetMappingName() {
+		return resultSetMappingName;
+	}
+
+	public String getResultSetMappingClassName() {
+		return resultSetMappingClassName;
+	}
+
+	public Set<String> getQuerySpaces() {
+		return querySpaces;
+	}
+
 	@Override
 	public String getSqlString() {
 		return sqlString;
@@ -76,15 +88,15 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 				resultSetMappingName,
 				resultSetMappingClassName,
 				querySpaces,
-				cacheable,
-				cacheRegion,
-				cacheMode,
-				flushMode,
-				readOnly,
-				timeout,
-				fetchSize,
-				comment,
-				hints
+				getCacheable(),
+				getCacheRegion(),
+				getCacheMode(),
+				getFlushMode(),
+				getReadOnly(),
+				getTimeout(),
+				getFetchSize(),
+				getComment(),
+				getHints()
 		);
 	}
 

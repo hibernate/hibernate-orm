@@ -13,14 +13,14 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.spi.NamedNativeQueryDefinition;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
+import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
@@ -117,9 +117,9 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named query metadata, or {@code null}.
 	 */
-	NamedHqlQueryMementoImpl getNamedQueryDefinition(String name);
+	NamedHqlQueryDefinition getNamedHqlQueryMapping(String name);
 
-	java.util.Collection<NamedHqlQueryMementoImpl> getNamedQueryDefinitions();
+	java.util.Collection<NamedHqlQueryDefinition> getNamedHqlQueryMappings();
 
 	/**
 	 * Retrieve named SQL query metadata.
@@ -128,11 +128,11 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named query metadata, or {@code null}
 	 */
-	NamedNativeQueryMemento getNamedNativeQueryDefinition(String name);
+	NamedNativeQueryDefinition getNamedNativeQueryMapping(String name);
 
-	java.util.Collection<NamedNativeQueryMemento> getNamedNativeQueryDefinitions();
+	java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryMappings();
 
-	java.util.Collection<NamedProcedureCallDefinition> getNamedProcedureCallDefinitions();
+	java.util.Collection<NamedProcedureCallDefinitionImpl> getNamedProcedureCallMappings();
 
 	/**
 	 * Retrieve the metadata for a named SQL result set mapping.

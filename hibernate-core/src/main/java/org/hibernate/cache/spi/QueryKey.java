@@ -29,6 +29,12 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class QueryKey implements Serializable {
+	/**
+	 * todo (6.0) : integrate work from original 6.0 branch
+	 */
+	public interface ParameterBindingsMemento {
+	}
+
 	private final String sqlQueryString;
 	private final Type[] positionalParameterTypes;
 	private final Object[] positionalParameterValues;

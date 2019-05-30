@@ -20,5 +20,5 @@ public interface AllowableTemporalParameterType extends AllowableParameterType {
 	/**
 	 * Convert the value and/or type to the specified temporal precision
 	 */
-	AllowableParameterType resolveTemporalPrecision(TemporalType temporalType, TypeConfiguration typeConfiguration);
+	AllowableTemporalParameterType resolveTemporalPrecision(TemporalType temporalPrecision, TypeConfiguration typeConfiguration);
 }

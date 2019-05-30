@@ -186,6 +186,8 @@ import static org.hibernate.query.TemporalUnit.TIME;
 import static org.hibernate.query.TemporalUnit.TIMEZONE_HOUR;
 import static org.hibernate.query.TemporalUnit.TIMEZONE_MINUTE;
 import static org.hibernate.query.TemporalUnit.WEEK;
+import static org.hibernate.query.TemporalUnit.WEEK_OF_MONTH;
+import static org.hibernate.query.TemporalUnit.WEEK_OF_YEAR;
 import static org.hibernate.query.TemporalUnit.YEAR;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.DATE_TIME;
 import static org.hibernate.type.spi.TypeConfiguration.isJDBCTemporalType;
@@ -2219,6 +2221,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return new SqmExtractUnit<>(SECOND, basicType( Float.class ), nodeBuilder);
 		}
 		if (ctx.WEEK()!=null) {
+			// this is the ISO week number
 			return new SqmExtractUnit<>(WEEK, basicType( Integer.class ), nodeBuilder);
 		}
 		if (ctx.QUARTER()!=null) {
@@ -2240,6 +2243,20 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return new SqmExtractUnit<>(DAY_OF_YEAR, basicType( Integer.class ), nodeBuilder);
 		}
 		return super.visitDayField(ctx);
+	}
+
+	@Override
+	public Object visitWeekField(HqlParser.WeekFieldContext ctx) {
+		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
+		if (ctx.MONTH()!=null) {
+			//this is computed from DAY_OF_MONTH/7
+			return new SqmExtractUnit<>(WEEK_OF_MONTH, basicType( Integer.class ), nodeBuilder);
+		}
+		if (ctx.YEAR()!=null) {
+			//this is computed from DAY_OF_YEAR/7
+			return new SqmExtractUnit<>(WEEK_OF_YEAR, basicType( Integer.class ), nodeBuilder);
+		}
+		return super.visitWeekField(ctx);
 	}
 
 	@Override
@@ -2315,13 +2332,18 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public Object visitExtractFunction(HqlParser.ExtractFunctionContext ctx) {
 
 		final SqmExpression<?> expressionToExtract = (SqmExpression) ctx.expression().accept( this );
+
+		// visitDateOrTimeField() needs to know if we're extracting from a
+		// JDBC Timestamp or from a java.time LocalDateTime/OffsetDateTime
 		extractingFromJdbc = isJDBCTemporalType( expressionToExtract.getExpressableType() );
 
 		final SqmExtractUnit<?> extractFieldExpression;
 		if ( ctx.extractField() != null ) {
+			//for the case of the full ANSI syntax "extract(field from arg)"
 			extractFieldExpression = (SqmExtractUnit) ctx.extractField().accept(this);
 		}
 		else if ( ctx.datetimeField() != null ) {
+			//for the shorter legacy Hibernate syntax "field(arg)"
 			extractFieldExpression = (SqmExtractUnit) ctx.datetimeField().accept(this);
 		}
 		else {
@@ -2329,45 +2351,125 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 
 		TemporalUnit unit = extractFieldExpression.getUnit();
-		AllowableFunctionReturnType<?> type = extractFieldExpression.getType();
-
 		switch ( unit ) {
 			case OFFSET:
-				return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
-						asList(
-								expressionToExtract,
-								new SqmFormat(
-										"XXX",
-										basicType( String.class ),
-										creationContext.getNodeBuilder()
-								)
-						),
-						type,
-						creationContext.getQueryEngine(),
-						creationContext.getDomainModel().getTypeConfiguration()
-				);
+				// use formatdatetime(arg, 'xxx') to get the offset
+				return extractOffsetUsingFormat( expressionToExtract );
 			case DATE:
 			case TIME:
-				return getFunctionTemplate("cast").makeSqmFunctionExpression(
-						asList(
-								expressionToExtract,
-								new SqmCastTarget<>(
-										type,
-										creationContext.getNodeBuilder()
-								)
-						),
-						type,
-						creationContext.getQueryEngine(),
-						creationContext.getDomainModel().getTypeConfiguration()
+				// use cast(arg as Type) to get the date or time part
+				// which might be javax.sql.Date / javax.sql.Time or
+				// java.time.LocalDate / java.time.LocalTime depending
+				// on the type of the expression we're extracting from
+				return extractDateOrTimeUsingCast(
+						expressionToExtract,
+						extractFieldExpression.getType()
 				);
+			case WEEK_OF_MONTH:
+				// use ceiling(extract(day of month, arg)/7.0)
+				return extractWeek( expressionToExtract, DAY_OF_MONTH );
+			case WEEK_OF_YEAR:
+				// use ceiling(extract(day of year, arg)/7.0)
+				return extractWeek( expressionToExtract, DAY_OF_YEAR );
 			default:
+				// otherwise it's something we expect the SQL dialect
+				// itself to understand, either natively, or via the
+				// registered function template for extract()
 				return getFunctionTemplate("extract").makeSqmFunctionExpression(
 						asList( extractFieldExpression, expressionToExtract ),
-						type,
+						extractFieldExpression.getType(),
 						creationContext.getQueryEngine(),
 						creationContext.getDomainModel().getTypeConfiguration()
 				);
 		}
+	}
+
+	private SqmExpression<ZoneOffset> extractOffsetUsingFormat(
+			SqmExpression<?> expressionToExtract) {
+		return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
+				asList(
+						expressionToExtract,
+						new SqmFormat(
+								"xxx", //pattern for timezone offset
+								basicType( String.class ),
+								creationContext.getNodeBuilder()
+						)
+				),
+				basicType( ZoneOffset.class ),
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
+		);
+	}
+
+	private SqmExpression<?> extractDateOrTimeUsingCast(
+			SqmExpression<?> expressionToExtract,
+			AllowableFunctionReturnType<?> type) {
+		return getFunctionTemplate("cast").makeSqmFunctionExpression(
+				asList(
+						expressionToExtract,
+						new SqmCastTarget<>(
+								type,
+								creationContext.getNodeBuilder()
+						)
+				),
+				type,
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
+		);
+	}
+
+	private SqmExpression<Integer> extractWeek(
+			SqmExpression<?> expressionToExtract,
+			TemporalUnit dayOf) {
+		BasicValuedExpressableType<Integer> intType = basicType( Integer.class );
+		return new SqmBinaryArithmetic<>(
+				BinaryArithmeticOperator.ADD,
+				getFunctionTemplate("ceiling").makeSqmFunctionExpression(
+						new SqmBinaryArithmetic<>(
+								BinaryArithmeticOperator.DIVIDE,
+								new SqmBinaryArithmetic<>(
+										BinaryArithmeticOperator.SUBTRACT,
+										getFunctionTemplate("extract").makeSqmFunctionExpression(
+												asList(
+														new SqmExtractUnit<>(
+																dayOf,
+																intType,
+																creationContext.getNodeBuilder()
+														),
+														expressionToExtract
+												),
+												intType,
+												creationContext.getQueryEngine(),
+												creationContext.getDomainModel().getTypeConfiguration()
+										),
+										getFunctionTemplate("extract").makeSqmFunctionExpression(
+												asList(
+														new SqmExtractUnit<>(
+																DAY_OF_WEEK,
+																intType,
+																creationContext.getNodeBuilder()
+														),
+														expressionToExtract
+												),
+												intType,
+												creationContext.getQueryEngine(),
+												creationContext.getDomainModel().getTypeConfiguration()
+										),
+										intType,
+										creationContext.getNodeBuilder()
+								),
+								floatLiteral("7.0"),
+								basicType( Float.class ),
+								creationContext.getNodeBuilder()
+						),
+						intType,
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
+				),
+				integerLiteral("1"),
+				intType,
+				creationContext.getNodeBuilder()
+		);
 	}
 
 	// G era

@@ -491,6 +491,11 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select extract(time from current datetime), extract(date from current datetime) from EntityOfBasics e")
 							.list();
+
+					session.createQuery("select extract(week of month from current date) from EntityOfBasics e")
+							.list();
+					session.createQuery("select extract(week of year from current date) from EntityOfBasics e")
+							.list();
 				}
 		);
 	}

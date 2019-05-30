@@ -861,6 +861,7 @@ extractFunction
 extractField
 	: datetimeField
 	| dayField
+	| weekField
 	| timeZoneField
 	| secondsField
 	| dateOrTimeField
@@ -881,6 +882,11 @@ dayField
 	: DAY OF MONTH
 	| DAY OF WEEK
 	| DAY OF YEAR
+	;
+
+weekField
+	: WEEK OF MONTH
+	| WEEK OF YEAR
 	;
 
 secondsField

@@ -20,6 +20,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.PostgresExtractEmulation;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.spi.QueryEngine;
@@ -324,6 +325,8 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new PostgresExtractEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )

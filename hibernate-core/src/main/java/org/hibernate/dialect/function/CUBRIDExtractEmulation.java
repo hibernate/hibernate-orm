@@ -68,14 +68,17 @@ public class CUBRIDExtractEmulation
 			case WEEK:
 				pattern = "week(?2,3)";
 				break;
+			//TODO should we include whole seconds?
+			// "(second(?2)*1e3+extract(millisecond from ?2))"
+			// "(second(?2)*1e6+extract(millisecond from ?2)*1e3)"
 			case MILLISECOND:
-				pattern = "(second(?2)*1e3+extract(millisecond from ?2))";
+				pattern = "extract(millisecond from ?2)";
 				break;
 			case MICROSECOND:
-				pattern = "(second(?2)*1e6+extract(millisecond from ?2)*1e3)";
+				pattern = "extract(millisecond from ?2)*1e3";
 				break;
 			default:
-				pattern = unit.toString() + "(?2)";
+				pattern = unit + "(?2)";
 				break;
 		}
 		return queryEngine.getSqmFunctionRegistry()

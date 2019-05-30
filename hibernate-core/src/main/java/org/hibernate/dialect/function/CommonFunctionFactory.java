@@ -705,9 +705,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_timestamp")
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_instant", "current_timestamp")
-				.setInvariantType( StandardSpiBasicTypes.INSTANT )
-				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("current_instant", "current instant");
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time", "current_time")
 				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
@@ -726,6 +724,24 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey("now", "current_timestamp");
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey("curdate", "current_date");
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey("curtime", "current_time");
+	}
+
+	/**
+	 * For databases like MySQL which default to truncating the the fractional seconds.
+	 */
+	public static void currentTimestampExplicitMicros(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("current_timestamp", "current_timestamp(6)")
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("current datetime", "current_timestamp(6)")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("current instant", "current_timestamp(6)")
+				.setInvariantType( StandardSpiBasicTypes.INSTANT )
+				.setExactArgumentCount( 0 )
+				.register();
 	}
 
 	public static void leastGreatest(QueryEngine queryEngine) {

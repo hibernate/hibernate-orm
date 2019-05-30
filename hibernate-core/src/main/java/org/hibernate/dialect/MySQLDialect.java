@@ -223,6 +223,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.datediff( queryEngine );
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
 		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+		CommonFunctionFactory.currentTimestampExplicitMicros( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new MySQLExtractEmulation() );
 

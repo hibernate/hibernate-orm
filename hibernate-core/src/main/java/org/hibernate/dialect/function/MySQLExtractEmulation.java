@@ -70,11 +70,11 @@ public class MySQLExtractEmulation
 				pattern = "weekofyear(?2)";
 				break;
 			//TODO: case WEEK_YEAR: yearweek(?2, 3)/100
+			//TODO should we include whole seconds?
+			// "(second(?2)*1e3+microsecond(?2)/1e3)"
+			// "(second(?2)*1e6+microsecond(?2))"
 			case MILLISECOND:
-				pattern = "(second(?2)*1e3+microsecond(?2)/1e3)";
-				break;
-			case MICROSECOND:
-				pattern = "(second(?2)*1e6+microsecond(?2))";
+				pattern = "round(microsecond(?2)/1e3)";
 				break;
 			default:
 				pattern = unit.toString() + "(?2)";

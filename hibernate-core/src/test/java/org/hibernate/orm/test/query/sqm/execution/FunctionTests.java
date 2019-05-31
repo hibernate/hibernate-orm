@@ -16,6 +16,12 @@ import org.junit.jupiter.api.Test;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.instanceOf;
 
 /**
  * @author Gavin King
@@ -501,6 +507,114 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testExtractFunctionWithAssertions() {
+		inTransaction(
+				session -> {
+					EntityOfBasics entity = new EntityOfBasics();
+					entity.setId(1);
+					session.save(entity);
+					session.flush();
+					assertThat(
+							session.createQuery("select extract(week of year from date '2019-01-01') from EntityOfBasics").getResultList().get(0),
+							is(1)
+					);
+					assertThat(
+							session.createQuery("select extract(week of year from date '2019-01-05') from EntityOfBasics").getResultList().get(0),
+							is(1)
+					);
+					assertThat(
+							session.createQuery("select extract(week of year from date '2019-01-06') from EntityOfBasics").getResultList().get(0),
+							is(2)
+					);
+
+					assertThat(
+							session.createQuery("select extract(week of month from date '2019-05-01') from EntityOfBasics").getResultList().get(0),
+							is(1)
+					);
+					assertThat(
+							session.createQuery("select extract(week of month from date '2019-05-04') from EntityOfBasics").getResultList().get(0),
+							is(1)
+					);
+					assertThat(
+							session.createQuery("select extract(week of month from date '2019-05-05') from EntityOfBasics").getResultList().get(0),
+							is(2)
+					);
+
+					assertThat(
+							session.createQuery("select extract(week from date '2019-05-27') from EntityOfBasics").getResultList().get(0),
+							is(22)
+					);
+					assertThat(
+							session.createQuery("select extract(week from date '2019-06-02') from EntityOfBasics").getResultList().get(0),
+							is(22)
+					);
+					assertThat(
+							session.createQuery("select extract(week from date '2019-06-03') from EntityOfBasics").getResultList().get(0),
+							is(23)
+					);
+
+					assertThat(
+							session.createQuery("select extract(day of year from date '2019-05-30') from EntityOfBasics").getResultList().get(0),
+							is(150)
+					);
+					assertThat(
+							session.createQuery("select extract(day of month from date '2019-05-27') from EntityOfBasics").getResultList().get(0),
+							is(27)
+					);
+
+					assertThat(
+							session.createQuery("select extract(day from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
+							is(31)
+					);
+					assertThat(
+							session.createQuery("select extract(month from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
+							is(5)
+					);
+					assertThat(
+							session.createQuery("select extract(year from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
+							is(2019)
+					);
+					assertThat(
+							session.createQuery("select extract(quarter from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
+							is(2)
+					);
+
+					assertThat(
+							session.createQuery("select extract(day of week from date '2019-05-27') from EntityOfBasics").getResultList().get(0),
+							is(2)
+					);
+					assertThat(
+							session.createQuery("select extract(day of week from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
+							is(6)
+					);
+
+					assertThat(
+							session.createQuery("select extract(second from time '14:12:10') from EntityOfBasics").getResultList().get(0),
+							is(10f)
+					);
+					assertThat(
+							session.createQuery("select extract(minute from time '14:12:10') from EntityOfBasics").getResultList().get(0),
+							is(12)
+					);
+					assertThat(
+							session.createQuery("select extract(hour from time '14:12:10') from EntityOfBasics").getResultList().get(0),
+							is(14)
+					);
+
+					assertThat(
+							session.createQuery("select extract(date from current datetime) from EntityOfBasics").getResultList().get(0),
+							instanceOf(LocalDate.class)
+					);
+					assertThat(
+							session.createQuery("select extract(time from current datetime) from EntityOfBasics").getResultList().get(0),
+							instanceOf(LocalTime.class)
+					);
+					session.delete(entity);
+				}
+		);
+	}
+
+	@Test
 	public void testExtractFunctions() {
 		inTransaction(
 				session -> {
@@ -578,8 +692,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					EntityOfBasics entity = new EntityOfBasics();
 					entity.setId(123);
-					entity.setTheDate( new Date( 1974, 3, 25 ) );
-					entity.setTheTime( new Time( System.currentTimeMillis() ) );
+					entity.setTheDate( new Date( 74, 2, 25 ) );
+					entity.setTheTime( new Time( 23, 10, 8 ) );
 					entity.setTheTimestamp( new Timestamp( System.currentTimeMillis() ) );
 					session.persist(entity);
 					session.flush();
@@ -590,6 +704,15 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e")
 							.list();
+
+					assertThat(
+							session.createQuery("select format(e.theDate as 'EEEE, dd/MM/yyyy') from EntityOfBasics").getResultList().get(0),
+							is("Monday, 25/03/1974")
+					);
+					assertThat(
+							session.createQuery("select format(e.theTime as '''Hello'', hh:mm:ss aa') from EntityOfBasics").getResultList().get(0),
+							is("Hello, 11:10:08 PM")
+					);
 				}
 		);
 	}

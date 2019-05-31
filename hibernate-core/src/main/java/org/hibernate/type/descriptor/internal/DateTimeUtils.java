@@ -26,17 +26,17 @@ public final class DateTimeUtils {
 	private DateTimeUtils() {
 	}
 
-	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss.SSSSSS";
 	public static final String FORMAT_STRING_DATE = "yyyy-MM-dd";
 	public static final String FORMAT_STRING_TIME = "HH:mm:ss";
+	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss.SSSSSS";
 
-	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP = DateTimeFormatter.ofPattern( FORMAT_STRING_TIMESTAMP, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_DATE = DateTimeFormatter.ofPattern( FORMAT_STRING_DATE, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME, Locale.ENGLISH );
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP = DateTimeFormatter.ofPattern( FORMAT_STRING_TIMESTAMP, Locale.ENGLISH );
 
-	public static final String JDBC_ESCAPE_START_TIMESTAMP = "{ts '";
 	public static final String JDBC_ESCAPE_START_DATE = "{d '";
 	public static final String JDBC_ESCAPE_START_TIME = "{t '";
+	public static final String JDBC_ESCAPE_START_TIMESTAMP = "{ts '";
 	public static final String JDBC_ESCAPE_END = "'}";
 
 	/**

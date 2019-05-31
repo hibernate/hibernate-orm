@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.OracleExtractEmulation;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
@@ -176,6 +177,8 @@ public class Oracle8iDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 
+		queryEngine.getSqmFunctionRegistry().register( "extract", new OracleExtractEmulation() );
+
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
 
 	}
@@ -206,8 +209,6 @@ public class Oracle8iDialect extends Dialect {
 			case HOUR:
 			case MINUTE:
 			case SECOND:
-			case MILLISECOND:
-			case MICROSECOND:
 			case NANOSECOND:
 				sqlAppender.append("numtodsinterval");
 				break;
@@ -222,20 +223,12 @@ public class Oracle8iDialect extends Dialect {
 			case WEEK:
 				sqlAppender.append("7*(");
 				break;
-			case MILLISECOND:
-				sqlAppender.append("1e-3*(");
-				break;
-			case MICROSECOND:
-				sqlAppender.append("1e-6*(");
-				break;
 			case NANOSECOND:
 				sqlAppender.append("1e-9*(");
 				break;
 		}
 		magnitude.render();
 		switch ( unit ) {
-			case MILLISECOND:
-			case MICROSECOND:
 			case NANOSECOND:
 			case QUARTER:
 			case WEEK:
@@ -250,8 +243,6 @@ public class Oracle8iDialect extends Dialect {
 			case WEEK:
 				sqlAppender.append("day");
 				break;
-			case MILLISECOND:
-			case MICROSECOND:
 			case NANOSECOND:
 				sqlAppender.append("second");
 				break;
@@ -306,8 +297,6 @@ public class Oracle8iDialect extends Dialect {
 				sqlAppender.append(")");
 				break;
 			case NANOSECOND:
-			case MICROSECOND:
-			case MILLISECOND:
 			case SECOND:
 				sqlAppender.append("(");
 				extractField(sqlAppender, from, to, DAY, unit);

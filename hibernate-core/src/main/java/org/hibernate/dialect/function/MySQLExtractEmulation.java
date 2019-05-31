@@ -67,7 +67,7 @@ public class MySQLExtractEmulation
 				pattern = "dayofyear(?2)";
 				break;
 			case WEEK:
-				pattern = "weekofyear(?2)";
+				pattern = "weekofyear(?2)"; //same as week(?2,3), the ISO week
 				break;
 			//TODO: case WEEK_YEAR: yearweek(?2, 3)/100
 			//TODO should we include whole seconds?

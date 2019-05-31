@@ -737,7 +737,7 @@ public class HSQLDialect extends Dialect {
 		//      other hand it doesn't support microsecond
 		//      precision in timestamps either so who cares?
 		switch (unit) {
-			case WEEK: return "week_of_year";
+			case WEEK: return "week_of_year"; //this is the ISO week number, I believe
 			default: return unit.toString();
 		}
 	}

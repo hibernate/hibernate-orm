@@ -842,6 +842,7 @@ public class PostgreSQL81Dialect extends Dialect {
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
 		switch ( unit ) {
+			//WEEK means the ISO week number on Postgres
 			case DAY_OF_MONTH: return "day";
 			case DAY_OF_YEAR: return "doy";
 			case DAY_OF_WEEK: return "dow";

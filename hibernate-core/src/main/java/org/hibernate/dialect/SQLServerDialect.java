@@ -18,6 +18,7 @@ import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -211,6 +212,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new SQLServerIdentityColumnSupport();
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case WEEK: return "isowk"; //the ISO week number (behavior of "week" depends on a system property)
+			default: return super.translateExtractField(unit);
+		}
 	}
 
 	@Override

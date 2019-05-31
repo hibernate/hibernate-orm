@@ -359,6 +359,7 @@ public class IngresDialect extends Dialect {
 			case DAY_OF_MONTH: return "day";
 			case DAY_OF_YEAR: return "doy";
 			case DAY_OF_WEEK: return "dow";
+			case WEEK: return "iso_week";
 			default: return unit.toString();
 		}
 	}

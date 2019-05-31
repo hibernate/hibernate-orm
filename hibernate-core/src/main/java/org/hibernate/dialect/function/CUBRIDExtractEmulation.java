@@ -66,7 +66,7 @@ public class CUBRIDExtractEmulation
 				pattern = "dayofyear(?2)";
 				break;
 			case WEEK:
-				pattern = "week(?2,3)";
+				pattern = "week(?2,3)"; //mode 3 is the ISO week
 				break;
 			//TODO should we include whole seconds?
 			// "(second(?2)*1e3+extract(millisecond from ?2))"

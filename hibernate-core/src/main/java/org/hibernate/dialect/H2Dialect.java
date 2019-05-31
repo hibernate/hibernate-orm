@@ -443,6 +443,7 @@ public class H2Dialect extends Dialect {
 	public String translateExtractField(TemporalUnit unit) {
 		switch ( unit ) {
 			case DAY_OF_MONTH: return "day";
+			case WEEK: return "iso_week";
 			default: return unit.toString();
 		}
 	}

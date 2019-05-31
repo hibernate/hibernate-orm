@@ -66,7 +66,7 @@ public class OracleExtractEmulation
 				pattern = "to_number(to_char(?2,'DDD'))";
 				break;
 			case WEEK:
-				pattern = "to_number(to_char(?2,'IW'))";
+				pattern = "to_number(to_char(?2,'IW'))"; //the ISO week number
 				break;
 			case MILLISECOND:
 				pattern = "to_number(to_char(?2,'FF3'))"; //TODO: include whole seconds? SSFF3

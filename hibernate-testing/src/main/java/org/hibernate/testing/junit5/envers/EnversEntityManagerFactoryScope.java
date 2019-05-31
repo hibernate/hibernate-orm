@@ -101,6 +101,50 @@ public class EnversEntityManagerFactoryScope implements EntityManagerFactoryAcce
 
 	@SafeVarargs
 	public final void inTransactions(Consumer<EntityManager>... actions) {
+		inTransactionsWithInit( null, actions );
+	}
+
+	/**
+	 * Allows executing a series of transaction-scoped actions with the same {@link EntityManager} with the
+	 * ability to provided a special {@code initAction} callback.
+	 *
+	 * @param initAction A callback allowing initial setup before running transactions, may be {@code null}.
+	 * @param actions List of callback actions to be executed within separate transaction scopes.
+	 */
+	@SafeVarargs
+	public final void inTransactionsWithInit(Consumer<EntityManager> initAction, Consumer<EntityManager>... actions) {
+		EntityManager entityManager = getEntityManagerFactory().createEntityManager();
+		try {
+			if ( initAction != null ) {
+				initAction.accept( entityManager );
+			}
+			for ( Consumer<EntityManager> action : actions ) {
+				try {
+					entityManager.getTransaction().begin();
+					action.accept( entityManager );
+					entityManager.getTransaction().commit();
+				}
+				catch ( Exception e ) {
+					if ( entityManager.getTransaction().isActive() ) {
+						entityManager.getTransaction().rollback();
+					}
+					throw e;
+				}
+			}
+		}
+		finally {
+			entityManager.close();
+		}
+	}
+
+	/**
+	 * Allows executing a series of transaction-scoped actions with the same {@link EntityManager} where the
+	 * {@link EntityManager}'s persistence context will be cleared after every transaction-scope.
+	 *
+	 * @param actions List of callback actions to be executed within separate transaction scopes.
+	 */
+	@SafeVarargs
+	public final void inTransactionsWithClear(Consumer<EntityManager>... actions) {
 		EntityManager entityManager = getEntityManagerFactory().createEntityManager();
 		try {
 			for ( Consumer<EntityManager> action : actions ) {
@@ -108,6 +152,7 @@ public class EnversEntityManagerFactoryScope implements EntityManagerFactoryAcce
 					entityManager.getTransaction().begin();
 					action.accept( entityManager );
 					entityManager.getTransaction().commit();
+					entityManager.clear();
 				}
 				catch ( Exception e ) {
 					if ( entityManager.getTransaction().isActive() ) {

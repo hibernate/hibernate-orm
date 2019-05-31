@@ -7,15 +7,17 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
- * Contract for Query impls that can be converted to named queries and
+ * Contract for Query impls that can be converted to a named query memento to be
  * stored in the {@link org.hibernate.query.spi.NamedQueryRepository}
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface NameableQuery {
-	NamedQueryMemento toMemento(String name, SessionFactoryImplementor factory);
+	/**
+	 * Convert the query into the memento
+	 */
+	NamedQueryMemento toMemento(String name);
 }

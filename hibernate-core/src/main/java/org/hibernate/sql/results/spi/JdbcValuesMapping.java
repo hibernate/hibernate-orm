@@ -9,6 +9,7 @@ package org.hibernate.sql.results.spi;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * The "resolved" form of {@link JdbcValuesMappingProducer} providing access
@@ -26,9 +27,13 @@ public interface JdbcValuesMapping {
 	 */
 	Set<SqlSelection> getSqlSelections();
 
-	List<DomainResult> getDomainResults();
+	List<DomainResult<?>> getDomainResults();
 
-	List<DomainResultAssembler> resolveAssemblers(
+	default List<DomainResultAssembler<?>> resolveAssemblers(
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState);
+			AssemblerCreationState creationState) {
+		return getDomainResults().stream()
+				.map( domainResult -> domainResult.createResultAssembler( initializerConsumer, creationState ) )
+				.collect( Collectors.toList() );
+	}
 }

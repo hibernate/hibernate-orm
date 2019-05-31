@@ -15,6 +15,9 @@ package org.hibernate.metamodel.model.convert.spi;
  * 		* implicitly, based on the Java type (e.g., enums)
  * 	    * etc
  *
+ * @param <O> The Java type we can use to represent the domain (object) type
+ * @param <R> The Java type we can use to represent the relational type
+ *
  * @author Steve Ebersole
  */
 public interface BasicValueConverter<O,R> {

@@ -10,35 +10,31 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.ParameterMode;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.procedure.ParameterBind;
 import org.hibernate.procedure.internal.ParameterBindImpl;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
-import org.hibernate.query.QueryParameter;
+import org.hibernate.query.procedure.ProcedureParameterBinding;
 import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.QueryParameterListBinding;
-import org.hibernate.type.Type;
+import org.hibernate.query.spi.QueryParameterImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public class ProcedureParamBindings implements QueryParameterBindings {
-	private final ProcedureParameterMetadata parameterMetadata;
+	private final ProcedureParameterMetadataImpl parameterMetadata;
 	private final ProcedureCallImpl procedureCall;
 
-	private final Map<ProcedureParameterImplementor, ParameterBind> bindingMap = new HashMap<>();
+	private final Map<ProcedureParameterImplementor<?>, ProcedureParameterBinding<?>> bindingMap = new HashMap<>();
 
 	public ProcedureParamBindings(
-			ProcedureParameterMetadata parameterMetadata,
+			ProcedureParameterMetadataImpl parameterMetadata,
 			ProcedureCallImpl procedureCall) {
 		this.parameterMetadata = parameterMetadata;
 		this.procedureCall = procedureCall;
 	}
 
-	public ProcedureParameterMetadata getParameterMetadata() {
+	public ProcedureParameterMetadataImpl getParameterMetadata() {
 		return parameterMetadata;
 	}
 
@@ -47,14 +43,13 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public boolean isBound(QueryParameter parameter) {
-		return getBinding( parameter ).isBound();
+	public QueryParameterBinding<?> getBinding(QueryParameterImplementor<?> parameter) {
+		return getBinding( parameterMetadata.resolve( parameter ) );
 	}
 
-	@Override
-	public <T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter) {
-		final ProcedureParameterImplementor<T> procParam = parameterMetadata.resolve( parameter );
-		ParameterBind binding = bindingMap.get( procParam );
+	public QueryParameterBinding<?> getBinding(ProcedureParameterImplementor parameter) {
+		final ProcedureParameterImplementor procParam = parameterMetadata.resolve( parameter );
+		ProcedureParameterBinding binding = bindingMap.get( procParam );
 
 		if ( binding == null ) {
 			if ( ! parameterMetadata.containsReference( parameter ) ) {
@@ -69,12 +64,12 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public <T> QueryParameterBinding<T> getBinding(String name) {
+	public ProcedureParameterBinding<?> getBinding(String name) {
 		return getBinding( parameterMetadata.getQueryParameter( name ) );
 	}
 
 	@Override
-	public <T> QueryParameterBinding<T> getBinding(int position) {
+	public ProcedureParameterBinding getBinding(int position) {
 		return getBinding( parameterMetadata.getQueryParameter( position ) );
 	}
 
@@ -94,42 +89,4 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 		);
 	}
 
-	@Override
-	public String expandListValuedParameters(String queryString, SharedSessionContractImplementor producer) {
-		return queryString;
-	}
-
-	@Override
-	public <T> QueryParameterListBinding<T> getQueryParameterListBinding(QueryParameter<T> parameter) {
-		return null;
-	}
-
-	@Override
-	public <T> QueryParameterListBinding<T> getQueryParameterListBinding(String name) {
-		return null;
-	}
-
-	@Override
-	public <T> QueryParameterListBinding<T> getQueryParameterListBinding(int position) {
-		return null;
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// I think these are not needed for proc call execution
-
-	@Override
-	public Type[] collectPositionalBindTypes() {
-		return new Type[0];
-	}
-
-	@Override
-	public Object[] collectPositionalBindValues() {
-		return new Object[0];
-	}
-
-	@Override
-	public Map<String, TypedValue> collectNamedParameterBindings() {
-		return null;
-	}
 }

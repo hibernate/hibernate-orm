@@ -8,24 +8,20 @@ package org.hibernate.query.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Calendar;
 import javax.persistence.ParameterMode;
-import javax.persistence.TemporalType;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.procedure.ParameterBind;
+import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.procedure.ParameterMisuseException;
-import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.query.internal.QueryParameterImpl;
+import org.hibernate.query.internal.AbstractQueryParameterImpl;
 import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.type.CalendarDateType;
-import org.hibernate.type.CalendarTimeType;
-import org.hibernate.type.CalendarType;
+import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.ProcedureParameterNamedBinder;
 import org.hibernate.type.Type;
@@ -36,8 +32,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ProcedureParameterImpl<T>
-		extends QueryParameterImpl<T>
-		implements ProcedureParameterImplementor<T>, ParameterRegistration<T> {
+		extends AbstractQueryParameterImpl<T>
+		implements ProcedureParameterImplementor<T> {
 	private static final Logger log = Logger.getLogger( ProcedureParameterImpl.class );
 
 	private final ProcedureCallImpl procedureCall;
@@ -45,9 +41,6 @@ public class ProcedureParameterImpl<T>
 	private final Integer position;
 	private final ParameterMode mode;
 	private final Class<T> javaType;
-
-	private int[] sqlTypes;
-	private boolean passNullsEnabled;
 
 	// in-flight state needed between prepare and extract
 	private int startIndex;
@@ -57,15 +50,13 @@ public class ProcedureParameterImpl<T>
 			String name,
 			ParameterMode mode,
 			Class<T> javaType,
-			Type hibernateType,
-			boolean initialPassNullsSetting) {
+			AllowableParameterType<T> hibernateType) {
 		super( hibernateType );
 		this.procedureCall = procedureCall;
 		this.name = name;
 		this.position = null;
 		this.mode = mode;
 		this.javaType = javaType;
-		this.passNullsEnabled = initialPassNullsSetting;
 
 		setHibernateType( hibernateType );
 	}
@@ -75,15 +66,13 @@ public class ProcedureParameterImpl<T>
 			Integer position,
 			ParameterMode mode,
 			Class<T> javaType,
-			Type hibernateType,
-			boolean initialPassNullsSetting) {
+			AllowableParameterType<T> hibernateType) {
 		super( hibernateType );
 		this.procedureCall = procedureCall;
 		this.name = null;
 		this.position = position;
 		this.mode = mode;
 		this.javaType = javaType;
-		this.passNullsEnabled = initialPassNullsSetting;
 
 		setHibernateType( hibernateType );
 	}
@@ -91,21 +80,6 @@ public class ProcedureParameterImpl<T>
 	@Override
 	public ParameterMode getMode() {
 		return mode;
-	}
-
-	@Override
-	public boolean isPassNullsEnabled() {
-		return passNullsEnabled;
-	}
-
-	@Override
-	public void enablePassingNulls(boolean enabled) {
-		this.passNullsEnabled = enabled;
-	}
-
-	@Override
-	public int[] getSourceLocations() {
-		return new int[0];
 	}
 
 	@Override
@@ -119,74 +93,29 @@ public class ProcedureParameterImpl<T>
 	}
 
 	@Override
-	public void setHibernateType(Type expectedType) {
+	public void setHibernateType(AllowableParameterType<?> expectedType) {
 		super.setHibernateType( expectedType );
 
-		if ( mode == ParameterMode.REF_CURSOR ) {
-			sqlTypes = new int[] { Types.REF_CURSOR };
-		}
-		else {
-			if ( expectedType == null ) {
-				throw new IllegalArgumentException( "Type cannot be null" );
-			}
-			else {
-				sqlTypes = expectedType.sqlTypes( procedureCall.getSession().getFactory() );
+		if ( mode == ParameterMode.REF_CURSOR || mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
+			if ( ! ( expectedType instanceof AllowableOutputParameterType ) ) {
+				throw new IllegalArgumentException( "Passed type must implement AllowableOutputParameterType" );
 			}
 		}
-
-	}
-
-	@Override
-	public Class<T> getParameterType() {
-		return javaType;
-	}
-
-	@Override
-	public ParameterBind<T> getBind() {
-		return (ParameterBind<T>) procedureCall.getQueryParameterBindings().getBinding( this );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void bindValue(Object value) {
-		getBind().setBindValue( (T) value );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void bindValue(Object value, TemporalType explicitTemporalType) {
-		getBind().setBindValue( (T) value, explicitTemporalType );
 	}
 
 	@Override
 	public void prepare(CallableStatement statement, int startIndex) throws SQLException {
-		// initially set up the Type we will use for binding as the explicit type.
-		Type typeToUse = getHibernateType();
-		int[] sqlTypesToUse = sqlTypes;
+		final QueryParameterBinding<?> binding = procedureCall.getQueryParameterBindings().getBinding( this );
 
-		final ParameterBind bind = getBind();
+		// initially set up the Type we will use for binding as the explicit type.
+		AllowableParameterType typeToUse = getHibernateType();
 
 		// however, for Calendar binding with an explicit TemporalType we may need to adjust this...
-		if ( bind != null && bind.getExplicitTemporalType() != null ) {
-			if ( Calendar.class.isInstance( bind.getValue() ) ) {
-				switch ( bind.getExplicitTemporalType() ) {
-					case TIMESTAMP: {
-						typeToUse = CalendarType.INSTANCE;
-						sqlTypesToUse = typeToUse.sqlTypes( procedureCall.getSession().getFactory() );
-						break;
-					}
-					case DATE: {
-						typeToUse = CalendarDateType.INSTANCE;
-						sqlTypesToUse = typeToUse.sqlTypes( procedureCall.getSession().getFactory() );
-						break;
-					}
-					case TIME: {
-						typeToUse = CalendarTimeType.INSTANCE;
-						sqlTypesToUse = typeToUse.sqlTypes( procedureCall.getSession().getFactory() );
-						break;
-					}
-				}
-			}
+		if ( binding != null && binding.getExplicitTemporalPrecision() != null ) {
+			typeToUse = ( (AllowableTemporalParameterType) typeToUse ).resolveTemporalPrecision(
+					binding.getExplicitTemporalPrecision(),
+					procedureCall.getSession().getFactory().getTypeConfiguration()
+			);
 		}
 
 		this.startIndex = startIndex;
@@ -226,10 +155,10 @@ public class ProcedureParameterImpl<T>
 			}
 
 			if ( mode == ParameterMode.INOUT || mode == ParameterMode.IN ) {
-				if ( bind == null || bind.getValue() == null ) {
-					// the user did not bind a value to the parameter being processed.  This is the condition
+				if ( binding == null || binding.getValue() == null ) {
+					// the user did not binding a value to the parameter being processed.  This is the condition
 					// defined by `passNulls` and that value controls what happens here.  If `passNulls` is
-					// {@code true} we will bind the NULL value into the statement; if `passNulls` is
+					// {@code true} we will binding the NULL value into the statement; if `passNulls` is
 					// {@code false} we will not.
 					//
 					// Unfortunately there is not a way to reliably know through JDBC metadata whether a procedure
@@ -264,13 +193,13 @@ public class ProcedureParameterImpl<T>
 					if ( this.procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && canDoNameParameterBinding( typeToUse ) ) {
 						((ProcedureParameterNamedBinder) typeToUse).nullSafeSet(
 								statement,
-								bind.getValue(),
+								binding.getValue(),
 								this.getName(),
 								procedureCall.getSession()
 						);
 					}
 					else {
-						typeToUse.nullSafeSet( statement, bind.getValue(), startIndex, procedureCall.getSession() );
+						typeToUse.nullSafeSet( statement, binding.getValue(), startIndex, procedureCall.getSession() );
 					}
 				}
 			}
@@ -301,16 +230,6 @@ public class ProcedureParameterImpl<T>
 				databaseMetaData.supportsNamedParameters()
 						&& ProcedureParameterNamedBinder.class.isInstance( hibernateType )
 						&& ((ProcedureParameterNamedBinder) hibernateType).canDoSetting();
-	}
-
-	@Override
-	public int[] getSqlTypes() {
-		if ( mode == ParameterMode.REF_CURSOR ) {
-			// we could use the Types#REF_CURSOR added in Java 8, but that would require requiring Java 8...
-			throw new IllegalStateException( "REF_CURSOR parameters do not have a SQL/JDBC type" );
-		}
-
-		return determineHibernateType().sqlTypes( procedureCall.getSession().getFactory() );
 	}
 
 	private Type determineHibernateType() {

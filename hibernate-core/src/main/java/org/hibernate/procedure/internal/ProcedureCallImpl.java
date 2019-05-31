@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import javax.persistence.FlushModeType;
@@ -24,40 +23,48 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import javax.persistence.ParameterMode;
+import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
+import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.query.spi.AbstractQuery;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.NoSuchParameterException;
-import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.internal.AbstractProducedQuery;
+import org.hibernate.query.internal.QueryOptionsImpl;
+import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.procedure.internal.ProcedureParamBindings;
 import org.hibernate.query.procedure.internal.ProcedureParameterImpl;
-import org.hibernate.query.procedure.internal.ProcedureParameterMetadata;
+import org.hibernate.query.procedure.internal.ProcedureParameterMetadataImpl;
 import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.AbstractQuery;
+import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
+import org.hibernate.sql.results.NoMoreOutputsException;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -69,25 +76,27 @@ import org.jboss.logging.Logger;
  */
 public class ProcedureCallImpl<R>
 		extends AbstractQuery<R>
-		implements ProcedureCallImplementor<R>, ResultContext {
+		implements ProcedureCallImplementor<R>, ResultContext, DomainParameterBindingContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			ProcedureCallImpl.class.getName()
 	);
 
-	private static final NativeSQLQueryReturn[] NO_RETURNS = new NativeSQLQueryReturn[0];
-
 	private final String procedureName;
-	private final NativeSQLQueryReturn[] queryReturns;
 
-	private final boolean globalParameterPassNullsSetting;
+	private FunctionReturnImpl functionReturn;
 
-	private final ProcedureParameterMetadata parameterMetadata;
+	private final ProcedureParameterMetadataImpl parameterMetadata;
 	private final ProcedureParamBindings paramBindings;
+
+	private final List<DomainResultProducer<?>> domainResultProducers;
 
 	private Set<String> synchronizedQuerySpaces;
 
+	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
+
 	private ProcedureOutputsImpl outputs;
+
 
 	/**
 	 * The no-returns form.
@@ -98,14 +107,13 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName) {
 		super( session );
 		this.procedureName = procedureName;
-		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
-		this.queryReturns = NO_RETURNS;
-
-		this.parameterMetadata = new ProcedureParameterMetadata( this );
+		this.parameterMetadata = new ProcedureParameterMetadataImpl( this );
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, this );
-	}
 
+		this.synchronizedQuerySpaces = null;
+		this.domainResultProducers = null;
+	}
 	/**
 	 * The result Class(es) return form
 	 *
@@ -113,39 +121,25 @@ public class ProcedureCallImpl<R>
 	 * @param procedureName The name of the procedure to call
 	 * @param resultClasses The classes making up the result
 	 */
-	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, Class... resultClasses) {
+	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName, Class... resultClasses) {
 		super( session );
+
+		assert resultClasses != null && resultClasses.length > 0;
+
 		this.procedureName = procedureName;
-		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
-		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
-		final Set<String> collectedQuerySpaces = new HashSet<>();
-
-		Util.resolveResultClasses(
-				new Util.ResultClassesResolutionContext() {
-					@Override
-					public SessionFactoryImplementor getSessionFactory() {
-						return session.getFactory();
-					}
-
-					@Override
-					public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-						Collections.addAll( collectedQueryReturns, queryReturns );
-					}
-
-					@Override
-					public void addQuerySpaces(String... spaces) {
-						Collections.addAll( collectedQuerySpaces, spaces );
-					}
-				},
-				resultClasses
-		);
-
-		this.queryReturns = collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] );
-		this.synchronizedQuerySpaces = collectedQuerySpaces;
-
-		this.parameterMetadata = new ProcedureParameterMetadata( this );
+		this.parameterMetadata = new ProcedureParameterMetadataImpl( this );
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, this );
+
+		this.domainResultProducers = CollectionHelper.arrayList( resultClasses.length );
+		this.synchronizedQuerySpaces = new HashSet<>();
+
+		Util.resolveResultSetMappingClasses(
+				resultClasses,
+				domainResultProducers::add,
+				synchronizedQuerySpaces::add,
+				getSession().getFactory()
+		);
 	}
 
 	/**
@@ -153,46 +147,30 @@ public class ProcedureCallImpl<R>
 	 *
 	 * @param session The session
 	 * @param procedureName The name of the procedure to call
-	 * @param resultSetMappings The names of the result set mappings making up the result
+	 * @param resultSetMappingNames The names of the result set mappings making up the result
 	 */
-	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, String... resultSetMappings) {
+	public ProcedureCallImpl(
+			final SharedSessionContractImplementor session,
+			String procedureName,
+			String... resultSetMappingNames) {
 		super( session );
+
+		assert resultSetMappingNames != null && resultSetMappingNames.length > 0;
+
 		this.procedureName = procedureName;
-		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
-		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
-		final Set<String> collectedQuerySpaces = new HashSet<>();
-
-		Util.resolveResultSetMappings(
-				new Util.ResultSetMappingResolutionContext() {
-					@Override
-					public SessionFactoryImplementor getSessionFactory() {
-						return session.getFactory();
-					}
-
-					@Override
-					public ResultSetMappingDescriptor findResultSetMapping(String name) {
-						return session.getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
-					}
-
-					@Override
-					public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-						Collections.addAll( collectedQueryReturns, queryReturns );
-					}
-
-					@Override
-					public void addQuerySpaces(String... spaces) {
-						Collections.addAll( collectedQuerySpaces, spaces );
-					}
-				},
-				resultSetMappings
-		);
-
-		this.queryReturns = collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] );
-		this.synchronizedQuerySpaces = collectedQuerySpaces;
-
-		this.parameterMetadata = new ProcedureParameterMetadata( this );
+		this.parameterMetadata = new ProcedureParameterMetadataImpl( this );
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, this );
+
+		this.domainResultProducers = CollectionHelper.arrayList( resultSetMappingNames.length );
+		this.synchronizedQuerySpaces = new HashSet<>();
+
+		Util.resolveResultSetMappingNames(
+				resultSetMappingNames,
+				domainResultProducers::add,
+				synchronizedQuerySpaces::add,
+				getSession().getFactory()
+		);
 	}
 
 	/**
@@ -201,52 +179,39 @@ public class ProcedureCallImpl<R>
 	 * @param session The session
 	 * @param memento The named/stored memento
 	 */
-	@SuppressWarnings("unchecked")
 	ProcedureCallImpl(SharedSessionContractImplementor session, NamedCallableQueryMemento memento) {
 		super( session );
 		this.procedureName = memento.getCallableName();
-		this.globalParameterPassNullsSetting = session.getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
-		this.queryReturns = memento.getQueryReturns();
-		this.synchronizedQuerySpaces = Util.copy( memento.getSynchronizedQuerySpaces() );
-
-		this.parameterMetadata = new ProcedureParameterMetadata( this );
+		this.parameterMetadata = new ProcedureParameterMetadataImpl( this, memento );
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, this );
 
-		for ( NamedCallableQueryMementoImpl.ParameterMemento storedRegistration : memento.getParameterDeclarations() ) {
-			final ProcedureParameterImplementor<?> registration;
+		this.domainResultProducers = new ArrayList<>();
+		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
-			if ( StringHelper.isNotEmpty( storedRegistration.getName() ) ) {
-				registration = new ProcedureParameterImpl(
-						this,
-						storedRegistration.getName(),
-						storedRegistration.getMode(),
-						storedRegistration.getType(),
-						storedRegistration.getHibernateType(),
-						storedRegistration.isPassNullsEnabled()
-				);
-			}
-			else {
-				registration = new ProcedureParameterImpl(
-						this,
-						storedRegistration.getPosition(),
-						storedRegistration.getMode(),
-						storedRegistration.getType(),
-						storedRegistration.getHibernateType(),
-						storedRegistration.isPassNullsEnabled()
-				);
-			}
+		Util.resolveResultSetMappings(
+				memento.getResultSetMappingNames(),
+				memento.getResultSetMappingClasses(),
+				domainResultProducers::add,
+				synchronizedQuerySpaces::add,
+				getSession().getFactory()
+		);
 
-			getParameterMetadata().registerParameter( registration );
-		}
-
-		for ( Map.Entry<String, Object> entry : memento.getHintsMap().entrySet() ) {
-			setHint( entry.getKey(), entry.getValue() );
-		}
+		applyOptions( memento );
 	}
 
 	@Override
-	public ProcedureParameterMetadata getParameterMetadata() {
+	public String getProcedureName() {
+		return procedureName;
+	}
+
+	@Override
+	public MutableQueryOptions getQueryOptions() {
+		return queryOptions;
+	}
+
+	@Override
+	public ProcedureParameterMetadataImpl getParameterMetadata() {
 		return parameterMetadata;
 	}
 
@@ -260,30 +225,85 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public String getProcedureName() {
-		return procedureName;
+	public boolean isFunctionCall() {
+		return functionReturn != null;
 	}
 
 	@Override
-	public String getSql() {
-		return getProcedureName();
+	public ProcedureCall markAsFunctionCall(int sqlType) {
+		functionReturn = new FunctionReturnImpl( this, sqlType );
+		return this;
 	}
 
 	@Override
-	public NativeSQLQueryReturn[] getQueryReturns() {
-		return queryReturns;
+	public DomainParameterBindingContext getDomainParameterBindingContext() {
+		return this;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// DomainParameterBindingContext
+
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return getSession().getFactory();
+	}
+
+	@Override
+	public <T> List<T> getLoadIdentifiers() {
+		return Collections.emptyList();
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Parameter registrations
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class type, ParameterMode mode) {
+		getSession().checkOpen( true );
+
+		try {
+			registerParameter( position, type, mode );
+		}
+		catch (HibernateException he) {
+			throw getSession().getExceptionConverter().convert( he );
+		}
+		catch (RuntimeException e) {
+			getSession().markForRollbackOnly();
+			throw e;
+		}
+
+		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> ParameterRegistration<T> registerParameter(int position, Class<T> type, ParameterMode mode) {
+	public ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode) {
+		getSession().checkOpen( true );
+		try {
+			registerParameter( parameterName, type, mode );
+		}
+		catch (HibernateException he) {
+			throw getSession().getExceptionConverter().convert( he );
+		}
+		catch (RuntimeException e) {
+			getSession().markForRollbackOnly();
+			throw e;
+		}
+
+		return this;
+	}
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
 		final ProcedureParameterImpl procedureParameter = new ProcedureParameterImpl(
 				this,
 				position,
 				mode,
-				type,
-				getSession().getFactory().getTypeResolver().heuristicType( type.getName() ),
-				globalParameterPassNullsSetting
+				javaType,
+				getSession().getFactory().getMetamodel().resolveQueryParameterType( javaType )
 		);
 
 		registerParameter( procedureParameter );
@@ -302,20 +322,19 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ParameterRegistrationImplementor getParameterRegistration(int position) {
-		return (ParameterRegistrationImplementor) getParameterMetadata().getQueryParameter( position );
+	public ProcedureParameterImplementor getParameterRegistration(int position) {
+		return getParameterMetadata().getQueryParameter( position );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> ParameterRegistration<T> registerParameter(String name, Class<T> type, ParameterMode mode) {
+	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> type, ParameterMode mode) {
 		final ProcedureParameterImpl parameter = new ProcedureParameterImpl(
 				this,
 				name,
 				mode,
 				type,
-				getSession().getFactory().getTypeResolver().heuristicType( type.getName() ),
-				globalParameterPassNullsSetting
+				getSession().getFactory().getMetamodel().resolveQueryParameterType( type )
 		);
 
 		registerParameter( parameter );
@@ -331,14 +350,14 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ParameterRegistrationImplementor getParameterRegistration(String name) {
+	public ProcedureParameterImplementor getParameterRegistration(String name) {
 		return getParameterMetadata().getQueryParameter( name );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public List getRegisteredParameters() {
-		return new ArrayList( getParameterMetadata().collectAllParameters() );
+		return new ArrayList( getParameterMetadata().getRegistrations() );
 	}
 
 	@Override
@@ -382,13 +401,13 @@ public class ProcedureCallImpl<R>
 		// prepare parameters
 
 		getParameterMetadata().visitRegistrations(
-				new Consumer<QueryParameter>() {
+				new Consumer<QueryParameter<?>>() {
 					int i = 1;
 
 					@Override
 					public void accept(QueryParameter queryParameter) {
 						try {
-							final ParameterRegistrationImplementor registration = (ParameterRegistrationImplementor) queryParameter;
+							final ProcedureParameterImplementor registration = (ProcedureParameterImplementor) queryParameter;
 							registration.prepare( statement, i );
 							if ( registration.getMode() == ParameterMode.REF_CURSOR ) {
 								i++;
@@ -416,26 +435,6 @@ public class ProcedureCallImpl<R>
 		return null;
 	}
 
-	@Override
-	public String[] getReturnAliases() {
-		throw new UnsupportedOperationException( "Procedure/function calls do not support returning aliases" );
-	}
-
-	@Override
-	public Type[] getReturnTypes() {
-		throw new UnsupportedOperationException( "Procedure/function calls do not support returning 'return types'" );
-	}
-
-	@Override
-	public ProcedureCallImplementor<R> setEntity(int position, Object val) {
-		return null;
-	}
-
-	@Override
-	public ProcedureCallImplementor<R> setEntity(String name, Object val) {
-		return null;
-	}
-
 	/**
 	 * Use this form instead of {@link #getSynchronizedQuerySpaces()} when you want to make sure the
 	 * underlying Set is instantiated (aka, on add)
@@ -451,7 +450,6 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<String> getSynchronizedQuerySpaces() {
 		if ( synchronizedQuerySpaces == null ) {
 			return Collections.emptySet();
@@ -484,140 +482,121 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	@Override
-	protected boolean isNativeQuery() {
-		return false;
-	}
-
-	@Override
-	public QueryParameters getQueryParameters() {
-		final QueryParameters qp = super.getQueryParameters();
-		// both of these are for documentation purposes, they are actually handled directly...
-		qp.setAutoDiscoverScalarTypes( true );
-		qp.setCallable( true );
-		return qp;
-	}
-
 	/**
 	 * Collects any parameter registrations which indicate a REF_CURSOR parameter type/mode.
 	 *
 	 * @return The collected REF_CURSOR type parameters.
 	 */
-	public ParameterRegistrationImplementor[] collectRefCursorParameters() {
-		final List<ParameterRegistrationImplementor> refCursorParams = new ArrayList<>();
+	public ProcedureParameterImplementor[] collectRefCursorParameters() {
+		final List<ProcedureParameterImplementor> refCursorParams = new ArrayList<>();
 
 		getParameterMetadata().visitRegistrations(
 				queryParameter -> {
-					final ParameterRegistrationImplementor registration = (ParameterRegistrationImplementor) queryParameter;
+					final ProcedureParameterImplementor registration = (ProcedureParameterImplementor) queryParameter;
 					if ( registration.getMode() == ParameterMode.REF_CURSOR ) {
 						refCursorParams.add( registration );
 					}
 				}
 		);
-		return refCursorParams.toArray( new ParameterRegistrationImplementor[refCursorParams.size()] );
+		return refCursorParams.toArray( new ProcedureParameterImplementor[0] );
 	}
 
 	@Override
-	public NamedCallableQueryMemento extractMemento(Map<String, Object> hints) {
+	public NamedCallableQueryMemento toMemento(String name) {
 		return new NamedCallableQueryMementoImpl(
+				name,
 				procedureName,
-				Util.copy( queryReturns ),
-				getParameterMetadata().getParameterStrategy(),
-				toParameterMementos( getParameterMetadata() ),
-				Util.copy( synchronizedQuerySpaces ),
-				Util.copy( hints )
+				getParameterStrategy(),
+				toParameterMementos( parameterMetadata ),
+				// todo (6.0) : result-set-mapping names
+				null,
+				// todo (6.0) : result-set-mapping class names
+				null,
+				getSynchronizedQuerySpaces(),
+				isCacheable(),
+				getCacheRegion(),
+				getCacheMode(),
+				getHibernateFlushMode(),
+				isReadOnly(),
+				getTimeout(),
+				getFetchSize(),
+				getComment(),
+				getHints()
 		);
 	}
 
-	@Override
-	public NamedCallableQueryMemento extractMemento() {
-		return new NamedCallableQueryMementoImpl(
-				procedureName,
-				Util.copy( queryReturns ),
-				getParameterMetadata().getParameterStrategy(),
-				toParameterMementos( getParameterMetadata() ),
-				Util.copy( synchronizedQuerySpaces ),
-				Util.copy( getHints() )
-		);
-	}
-
-	private static List<NamedCallableQueryMementoImpl.ParameterMemento> toParameterMementos(ProcedureParameterMetadata parameterMetadata) {
+	private static List<NamedCallableQueryMementoImpl.ParameterMemento> toParameterMementos(
+			ProcedureParameterMetadataImpl parameterMetadata) {
 		if ( parameterMetadata.getParameterStrategy() == ParameterStrategy.UNKNOWN ) {
 			// none...
 			return Collections.emptyList();
 		}
 
-		final List<NamedCallableQueryMementoImpl.ParameterMemento> copy = new ArrayList<>();
+		final List<NamedCallableQueryMementoImpl.ParameterMemento> mementos = new ArrayList<>();
 
 		parameterMetadata.visitRegistrations(
 				queryParameter -> {
-					final ParameterRegistrationImplementor registration = (ParameterRegistrationImplementor) queryParameter;
-					copy.add( NamedCallableQueryMementoImpl.ParameterMemento.fromRegistration( registration ) );
+					final ProcedureParameterImplementor procedureParameter = (ProcedureParameterImplementor) queryParameter;
+					mementos.add(
+							new NamedCallableQueryMementoImpl.ParameterMementoImpl(
+									procedureParameter.getPosition(),
+									procedureParameter.getName(),
+									procedureParameter.getMode(),
+									procedureParameter.getParameterType(),
+									procedureParameter.getHibernateType()
+							)
+					);
 				}
 		);
 
-		return copy;
+		return mementos;
+	}
+
+	@Override
+	protected boolean canApplyAliasSpecificLockModes() {
+		return false;
+	}
+
+	@Override
+	protected void verifySettingLockMode() {
+		throw new IllegalStateException( "Illegal attempt to set lock mode on a ProcedureCall / StoredProcedureQuery" );
+	}
+
+	@Override
+	protected void verifySettingAliasSpecificLockModes() {
+		throw new IllegalStateException( "Illegal attempt to set lock mode on a ProcedureCall / StoredProcedureQuery" );
+	}
+
+	@Override
+	protected void applyEntityGraphQueryHint(String hintName, RootGraphImplementor entityGraph) {
+		throw new IllegalStateException( "EntityGraph hints are not supported for ProcedureCall/StoredProcedureQuery" );
+	}
+
+	@Override
+	public Query<R> applyGraph(RootGraph<?> graph, GraphSemantic semantic) {
+		throw new IllegalStateException( "EntityGraph hints are not supported for ProcedureCall/StoredProcedureQuery" );
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// JPA StoredProcedureQuery impl
+	// outputs
 
 	private ProcedureOutputs procedureResult;
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class type, ParameterMode mode) {
-		getProducer().checkOpen( true );
-
-		try {
-			registerParameter( position, type, mode );
-		}
-		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
-		}
-		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
-			throw e;
-		}
-
-		return this;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode) {
-		getProducer().checkOpen( true );
-		try {
-			registerParameter( parameterName, type, mode );
-		}
-		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
-		}
-		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
-			throw e;
-		}
-
-		return this;
-	}
-
-	// outputs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public boolean execute() {
 		try {
 			final Output rtn = outputs().getCurrent();
-			return rtn != null && ResultSetOutput.class.isInstance( rtn );
+			return ResultSetOutput.class.isInstance( rtn );
 		}
-		catch (NoMoreReturnsException e) {
+		catch (NoMoreOutputsException e) {
 			return false;
 		}
 		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
+			throw getSession().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
+			getSession().markForRollbackOnly();
 			throw e;
 		}
 	}
@@ -630,9 +609,10 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public int executeUpdate() {
-		getSession().checkTransactionNeededForUpdateOperation(
-				"javax.persistence.Query.executeUpdate requires active transaction" );
+	protected int doExecuteUpdate() {
+		if ( ! getSession().isTransactionInProgress() ) {
+			throw new TransactionRequiredException( "javax.persistence.Query.executeUpdate requires active transaction" );
+		}
 
 		// the expectation is that there is just one Output, of type UpdateCountOutput
 		try {
@@ -691,11 +671,11 @@ public class ProcedureCallImpl<R>
 				return -1;
 			}
 		}
-		catch (NoMoreReturnsException e) {
+		catch (NoMoreOutputsException e) {
 			return -1;
 		}
 		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
+			throw getSession().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getSession().markForRollbackOnly();
@@ -703,6 +683,39 @@ public class ProcedureCallImpl<R>
 		}
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	protected List<R> doList() {
+		if ( getMaxResults() == 0 ) {
+			return Collections.EMPTY_LIST;
+		}
+		try {
+			final Output rtn = outputs().getCurrent();
+			if ( ! ResultSetOutput.class.isInstance( rtn ) ) {
+				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
+			}
+
+			return ( (ResultSetOutput) rtn ).getResultList();
+		}
+		catch (NoMoreOutputsException e) {
+			// todo : the spec is completely silent on these type of edge-case scenarios.
+			// Essentially here we'd have a case where there are no more results (ResultSets nor updateCount) but
+			// getResultList was called.
+			return null;
+		}
+		catch (HibernateException he) {
+			throw getSession().getExceptionConverter().convert( he );
+		}
+		catch (RuntimeException e) {
+			getSession().markForRollbackOnly();
+			throw e;
+		}
+	}
+
+	@Override
+	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -712,7 +725,7 @@ public class ProcedureCallImpl<R>
 		}
 		try {
 			final Output rtn = outputs().getCurrent();
-			if ( ! ResultSetOutput.class.isInstance( rtn ) ) {
+			if ( !(rtn instanceof ResultSetOutput) ) {
 				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
 			}
 
@@ -725,7 +738,7 @@ public class ProcedureCallImpl<R>
 			return null;
 		}
 		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he );
+			throw getSession().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getSession().markForRollbackOnly();
@@ -762,11 +775,28 @@ public class ProcedureCallImpl<R>
 		if ( cls.isInstance( this ) ) {
 			return (T) this;
 		}
-		else if ( cls.isInstance( outputs ) ) {
-			return (T) outputs();
+
+		if ( cls.isInstance( parameterMetadata ) ) {
+			return (T) parameterMetadata;
 		}
 
-		return super.unwrap( cls );
+		if ( cls.isInstance( paramBindings ) ) {
+			return (T) paramBindings;
+		}
+
+		if ( cls.isInstance( queryOptions ) ) {
+			return (T) queryOptions;
+		}
+
+		if ( cls.isInstance( getSession() ) ) {
+			return (T) getSession();
+		}
+
+		if ( ProcedureOutputs.class.isAssignableFrom( cls ) ) {
+			return (T) getOutputs();
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type : " + cls.getName() );
 	}
 
 	@Override
@@ -797,121 +827,100 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
-		paramBindings.getBinding( getParameterMetadata().resolve( parameter ) ).setBindValue( value );
-		return this;
+		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value );
 	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(Parameter<P> parameter, P value) {
-		paramBindings.getBinding( getParameterMetadata().resolve( parameter ) ).setBindValue( value );
-		return this;
+		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value) {
-		paramBindings.getBinding( getParameterMetadata().getQueryParameter( name ) ).setBindValue( value );
-		return this;
+		return (ProcedureCallImplementor<R>) super.setParameter( name, value );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value) {
-		paramBindings.getBinding( getParameterMetadata().getQueryParameter( position ) ).setBindValue( value );
-		return this;
+		return (ProcedureCallImplementor<R>) super.setParameter( position, value );
+	}
+
+	@Override
+	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType type) {
+		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, type );
 	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type type) {
-		final QueryParameterBinding<P> binding = paramBindings.getBinding( parameter );
-		binding.setBindValue( value, type );
-		return this;
+		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, type );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	public ProcedureCallImplementor<R> setParameter(String name, Object value, AllowableParameterType type) {
+		return (ProcedureCallImplementor<R>) super.setParameter( name, value, type );
+	}
+
+	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value, Type type) {
-		final QueryParameterBinding binding = paramBindings.getBinding( getParameterMetadata().getQueryParameter( name ) );
-		binding.setBindValue( value, type );
-		return this;
+		return (ProcedureCallImplementor<R>) super.setParameter( name, value, type );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	public ProcedureCallImplementor<R> setParameter(int position, Object value, AllowableParameterType type) {
+		//noinspection unchecked
+		return (ProcedureCallImplementor<R>) super.setParameter( position, value, type );
+	}
+
+	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value, Type type) {
-		final QueryParameterBinding binding = paramBindings.getBinding( getParameterMetadata().getQueryParameter( position ) );
-		binding.setBindValue( value, type );
-		return this;
+		return (ProcedureCallImplementor<R>) super.setParameter( position, value, type );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalType) {
-		final QueryParameterBinding binding = paramBindings.getBinding( parameter );
-		binding.setBindValue( value, temporalType );
-		return this;
+	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalPrecision) {
+		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, temporalPrecision );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> setParameter(String name, Object value, TemporalType temporalType) {
-		final QueryParameterBinding binding = paramBindings.getBinding( getParameterMetadata().getQueryParameter( name ) );
-		binding.setBindValue( value, temporalType );
-		return this;
+	public ProcedureCallImplementor<R> setParameter(String name, Object value, TemporalType temporalPrecision) {
+		return (ProcedureCallImplementor<R>) super.setParameter( name, value, temporalPrecision );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> setParameter(int position, Object value, TemporalType temporalType) {
-		final QueryParameterBinding binding = paramBindings.getBinding( getParameterMetadata().getQueryParameter( position ) );
-		binding.setBindValue( value, temporalType );
-		return this;
+	public ProcedureCallImplementor<R> setParameter(int position, Object value, TemporalType temporalPrecision) {
+		return (ProcedureCallImplementor<R>) super.setParameter( position, value, temporalPrecision );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Calendar value, TemporalType temporalType) {
-		final QueryParameterBinding binding = paramBindings.getBinding( getParameterMetadata().resolve( parameter ) );
-		binding.setBindValue( value, temporalType );
-		return this;
+	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Calendar value, TemporalType temporalPrecision) {
+		//noinspection unchecked
+		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, temporalPrecision );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Date value, TemporalType temporalType) {
-		final QueryParameterBinding binding = paramBindings.getBinding( getParameterMetadata().resolve( parameter ) );
-		binding.setBindValue( value, temporalType );
-		return this;
+	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Date value, TemporalType temporalPrecision) {
+		//noinspection unchecked
+		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, temporalPrecision );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
-		final QueryParameterBinding binding = paramBindings.getBinding( name );
-		binding.setBindValue( value, temporalType );
-		return this;
+	public ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalPrecision) {
+		return (ProcedureCallImplementor<R>) super.setParameter( name, value, temporalPrecision );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
-		final QueryParameterBinding binding = paramBindings.getBinding( name );
-		binding.setBindValue( value, temporalType );
-		return this;
+	public ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalPrecision) {
+		return (ProcedureCallImplementor<R>) super.setParameter( name, value, temporalPrecision );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
-		final QueryParameterBinding binding = paramBindings.getBinding( position );
-		binding.setBindValue( value, temporalType );
-		return this;
+	public ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalPrecision) {
+		return (ProcedureCallImplementor<R>) super.setParameter( position, value, temporalPrecision );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
-		final QueryParameterBinding binding = paramBindings.getBinding( position );
-		binding.setBindValue( value, temporalType );
-		return this;
+	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalPrecision) {
+		return (ProcedureCallImplementor<R>) super.setParameter( position, value, temporalPrecision );
 	}
 
 }

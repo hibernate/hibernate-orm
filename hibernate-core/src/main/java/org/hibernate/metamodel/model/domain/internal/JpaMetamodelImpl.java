@@ -361,8 +361,10 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			type = embeddableDescriptorMap.get( cls );
 		}
 		if ( type == null ) {
+			// per JPA
 			throw new IllegalArgumentException( "Not a managed type: " + cls );
 		}
+
 		//noinspection unchecked
 		return (ManagedDomainType<X>) type;
 	}

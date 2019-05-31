@@ -14,6 +14,7 @@ import org.hibernate.boot.spi.NamedHqlQueryDefinition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
+import org.hibernate.query.spi.NameableQuery;
 import org.hibernate.query.spi.NamedQueryMemento;
 
 /**
@@ -52,7 +53,7 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 	 * Delegate used in creating named HQL query mementos.
 	 *
 	 * @see NamedHqlQueryDefinition
-	 * @see HqlQueryImplementor#toMemento
+	 * @see NameableQuery#toMemento
 	 */
 	class Builder extends AbstractNamedQueryMemento.AbstractBuilder<Builder> {
 		protected String hqlString;

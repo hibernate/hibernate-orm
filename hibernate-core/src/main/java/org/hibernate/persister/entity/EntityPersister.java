@@ -191,6 +191,19 @@ public interface EntityPersister extends EntityDefinition {
 	Serializable[] getQuerySpaces();
 
 	/**
+	 * Returns an array of objects that identify spaces in which properties of
+	 * this entity are persisted, for instances of this class and its subclasses.
+	 * <p/>
+	 * Much like {@link #getPropertySpaces()}, except that here we include subclass
+	 * entity spaces.
+	 *
+	 * @return The query spaces.
+	 */
+	default String[] getSynchronizedQuerySpaces() {
+		return (String[]) getQuerySpaces();
+	}
+
+	/**
 	 * Determine whether this entity supports dynamic proxies.
 	 *
 	 * @return True if the entity has dynamic proxy support; false otherwise.

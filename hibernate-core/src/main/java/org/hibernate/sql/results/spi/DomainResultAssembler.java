@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 /**
  * Responsible for "assembling" a result for inclusion in the domain query
  * result.  "Assembling" the result basically means building the result object
@@ -14,5 +16,22 @@ package org.hibernate.sql.results.spi;
  *
  * @author Steve Ebersole
  */
-public interface DomainResultAssembler {
+public interface DomainResultAssembler<J> {
+	/**
+	 * The main "assembly" contract.  Assemble the result and return it.
+	 */
+	Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options);
+
+	/**
+	 * Convenience form of {@link #assemble(RowProcessingState, JdbcValuesSourceProcessingOptions)}
+	 */
+	default Object assemble(RowProcessingState rowProcessingState) {
+		return assemble( rowProcessingState, rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions() );
+	}
+
+	/**
+	 * The JavaTypeDescriptor describing the Java type that this assembler
+	 * assembles.
+	 */
+	JavaTypeDescriptor<J> getJavaTypeDescriptor();
 }

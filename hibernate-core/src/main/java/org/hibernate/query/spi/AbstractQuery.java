@@ -225,7 +225,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	public QueryImplementor setFlushMode(FlushModeType flushModeType) {
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 		return this;
-	}	@Override
+	}
+
+	@Override
 	public CacheMode getCacheMode() {
 		return getQueryOptions().getCacheMode();
 	}

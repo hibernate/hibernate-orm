@@ -6,6 +6,7 @@
  */
 package org.hibernate.procedure;
 
+import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Outputs;
 
 /**
@@ -21,13 +22,13 @@ public interface ProcedureOutputs extends Outputs {
 	 * Should NOT be called for parameters registered as REF_CURSOR.  REF_CURSOR parameters should be
 	 * accessed via the returns (see {@link #getNextOutput}
 	 *
-	 * @param parameterRegistration The parameter's registration memento.
+	 * @param parameter The parameter's registration memento.
 	 *
 	 * @return The output value.
 	 *
 	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
-	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration);
+	<T> T getOutputParameterValue(ProcedureParameter<T> parameter);
 
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the name under which the parameter was registered.
@@ -41,7 +42,7 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
-	public Object getOutputParameterValue(String name);
+	Object getOutputParameterValue(String name);
 
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the name position under which the parameter was registered.
@@ -55,5 +56,5 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @see ProcedureCall#registerParameter(int, Class, javax.persistence.ParameterMode)
 	 */
-	public Object getOutputParameterValue(int position);
+	Object getOutputParameterValue(int position);
 }

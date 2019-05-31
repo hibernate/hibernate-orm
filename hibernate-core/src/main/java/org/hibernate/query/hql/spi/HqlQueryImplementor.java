@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.hql.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.NameableQuery;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
@@ -16,7 +15,7 @@ import org.hibernate.query.spi.QueryImplementor;
  */
 public interface HqlQueryImplementor<R> extends QueryImplementor<R>, NameableQuery {
 	@Override
-	NamedHqlQueryMemento toMemento(String name, SessionFactoryImplementor factory);
+	NamedHqlQueryMemento toMemento(String name);
 
 	@Override
 	ParameterMetadataImplementor getParameterMetadata();

@@ -7,44 +7,27 @@
 package org.hibernate.procedure.spi;
 
 import java.sql.CallableStatement;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.procedure.internal.FunctionReturnImpl;
 import org.hibernate.query.procedure.internal.ProcedureParamBindings;
-import org.hibernate.query.procedure.internal.ProcedureParameterMetadata;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public interface CallableStatementSupport {
-	default String renderCallableStatement(
-			String name,
-			ParameterStrategy parameterStrategy,
-			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
-			SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException(
-				"Legacy #renderCallableStatement called but implementation does not support that call."
-		);
-	}
-
-	default String renderCallableStatement(
+	JdbcCall interpretCall(
 			String procedureName,
-			ProcedureParameterMetadata parameterMetadata,
+			FunctionReturnImpl functionReturn,
+			ParameterMetadataImplementor parameterMetadata,
 			ProcedureParamBindings paramBindings,
-			SharedSessionContractImplementor session) {
-		return renderCallableStatement(
-				procedureName,
-				parameterMetadata.getParameterStrategy(),
-				new ArrayList( parameterMetadata.collectAllParameters() ),
-				session
-		);
-	}
+			SharedSessionContractImplementor session);
 
 	void registerParameters(
 			String procedureName,
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
-			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
+			ParameterMetadataImplementor parameterMetadata,
 			SharedSessionContractImplementor session);
 }

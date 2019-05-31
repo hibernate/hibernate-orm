@@ -8,7 +8,7 @@ package org.hibernate.sql.results.spi;
 
 import java.util.function.Consumer;
 
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Represents a result value in the domain query results.  Acts as the
@@ -31,18 +31,16 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface DomainResult extends ResultSetMappingNode {
+public interface DomainResult<J> extends ResultSetMappingNode {
 	/**
 	 * The result-variable (alias) associated with this result.
 	 */
 	String getResultVariable();
 
-	JavaTypeDescriptor getJavaTypeDescriptor();
-
 	/**
 	 * Create an assembler (and any initializers) for this result.
 	 */
-	DomainResultAssembler createResultAssembler(
+	DomainResultAssembler<J> createResultAssembler(
 			Consumer<Initializer> initializerCollector,
 			AssemblerCreationState creationState);
 }

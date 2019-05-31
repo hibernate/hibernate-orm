@@ -13,11 +13,11 @@ package org.hibernate.sql.results.spi;
  *
  * @author Steve Ebersole
  */
-public interface DomainResultProducer {
+public interface DomainResultProducer<T> {
 	/**
 	 * Produce the domain query
 	 */
-	DomainResult createDomainResult(
+	DomainResult<T> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState);
 

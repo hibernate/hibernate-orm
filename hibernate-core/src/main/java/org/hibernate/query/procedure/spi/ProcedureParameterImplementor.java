@@ -6,9 +6,12 @@
  */
 package org.hibernate.query.procedure.spi;
 
+import java.sql.CallableStatement;
+import java.sql.SQLException;
+
 import org.hibernate.Incubating;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.query.spi.QueryParameterImplementor;
 
 /**
  * NOTE: Consider this contract (and its sub-contracts) as incubating as we transition to 6.0 and SQM
@@ -16,5 +19,11 @@ import org.hibernate.query.procedure.ProcedureParameter;
  * @author Steve Ebersole
  */
 @Incubating
-public interface ProcedureParameterImplementor<T> extends ProcedureParameter<T>, ParameterRegistrationImplementor<T> {
+public interface ProcedureParameterImplementor<T> extends ProcedureParameter<T>, QueryParameterImplementor<T> {
+	void prepare(CallableStatement statement, int startIndex) throws SQLException;
+
+	@Override
+	default boolean allowsMultiValuedBinding() {
+		return false;
+	}
 }

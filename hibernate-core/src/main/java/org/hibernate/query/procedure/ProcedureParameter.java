@@ -9,7 +9,6 @@ package org.hibernate.query.procedure;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.Incubating;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.query.QueryParameter;
 
 /**
@@ -33,8 +32,6 @@ public interface ProcedureParameter<T> extends QueryParameter<T> {
 	 * @return {@code true} here indicates that NULL should be passed; {@code false} indicates
 	 * that it is ignored.
 	 *
-	 * @see ParameterRegistrationImplementor#isPassNullsEnabled()
-	 *
 	 * @deprecated (since 6.0) : Passing null or not is now triggered by whether
 	 * setting the parameter was called at all.  In other words a distinction is
 	 * made between calling `setParameter` passing {@code null} versus not calling
@@ -42,18 +39,19 @@ public interface ProcedureParameter<T> extends QueryParameter<T> {
 	 * the second we do not pass {@code null}.
 	 */
 	@Deprecated
-	boolean isPassNullsEnabled();
+	default boolean isPassNullsEnabled() {
+		return false;
+	}
 
 	/**
 	 * Controls how unbound values for this IN/INOUT parameter registration will be handled prior to
-	 * execution.  For details see {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls}
+	 * execution.
 	 *
 	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
-	 *
-	 * @see org.hibernate.procedure.ParameterRegistration#enablePassingNulls
 	 *
 	 * @deprecated (since 6.0) : see {@link #isPassNullsEnabled}
 	 */
 	@Deprecated
-	void enablePassingNulls(boolean enabled);
+	default void enablePassingNulls(boolean enabled) {
+	}
 }

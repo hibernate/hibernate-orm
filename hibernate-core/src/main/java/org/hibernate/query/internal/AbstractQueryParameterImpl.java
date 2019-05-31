@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.internal;
 
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.type.Type;
 
 /**
  * QueryParameter implementation.
@@ -17,24 +17,25 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public abstract class QueryParameterImpl<T> implements QueryParameter<T> {
-	private Type expectedType;
+public abstract class AbstractQueryParameterImpl<T> implements QueryParameter<T> {
+	private AllowableParameterType<T> expectedType;
 
-	public QueryParameterImpl(Type expectedType) {
+	public AbstractQueryParameterImpl(AllowableParameterType<T> expectedType) {
 		this.expectedType = expectedType;
 	}
 
 	@Override
-	public Type getHibernateType() {
+	public AllowableParameterType<T> getHibernateType() {
 		return expectedType;
 	}
 
-	public void setHibernateType(Type expectedType) {
-		this.expectedType = expectedType;
+	public void setHibernateType(AllowableParameterType<?> expectedType) {
+		//noinspection unchecked
+		this.expectedType = (AllowableParameterType) expectedType;
 	}
 
 	@Override
 	public Class<T> getParameterType() {
-		return expectedType == null ? null : expectedType.getReturnedClass();
+		return expectedType == null ? null : expectedType.getJavaType();
 	}
 }

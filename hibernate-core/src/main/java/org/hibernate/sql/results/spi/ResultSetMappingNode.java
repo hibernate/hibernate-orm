@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public interface ResultSetMappingNode {
 	// todo (6.0) : result variable (selection alias)?  - even fetches can have alias
 
-	JavaTypeDescriptor getJavaTypeDescriptor();
+	JavaTypeDescriptor getResultJavaTypeDescriptor();
 
 	/**
 	 * The NavigablePath for this node (if one!).  Certain nodes will not

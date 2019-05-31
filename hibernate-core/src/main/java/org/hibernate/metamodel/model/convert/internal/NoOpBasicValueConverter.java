@@ -13,13 +13,21 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
  *
  * @author Steve Ebersole
  */
-public class StandardBasicValueConverter<O,R> implements BasicValueConverter<O,R> {
+public class NoOpBasicValueConverter<O,R> implements BasicValueConverter<O,R> {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardBasicValueConverter INSTANCE = new StandardBasicValueConverter();
+	public static final NoOpBasicValueConverter INSTANCE = new NoOpBasicValueConverter();
 
-	private StandardBasicValueConverter() {
+	/**
+	 * Typed access to the singleton
+	 */
+	public static <O,R> NoOpBasicValueConverter<O,R> instance() {
+		//noinspection unchecked
+		return INSTANCE;
+	}
+
+	private NoOpBasicValueConverter() {
 	}
 
 	@Override

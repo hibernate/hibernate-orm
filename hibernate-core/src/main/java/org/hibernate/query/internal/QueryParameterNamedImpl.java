@@ -19,7 +19,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class QueryParameterNamedImpl<T> extends QueryParameterImpl<T> implements QueryParameter<T> {
+public class QueryParameterNamedImpl<T> extends AbstractQueryParameterImpl<T> implements QueryParameter<T> {
 	private final String name;
 	private final int[] sourceLocations;
 

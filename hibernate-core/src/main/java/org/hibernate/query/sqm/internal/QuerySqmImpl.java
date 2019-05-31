@@ -475,7 +475,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public NamedHqlQueryMemento toMemento(String name, SessionFactoryImplementor factory) {
+	public NamedHqlQueryMemento toMemento(String name) {
 		return new NamedHqlQueryMementoImpl(
 				name,
 				hqlString,

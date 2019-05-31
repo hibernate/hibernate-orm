@@ -15,13 +15,13 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.NamedQueryMemento;
-import org.hibernate.type.Type;
 
 /**
  * Implementation of NamedCallableQueryMemento
@@ -86,6 +86,31 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
+	public List<ParameterMemento> getParameterMementos() {
+		return parameterMementos;
+	}
+
+	@Override
+	public ParameterStrategy getParameterStrategy() {
+		return parameterStrategy;
+	}
+
+	@Override
+	public String[] getResultSetMappingNames() {
+		return resultSetMappingNames;
+	}
+
+	@Override
+	public Class[] getResultSetMappingClasses() {
+		return resultSetMappingClasses;
+	}
+
+	@Override
+	public Set<String> getQuerySpaces() {
+		return querySpaces;
+	}
+
+	@Override
 	public ProcedureCall makeProcedureCall(SharedSessionContractImplementor session) {
 		return new ProcedureCallImpl( session, this );
 	}
@@ -120,32 +145,22 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 		private final String name;
 		private final ParameterMode mode;
 		private final Class type;
-		private final Type hibernateType;
-		private final boolean passNulls;
+		private final AllowableParameterType hibernateType;
 
 		/**
 		 * Create the memento
-		 *
-		 * @param position The parameter position
-		 * @param name The parameter name
-		 * @param mode The parameter mode
-		 * @param type The Java type of the parameter
-		 * @param hibernateType The Hibernate Type.
-		 * @param passNulls Should NULL values to passed to the database?
 		 */
 		public ParameterMementoImpl(
 				int position,
 				String name,
 				ParameterMode mode,
 				Class type,
-				Type hibernateType,
-				boolean passNulls) {
+				AllowableParameterType hibernateType) {
 			this.position = position;
 			this.name = name;
 			this.mode = mode;
 			this.type = type;
 			this.hibernateType = hibernateType;
-			this.passNulls = passNulls;
 		}
 
 		public Integer getPosition() {
@@ -164,16 +179,12 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			return type;
 		}
 
-		public Type getHibernateType() {
+		public AllowableParameterType getHibernateType() {
 			return hibernateType;
 		}
 
-		public boolean isPassNullsEnabled() {
-			return passNulls;
-		}
-
 		@Override
-		public ParameterRegistrationImplementor resolve(SharedSessionContractImplementor session) {
+		public ProcedureParameterImplementor resolve(SharedSessionContractImplementor session) {
 			throw new NotYetImplementedFor6Exception();
 		}
 
@@ -184,14 +195,13 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 		 *
 		 * @return The memento
 		 */
-		public static ParameterMementoImpl fromRegistration(ParameterRegistrationImplementor registration) {
+		public static ParameterMementoImpl fromRegistration(ProcedureParameterImplementor registration) {
 			return new ParameterMementoImpl(
 					registration.getPosition(),
 					registration.getName(),
 					registration.getMode(),
 					registration.getParameterType(),
-					registration.getHibernateType(),
-					registration.isPassNullsEnabled()
+					registration.getHibernateType()
 			);
 		}
 

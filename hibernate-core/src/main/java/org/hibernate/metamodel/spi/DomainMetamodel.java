@@ -9,13 +9,16 @@ package org.hibernate.metamodel.spi;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.UnknownEntityTypeException;
+import org.hibernate.Incubating;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -23,11 +26,41 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface DomainMetamodel {
+	/**
+	 * Access to the JPA metamodel sub-set of the overall run-time metamodel
+	 *
+	 * @apiNote The distinction is mainly used in building SQM trees, which rely
+	 * on the JPA type subset
+	 */
 	JpaMetamodel getJpaMetamodel();
 
+	/**
+	 * The TypeConfiguration this metamodel is associated with
+	 */
 	default TypeConfiguration getTypeConfiguration() {
 		return getJpaMetamodel().getTypeConfiguration();
+	}
+
+	/**
+	 * Given a Java type, determine the corresponding AllowableParameterType to
+	 * use implicitly
+	 */
+	default <T> AllowableParameterType<T> resolveQueryParameterType(Class<T> javaType) {
+		final BasicType basicType = getTypeConfiguration().getBasicTypeForJavaType( javaType );
+		if ( basicType != null ) {
+			//noinspection unchecked
+			return basicType;
+		}
+
+		final ManagedDomainType<T> managedType = getJpaMetamodel().findManagedType( javaType );
+		if ( managedType instanceof AllowableParameterType ) {
+			//noinspection unchecked
+			return (AllowableParameterType) managedType;
+		}
+
+		return null;
 	}
 
 	/**
@@ -184,5 +217,4 @@ public interface DomainMetamodel {
 	List<RootGraph<?>> findRootGraphsForType(Class baseEntityJavaType);
 	List<RootGraph<?>> findRootGraphsForType(String baseEntityName);
 	List<RootGraph<?>> findRootGraphsForType(EntityPersister baseEntityDescriptor);
-
 }

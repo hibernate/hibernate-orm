@@ -9,7 +9,7 @@ package org.hibernate.procedure;
 import org.hibernate.HibernateException;
 
 /**
- * Thrown to indicate a misuse of a {@link ParameterRegistration}
+ * Thrown to indicate a misuse of a parameter
  *
  * @author Steve Ebersole
  */

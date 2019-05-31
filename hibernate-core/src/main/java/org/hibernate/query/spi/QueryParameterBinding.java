@@ -41,9 +41,13 @@ public interface QueryParameterBinding<T> {
 	AllowableParameterType<T> getBindType();
 
 	/**
+	 * If the parameter represents a temporal type, return the explicitly
+	 * specified precision - if one.
+	 */
+	TemporalType getExplicitTemporalPrecision();
+
+	/**
 	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed
-	 *
-	 * @param value The bind value
 	 */
 	void setBindValue(T value);
 

@@ -512,6 +512,21 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final ConcurrentHashMap<Class,BasicType> basicTypeByJavaType = new ConcurrentHashMap<>();
 
+	public BasicType getBasicTypeForJavaType(Class<?> javaType) {
+		final BasicType existing = basicTypeByJavaType.get( javaType );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final BasicType registeredType = getBasicTypeRegistry().getRegisteredType( javaType );
+		if ( registeredType != null ) {
+			basicTypeByJavaType.put( javaType, registeredType );
+			return registeredType;
+		}
+
+		return null;
+	}
+
 	public BasicType standardBasicTypeForJavaType(Class<?> javaType) {
 		if ( javaType == null ) {
 			return null;

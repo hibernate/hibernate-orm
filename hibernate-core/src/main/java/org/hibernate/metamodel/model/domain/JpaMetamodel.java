@@ -13,6 +13,7 @@ import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 
+import org.hibernate.Incubating;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.service.ServiceRegistry;
@@ -24,6 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  * @see DomainMetamodel
  */
+@Incubating
 public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,10 +55,29 @@ public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
 	 */
 	<X> EntityDomainType<X> resolveHqlEntityReference(String entityName);
 
+	/**
+	 * Visitation over all managed types via Consumer
+	 */
 	void visitManagedTypes(Consumer<ManagedDomainType<?>> action);
 
+	/**
+	 * Same as {@link #managedType} except {@code null} is returned rather
+	 * than throwing an exception
+	 */
+	<X> ManagedDomainType<X> findManagedType(Class<X> cls);
+
+	/**
+	 * Visitation over all entity types via Consumer
+	 */
 	void visitEntityTypes(Consumer<EntityDomainType<?>> action);
 
+	/**
+	 * Same as {@link #entity} except {@code null} is returned rather
+	 * than throwing an exception
+	 */
+	<X> EntityDomainType<X> findEntityType(Class<X> cls);
+
+	/
 	void visitRootEntityTypes(Consumer<EntityDomainType<?>> action);
 
 	void visitEmbeddables(Consumer<EmbeddableDomainType<?>> action);

@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.test.support.domains.manytomany;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -97,5 +99,11 @@ public class SetOwnedEntity {
 
 	public String toString() {
 		return "SetOwnedEntity(id = " + id + ", data = " + data + ")";
+	}
+
+	public static SetOwnedEntity from(Integer id, String data, SetOwningEntity... referencing) {
+		final SetOwnedEntity entity = new SetOwnedEntity( id, data );
+		entity.setReferencing( new HashSet<>( Arrays.asList( referencing ) ) );
+		return entity;
 	}
 }

@@ -43,7 +43,7 @@ public class IndexedJoinColumnBidirectionalListTest extends EnversEntityManagerF
 	@DynamicBeforeAll
 	public void prepareAuditData() {
 		inJPA(
-				em -> {
+				entityManager -> {
 					IndexedListJoinColumnBidirectionalRefEdEntity ed1 = new IndexedListJoinColumnBidirectionalRefEdEntity( "ed1", null );
 					IndexedListJoinColumnBidirectionalRefEdEntity ed2 = new IndexedListJoinColumnBidirectionalRefEdEntity( "ed2", null );
 					IndexedListJoinColumnBidirectionalRefEdEntity ed3 = new IndexedListJoinColumnBidirectionalRefEdEntity( "ed3", null );
@@ -52,58 +52,58 @@ public class IndexedJoinColumnBidirectionalListTest extends EnversEntityManagerF
 					IndexedListJoinColumnBidirectionalRefIngEntity ing2 = new IndexedListJoinColumnBidirectionalRefIngEntity( "coll1" );
 
 					// Revision 1 (ing1: ed1, ed2, ed3)
-					em.getTransaction().begin();
+					entityManager.getTransaction().begin();
 
-					em.persist( ed1 );
-					em.persist( ed2 );
-					em.persist( ed3 );
-					em.persist( ing1 );
-					em.persist( ing2 );
+					entityManager.persist( ed1 );
+					entityManager.persist( ed2 );
+					entityManager.persist( ed3 );
+					entityManager.persist( ing1 );
+					entityManager.persist( ing2 );
 
-					em.getTransaction().commit();
+					entityManager.getTransaction().commit();
 
 					// Revision 2 (ing1: ed1, ed3, ing2: ed2)
-					em.getTransaction().begin();
+					entityManager.getTransaction().begin();
 
-					ing1 = em.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
-					ing2 = em.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
-					ed2 = em.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed2.getId() );
+					ing1 = entityManager.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
+					ing2 = entityManager.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
+					ed2 = entityManager.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed2.getId() );
 
 					ing1.getReferences().remove( ed2 );
 					ing2.getReferences().add( ed2 );
 
-					em.getTransaction().commit();
-					em.clear();
+					entityManager.getTransaction().commit();
+					entityManager.clear();
 
 					// Revision 3 (ing1: ed3, ed1, ing2: ed2)
-					em.getTransaction().begin();
+					entityManager.getTransaction().begin();
 
-					ing1 = em.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
-					ing2 = em.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
-					ed1 = em.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed1.getId() );
-					ed2 = em.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed2.getId() );
-					ed3 = em.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed3.getId() );
+					ing1 = entityManager.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
+					ing2 = entityManager.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
+					ed1 = entityManager.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed1.getId() );
+					ed2 = entityManager.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed2.getId() );
+					ed3 = entityManager.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed3.getId() );
 
 					ing1.getReferences().remove( ed3 );
 					ing1.getReferences().add( 0, ed3 );
 
-					em.getTransaction().commit();
-					em.clear();
+					entityManager.getTransaction().commit();
+					entityManager.clear();
 
 					// Revision 4 (ing1: ed2, ed3, ed1)
-					em.getTransaction().begin();
+					entityManager.getTransaction().begin();
 
-					ing1 = em.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
-					ing2 = em.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
-					ed1 = em.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed1.getId() );
-					ed2 = em.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed2.getId() );
-					ed3 = em.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed3.getId() );
+					ing1 = entityManager.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
+					ing2 = entityManager.find( IndexedListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
+					ed1 = entityManager.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed1.getId() );
+					ed2 = entityManager.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed2.getId() );
+					ed3 = entityManager.find( IndexedListJoinColumnBidirectionalRefEdEntity.class, ed3.getId() );
 
 					ing2.getReferences().remove( ed2 );
 					ing1.getReferences().add( 0, ed2 );
 
-					em.getTransaction().commit();
-					em.clear();
+					entityManager.getTransaction().commit();
+					entityManager.clear();
 
 					ing1_id = ing1.getId();
 					ing2_id = ing2.getId();

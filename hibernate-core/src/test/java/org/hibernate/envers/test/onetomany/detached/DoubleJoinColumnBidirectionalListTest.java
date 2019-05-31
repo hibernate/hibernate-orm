@@ -47,7 +47,7 @@ public class DoubleJoinColumnBidirectionalListTest extends EnversEntityManagerFa
 	@DynamicBeforeAll
 	public void prepareAuditData() {
 		inJPA(
-				em -> {
+				entityManager -> {
 					DoubleListJoinColumnBidirectionalRefEdEntity1 ed1_1 = new DoubleListJoinColumnBidirectionalRefEdEntity1( "ed1_1", null );
 					DoubleListJoinColumnBidirectionalRefEdEntity1 ed1_2 = new DoubleListJoinColumnBidirectionalRefEdEntity1( "ed1_2", null );
 
@@ -58,7 +58,7 @@ public class DoubleJoinColumnBidirectionalListTest extends EnversEntityManagerFa
 					DoubleListJoinColumnBidirectionalRefIngEntity ing2 = new DoubleListJoinColumnBidirectionalRefIngEntity( "coll2" );
 
 					// Revision 1 (ing1: ed1_1, ed2_1, ing2: ed1_2, ed2_2)
-					em.getTransaction().begin();
+					entityManager.getTransaction().begin();
 
 					ing1.getReferences1().add( ed1_1 );
 					ing1.getReferences2().add( ed2_1 );
@@ -66,24 +66,24 @@ public class DoubleJoinColumnBidirectionalListTest extends EnversEntityManagerFa
 					ing2.getReferences1().add( ed1_2 );
 					ing2.getReferences2().add( ed2_2 );
 
-					em.persist( ed1_1 );
-					em.persist( ed1_2 );
-					em.persist( ed2_1 );
-					em.persist( ed2_2 );
-					em.persist( ing1 );
-					em.persist( ing2 );
+					entityManager.persist( ed1_1 );
+					entityManager.persist( ed1_2 );
+					entityManager.persist( ed2_1 );
+					entityManager.persist( ed2_2 );
+					entityManager.persist( ing1 );
+					entityManager.persist( ing2 );
 
-					em.getTransaction().commit();
+					entityManager.getTransaction().commit();
 
 					// Revision 2 (ing1: ed1_1, ed1_2, ed2_1, ed2_2)
-					em.getTransaction().begin();
+					entityManager.getTransaction().begin();
 
-					ing1 = em.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
-					ing2 = em.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
-					ed1_1 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_1.getId() );
-					ed1_2 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_2.getId() );
-					ed2_1 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_1.getId() );
-					ed2_2 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_2.getId() );
+					ing1 = entityManager.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
+					ing2 = entityManager.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
+					ed1_1 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_1.getId() );
+					ed1_2 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_2.getId() );
+					ed2_1 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_1.getId() );
+					ed2_2 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_2.getId() );
 
 					ing2.getReferences1().clear();
 					ing2.getReferences2().clear();
@@ -91,34 +91,34 @@ public class DoubleJoinColumnBidirectionalListTest extends EnversEntityManagerFa
 					ing1.getReferences1().add( ed1_2 );
 					ing1.getReferences2().add( ed2_2 );
 
-					em.getTransaction().commit();
-					em.clear();
+					entityManager.getTransaction().commit();
+					entityManager.clear();
 
 					// Revision 3 (ing1: ed1_1, ed1_2, ed2_1, ed2_2)
-					em.getTransaction().begin();
+					entityManager.getTransaction().begin();
 
-					ing1 = em.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
-					ing2 = em.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
-					ed1_1 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_1.getId() );
-					ed1_2 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_2.getId() );
-					ed2_1 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_1.getId() );
-					ed2_2 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_2.getId() );
+					ing1 = entityManager.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
+					ing2 = entityManager.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
+					ed1_1 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_1.getId() );
+					ed1_2 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_2.getId() );
+					ed2_1 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_1.getId() );
+					ed2_2 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_2.getId() );
 
 					ed1_1.setData( "ed1_1 bis" );
 					ed2_2.setData( "ed2_2 bis" );
 
-					em.getTransaction().commit();
-					em.clear();
+					entityManager.getTransaction().commit();
+					entityManager.clear();
 
 					// Revision 4 (ing1: ed2_2, ing2: ed2_1, ed1_1, ed1_2)
-					em.getTransaction().begin();
+					entityManager.getTransaction().begin();
 
-					ing1 = em.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
-					ing2 = em.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
-					ed1_1 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_1.getId() );
-					ed1_2 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_2.getId() );
-					ed2_1 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_1.getId() );
-					ed2_2 = em.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_2.getId() );
+					ing1 = entityManager.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1.getId() );
+					ing2 = entityManager.find( DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2.getId() );
+					ed1_1 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_1.getId() );
+					ed1_2 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_2.getId() );
+					ed2_1 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_1.getId() );
+					ed2_2 = entityManager.find( DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_2.getId() );
 
 					ing1.getReferences1().clear();
 					ing2.getReferences1().add( ed1_1 );
@@ -127,8 +127,8 @@ public class DoubleJoinColumnBidirectionalListTest extends EnversEntityManagerFa
 					ing1.getReferences2().remove( ed2_1 );
 					ing2.getReferences2().add( ed2_1 );
 
-					em.getTransaction().commit();
-					em.clear();
+					entityManager.getTransaction().commit();
+					entityManager.clear();
 
 					ing1_id = ing1.getId();
 					ing2_id = ing2.getId();

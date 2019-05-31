@@ -37,18 +37,18 @@ public class EnumMapTest extends EnversEntityManagerFactoryBasedFunctionalTest {
 	public void prepareAuditData() {
 		inTransactions(
 				// Revision 1
-				em -> {
+				entityManager -> {
 					EnumMapEntity entity = new EnumMapEntity();
 					entity.getTypes().put( EnumType.TYPE_A, new EnumMapType( "A" ) );
 					entity.getTypes().put( EnumType.TYPE_B, new EnumMapType( "B" ) );
-					em.persist( entity );
+					entityManager.persist( entity );
 
 					entityId = entity.getId();
 				},
 
 				// Revision 2
-				em -> {
-					final EnumMapEntity entity = em.find( EnumMapEntity.class, entityId );
+				entityManager -> {
+					final EnumMapEntity entity = entityManager.find( EnumMapEntity.class, entityId );
 					entity.getTypes().remove( EnumType.TYPE_A );
 					entity.getTypes().put( EnumType.TYPE_C, new EnumMapType( "C" ) );
 				}

@@ -9,6 +9,7 @@ package org.hibernate.envers.test;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
@@ -101,7 +102,16 @@ public class EnversSingleSessionBasedFunctionalTest
 		action.accept( session );
 	}
 
-	protected void inTransactions(Consumer<SessionImplementor>... actions) {
+	protected <T> T inSession(Function<SessionImplementor, T> action) {
+		if ( session == null ) {
+			session = initializeSession();
+		}
+
+		return action.apply( session );
+	}
+
+	@SafeVarargs
+	protected final void inTransactions(Consumer<SessionImplementor>... actions) {
 		if ( session == null ) {
 			session = initializeSession();
 		}
@@ -117,6 +127,16 @@ public class EnversSingleSessionBasedFunctionalTest
 		}
 
 		return auditReader;
+	}
+
+	protected void forceNewSession() {
+		// Cleanup existing resources if allocated
+		releaseSessionFactory();
+		this.session = null;
+
+		// Create new session
+		// An audit reader will be allocated when first requested
+		session = initializeSession();
 	}
 
 	private void applyMetadataSources(MetadataSources metadataSources) {

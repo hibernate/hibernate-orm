@@ -26,14 +26,15 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * MySQL supports a limited list of temporal fields in the
  * extract() function, but we can emulate some of them by
  * using the appropriate named functions instead of
- * extract(), or by re-expressing the unit in terms of
- * {@link TemporalUnit#MICROSECOND}.
+ * extract().
  *
  * Thus, the additional supported fields are
  * {@link TemporalUnit#DAY_OF_YEAR},
  * {@link TemporalUnit#DAY_OF_MONTH},
- * {@link TemporalUnit#DAY_OF_YEAR}, and
- * {@link TemporalUnit#MILLISECOND}.
+ * {@link TemporalUnit#DAY_OF_YEAR}.
+ *
+ * In addition, the field {@link TemporalUnit#SECOND} is
+ * redefined to include microseconds.
  *
  * @author Gavin King
  */
@@ -57,6 +58,9 @@ public class MySQLExtractEmulation
 		TemporalUnit unit = extractUnit.getUnit();
 		String pattern;
 		switch (unit) {
+			case SECOND:
+				pattern = "(second(?2)+microsecond(?2)/1e6)";
+				break;
 			case DAY_OF_WEEK:
 				pattern = "dayofweek(?2)";
 				break;
@@ -70,12 +74,6 @@ public class MySQLExtractEmulation
 				pattern = "weekofyear(?2)"; //same as week(?2,3), the ISO week
 				break;
 			//TODO: case WEEK_YEAR: yearweek(?2, 3)/100
-			//TODO should we include whole seconds?
-			// "(second(?2)*1e3+microsecond(?2)/1e3)"
-			// "(second(?2)*1e6+microsecond(?2))"
-			case MILLISECOND:
-				pattern = "round(microsecond(?2)/1e3)";
-				break;
 			default:
 				pattern = unit.toString() + "(?2)";
 				break;

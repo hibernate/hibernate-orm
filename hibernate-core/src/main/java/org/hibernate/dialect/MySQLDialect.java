@@ -41,7 +41,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
-import static org.hibernate.query.TemporalUnit.MILLISECOND;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
@@ -256,20 +255,17 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
 		sqlAppender.append("timestampadd(");
-		if ( unit == MILLISECOND || unit == NANOSECOND ) {
+		if ( unit == NANOSECOND ) {
 			sqlAppender.append("microsecond");
 		}
 		else {
 			sqlAppender.append( unit.toString() );
 		}
 		sqlAppender.append(", ");
-		if ( unit == MILLISECOND || unit == NANOSECOND ) {
+		if ( unit == NANOSECOND ) {
 			sqlAppender.append("(");
 		}
 		magnitude.render();
-		if ( unit == MILLISECOND ) {
-			sqlAppender.append(")*1e3");
-		}
 		if ( unit == NANOSECOND ) {
 			sqlAppender.append(")/1e3");
 		}
@@ -281,7 +277,7 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
 		sqlAppender.append("timestampdiff(");
-		if ( unit == MILLISECOND || unit == NANOSECOND ) {
+		if ( unit == NANOSECOND ) {
 			sqlAppender.append("microsecond");
 		}
 		else {
@@ -292,9 +288,6 @@ public class MySQLDialect extends Dialect {
 		sqlAppender.append(", ");
 		to.render();
 		sqlAppender.append(")");
-		if ( unit == MILLISECOND ) {
-			sqlAppender.append("/1e3");
-		}
 		if ( unit == NANOSECOND ) {
 			sqlAppender.append("*1e3");
 		}

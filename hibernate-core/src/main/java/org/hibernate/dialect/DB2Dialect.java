@@ -197,8 +197,6 @@ public class DB2Dialect extends Dialect {
 		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
 		boolean castTo = !toTimestamp && !unit.isDateUnit();
 		switch (unit) {
-			case MILLISECOND:
-			case MICROSECOND:
 			case NANOSECOND:
 				sqlAppender.append("(second");
 				break;
@@ -230,20 +228,6 @@ public class DB2Dialect extends Dialect {
 		}
 		sqlAppender.append(")");
 		switch (unit) {
-			case MILLISECOND:
-				sqlAppender.append("*1e3+(microsecond(");
-				to.render();
-				sqlAppender.append(")-microsecond(");
-				from.render();
-				sqlAppender.append("))/1e3)");
-				break;
-			case MICROSECOND:
-				sqlAppender.append("*1e6+microsecond(");
-				to.render();
-				sqlAppender.append(")-microsecond(");
-				from.render();
-				sqlAppender.append("))");
-				break;
 			case NANOSECOND:
 				sqlAppender.append("*1e9+(microsecond(");
 				to.render();
@@ -266,8 +250,6 @@ public class DB2Dialect extends Dialect {
 		sqlAppender.append("add_");
 		switch (unit) {
 			case NANOSECOND:
-			case MILLISECOND:
-			case MICROSECOND:
 				sqlAppender.append("second");
 				break;
 			case WEEK:
@@ -290,8 +272,6 @@ public class DB2Dialect extends Dialect {
 		}
 		sqlAppender.append(",");
 		switch (unit) {
-			case MILLISECOND:
-			case MICROSECOND:
 			case NANOSECOND:
 			case WEEK:
 			case QUARTER:
@@ -302,12 +282,6 @@ public class DB2Dialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 				sqlAppender.append(")/1e9");
-				break;
-			case MILLISECOND:
-				sqlAppender.append(")/1e3");
-				break;
-			case MICROSECOND:
-				sqlAppender.append(")/1e6");
 				break;
 			case WEEK:
 				sqlAppender.append(")*7");

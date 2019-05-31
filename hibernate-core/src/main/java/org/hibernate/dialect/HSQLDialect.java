@@ -55,7 +55,6 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.query.TemporalUnit.MICROSECOND;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
@@ -231,7 +230,7 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
 		boolean castTo = !timestamp && !unit.isDateUnit();
-		if ( unit == MICROSECOND || unit == NANOSECOND ) {
+		if ( unit == NANOSECOND ) {
 			sqlAppender.append("timestampadd(sql_tsi_frac_second"); //nanos
 		}
 		else {
@@ -239,13 +238,7 @@ public class HSQLDialect extends Dialect {
 			sqlAppender.append( unit.toString() );
 		}
 		sqlAppender.append(", ");
-		if ( unit == MICROSECOND ) {
-			sqlAppender.append("1e3*(");
-		}
 		magnitude.render();
-		if ( unit == MICROSECOND ) {
-			sqlAppender.append(")");
-		}
 		sqlAppender.append(", ");
 		if (castTo) {
 			sqlAppender.append("cast(");
@@ -261,7 +254,7 @@ public class HSQLDialect extends Dialect {
 	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
 		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
 		boolean castTo = !toTimestamp && !unit.isDateUnit();
-		if ( unit == MICROSECOND || unit == NANOSECOND ) {
+		if ( unit == NANOSECOND ) {
 			sqlAppender.append("timestampdiff(sql_tsi_frac_second"); //nanos
 		}
 		else {
@@ -285,9 +278,6 @@ public class HSQLDialect extends Dialect {
 			sqlAppender.append(" as timestamp)");
 		}
 		sqlAppender.append(")");
-		if ( unit == MICROSECOND ) {
-			sqlAppender.append("/1e3");
-		}
 	}
 
 	@Override

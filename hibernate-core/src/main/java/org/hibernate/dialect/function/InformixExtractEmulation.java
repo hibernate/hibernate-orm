@@ -32,8 +32,6 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * {@link TemporalUnit#HOUR},
  * {@link TemporalUnit#MINUTE},
  * {@link TemporalUnit#SECOND},
- * {@link TemporalUnit#MILLISECOND},
- * {@link TemporalUnit#MICROSECOND},
  * {@link TemporalUnit#DAY},
  * {@link TemporalUnit#MONTH},
  * {@link TemporalUnit#YEAR},
@@ -63,12 +61,6 @@ public class InformixExtractEmulation
 		TemporalUnit unit = extractUnit.getUnit();
 		String pattern;
 		switch (unit) {
-			case MICROSECOND:
-				pattern = "to_number(to_char(?2,'%F50'))";
-				break;
-			case MILLISECOND:
-				pattern = "to_number(to_char(?2,'%F3'))";
-				break;
 			case SECOND:
 				pattern = "to_number(to_char(?2,'%S'))";
 				break;

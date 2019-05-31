@@ -23,18 +23,17 @@ import java.util.List;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
- * Postgres extract() function returns {@link TemporalUnit#DAY_OF_WEEK}
- * numbered from 0 to 6. This isn't consistent with what most other
- * databases do, so here we adjust the result by generating
- * {@code (extract(dow,arg)+1)).
- *
+ * In H2, the extract() function does not return
+ * fractional seconds for the the field
+ * {@link TemporalUnit#SECOND}. We work around
+ * this here with two calls to extract().
  *
  * @author Gavin King
  */
-public class PostgresExtractEmulation
+public class H2ExtractEmulation
 		extends AbstractSqmFunctionTemplate {
 
-	public PostgresExtractEmulation() {
+	public H2ExtractEmulation() {
 		super(
 				StandardArgumentsValidators.exactly( 2 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
@@ -47,22 +46,23 @@ public class PostgresExtractEmulation
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		TemporalUnit unit = ((SqmExtractUnit<?>) arguments.get(0)).getUnit();
+		SqmExtractUnit<?> extractUnit = (SqmExtractUnit<?>) arguments.get(0);
+		TemporalUnit unit = extractUnit.getUnit();
 		String pattern;
-		pattern = unit == TemporalUnit.DAY_OF_WEEK
-				? "(extract(?1 from ?2)+1)"
+		pattern = unit == TemporalUnit.SECOND
+				? "(extract(second from ?2)+extract(nanosecond from ?2)/1e9)"
 				: "extract(?1 from ?2)";
 		return queryEngine.getSqmFunctionRegistry()
-						.patternTemplateBuilder("extract", pattern)
-						.setReturnTypeResolver( useArgType(1) )
-						.setExactArgumentCount(2)
-						.template()
-						.makeSqmFunctionExpression(
-								arguments,
-								impliedResultType,
-								queryEngine,
-								typeConfiguration
-						);
+				.patternTemplateBuilder("extract", pattern)
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.template()
+				.makeSqmFunctionExpression(
+						arguments,
+						impliedResultType,
+						queryEngine,
+						typeConfiguration
+				);
 	}
 
 }

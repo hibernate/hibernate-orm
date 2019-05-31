@@ -43,7 +43,6 @@ import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
-import static org.hibernate.query.TemporalUnit.MICROSECOND;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
@@ -314,7 +313,7 @@ public class Cache71Dialect extends Dialect {
 	@Override
 	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
 		sqlAppender.append("dateadd(");
-		if ( unit == NANOSECOND || unit == MICROSECOND ) {
+		if ( unit == NANOSECOND ) {
 			sqlAppender.append("millisecond");
 		}
 		else {
@@ -324,9 +323,6 @@ public class Cache71Dialect extends Dialect {
 		magnitude.render();
 		if ( unit == NANOSECOND ) {
 			sqlAppender.append("/1e6");
-		}
-		if ( unit == MICROSECOND ) {
-			sqlAppender.append("/1e3");
 		}
 		sqlAppender.append(", ");
 		to.render();

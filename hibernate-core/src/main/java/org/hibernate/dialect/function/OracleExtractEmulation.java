@@ -31,9 +31,7 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * {@link TemporalUnit#DAY_OF_YEAR},
  * {@link TemporalUnit#DAY_OF_MONTH},
  * {@link TemporalUnit#DAY_OF_YEAR},
- * {@link TemporalUnit#WEEK},
- * {@link TemporalUnit#MILLISECOND}, and
- * {@link TemporalUnit#MICROSECOND}.
+ * and {@link TemporalUnit#WEEK}.
  *
  * @author Gavin King
  */
@@ -67,12 +65,6 @@ public class OracleExtractEmulation
 				break;
 			case WEEK:
 				pattern = "to_number(to_char(?2,'IW'))"; //the ISO week number
-				break;
-			case MILLISECOND:
-				pattern = "to_number(to_char(?2,'FF3'))"; //TODO: include whole seconds? SSFF3
-				break;
-			case MICROSECOND:
-				pattern = "to_number(to_char(?2,'FF6'))"; //TODO: include whole seconds? SSFF6
 				break;
 			default:
 				pattern = "extract(?1 from ?2)";

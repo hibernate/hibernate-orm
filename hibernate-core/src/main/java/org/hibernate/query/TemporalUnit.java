@@ -13,8 +13,7 @@ import org.hibernate.query.sqm.SemanticException;
  */
 public enum TemporalUnit {
 	YEAR(true), QUARTER(true), MONTH(true), WEEK(true), DAY(true),
-	HOUR(false), MINUTE(false),
-	SECOND(false), MILLISECOND(false), MICROSECOND(false),
+	HOUR(false), MINUTE(false), SECOND(false),
 	NANOSECOND(false),
 	DAY_OF_WEEK(true), DAY_OF_YEAR(true), DAY_OF_MONTH(true),
 	WEEK_OF_MONTH(true), WEEK_OF_YEAR(true),
@@ -32,10 +31,17 @@ public enum TemporalUnit {
 		throw new SemanticException("illegal unit conversion " + from + " to " + to);
 	}
 
+	public String conversionFactor(TemporalUnit toUnit) {
+		return conversionFactor(this, toUnit);
+	}
+
 	public static String conversionFactor(TemporalUnit fromUnit, TemporalUnit toUnit) {
 		long factor = 1;
 		boolean reciprocal = false;
-		if ( toUnit != fromUnit ) {
+		if (toUnit == fromUnit) {
+			return "";
+		}
+		else {
 			switch (toUnit) {
 				case NANOSECOND:
 					switch (fromUnit) {
@@ -49,57 +55,6 @@ public enum TemporalUnit {
 							factor *= 60;
 						case SECOND:
 							factor *= 1e3;
-						case MILLISECOND:
-							factor *= 1e3;
-						case MICROSECOND:
-							factor *= 1e3;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case MICROSECOND:
-					switch (fromUnit) {
-						case WEEK:
-							factor *= 7;
-						case DAY:
-							factor *= 24;
-						case HOUR:
-							factor *= 60;
-						case MINUTE:
-							factor *= 60;
-						case SECOND:
-							factor *= 1e3;
-						case MILLISECOND:
-							factor *= 1e3;
-							break;
-						case NANOSECOND:
-							factor *= 1e3;
-							reciprocal = true;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case MILLISECOND:
-					switch (fromUnit) {
-						case NANOSECOND:
-							factor *= 1e3;
-						case MICROSECOND:
-							factor *= 1e3;
-							reciprocal = true;
-							break;
-						case WEEK:
-							factor *= 7;
-						case DAY:
-							factor *= 24;
-						case HOUR:
-							factor *= 60;
-						case MINUTE:
-							factor *= 60;
-							break;
-						case SECOND:
-							factor *= 1e3;
 							break;
 						default:
 							illegalConversion(fromUnit, toUnit);
@@ -108,10 +63,6 @@ public enum TemporalUnit {
 				case SECOND:
 					switch (fromUnit) {
 						case NANOSECOND:
-							factor *= 1e3;
-						case MICROSECOND:
-							factor *= 1e3;
-						case MILLISECOND:
 							factor *= 1e3;
 							reciprocal = true;
 							break;
@@ -132,10 +83,6 @@ public enum TemporalUnit {
 					switch (fromUnit) {
 						case NANOSECOND:
 							factor *= 1e3;
-						case MICROSECOND:
-							factor *= 1e3;
-						case MILLISECOND:
-							factor *= 1e3;
 						case SECOND:
 							factor *= 60;
 							reciprocal = true;
@@ -154,10 +101,6 @@ public enum TemporalUnit {
 				case HOUR:
 					switch (fromUnit) {
 						case NANOSECOND:
-							factor *= 1e3;
-						case MICROSECOND:
-							factor *= 1e3;
-						case MILLISECOND:
 							factor *= 1e3;
 						case SECOND:
 							factor *= 60;
@@ -178,10 +121,6 @@ public enum TemporalUnit {
 					switch (fromUnit) {
 						case NANOSECOND:
 							factor *= 1e3;
-						case MICROSECOND:
-							factor *= 1e3;
-						case MILLISECOND:
-							factor *= 1e3;
 						case SECOND:
 							factor *= 60;
 						case MINUTE:
@@ -200,10 +139,6 @@ public enum TemporalUnit {
 				case WEEK:
 					switch (fromUnit) {
 						case NANOSECOND:
-							factor *= 1e3;
-						case MICROSECOND:
-							factor *= 1e3;
-						case MILLISECOND:
 							factor *= 1e3;
 						case SECOND:
 							factor *= 60;
@@ -261,15 +196,12 @@ public enum TemporalUnit {
 			String string = String.valueOf(factor);
 			int len = string.length();
 			int chop;
-			for ( chop = len; chop>0 && string.charAt(chop-1)=='0'; chop-- ) {}
+			for (chop = len; chop>0 && string.charAt(chop-1)=='0'; chop--) {}
 			int e = len-chop;
-			if ( chop>0 && e>2 ) {
+			if (chop>0 && e>2) {
 				string = string.substring(0, chop) + "e" + e;
 			}
 			return (reciprocal ? "/" : "*") + string;
-		}
-		else {
-			return "";
 		}
 	}
 

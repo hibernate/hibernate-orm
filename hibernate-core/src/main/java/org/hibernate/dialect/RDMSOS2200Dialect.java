@@ -33,7 +33,6 @@ import org.hibernate.sql.DecodeCaseFragment;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.query.TemporalUnit.MICROSECOND;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
@@ -207,7 +206,7 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		if ( unit == MICROSECOND || unit == NANOSECOND ) {
+		if ( unit == NANOSECOND ) {
 			sqlAppender.append("timestampadd('SQL_TSI_FRAC_SECOND'"); //micros
 		}
 		else {
@@ -230,7 +229,7 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		if ( unit == MICROSECOND || unit == NANOSECOND ) {
+		if ( unit == NANOSECOND ) {
 			sqlAppender.append("timestampdiff('SQL_TSI_FRAC_SECOND'"); //micros
 		}
 		else {

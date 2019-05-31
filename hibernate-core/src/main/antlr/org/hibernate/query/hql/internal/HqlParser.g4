@@ -397,8 +397,8 @@ expression
 	| path											# PathExpression
 	| function										# FunctionExpression
 	| signOperator expression						# UnaryExpression
-	| expression intervalField  					# ToDurationExpression
-	| expression BY intervalField					# FromDurationExpression
+	| expression datetimeField  					# ToDurationExpression
+	| expression BY datetimeField					# FromDurationExpression
 	| expression multiplicativeOperator expression	# MultiplicationExpression
 	| expression additiveOperator expression		# AdditionExpression
 	| expression DOUBLE_PIPE expression				# ConcatenationExpression
@@ -559,12 +559,7 @@ nonStandardFunctionName
 	;
 
 nonStandardFunctionArguments
-	: (datetimeFieldArgument COMMA)? expression (COMMA expression)*
-	;
-
-datetimeFieldArgument
-	: datetimeField
-	| secondsField
+	: (datetimeField COMMA)? expression (COMMA expression)*
 	;
 
 jpaCollectionFunction
@@ -848,11 +843,6 @@ format
 	: STRING_LITERAL
 	;
 
-intervalField
-	: datetimeField
-	| secondsField
-	;
-
 extractFunction
 	: EXTRACT LEFT_PAREN extractField FROM expression RIGHT_PAREN
 	| datetimeField LEFT_PAREN expression RIGHT_PAREN
@@ -863,7 +853,6 @@ extractField
 	| dayField
 	| weekField
 	| timeZoneField
-	| secondsField
 	| dateOrTimeField
 	;
 
@@ -876,6 +865,7 @@ datetimeField
 	| HOUR
 	| MINUTE
 	| SECOND
+	| NANOSECOND
 	;
 
 dayField
@@ -887,11 +877,6 @@ dayField
 weekField
 	: WEEK OF MONTH
 	| WEEK OF YEAR
-	;
-
-secondsField
-	: MILLISECOND
-	| MICROSECOND
 	;
 
 timeZoneField
@@ -981,8 +966,6 @@ identifier
 	| LOWER
 	| MAP
 	| MAX
-	| MICROSECOND
-	| MILLISECOND
 	| MIN
 	| MINUTE
 	| MEMBER

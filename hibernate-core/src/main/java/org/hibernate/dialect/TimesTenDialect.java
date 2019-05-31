@@ -102,26 +102,15 @@ public class TimesTenDialect extends Dialect {
 	@Override
 	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
 		sqlAppender.append("timestampadd(sql_tsi_");
-		switch (unit) {
-			case MILLISECOND:
-			case MICROSECOND:
-			case NANOSECOND:
-				sqlAppender.append("frac_second");
-				break;
-			default:
-				sqlAppender.append( unit.toString() );
+		if (unit == TemporalUnit.NANOSECOND) {
+			sqlAppender.append("frac_second");
+		}
+		else {
+			sqlAppender.append(unit.toString());
 		}
 		//TODO: millisecond, microsecond
 		sqlAppender.append(", ");
 		magnitude.render();
-		switch (unit) {
-			case MILLISECOND:
-				sqlAppender.append("*1e6");
-				break;
-			case MICROSECOND:
-				sqlAppender.append("*1e3");
-				break;
-		}
 		sqlAppender.append(", ");
 		to.render();
 		sqlAppender.append(")");
@@ -130,28 +119,18 @@ public class TimesTenDialect extends Dialect {
 	@Override
 	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
 		sqlAppender.append("timestampdiff(sql_tsi_");
-		switch (unit) {
-			case MILLISECOND:
-			case MICROSECOND:
-			case NANOSECOND:
-				sqlAppender.append("frac_second");
-				break;
-			default:
-				sqlAppender.append( unit.toString() );
+		if (unit == TemporalUnit.NANOSECOND) {
+			sqlAppender.append("frac_second");
+
+		}
+		else {
+			sqlAppender.append(unit.toString());
 		}
 		sqlAppender.append(", ");
 		from.render();
 		sqlAppender.append(", ");
 		to.render();
 		sqlAppender.append(")");
-		switch (unit) {
-			case MILLISECOND:
-				sqlAppender.append("/1e6");
-				break;
-			case MICROSECOND:
-				sqlAppender.append("/1e3");
-				break;
-		}
 	}
 
 	@Override

@@ -175,10 +175,9 @@ import static org.hibernate.query.TemporalUnit.DAY_OF_MONTH;
 import static org.hibernate.query.TemporalUnit.DAY_OF_WEEK;
 import static org.hibernate.query.TemporalUnit.DAY_OF_YEAR;
 import static org.hibernate.query.TemporalUnit.HOUR;
-import static org.hibernate.query.TemporalUnit.MICROSECOND;
-import static org.hibernate.query.TemporalUnit.MILLISECOND;
 import static org.hibernate.query.TemporalUnit.MINUTE;
 import static org.hibernate.query.TemporalUnit.MONTH;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.TemporalUnit.OFFSET;
 import static org.hibernate.query.TemporalUnit.QUARTER;
 import static org.hibernate.query.TemporalUnit.SECOND;
@@ -2017,8 +2016,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public List<SqmTypedNode<?>> visitNonStandardFunctionArguments(HqlParser.NonStandardFunctionArgumentsContext ctx) {
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
 
-		if ( ctx.datetimeFieldArgument() != null ) {
-			arguments.add( (SqmTypedNode<?>) ctx.datetimeFieldArgument().accept( this ) );
+		if ( ctx.datetimeField() != null ) {
+			arguments.add( (SqmTypedNode<?>) ctx.datetimeField().accept( this ) );
 		}
 
 		for ( int i=0, size=ctx.expression().size(); i<size; i++ ) {
@@ -2220,6 +2219,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		if (ctx.SECOND()!=null) {
 			return new SqmExtractUnit<>(SECOND, basicType( Float.class ), nodeBuilder);
 		}
+		if (ctx.NANOSECOND()!=null) {
+			return new SqmExtractUnit<>(NANOSECOND, basicType( Long.class ), nodeBuilder);
+		}
 		if (ctx.WEEK()!=null) {
 			// this is the ISO week number
 			return new SqmExtractUnit<>(WEEK, basicType( Integer.class ), nodeBuilder);
@@ -2260,18 +2262,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public Object visitSecondsField(HqlParser.SecondsFieldContext ctx) {
-		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		if (ctx.MICROSECOND()!=null) {
-			return new SqmExtractUnit<>(MICROSECOND, basicType( Integer.class ), nodeBuilder);
-		}
-		if (ctx.MILLISECOND()!=null) {
-			return new SqmExtractUnit<>(MILLISECOND, basicType( Integer.class ), nodeBuilder);
-		}
-		return super.visitSecondsField(ctx);
-	}
-
-	@Override
 	public Object visitDateOrTimeField(HqlParser.DateOrTimeFieldContext ctx) {
 		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 		if (ctx.DATE()!=null) {
@@ -2305,7 +2295,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public Object visitToDurationExpression(HqlParser.ToDurationExpressionContext ctx) {
 		return new SqmToDuration<>(
 				(SqmExpression<?>) ctx.expression().accept(this),
-				(SqmExtractUnit<?>) ctx.intervalField().accept(this),
+				(SqmExtractUnit<?>) ctx.datetimeField().accept(this),
 				basicType( Duration.class ),
 				creationContext.getNodeBuilder()
 		);
@@ -2314,7 +2304,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public Object visitFromDurationExpression(HqlParser.FromDurationExpressionContext ctx) {
 		return new SqmByUnit(
-				(SqmExtractUnit<?>) ctx.intervalField().accept(this),
+				(SqmExtractUnit<?>) ctx.datetimeField().accept(this),
 				(SqmExpression<?>) ctx.expression().accept(this),
 				basicType( Long.class ),
 				creationContext.getNodeBuilder()
@@ -2352,6 +2342,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		TemporalUnit unit = extractFieldExpression.getUnit();
 		switch ( unit ) {
+			case NANOSECOND:
+				return extractNanoseconds( expressionToExtract );
 			case OFFSET:
 				// use formatdatetime(arg, 'xxx') to get the offset
 				return extractOffsetUsingFormat( expressionToExtract );
@@ -2382,6 +2374,37 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 						creationContext.getDomainModel().getTypeConfiguration()
 				);
 		}
+	}
+
+	private SqmExpression<Long> extractNanoseconds(
+			SqmExpression<?> expressionToExtract) {
+		return getFunctionTemplate("round").makeSqmFunctionExpression(
+				asList(
+						new SqmBinaryArithmetic<>(
+							BinaryArithmeticOperator.MULTIPLY,
+							getFunctionTemplate("extract").makeSqmFunctionExpression(
+									asList(
+											new SqmExtractUnit<>(
+												SECOND,
+												basicType( Float.class),
+												creationContext.getNodeBuilder()
+											),
+											expressionToExtract
+									),
+									basicType( Float.class ),
+									creationContext.getQueryEngine(),
+									creationContext.getDomainModel().getTypeConfiguration()
+							),
+							floatLiteral("1e9"),
+							basicType( Float.class ),
+							creationContext.getNodeBuilder()
+						),
+						integerLiteral("0")
+				),
+				basicType( Long.class ),
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
+		);
 	}
 
 	private SqmExpression<ZoneOffset> extractOffsetUsingFormat(

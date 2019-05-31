@@ -48,11 +48,10 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.HOUR;
-import static org.hibernate.query.TemporalUnit.MICROSECOND;
 import static org.hibernate.query.TemporalUnit.MINUTE;
 import static org.hibernate.query.TemporalUnit.MONTH;
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.TemporalUnit.QUARTER;
+import static org.hibernate.query.TemporalUnit.SECOND;
 import static org.hibernate.query.TemporalUnit.YEAR;
 import static org.hibernate.query.TemporalUnit.conversionFactor;
 
@@ -220,8 +219,6 @@ public class PostgreSQL81Dialect extends Dialect {
 					}
 					sqlAppender.append(")");
 					break;
-				case MICROSECOND:
-				case MILLISECOND:
 				case NANOSECOND:
 				case SECOND:
 					sqlAppender.append("(");
@@ -232,12 +229,7 @@ public class PostgreSQL81Dialect extends Dialect {
 						sqlAppender.append("+");
 						extractField(sqlAppender, from, to, MINUTE, fromTimestamp, toTimestamp, unit);
 						sqlAppender.append("+");
-						if (unit == NANOSECOND) {
-							extractField(sqlAppender, from, to, MICROSECOND, fromTimestamp, toTimestamp, unit);
-						}
-						else {
-							extractField(sqlAppender, from, to, unit, fromTimestamp, toTimestamp, unit);
-						}
+						extractField(sqlAppender, from, to, SECOND, fromTimestamp, toTimestamp, unit);
 					}
 					sqlAppender.append(")");
 					break;
@@ -247,7 +239,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		}
 	}
 
-	void extractField(
+	private void extractField(
 			Appender sqlAppender,
 			Renderer from, Renderer to,
 			TemporalUnit unit,
@@ -282,8 +274,6 @@ public class PostgreSQL81Dialect extends Dialect {
 				case HOUR:
 				case MINUTE:
 				case SECOND:
-				case MILLISECOND:
-				case MICROSECOND:
 					to.render();
 					sqlAppender.append("-");
 					from.render();

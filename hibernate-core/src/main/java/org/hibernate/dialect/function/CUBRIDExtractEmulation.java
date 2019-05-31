@@ -26,13 +26,18 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * CUBRID supports a limited list of temporal fields in the
  * extract() function, but we can emulate some of them by
  * using the appropriate named functions instead of
- * extract(), or by re-expressing the unit in terms of
- * {@link TemporalUnit#MICROSECOND}.
+ * extract().
+ *
+ * Thus, the additional supported fields are
+ * {@link TemporalUnit#DAY_OF_YEAR},
+ * {@link TemporalUnit#DAY_OF_MONTH},
+ * {@link TemporalUnit#DAY_OF_YEAR}.
+ *
+ * In addition, the field {@link TemporalUnit#SECOND} is
+ * redefined to include milliseconds.
  *
  * This class is very nearly a duplicate of
- * {@link MySQLExtractEmulation}, except for the treatment
- * of {@link TemporalUnit#MILLISECOND} and
- * {@link TemporalUnit#MICROSECOND}.
+ * {@link MySQLExtractEmulation}.
  *
  * @author Gavin King
  */
@@ -56,6 +61,9 @@ public class CUBRIDExtractEmulation
 		TemporalUnit unit = extractUnit.getUnit();
 		String pattern;
 		switch (unit) {
+			case SECOND:
+				pattern = "(second(?2)+extract(millisecond from ?2)/1e3)";
+				break;
 			case DAY_OF_WEEK:
 				pattern = "dayofweek(?2)";
 				break;
@@ -67,15 +75,6 @@ public class CUBRIDExtractEmulation
 				break;
 			case WEEK:
 				pattern = "week(?2,3)"; //mode 3 is the ISO week
-				break;
-			//TODO should we include whole seconds?
-			// "(second(?2)*1e3+extract(millisecond from ?2))"
-			// "(second(?2)*1e6+extract(millisecond from ?2)*1e3)"
-			case MILLISECOND:
-				pattern = "extract(millisecond from ?2)";
-				break;
-			case MICROSECOND:
-				pattern = "extract(millisecond from ?2)*1e3";
 				break;
 			default:
 				pattern = unit + "(?2)";

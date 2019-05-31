@@ -20,6 +20,8 @@ import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+
 /**
  * A dialect for the Teradata database created by MCR as part of the
  * dialect certification process.
@@ -80,16 +82,9 @@ public class TeradataDialect extends Dialect {
 	@Override
 	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
 		//TODO: TOTALLY UNTESTED CODE!
-		switch (unit) {
-			case MILLISECOND:
-				sqlAppender.append("1e3*");
-				break;
-			case MICROSECOND:
-				sqlAppender.append("1e6*");
-				break;
-			case NANOSECOND:
-				sqlAppender.append("1e9*");
-				break;
+		if (unit == NANOSECOND) {
+			sqlAppender.append("1e9*");
+
 		}
 		sqlAppender.append("((");
 		to.render();
@@ -97,12 +92,6 @@ public class TeradataDialect extends Dialect {
 		from.render();
 		sqlAppender.append(") ");
 		switch (unit) {
-			case MILLISECOND:
-				sqlAppender.append("second(19,3)");
-				break;
-			case MICROSECOND:
-				sqlAppender.append("second(19,6)");
-				break;
 			case NANOSECOND:
 				sqlAppender.append("second(19,9)");
 				break;
@@ -139,16 +128,6 @@ public class TeradataDialect extends Dialect {
 //		}
 		sqlAppender.append(subtract ? " - " : " + ");
 		switch ( unit ) {
-			case MILLISECOND:
-				sqlAppender.append("(");
-				magnitude.render();
-				sqlAppender.append(")/1e3 * interval '1' second");
-				break;
-			case MICROSECOND:
-				sqlAppender.append("(");
-				magnitude.render();
-				sqlAppender.append(")/1e6 * interval '1' second");
-				break;
 			case NANOSECOND:
 				sqlAppender.append("(");
 				magnitude.render();

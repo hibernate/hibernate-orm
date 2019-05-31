@@ -13,6 +13,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.H2ExtractEmulation;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -173,6 +174,8 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.formatdatetime( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new H2ExtractEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )

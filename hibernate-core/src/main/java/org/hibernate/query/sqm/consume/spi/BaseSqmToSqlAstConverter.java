@@ -153,7 +153,6 @@ import org.jboss.logging.Logger;
 import static org.hibernate.query.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
-import static org.hibernate.query.TemporalUnit.MICROSECOND;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;

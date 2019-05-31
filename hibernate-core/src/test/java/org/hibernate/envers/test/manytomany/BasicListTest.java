@@ -90,8 +90,8 @@ public class BasicListTest extends EnversEntityManagerFactoryBasedFunctionalTest
 				},
 
 				// Revision 5
-				em -> {
-					final ListOwningEntity ing1 = em.find( ListOwningEntity.class, ing1_id );
+				entityManager -> {
+					final ListOwningEntity ing1 = entityManager.find( ListOwningEntity.class, ing1_id );
 					ing1.setReferences( null );
 				}
 		);

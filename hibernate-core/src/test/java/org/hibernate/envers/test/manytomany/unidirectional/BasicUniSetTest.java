@@ -39,17 +39,17 @@ public class BasicUniSetTest extends EnversEntityManagerFactoryBasedFunctionalTe
 	public void prepareAuditData() {
 		inTransactions(
 				// Revision 1
-				em -> {
+				entityManager -> {
 					final StrTestEntity ed1 = new StrTestEntity( "data_ed_1" );
 					final StrTestEntity ed2 = new StrTestEntity( "data_ed_2" );
 
 					final SetUniEntity ing1 = new SetUniEntity( 3, "data_ing_1" );
 					final SetUniEntity ing2 = new SetUniEntity( 4, "data_ing_2" );
 
-					em.persist( ed1 );
-					em.persist( ed2 );
-					em.persist( ing1 );
-					em.persist( ing2 );
+					entityManager.persist( ed1 );
+					entityManager.persist( ed2 );
+					entityManager.persist( ing1 );
+					entityManager.persist( ing2 );
 
 					ed1_id = ed1.getId();
 					ed2_id = ed2.getId();
@@ -59,11 +59,11 @@ public class BasicUniSetTest extends EnversEntityManagerFactoryBasedFunctionalTe
 				},
 
 				// Revision 2
-				em -> {
-					final SetUniEntity ing1 = em.find( SetUniEntity.class, ing1_id );
-					final SetUniEntity ing2 = em.find( SetUniEntity.class, ing2_id );
-					final StrTestEntity ed1 = em.find( StrTestEntity.class, ed1_id );
-					final StrTestEntity ed2 = em.find( StrTestEntity.class, ed2_id );
+				entityManager -> {
+					final SetUniEntity ing1 = entityManager.find( SetUniEntity.class, ing1_id );
+					final SetUniEntity ing2 = entityManager.find( SetUniEntity.class, ing2_id );
+					final StrTestEntity ed1 = entityManager.find( StrTestEntity.class, ed1_id );
+					final StrTestEntity ed2 = entityManager.find( StrTestEntity.class, ed2_id );
 
 					ing1.setReferences( new HashSet<>() );
 					ing1.getReferences().add( ed1 );
@@ -74,24 +74,24 @@ public class BasicUniSetTest extends EnversEntityManagerFactoryBasedFunctionalTe
 				},
 
 				// Revision 3
-				em -> {
-					final SetUniEntity ing1 = em.find( SetUniEntity.class, ing1_id );
-					final StrTestEntity ed2 = em.find( StrTestEntity.class, ed2_id );
-					final StrTestEntity ed1 = em.find( StrTestEntity.class, ed1_id );
+				entityManager -> {
+					final SetUniEntity ing1 = entityManager.find( SetUniEntity.class, ing1_id );
+					final StrTestEntity ed2 = entityManager.find( StrTestEntity.class, ed2_id );
+					final StrTestEntity ed1 = entityManager.find( StrTestEntity.class, ed1_id );
 					ing1.getReferences().add( ed2 );
 				},
 
 				// Revision 4
-				em -> {
-					final SetUniEntity ing1 = em.find( SetUniEntity.class, ing1_id );
-					final StrTestEntity ed2 = em.find( StrTestEntity.class, ed2_id );
-					final StrTestEntity ed1 = em.find( StrTestEntity.class, ed1_id );
+				entityManager -> {
+					final SetUniEntity ing1 = entityManager.find( SetUniEntity.class, ing1_id );
+					final StrTestEntity ed2 = entityManager.find( StrTestEntity.class, ed2_id );
+					final StrTestEntity ed1 = entityManager.find( StrTestEntity.class, ed1_id );
 					ing1.getReferences().remove( ed1 );
 				},
 
 				// Revision 5
-				em -> {
-					final SetUniEntity ing1 = em.find( SetUniEntity.class, ing1_id );
+				entityManager -> {
+					final SetUniEntity ing1 = entityManager.find( SetUniEntity.class, ing1_id );
 					ing1.setReferences( null );
 				}
 		);

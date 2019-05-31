@@ -40,17 +40,17 @@ public class BasicSetTest extends EnversEntityManagerFactoryBasedFunctionalTest 
 	public void prepareAuditData() {
 		inTransactions(
 				// Revision 1
-				em -> {
+				entityManager -> {
 					final SetOwnedEntity ed1 = new SetOwnedEntity( 1, "data_ed_1" );
 					final SetOwnedEntity ed2 = new SetOwnedEntity( 2, "data_ed_2" );
 
 					final SetOwningEntity ing1 = new SetOwningEntity( 3, "data_ing_1" );
 					final SetOwningEntity ing2 = new SetOwningEntity( 4, "data_ing_2" );
 
-					em.persist( ed1 );
-					em.persist( ed2 );
-					em.persist( ing1 );
-					em.persist( ing2 );
+					entityManager.persist( ed1 );
+					entityManager.persist( ed2 );
+					entityManager.persist( ing1 );
+					entityManager.persist( ing2 );
 
 					ed1_id = ed1.getId();
 					ed2_id = ed2.getId();
@@ -59,11 +59,11 @@ public class BasicSetTest extends EnversEntityManagerFactoryBasedFunctionalTest 
 				},
 
 				// Revision 2
-				em -> {
-					final SetOwningEntity ing1 = em.find( SetOwningEntity.class, ing1_id );
-					final SetOwningEntity ing2 = em.find( SetOwningEntity.class, ing2_id );
-					final SetOwnedEntity ed1 = em.find( SetOwnedEntity.class, ed1_id );
-					final SetOwnedEntity ed2 = em.find( SetOwnedEntity.class, ed2_id );
+				entityManager -> {
+					final SetOwningEntity ing1 = entityManager.find( SetOwningEntity.class, ing1_id );
+					final SetOwningEntity ing2 = entityManager.find( SetOwningEntity.class, ing2_id );
+					final SetOwnedEntity ed1 = entityManager.find( SetOwnedEntity.class, ed1_id );
+					final SetOwnedEntity ed2 = entityManager.find( SetOwnedEntity.class, ed2_id );
 
 					ing1.setReferences( new HashSet<>() );
 					ing1.getReferences().add( ed1 );
@@ -74,26 +74,26 @@ public class BasicSetTest extends EnversEntityManagerFactoryBasedFunctionalTest 
 				},
 
 				// Revision 3
-				em -> {
-					final SetOwningEntity ing1 = em.find( SetOwningEntity.class, ing1_id );
-					final SetOwnedEntity ed2 = em.find( SetOwnedEntity.class, ed2_id );
-					final SetOwnedEntity ed1 = em.find( SetOwnedEntity.class, ed1_id );
+				entityManager -> {
+					final SetOwningEntity ing1 = entityManager.find( SetOwningEntity.class, ing1_id );
+					final SetOwnedEntity ed2 = entityManager.find( SetOwnedEntity.class, ed2_id );
+					final SetOwnedEntity ed1 = entityManager.find( SetOwnedEntity.class, ed1_id );
 
 					ing1.getReferences().add( ed2 );
 				},
 
 				// Revision 4
-				em -> {
-					final SetOwningEntity ing1 = em.find( SetOwningEntity.class, ing1_id );
-					final SetOwnedEntity ed2 = em.find( SetOwnedEntity.class, ed2_id );
-					final SetOwnedEntity ed1 = em.find( SetOwnedEntity.class, ed1_id );
+				entityManager -> {
+					final SetOwningEntity ing1 = entityManager.find( SetOwningEntity.class, ing1_id );
+					final SetOwnedEntity ed2 = entityManager.find( SetOwnedEntity.class, ed2_id );
+					final SetOwnedEntity ed1 = entityManager.find( SetOwnedEntity.class, ed1_id );
 
 					ing1.getReferences().remove( ed1 );
 				},
 
 				// Revision 5
-				em -> {
-					final SetOwningEntity ing1 = em.find( SetOwningEntity.class, ing1_id );
+				entityManager -> {
+					final SetOwningEntity ing1 = entityManager.find( SetOwningEntity.class, ing1_id );
 					ing1.setReferences( null );
 				}
 		);

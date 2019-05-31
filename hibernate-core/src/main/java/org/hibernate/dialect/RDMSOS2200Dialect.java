@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.RDMSExtractEmulation;
 import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.query.TemporalUnit;
@@ -199,6 +200,8 @@ public class RDMSOS2200Dialect extends Dialect {
 
 		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new RDMSExtractEmulation() );
 
 	}
 

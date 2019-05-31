@@ -43,6 +43,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.HANAExtractEmulation;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -301,6 +302,8 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.secondsBetween( queryEngine );
 		CommonFunctionFactory.formatdatetime_toVarchar( queryEngine );
 		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new HANAExtractEmulation() );
 	}
 
 	@Override

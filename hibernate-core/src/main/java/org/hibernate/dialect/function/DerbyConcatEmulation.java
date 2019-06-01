@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
@@ -48,13 +47,9 @@ public class DerbyConcatEmulation extends FunctionAsExpressionTemplate {
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
-			SqlAstWalker walker,
-			SessionFactoryImplementor sessionFactory) {
+			SqlAstWalker walker) {
+
 		// check if all arguments are parameters...
-		//		- if not, simply use the Derby concat operator - e.g. `arg1 || arg2`
-		//		- if so, wrap the individual args in `cast` function and wrap the
-		//				entire expression in Derby's `varchar` function (specialized
-		// 				`cast` function)
 		boolean areAllArgumentsDynamic = true;
 		for ( SqlAstNode argument : sqlAstArguments ) {
 			if ( GenericParameter.class.isInstance( argument ) ) {
@@ -64,12 +59,16 @@ public class DerbyConcatEmulation extends FunctionAsExpressionTemplate {
 		}
 
 		if ( areAllArgumentsDynamic ) {
+			// - if so, wrap the individual args in `varchar()`
+			//   and wrap the entire expression in a `cast()`
 			sqlAppender.appendSql( "cast(" );
-			super.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
+			super.render( sqlAppender, sqlAstArguments, walker );
 			sqlAppender.appendSql( " as varchar(32672))" );
 		}
 		else {
-			super.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
+			// - if not, simply use the Derby concat operator
+			//   `arg1 || arg2`
+			super.render( sqlAppender, sqlAstArguments, walker );
 		}
 	}
 
@@ -77,10 +76,9 @@ public class DerbyConcatEmulation extends FunctionAsExpressionTemplate {
 	protected void renderArgument(
 			SqlAppender sqlAppender,
 			SqlAstNode sqlAstArgument,
-			SqlAstWalker walker,
-			SessionFactoryImplementor sessionFactory) {
+			SqlAstWalker walker) {
 		sqlAppender.appendSql( "varchar(" );
-		super.renderArgument( sqlAppender, sqlAstArgument, walker, sessionFactory );
+		sqlAstArgument.accept(walker);
 		sqlAppender.appendSql( ")" );
 	}
 

@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
@@ -37,10 +38,12 @@ import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.function.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
+import org.hibernate.query.sqm.tree.expression.function.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
@@ -465,13 +468,28 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	}
 
 	@Override
+	public T visitFormat(SqmFormat format) {
+		return (T) format;
+	}
+
+	@Override
 	public T visitDistinct(SqmDistinct distinct) {
 		return (T) distinct;
 	}
 
 	@Override
-	public T visitStar(SqmStar sqmStar) {
-		return (T) sqmStar;
+	public T visitStar(SqmStar star) {
+		return (T) star;
+	}
+
+	@Override
+	public T visitToDuration(SqmToDuration toDuration) {
+		return (T) toDuration;
+	}
+
+	@Override
+	public T visitByUnit(SqmByUnit byUnit) {
+		return (T) byUnit;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

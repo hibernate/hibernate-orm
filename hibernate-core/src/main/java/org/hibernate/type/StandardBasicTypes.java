@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Currency;
@@ -423,6 +424,11 @@ public final class StandardBasicTypes {
 	 * The standard Hibernate type for mapping {@link java.util.TimeZone} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
 	public static final StandardBasicType<TimeZone> TIMEZONE = StandardSpiBasicTypes.TIMEZONE;
+
+	/**
+	 * The standard Hibernate type for mapping {@link java.time.ZoneOffset} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 */
+	public static final StandardBasicType<ZoneOffset> OFFSET = StandardSpiBasicTypes.OFFSET;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.net.URL} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.

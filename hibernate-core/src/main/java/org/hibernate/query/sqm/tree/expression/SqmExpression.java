@@ -95,5 +95,4 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 				);
 	}
 
-
 }

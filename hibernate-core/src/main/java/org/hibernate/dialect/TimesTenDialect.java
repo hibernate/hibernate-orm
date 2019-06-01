@@ -24,6 +24,7 @@ import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -118,8 +119,44 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.rownumRowid( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("timestampadd(sql_tsi_");
+		if (unit == TemporalUnit.NANOSECOND) {
+			sqlAppender.append("frac_second");
+		}
+		else {
+			sqlAppender.append(unit.toString());
+		}
+		//TODO: millisecond, microsecond
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("timestampdiff(sql_tsi_");
+		if (unit == TemporalUnit.NANOSECOND) {
+			sqlAppender.append("frac_second");
+
+		}
+		else {
+			sqlAppender.append(unit.toString());
+		}
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
 	}
 
 	@Override

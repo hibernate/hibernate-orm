@@ -22,8 +22,11 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Conversion;
 import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
 import org.hibernate.sql.ast.tree.expression.NamedParameter;
 import org.hibernate.sql.ast.tree.expression.PositionalParameter;
@@ -550,6 +553,21 @@ public class SqlAstPrinter implements SqlAstWalker {
 				"tuple",
 				() -> tuple.getExpressions().forEach( expr -> expr.accept( this ) )
 		);
+	}
+
+	@Override
+	public void visitConversion(Conversion conversion) {
+
+	}
+
+	@Override
+	public void visitDuration(Duration duration) {
+
+	}
+
+	@Override
+	public void visitFormat(Format format) {
+
 	}
 
 	@Override

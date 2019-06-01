@@ -17,6 +17,9 @@ import java.util.regex.Pattern;
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.OracleExtractEmulation;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -53,6 +56,14 @@ import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
+import static org.hibernate.query.TemporalUnit.DAY;
+import static org.hibernate.query.TemporalUnit.HOUR;
+import static org.hibernate.query.TemporalUnit.MINUTE;
+import static org.hibernate.query.TemporalUnit.MONTH;
+import static org.hibernate.query.TemporalUnit.SECOND;
+import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.query.TemporalUnit.conversionFactor;
+
 /**
  * A dialect for Oracle 8i.
  *
@@ -69,7 +80,7 @@ public class Oracle8iDialect extends Dialect {
 
 	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
 
-	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:\\/\\*.*?\\*\\/)?\\s*(select|insert|update|delete)\\s+.*?");
+	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?");
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -162,6 +173,8 @@ public class Oracle8iDialect extends Dialect {
 		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.systimestamp( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
 
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
@@ -173,6 +186,169 @@ public class Oracle8iDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
 
+		queryEngine.getSqmFunctionRegistry().register( "extract", new OracleExtractEmulation() );
+
+	}
+
+	@Override
+	public void timestampadd(
+			TemporalUnit unit,
+			Renderer magnitude,
+			Renderer to,
+			Appender sqlAppender,
+			boolean timestamp) {
+		sqlAppender.append("(");
+		to.render();
+		boolean subtract = false;
+//		if ( magnitude.startsWith("-") ) {
+//			subtract = true;
+//			magnitude = magnitude.substring(1);
+//		}
+		sqlAppender.append(subtract ? " - " : " + ");
+		switch ( unit ) {
+			case YEAR:
+			case QUARTER:
+			case MONTH:
+				sqlAppender.append("numtoyminterval");
+				break;
+			case WEEK:
+			case DAY:
+			case HOUR:
+			case MINUTE:
+			case SECOND:
+			case NANOSECOND:
+				sqlAppender.append("numtodsinterval");
+				break;
+			default:
+				throw new SemanticException(unit + " is not a legal field");
+		}
+		sqlAppender.append("(");
+		switch ( unit ) {
+			case QUARTER:
+				sqlAppender.append("3*(");
+				break;
+			case WEEK:
+				sqlAppender.append("7*(");
+				break;
+			case NANOSECOND:
+				sqlAppender.append("1e-9*(");
+				break;
+		}
+		magnitude.render();
+		switch ( unit ) {
+			case NANOSECOND:
+			case QUARTER:
+			case WEEK:
+				sqlAppender.append(")");
+				break;
+		}
+		sqlAppender.append(",'");
+		switch ( unit ) {
+			case QUARTER:
+				sqlAppender.append("month");
+				break;
+			case WEEK:
+				sqlAppender.append("day");
+				break;
+			case NANOSECOND:
+				sqlAppender.append("second");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append("')");
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(
+			TemporalUnit unit,
+			Renderer from, Renderer to,
+			Appender sqlAppender,
+			boolean fromTimestamp, boolean toTimestamp) {
+		boolean timestamp = toTimestamp || fromTimestamp;
+		switch (unit) {
+			case YEAR:
+				extractField(sqlAppender, from, to, YEAR, unit);
+				break;
+			case QUARTER:
+			case MONTH:
+				sqlAppender.append("(");
+				extractField(sqlAppender, from, to, YEAR, unit);
+				sqlAppender.append("+");
+				extractField(sqlAppender, from, to, MONTH, unit);
+				sqlAppender.append(")");
+				break;
+			case WEEK:
+			case DAY:
+				extractField(sqlAppender, from, to, DAY, unit);
+				break;
+			case HOUR:
+				sqlAppender.append("(");
+				extractField(sqlAppender, from, to, DAY, unit);
+				if (timestamp) {
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, HOUR, unit);
+				}
+				sqlAppender.append(")");
+				break;
+			case MINUTE:
+				sqlAppender.append("(");
+				extractField(sqlAppender, from, to, DAY, unit);
+				if (timestamp) {
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, HOUR, unit);
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, MINUTE, unit);
+				}
+				sqlAppender.append(")");
+				break;
+			case NANOSECOND:
+			case SECOND:
+				sqlAppender.append("(");
+				extractField(sqlAppender, from, to, DAY, unit);
+				if (timestamp) {
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, HOUR, unit);
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, MINUTE, unit);
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, SECOND, unit);
+				}
+				sqlAppender.append(")");
+				break;
+			default:
+				throw new SemanticException("unrecognized field: " + unit);
+		}
+	}
+
+	void extractField(
+			Appender sqlAppender,
+			Renderer from, Renderer to,
+			TemporalUnit unit, TemporalUnit toUnit) {
+		sqlAppender.append("extract(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(" from (");
+		to.render();
+		sqlAppender.append("-");
+		from.render();
+		sqlAppender.append(") ");
+		switch (unit) {
+			case YEAR:
+			case MONTH:
+				sqlAppender.append("year to month");
+				break;
+			case DAY:
+			case HOUR:
+			case MINUTE:
+			case SECOND:
+				sqlAppender.append("day to second");
+				break;
+			default:
+				throw new SemanticException(unit + " is not a legal field");
+		}
+		sqlAppender.append(")");
+		sqlAppender.append( conversionFactor(unit, toUnit) );
 	}
 
 	protected void registerCharacterTypeMappings() {
@@ -726,4 +902,89 @@ public class Oracle8iDialect extends Dialect {
 	public boolean supportsNoWait() {
 		return true;
 	}
+
+	public static Replacer datetimeFormat(String format, boolean useFm) {
+		String fm = useFm ? "fm" : "";
+		return new Replacer( format, "'", "\"" )
+				//era
+				.replace("GG", "AD")
+				.replace("G", "AD")
+
+				//year
+				.replace("yyyy", "YYYY")
+				.replace("yyy", fm + "YYYY")
+				.replace("yy", "YY")
+				.replace("y", fm + "YYYY")
+
+				//month of year
+				.replace("MMMM", fm + "Month")
+				.replace("MMM", "Mon")
+				.replace("MM", "MM")
+				.replace("M", fm + "MM")
+
+				//week of year
+				.replace("ww", "IW")
+				.replace("w", fm + "IW")
+				//year for week
+				.replace("YYYY", "IYYY")
+				.replace("YYY", fm + "IYYY")
+				.replace("YY", "IY")
+				.replace("Y", fm + "IYYY")
+
+				//week of month
+				.replace("W", "W")
+
+				//day of week
+				.replace("EEEE", fm + "Day")
+				.replace("EEE", "Dy")
+				.replace("ee", "D")
+				.replace("e", fm + "D")
+
+				//day of month
+				.replace("dd", "DD")
+				.replace("d", fm + "DD")
+
+				//day of year
+				.replace("DDD", "DDD")
+				.replace("DD", fm + "DDD")
+				.replace("D", fm + "DDD")
+
+				//am pm
+				.replace("aa", "AM")
+				.replace("a", "AM")
+
+				//hour
+				.replace("hh", "HH12")
+				.replace("HH", "HH24")
+				.replace("h", fm + "HH12")
+				.replace("H", fm + "HH24")
+
+				//minute
+				.replace("mm", "MI")
+				.replace("m", fm + "MI")
+
+				//second
+				.replace("ss", "SS")
+				.replace("s", fm + "SS")
+
+				//fractional seconds
+				.replace("SSSSSS", "FF6")
+				.replace("SSSSS", "FF5")
+				.replace("SSSS", "FF4")
+				.replace("SSS", "FF3")
+				.replace("SS", "FF2")
+				.replace("S", "FF1")
+
+				//timezones
+				.replace("zzz", "TZR")
+				.replace("zz", "TZR")
+				.replace("z", "TZR")
+				.replace("ZZZ", "TZHTZM")
+				.replace("ZZ", "TZHTZM")
+				.replace("Z", "TZHTZM")
+				.replace("xxx", "TZH:TZM")
+				.replace("xx", "TZHTZM")
+				.replace("x", "TZH"); //note special case
+	}
+
 }

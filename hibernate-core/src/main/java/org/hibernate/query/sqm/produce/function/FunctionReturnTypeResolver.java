@@ -30,7 +30,6 @@ public interface FunctionReturnTypeResolver {
 	 * @param impliedType the context-impled type
 	 * @param arguments the arguments "passed" to this call.
 	 *
-	 * @param typeConfiguration
 	 * @return The resolved type.
 	 */
 	AllowableFunctionReturnType<?> resolveFunctionReturnType(

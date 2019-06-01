@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -133,6 +134,7 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.substr( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.leftRight( queryEngine );
@@ -140,6 +142,8 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.position( queryEngine );
+		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+		CommonFunctionFactory.dateTrunc( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
 
@@ -152,6 +156,28 @@ public class IngresDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
 
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("timestampadd(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("timestampdiff(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
 	}
 
 	@Override
@@ -312,4 +338,21 @@ public class IngresDialect extends Dialect {
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return MySQLDialect.datetimeFormat( format ).result();
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			case DAY_OF_YEAR: return "doy";
+			case DAY_OF_WEEK: return "dow";
+			case WEEK: return "iso_week";
+			default: return unit.toString();
+		}
+	}
+
 }

@@ -117,6 +117,8 @@ public class Oracle9Dialect extends Dialect {
 		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.systimestamp( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
 
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );

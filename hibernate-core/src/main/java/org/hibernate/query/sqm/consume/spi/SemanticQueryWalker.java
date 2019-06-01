@@ -23,11 +23,13 @@ import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.function.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
@@ -40,6 +42,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
+import org.hibernate.query.sqm.tree.expression.function.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
@@ -254,11 +257,17 @@ public interface SemanticQueryWalker<T> {
 
 	T visitExtractUnit(SqmExtractUnit extractUnit);
 
-	T visitCastTarget(SqmCastTarget sqmCastTarget);
+	T visitCastTarget(SqmCastTarget castTarget);
 
 	T visitTrimSpecification(SqmTrimSpecification trimSpecification);
 
 	T visitDistinct(SqmDistinct distinct);
 
-	T visitStar(SqmStar sqmStar);
+	T visitStar(SqmStar star);
+
+	T visitFormat(SqmFormat format);
+
+	T visitToDuration(SqmToDuration toDuration);
+
+	T visitByUnit(SqmByUnit byUnit);
 }

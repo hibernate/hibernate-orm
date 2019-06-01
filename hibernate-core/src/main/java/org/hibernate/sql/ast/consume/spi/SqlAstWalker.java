@@ -9,8 +9,11 @@ package org.hibernate.sql.ast.consume.spi;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Conversion;
 import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -147,4 +150,10 @@ public interface SqlAstWalker {
 	void visitStar(Star star);
 
 	void visitDistinct(Distinct distinct);
+
+	void visitFormat(Format format);
+
+	void visitConversion(Conversion conversion);
+
+	void visitDuration(Duration duration);
 }

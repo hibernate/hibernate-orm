@@ -16,6 +16,7 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.MySQLExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -28,6 +29,7 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -38,6 +40,8 @@ import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * An SQL dialect for MySQL (prior to 5.x).
@@ -200,6 +204,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
+		CommonFunctionFactory.utcDateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.crc32( queryEngine );
 		CommonFunctionFactory.sha1( queryEngine );
@@ -223,6 +228,12 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.datediff( queryEngine );
+		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
+		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+		CommonFunctionFactory.currentTimestampExplicitMicros( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new MySQLExtractEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -240,6 +251,55 @@ public class MySQLDialect extends Dialect {
 				.setUseParenthesesWhenNoArgs( true ) //MySQL requires the parens
 				.register();
 
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "makedate" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "maketime" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("timestampadd(");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("microsecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("(");
+		}
+		magnitude.render();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append(")/1e3");
+		}
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("timestampdiff(");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("microsecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("*1e3");
+		}
 	}
 
 	protected void registerVarcharTypes() {
@@ -614,5 +674,79 @@ public class MySQLDialect extends Dialect {
 	@Override
 	protected String escapeLiteral(String literal) {
 		return super.escapeLiteral( literal ).replace("\\", "\\\\");
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return datetimeFormat( format ).result();
+	}
+
+	public static Replacer datetimeFormat(String format) {
+		return new Replacer( format, "'", "" )
+				.replace("%", "%%")
+
+				//year
+				.replace("yyyy", "%Y")
+				.replace("yyy", "%Y")
+				.replace("yy", "%y")
+				.replace("y", "%Y")
+
+				//month of year
+				.replace("MMMM", "%M")
+				.replace("MMM", "%b")
+				.replace("MM", "%m")
+				.replace("M", "%c")
+
+				//week of year
+				.replace("ww", "%v")
+				.replace("w", "%v")
+				//year for week
+				.replace("YYYY", "%x")
+				.replace("YYY", "%x")
+				.replace("Y", "%x")
+
+				//week of month
+				//????
+
+				//day of week
+				.replace("EEEE", "%W")
+				.replace("EEE", "%a")
+				.replace("ee", "%w")
+				.replace("e", "%w")
+
+				//day of month
+				.replace("dd", "%d")
+				.replace("d", "%e")
+
+				//day of year
+				.replace("DDD", "%j")
+				.replace("DD", "%j")
+				.replace("D", "%j")
+
+				//am pm
+				.replace("aa", "%p")
+				.replace("a", "%p")
+
+				//hour
+				.replace("hh", "%h")
+				.replace("HH", "%H")
+				.replace("h", "%l")
+				.replace("H", "%k")
+
+				//minute
+				.replace("mm", "%i")
+				.replace("m", "%i")
+
+				//second
+				.replace("ss", "%S")
+				.replace("s", "%S")
+
+				//fractional seconds
+				.replace("SSSSSS", "%f")
+				.replace("SSSSS", "%f")
+				.replace("SSSS", "%f")
+				.replace("SSS", "%f")
+				.replace("SS", "%f")
+				.replace("S", "%f");
 	}
 }

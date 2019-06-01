@@ -28,6 +28,32 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 		CommonFunctionFactory.translate( queryEngine );
 
 		CommonFunctionFactory.median_percentileCont( queryEngine, true );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datefromparts" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "timefromparts" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 5 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "smalldatetimefromparts" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 5 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datetimefromparts" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 7 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datetime2fromparts" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 8 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datetimeoffsetfromparts" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 10 )
+				.register();
+
 	}
 
 	@Override

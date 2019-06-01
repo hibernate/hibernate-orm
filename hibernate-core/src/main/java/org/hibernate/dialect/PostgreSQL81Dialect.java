@@ -20,6 +20,9 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.PostgresExtractEmulation;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -42,6 +45,15 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+
+import static org.hibernate.query.TemporalUnit.DAY;
+import static org.hibernate.query.TemporalUnit.EPOCH;
+import static org.hibernate.query.TemporalUnit.MONTH;
+import static org.hibernate.query.TemporalUnit.QUARTER;
+import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.query.TemporalUnit.conversionFactor;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiDateLiteral;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTimeLiteral;
 
 /**
  * An SQL dialect for Postgres
@@ -103,6 +115,147 @@ public class PostgreSQL81Dialect extends Dialect {
 		return Types.BOOLEAN;
 	}
 
+	public void timestampadd(
+			TemporalUnit unit,
+			Renderer magnitude, Renderer to,
+			Appender sqlAppender,
+			boolean timestamp) {
+		sqlAppender.append("(");
+		to.render();
+		boolean subtract = false;
+		//TODO: do something nicer for negative magnitude
+//		if ( magnitude.startsWith("-") ) {
+//			subtract = true;
+//			magnitude = magnitude.substring(1);
+//		}
+		sqlAppender.append(subtract ? " - " : " + ");
+		switch ( unit ) {
+			case NANOSECOND:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(")/1e3 * interval '1 microsecond'");
+				break;
+			case QUARTER: //quarter is not supported in interval literals
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(") * interval '3 month'");
+				break;
+			default:
+				//TODO: do something nicer for literal magnitude
+//				if ( magnitude.matches("\\d+") ) {
+//					sqlAppender.append("interval '");
+//					sqlAppender.append( magnitude );
+//				}
+//				else {
+					sqlAppender.append("(");
+					magnitude.render();
+					sqlAppender.append(") * interval '1");
+//				}
+				sqlAppender.append(" ");
+				sqlAppender.append( unit.toString() );
+				sqlAppender.append("'");
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(
+			TemporalUnit unit,
+			Renderer from, Renderer to,
+			Appender sqlAppender,
+			boolean fromTimestamp, boolean toTimestamp) {
+		if ( !toTimestamp && !fromTimestamp && unit==DAY ) {
+			// special case: subtraction of two dates
+			// results in an integer number of days
+			// instead of an INTERVAL
+			sqlAppender.append("(");
+			to.render();
+			sqlAppender.append("-");
+			from.render();
+			sqlAppender.append(")");
+		}
+		else {
+			switch (unit) {
+				case YEAR:
+					extractField(sqlAppender, from, to, YEAR, fromTimestamp, toTimestamp, unit);
+					break;
+				case QUARTER:
+					sqlAppender.append("(");
+					extractField(sqlAppender, from, to, YEAR, fromTimestamp, toTimestamp, unit);
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, QUARTER, fromTimestamp, toTimestamp, unit);
+					sqlAppender.append(")");
+					break;
+				case MONTH:
+					sqlAppender.append("(");
+					extractField(sqlAppender, from, to, YEAR, fromTimestamp, toTimestamp, unit);
+					sqlAppender.append("+");
+					extractField(sqlAppender, from, to, MONTH, fromTimestamp, toTimestamp, unit);
+					sqlAppender.append(")");
+					break;
+				case WEEK: //week is not supported by extract() when the argument is a duration
+				case DAY:
+					extractField(sqlAppender, from, to, DAY, fromTimestamp, toTimestamp, unit);
+					break;
+				case HOUR:
+				case MINUTE:
+				case SECOND:
+				case NANOSECOND:
+					extractField(sqlAppender, from, to, EPOCH, fromTimestamp, toTimestamp, unit);
+					break;
+				default:
+					throw new SemanticException("unrecognized field: " + unit);
+			}
+		}
+	}
+
+	private void extractField(
+			Appender sqlAppender,
+			Renderer from, Renderer to,
+			TemporalUnit unit,
+			boolean fromTimestamp, boolean toTimestamp,
+			TemporalUnit toUnit) {
+		sqlAppender.append("extract(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(" from ");
+		if ( !toTimestamp && !fromTimestamp ) {
+			// special case subtraction of two
+			// dates results in an integer not
+			// an Interval
+			sqlAppender.append("age(");
+			to.render();
+			sqlAppender.append(",");
+			from.render();
+			sqlAppender.append(")");
+		}
+		else {
+			switch (unit) {
+				case YEAR:
+				case MONTH:
+				case QUARTER:
+					sqlAppender.append("age(");
+					to.render();
+					sqlAppender.append(",");
+					from.render();
+					sqlAppender.append(")");
+					break;
+				case DAY:
+				case HOUR:
+				case MINUTE:
+				case SECOND:
+				case EPOCH:
+					to.render();
+					sqlAppender.append("-");
+					from.render();
+					break;
+				default:
+					throw new SemanticException(unit + " is not a legal field");
+			}
+		}
+		sqlAppender.append(")");
+		sqlAppender.append( conversionFactor(unit, toUnit) );
+	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
@@ -126,6 +279,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+		CommonFunctionFactory.dateTrunc( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
@@ -140,6 +294,8 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
 
+		queryEngine.getSqmFunctionRegistry().register( "extract", new PostgresExtractEmulation() );
+
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
@@ -151,6 +307,26 @@ public class PostgreSQL81Dialect extends Dialect {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_date" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_time" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 6 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamptz" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setArgumentCountBetween( 6, 7 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
+
 	}
 
 	@Override
@@ -608,6 +784,54 @@ public class PostgreSQL81Dialect extends Dialect {
 	@Override
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return datetimeFormat( format ).result();
+	}
+
+	public Replacer datetimeFormat(String format) {
+		return Oracle8iDialect.datetimeFormat(format, true)
+				.replace("SSSSSS", "US")
+				.replace("SSSSS", "US")
+				.replace("SSSS", "US")
+				.replace("SSS", "MS")
+				.replace("SS", "MS")
+				.replace("S", "MS")
+				//use ISO day in week, as per DateTimeFormatter
+				.replace("ee", "ID")
+				.replace("e", "fmID")
+				//TZR is TZ in Postgres
+				.replace("zzz", "TZ")
+				.replace("zz", "TZ")
+				.replace("z", "TZ");
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			//WEEK means the ISO week number on Postgres
+			case DAY_OF_MONTH: return "day";
+			case DAY_OF_YEAR: return "doy";
+			case DAY_OF_WEEK: return "dow";
+			default: return unit.toString();
+		}
+	}
+
+	@Override
+	protected String wrapDateLiteral(String date) {
+		return wrapAsAnsiDateLiteral(date);
+	}
+
+	@Override
+	protected String wrapTimeLiteral(String time) {
+		return wrapAsAnsiTimeLiteral(time);
+	}
+
+	@Override
+	protected String wrapTimestampLiteral(String timestamp) {
+		return "timestamp with time zone '" + timestamp + "'";
 	}
 
 }

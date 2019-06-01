@@ -12,6 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
@@ -32,6 +33,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
@@ -39,10 +41,12 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.function.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -53,6 +57,7 @@ import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
+import org.hibernate.query.sqm.tree.expression.function.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
@@ -78,6 +83,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
@@ -102,9 +108,12 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Conversion;
 import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
@@ -139,13 +148,16 @@ import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.query.BinaryArithmeticOperator.ADD;
-import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
 import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
-import static org.hibernate.query.BinaryArithmeticOperator.QUOT;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
+import static org.hibernate.query.TemporalUnit.DAY;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.UnaryArithmeticOperator.UNARY_MINUS;
+import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
 /**
  * @author Steve Ebersole
@@ -178,6 +190,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 	private final Stack<Clause> currentClauseStack = new StandardStack<>();
 	private final Stack<SqmSelectToSqlAstConverter.Shallowness> shallownessStack = new StandardStack<>( SqmSelectToSqlAstConverter.Shallowness.NONE );
+
+	private SqmByUnit appliedByUnit;
+	private Expression adjustedTimestamp;
+	private Expression adjustmentScale;
+	private boolean negativeAdjustment;
 
 	public BaseSqmToSqlAstConverter(
 			SqlAstCreationContext creationContext,
@@ -553,12 +570,76 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public BasicValuedNavigableReference visitBasicValuedPath(SqmBasicValuedSimplePath path) {
-		return new BasicValuedNavigableReference(
+	public Object visitBasicValuedPath(SqmBasicValuedSimplePath path) {
+
+		BasicValuedNavigableReference navigableReference = new BasicValuedNavigableReference(
 				path.getNavigablePath(),
 				path.getReferencedNavigable(),
 				this
 		);
+
+		if ( isDuration( path.getExpressableType() ) ) {
+
+			// Durations are stored (at least by default)
+			// in a BIGINTEGER column full of nanoseconds
+			// which we need to convert to the given unit
+			//
+			// This does not work at all for a Duration
+			// mapped to a VARCHAR column, in which case
+			// we would need to parse the weird format
+			// defined by java.time.Duration (a bit hard
+			// to do without some custom function).
+			// Nor does it work for databases which have
+			// a well-defined INTERVAL type, but that is
+			// something we could implement.
+
+			//first let's apply the propagated scale
+			Expression scaledExpression = applyScale( toSqlExpression( navigableReference ) );
+
+			if ( adjustedTimestamp != null ) {
+				if ( appliedByUnit != null ) {
+					throw new IllegalStateException();
+				}
+				// we're adding this variable duration to the
+				// given date or timestamp, producing an
+				// adjusted date or timestamp
+				return new BinaryArithmeticExpression(
+						adjustedTimestamp,
+						ADD,
+						new Duration(
+								scaledExpression,
+								NANOSECOND,
+								scaledExpression.getType()
+						),
+						adjustedTimestamp.getType()
+				);
+			}
+			else if ( appliedByUnit != null ) {
+				// we're applying the 'by unit' operator,
+				// producing a literal scalar value, so
+				// we must convert this duration from
+				// nanoseconds to the given unit
+				return new Conversion(
+						new Duration(
+								scaledExpression,
+								NANOSECOND,
+								scaledExpression.getType()
+						),
+						appliedByUnit.getUnit().getUnit(),
+						sqlExpressableTypeForLong()
+				);
+			}
+			else {
+				// a "bare" Duration value in nanoseconds
+				return scaledExpression;
+			}
+		}
+
+		return navigableReference;
+	}
+
+	private SqlExpressableType sqlExpressableTypeForLong() {
+		return getCreationContext().getDomainModel().getTypeConfiguration().standardExpressableTypeForJavaType( Long.class ).getSqlExpressableType();
 	}
 
 	@Override
@@ -692,6 +773,122 @@ public abstract class BaseSqmToSqlAstConverter
 		return consumeSqmParameter( expression );
 	}
 
+	Expression applyScale(Expression magnitude) {
+		boolean negate = negativeAdjustment;
+
+		if ( magnitude instanceof UnaryOperation ) {
+			UnaryOperation unary = (UnaryOperation) magnitude;
+			if ( unary.getOperator() == UNARY_MINUS ) {
+				// if it's already negated, don't
+				// wrap it in another unary minus,
+				// just throw away the one we have
+				// (OTOH, if it *is* negated, shift
+				// the operator to left of scale)
+				negate = !negate;
+			}
+			magnitude = unary.getOperand();
+		}
+
+		if ( adjustmentScale != null ) {
+			if ( isOne( adjustmentScale ) ) {
+				//no work to do
+			}
+			else {
+				if ( isOne( magnitude ) ) {
+					magnitude = adjustmentScale;
+				}
+				else {
+					magnitude = new BinaryArithmeticExpression(
+							adjustmentScale,
+							MULTIPLY,
+							magnitude,
+							magnitude.getType()
+					);
+				}
+			}
+		}
+
+		if ( negate ) {
+			magnitude = new UnaryOperation(
+					UNARY_MINUS,
+					magnitude,
+					magnitude.getType()
+			);
+		}
+
+		return magnitude;
+	}
+
+	static boolean isOne(Expression scale) {
+		return scale instanceof QueryLiteral
+			&& ((QueryLiteral) scale).getValue().toString().equals("1");
+	}
+
+	@Override
+	public Object visitToDuration(SqmToDuration toDuration) {
+		//TODO: do we need to temporarily set appliedByUnit
+		//      to null before we recurse down the tree?
+		//      and what about scale?
+		Expression magnitude = toSqlExpression( toDuration.getMagnitude().accept(this) );
+		ExtractUnit unit = (ExtractUnit) toDuration.getUnit().accept(this);
+
+		// let's start by applying the propagated scale
+		// so we don't forget to do it in what follows
+		Expression scaledMagnitude = applyScale( magnitude );
+
+		if ( adjustedTimestamp != null ) {
+			// we're adding this literal duration to the
+			// given date or timestamp, producing an
+			// adjusted date or timestamp
+			if ( appliedByUnit != null ) {
+				throw new IllegalStateException();
+			}
+			return new BinaryArithmeticExpression(
+					adjustedTimestamp,
+					BinaryArithmeticOperator.ADD,
+					new Duration(
+							scaledMagnitude,
+							unit.getUnit(),
+							toDuration.getExpressableType().getSqlExpressableType()
+					),
+					adjustedTimestamp.getType()
+			);
+		}
+		else if ( appliedByUnit != null ) {
+			// we're applying the 'by unit' operator,
+			// producing a literal scalar value in
+			// the given unit
+			return new Conversion(
+					new Duration(
+							scaledMagnitude,
+							unit.getUnit(),
+							toDuration.getExpressableType().getSqlExpressableType()
+					),
+					appliedByUnit.getUnit().getUnit(),
+					sqlExpressableTypeForLong()
+			);
+		}
+		else {
+			// a "bare" Duration value (gets rendered as nanoseconds)
+			return new Duration(
+					scaledMagnitude,
+					unit.getUnit(),
+					toDuration.getExpressableType().getSqlExpressableType()
+			);
+		}
+	}
+
+	@Override
+	public Object visitByUnit(SqmByUnit byUnit) {
+		SqmByUnit outer = appliedByUnit;
+		appliedByUnit = byUnit;
+		try {
+			return byUnit.getDuration().accept( this );
+		}
+		finally {
+			appliedByUnit = outer;
+		}
+	}
 
 	@Override
 	public Object visitFunction(SqmFunction sqmFunction) {
@@ -702,6 +899,14 @@ public abstract class BaseSqmToSqlAstConverter
 		finally {
 			shallownessStack.pop();
 		}
+	}
+
+	@Override
+	public Object visitFormat(SqmFormat sqmFormat) {
+		return new Format(
+				sqmFormat.getLiteralValue(),
+				sqmFormat.getExpressableType().getSqlExpressableType()
+		);
 	}
 
 	@Override
@@ -738,7 +943,7 @@ public abstract class BaseSqmToSqlAstConverter
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
 			return new ExtractUnit(
-					unit.getUnitName(),
+					unit.getUnit(),
 					unit.getType().getSqlExpressableType()
 			);
 		}
@@ -753,7 +958,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitStar(SqmStar sqmStar) {
+	public Object visitStar(SqmStar star) {
 		return new Star();
 	}
 
@@ -779,42 +984,219 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Expression visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
+	public Object visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
 		shallownessStack.push( Shallowness.NONE );
 
 		try {
-			return new BinaryArithmeticExpression(
-					toSqlExpression( expression.getLeftHandOperand().accept( this ) ),
-					interpret( expression.getOperator() ),
-					toSqlExpression( expression.getRightHandOperand().accept( this ) ),
-					expression.getExpressableType().getSqlExpressableType()
-			);
+			SqmExpression leftOperand = expression.getLeftHandOperand();
+			SqmExpression rightOperand = expression.getRightHandOperand();
+
+			boolean durationToRight = isDuration( rightOperand.getExpressableType() );
+			TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
+			boolean temporalTypeToLeft = typeConfiguration.isTemporalType( leftOperand.getExpressableType() );
+			boolean temporalTypeToRight = typeConfiguration.isTemporalType( rightOperand.getExpressableType() );
+			boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft;
+
+			if (temporalTypeToLeft && durationToRight) {
+				if (adjustmentScale != null || negativeAdjustment) {
+					//we can't distribute a scale over a date/timestamp
+					throw new SemanticException("scalar multiplication of temporal value");
+				}
+			}
+
+			if (durationToRight && temporalTypeSomewhereToLeft) {
+				return transformDurationArithmetic( expression );
+			}
+			else if (temporalTypeToLeft && temporalTypeToRight) {
+				return transformDatetimeArithmetic( expression );
+			}
+			else {
+				return new BinaryArithmeticExpression(
+						toSqlExpression( leftOperand.accept(this) ),
+						expression.getOperator(),
+						toSqlExpression( rightOperand.accept(this) ),
+						expression.getExpressableType().getSqlExpressableType()
+				);
+			}
 		}
 		finally {
 			shallownessStack.pop();
 		}
 	}
 
-	private BinaryArithmeticOperator interpret(BinaryArithmeticOperator operator) {
+	Object transformDurationArithmetic(SqmBinaryArithmetic<?> expression) {
+		BinaryArithmeticOperator operator = expression.getOperator();
+
+		// we have a date or timestamp somewhere to
+		// the right of us, so we need to restructure
+		// the expression tree
 		switch ( operator ) {
-			case ADD: {
-				return ADD;
-			}
-			case SUBTRACT: {
-				return SUBTRACT;
-			}
-			case MULTIPLY: {
-				return MULTIPLY;
-			}
-			case DIVIDE: {
-				return DIVIDE;
-			}
-			case QUOT: {
-				return QUOT;
-			}
+			case ADD:
+			case SUBTRACT:
+				// the only legal binary operations involving
+				// a duration with a date or timestamp are
+				// addition and subtraction with the duration
+				// on the right and the date or timestamp on
+				// the left, producing a date or timestamp
+				//
+				// ts + d or ts - d
+				//
+				// the only legal binary operations involving
+				// two durations are addition and subtraction,
+				// producing a duration
+				//
+				// d1 + d2
+
+				// re-express addition of non-leaf duration
+				// expressions to a date or timestamp as
+				// addition of leaf durations to a date or
+				// timestamp
+				// ts + x * (d1 + d2) => (ts + x * d1) + x * d2
+				// ts - x * (d1 + d2) => (ts - x * d1) - x * d2
+				// ts + x * (d1 - d2) => (ts + x * d1) - x * d2
+				// ts - x * (d1 - d2) => (ts - x * d1) + x * d2
+
+				Expression timestamp = adjustedTimestamp;
+				adjustedTimestamp = toSqlExpression( expression.getLeftHandOperand().accept( this ) );
+				if (operator == SUBTRACT) {
+					negativeAdjustment = !negativeAdjustment;
+				}
+				try {
+					return expression.getRightHandOperand().accept( this );
+				}
+				finally {
+					if (operator == SUBTRACT) {
+						negativeAdjustment = !negativeAdjustment;
+					}
+					adjustedTimestamp = timestamp;
+				}
+			case MULTIPLY:
+				// finally, we can multiply a duration on the
+				// right by a scalar value on the left
+				// scalar multiplication produces a duration
+				// x * d
+
+				// distribute scalar multiplication over the
+				// terms, not forgetting the propagated scale
+				// x * (d1 + d2) => x * d1 + x * d2
+				// x * (d1 - d2) => x * d1 - x * d2
+				// -x * (d1 + d2) => - x * d1 - x * d2
+				// -x * (d1 - d2) => - x * d1 + x * d2
+				Expression duration = toSqlExpression( expression.getLeftHandOperand().accept(this) );
+				Expression scale = adjustmentScale;
+				boolean negate = negativeAdjustment;
+				adjustmentScale = applyScale( duration );
+				negativeAdjustment = false; //was sucked into the scale
+				try {
+					return expression.getRightHandOperand().accept( this );
+				}
+				finally {
+					adjustmentScale = scale;
+					negativeAdjustment = negate;
+				}
+			default:
+				throw new SemanticException("illegal operator for a duration " + operator);
+		}
+	}
+
+	Object transformDatetimeArithmetic(SqmBinaryArithmetic expression) {
+		BinaryArithmeticOperator operator = expression.getOperator();
+
+		// the only kind of algebra we know how to
+		// do on dates/timestamps is subtract them,
+		// producing a duration - all other binary
+		// operator expressions with two dates or
+		// timestamps are ill-formed
+		if ( operator != SUBTRACT ) {
+			throw new SemanticException("illegal operator for temporal type: " + operator);
 		}
 
-		throw new IllegalStateException( "Unexpected BinaryArithmeticOperator : " + operator );
+		// a difference between two dates or two
+		// timestamps is a leaf duration, so we
+		// must apply the scale, and the 'by unit'
+		// ts1 - ts2
+
+		BinaryArithmeticExpression difference = cleanly(() ->
+				new BinaryArithmeticExpression(
+						toSqlExpression( expression.getLeftHandOperand().accept(this) ),
+						operator,
+						toSqlExpression( expression.getRightHandOperand().accept(this) ),
+						expression.getExpressableType().getSqlExpressableType()
+				)
+		);
+
+		TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
+		boolean leftTimestamp = typeConfiguration.isTimestampType( expression.getLeftHandOperand().getExpressableType()) ;
+		boolean rightTimestamp = typeConfiguration.isTimestampType( expression.getRightHandOperand().getExpressableType() );
+
+		if (adjustedTimestamp != null) {
+			if ( appliedByUnit != null ) {
+				throw new IllegalStateException();
+			}
+			// we're using the resulting duration to
+			// adjust a date or timestamp on the left
+
+			return new BinaryArithmeticExpression(
+					adjustedTimestamp,
+					ADD,
+					new Duration(
+							applyScale( difference ),
+							// even though no database supports
+							// nanosecond precision for timestamps,
+							// the "native" precision of the Java
+							// Duration type is nanoseconds, so we
+							// need to use it here to bypass the
+							// conversion to nanoseconds that
+							// happens in AbstractSqlAstWalker
+							rightTimestamp || leftTimestamp ? NANOSECOND : DAY,
+							expression.getExpressableType().getSqlExpressableType()
+					),
+					adjustedTimestamp.getType()
+			);
+		}
+		else if (appliedByUnit != null) {
+			// we're immediately converting the resulting
+			// duration to a scalar in the given unit
+			return applyScale(
+					new Conversion( //this is only a conversion of type, not of unit!
+							new Duration(
+									difference,
+									appliedByUnit.getUnit().getUnit(),
+									expression.getExpressableType().getSqlExpressableType()
+							),
+							appliedByUnit.getUnit().getUnit(),
+							sqlExpressableTypeForLong()
+					)
+			);
+		}
+		else {
+			// a plain "bare" Duration
+			return new Duration(
+					applyScale(difference),
+					rightTimestamp || leftTimestamp ? NANOSECOND : DAY,
+					expression.getExpressableType().getSqlExpressableType()
+			);
+		}
+	}
+
+	private <T> T cleanly(Supplier<T> supplier) {
+		SqmByUnit byUnit = appliedByUnit;
+		Expression timestamp = adjustedTimestamp;
+		Expression scale = adjustmentScale;
+		boolean negate = negativeAdjustment;
+		adjustmentScale = null;
+		negativeAdjustment = false;
+		appliedByUnit = null;
+		adjustedTimestamp = null;
+		try {
+			return supplier.get();
+		}
+		finally {
+			appliedByUnit = byUnit;
+			adjustedTimestamp = timestamp;
+			adjustmentScale = scale;
+			negativeAdjustment = negate;
+		}
 	}
 
 	@Override

@@ -9,6 +9,9 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+
+import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
 /**
  * Represents a literal value in the sqm, e.g.<ul>
@@ -45,5 +48,11 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> implements SqmExpres
 	@Override
 	public String asLoggableText() {
 		return "Literal( " + value + ")";
+	}
+
+	@Override
+	protected void internalApplyInferableType(ExpressableType newType) {
+		//never mess with the type, because the original
+		//type is needed for parameter binding!
 	}
 }

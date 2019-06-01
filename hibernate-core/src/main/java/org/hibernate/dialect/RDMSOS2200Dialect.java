@@ -11,7 +11,9 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
+import org.hibernate.dialect.function.RDMSExtractEmulation;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
@@ -30,6 +32,8 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -195,12 +199,58 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
 
 		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
 		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation() );
 
+		queryEngine.getSqmFunctionRegistry().register( "extract", new RDMSExtractEmulation() );
+
 	}
 
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("timestampadd('SQL_TSI_FRAC_SECOND'"); //micros
+		}
+		else {
+			sqlAppender.append("dateadd('");
+			sqlAppender.append( unit.toString() );
+			sqlAppender.append("'");
+		}
+		sqlAppender.append(", ");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("(");
+		}
+		magnitude.render();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append(")/1e3");
+		}
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("timestampdiff('SQL_TSI_FRAC_SECOND'"); //micros
+		}
+		else {
+			sqlAppender.append("datediff('");
+			sqlAppender.append( unit.toString() );
+			sqlAppender.append("'");
+		}
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("*1e3");
+		}
+	}
 
 	// Dialect method overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -373,5 +423,17 @@ public class RDMSOS2200Dialect extends Dialect {
 		else {
 			return new SelectLockingStrategy( lockable, lockMode );
 		}
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return Oracle8iDialect.datetimeFormat( format, true ) //Does it really support FM?
+				.replace("SSSSSS", "MLS")
+				.replace("SSSSS", "MLS")
+				.replace("SSSS", "MLS")
+				.replace("SSS", "MLS")
+				.replace("SS", "MLS")
+				.replace("S", "MLS")
+				.result();
 	}
 }

@@ -17,6 +17,7 @@ import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -45,6 +46,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.StandardBasicTypes.StandardBasicType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -477,12 +479,34 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			BasicValuedExpressableType<?> secondType,
 			boolean isDivision) {
 
+		if ( isTemporalType( firstType ) ) {
+			if ( secondType==null || isTemporalType( secondType ) ) {
+				// special case for subtraction of two dates
+				// or timestamps resulting in a duration
+				return getBasicTypeRegistry().getBasicType( Duration.class );
+			}
+			else {
+				// must be postfix addition/subtraction of
+				// a duration to/from a date or timestamp
+				return firstType;
+			}
+		}
+		else if ( isDuration( secondType ) ) {
+			// it's either addition/subtraction of durations
+			// or prefix scalar multiplication of a duration
+			return secondType;
+		}
+		else if ( firstType==null && isTemporalType( secondType ) ) {
+			// subtraction of a date or timestamp from a
+			// parameter (which doesn't have a type yet)
+			return getBasicTypeRegistry().getBasicType( Duration.class );
+		}
+
 		if ( isDivision ) {
 			// covered under the note in 6.5.7.1 discussing the unportable
 			// "semantics of the SQL division operation"..
 			return getBasicTypeRegistry().getBasicType( Number.class );
 		}
-
 
 		// non-division
 
@@ -533,8 +557,49 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
+	public static boolean isDuration(ExpressableType<?> type) {
+		return matchesJavaType( type, Duration.class );
+	}
+
+	public static boolean isJDBCTemporalType(ExpressableType<?> type) {
+		return matchesJavaType( type, java.util.Date.class );
+	}
+
+	public boolean isTemporalType(ExpressableType<?> type) {
+		return type != null
+			&& isTemporalType( type.getJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
+	}
+
+	public boolean isTimestampType(ExpressableType<?> type) {
+		return type != null
+			&& isTimestampType( type.getJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
+	}
+
+	public static boolean isTimestampType(SqlExpressableType type) {
+		return isTimestampType( type.getSqlTypeDescriptor() );
+	}
+
+	public static boolean isTimestampType(SqlTypeDescriptor descriptor) {
+		int jdbcTypeCode = descriptor.getJdbcTypeCode();
+		return jdbcTypeCode == Types.TIMESTAMP
+			|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE;
+	}
+
+	public static boolean isTemporalType(SqlExpressableType type) {
+		return isTemporalType( type.getSqlTypeDescriptor() );
+	}
+
+	public static boolean isTemporalType(SqlTypeDescriptor descriptor) {
+		int jdbcTypeCode = descriptor.getJdbcTypeCode();
+		return jdbcTypeCode == Types.TIMESTAMP
+			|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE
+			|| jdbcTypeCode == Types.TIME
+			|| jdbcTypeCode == Types.TIME_WITH_TIMEZONE
+			|| jdbcTypeCode == Types.DATE;
+	}
+
 	@SuppressWarnings("unchecked")
-	private static boolean matchesJavaType(BasicValuedExpressableType type, Class javaType) {
+	private static boolean matchesJavaType(ExpressableType<?> type, Class javaType) {
 		assert javaType != null;
 		return type != null && javaType.isAssignableFrom( type.getJavaType() );
 	}

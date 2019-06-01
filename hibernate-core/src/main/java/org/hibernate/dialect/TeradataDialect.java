@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
@@ -17,6 +18,8 @@ import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * A dialect for the Teradata database created by MCR as part of the
@@ -67,6 +70,86 @@ public class TeradataDialect extends Dialect {
 	@Override
 	public int getDefaultDecimalPrecision() {
 		return 18;
+	}
+
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		//TODO: TOTALLY UNTESTED CODE!
+		if (unit == NANOSECOND) {
+			sqlAppender.append("1e9*");
+
+		}
+		sqlAppender.append("((");
+		to.render();
+		sqlAppender.append(" - ");
+		from.render();
+		sqlAppender.append(") ");
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append("second(19,9)");
+				break;
+			case WEEK:
+				sqlAppender.append("day(19,0)");
+				break;
+			case QUARTER:
+				sqlAppender.append("month(19,0)");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+				sqlAppender.append("(19,0)");
+		}
+		sqlAppender.append(")");
+		switch (unit) {
+			case WEEK:
+				sqlAppender.append("/7");
+				break;
+			case QUARTER:
+				sqlAppender.append("/3");
+				break;
+		}
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		//TODO: TOTALLY UNTESTED CODE!
+		sqlAppender.append("(");
+		to.render();
+		boolean subtract = false;
+//		if ( magnitude.startsWith("-") ) {
+//			subtract = true;
+//			magnitude = magnitude.substring(1);
+//		}
+		sqlAppender.append(subtract ? " - " : " + ");
+		switch ( unit ) {
+			case NANOSECOND:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(")/1e9 * interval '1' second");
+				break;
+			case QUARTER:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(") * interval '3' month");
+				break;
+			case WEEK:
+				sqlAppender.append("(");
+				magnitude.render();
+				sqlAppender.append(") * interval '7' day");
+				break;
+			default:
+//				if ( magnitude.matches("\\d+") ) {
+//					sqlAppender.append("interval '");
+//					sqlAppender.append( magnitude );
+//					sqlAppender.append("'");
+//				}
+//				else {
+					sqlAppender.append("(");
+					magnitude.render();
+					sqlAppender.append(") * interval '1'");
+//				}
+				sqlAppender.append(" ");
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(")");
 	}
 
 	@Override

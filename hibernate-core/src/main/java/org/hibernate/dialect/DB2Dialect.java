@@ -17,6 +17,7 @@ import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.DB2FormatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -29,6 +30,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
@@ -172,12 +174,16 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
-
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
+		CommonFunctionFactory.yearsMonthsDaysHoursMinutesSecondsBetween( queryEngine );
+		CommonFunctionFactory.dateTrunc( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "formatdatetime", new DB2FormatEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
@@ -193,6 +199,107 @@ public class DB2Dialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
+		boolean castTo = !toTimestamp && !unit.isDateUnit();
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append("(second");
+				break;
+			//note: DB2 does have weeks_between()
+			case MONTH:
+			case QUARTER:
+				// the months_between() function results
+				// in a non-integral value, so trunc() it
+				sqlAppender.append("trunc(month");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append("s_between(");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(",");
+		if (castFrom) {
+			sqlAppender.append("cast(");
+		}
+		from.render();
+		if (castFrom) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(")");
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append("*1e9+(microsecond(");
+				to.render();
+				sqlAppender.append(")-microsecond(");
+				from.render();
+				sqlAppender.append("))*1e3)");
+				break;
+			case MONTH:
+				sqlAppender.append(")");
+				break;
+			case QUARTER:
+				sqlAppender.append("/3)");
+				break;
+		}
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		boolean castTo = !timestamp && !unit.isDateUnit();
+		sqlAppender.append("add_");
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append("second");
+				break;
+			case WEEK:
+				//note: DB2 does not have add_weeks()
+				sqlAppender.append("day");
+				break;
+			case QUARTER:
+				sqlAppender.append("month");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append("s(");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(",");
+		switch (unit) {
+			case NANOSECOND:
+			case WEEK:
+			case QUARTER:
+				sqlAppender.append("(");
+				break;
+		}
+		magnitude.render();
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append(")/1e9");
+				break;
+			case WEEK:
+				sqlAppender.append(")*7");
+				break;
+			case QUARTER:
+				sqlAppender.append(")*3");
+				break;
+		}
+		sqlAppender.append(")");
 	}
 
 	@Override
@@ -577,4 +684,22 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsPartitionBy() {
 		return true;
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//DB2 does not need nor support FM
+		return Oracle8iDialect.datetimeFormat( format, false ).result();
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			//WEEK means the ISO week number on DB2
+			case DAY_OF_MONTH: return "day";
+			case DAY_OF_YEAR: return "doy";
+			case DAY_OF_WEEK: return "dow";
+			default: return unit.toString();
+		}
+	}
+
 }

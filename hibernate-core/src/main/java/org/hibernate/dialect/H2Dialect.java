@@ -13,6 +13,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.H2ExtractEmulation;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -28,6 +29,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -162,18 +164,42 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
-
 //		CommonFunctionFactory.everyAny( queryEngine ); //this would work too
 		CommonFunctionFactory.everyAny_boolAndOr( queryEngine );
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.formatdatetime( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new H2ExtractEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setUseParenthesesWhenNoArgs( true ) //H2 requires the parens
 				.register();
 
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("dateadd(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("datediff(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
 	}
 
 	@Override
@@ -407,4 +433,18 @@ public class H2Dialect extends Dialect {
 	public String getQueryHintString(String query, String hints) {
 		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return new Replacer( format, "'", "''" ).replace("e", "u").result(); //NICE!!
+	}
+
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			case WEEK: return "iso_week";
+			default: return unit.toString();
+		}
+	}
+
 }

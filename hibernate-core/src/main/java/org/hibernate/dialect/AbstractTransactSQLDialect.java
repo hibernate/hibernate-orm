@@ -20,6 +20,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
@@ -86,12 +87,37 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.characterLength_len( queryEngine );
 		CommonFunctionFactory.extract_datepart( queryEngine );
+		CommonFunctionFactory.lastDay_eomonth( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2", "atn2")
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )
 				.register();
 
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("dateadd(");
+		//TODO: SQL Server supports nanosecond, but what about Sybase?
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("datediff(");
+		//TODO: SQL Server supports nanosecond, but what about Sybase?
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
 	}
 
 	@Override

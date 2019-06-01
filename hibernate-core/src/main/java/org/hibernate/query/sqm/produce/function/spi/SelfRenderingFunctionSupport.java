@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.produce.function.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -23,6 +22,5 @@ public interface SelfRenderingFunctionSupport {
 	void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
-			SqlAstWalker walker,
-			SessionFactoryImplementor sessionFactory);
+			SqlAstWalker walker);
 }

@@ -6,12 +6,22 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.expression.function.SqmByUnit;
+import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.BinaryArithmeticOperator.ADD;
+import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
+import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
+import static org.hibernate.type.spi.TypeConfiguration.isDuration;
+import static org.hibernate.type.spi.TypeConfiguration.isTemporalType;
 
 /**
  * @author Steve Ebersole
@@ -25,11 +35,11 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			MetamodelImplementor domainModel,
+			TypeConfiguration typeConfiguration,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(ExpressableType<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
+				(ExpressableType<T>) typeConfiguration.resolveArithmeticType(
 						(BasicValuedExpressableType) lhsOperand.getExpressableType(),
 						(BasicValuedExpressableType) rhsOperand.getExpressableType(),
 						operator
@@ -99,11 +109,16 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	protected void internalApplyInferableType(ExpressableType<?> type) {
-		rhsOperand.applyInferableType( type );
-		lhsOperand.applyInferableType( type );
+	protected void internalApplyInferableType(ExpressableType<?> newType) {
+		//don't cast Durations to Timestamps in addition expressions
+		//don't cast scalars to Durations in multiplication expressions
+		if ( !isDuration( getExpressableType() )
+				&& !isDuration( newType ) ) {
+			rhsOperand.applyInferableType( newType );
+			lhsOperand.applyInferableType( newType );
+		}
 
-		super.internalApplyInferableType( type );
+		super.internalApplyInferableType( newType );
 	}
 
 	@Override

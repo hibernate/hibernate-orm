@@ -14,6 +14,7 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.dialect.identity.Chache71IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -41,6 +42,8 @@ import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * Cach&eacute; 2007.1 dialect.
@@ -270,6 +273,8 @@ public class Cache71Dialect extends Dialect {
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
 
@@ -299,10 +304,41 @@ public class Cache71Dialect extends Dialect {
 		useJdbcEscape(queryEngine, "dayofweek");
 		useJdbcEscape(queryEngine, "dayofmonth");
 		useJdbcEscape(queryEngine, "dayofyear");
+
 	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("dateadd(");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("millisecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		magnitude.render();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("/1e6");
+		}
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("datediff(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
 
 	@Override
 	public boolean hasAlterTable() {
@@ -607,4 +643,11 @@ public class Cache71Dialect extends Dialect {
 	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		return false;
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//I don't think Cache needs FM
+		return Oracle8iDialect.datetimeFormat( format, false ).result();
+	}
+
 }

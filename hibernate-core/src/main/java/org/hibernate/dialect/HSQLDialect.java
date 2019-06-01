@@ -40,6 +40,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -53,6 +54,8 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -196,10 +199,11 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
-
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
 
 		if ( hsqldbVersion >= 200 ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
@@ -214,6 +218,59 @@ public class HSQLDialect extends Dialect {
 					.register();
 		}
 
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		boolean castTo = !timestamp && !unit.isDateUnit();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("timestampadd(sql_tsi_frac_second"); //nanos
+		}
+		else {
+			sqlAppender.append("dateadd(");
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
+		boolean castTo = !toTimestamp && !unit.isDateUnit();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("timestampdiff(sql_tsi_frac_second"); //nanos
+		}
+		else {
+			sqlAppender.append("datediff(");
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		if (castFrom) {
+			sqlAppender.append("cast(");
+		}
+		from.render();
+		if (castFrom) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(", ");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(")");
 	}
 
 	@Override
@@ -643,6 +700,30 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String getCascadeConstraintsString() {
-		return " CASCADE ";
+		return " cascade ";
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return Oracle8iDialect.datetimeFormat(format, false)
+				.replace("SSSSSS", "FF")
+				.replace("SSSSS", "FF")
+				.replace("SSSS", "FF")
+				.replace("SSS", "FF")
+				.replace("SS", "FF")
+				.replace("S", "FF")
+				.result();
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		//TODO: does not support MICROSECOND, but on the
+		//      other hand it doesn't support microsecond
+		//      precision in timestamps either so who cares?
+		switch (unit) {
+			case WEEK: return "week_of_year"; //this is the ISO week number, I believe
+			default: return unit.toString();
+		}
+	}
+
 }

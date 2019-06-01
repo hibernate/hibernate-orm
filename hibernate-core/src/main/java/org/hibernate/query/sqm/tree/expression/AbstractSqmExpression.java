@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
+import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
 /**
  * @author Steve Ebersole
@@ -46,13 +47,18 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@SuppressWarnings("unchecked")
 	protected void internalApplyInferableType(ExpressableType<?> newType) {
-		SqmTreeCreationLogger.LOGGER.debugf(
-				"Applying inferable type to SqmExpression [%s] : %s -> %s",
-				this,
-				getExpressableType(),
-				newType
-		);
-		setExpressableType( highestPrecedenceType( newType, getExpressableType() ) );
+		//don't cast Durations to Timestamps in addition expressions
+		//don't cast scalars to Durations in multiplication expressions
+		if ( !isDuration( getExpressableType() )
+				&& !isDuration( newType ) ) {
+			SqmTreeCreationLogger.LOGGER.debugf(
+					"Applying inferable type to SqmExpression [%s] : %s -> %s",
+					this,
+					getExpressableType(),
+					newType
+			);
+			setExpressableType( highestPrecedenceType( newType, getExpressableType() ) );
+		}
 	}
 
 	@Override

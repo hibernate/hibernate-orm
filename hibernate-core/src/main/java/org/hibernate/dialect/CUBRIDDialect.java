@@ -10,16 +10,24 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CUBRIDExtractEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.metamodel.model.relational.spi.Size;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.CUBRIDLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorCUBRIDDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.HOUR;
+import static org.hibernate.query.TemporalUnit.MINUTE;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.SECOND;
 
 /**
  * An SQL dialect for CUBRID (8.3.x and later).
@@ -142,14 +150,28 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.insert( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot( queryEngine );
-
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.datediff( queryEngine );
+		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new CUBRIDExtractEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "makedate" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "maketime" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.register();
 	}
 
 	@Override
@@ -275,5 +297,109 @@ public class CUBRIDDialect extends Dialect {
 	@Override
 	public boolean supportsPartitionBy() {
 		return true;
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//I do not know if CUBRID supports FM, but it
+		//seems that it does pad by default, so it needs it!
+		return Oracle8iDialect.datetimeFormat( format, true )
+				.replace("SSSSSS", "FF")
+				.replace("SSSSS", "FF")
+				.replace("SSSS", "FF")
+				.replace("SSS", "FF")
+				.replace("SS", "FF")
+				.replace("S", "FF")
+				.result();
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("adddate(");
+		to.render();
+		sqlAppender.append(",interval ");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("(");
+		}
+		magnitude.render();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append(")/1e6");
+		}
+		sqlAppender.append(" ");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("microsecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		switch ( unit ) {
+			case DAY:
+				sqlAppender.append("datediff(");
+				to.render();
+				sqlAppender.append(",");
+				from.render();
+				sqlAppender.append(")");
+				break;
+			case HOUR:
+				timediff(from, to, sqlAppender, HOUR, unit);
+				break;
+			case MINUTE:
+				sqlAppender.append("(");
+				timediff(from, to, sqlAppender, MINUTE, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, HOUR, unit);
+				sqlAppender.append(")");
+				break;
+			case SECOND:
+				sqlAppender.append("(");
+				timediff(from, to, sqlAppender, SECOND, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, MINUTE, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, HOUR, unit);
+				sqlAppender.append(")");
+				break;
+			case NANOSECOND:
+				sqlAppender.append("(");
+				timediff(from, to, sqlAppender, NANOSECOND, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, SECOND, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, MINUTE, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, HOUR, unit);
+				sqlAppender.append(")");
+				break;
+			default:
+				throw new SemanticException("unsupported temporal unit for CUBRID: " + unit);
+		}
+	}
+
+	private void timediff(
+			Renderer from, Renderer to,
+			Appender sqlAppender,
+			TemporalUnit diffUnit,
+			TemporalUnit toUnit) {
+		if ( diffUnit == NANOSECOND ) {
+			sqlAppender.append("1e6*");
+		}
+		sqlAppender.append("extract(");
+		if ( diffUnit == NANOSECOND ) {
+			sqlAppender.append("millisecond");
+		}
+		else {
+			sqlAppender.append( diffUnit.toString() );
+		}
+		sqlAppender.append(",timediff(");
+		to.render();
+		sqlAppender.append(",");
+		from.render();
+		sqlAppender.append("))");
+		sqlAppender.append( diffUnit.conversionFactor(toUnit) );
 	}
 }

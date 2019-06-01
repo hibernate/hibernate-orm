@@ -74,6 +74,7 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( OffsetDateTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( OffsetTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( ZonedDateTimeJavaDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ZoneOffsetJavaDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( CalendarJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( DateJavaDescriptor.INSTANCE );

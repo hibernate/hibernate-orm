@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Currency;
@@ -70,6 +71,7 @@ import org.hibernate.type.descriptor.java.internal.StringJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.TimeZoneJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.UrlJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.ZoneOffsetJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BinarySqlDescriptor;
@@ -712,6 +714,13 @@ public final class StandardSpiBasicTypes {
 			VarcharSqlDescriptor.INSTANCE
 	);
 
+	/**
+	 * The standard Hibernate type for mapping {@link java.time.ZoneOffset} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 */
+	public static final StandardBasicType<ZoneOffset> OFFSET = new StandardBasicTypeImpl(
+			ZoneOffsetJavaDescriptor.INSTANCE,
+			VarcharSqlDescriptor.INSTANCE
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.net.URL} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
@@ -1143,6 +1152,13 @@ public final class StandardSpiBasicTypes {
 				"org.hibernate.type.TimeZoneType",
 				typeConfiguration,
 				"timezone", TimeZone.class.getName()
+		);
+
+		handle(
+				OFFSET,
+				"org.hibernate.type.ZoneOffsetType",
+				typeConfiguration,
+				"offset", ZoneOffset.class.getName()
 		);
 
 		handle(

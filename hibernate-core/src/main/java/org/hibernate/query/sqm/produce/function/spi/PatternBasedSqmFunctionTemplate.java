@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.produce.function.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -78,9 +77,8 @@ public class PatternBasedSqmFunctionTemplate
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
-			SqlAstWalker walker,
-			SessionFactoryImplementor sessionFactory) {
-		renderer.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
+			SqlAstWalker walker) {
+		renderer.render( sqlAppender, sqlAstArguments, walker );
 	}
 
 	@Override

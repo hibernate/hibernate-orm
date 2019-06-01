@@ -43,6 +43,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.HANAExtractEmulation;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -309,7 +310,13 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.characterLength_length( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
+		CommonFunctionFactory.daysBetween( queryEngine );
+		CommonFunctionFactory.secondsBetween( queryEngine );
+		CommonFunctionFactory.formatdatetime_toVarchar( queryEngine );
+		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
 
+		queryEngine.getSqmFunctionRegistry().register( "extract", new HANAExtractEmulation() );
 	}
 
 	@Override
@@ -1718,5 +1725,11 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	public boolean supportsNoColumnsInsert() {
 		return false;
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//I don't think HANA needs FM
+		return Oracle8iDialect.datetimeFormat( format, false ).result();
 	}
 }

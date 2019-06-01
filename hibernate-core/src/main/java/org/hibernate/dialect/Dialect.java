@@ -17,6 +17,9 @@ import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -29,6 +32,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
@@ -38,6 +42,8 @@ import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.LocatePositionEmulation;
+import org.hibernate.dialect.function.TimestampaddFunction;
+import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -87,6 +93,7 @@ import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -119,6 +126,15 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import javax.persistence.TemporalType;
+
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsDate;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTime;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestamp;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcDateLiteral;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcTimeLiteral;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcTimestampLiteral;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS. Subclasses
@@ -271,9 +287,9 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Initialize the given registry with any dialect-specific functions.
 	 *
-	 * Note that support for certain functions is required, and if the
-	 * database does not support a required function, then the dialect
-	 * must define a way to emulate it.
+	 * Support for certain SQL functions is required, and if the database
+	 * does not support a required function, then the dialect must define
+	 * a way to emulate it.
 	 *
 	 * These required functions include the functions defined by the JPA
 	 * query language specification:
@@ -305,20 +321,27 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * 		* cast
 	 * 		* extract
-	 * 	    * position (alternative syntax for locate)
 	 *      * ln, exp
 	 *      * power
 	 *      * floor, ceiling
+	 *      * position (alternative syntax for locate)
+	 *
+	 * And the following functions for working with java.time types:
+	 *
+	 *      * current date
+	 *      * current time
+	 *      * current datetime
+	 *      * current instant
 	 *
 	 * And a number of additional "standard" functions:
 	 *
+	 *      * format
 	 *      * left, right
 	 *      * replace
 	 *      * least, greatest
 	 *      * sign
 	 *      * sin, cos, tan, asin, acos, atan, atan2
 	 *      * round
-	 * 	    * current_instant
 	 * 	    * ifnull        - two-argument synonym of coalesce(a, b)
 	 * 		* str           - synonym of cast(a as String)
 	 *
@@ -399,6 +422,63 @@ public abstract class Dialect implements ConversionContext {
 
 		queryEngine.getSqmFunctionRegistry().register("str", new CastStrEmulation());
 
+		//datetime formatting function, Oracle-style to_char() on most databases
+
+		CommonFunctionFactory.formatdatetime_toChar(queryEngine);
+
+		//timestampadd/timestampdiff implemented by Dialect itself
+
+		queryEngine.getSqmFunctionRegistry().register("timestampadd", new TimestampaddFunction(this) );
+		queryEngine.getSqmFunctionRegistry().register("timestampdiff", new TimestampdiffFunction(this) );
+
+	}
+
+	public interface Renderer {
+		void render();
+	}
+
+	public interface Appender {
+		void append(String text);
+	}
+
+	/**
+	 * Write SQL equivalent to a timestampdiff() function
+	 * to the given {@link Appender}.
+	 *
+	 * @param unit the first argument of timestampdiff()
+	 * @param from the second argument of timestampdiff()
+	 * @param to the third argument of timestampdiff()
+	 * @param sqlAppender an {@link Appender} to write to
+	 * @param fromTimestamp true if the first argument is
+	 *                      a timestamp, false if a date
+	 * @param toTimestamp true if the second argument is
+	 *                    a timestamp, false if a date
+	 */
+	public void timestampdiff(
+			TemporalUnit unit,
+			Renderer from, Renderer to,
+			Appender sqlAppender,
+			boolean fromTimestamp, boolean toTimestamp) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	/**
+	 * Write SQL equivalent to a timestampadd() function
+	 * to the given {@link Appender}.
+	 *
+	 * @param unit the first argument of timestampdiff()
+	 * @param magnitude the second argument of timestampdiff()
+	 * @param to the third argument of timestampdiff()
+	 * @param sqlAppender an {@link Appender} to write to
+	 * @param timestamp true if the second argument is a
+	 *                  timestamp, false if a date
+	 */
+	public void timestampadd(
+			TemporalUnit unit,
+			Renderer magnitude, Renderer to,
+			Appender sqlAppender,
+			boolean timestamp) {
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	/**
@@ -1991,9 +2071,6 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Meant as a means for end users to affect the select strings being sent
 	 * to the database and perhaps manipulate them in some fashion.
-	 * <p/>
-	 * The recommend approach is to instead use
-	 * {@link org.hibernate.Interceptor#onPrepareStatement(String)}.
 	 *
 	 * @param select The select command
 	 * @return The mutated select command, or the same as was passed in.
@@ -3313,4 +3390,72 @@ public abstract class Dialect implements ConversionContext {
 			return null;
 		}
 	}
+
+	public String translateDatetimeFormat(String format) {
+		//most databases support a datetime format
+		//copied from Oracle's to_char() function,
+		//with some minor variation
+		return Oracle8iDialect.datetimeFormat( format, true ).result();
+	}
+
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "dd";
+			case DAY_OF_YEAR: return "dy";
+			case DAY_OF_WEEK: return "dw";
+			default: return unit.toString();
+		}
+	}
+
+	protected String wrapTimestampLiteral(String timestamp) {
+		return wrapAsJdbcTimestampLiteral(timestamp);
+	}
+
+	protected String wrapDateLiteral(String date) {
+		return wrapAsJdbcDateLiteral(date);
+	}
+
+	protected String wrapTimeLiteral(String time) {
+		return wrapAsJdbcTimeLiteral(time);
+	}
+
+	public String formatDateTimeLiteral(TemporalAccessor temporalAccessor, TemporalType precision) {
+		switch ( precision ) {
+			case DATE:
+				return wrapDateLiteral( formatAsDate(temporalAccessor) );
+			case TIME:
+				return wrapTimeLiteral( formatAsTime(temporalAccessor) );
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestamp(temporalAccessor) );
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public String formatDateTimeLiteral(Date date, TemporalType precision) {
+		switch ( precision ) {
+			case DATE:
+				return wrapDateLiteral( formatAsDate(date) );
+			case TIME:
+				return wrapTimeLiteral( formatAsTime(date) );
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestamp(date) );
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision) {
+		switch ( precision ) {
+			case DATE:
+				return wrapDateLiteral( formatAsDate(calendar) );
+			case TIME:
+				return wrapTimeLiteral( formatAsTime(calendar) );
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestamp(calendar) );
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
 }

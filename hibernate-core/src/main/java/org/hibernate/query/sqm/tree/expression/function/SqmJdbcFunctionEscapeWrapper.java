@@ -23,16 +23,12 @@ public class SqmJdbcFunctionEscapeWrapper<T>
 			SelfRenderingSqmFunction<T> wrappedSqmFunction,
 			NodeBuilder nodeBuilder) {
 		super(
-				(sqlAppender,
-				sqlAstArguments,
-				walker,
-				sessionFactory) -> {
+				(sqlAppender, sqlAstArguments, walker) -> {
 					sqlAppender.appendSql( "{fn " );
 					wrappedSqmFunction.getRenderingSupport().render(
 							sqlAppender,
 							sqlAstArguments,
-							walker,
-							sessionFactory
+							walker
 					);
 					sqlAppender.appendSql( "}" );
 				},

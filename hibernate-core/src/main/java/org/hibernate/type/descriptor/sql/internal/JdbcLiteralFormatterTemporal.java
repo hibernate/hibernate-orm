@@ -36,19 +36,19 @@ public class JdbcLiteralFormatterTemporal extends BasicJdbcLiteralFormatter {
 	public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
 		// for performance reasons, avoid conversions if we can
 		if ( value instanceof java.util.Date ) {
-			return DateTimeUtils.formatJdbcLiteralUsingPrecision(
+			return dialect.formatDateTimeLiteral(
 					(java.util.Date) value,
 					precision
 			);
 		}
 		else if ( value instanceof java.util.Calendar ) {
-			return DateTimeUtils.formatJdbcLiteralUsingPrecision(
+			return dialect.formatDateTimeLiteral(
 					(java.util.Calendar) value,
 					precision
 			);
 		}
 		else if ( value instanceof TemporalAccessor ) {
-			return DateTimeUtils.formatJdbcLiteralUsingPrecision(
+			return dialect.formatDateTimeLiteral(
 					(TemporalAccessor) value,
 					precision
 			);
@@ -56,19 +56,19 @@ public class JdbcLiteralFormatterTemporal extends BasicJdbcLiteralFormatter {
 
 		switch ( getJavaTypeDescriptor().getPrecision() ) {
 			case DATE: {
-				return DateTimeUtils.formatJdbcLiteralUsingPrecision(
+				return dialect.formatDateTimeLiteral(
 						unwrap( value, java.sql.Date.class, session ),
 						precision
 				);
 			}
 			case TIME: {
-				return DateTimeUtils.formatJdbcLiteralUsingPrecision(
+				return dialect.formatDateTimeLiteral(
 						unwrap( value, java.sql.Time.class, session ),
 						precision
 				);
 			}
 			default: {
-				return DateTimeUtils.formatJdbcLiteralUsingPrecision(
+				return dialect.formatDateTimeLiteral(
 						unwrap( value, java.util.Date.class, session ),
 						precision
 				);

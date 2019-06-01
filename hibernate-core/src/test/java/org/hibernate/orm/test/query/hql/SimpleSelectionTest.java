@@ -171,6 +171,19 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testSelectADoubleConstant() {
+		inTransaction(
+				session -> {
+					List<Object> results = session.createQuery(
+							"select 1.5e-6d from SimpleEntity s where s.id = :id" )
+							.setParameter( "id", 1 )
+							.list();
+					assertThat( results.size(), is( 1 ) );
+					assertThat( results.get( 0 ), is( 1.5e-6d ) );
+				} );
+	}
+
+	@Test
 	public void testSelectACharConstant() {
 		inTransaction(
 				session -> {
@@ -179,7 +192,7 @@ public class SimpleSelectionTest extends SessionFactoryBasedFunctionalTest {
 							.setParameter( "id", 1 )
 							.list();
 					assertThat( results.size(), is( 1 ) );
-					assertThat( results.get( 0 ), is( 'a' ) );
+					assertThat( results.get( 0 ), is( "a" ) );
 				} );
 	}
 

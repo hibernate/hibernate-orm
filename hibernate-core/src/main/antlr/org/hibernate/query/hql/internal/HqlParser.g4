@@ -73,7 +73,7 @@ targetFieldsSpec
 // QUERY SPEC - general structure of root sqm or sub sqm
 
 querySpec
-	:	selectClause? fromClause whereClause? ( groupByClause havingClause? )? orderByClause? limitClause? offsetClause?
+	: selectClause? fromClause whereClause? ( groupByClause havingClause? )? orderByClause? limitClause? offsetClause?
 	;
 
 
@@ -85,7 +85,7 @@ fromClause
 	;
 
 fromClauseSpace
-	:	pathRoot ( crossJoin | jpaCollectionJoin | qualifiedJoin )*
+	: pathRoot ( crossJoin | jpaCollectionJoin | qualifiedJoin )*
 	;
 
 pathRoot
@@ -111,7 +111,7 @@ crossJoin
 	;
 
 jpaCollectionJoin
-	:	COMMA IN LEFT_PAREN path RIGHT_PAREN (identificationVariableDef)?
+	: COMMA IN LEFT_PAREN path RIGHT_PAREN (identificationVariableDef)?
 	;
 
 qualifiedJoin
@@ -137,7 +137,7 @@ qualifiedJoinPredicate
 // SELECT clause
 
 selectClause
-	:	SELECT DISTINCT? selectionList
+	: SELECT DISTINCT? selectionList
 	;
 
 selectionList
@@ -149,10 +149,10 @@ selection
 	;
 
 selectExpression
-	:	dynamicInstantiation
-	|	jpaSelectObjectSyntax
-	|	mapEntrySelection
-	|	expression
+	: dynamicInstantiation
+	| jpaSelectObjectSyntax
+	| mapEntrySelection
+	| expression
 	;
 
 resultIdentifier
@@ -176,20 +176,20 @@ dynamicInstantiationTarget
 	;
 
 dynamicInstantiationArgs
-	:	dynamicInstantiationArg ( COMMA dynamicInstantiationArg )*
+	: dynamicInstantiationArg ( COMMA dynamicInstantiationArg )*
 	;
 
 dynamicInstantiationArg
-	:	dynamicInstantiationArgExpression (AS? identifier)?
+	: dynamicInstantiationArgExpression (AS? identifier)?
 	;
 
 dynamicInstantiationArgExpression
-	:	expression
-	|	dynamicInstantiation
+	: expression
+	| dynamicInstantiation
 	;
 
 jpaSelectObjectSyntax
-	:	OBJECT LEFT_PAREN identifier RIGHT_PAREN
+	: OBJECT LEFT_PAREN identifier RIGHT_PAREN
 	;
 
 
@@ -272,15 +272,15 @@ mapKeyNavigablePath
 // GROUP BY clause
 
 groupByClause
-	:	GROUP BY groupingSpecification
+	: GROUP BY groupingSpecification
 	;
 
 groupingSpecification
-	:	groupingValue ( COMMA groupingValue )*
+	: groupingValue ( COMMA groupingValue )*
 	;
 
 groupingValue
-	:	expression collationSpecification?
+	: expression collationSpecification?
 	;
 
 
@@ -288,7 +288,7 @@ groupingValue
 //HAVING clause
 
 havingClause
-	:	HAVING predicate
+	: HAVING predicate
 	;
 
 
@@ -311,16 +311,16 @@ sortExpression
 	;
 
 collationSpecification
-	:	COLLATE collateName
+	: COLLATE collateName
 	;
 
 collateName
-	:	dotIdentifierSequence
+	: dotIdentifierSequence
 	;
 
 orderingSpecification
-	:	ASC
-	|	DESC
+	: ASC
+	| DESC
 	;
 
 
@@ -345,32 +345,37 @@ parameterOrNumberLiteral
 // WHERE clause & Predicates
 
 whereClause
-	:	WHERE predicate
+	: WHERE predicate
 	;
 
 predicate
+	//highest to lowest precedence
 	: LEFT_PAREN predicate RIGHT_PAREN						# GroupedPredicate
-	| predicate OR predicate								# OrPredicate
-	| predicate AND predicate								# AndPredicate
-	| NOT predicate											# NegatedPredicate
 	| expression IS (NOT)? NULL								# IsNullPredicate
 	| expression IS (NOT)? EMPTY							# IsEmptyPredicate
-	| expression EQUAL expression							# EqualityPredicate
-	| expression NOT_EQUAL expression						# InequalityPredicate
-	| expression GREATER expression							# GreaterThanPredicate
-	| expression GREATER_EQUAL expression					# GreaterThanOrEqualPredicate
-	| expression LESS expression							# LessThanPredicate
-	| expression LESS_EQUAL expression						# LessThanOrEqualPredicate
 	| expression (NOT)? IN inList							# InPredicate
 	| expression (NOT)? BETWEEN expression AND expression	# BetweenPredicate
 	| expression (NOT)? LIKE expression (likeEscape)?		# LikePredicate
+	| expression comparisonOperator expression				# ComparisonPredicate
 	| MEMBER OF path										# MemberOfPredicate
+	| NOT predicate											# NegatedPredicate
+	| predicate AND predicate								# AndPredicate
+	| predicate OR predicate								# OrPredicate
+	;
+
+comparisonOperator
+	: EQUAL
+	| NOT_EQUAL
+	| GREATER
+	| GREATER_EQUAL
+	| LESS
+	| LESS_EQUAL
 	;
 
 inList
-	: ELEMENTS? LEFT_PAREN dotIdentifierSequence RIGHT_PAREN		# PersistentCollectionReferenceInList
-	| LEFT_PAREN expression (COMMA expression)*	RIGHT_PAREN			# ExplicitTupleInList
-	| expression													# SubQueryInList
+	: ELEMENTS? LEFT_PAREN dotIdentifierSequence RIGHT_PAREN	# PersistentCollectionReferenceInList
+	| LEFT_PAREN expression (COMMA expression)*	RIGHT_PAREN		# ExplicitTupleInList
+	| expression												# SubQueryInList
 	;
 
 likeEscape
@@ -382,36 +387,49 @@ likeEscape
 // Expression
 
 expression
-	: expression DOUBLE_PIPE expression			# ConcatenationExpression
-	| expression PLUS expression				# AdditionExpression
-	| expression MINUS expression				# SubtractionExpression
-	| expression ASTERISK expression			# MultiplicationExpression
-	| expression SLASH expression				# DivisionExpression
-	| expression PERCENT expression				# ModuloExpression
-	// todo (6.0) : should these unary plus/minus rules only apply to literals?
-	//		if so, move the MINUS / PLUS recognition to the `literal` rule
-	//		specificcally for numeric literals
-	| MINUS expression							# UnaryMinusExpression
-	| PLUS expression							# UnaryPlusExpression
-	| caseStatement								# CaseExpression
-	| literal									# LiteralExpression
-	| parameter									# ParameterExpression
-	| entityTypeReference						# EntityTypeExpression
-	| path										# PathExpression
-	| function									# FunctionExpression
-	| LEFT_PAREN subQuery RIGHT_PAREN			# SubQueryExpression
+	//highest to lowest precedence
+	: LEFT_PAREN expression RIGHT_PAREN				# GroupedExpression
+	| LEFT_PAREN subQuery RIGHT_PAREN				# SubQueryExpression
+	| caseList										# CaseExpression
+	| literal										# LiteralExpression
+	| parameter										# ParameterExpression
+	| entityTypeReference							# EntityTypeExpression
+	| path											# PathExpression
+	| function										# FunctionExpression
+	| signOperator expression						# UnaryExpression
+	| expression datetimeField  					# ToDurationExpression
+	| expression BY datetimeField					# FromDurationExpression
+	| expression multiplicativeOperator expression	# MultiplicationExpression
+	| expression additiveOperator expression		# AdditionExpression
+	| expression DOUBLE_PIPE expression				# ConcatenationExpression
+	;
+
+multiplicativeOperator
+	: SLASH
+	| PERCENT
+	| ASTERISK
+	;
+
+additiveOperator
+	: PLUS
+	| MINUS
+	;
+
+signOperator
+	: PLUS
+	| MINUS
 	;
 
 entityTypeReference
 	: TYPE LEFT_PAREN (path | parameter) RIGHT_PAREN
 	;
 
-caseStatement
-	: simpleCaseStatement
-	| searchedCaseStatement
+caseList
+	: simpleCaseList
+	| searchedCaseList
 	;
 
-simpleCaseStatement
+simpleCaseList
 	: CASE expression (simpleCaseWhen)+ (caseOtherwise)? END
 	;
 
@@ -423,7 +441,7 @@ caseOtherwise
 	: ELSE expression
 	;
 
-searchedCaseStatement
+searchedCaseList
 	: CASE (searchedCaseWhen)+ (caseOtherwise)? END
 	;
 
@@ -453,7 +471,6 @@ nullifFunction
 
 literal
 	: STRING_LITERAL
-	| CHARACTER_LITERAL
 	| INTEGER_LITERAL
 	| LONG_LITERAL
 	| BIG_INTEGER_LITERAL
@@ -461,11 +478,14 @@ literal
 	| DOUBLE_LITERAL
 	| BIG_DECIMAL_LITERAL
 	| HEX_LITERAL
-	| OCTAL_LITERAL
 	| NULL
 	| TRUE
 	| FALSE
-	| timestampLiteral
+	| escapedTimestampLiteral
+	| escapedDateLiteral
+	| escapedTimeLiteral
+	| datetimeLiteral
+	| offsetDatetimeLiteral
 	| dateLiteral
 	| timeLiteral
 	;
@@ -483,21 +503,57 @@ literal
 //		1) the markers above are just initial thoughts.  They are obviously verbose.  Maybe acronyms or shortened forms would be better
 //		2) we may want to stay away from all of the timezone headaches by not supporting local, zoned and offset forms
 
-timestampLiteral
+escapedTimestampLiteral
 	: TIMESTAMP_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
 	;
 
-dateLiteral
+escapedDateLiteral
 	: DATE_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
 	;
 
-timeLiteral
+escapedTimeLiteral
 	: TIME_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
 	;
 
-dateTimeLiteralText
-	: STRING_LITERAL | CHARACTER_LITERAL
+datetimeLiteral
+	: DATETIME (date time timezone? | dateTimeLiteralText)
 	;
+
+offsetDatetimeLiteral
+	: OFFSET DATETIME (date time offset | dateTimeLiteralText)
+	;
+
+dateLiteral
+	: DATE (date | dateTimeLiteralText)
+	;
+
+timeLiteral
+	: TIME (time | dateTimeLiteralText)
+	;
+
+dateTimeLiteralText
+	: STRING_LITERAL
+	;
+
+date
+	: year MINUS month MINUS day
+	;
+
+time
+	: hour COLON minute (COLON second)?
+	;
+
+offset
+	: (PLUS | MINUS) hour (COLON minute)?
+	;
+
+year: INTEGER_LITERAL;
+month: INTEGER_LITERAL;
+day: INTEGER_LITERAL;
+hour: INTEGER_LITERAL;
+minute: INTEGER_LITERAL;
+second: INTEGER_LITERAL | FLOAT_LITERAL;
+timezone: STRING_LITERAL;
 
 parameter
 	: COLON identifier					# NamedParameter
@@ -530,7 +586,7 @@ nonStandardFunctionName
 	;
 
 nonStandardFunctionArguments
-	: expression (COMMA expression)*
+	: (datetimeField COMMA)? expression (COMMA expression)*
 	;
 
 jpaCollectionFunction
@@ -584,41 +640,46 @@ countFunction
 	;
 
 standardFunction
-	:	castFunction
-	|	extractFunction
-	|	coalesceFunction
-	|	ifnullFunction
-	|	nullifFunction
-	|	concatFunction
-	|	substringFunction
-	|	leftFunction
-	|	rightFunction
-	|   replaceFunction
-	|	trimFunction
-	|	upperFunction
-	|	lowerFunction
-	|	locateFunction
-	|	positionFunction
-	|	lengthFunction
-	|	absFunction
-	|	signFunction
-	|	sqrtFunction
-	|	lnFunction
-	|	expFunction
-	|	modFunction
-	|	powerFunction
-	|	ceilingFunction
-	|	floorFunction
-	|	roundFunction
-	|	trigFunction
-	|	atan2Function
-	|	strFunction
-	|	greatestFunction
-	|	leastFunction
-	|	currentDateFunction
-	|	currentTimeFunction
-	|	currentTimestampFunction
-	|	currentInstantFunction
+	: castFunction
+	| extractFunction
+	| coalesceFunction
+	| nullifFunction
+	| ifnullFunction
+	| formatFunction
+	| concatFunction
+	| substringFunction
+	| leftFunction
+	| rightFunction
+	| replaceFunction
+	| trimFunction
+	| upperFunction
+	| lowerFunction
+	| locateFunction
+	| positionFunction
+	| lengthFunction
+	| absFunction
+	| signFunction
+	| sqrtFunction
+	| lnFunction
+	| expFunction
+	| modFunction
+	| powerFunction
+	| ceilingFunction
+	| floorFunction
+	| roundFunction
+	| trigFunction
+	| atan2Function
+	| strFunction
+	| greatestFunction
+	| leastFunction
+	| currentDateFunction
+	| currentTimeFunction
+	| currentTimestampFunction
+	| currentInstantFunction
+	| currentDate
+	| currentTime
+	| currentDatetime
+	| currentInstant
 	;
 
 
@@ -665,7 +726,7 @@ trimSpecification
 	;
 
 trimCharacter
-	: CHARACTER_LITERAL | STRING_LITERAL
+	: STRING_LITERAL
 	;
 
 upperFunction
@@ -713,27 +774,27 @@ lengthFunction
 	;
 
 absFunction
-	:	ABS LEFT_PAREN expression RIGHT_PAREN
+	: ABS LEFT_PAREN expression RIGHT_PAREN
 	;
 
 signFunction
-	:	SIGN LEFT_PAREN expression RIGHT_PAREN
+	: SIGN LEFT_PAREN expression RIGHT_PAREN
 	;
 
 sqrtFunction
-	:	SQRT LEFT_PAREN expression RIGHT_PAREN
+	: SQRT LEFT_PAREN expression RIGHT_PAREN
 	;
 
 lnFunction
-	:	LN LEFT_PAREN expression RIGHT_PAREN
+	: LN LEFT_PAREN expression RIGHT_PAREN
 	;
 
 expFunction
-	:	EXP LEFT_PAREN expression RIGHT_PAREN
+	: EXP LEFT_PAREN expression RIGHT_PAREN
 	;
 
 powerFunction
-	:	POWER LEFT_PAREN powerBaseArgument COMMA powerPowerArgument RIGHT_PAREN
+	: POWER LEFT_PAREN powerBaseArgument COMMA powerPowerArgument RIGHT_PAREN
 	;
 
 powerBaseArgument
@@ -745,7 +806,7 @@ powerPowerArgument
 	;
 
 modFunction
-	:	MOD LEFT_PAREN modDividendArgument COMMA modDivisorArgument RIGHT_PAREN
+	: MOD LEFT_PAREN modDividendArgument COMMA modDivisorArgument RIGHT_PAREN
 	;
 
 modDividendArgument
@@ -757,15 +818,15 @@ modDivisorArgument
 	;
 
 ceilingFunction
-	:	CEILING LEFT_PAREN expression RIGHT_PAREN
+	: CEILING LEFT_PAREN expression RIGHT_PAREN
 	;
 
 floorFunction
-	:	FLOOR LEFT_PAREN expression RIGHT_PAREN
+	: FLOOR LEFT_PAREN expression RIGHT_PAREN
 	;
 
 roundFunction
-	:	ROUND LEFT_PAREN expression COMMA roundFunctionPrecision RIGHT_PAREN
+	: ROUND LEFT_PAREN expression COMMA roundFunctionPrecision RIGHT_PAREN
 	;
 
 roundFunctionPrecision
@@ -773,19 +834,19 @@ roundFunctionPrecision
 	;
 
 trigFunction
-	:	trigFunctionName LEFT_PAREN expression RIGHT_PAREN
+	: trigFunctionName LEFT_PAREN expression RIGHT_PAREN
 	;
 
 trigFunctionName
-    : SIN | COS | TAN | ASIN | ACOS | ATAN
-    ;
+	: SIN | COS | TAN | ASIN | ACOS | ATAN
+	;
 
 atan2Function
-	:	ATAN2 LEFT_PAREN expression COMMA expression RIGHT_PAREN
+	: ATAN2 LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
 strFunction
-	:   STR LEFT_PAREN expression RIGHT_PAREN
+	: STR LEFT_PAREN expression RIGHT_PAREN
 	;
 
 currentDateFunction
@@ -800,8 +861,33 @@ currentTimestampFunction
 	: CURRENT_TIMESTAMP (LEFT_PAREN RIGHT_PAREN)?
 	;
 
+//deprecated legacy syntax
 currentInstantFunction
 	: CURRENT_INSTANT (LEFT_PAREN RIGHT_PAREN)?
+	;
+
+currentDate
+	: CURRENT DATE
+	;
+
+currentTime
+	: CURRENT TIME
+	;
+
+currentDatetime
+	: CURRENT DATETIME
+	;
+
+currentInstant
+	: CURRENT INSTANT
+	;
+
+formatFunction
+	: FORMAT LEFT_PAREN expression AS format RIGHT_PAREN
+	;
+
+format
+	: STRING_LITERAL
 	;
 
 extractFunction
@@ -811,8 +897,10 @@ extractFunction
 
 extractField
 	: datetimeField
+	| dayField
+	| weekField
 	| timeZoneField
-	| secondsField
+	| dateOrTimeField
 	;
 
 datetimeField
@@ -824,16 +912,27 @@ datetimeField
 	| HOUR
 	| MINUTE
 	| SECOND
+	| NANOSECOND
 	;
 
-secondsField
-	: MILLISECOND
-	| MICROSECOND
+dayField
+	: DAY OF MONTH
+	| DAY OF WEEK
+	| DAY OF YEAR
+	;
+
+weekField
+	: WEEK OF MONTH
+	| WEEK OF YEAR
 	;
 
 timeZoneField
-	: TIMEZONE_HOUR
-	| TIMEZONE_MINUTE
+	: OFFSET (HOUR | MINUTE)?
+	;
+
+dateOrTimeField
+	: DATE
+	| TIME
 	;
 
 positionFunction
@@ -878,6 +977,7 @@ identifier
 	| CONCAT
 	| COUNT
 	| CROSS
+	| DATE
 	| DAY
 	| DELETE
 	| DESC
@@ -889,6 +989,7 @@ identifier
 	| FLOOR
 	| FROM
 	| FOR
+	| FORMAT
 	| FULL
 	| FUNCTION
 	| GREATEST
@@ -899,6 +1000,7 @@ identifier
 	| INDEX
 	| INNER
 	| INSERT
+	| INSTANT
 	| JOIN
 	| KEY
 	| LEADING
@@ -912,8 +1014,6 @@ identifier
 	| LOWER
 	| MAP
 	| MAX
-	| MICROSECOND
-	| MILLISECOND
 	| MIN
 	| MINUTE
 	| MEMBER
@@ -940,6 +1040,8 @@ identifier
 	| STR
 	| SUBSTRING
 	| SUM
+	| TIME
+	| TIMESTAMP
 	| TRAILING
 	| TREAT
 	| UPDATE

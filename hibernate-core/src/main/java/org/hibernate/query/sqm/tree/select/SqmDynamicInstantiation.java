@@ -134,13 +134,15 @@ public class SqmDynamicInstantiation<T>
 		}
 		else if ( instantiationTarget.getNature() == MAP ) {
 			// must(?) have an alias...
-			log.warnf(
-					"Argument [%s] for dynamic Map instantiation did not declare an 'injection alias' [%s] " +
-							"but such aliases are needed for dynamic Map instantiations; " +
-							"will likely cause problems later translating sqm",
-					argument.getSelectableNode().asLoggableText(),
-					argument.getAlias()
-			);
+			if ( argument.getAlias() == null ) {
+				log.warnf(
+						"Argument [%s] for dynamic Map instantiation did not declare an 'injection alias' [%s] " +
+								"but such aliases are needed for dynamic Map instantiations; " +
+								"will likely cause problems later translating sqm",
+						argument.getSelectableNode().asLoggableText(),
+						argument.getAlias()
+				);
+			}
 		}
 
 		if ( arguments == null ) {

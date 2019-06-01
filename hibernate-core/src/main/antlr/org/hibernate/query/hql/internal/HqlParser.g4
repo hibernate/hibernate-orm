@@ -482,6 +482,7 @@ literal
 	| escapedDateLiteral
 	| escapedTimeLiteral
 	| datetimeLiteral
+	| offsetDatetimeLiteral
 	| dateLiteral
 	| timeLiteral
 	;
@@ -512,7 +513,11 @@ escapedTimeLiteral
 	;
 
 datetimeLiteral
-	: DATETIME (date time | dateTimeLiteralText)
+	: DATETIME (date time timezone? | dateTimeLiteralText)
+	;
+
+offsetDatetimeLiteral
+	: OFFSET DATETIME (date time offset | dateTimeLiteralText)
 	;
 
 dateLiteral
@@ -535,12 +540,17 @@ time
 	: hour COLON minute COLON second
 	;
 
+offset
+	: (PLUS | MINUS) hour (COLON minute)?
+	;
+
 year: INTEGER_LITERAL;
 month: INTEGER_LITERAL;
 day: INTEGER_LITERAL;
 hour: INTEGER_LITERAL;
 minute: INTEGER_LITERAL;
 second: INTEGER_LITERAL | FLOAT_LITERAL;
+timezone: STRING_LITERAL;
 
 parameter
 	: COLON identifier					# NamedParameter

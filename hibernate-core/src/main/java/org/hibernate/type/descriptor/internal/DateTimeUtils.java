@@ -57,6 +57,23 @@ public final class DateTimeUtils {
 			.optionalStart().appendZoneOrOffsetId().optionalEnd()
 			.toFormatter();
 
+	/**
+	 * Pattern used for parsing literal offset datetimes in HQL.
+	 *
+	 * Recognizes timestamps consisting of a date and time separated
+	 * by either T or a space, and with a required offset. Ideally we
+	 * should accept both ISO and SQL standard timestamp formats here.
+	 */
+	public static final DateTimeFormatter OFFSET_DATE_TIME = new DateTimeFormatterBuilder()
+			.parseCaseInsensitive()
+			.append( ISO_LOCAL_DATE )
+			.optionalStart().appendLiteral( ' ' ).optionalEnd()
+			.optionalStart().appendLiteral( 'T' ).optionalEnd()
+			.append( ISO_LOCAL_TIME )
+			.optionalStart().appendLiteral( ' ' ).optionalEnd()
+			.appendOffset("+HH:mm", "+00")
+			.toFormatter();
+
 	public static String formatUsingPrecision(TemporalAccessor temporalAccessor, TemporalType precision) {
 		switch ( precision ) {
 			case DATE: {

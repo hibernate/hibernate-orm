@@ -42,11 +42,22 @@ public class LiteralTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = {ts '2018-01-01T12:30:00+05:00'}" )
 							.list();
-					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = datetime '2018-01-01 12:30:00+05:00'" )
+//					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = {ts '2018-01-01T12:30:00+05'}" )
+//							.list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = offset datetime '2018-01-01 12:30:00+05:00'" )
 							.list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = offset datetime '2018-01-01 12:30:00+05'" )
+							.list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = offset datetime 2018-01-01 12:30:00+05:00" )
+							.list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = offset datetime 2018-01-01 12:30:00+05" )
+							.list();
+
 					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = {ts '2018-01-01T12:30:00 GMT'}" )
 							.list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = datetime '2018-01-01 12:30:00 GMT'" )
+							.list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = datetime 2018-01-01 12:30:00 'GMT'" )
 							.list();
 				}
 		);
@@ -59,6 +70,8 @@ public class LiteralTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = {ts '2018-01-01T12:30:00 US/Pacific'}" )
 							.list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = datetime '2018-01-01 12:30:00 US/Pacific'" )
+							.list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = datetime 2018-01-01 12:30:00 'US/Pacific'" )
 							.list();
 				}
 		);

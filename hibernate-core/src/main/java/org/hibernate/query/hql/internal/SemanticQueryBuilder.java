@@ -14,6 +14,8 @@ import java.sql.Timestamp;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -189,6 +191,7 @@ import static org.hibernate.query.TemporalUnit.WEEK_OF_MONTH;
 import static org.hibernate.query.TemporalUnit.WEEK_OF_YEAR;
 import static org.hibernate.query.TemporalUnit.YEAR;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.DATE_TIME;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.OFFSET_DATE_TIME;
 import static org.hibernate.type.spi.TypeConfiguration.isJDBCTemporalType;
 
 /**
@@ -1697,17 +1700,30 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		else if ( ctx.literal().NULL() != null ) {
 			return new SqmLiteralNull( creationContext.getQueryEngine().getCriteriaBuilder() );
 		}
-		// literals for java.time LocalDate/LocalTime/LocalDateTime using either
-		// ANSI SQL quoted string literal or HQL unquoted literal syntax
+		// literals for java.time LocalDate/LocalTime/LocalDateTime/OffsetDateTime using
+		// either the ANSI SQL quoted string literal or the HQL unquoted literal syntax
 		else if ( ctx.literal().datetimeLiteral() != null ) {
 			if ( ctx.literal().datetimeLiteral().dateTimeLiteralText() == null ) {
 				return datetimeLiteralFrom(
 						ctx.literal().datetimeLiteral().date(),
-						ctx.literal().datetimeLiteral().time()
+						ctx.literal().datetimeLiteral().time(),
+						ctx.literal().datetimeLiteral().timezone()
 				);
 			}
 			else {
 				return datetimeLiteralFrom( ctx.literal().datetimeLiteral().dateTimeLiteralText().getText() );
+			}
+		}
+		else if ( ctx.literal().offsetDatetimeLiteral() != null ) {
+			if ( ctx.literal().offsetDatetimeLiteral().dateTimeLiteralText() == null ) {
+				return offsetDatetimeLiteralFrom(
+						ctx.literal().offsetDatetimeLiteral().date(),
+						ctx.literal().offsetDatetimeLiteral().time(),
+						ctx.literal().offsetDatetimeLiteral().offset()
+				);
+			}
+			else {
+				return offsetDatetimeLiteralFrom( ctx.literal().offsetDatetimeLiteral().dateTimeLiteralText().getText() );
 			}
 		}
 		else if ( ctx.literal().dateLiteral() != null ) {
@@ -1742,10 +1758,24 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-	private SqmLiteral<?> datetimeLiteralFrom(HqlParser.DateContext date, HqlParser.TimeContext time) {
+	private SqmLiteral<?> datetimeLiteralFrom(HqlParser.DateContext date, HqlParser.TimeContext time, HqlParser.TimezoneContext timezone) {
+		return timezone == null
+				? new SqmLiteral<>(
+						LocalDateTime.of( localDate( date ), localTime( time ) ),
+						basicType( LocalDateTime.class ),
+						creationContext.getNodeBuilder()
+				)
+				: new SqmLiteral<>(
+						ZonedDateTime.of( localDate( date ), localTime( time ), ZoneId.of( timezone.getText() ) ),
+						basicType( ZonedDateTime.class ),
+						creationContext.getNodeBuilder()
+				);
+	}
+
+	private SqmLiteral<?> offsetDatetimeLiteralFrom(HqlParser.DateContext date, HqlParser.TimeContext time, HqlParser.OffsetContext offset) {
 		return new SqmLiteral<>(
-				LocalDateTime.of( localDate( date ), localTime( time ) ),
-				basicType( LocalDateTime.class ),
+				OffsetDateTime.of( localDate( date ), localTime( time ), zoneOffset( offset ) ),
+				basicType( OffsetDateTime.class ),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -1787,6 +1817,24 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				Integer.parseInt( ctx.year().getText() ),
 				Integer.parseInt( ctx.month().getText() ),
 				Integer.parseInt( ctx.day().getText() )
+		);
+	}
+
+	private static ZoneOffset zoneOffset(HqlParser.OffsetContext offset) {
+		return offset.minute() == null
+				? ZoneOffset.ofHours( Integer.parseInt( offset.hour().getText() ) )
+				: ZoneOffset.ofHoursMinutes(
+						Integer.parseInt( offset.hour().getText() ),
+						Integer.parseInt( offset.minute().getText() )
+				);
+	}
+
+	private SqmLiteral<OffsetDateTime> offsetDatetimeLiteralFrom(String literalText) {
+		TemporalAccessor parsed = OFFSET_DATE_TIME.parse( literalText );
+		return new SqmLiteral<>(
+				OffsetDateTime.from( parsed ),
+				basicType(OffsetDateTime.class),
+				creationContext.getNodeBuilder()
 		);
 	}
 

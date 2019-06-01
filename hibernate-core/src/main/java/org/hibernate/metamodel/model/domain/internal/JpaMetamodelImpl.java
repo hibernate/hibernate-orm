@@ -125,12 +125,39 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	public void visitManagedTypes(Consumer<ManagedDomainType<?>> action) {
 		visitEntityTypes( (Consumer) action );
 		visitEmbeddables( (Consumer) action );
-		mappedSuperclassTypeMap.values().forEach( (Consumer) action );
+		mappedSuperclassTypeMap.values().forEach( action );
+	}
+
+	@Override
+	public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
+		ManagedType<?> type = entityDescriptorMap.get( cls );
+		if ( type == null ) {
+			type = mappedSuperclassTypeMap.get( cls );
+		}
+		if ( type == null ) {
+			type = embeddableDescriptorMap.get( cls );
+		}
+		if ( type == null ) {
+			return null;
+		}
+
+		//noinspection unchecked
+		return (ManagedDomainType<X>) type;
 	}
 
 	@Override
 	public void visitEntityTypes(Consumer<EntityDomainType<?>> action) {
 		entityDescriptorMap.values().forEach( action );
+	}
+
+	@Override
+	public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
+		final EntityType<?> entityType = entityDescriptorMap.get( cls );
+		if ( entityType == null ) {
+			return null;
+		}
+		//noinspection unchecked
+		return (EntityDomainType<X>) entityType;
 	}
 
 	@Override

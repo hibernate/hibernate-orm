@@ -64,11 +64,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 
 	private final JpaMetamodel jpaMetamodel;
 
-	//	private final Map<Class<?>, EntityDomainType<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
-//	private final Map<String, EntityDomainType<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
-//	private final Map<Class<?>, MappedSuperclassType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
-//	private final Set<EmbeddableDomainType<?>> jpaEmbeddableTypes = new CopyOnWriteArraySet<>();
-	private final Map<Class, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
+	private final Map<Class, String> entityProxyInterfaceMap;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,7 +128,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 		this.collectionPersisterMap = runtimeMetamodel.getCollectionPersisterMap();
 		this.collectionRolesByEntityParticipant = runtimeMetamodel.getCollectionRolesByEntityParticipant();
 		this.entityNameResolvers = runtimeMetamodel.getEntityNameResolvers();
-
+		this.entityProxyInterfaceMap = runtimeMetamodel.getEntityProxyInterfaceMap();
 	}
 
 	@Override

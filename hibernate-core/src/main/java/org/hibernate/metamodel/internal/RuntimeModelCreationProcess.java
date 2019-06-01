@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
@@ -25,9 +23,11 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
+import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 
@@ -83,48 +83,23 @@ public class RuntimeModelCreationProcess {
 	// ````
 
 
+	private final SessionFactoryImplementor sessionFactory;
+	private TypeConfiguration typeConfiguration;
+
+	public RuntimeModelCreationProcess(
+			SessionFactoryImplementor sessionFactory,
+			TypeConfiguration typeConfiguration) {
+		this.sessionFactory = sessionFactory;
+		this.typeConfiguration = typeConfiguration;
+	}
+
 	/**
 	 * Perform the runtime metamodel creation based on the information obtained during
 	 * the first phase of booting, returning the
 	 */
-	public static MetamodelImplementor execute(
-			SessionFactoryImplementor sessionFactory,
-			BootstrapContext bootstrapContext,
-			MetadataBuildingContext metadataBuildingContext,
+	public DomainMetamodel create(
 			MetadataImplementor bootMetamodel,
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
-		return new RuntimeModelCreationProcess(
-				sessionFactory,
-				bootstrapContext,
-				metadataBuildingContext,
-				bootMetamodel,
-				jpaMetaModelPopulationSetting
-		).execute();
-	}
-
-	private final SessionFactoryImplementor sessionFactory;
-	private final BootstrapContext bootstrapContext;
-	private final MetadataBuildingContext metadataBuildingContext;
-	private final MetadataImplementor bootMetamodel;
-	private final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting;
-
-	private JpaMetamodel jpaMetamodel;
-	private MetamodelImplementor domainMetamodel;
-
-	public RuntimeModelCreationProcess(
-			SessionFactoryImplementor sessionFactory,
-			BootstrapContext bootstrapContext,
-			MetadataBuildingContext metadataBuildingContext,
-			MetadataImplementor bootMetamodel,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
-		this.sessionFactory = sessionFactory;
-		this.bootstrapContext = bootstrapContext;
-		this.metadataBuildingContext = metadataBuildingContext;
-		this.bootMetamodel = bootMetamodel;
-		this.jpaMetaModelPopulationSetting = jpaMetaModelPopulationSetting;
-	}
-
-	public MetamodelImplementor execute() {
 		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
 			@Override
 			public SessionFactoryImplementor getSessionFactory() {
@@ -139,8 +114,7 @@ public class RuntimeModelCreationProcess {
 
 		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry()
 				.getService( PersisterFactory.class );
-		final InflightRuntimeMetamodel inflightRuntimeMetamodel = new InflightRuntimeMetamodel( bootstrapContext.getTypeConfiguration() );
-
+		final InflightRuntimeMetamodel inflightRuntimeMetamodel = new InflightRuntimeMetamodel( typeConfiguration );
 
 		primeSecondLevelCacheRegions( bootMetamodel );
 
@@ -156,12 +130,16 @@ public class RuntimeModelCreationProcess {
 
 		);
 
-		this.jpaMetamodel = new JpaMetamodelImpl(
+		JpaMetamodel jpaMetamodel = new JpaMetamodelImpl(
 				inflightRuntimeMetamodel,
 				bootMetamodel.getNamedEntityGraphs().values()
 		);
 
-		this.domainMetamodel = new DomainMetamodelImpl( sessionFactory, inflightRuntimeMetamodel, this.jpaMetamodel );
+		DomainMetamodelImpl domainMetamodel = new DomainMetamodelImpl(
+				sessionFactory,
+				inflightRuntimeMetamodel,
+				jpaMetamodel
+		);
 		return domainMetamodel;
 	}
 

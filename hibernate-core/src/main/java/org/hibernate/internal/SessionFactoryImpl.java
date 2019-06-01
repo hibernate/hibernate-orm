@@ -73,11 +73,8 @@ import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
-import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.ReturnMetadata;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -100,13 +97,15 @@ import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
+import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.spi.QueryPlanCache;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.NativeQuery;
@@ -299,11 +298,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			LOG.debug( "Instantiated session factory" );
 
-			this.metamodel = metadata.getTypeConfiguration().scope( this );
-			( (DomainMetamodelImpl) this.metamodel ).initialize(
-					metadata,
-					determineJpaMetaModelPopulationSetting( properties )
-			);
+			this.metamodel = (MetamodelImplementor) metadata.getTypeConfiguration().scope( this )
+					.create( metadata, determineJpaMetaModelPopulationSetting( properties ) );
 
 			//Named Queries:
 			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );

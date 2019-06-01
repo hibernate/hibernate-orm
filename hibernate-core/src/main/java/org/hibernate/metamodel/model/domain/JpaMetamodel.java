@@ -77,7 +77,6 @@ public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
 	 */
 	<X> EntityDomainType<X> findEntityType(Class<X> cls);
 
-	/
 	void visitRootEntityTypes(Consumer<EntityDomainType<?>> action);
 
 	void visitEmbeddables(Consumer<EmbeddableDomainType<?>> action);

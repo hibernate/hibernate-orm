@@ -75,6 +75,7 @@ public class InflightRuntimeMetamodel {
 
 	private final Map<String, String> nameToImportNameMap = new HashMap<>();
 	private final Set<EntityNameResolver> entityNameResolvers = new CopyOnWriteArraySet<>();
+	private final Map<String, String> imports = new ConcurrentHashMap<>(  );
 
 	public InflightRuntimeMetamodel(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
@@ -88,6 +89,7 @@ public class InflightRuntimeMetamodel {
 			PersisterCreationContext persisterCreationContext,
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
+		this.imports.putAll( bootMetamodel.getImports() );
 		processBootEntities(
 				bootMetamodel.getEntityBindings(),
 				cacheImplementor,
@@ -424,4 +426,7 @@ public class InflightRuntimeMetamodel {
 		return entityType;
 	}
 
+	public Map<String, String> getImports() {
+		return imports;
+	}
 }

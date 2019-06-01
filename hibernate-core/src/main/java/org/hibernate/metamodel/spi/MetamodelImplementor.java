@@ -56,7 +56,9 @@ public interface MetamodelImplementor extends DomainMetamodel, Metamodel {
 	 *
 	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
 	 */
-	EntityPersister locateEntityPersister(Class byClass);
+	default EntityPersister locateEntityPersister(Class byClass){
+		return locateEntityDescriptor( byClass );
+	}
 
 	/**
 	 * Locate the entity persister by name.

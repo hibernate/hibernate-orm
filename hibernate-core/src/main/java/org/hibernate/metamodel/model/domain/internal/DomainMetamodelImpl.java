@@ -21,6 +21,7 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -35,6 +36,7 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -53,7 +55,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( DomainMetamodelImpl.class );
 
-	private static final Object ENTITY_NAME_RESOLVER_MAP_VALUE = new Object();
 	private static final String INVALID_IMPORT = "";
 	private static final String[] EMPTY_IMPLEMENTORS = new String[0];
 
@@ -79,6 +80,8 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	// DomainMetamodel
 
 	private final Set<EntityNameResolver> entityNameResolvers;
+
+	private final Map<String,String> imports;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,6 +132,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 		this.collectionRolesByEntityParticipant = runtimeMetamodel.getCollectionRolesByEntityParticipant();
 		this.entityNameResolvers = runtimeMetamodel.getEntityNameResolvers();
 		this.entityProxyInterfaceMap = runtimeMetamodel.getEntityProxyInterfaceMap();
+		this.imports = runtimeMetamodel.getImports();
 	}
 
 	@Override
@@ -158,12 +162,22 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	}
 
 	@Override
+	public EntityPersister resolveEntityDescriptor(EntityDomainType<?> entityDomainType) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
 	public EntityPersister getEntityDescriptor(String entityName) {
 		final EntityPersister entityPersister = entityPersisterMap.get( entityName );
 		if ( entityPersister == null ) {
 			throw new IllegalArgumentException( "Unable to locate persister: " + entityName );
 		}
 		return entityPersister;
+	}
+
+	@Override
+	public EntityPersister getEntityDescriptor(NavigableRole name) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -255,6 +269,29 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	}
 
 	@Override
+	public String getImportedClassName(String className) {
+		String result = imports.get( className );
+		if ( result == null ) {
+			try {
+				sessionFactory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
+				imports.put( className, className );
+				return className;
+			}
+			catch ( ClassLoadingException cnfe ) {
+				imports.put( className, INVALID_IMPORT );
+				return null;
+			}
+		}
+		else if ( result == INVALID_IMPORT ) {
+			return null;
+		}
+		else {
+			return result;
+		}
+	}
+
+
+	@Override
 	public String[] getImplementors(String className) throws MappingException {
 		// computeIfAbsent() can be a contention point and we expect all the values to be in the map at some point so
 		// let's do an optimistic check first
@@ -324,6 +361,11 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	}
 
 	@Override
+	public String getImportedName(String name) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
 	public void visitCollectionDescriptors(Consumer<CollectionPersister> action) {
 		collectionPersisterMap.values().forEach( action );
 	}
@@ -335,6 +377,16 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 			throw new IllegalArgumentException( "Unable to locate persister: " + role );
 		}
 		return collectionPersister;
+	}
+
+	@Override
+	public CollectionPersister getCollectionDescriptor(NavigableRole role) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public CollectionPersister findCollectionDescriptor(NavigableRole role) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -382,6 +434,46 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	@Override
 	public RootGraph<?> findNamedGraph(String name) {
 		return findEntityGraphByName( name );
+	}
+
+	@Override
+	public void visitNamedGraphs(Consumer<RootGraph<?>> action) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public RootGraph<?> defaultGraph(String entityName) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public RootGraph<?> defaultGraph(Class entityJavaType) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public RootGraph<?> defaultGraph(EntityPersister entityDescriptor) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public RootGraph<?> defaultGraph(EntityDomainType<?> entityDomainType) {
+		return null;
+	}
+
+	@Override
+	public List<RootGraph<?>> findRootGraphsForType(Class baseEntityJavaType) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public List<RootGraph<?>> findRootGraphsForType(String baseEntityName) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public List<RootGraph<?>> findRootGraphsForType(EntityPersister baseEntityDescriptor) {
+		return null;
 	}
 
 	@Override

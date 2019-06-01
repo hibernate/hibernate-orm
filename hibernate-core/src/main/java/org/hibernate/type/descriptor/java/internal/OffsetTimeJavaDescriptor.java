@@ -58,7 +58,7 @@ public class OffsetTimeJavaDescriptor
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIME ); //TIMESTAMP_WITH_TIMEZONE not yet well-supported by drivers
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TIME ); //TIME_WITH_TIMEZONE not yet well-supported by drivers
 	}
 
 	@Override

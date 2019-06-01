@@ -54,7 +54,7 @@ public enum TemporalUnit {
 						case MINUTE:
 							factor *= 60;
 						case SECOND:
-							factor *= 1e3;
+							factor *= 1e9;
 							break;
 						default:
 							illegalConversion(fromUnit, toUnit);
@@ -63,7 +63,7 @@ public enum TemporalUnit {
 				case SECOND:
 					switch (fromUnit) {
 						case NANOSECOND:
-							factor *= 1e3;
+							factor *= 1e9;
 							reciprocal = true;
 							break;
 						case WEEK:
@@ -82,7 +82,7 @@ public enum TemporalUnit {
 				case MINUTE:
 					switch (fromUnit) {
 						case NANOSECOND:
-							factor *= 1e3;
+							factor *= 1e9;
 						case SECOND:
 							factor *= 60;
 							reciprocal = true;
@@ -101,7 +101,7 @@ public enum TemporalUnit {
 				case HOUR:
 					switch (fromUnit) {
 						case NANOSECOND:
-							factor *= 1e3;
+							factor *= 1e9;
 						case SECOND:
 							factor *= 60;
 						case MINUTE:
@@ -120,7 +120,7 @@ public enum TemporalUnit {
 				case DAY:
 					switch (fromUnit) {
 						case NANOSECOND:
-							factor *= 1e3;
+							factor *= 1e9;
 						case SECOND:
 							factor *= 60;
 						case MINUTE:
@@ -139,7 +139,7 @@ public enum TemporalUnit {
 				case WEEK:
 					switch (fromUnit) {
 						case NANOSECOND:
-							factor *= 1e3;
+							factor *= 1e9;
 						case SECOND:
 							factor *= 60;
 						case MINUTE:

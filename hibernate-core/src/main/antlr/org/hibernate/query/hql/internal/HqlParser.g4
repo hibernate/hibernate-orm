@@ -537,7 +537,7 @@ date
 	;
 
 time
-	: hour COLON minute COLON second
+	: hour COLON minute (COLON second)?
 	;
 
 offset

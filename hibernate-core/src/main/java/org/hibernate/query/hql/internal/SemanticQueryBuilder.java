@@ -1797,19 +1797,27 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	private static LocalTime localTime(HqlParser.TimeContext ctx) {
-		int index = ctx.second().getText().indexOf('.');
-		return index < 0
-				? LocalTime.of(
-						Integer.parseInt( ctx.hour().getText() ),
-						Integer.parseInt( ctx.minute().getText() ),
-						Integer.parseInt( ctx.second().getText() )
-				)
-				: LocalTime.of(
-						Integer.parseInt( ctx.hour().getText() ),
-						Integer.parseInt( ctx.minute().getText() ),
-						Integer.parseInt( ctx.second().getText().substring(0, index) ),
-						Integer.parseInt( ctx.second().getText().substring(index + 1) )
-				);
+		if ( ctx.second() != null ) {
+			int index = ctx.second().getText().indexOf('.');
+			return index < 0
+					? LocalTime.of(
+							Integer.parseInt( ctx.hour().getText() ),
+							Integer.parseInt( ctx.minute().getText() ),
+							Integer.parseInt( ctx.second().getText() )
+					)
+					: LocalTime.of(
+							Integer.parseInt( ctx.hour().getText() ),
+							Integer.parseInt( ctx.minute().getText() ),
+							Integer.parseInt( ctx.second().getText().substring(0, index) ),
+							Integer.parseInt( ctx.second().getText().substring(index + 1) )
+					);
+		}
+		else {
+			return LocalTime.of(
+					Integer.parseInt( ctx.hour().getText() ),
+					Integer.parseInt( ctx.minute().getText() )
+			);
+		}
 	}
 
 	private static LocalDate localDate(HqlParser.DateContext ctx) {
@@ -1833,7 +1841,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		TemporalAccessor parsed = OFFSET_DATE_TIME.parse( literalText );
 		return new SqmLiteral<>(
 				OffsetDateTime.from( parsed ),
-				basicType(OffsetDateTime.class),
+				basicType( OffsetDateTime.class ),
 				creationContext.getNodeBuilder()
 		);
 	}

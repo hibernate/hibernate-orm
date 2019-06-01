@@ -93,7 +93,10 @@ public class LiteralTests extends SessionFactoryBasedFunctionalTest {
 		inTransaction(
 				session -> {
 					session.createQuery( "from EntityOfBasics e1 where e1.theTime = {t '12:30:00'}" ).list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time '12:30'" ).list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time '12:30:00'" ).list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time '12:30:00.123'" ).list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time 12:30" ).list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time 12:30:00" ).list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time 12:30:00.123" ).list();
 				}

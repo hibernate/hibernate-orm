@@ -30,6 +30,8 @@ public class LiteralTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = datetime '2018-01-01 12:30:00'" )
 							.list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTimestamp = datetime 2018-01-01 12:30:00" )
+							.list();
 				}
 		);
 	}
@@ -68,6 +70,7 @@ public class LiteralTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery( "from EntityOfBasics e1 where e1.theDate = {d '2018-01-01'}" ).list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theDate = date '2018-01-01'" ).list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theDate = date 2018-01-01" ).list();
 				}
 		);
 	}
@@ -78,6 +81,8 @@ public class LiteralTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery( "from EntityOfBasics e1 where e1.theTime = {t '12:30:00'}" ).list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time '12:30:00'" ).list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time 12:30:00" ).list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time 12:30:00.123" ).list();
 				}
 		);
 	}

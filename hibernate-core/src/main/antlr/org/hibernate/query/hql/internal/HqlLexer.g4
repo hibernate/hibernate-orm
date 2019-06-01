@@ -23,9 +23,6 @@ fragment
 HEX_DIGIT : [0-9a-fA-F];
 
 fragment
-OCTAL_DIGIT : [0-7];
-
-fragment
 EXPONENT : [eE] [+-]? DIGIT+;
 
 fragment
@@ -45,8 +42,7 @@ BIG_INTEGER_SUFFIX : [bB] [iI];
 
 fragment
 INTEGER_NUMBER
-	: '0'
-	| [1-9] DIGIT*
+	: DIGIT+
 	;
 
 fragment
@@ -71,8 +67,6 @@ BIG_DECIMAL_LITERAL : FLOATING_POINT_NUMBER BIG_DECIMAL_SUFFIX;
 
 HEX_LITERAL : '0' [xX] HEX_DIGIT+ LONG_SUFFIX?;
 
-OCTAL_LITERAL : '0' OCTAL_DIGIT+ LONG_SUFFIX?;
-
 fragment SINGLE_QUOTE : '\'';
 fragment DOUBLE_QUOTE : '"';
 
@@ -89,15 +83,7 @@ fragment
 ESCAPE_SEQUENCE
 	: BACKSLASH [btnfr"']
 	| BACKSLASH UNICODE_ESCAPE
-	| BACKSLASH OCTAL_ESCAPE
 	| BACKSLASH BACKSLASH
-	;
-
-fragment
-OCTAL_ESCAPE
-	: [0-3] OCTAL_DIGIT OCTAL_DIGIT
-	| OCTAL_DIGIT OCTAL_DIGIT
-	| OCTAL_DIGIT
 	;
 
 fragment

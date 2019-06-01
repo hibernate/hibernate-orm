@@ -1679,15 +1679,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				return integerLiteral( text );
 			}
 		}
-		else if ( ctx.literal().OCTAL_LITERAL() != null ) {
-			final String text = ctx.literal().OCTAL_LITERAL().getText();
-			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
-				return longLiteral( text );
-			}
-			else {
-				return integerLiteral( text );
-			}
-		}
 		else if ( ctx.literal().FLOAT_LITERAL() != null ) {
 			return floatLiteral( ctx.literal().FLOAT_LITERAL().getText() );
 		}
@@ -1706,15 +1697,36 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		else if ( ctx.literal().NULL() != null ) {
 			return new SqmLiteralNull( creationContext.getQueryEngine().getCriteriaBuilder() );
 		}
+		// literals for java.time LocalDate/LocalTime/LocalDateTime using either
+		// ANSI SQL quoted string literal or HQL unquoted literal syntax
 		else if ( ctx.literal().datetimeLiteral() != null ) {
-			return localDatetimeLiteralFrom( ctx.literal().datetimeLiteral().dateTimeLiteralText().getText() );
+			if ( ctx.literal().datetimeLiteral().dateTimeLiteralText() == null ) {
+				return datetimeLiteralFrom(
+						ctx.literal().datetimeLiteral().date(),
+						ctx.literal().datetimeLiteral().time()
+				);
+			}
+			else {
+				return datetimeLiteralFrom( ctx.literal().datetimeLiteral().dateTimeLiteralText().getText() );
+			}
 		}
 		else if ( ctx.literal().dateLiteral() != null ) {
-			return localDateLiteralFrom( ctx.literal().dateLiteral().dateTimeLiteralText().getText() );
+			if ( ctx.literal().dateLiteral().dateTimeLiteralText() == null ) {
+				return dateLiteralFrom( ctx.literal().dateLiteral().date() );
+			}
+			else {
+				return localDateLiteralFrom( ctx.literal().dateLiteral().dateTimeLiteralText().getText() );
+			}
 		}
 		else if ( ctx.literal().timeLiteral() != null ) {
-			return localTimeLiteralFrom( ctx.literal().timeLiteral().dateTimeLiteralText().getText() );
+			if ( ctx.literal().timeLiteral().dateTimeLiteralText() == null ) {
+				return timeLiteralFrom( ctx.literal().timeLiteral().time() );
+			}
+			else {
+				return localTimeLiteralFrom( ctx.literal().timeLiteral().dateTimeLiteralText().getText() );
+			}
 		}
+		// literals for javax.sql Date/Time/Timestamp using JDBC escape syntax
 		else if ( ctx.literal().escapedTimestampLiteral() != null ) {
 			return sqlTimestampLiteralFrom( ctx.literal().escapedTimestampLiteral().dateTimeLiteralText().getText() );
 		}
@@ -1730,7 +1742,56 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-	private SqmLiteral<?> localDatetimeLiteralFrom(String literalText) {
+	private SqmLiteral<?> datetimeLiteralFrom(HqlParser.DateContext date, HqlParser.TimeContext time) {
+		return new SqmLiteral<>(
+				LocalDateTime.of( localDate( date ), localTime( time ) ),
+				basicType( LocalDateTime.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmLiteral<?> dateLiteralFrom(HqlParser.DateContext date) {
+		return new SqmLiteral<>(
+				localDate( date ),
+				basicType( LocalDate.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmLiteral<?> timeLiteralFrom(HqlParser.TimeContext time) {
+		return new SqmLiteral<>(
+				localTime( time ),
+				basicType( LocalTime.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private static LocalTime localTime(HqlParser.TimeContext ctx) {
+		int index = ctx.second().getText().indexOf('.');
+		return index < 0
+				? LocalTime.of(
+						Integer.parseInt( ctx.hour().getText() ),
+						Integer.parseInt( ctx.minute().getText() ),
+						Integer.parseInt( ctx.second().getText() )
+				)
+				: LocalTime.of(
+						Integer.parseInt( ctx.hour().getText() ),
+						Integer.parseInt( ctx.minute().getText() ),
+						Integer.parseInt( ctx.second().getText().substring(0, index) ),
+						Integer.parseInt( ctx.second().getText().substring(index + 1) )
+				);
+	}
+
+	private static LocalDate localDate(HqlParser.DateContext ctx) {
+		return LocalDate.of(
+				Integer.parseInt( ctx.year().getText() ),
+				Integer.parseInt( ctx.month().getText() ),
+				Integer.parseInt( ctx.day().getText() )
+		);
+	}
+
+	private SqmLiteral<?> datetimeLiteralFrom(String literalText) {
+		//TODO: return an OffsetDateTime when appropriate?
 		TemporalAccessor parsed = DATE_TIME.parse( literalText );
 		try {
 			return new SqmLiteral<>(

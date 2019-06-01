@@ -475,7 +475,6 @@ literal
 	| DOUBLE_LITERAL
 	| BIG_DECIMAL_LITERAL
 	| HEX_LITERAL
-	| OCTAL_LITERAL
 	| NULL
 	| TRUE
 	| FALSE
@@ -513,20 +512,35 @@ escapedTimeLiteral
 	;
 
 datetimeLiteral
-	: DATETIME dateTimeLiteralText
+	: DATETIME (date time | dateTimeLiteralText)
 	;
 
 dateLiteral
-	: DATE dateTimeLiteralText
+	: DATE (date | dateTimeLiteralText)
 	;
 
 timeLiteral
-	: TIME dateTimeLiteralText
+	: TIME (time | dateTimeLiteralText)
 	;
 
 dateTimeLiteralText
 	: STRING_LITERAL
 	;
+
+date
+	: year MINUS month MINUS day
+	;
+
+time
+	: hour COLON minute COLON second
+	;
+
+year: INTEGER_LITERAL;
+month: INTEGER_LITERAL;
+day: INTEGER_LITERAL;
+hour: INTEGER_LITERAL;
+minute: INTEGER_LITERAL;
+second: INTEGER_LITERAL | FLOAT_LITERAL;
 
 parameter
 	: COLON identifier					# NamedParameter

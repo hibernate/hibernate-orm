@@ -25,9 +25,13 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Descriptor for {@link Types#REAL REAL} handling.
  *
+ * Since {@link Types#REAL REAL} is defined to be of lower precision
+ * than {@link Types#DOUBLE DOUBLE}, by default we map this type to
+ * Java {@link Float}.
+ *
  * @author Steve Ebersole
  */
-public class RealSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
+public class RealSqlDescriptor extends FloatSqlDescriptor {
 	public static final RealSqlDescriptor INSTANCE = new RealSqlDescriptor();
 
 	public RealSqlDescriptor() {
@@ -36,11 +40,6 @@ public class RealSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.REAL;
-	}
-
-	@Override
-	public boolean canBeRemapped() {
-		return true;
 	}
 
 	@Override

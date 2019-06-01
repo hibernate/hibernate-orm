@@ -25,9 +25,11 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Descriptor for {@link Types#DOUBLE DOUBLE} handling.
  *
+ * By default we map this type to Java {@link Double}.
+ *
  * @author Steve Ebersole
  */
-public class DoubleSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
+public class DoubleSqlDescriptor extends FloatSqlDescriptor {
 	public static final DoubleSqlDescriptor INSTANCE = new DoubleSqlDescriptor();
 
 	public DoubleSqlDescriptor() {
@@ -38,67 +40,4 @@ public class DoubleSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 		return Types.DOUBLE;
 	}
 
-	@Override
-	public boolean canBeRemapped() {
-		return true;
-	}
-
-	@Override
-	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Double.class );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Double.class );
-	}
-
-	@Override
-	protected <X> JdbcValueBinder<X> createBinder(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
-		return new AbstractJdbcValueBinder<X>( javaTypeDescriptor, this ) {
-			@Override
-			protected void doBind(
-					PreparedStatement st,
-					int index, X value,
-					ExecutionContext executionContext) throws SQLException {
-				st.setDouble(
-						index,
-						javaTypeDescriptor.unwrap( value, Double.class, executionContext.getSession() )
-				);
-			}
-
-			@Override
-			protected void doBind(
-					CallableStatement st,
-					String name, X value,
-					ExecutionContext executionContext)
-					throws SQLException {
-				st.setDouble(
-						name,
-						javaTypeDescriptor.unwrap( value, Double.class, executionContext.getSession() )
-				);
-			}
-		};
-	}
-
-	@Override
-	protected <X> JdbcValueExtractor<X> createExtractor(BasicJavaDescriptor<X> javaTypeDescriptor, TypeConfiguration typeConfiguration) {
-		return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
-			@Override
-			protected X doExtract(ResultSet rs, int position, ExecutionContext executionContext) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getDouble( position ), executionContext.getSession() );
-			}
-
-			@Override
-			protected X doExtract(CallableStatement statement, int position, ExecutionContext executionContext) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getDouble( position ), executionContext.getSession() );
-			}
-
-			@Override
-			protected X doExtract(CallableStatement statement, String name, ExecutionContext executionContext) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getDouble( name ), executionContext.getSession() );
-			}
-		};
-	}
 }

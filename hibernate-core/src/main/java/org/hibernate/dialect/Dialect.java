@@ -233,35 +233,43 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.NCLOB, "nclob" );
 
 		// register hibernate types for default use in scalar sqlquery type auto detection
-		registerHibernateType( Types.BIGINT, StandardSpiBasicTypes.BIG_INTEGER.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.BINARY, StandardSpiBasicTypes.BINARY.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.BOOLEAN, StandardSpiBasicTypes.BOOLEAN.getJavaTypeDescriptor().getTypeName() );
+
 		registerHibernateType( Types.BIT, 64, StandardSpiBasicTypes.LONG.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.BIT, 32, StandardSpiBasicTypes.INTEGER.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.BIT, 16, StandardSpiBasicTypes.SHORT.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.BIT, 8, StandardSpiBasicTypes.BYTE.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.BIT, 1, StandardSpiBasicTypes.BOOLEAN.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.BOOLEAN, StandardSpiBasicTypes.BOOLEAN.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.CHAR, StandardSpiBasicTypes.STRING.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.CHAR, 1, StandardSpiBasicTypes.CHARACTER.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.DATE, StandardSpiBasicTypes.DATE.getJavaTypeDescriptor().getTypeName() );
+
+		registerHibernateType( Types.REAL, StandardSpiBasicTypes.FLOAT.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.DOUBLE, StandardSpiBasicTypes.DOUBLE.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.FLOAT, StandardSpiBasicTypes.DOUBLE.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.NUMERIC, StandardSpiBasicTypes.BIG_DECIMAL.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.DECIMAL, StandardSpiBasicTypes.BIG_DECIMAL.getJavaTypeDescriptor().getTypeName() );
+
+		registerHibernateType( Types.BIGINT, StandardSpiBasicTypes.LONG.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.INTEGER, StandardSpiBasicTypes.INTEGER.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.SMALLINT, StandardSpiBasicTypes.SHORT.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.TINYINT, StandardSpiBasicTypes.BYTE.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.TIME, StandardSpiBasicTypes.TIME.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.TIMESTAMP, StandardSpiBasicTypes.TIMESTAMP.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.VARCHAR, StandardSpiBasicTypes.STRING.getJavaTypeDescriptor().getTypeName() );
+
+		registerHibernateType( Types.CHAR, 1, StandardSpiBasicTypes.CHARACTER.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.CHAR, StandardSpiBasicTypes.STRING.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.VARCHAR, 1, StandardSpiBasicTypes.CHARACTER.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.VARCHAR, StandardSpiBasicTypes.STRING.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.NVARCHAR, StandardSpiBasicTypes.NSTRING.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.VARBINARY, StandardSpiBasicTypes.BINARY.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.LONGVARCHAR, StandardSpiBasicTypes.TEXT.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.LONGNVARCHAR, StandardSpiBasicTypes.NTEXT.getJavaTypeDescriptor().getTypeName() );
+
+		registerHibernateType( Types.BINARY, StandardSpiBasicTypes.BINARY.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.VARBINARY, StandardSpiBasicTypes.BINARY.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.LONGVARBINARY, StandardSpiBasicTypes.IMAGE.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.NUMERIC, StandardSpiBasicTypes.BIG_DECIMAL.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.DECIMAL, StandardSpiBasicTypes.BIG_DECIMAL.getJavaTypeDescriptor().getTypeName() );
+
 		registerHibernateType( Types.BLOB, StandardSpiBasicTypes.BLOB.getJavaTypeDescriptor().getTypeName() );
 		registerHibernateType( Types.CLOB, StandardSpiBasicTypes.CLOB.getJavaTypeDescriptor().getTypeName() );
-		registerHibernateType( Types.REAL, StandardSpiBasicTypes.FLOAT.getJavaTypeDescriptor().getTypeName() );
+
+		registerHibernateType( Types.DATE, StandardSpiBasicTypes.DATE.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.TIME, StandardSpiBasicTypes.TIME.getJavaTypeDescriptor().getTypeName() );
+		registerHibernateType( Types.TIMESTAMP, StandardSpiBasicTypes.TIMESTAMP.getJavaTypeDescriptor().getTypeName() );
 
 		if(supportsPartitionBy()) {
 			registerKeyword( "PARTITION" );

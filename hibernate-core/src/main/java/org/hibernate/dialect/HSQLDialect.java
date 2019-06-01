@@ -56,6 +56,9 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiDateLiteral;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTimeLiteral;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTimestampLiteral;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -731,4 +734,5 @@ public class HSQLDialect extends Dialect {
 			default: return unit.toString();
 		}
 	}
+
 }

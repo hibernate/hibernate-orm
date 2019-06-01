@@ -17,6 +17,9 @@ import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -119,6 +122,15 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import javax.persistence.TemporalType;
+
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsDate;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTime;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestamp;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcDateLiteral;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcTimeLiteral;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcTimestampLiteral;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
@@ -3341,6 +3353,57 @@ public abstract class Dialect implements ConversionContext {
 			case DAY_OF_YEAR: return "dy";
 			case DAY_OF_WEEK: return "dw";
 			default: return unit.toString();
+		}
+	}
+
+	protected String wrapTimestampLiteral(String timestamp) {
+		return wrapAsJdbcTimestampLiteral(timestamp);
+	}
+
+	protected String wrapDateLiteral(String date) {
+		return wrapAsJdbcDateLiteral(date);
+	}
+
+	protected String wrapTimeLiteral(String time) {
+		return wrapAsJdbcTimeLiteral(time);
+	}
+
+	public String formatDateTimeLiteral(TemporalAccessor temporalAccessor, TemporalType precision) {
+		switch ( precision ) {
+			case DATE:
+				return wrapDateLiteral( formatAsDate(temporalAccessor) );
+			case TIME:
+				return wrapTimeLiteral( formatAsTime(temporalAccessor) );
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestamp(temporalAccessor) );
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public String formatDateTimeLiteral(Date date, TemporalType precision) {
+		switch ( precision ) {
+			case DATE:
+				return wrapDateLiteral( formatAsDate(date) );
+			case TIME:
+				return wrapTimeLiteral( formatAsTime(date) );
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestamp(date) );
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision) {
+		switch ( precision ) {
+			case DATE:
+				return wrapDateLiteral( formatAsDate(calendar) );
+			case TIME:
+				return wrapTimeLiteral( formatAsTime(calendar) );
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestamp(calendar) );
+			default:
+				throw new IllegalArgumentException();
 		}
 	}
 

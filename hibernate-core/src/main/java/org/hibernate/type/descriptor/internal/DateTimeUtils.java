@@ -11,11 +11,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-import javax.persistence.TemporalType;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
@@ -77,20 +74,6 @@ public final class DateTimeUtils {
 			.appendOffset("+HH:mm", "+00")
 			.toFormatter();
 
-	public static String formatUsingPrecision(TemporalAccessor temporalAccessor, TemporalType precision) {
-		switch ( precision ) {
-			case DATE: {
-				return formatAsDate( temporalAccessor );
-			}
-			case TIME: {
-				return formatAsTime( temporalAccessor );
-			}
-			default: {
-				return formatAsTimestamp( temporalAccessor );
-			}
-		}
-	}
-
 	public static String formatAsTimestamp(TemporalAccessor temporalAccessor) {
 		return temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS)
 				? DATE_TIME_FORMATTER_TIMESTAMP_WITH_OFFSET.format( temporalAccessor )
@@ -105,61 +88,32 @@ public final class DateTimeUtils {
 		return DATE_TIME_FORMATTER_TIME.format( temporalAccessor );
 	}
 
-	public static String formatJdbcLiteralUsingPrecision(TemporalAccessor temporalAccessor, TemporalType precision) {
-		switch ( precision ) {
-			case DATE: {
-				return formatAsJdbcLiteralDate( temporalAccessor );
-			}
-			case TIME: {
-				return formatAsJdbcLiteralTime( temporalAccessor );
-			}
-			default: {
-				return formatAsJdbcLiteralTimestamp( temporalAccessor );
-			}
-		}
-	}
-
-	public static String formatAsJdbcLiteralDate(TemporalAccessor temporalAccessor) {
-		return wrapAsJdbcDateLiteral( formatAsDate( temporalAccessor ));
+	public static String formatAsTimestamp(java.util.Date date) {
+		return simpleDateFormatTimestamp().format( date );
 	}
 
 	public static String wrapAsJdbcDateLiteral(String literal) {
 		return JDBC_ESCAPE_START_DATE + literal + JDBC_ESCAPE_END;
 	}
 
-	public static String formatAsJdbcLiteralTime(TemporalAccessor temporalAccessor) {
-		return wrapAsJdbcTimeLiteral( formatAsTime( temporalAccessor ));
-	}
-
 	public static String wrapAsJdbcTimeLiteral(String literal) {
 		return JDBC_ESCAPE_START_TIME + literal + JDBC_ESCAPE_END;
-	}
-
-	public static String formatAsJdbcLiteralTimestamp(TemporalAccessor temporalAccessor) {
-		return wrapAsJdbcTimestampLiteral( formatAsTimestamp( temporalAccessor ));
 	}
 
 	public static String wrapAsJdbcTimestampLiteral(String literal) {
 		return JDBC_ESCAPE_START_TIMESTAMP + literal + JDBC_ESCAPE_END;
 	}
 
-	public static String formatUsingPrecision(java.util.Date date, TemporalType precision) {
-		switch ( precision ) {
-			case DATE: {
-				return formatAsDate( date );
-			}
-			case TIME: {
-				return formatAsTime( date );
-			}
-			default: {
-				return formatAsTimestamp( date );
-			}
-		}
+	public static String wrapAsAnsiDateLiteral(String literal) {
+		return "date '" + literal + "'";
 	}
 
+	public static String wrapAsAnsiTimeLiteral(String literal) {
+		return "time '" + literal + "'";
+	}
 
-	public static String formatAsTimestamp(java.util.Date date) {
-		return simpleDateFormatTimestamp().format( date );
+	public static String wrapAsAnsiTimestampLiteral(String literal) {
+		return "timestamp '" + literal + "'";
 	}
 
 	public static SimpleDateFormat simpleDateFormatTimestamp() {
@@ -182,46 +136,6 @@ public final class DateTimeUtils {
 		return new SimpleDateFormat( FORMAT_STRING_TIME, Locale.ENGLISH );
 	}
 
-	public static String formatJdbcLiteralUsingPrecision(java.util.Date date, TemporalType precision) {
-		switch ( precision ) {
-			case DATE: {
-				return formatAsJdbcLiteralDate( date );
-			}
-			case TIME: {
-				return formatAsJdbcLiteralTime( date );
-			}
-			default: {
-				return formatAsJdbcLiteralTimestamp( date );
-			}
-		}
-	}
-
-	public static String formatAsJdbcLiteralDate(Date date) {
-		return wrapAsJdbcDateLiteral( formatAsDate( date ) );
-	}
-
-	public static String formatAsJdbcLiteralTime(Date date) {
-		return wrapAsJdbcTimeLiteral( formatAsTime( date ) );
-	}
-
-	public static String formatAsJdbcLiteralTimestamp(Date date) {
-		return wrapAsJdbcTimestampLiteral( formatAsTimestamp( date ) );
-	}
-
-	public static String formatUsingPrecision(java.util.Calendar calendar, TemporalType precision) {
-		switch ( precision ) {
-			case DATE: {
-				return formatAsDate( calendar );
-			}
-			case TIME: {
-				return formatAsTime( calendar );
-			}
-			default: {
-				return formatAsTimestamp( calendar );
-			}
-		}
-	}
-
 	public static String formatAsTimestamp(java.util.Calendar calendar) {
 		return simpleDateFormatTimestamp( calendar.getTimeZone() ).format( calendar.getTime() );
 	}
@@ -242,7 +156,6 @@ public final class DateTimeUtils {
 		return formatter;
 	}
 
-
 	public static String formatAsTime(java.util.Calendar calendar) {
 		return simpleDateFormatTime( calendar.getTimeZone() ).format( calendar.getTime() );
 	}
@@ -253,29 +166,4 @@ public final class DateTimeUtils {
 		return formatter;
 	}
 
-	public static String formatJdbcLiteralUsingPrecision(java.util.Calendar calendar, TemporalType precision) {
-		switch ( precision ) {
-			case DATE: {
-				return formatAsJdbcLiteralDate( calendar );
-			}
-			case TIME: {
-				return formatAsJdbcLiteralTime( calendar );
-			}
-			default: {
-				return formatAsJdbcLiteralTimestamp( calendar );
-			}
-		}
-	}
-
-	public static String formatAsJdbcLiteralTimestamp(Calendar calendar) {
-		return wrapAsJdbcTimestampLiteral( formatAsTimestamp( calendar ) );
-	}
-
-	public static String formatAsJdbcLiteralDate(Calendar calendar) {
-		return wrapAsJdbcDateLiteral( formatAsDate( calendar ) );
-	}
-
-	public static String formatAsJdbcLiteralTime(Calendar calendar) {
-		return wrapAsJdbcTimeLiteral( formatAsTime( calendar ) );
-	}
 }

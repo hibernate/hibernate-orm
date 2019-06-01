@@ -48,13 +48,12 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.EPOCH;
-import static org.hibernate.query.TemporalUnit.HOUR;
-import static org.hibernate.query.TemporalUnit.MINUTE;
 import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.QUARTER;
-import static org.hibernate.query.TemporalUnit.SECOND;
 import static org.hibernate.query.TemporalUnit.YEAR;
 import static org.hibernate.query.TemporalUnit.conversionFactor;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiDateLiteral;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTimeLiteral;
 
 /**
  * An SQL dialect for Postgres
@@ -812,6 +811,21 @@ public class PostgreSQL81Dialect extends Dialect {
 			case DAY_OF_WEEK: return "dow";
 			default: return unit.toString();
 		}
+	}
+
+	@Override
+	protected String wrapDateLiteral(String date) {
+		return wrapAsAnsiDateLiteral(date);
+	}
+
+	@Override
+	protected String wrapTimeLiteral(String time) {
+		return wrapAsAnsiTimeLiteral(time);
+	}
+
+	@Override
+	protected String wrapTimestampLiteral(String timestamp) {
+		return "timestamp with time zone '" + timestamp + "'";
 	}
 
 }

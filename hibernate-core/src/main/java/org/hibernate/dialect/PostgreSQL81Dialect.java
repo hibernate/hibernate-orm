@@ -165,8 +165,7 @@ public class PostgreSQL81Dialect extends Dialect {
 			Renderer from, Renderer to,
 			Appender sqlAppender,
 			boolean fromTimestamp, boolean toTimestamp) {
-		boolean timestamp = toTimestamp || fromTimestamp;
-		if ( !timestamp && unit==DAY ) {
+		if ( !toTimestamp && !fromTimestamp && unit==DAY ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
@@ -220,8 +219,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		sqlAppender.append("extract(");
 		sqlAppender.append( unit.toString() );
 		sqlAppender.append(" from ");
-		boolean timestamp = toTimestamp || fromTimestamp;
-		if ( !timestamp ) {
+		if ( !toTimestamp && !fromTimestamp ) {
 			// special case subtraction of two
 			// dates results in an integer not
 			// an Interval

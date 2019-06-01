@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.internal;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
@@ -29,10 +30,12 @@ public final class DateTimeUtils {
 	public static final String FORMAT_STRING_DATE = "yyyy-MM-dd";
 	public static final String FORMAT_STRING_TIME = "HH:mm:ss";
 	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss.SSSSSS";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_OFFSET = "yyyy-MM-dd HH:mm:ss.SSSSSSxxx";
 
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_DATE = DateTimeFormatter.ofPattern( FORMAT_STRING_DATE, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP = DateTimeFormatter.ofPattern( FORMAT_STRING_TIMESTAMP, Locale.ENGLISH );
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_OFFSET = DateTimeFormatter.ofPattern( FORMAT_STRING_TIMESTAMP_WITH_OFFSET, Locale.ENGLISH );
 
 	public static final String JDBC_ESCAPE_START_DATE = "{d '";
 	public static final String JDBC_ESCAPE_START_TIME = "{t '";
@@ -89,7 +92,9 @@ public final class DateTimeUtils {
 	}
 
 	public static String formatAsTimestamp(TemporalAccessor temporalAccessor) {
-		return DATE_TIME_FORMATTER_TIMESTAMP.format( temporalAccessor );
+		return temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS)
+				? DATE_TIME_FORMATTER_TIMESTAMP_WITH_OFFSET.format( temporalAccessor )
+				: DATE_TIME_FORMATTER_TIMESTAMP.format( temporalAccessor );
 	}
 
 	public static String formatAsDate(TemporalAccessor temporalAccessor) {

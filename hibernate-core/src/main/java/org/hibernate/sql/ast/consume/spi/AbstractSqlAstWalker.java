@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.consume.spi;
 
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,6 +74,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
+import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.TemporalUnit.conversionFactor;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.CLOSE_PARENTHESIS;
@@ -530,13 +530,15 @@ public abstract class AbstractSqlAstWalker
 		if (arithmeticExpression.getOperator() == SUBTRACT
 				&& isTemporalType( leftOperand.getType() )
 				&& isTemporalType( rightOperand.getType() ) ) {
+			boolean leftTimestamp = isTimestampType( leftOperand.getType() );
+			boolean rightTimestamp = isTimestampType( rightOperand.getType() );
 			getJdbcServices().getDialect().timestampdiff(
-					NANOSECOND,
+					rightTimestamp || leftTimestamp ? NANOSECOND : DAY,
 					() -> rightOperand.accept( this ),
 					() -> leftOperand.accept( this ),
 					sqlAppender::appendSql,
-					isTimestampType( rightOperand.getType() ),
-					isTimestampType( leftOperand.getType() )
+					rightTimestamp,
+					leftTimestamp
 			);
 			return;
 		}

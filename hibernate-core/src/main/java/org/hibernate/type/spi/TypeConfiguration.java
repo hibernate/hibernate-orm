@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
 import java.time.Duration;
-import java.time.temporal.Temporal;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -494,8 +493,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return secondType;
 		}
 		else if ( firstType==null && isTemporalType( secondType ) ) {
-			// subtraction of a date or timestamp from
-			// a parameter (which
+			// subtraction of a date or timestamp from a
+			// parameter (which doesn't have a type yet)
 			return getBasicTypeRegistry().getBasicType( Duration.class );
 		}
 
@@ -554,27 +553,40 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
-	public static boolean isJDBCTemporalType(ExpressableType<?> type) {
-		return matchesJavaType( type, Date.class );
-	}
-
-	public static boolean isTemporalType(ExpressableType<?> type) {
-		return matchesJavaType( type, Date.class )
-			|| matchesJavaType( type, Temporal.class );
-	}
-
 	public static boolean isDuration(ExpressableType<?> type) {
 		return matchesJavaType( type, Duration.class );
 	}
 
+	public static boolean isJDBCTemporalType(ExpressableType<?> type) {
+		return matchesJavaType( type, Date.class );
+	}
+
+	public boolean isTemporalType(ExpressableType<?> type) {
+		return type != null
+			&& isTemporalType( type.getJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
+	}
+
+	public boolean isTimestampType(ExpressableType<?> type) {
+		return type != null
+			&& isTimestampType( type.getJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
+	}
+
 	public static boolean isTimestampType(SqlExpressableType type) {
-		int jdbcTypeCode = type.getSqlTypeDescriptor().getJdbcTypeCode();
+		return isTimestampType( type.getSqlTypeDescriptor() );
+	}
+
+	public static boolean isTimestampType(SqlTypeDescriptor descriptor) {
+		int jdbcTypeCode = descriptor.getJdbcTypeCode();
 		return jdbcTypeCode == Types.TIMESTAMP
 			|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE;
 	}
 
 	public static boolean isTemporalType(SqlExpressableType type) {
-		int jdbcTypeCode = type.getSqlTypeDescriptor().getJdbcTypeCode();
+		return isTemporalType( type.getSqlTypeDescriptor() );
+	}
+
+	public static boolean isTemporalType(SqlTypeDescriptor descriptor) {
+		int jdbcTypeCode = descriptor.getJdbcTypeCode();
 		return jdbcTypeCode == Types.TIMESTAMP
 			|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE
 			|| jdbcTypeCode == Types.TIME

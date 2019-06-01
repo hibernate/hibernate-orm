@@ -148,15 +148,16 @@ import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.query.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
+import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
-import static org.hibernate.type.spi.TypeConfiguration.isTemporalType;
 
 /**
  * @author Steve Ebersole
@@ -988,8 +989,9 @@ public abstract class BaseSqmToSqlAstConverter
 			SqmExpression rightOperand = expression.getRightHandOperand();
 
 			boolean durationToRight = isDuration( rightOperand.getExpressableType() );
-			boolean temporalTypeToLeft = isTemporalType( leftOperand.getExpressableType() );
-			boolean temporalTypeToRight = isTemporalType( rightOperand.getExpressableType() );
+			TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
+			boolean temporalTypeToLeft = typeConfiguration.isTemporalType( leftOperand.getExpressableType() );
+			boolean temporalTypeToRight = typeConfiguration.isTemporalType( rightOperand.getExpressableType() );
 			boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft;
 
 			if (temporalTypeToLeft && durationToRight) {
@@ -1112,13 +1114,17 @@ public abstract class BaseSqmToSqlAstConverter
 		// ts1 - ts2
 
 		BinaryArithmeticExpression difference = cleanly(() ->
-			new BinaryArithmeticExpression(
-					toSqlExpression( expression.getLeftHandOperand().accept(this) ),
-					operator,
-					toSqlExpression( expression.getRightHandOperand().accept(this) ),
-					expression.getExpressableType().getSqlExpressableType()
-			)
+				new BinaryArithmeticExpression(
+						toSqlExpression( expression.getLeftHandOperand().accept(this) ),
+						operator,
+						toSqlExpression( expression.getRightHandOperand().accept(this) ),
+						expression.getExpressableType().getSqlExpressableType()
+				)
 		);
+
+		TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
+		boolean leftTimestamp = typeConfiguration.isTimestampType( expression.getLeftHandOperand().getExpressableType()) ;
+		boolean rightTimestamp = typeConfiguration.isTimestampType( expression.getRightHandOperand().getExpressableType() );
 
 		if (adjustedTimestamp != null) {
 			if ( appliedByUnit != null ) {
@@ -1126,6 +1132,7 @@ public abstract class BaseSqmToSqlAstConverter
 			}
 			// we're using the resulting duration to
 			// adjust a date or timestamp on the left
+
 			return new BinaryArithmeticExpression(
 					adjustedTimestamp,
 					ADD,
@@ -1138,7 +1145,7 @@ public abstract class BaseSqmToSqlAstConverter
 							// need to use it here to bypass the
 							// conversion to nanoseconds that
 							// happens in AbstractSqlAstWalker
-							NANOSECOND,
+							rightTimestamp || leftTimestamp ? NANOSECOND : DAY,
 							expression.getExpressableType().getSqlExpressableType()
 					),
 					adjustedTimestamp.getType()
@@ -1161,7 +1168,11 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 		else {
 			// a plain "bare" Duration
-			return applyScale(difference);
+			return new Duration(
+					applyScale(difference),
+					rightTimestamp || leftTimestamp ? NANOSECOND : DAY,
+					expression.getExpressableType().getSqlExpressableType()
+			);
 		}
 	}
 

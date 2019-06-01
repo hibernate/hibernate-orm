@@ -19,7 +19,8 @@ public enum TemporalUnit {
 	WEEK_OF_MONTH(true), WEEK_OF_YEAR(true),
 	OFFSET(false),
 	TIMEZONE_HOUR(false), TIMEZONE_MINUTE(false),
-	DATE(false), TIME(false);
+	DATE(false), TIME(false),
+	EPOCH(false);
 
 	private boolean dateUnit;
 
@@ -36,6 +37,12 @@ public enum TemporalUnit {
 	}
 
 	public static String conversionFactor(TemporalUnit fromUnit, TemporalUnit toUnit) {
+		if (fromUnit == EPOCH) {
+			fromUnit = SECOND;
+		}
+		if (toUnit == EPOCH) {
+			toUnit = SECOND;
+		}
 		long factor = 1;
 		boolean reciprocal = false;
 		if (toUnit == fromUnit) {

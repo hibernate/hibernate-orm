@@ -47,6 +47,7 @@ import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 import static org.hibernate.query.TemporalUnit.DAY;
+import static org.hibernate.query.TemporalUnit.EPOCH;
 import static org.hibernate.query.TemporalUnit.HOUR;
 import static org.hibernate.query.TemporalUnit.MINUTE;
 import static org.hibernate.query.TemporalUnit.MONTH;
@@ -200,38 +201,10 @@ public class PostgreSQL81Dialect extends Dialect {
 					extractField(sqlAppender, from, to, DAY, fromTimestamp, toTimestamp, unit);
 					break;
 				case HOUR:
-					sqlAppender.append("(");
-					extractField(sqlAppender, from, to, DAY, fromTimestamp, toTimestamp, unit);
-					if (timestamp) {
-						sqlAppender.append("+");
-						extractField(sqlAppender, from, to, HOUR, fromTimestamp, toTimestamp, unit);
-					}
-					sqlAppender.append(")");
-					break;
 				case MINUTE:
-					sqlAppender.append("(");
-					extractField(sqlAppender, from, to, DAY, fromTimestamp, toTimestamp, unit);
-					if (timestamp) {
-						sqlAppender.append("+");
-						extractField(sqlAppender, from, to, HOUR, fromTimestamp, toTimestamp, unit);
-						sqlAppender.append("+");
-						extractField(sqlAppender, from, to, MINUTE, fromTimestamp, toTimestamp, unit);
-					}
-					sqlAppender.append(")");
-					break;
-				case NANOSECOND:
 				case SECOND:
-					sqlAppender.append("(");
-					extractField(sqlAppender, from, to, DAY, fromTimestamp, toTimestamp, unit);
-					if (timestamp) {
-						sqlAppender.append("+");
-						extractField(sqlAppender, from, to, HOUR, fromTimestamp, toTimestamp, unit);
-						sqlAppender.append("+");
-						extractField(sqlAppender, from, to, MINUTE, fromTimestamp, toTimestamp, unit);
-						sqlAppender.append("+");
-						extractField(sqlAppender, from, to, SECOND, fromTimestamp, toTimestamp, unit);
-					}
-					sqlAppender.append(")");
+				case NANOSECOND:
+					extractField(sqlAppender, from, to, EPOCH, fromTimestamp, toTimestamp, unit);
 					break;
 				default:
 					throw new SemanticException("unrecognized field: " + unit);
@@ -274,6 +247,7 @@ public class PostgreSQL81Dialect extends Dialect {
 				case HOUR:
 				case MINUTE:
 				case SECOND:
+				case EPOCH:
 					to.render();
 					sqlAppender.append("-");
 					from.render();

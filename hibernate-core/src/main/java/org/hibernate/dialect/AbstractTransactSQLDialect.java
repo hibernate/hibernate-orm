@@ -25,7 +25,9 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * An abstract base class for Sybase and MS SQL Server dialects.
@@ -35,13 +37,14 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 abstract class AbstractTransactSQLDialect extends Dialect {
 	public AbstractTransactSQLDialect() {
 		super();
-		//TODO: Why are we not using the BIT type to
-		//store booleans in SQL Server and Sybase?
-//		registerColumnType( Types.BIT, "bit" );
-//		registerColumnType( Types.BOOLEAN, "bit" );
-		registerColumnType( Types.BIT, 1, "tinyint" );
-		registerColumnType( Types.BIT, "tinyint" );
-		registerColumnType( Types.BOOLEAN, "tinyint" );
+		registerColumnType( Types.BOOLEAN, "bit" );
+		registerColumnType( Types.BIT, 1, "bit" );
+		registerColumnType( Types.BIT, "smallint" );
+
+		//'tinyint' is an unsigned type in Sybase and
+		//SQL Server, holding values in the range 0-255
+		//see HHH-6779
+		registerColumnType( Types.TINYINT, "smallint" );
 
 		//it's called 'int' not 'integer'
 		registerColumnType( Types.INTEGER, "int" );
@@ -62,6 +65,19 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
+
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		switch (sqlCode) {
+			case Types.BOOLEAN:
+				return BitSqlDescriptor.INSTANCE;
+			case Types.TINYINT:
+				return SmallIntSqlDescriptor.INSTANCE;
+			default:
+				return super.getSqlTypeDescriptorOverride( sqlCode );
+		}
+	}
+
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {

@@ -10,8 +10,6 @@ import java.sql.Types;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15 and higher.
@@ -309,11 +307,6 @@ public class SybaseASE15Dialect extends SybaseDialect {
 	@Override
 	public String getCrossJoinSeparator() {
 		return ", ";
-	}
-
-	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.BOOLEAN ? TinyIntSqlDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 
 	@Override

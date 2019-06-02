@@ -206,13 +206,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.TINYINT ?
-				SmallIntSqlDescriptor.INSTANCE :
-				super.getSqlTypeDescriptorOverride( sqlCode );
-	}
-
-	@Override
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}

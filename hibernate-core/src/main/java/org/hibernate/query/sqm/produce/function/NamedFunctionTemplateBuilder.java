@@ -6,17 +6,14 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 
 import org.hibernate.type.StandardBasicTypes;
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
 public class NamedFunctionTemplateBuilder {
-	private static final Logger log = Logger.getLogger( NamedFunctionTemplateBuilder.class );
 
 	private final SqmFunctionRegistry registry;
 	private final String registrationKey;

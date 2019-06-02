@@ -1044,15 +1044,19 @@ public class CommonFunctionFactory {
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time", "current_time")
 				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
+				.setUseParenthesesWhenNoArgs( false )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current date", "current_date")
 				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE )
+				.setUseParenthesesWhenNoArgs( false )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current datetime", "current_timestamp")
 				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
+				.setUseParenthesesWhenNoArgs( false )
 				.register();
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current instant", "current_timestamp")
 				.setInvariantType( StandardSpiBasicTypes.INSTANT )
+				.setUseParenthesesWhenNoArgs( false )
 				.register();
 	}
 

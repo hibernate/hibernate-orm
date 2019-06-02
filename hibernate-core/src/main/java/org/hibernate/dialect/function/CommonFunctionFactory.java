@@ -114,6 +114,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "trunc" )
 				.setArgumentCountBetween( 1, 2 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setArgumentListSignature("(number[, places])")
 				.register();
 	}
 
@@ -121,6 +122,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "truncate" )
 				.setExactArgumentCount( 2 ) //some databases allow 1 arg but in these it's a synonym for trunc()
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setArgumentListSignature("(number, places)")
 				.register();
 	}
 
@@ -131,6 +133,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "truncate", "round(?1,?2,1)" )
 				.setExactArgumentCount( 2 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setArgumentListSignature("(number, places)")
 				.register();
 	}
 
@@ -142,6 +145,7 @@ public class CommonFunctionFactory {
 				.setArgumentCountBetween( 0, 1 )
 				.setUseParenthesesWhenNoArgs( true )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setArgumentListSignature("([seed])")
 				.register();
 	}
 
@@ -262,10 +266,12 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
+				.setArgumentListSignature("(string[, characters])")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rtrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
+				.setArgumentListSignature("(string[, characters])")
 				.register();
 	}
 
@@ -273,10 +279,12 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "ltrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
+				.setArgumentListSignature("(string)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rtrim" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 1 )
+				.setArgumentListSignature("(string)")
 				.register();
 	}
 
@@ -284,10 +292,12 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "lpad" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
+				.setArgumentListSignature("(string, length[, padding])")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "rpad" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
+				.setArgumentListSignature("(string, length[, padding])")
 				.register();
 	}
 
@@ -314,6 +324,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "repeat" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, times)")
 				.register();
 	}
 
@@ -321,10 +332,12 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "left" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, length)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "right" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, length)")
 				.register();
 	}
 
@@ -332,10 +345,12 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "left", "substr(?1,0,?2)" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, length)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "right", "substr(?1,-?2)" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, length)")
 				.register();
 	}
 
@@ -343,6 +358,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "replicate" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, times)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "repeat", "replicate" );
 	}
@@ -365,6 +381,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "instr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 4 )
+				.setArgumentListSignature("(string, pattern[, start[, occurrence]])")
 				.register();
 	}
 
@@ -372,6 +389,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substr" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
+				.setArgumentListSignature("(string, start[, length])")
 				.register();
 	}
 
@@ -477,11 +495,13 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "every" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "any" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
 				.register();
 	}
 
@@ -494,12 +514,14 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bool_and" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "every", "bool_and" );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bool_or" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "any", "bool_or" );
 	}
@@ -514,12 +536,14 @@ public class CommonFunctionFactory {
 				"(sum(case when ?1 then 0 else 1 end)=0)" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "any",
 				"(sum(case when ?1 then 1 else 0 end)>0)" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
 				.register();
 	}
 
@@ -713,6 +737,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "concat", "(", "||", ")" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setMinArgumentCount( 1 )
+//				.setArgumentListSignature("(string0[, string1[, ...]])")
 				.register();
 	}
 
@@ -723,6 +748,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "concat", "(", "+", ")" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setMinArgumentCount( 1 )
+//				.setArgumentListSignature("(string0[, string1[, ...]])")
 				.register();
 	}
 
@@ -992,7 +1018,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("position", "position(?1 in ?2)")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount(2)
-				.setArgumentListSignature("(arg0 in arg1)")
+				.setArgumentListSignature("(pattern in string)")
 				.register();
 	}
 
@@ -1000,6 +1026,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("locate")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween(2, 3)
+				.setArgumentListSignature("(pattern, string, start)")
 				.register();
 	}
 
@@ -1010,6 +1037,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charindex" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 3 )
+				.setArgumentListSignature("(pattern, string, start)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "locate", "charindex" );
 	}
@@ -1021,7 +1049,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("substring")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween(2, 3)
-				.setArgumentListSignature("(arg0{ from|,} arg1[{ for|,} arg3])")
+				.setArgumentListSignature("(string{ from|,} start[{ for|,} length])")
 				.register();
 	}
 
@@ -1030,7 +1058,7 @@ public class CommonFunctionFactory {
 	 */
 	public static void substring_substr(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "substring", "substr" )
-				.setArgumentListSignature("(arg0{ from|,} arg1[{ for|,} arg3])")
+				.setArgumentListSignature("(string{ from|,} start[{ for|,} length])")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
@@ -1040,6 +1068,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("insert")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(4)
+				.setArgumentListSignature("(string, start, length, replacement)")
 				.register();
 	}
 
@@ -1050,6 +1079,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("insert", "overlay(?1 placing ?4 from ?2 for ?3)")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(4)
+				.setArgumentListSignature("(string, start, length, replacement)")
 				.register();
 	}
 
@@ -1057,6 +1087,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("replace")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(3)
+				.setArgumentListSignature("(string, pattern, replacement)")
 				.register();
 	}
 
@@ -1067,6 +1098,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("str_replace")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(3)
+				.setArgumentListSignature("(string, pattern, replacement)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey("replace", "str_replace");
 	}
@@ -1075,6 +1107,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("concat")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setMinArgumentCount(1)
+				.setArgumentListSignature("(string0[, string1[, ...]])")
 				.register();
 	}
 
@@ -1082,11 +1115,13 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("lower")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(1)
+				.setArgumentListSignature("(string)")
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("upper")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(1)
+				.setArgumentListSignature("(string)")
 				.register();
 	}
 
@@ -1130,6 +1165,7 @@ public class CommonFunctionFactory {
 //				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(field, arg)")
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "extract", "datepart" )
@@ -1141,6 +1177,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datename" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(field, arg)")
 				.register();
 	}
 
@@ -1156,7 +1193,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("trim", "trim(?1 ?2 from ?3)")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(3)
-				.setArgumentListSignature("([[{leading|trailing|both} ][arg0 ]from] arg1)")
+				.setArgumentListSignature("([[{leading|trailing|both} ][character ]from] string)")
 				.register();
 	}
 
@@ -1522,6 +1559,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datediff" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(end, start)")
 				.register();
 	}
 
@@ -1532,24 +1570,29 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "adddate" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, days)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "subdate" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, days)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "addtime" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, time)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "subtime" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, time)")
 				.register();
 	}
 
 	public static void addMonths(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("add_months")
-				.setReturnTypeResolver(useArgType(1))
+				.setReturnTypeResolver( useArgType(1) )
+				.setArgumentListSignature("(datetime, months)")
 				.setExactArgumentCount(2)
 				.register();
 	}
@@ -1558,6 +1601,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("months_between")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(end, start)")
 				.register();
 	}
 
@@ -1565,6 +1609,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("days_between")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(end, start)")
 				.register();
 	}
 
@@ -1572,6 +1617,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("seconds_between")
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(end, start)")
 				.register();
 	}
 
@@ -1579,26 +1625,32 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("years_between")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(end, start)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("months_between")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(end, start)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("days_between")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(end, start)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("hours_between")
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(end, start)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("minutes_between")
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(end, start)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("seconds_between")
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(end, start)")
 				.register();
 	}
 
@@ -1606,26 +1658,32 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_years" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, years)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_months" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, months)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_days" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, days)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_hours" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, hours)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_minutes" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, minutes)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "add_seconds" )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime, seconds)")
 				.register();
 	}
 
@@ -1636,6 +1694,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(datetime, pattern)")
 				.register();
 	}
 
@@ -1649,6 +1708,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "to_char")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(datetime, pattern)")
 				.register();
 	}
 
@@ -1661,6 +1721,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "date_format")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(datetime, pattern)")
 				.register();
 	}
 
@@ -1673,6 +1734,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "format")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(datetime, pattern)")
 				.register();
 	}
 
@@ -1685,6 +1747,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "to_varchar")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(datetime, pattern)")
 				.register();
 	}
 
@@ -1692,6 +1755,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("date_trunc", "date_trunc('?1',?2)")
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setExactArgumentCount(2)
+				.setArgumentListSignature("(field, datetime)")
 				.register();
 	}
 

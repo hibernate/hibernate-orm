@@ -65,4 +65,9 @@ public class PostgresExtractEmulation
 						);
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(field from datetime)";
+	}
+
 }

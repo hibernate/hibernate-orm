@@ -93,4 +93,8 @@ public class CUBRIDExtractEmulation
 				);
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(field from datetime)";
+	}
 }

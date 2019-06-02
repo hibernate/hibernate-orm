@@ -65,4 +65,9 @@ public class H2ExtractEmulation
 				);
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(field from datetime)";
+	}
+
 }

@@ -76,4 +76,9 @@ public class TimestampaddFunction
 		);
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(field, magnitude, datetime)";
+	}
+
 }

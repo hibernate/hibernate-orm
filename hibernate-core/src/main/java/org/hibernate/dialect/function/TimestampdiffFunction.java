@@ -78,4 +78,9 @@ public class TimestampdiffFunction
 		);
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(field, start, end)";
+	}
+
 }

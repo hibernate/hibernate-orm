@@ -82,4 +82,8 @@ public class DerbyConcatEmulation extends FunctionAsExpressionTemplate {
 		sqlAppender.appendSql( ")" );
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(string0[, string1[, ...]])";
+	}
 }

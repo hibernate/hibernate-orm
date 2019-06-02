@@ -90,4 +90,9 @@ public class RDMSExtractEmulation
 				);
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(field from datetime)";
+	}
+
 }

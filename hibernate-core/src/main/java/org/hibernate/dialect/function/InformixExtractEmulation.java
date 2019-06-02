@@ -94,4 +94,9 @@ public class InformixExtractEmulation
 				);
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(field from datetime)";
+	}
+
 }

@@ -187,6 +187,7 @@ public class DB2Dialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "posstr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, pattern)")
 				.register();
 
 	}

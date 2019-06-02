@@ -99,4 +99,8 @@ public class DB2FormatEmulation
 		);
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(datetime, pattern)";
+	}
 }

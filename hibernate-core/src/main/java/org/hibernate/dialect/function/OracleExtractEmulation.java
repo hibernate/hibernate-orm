@@ -83,5 +83,9 @@ public class OracleExtractEmulation
 				);
 	}
 
+	@Override
+	public String getArgumentListSignature() {
+		return "(field from datetime)";
+	}
 
 }

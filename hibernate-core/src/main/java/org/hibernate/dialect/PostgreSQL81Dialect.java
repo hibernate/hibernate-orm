@@ -265,6 +265,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.cbrt( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
@@ -293,40 +294,12 @@ public class PostgreSQL81Dialect extends Dialect {
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
+		CommonFunctionFactory.insert_overlay( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new PostgresExtractEmulation() );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("insert", "overlay(?1 placing ?4 from ?2 for ?3)")
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount(4)
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_date" )
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setExactArgumentCount( 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_time" )
-				.setInvariantType( StandardSpiBasicTypes.TIME )
-				.setExactArgumentCount( 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamp" )
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 6 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamptz" )
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setArgumentCountBetween( 6, 7 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
-
 	}
 
 	@Override

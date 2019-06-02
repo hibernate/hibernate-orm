@@ -185,15 +185,6 @@ public class DB2Dialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "formatdatetime", new DB2FormatEmulation() );
 
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "upper" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 1, 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "lower" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 1, 3 )
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "posstr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )

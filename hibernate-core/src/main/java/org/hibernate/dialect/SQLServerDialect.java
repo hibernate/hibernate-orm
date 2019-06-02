@@ -61,10 +61,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		super.initializeFunctionRegistry(queryEngine);
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation() );
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "truncate", "round(?1,?2,1)" )
-				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+
+		CommonFunctionFactory.truncate_round( queryEngine );
 
 		//note: this function was introduced in SQL Server 2012
 		CommonFunctionFactory.formatdatetime_format( queryEngine );

@@ -193,22 +193,9 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.datediff( queryEngine );
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
 		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+		CommonFunctionFactory.makedateMaketime( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new MySQLExtractEmulation() );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setArgumentCountBetween( 1, 2 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "makedate" )
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "maketime" )
-				.setInvariantType( StandardSpiBasicTypes.TIME )
-				.setExactArgumentCount( 3 )
-				.register();
 	}
 
 	@Override

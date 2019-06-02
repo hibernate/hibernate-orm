@@ -149,6 +149,7 @@ public class CUBRIDDialect extends Dialect {
 //		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
+		CommonFunctionFactory.makedateMaketime( queryEngine );
 		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot( queryEngine );
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
@@ -159,19 +160,10 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory.rownumInstOrderbyGroupbyNum( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new CUBRIDExtractEmulation() );
 
-		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardSpiBasicTypes.INTEGER );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "makedate" )
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "maketime" )
-				.setInvariantType( StandardSpiBasicTypes.TIME )
-				.setExactArgumentCount( 3 )
-				.register();
 	}
 
 	@Override

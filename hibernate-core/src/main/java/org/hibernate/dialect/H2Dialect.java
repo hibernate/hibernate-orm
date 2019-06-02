@@ -170,14 +170,9 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
 		CommonFunctionFactory.formatdatetime( queryEngine );
+		CommonFunctionFactory.rownum( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new H2ExtractEmulation() );
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
-				.setInvariantType( StandardSpiBasicTypes.LONG )
-				.setUseParenthesesWhenNoArgs( true ) //H2 requires the parens
-				.register();
-
 	}
 
 	@Override

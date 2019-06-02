@@ -125,6 +125,16 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * SQL Server
+	 */
+	public static void truncate_round(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "truncate", "round(?1,?2,1)" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+	}
+
+	/**
 	 * Returns double between 0.0 and 1.0. First call may specify a seed value.
 	 */
 	public static void rand(QueryEngine queryEngine) {
@@ -716,6 +726,9 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Oracle-style
+	 */
 	public static void rownumRowid(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rowid" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
@@ -724,6 +737,77 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setUseParenthesesWhenNoArgs( false )
+				.register();
+	}
+
+	/**
+	 * H2/HSQL-style
+	 */
+	public static void rownum(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
+				.setInvariantType( StandardSpiBasicTypes.LONG )
+				.setUseParenthesesWhenNoArgs( true ) //H2 and HSQL require the parens
+				.register();
+	}
+
+	/**
+	 * CUBRID
+	 */
+	public static void rownumInstOrderbyGroupbyNum(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "inst_num" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "orderby_num" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "groupby_num" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+	}
+
+	/**
+	 * MySQL/CUBRID
+	 */
+	public static void makedateMaketime(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "makedate" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(year, dayofyear)")
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "maketime" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.setArgumentListSignature("(hour, min, sec)")
+				.register();
+	}
+
+	/**
+	 * Postgres
+	 */
+	public static void makeDateTimeTimestamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_date" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setExactArgumentCount( 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_time" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 6 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamptz" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setArgumentCountBetween( 6, 7 )
 				.register();
 	}
 
@@ -809,6 +893,16 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("atan2")
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount(2)
+				.register();
+	}
+
+	/**
+	 * Transact-SQL atan2 is misspelled
+	 */
+	public static void atan2_atn2(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2", "atn2")
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 2 )
 				.register();
 	}
 
@@ -935,6 +1029,16 @@ public class CommonFunctionFactory {
 
 	public static void insert(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("insert")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount(4)
+				.register();
+	}
+
+	/**
+	 * Postgres
+	 */
+	public static void insert_overlay(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("insert", "overlay(?1 placing ?4 from ?2 for ?3)")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(4)
 				.register();
@@ -1293,6 +1397,13 @@ public class CommonFunctionFactory {
 
 	public static void square(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "square" )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public static void cbrt(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "cbrt" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
 	}

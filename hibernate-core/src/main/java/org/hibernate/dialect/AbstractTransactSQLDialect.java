@@ -71,6 +71,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.ln_log( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.atan2_atn2( queryEngine );
 		CommonFunctionFactory.mod_operator( queryEngine );
 		CommonFunctionFactory.square( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
@@ -88,12 +89,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.characterLength_len( queryEngine );
 		CommonFunctionFactory.extract_datepart( queryEngine );
 		CommonFunctionFactory.lastDay_eomonth( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "atan2", "atn2")
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setExactArgumentCount( 2 )
-				.register();
-
 	}
 
 	@Override

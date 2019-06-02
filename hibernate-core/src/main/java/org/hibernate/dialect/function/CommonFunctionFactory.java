@@ -1196,6 +1196,76 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * Ancient Oracle 8 syntax
+	 */
+	public static void currentDateTimeTimestamp_sysdate(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time", "sysdate" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date", "sysdate"  )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_timestamp", "sysdate" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time", "sysdate")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current date", "sysdate")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current datetime", "sysdate")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current instant", "sysdate")
+				.setInvariantType( StandardSpiBasicTypes.INSTANT )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+	}
+
+	/**
+	 * Current Oracle 9-12 syntax
+	 */
+	public static void currentDateTimeTimestamp_currentDateTimestampLocaltimestamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time", "current_timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date", "current_date"  )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_timestamp", "current_timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time", "localtimestamp")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current date", "current_date")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current datetime", "localtimestamp")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current instant", "current_timestamp")
+				.setInvariantType( StandardSpiBasicTypes.INSTANT )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+	}
+
+	/**
 	 * Sybase ASE (parentheses are required)
 	 */
 	public static void currentDateTimeBigdatetimeParens(QueryEngine queryEngine) {

@@ -97,6 +97,9 @@ public class Oracle9iDialect extends Oracle8iDialect {
 
 		//Oracle has had coalesce() since 9.0.1
 		CommonFunctionFactory.coalesce( queryEngine );
+
+		//current_date , current_timestamp, and localtimestamp were introduced in Oracle 9
+		CommonFunctionFactory.currentDateTimeTimestamp_currentDateTimestampLocaltimestamp( queryEngine );
 	}
 
 	@Override

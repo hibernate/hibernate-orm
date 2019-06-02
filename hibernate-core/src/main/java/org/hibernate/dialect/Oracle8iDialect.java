@@ -175,6 +175,7 @@ public class Oracle8iDialect extends Dialect {
 		CommonFunctionFactory.characterLength_length( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory.currentDateTimeTimestamp_sysdate( queryEngine );
 
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );

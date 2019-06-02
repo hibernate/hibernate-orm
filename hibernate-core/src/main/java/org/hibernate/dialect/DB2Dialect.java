@@ -43,7 +43,6 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -578,14 +577,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		if ( sqlCode == Types.BOOLEAN ) {
-			return SmallIntSqlDescriptor.INSTANCE;
-		}
-		else if ( sqlCode == Types.NUMERIC ) {
-			return DecimalSqlDescriptor.INSTANCE;
-		}
-
-		return super.getSqlTypeDescriptorOverride( sqlCode );
+		return sqlCode == Types.NUMERIC ? DecimalSqlDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride(sqlCode);
 	}
 
 	@Override

@@ -76,4 +76,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public String getCurrentSchemaCommand() {
 		return "select db_name()";
 	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case WEEK: return "calweekofyear"; //the ISO week number I think
+			default: return super.translateExtractField(unit);
+		}
+	}
 }

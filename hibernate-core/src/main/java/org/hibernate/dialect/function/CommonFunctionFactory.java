@@ -735,7 +735,27 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void systimestamp( QueryEngine queryEngine ) {
+	/**
+	 * MySQL requires the parens in sysdate()
+	 */
+	public static void sysdateParens(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "sysdate" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+	}
+
+	/**
+	 * MySQL 5.7 precision defaults to seconds, but microseconds is better
+	 */
+	public static void sysdateExplicitMicros(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "sysdate", "sysdate(6)" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 0 )
+				.register();
+	}
+
+	public static void systimestamp(QueryEngine queryEngine) {
 		// returns a timestamp with timezone
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "systimestamp" )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
@@ -1027,6 +1047,9 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * ANSI SQL standard syntax
+	 */
 	public static void currentDateTimeTimestamp(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
 				.setInvariantType( StandardSpiBasicTypes.TIME )
@@ -1040,7 +1063,6 @@ public class CommonFunctionFactory {
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey("current_instant", "current instant");
 
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time", "current_time")
 				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
@@ -1057,6 +1079,90 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current instant", "current_timestamp")
 				.setInvariantType( StandardSpiBasicTypes.INSTANT )
 				.setUseParenthesesWhenNoArgs( false )
+				.register();
+	}
+
+	/**
+	 * Sybase ASE (parentheses are required)
+	 */
+	public static void currentDateTimeBigdatetimeParens(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setUseParenthesesWhenNoArgs( true )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs( true )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp", "current_bigdatetime" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs( true )
+				.setExactArgumentCount( 0 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time", "current_time")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
+				.setUseParenthesesWhenNoArgs( true )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current date", "current_date")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE )
+				.setUseParenthesesWhenNoArgs( true )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current datetime", "current_bigdatetime")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
+				.setUseParenthesesWhenNoArgs( true )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current instant", "current_bigdatetime")
+				.setInvariantType( StandardSpiBasicTypes.INSTANT )
+				.setUseParenthesesWhenNoArgs( true )
+				.setExactArgumentCount( 0 )
+				.register();
+	}
+
+	/**
+	 * Sybase Anywhere (these are "special values", not functions)
+	 */
+	public static void currentDateTimeTimestampSpaces(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time", "current time" )
+				.setInvariantType( StandardSpiBasicTypes.TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date", "current date" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs( false )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp", "current timestamp" )
+				.setInvariantType( StandardSpiBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs( false )
+				.setExactArgumentCount( 0 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current date")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE )
+				.setUseParenthesesWhenNoArgs( false )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current datetime", "current timestamp")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current instant", "current timestamp")
+				.setInvariantType( StandardSpiBasicTypes.INSTANT )
+				.setUseParenthesesWhenNoArgs( false )
+				.setExactArgumentCount( 0 )
 				.register();
 	}
 
@@ -1081,7 +1187,7 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * For databases like MySQL which default to truncating the the fractional seconds.
+	 * MySQL 5.7 precision defaults to seconds, but microseconds is better
 	 */
 	public static void currentTimestampExplicitMicros(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("current_timestamp", "current_timestamp(6)")

@@ -9,8 +9,10 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
 
@@ -27,6 +29,15 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		registerColumnType( Types.BIGINT, "bigint" );
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		CommonFunctionFactory.currentDateTimeTimestampSpaces( queryEngine );
 	}
 
 	/**

@@ -415,6 +415,7 @@ public abstract class Dialect implements ConversionContext {
 		//ANSI current date/time functions, supported on almost every database
 
 		CommonFunctionFactory.currentDateTimeTimestamp(queryEngine);
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey("current_instant", "current instant");
 
 		//comparison functions supported on every known database
 

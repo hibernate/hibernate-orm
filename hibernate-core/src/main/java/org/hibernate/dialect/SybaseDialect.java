@@ -10,19 +10,21 @@ import java.sql.Types;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 
 /**
- * All Sybase dialects share an IN list size limit.
+ * Superclass for all Sybase dialects.
  *
  * @author Brett Meyer
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
+
+	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
 
 	public SybaseDialect() {
@@ -63,48 +65,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation("str_replace") );
 
-		//these functions need parens on Sybase
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setUseParenthesesWhenNoArgs( true )
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setUseParenthesesWhenNoArgs( true )
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
-				.setInvariantType( StandardSpiBasicTypes.DATE )
-				.setUseParenthesesWhenNoArgs( true )
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current_instant", "current_timestamp")
-				.setInvariantType( StandardSpiBasicTypes.INSTANT )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time", "current_time")
-				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current date", "current_date")
-				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current datetime", "current_timestamp")
-				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current instant", "current_timestamp")
-				.setInvariantType( StandardSpiBasicTypes.INSTANT )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register();
 	}
 
 	@Override

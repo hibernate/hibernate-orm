@@ -8,6 +8,8 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 
@@ -33,6 +35,13 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		registerColumnType( Types.TIME, "time" );
 
 		registerSybaseKeywords();
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		CommonFunctionFactory.currentDateTimeBigdatetimeParens( queryEngine );
 	}
 
 	private void registerSybaseKeywords() {

@@ -116,61 +116,23 @@ public class MySQLDialect extends Dialect {
 	}
 
 	void upgradeTo57() {
-
-		// For details about MySQL 5.7 support for fractional seconds
-		// precision (fsp): http://dev.mysql.com/doc/refman/5.7/en/fractional-seconds.html
-		// Regarding datetime(fsp), "The fsp value, if given, must be
-		// in the range 0 to 6. A value of 0 signifies that there is
-		// no fractional part. If omitted, the default precision is 0.
-		// (This differs from the standard SQL default of 6, for
-		// compatibility with previous MySQL versions.)".
-
-		// The following is defined because Hibernate currently expects
-		// the SQL 1992 default of 6 (which is inconsistent with the MySQL
-		// default).
+		// Since 5.7 we can explicitly specify a fractional second
+		// precision for the timestamp-like types
 		registerColumnType(Types.TIMESTAMP, "datetime($p)");
 		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
 
-		// MySQL 5.7 brings JSON native support with a dedicated datatype.
-		// For more details about MySql new JSON datatype support, see:
+		// MySQL 5.7 brings JSON native support with a dedicated datatype
 		// https://dev.mysql.com/doc/refman/5.7/en/json.html
 		registerColumnType(Types.JAVA_OBJECT, "json");
 
 	}
 
 	void upgradeTo57(QueryEngine queryEngine) {
+		// MySQL timestamp type defaults to precision 0 (seconds) but
+		// we want the standard default precision of 6 (microseconds)
+		CommonFunctionFactory.currentTimestampExplicitMicros( queryEngine );
+		CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
 
-		// MySQL also supports fractional seconds precision for time values
-		// (time(fsp)). According to SQL 1992, the default for <time precision>
-		// is 0. The MySQL default is time(0), there's no need to override
-		// the setting for Types.TIME columns.
-
-		// For details about MySQL support for timestamp functions, see:
-		// http://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html
-
-		// The following are synonyms for now(fsp), where fsp defaults to 0 on MySQL 5.7:
-		// current_timestamp([fsp]), localtime(fsp), localtimestamp(fsp).
-		// Register the same StaticPrecisionFspTimestampFunction for all 4 functions.
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "current_timestamp", "now(6)" )
-				.setExactArgumentCount(0)
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
-
-//		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "now", "now(6)" )
-//				.setExactArgumentCount(0)
-//				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
-
-		// sysdate is different from now():
-		// "SYSDATE() returns the time at which it executes. This differs
-		// from the behavior for NOW(), which returns a constant time that
-		// indicates the time at which the statement began to execute.
-		// (Within a stored function or trigger, NOW() returns the time at
-		// which the function or triggering statement began to execute.)
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "sysdate", "sysdate(6)" )
-				.setExactArgumentCount(0)
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP );
-
-		// from_unixtime(), timestamp() are functions that return TIMESTAMP that do not support a
-		// fractional seconds precision argument (so there's no need to override them here):
 	}
 
 //	@Override
@@ -218,8 +180,8 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.substr( queryEngine );
 		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.position( queryEngine );
+		CommonFunctionFactory.sysdateParens( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
-		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
 		CommonFunctionFactory.bitandorxornot_operator( queryEngine );
@@ -231,24 +193,12 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.datediff( queryEngine );
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
 		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
-		CommonFunctionFactory.currentTimestampExplicitMicros( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new MySQLExtractEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "encrypt" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
-				.register();
-
-//		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "now" )
-//				.setInvariantType(StandardSpiBasicTypes.TIMESTAMP )
-//				.setUseParenthesesWhenNoArgs(true)
-//				.register();
-
-		//sysdate is different
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "sysdate" )
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setUseParenthesesWhenNoArgs( true ) //MySQL requires the parens
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "makedate" )

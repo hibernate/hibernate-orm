@@ -857,6 +857,15 @@ public class CommonFunctionFactory {
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current time", "localtime")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder("current datetime", "localtimestamp")
+				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
+				.setUseParenthesesWhenNoArgs( false )
+				.register();
 	}
 
 	public static void trigonometry(QueryEngine queryEngine) {

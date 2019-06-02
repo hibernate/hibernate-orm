@@ -171,6 +171,7 @@ import org.jboss.logging.Logger;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.query.TemporalUnit.DATE;
 import static org.hibernate.query.TemporalUnit.DAY;
@@ -2105,7 +2106,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmExpression visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
 		final String functionName = ctx.jpaNonStandardFunctionName().STRING_LITERAL().getText().toLowerCase();
-		final List<SqmTypedNode<?>> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
+		List<SqmTypedNode<?>> functionArguments =
+				ctx.nonStandardFunctionArguments() == null ? emptyList() :
+				(List<SqmTypedNode<?>>) ctx.nonStandardFunctionArguments().accept( this );
 
 		SqmFunctionTemplate functionTemplate = getFunctionTemplate( functionName );
 		if (functionTemplate == null) {
@@ -2130,7 +2133,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 
 		final String functionName = ctx.nonStandardFunctionName().getText().toLowerCase();
-		final List<SqmTypedNode<?>> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
+		List<SqmTypedNode<?>> functionArguments =
+				ctx.nonStandardFunctionArguments() == null ? emptyList() :
+				(List<SqmTypedNode<?>>) ctx.nonStandardFunctionArguments().accept( this );
 
 		SqmFunctionTemplate functionTemplate = getFunctionTemplate(functionName);
 		if (functionTemplate == null) {

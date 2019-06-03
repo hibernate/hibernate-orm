@@ -6,13 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-import java.util.Properties;
-
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.Ingres10IdentityColumnSupport;
-
 /**
  * A SQL dialect for Ingres 10 and later versions.
  * <p/>
@@ -25,44 +18,10 @@ import org.hibernate.dialect.identity.Ingres10IdentityColumnSupport;
  * @author Raymond Fan
  */
 public class Ingres10Dialect extends Ingres9Dialect {
-	/**
-	 * Constructs a Ingres10Dialect
-	 */
-	public Ingres10Dialect() {
-		super();
-
-		registerColumnType( Types.BIT, 1, "boolean" );
-		registerColumnType( Types.BOOLEAN, "boolean" );
-
-		registerDefaultProperties();
-	}
 
 	@Override
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BOOLEAN;
-	}
-
-	private void registerDefaultProperties() {
-		// true, false and unknown are now valid values
-		// Remove the query substitutions previously added in IngresDialect.
-		final Properties properties = getDefaultProperties();
-		final String querySubst = properties.getProperty( Environment.QUERY_SUBSTITUTIONS );
-		if ( querySubst != null ) {
-			final String newQuerySubst = querySubst.replace( "true=1,false=0", "" );
-			properties.setProperty( Environment.QUERY_SUBSTITUTIONS, newQuerySubst );
-		}
-	}
-
-	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public String toBooleanValueString(boolean bool) {
-		return bool ? "true" : "false";
-	}
-
-	@Override
-	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new Ingres10IdentityColumnSupport();
+	int getVersion() {
+		return 1000;
 	}
 
 }

@@ -7,9 +7,16 @@
 package org.hibernate.dialect;
 
 import java.sql.Types;
+import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.Ingres10IdentityColumnSupport;
+import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
@@ -54,14 +61,52 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 @SuppressWarnings("deprecation")
 public class IngresDialect extends Dialect {
 
+	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final String soff = " offset " + selection.getFirstRow();
+			final String slim = " fetch first " + getMaxOrLimit( selection ) + " rows only";
+			final StringBuilder sb = new StringBuilder( sql.length() + soff.length() + slim.length() )
+					.append( sql );
+			if (LimitHelper.hasFirstRow( selection )) {
+				sb.append( soff );
+			}
+			if (LimitHelper.hasMaxRows( selection )) {
+				sb.append( slim );
+			}
+			return sb.toString();
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
+
+	int getVersion() {
+		return 920;
+	}
+
 	/**
 	 * Constructs a IngresDialect
 	 */
 	public IngresDialect() {
 		super();
-		registerColumnType( Types.BIT, 1, "tinyint" );
+
+		if ( getVersion() < 1000 ) {
+			registerColumnType( Types.BIT, 1, "tinyint" );
+			registerColumnType( Types.BOOLEAN, "tinyint" );
+		}
+		else {
+			registerColumnType( Types.BIT, 1, "boolean" );
+			registerColumnType( Types.BOOLEAN, "boolean" );
+		}
 		registerColumnType( Types.BIT, "tinyint" );
-		registerColumnType( Types.BOOLEAN, "tinyint" );
 
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //Ingres has no 'numeric' type
 
@@ -87,6 +132,12 @@ public class IngresDialect extends Dialect {
 		registerColumnType( Types.NVARCHAR, "long nvarchar" );
 		registerColumnType( Types.LONGNVARCHAR, "long nvarchar" );
 
+		if ( getVersion() >= 930 ) {
+			// Not completely necessary, given that Ingres
+			// can be configured to set DATE = ANSIDATE
+			registerColumnType( Types.DATE, "ansidate" );
+		}
+
 		// Ingres driver supports getGeneratedKeys but only in the following
 		// form:
 		// The Ingres DBMS returns only a single table key or a single object
@@ -98,11 +149,27 @@ public class IngresDialect extends Dialect {
 		// rows, a single row with one column, or a single row with two columns.
 		// Ingres JDBC Driver returns table and object keys as BINARY values.
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
-		// There is no support for a native boolean type that accepts values
-		// of true, false or unknown. Using the tinyint type requires
-		// substitions of true and false.
-		getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
+
+		if ( getVersion() < 1000 ) {
+			// There is no support for a native boolean type that accepts values
+			// of true, false or unknown. Using the tinyint type requires
+			// substitions of true and false.
+			getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
+		}
 	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return getVersion() < 1000 ? Types.BIT : Types.BOOLEAN;
+	}
+
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		return getVersion() < 1000
+				? super.toBooleanValueString( bool )
+				: String.valueOf( bool );
+	}
+
 
 	@Override
 	public int getDefaultDecimalPrecision() {
@@ -200,9 +267,23 @@ public class IngresDialect extends Dialect {
 		return " with null";
 	}
 
+	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	@Override
 	public boolean supportsSequences() {
 		return true;
+	}
+
+	@Override
+	public String getQuerySequencesString() {
+		return getVersion() < 930
+				? "select seq_name from iisequence"
+				: "select seq_name from iisequences";
+	}
+
+	@Override
+	public boolean supportsPooledSequences() {
+		return getVersion() >= 930;
 	}
 
 	@Override
@@ -226,11 +307,6 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public String getQuerySequencesString() {
-		return "select seq_name from iisequence";
-	}
-
-	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceNameExtractorImpl.INSTANCE;
 	}
@@ -248,8 +324,21 @@ public class IngresDialect extends Dialect {
 		return getDefaultLimitHandler();
 	}
 
-	protected LimitHandler getDefaultLimitHandler() {
-		return FirstLimitHandler.INSTANCE;
+	private LimitHandler getDefaultLimitHandler() {
+		return getVersion() < 930 ? FirstLimitHandler.INSTANCE : LIMIT_HANDLER;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		if ( getVersion() >= 1000 ) {
+			return new Ingres10IdentityColumnSupport();
+		}
+		else if (getVersion() >= 930) {
+			return new Ingres9IdentityColumnSupport();
+		}
+		else {
+			return super.getIdentityColumnSupport();
+		}
 	}
 
 	@Override
@@ -258,19 +347,90 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimitOffset() {
+	public String getLimitString(String querySelect, int offset, int limit) {
+		if ( getVersion() >= 930 ) {
+			final StringBuilder soff = new StringBuilder( " offset " + offset );
+			final StringBuilder slim = new StringBuilder( " fetch first " + limit + " rows only" );
+			final StringBuilder sb = new StringBuilder( querySelect.length() + soff.length() + slim.length() )
+					.append( querySelect );
+			if ( offset > 0 ) {
+				sb.append( soff );
+			}
+			if ( limit > 0 ) {
+				sb.append( slim );
+			}
+			return sb.toString();
+		}
+		else {
+			if ( offset > 0 ) {
+				throw new UnsupportedOperationException( "query result offset is not supported" );
+			}
+			return new StringBuilder( querySelect.length() + 16 )
+					.append( querySelect )
+					.insert( 6, " first " + limit )
+					.toString();
+		}
+	}
+	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean supportsOuterJoinForUpdate() {
+		return getVersion() >= 930;
+	}
+
+	@Override
+	public boolean forUpdateOfColumns() {
+		return getVersion() >= 930;
+	}
+
+	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean isCurrentTimestampSelectStringCallable() {
 		return false;
 	}
 
 	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 16 )
-				.append( querySelect )
-				.insert( 6, " first " + limit )
-				.toString();
+	public boolean supportsCurrentTimestampSelection() {
+		return getVersion() >= 930;
+	}
+
+	@Override
+	public String getCurrentTimestampSelectString() {
+		return getVersion() >= 930
+				? "select current_timestamp"
+				: super.getCurrentTimestampSelectString();
+	}
+
+	@Override
+	public String getCurrentTimestampSQLFunctionName() {
+		return getVersion() >= 930 ? "current_timestamp" : "date(now)";
+	}
+
+	// union subclass support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean supportsUnionAll() {
+		return getVersion() >= 930;
+	}
+
+	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		return getVersion() >= 930;
+	}
+
+	@Override
+	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
+		return getVersion() >= 930;
+	}
+
+	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean supportsLimitOffset() {
+		return getVersion() >= 930;
 	}
 
 	@Override
@@ -280,7 +440,7 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public boolean useMaxForLimit() {
-		return true;
+		return getVersion() < 930;
 	}
 
 	@Override
@@ -309,12 +469,6 @@ public class IngresDialect extends Dialect {
 				return "on commit preserve rows with norecovery";
 			}
 		};
-	}
-
-
-	@Override
-	public String getCurrentTimestampSQLFunctionName() {
-		return "date(now)";
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

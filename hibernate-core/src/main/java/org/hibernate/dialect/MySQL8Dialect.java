@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.LockOptions;
-
 /**
  * @author Vlad Mihalcea
  */

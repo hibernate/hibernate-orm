@@ -17,7 +17,8 @@ import java.sql.Types;
 import java.util.Map;
 
 /**
- * Dialect for Sybase Adaptive Server Enterprise
+ * Dialect for Sybase Adaptive Server Enterprise for
+ * Sybase 11.9.2 and above.
  */
 public class SybaseASEDialect extends SybaseDialect {
 

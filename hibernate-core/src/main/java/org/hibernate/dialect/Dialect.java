@@ -3215,7 +3215,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
-		// nothing to do
+		// nohing to do
 	}
 
 	/**

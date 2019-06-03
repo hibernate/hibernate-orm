@@ -6,10 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
-import org.hibernate.query.spi.QueryEngine;
-
 /**
  * @author Gail Badner
  */

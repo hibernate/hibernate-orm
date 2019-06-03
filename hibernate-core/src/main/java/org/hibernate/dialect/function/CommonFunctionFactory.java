@@ -659,20 +659,25 @@ public class CommonFunctionFactory {
 	}
 
 	public static void toCharNumberDateTimestamp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_char" )
-				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.register();
+		//argument counts are right for Oracle, TimesTen, and CUBRID
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_number" )
-				.setExactArgumentCount( 2 )
+				//always 1 arg on HSQL and Cache, always 2 on Postgres
+				.setArgumentCountBetween( 1, 3 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_char" )
+				.setArgumentCountBetween( 1, 3 )
+				//always 2 args on HSQL and Postgres
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_date" )
-				.setExactArgumentCount( 2 )
+				//always 2 args on HSQL and Postgres
+				.setArgumentCountBetween( 1, 3 )
 				.setInvariantType( StandardSpiBasicTypes.DATE )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "to_timestamp" )
-				.setExactArgumentCount( 2 )
+				//always 2 args on HSQL and Postgres
+				.setArgumentCountBetween( 1, 3 )
 				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
 				.register();
 	}

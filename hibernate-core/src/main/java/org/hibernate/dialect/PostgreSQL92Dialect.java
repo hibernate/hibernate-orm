@@ -6,26 +6,18 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
 /**
- * An SQL dialect for Postgres 9.2 and later, adds support for JSON data type
+ * An SQL dialect for Postgres 9.2 and later,
+ * adds support for JSON data type, and IF EXISTS
+ * after ALTER TABLE.
  * 
  * @author Mark Robinson
  */
 public class PostgreSQL92Dialect extends PostgreSQL91Dialect {
 
-	/**
-	 * Constructs a PostgreSQL92Dialect
-	 */
-	public PostgreSQL92Dialect() {
-		super();
-		this.registerColumnType( Types.JAVA_OBJECT, "json" );
-	}
-
 	@Override
-	public boolean supportsIfExistsAfterAlterTable() {
-		return true;
+	int getVersion() {
+		return 920;
 	}
 
 }

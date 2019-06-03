@@ -7,19 +7,16 @@
 package org.hibernate.dialect;
 
 /**
- * An SQL dialect for Postgres 9.1 and later, adds support for PARTITION BY as a keyword.
+ * An SQL dialect for Postgres 9.1 and later,
+ * adds support for PARTITION BY as a keyword.
  * 
  * @author Mark Robinson
  */
 public class PostgreSQL91Dialect extends PostgreSQL9Dialect {
 
 	@Override
-	public boolean supportsPartitionBy() {
-		return true;
+	int getVersion() {
+		return 910;
 	}
 
-	@Override
-	public boolean supportsNonQueryWithCTE() {
-		return true;
-	}
 }

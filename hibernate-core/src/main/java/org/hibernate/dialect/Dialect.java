@@ -439,7 +439,8 @@ public abstract class Dialect implements ConversionContext {
 
 		queryEngine.getSqmFunctionRegistry().register("timestampadd", new TimestampaddFunction(this) );
 		queryEngine.getSqmFunctionRegistry().register("timestampdiff", new TimestampdiffFunction(this) );
-
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
 	}
 
 	public interface Renderer {

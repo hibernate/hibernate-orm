@@ -181,8 +181,8 @@ public class CommonFunctionFactory {
 	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
 	 *
-	 * - On Postgres it means stdev_samp()
-	 * - On Oracle, DB2, MySQL it means stdev_pop()
+	 * - On Postgres it means var_samp()
+	 * - On Oracle, DB2, MySQL it means var_pop()
 	 */
 	public static void variance(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "variance" )
@@ -203,7 +203,21 @@ public class CommonFunctionFactory {
 	}
 
 	public static void varPopSamp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "variance_pop" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "var_pop" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "var_samp" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	/**
+	 * DB2
+	 */
+	public static void stdevVarianceSamp(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "stddev_samp" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();

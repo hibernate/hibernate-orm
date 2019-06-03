@@ -184,7 +184,7 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
-		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.stdevVarianceSamp( queryEngine );
 		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
 		CommonFunctionFactory.yearsMonthsDaysHoursMinutesSecondsBetween( queryEngine );
 		CommonFunctionFactory.dateTrunc( queryEngine );

@@ -7,24 +7,16 @@
 package org.hibernate.dialect;
 
 /**
- * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
- * override for the identity column generator as well as for the case statement
- * issue documented at:
- * http://www.jroller.com/comments/kenlars99/Weblog/cloudscape_soon_to_be_derby
+ * Dialect for Derby/Cloudscape 10.6
  *
  * @author Simon Johnston
  * @author Scott Marlow
  */
 public class DerbyTenSixDialect extends DerbyTenFiveDialect {
-	/**
-	 * Constructs a DerbyTenSixDialect
-	 */
-	public DerbyTenSixDialect() {
-		super();
-	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
+	int getDerbyVersion() {
+		return 1060;
 	}
+
 }

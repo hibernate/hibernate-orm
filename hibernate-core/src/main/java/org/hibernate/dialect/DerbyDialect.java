@@ -6,10 +6,8 @@
  */
 package org.hibernate.dialect;
 
-import java.lang.reflect.Method;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
@@ -19,8 +17,6 @@ import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.AfterUseAction;
@@ -32,29 +28,19 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDe
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
-import org.jboss.logging.Logger;
-
 /**
- * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
- * override for the identity column generator as well as for the case statement
- * issue documented at:
- * http://www.jroller.com/comments/kenlars99/Weblog/cloudscape_soon_to_be_derby
+ * Hibernate Dialect for Apache Derby / Cloudscape 10
  *
  * @author Simon Johnston
  *
- * @deprecated HHH-6073
  */
-@Deprecated
 public class DerbyDialect extends DB2Dialect {
-	@SuppressWarnings("deprecation")
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			DerbyDialect.class.getName()
-	);
 
-	private int driverVersionMajor;
-	private int driverVersionMinor;
-	private final LimitHandler limitHandler;
+	int getDerbyVersion() {
+		return 1000;
+	}
+
+	private final LimitHandler limitHandler = new DerbyLimitHandler();
 
 	/**
 	 * Constructs a DerbyDialect
@@ -62,14 +48,8 @@ public class DerbyDialect extends DB2Dialect {
 	@SuppressWarnings("deprecation")
 	public DerbyDialect() {
 		super();
-		if ( this.getClass() == DerbyDialect.class ) {
-			LOG.deprecatedDerbyDialect();
-		}
 
 		registerDerbyKeywords();
-		determineDriverVersion();
-
-		this.limitHandler = new DerbyLimitHandler();
 	}
 
 	@Override
@@ -78,24 +58,9 @@ public class DerbyDialect extends DB2Dialect {
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
 	}
 
-	private void determineDriverVersion() {
-		try {
-			// locate the derby sysinfo class and query its version info
-			final Class sysinfoClass = ReflectHelper.classForName( "org.apache.derby.tools.sysinfo", this.getClass() );
-			final Method majorVersionGetter = sysinfoClass.getMethod( "getMajorVersion", ReflectHelper.NO_PARAM_SIGNATURE );
-			final Method minorVersionGetter = sysinfoClass.getMethod( "getMinorVersion", ReflectHelper.NO_PARAM_SIGNATURE );
-			driverVersionMajor = (Integer) majorVersionGetter.invoke( null, ReflectHelper.NO_PARAMS );
-			driverVersionMinor = (Integer) minorVersionGetter.invoke( null, ReflectHelper.NO_PARAMS );
-		}
-		catch ( Exception e ) {
-			LOG.unableToLoadDerbyDriver( e.getMessage() );
-			driverVersionMajor = -1;
-			driverVersionMinor = -1;
-		}
-	}
-
-	private boolean isTenPointFiveReleaseOrNewer() {
-		return driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 5 );
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		return getDerbyVersion() < 1070 ? super.toBooleanValueString( bool ) : String.valueOf( bool );
 	}
 
 	@Override
@@ -115,17 +80,7 @@ public class DerbyDialect extends DB2Dialect {
 
 	@Override
 	public boolean supportsSequences() {
-		// technically sequence support was added in 10.6.1.0...
-		//
-		// The problem though is that I am not exactly sure how to differentiate 10.6.1.0 from any other 10.6.x release.
-		//
-		// http://db.apache.org/derby/docs/10.0/publishedapi/org/apache/derby/tools/sysinfo.html seems incorrect.  It
-		// states that derby's versioning scheme is major.minor.maintenance, but obviously 10.6.1.0 has 4 components
-		// to it, not 3.
-		//
-		// Let alone the fact that it states that versions with the matching major.minor are 'feature
-		// compatible' which is clearly not the case here (sequence support is a new feature...)
-		return driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 6 );
+		return getDerbyVersion() >= 1060;
 	}
 
 	@Override
@@ -160,19 +115,19 @@ public class DerbyDialect extends DB2Dialect {
 
 	@Override
 	public boolean supportsLimit() {
-		return isTenPointFiveReleaseOrNewer();
+		return getDerbyVersion() >= 1050;
+	}
+
+	@Override
+	@SuppressWarnings("deprecation")
+	public boolean supportsLimitOffset() {
+		return getDerbyVersion() >= 1050;
 	}
 
 	@Override
 	public boolean supportsCommentOn() {
 		//HHH-4531
 		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return isTenPointFiveReleaseOrNewer();
 	}
 
 	@Override
@@ -255,15 +210,15 @@ public class DerbyDialect extends DB2Dialect {
 		return false;
 	}
 
-	private boolean hasForUpdateClause(int forUpdateIndex) {
+	private static boolean hasForUpdateClause(int forUpdateIndex) {
 		return forUpdateIndex >= 0;
 	}
 
-	private boolean hasWithClause(String normalizedSelect){
+	private static boolean hasWithClause(String normalizedSelect){
 		return normalizedSelect.startsWith( "with ", normalizedSelect.length() - 7 );
 	}
 
-	private int getWithIndex(String querySelect) {
+	private static int getWithIndex(String querySelect) {
 		int i = querySelect.lastIndexOf( "with " );
 		if ( i < 0 ) {
 			i = querySelect.lastIndexOf( "WITH " );
@@ -284,7 +239,7 @@ public class DerbyDialect extends DB2Dialect {
 		return false;
 	}
 
-	private final class DerbyLimitHandler extends AbstractLimitHandler {
+	private class DerbyLimitHandler extends AbstractLimitHandler {
 		/**
 		 * {@inheritDoc}
 		 * <p/>
@@ -335,13 +290,13 @@ public class DerbyDialect extends DB2Dialect {
 
 		@Override
 		public boolean supportsLimit() {
-			return isTenPointFiveReleaseOrNewer();
+			return getDerbyVersion() >= 1050;
 		}
 
 		@Override
 		@SuppressWarnings("deprecation")
 		public boolean supportsLimitOffset() {
-			return isTenPointFiveReleaseOrNewer();
+			return getDerbyVersion() >= 1050;
 		}
 
 		@Override
@@ -364,7 +319,7 @@ public class DerbyDialect extends DB2Dialect {
 		return builder.build();
 	}
 
-	protected void registerDerbyKeywords() {
+	private void registerDerbyKeywords() {
 		registerKeyword( "ADD" );
 		registerKeyword( "ALL" );
 		registerKeyword( "ALLOCATE" );

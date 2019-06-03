@@ -42,8 +42,11 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -52,6 +55,10 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * @author Gavin King
  */
 public class DB2Dialect extends Dialect {
+
+	int getVersion() {
+		return 900;
+	}
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -470,6 +477,8 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public SqmMutationStrategy getDefaultIdTableStrategy() {
+		// Starting in DB2 9.7, "real" global temporary tables that can be shared between sessions
+		// are supported; (obviously) data is not shared between sessions.
 		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
 	}
 
@@ -483,12 +492,11 @@ public class DB2Dialect extends Dialect {
 		return new StandardIdTableSupport( new GlobalTempTableExporter() ) {
 			@Override
 			protected Identifier determineIdTableName(Identifier baseName) {
-				return new Identifier(
-						"session." + super.determineIdTableName( baseName ).getText(),
-						false
-				);
+				Identifier identifier = super.determineIdTableName(baseName);
+				return getVersion() < 970
+						? new Identifier( "session." + identifier.getText(), false )
+						: identifier;
 			}
-
 			@Override
 			public Exporter<IdTable> getIdTableExporter() {
 				return generateIdTableExporter();
@@ -550,7 +558,8 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String getCrossJoinSeparator() {
 		//DB2 v9.1 doesn't support 'cross join' syntax
-		return ", ";
+		// DB2 9.7 and later support "cross join"
+		return getVersion() < 970 ? ", " : " cross join ";
 	}
 
 
@@ -578,7 +587,32 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.NUMERIC ? DecimalSqlDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride(sqlCode);
+		if ( getVersion() < 970 ) {
+			return sqlCode == Types.NUMERIC
+					? DecimalSqlDescriptor.INSTANCE
+					: super.getSqlTypeDescriptorOverride(sqlCode);
+		}
+		else {
+			// See HHH-12753
+			// It seems that DB2's JDBC 4.0 support as of 9.5 does not
+			// support the N-variant methods like NClob or NString.
+			// Therefore here we overwrite the sql type descriptors to
+			// use the non-N variants which are supported.
+			switch ( sqlCode ) {
+				case Types.NCHAR:
+					return CharSqlDescriptor.INSTANCE;
+				case Types.NCLOB:
+					return useInputStreamToInsertBlob()
+							? ClobSqlDescriptor.STREAM_BINDING
+							: ClobSqlDescriptor.CLOB_BINDING;
+				case Types.NVARCHAR:
+					return VarcharSqlDescriptor.INSTANCE;
+				case Types.NUMERIC:
+					return DecimalSqlDescriptor.INSTANCE;
+				default:
+					return super.getSqlTypeDescriptorOverride(sqlCode);
+			}
+		}
 	}
 
 	@Override

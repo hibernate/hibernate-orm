@@ -22,6 +22,10 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class DB2390Dialect extends DB2Dialect {
 
+	int get390Version() {
+		return 700;
+	}
+
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
 		public String processSql(String sql, RowSelection selection) {
@@ -76,12 +80,20 @@ public class DB2390Dialect extends DB2Dialect {
 
 	@Override
 	public boolean supportsSequences() {
-		return false;
+		return get390Version() >= 800;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return null;
+		return get390Version() < 800 ? null : "select * from sysibm.syssequences";
+	}
+
+	public String getSequenceNextValString(String sequenceName) {
+		return "select nextval for " + sequenceName + " from sysibm.sysdummy1";
+	}
+
+	public String getCreateSequenceString(String sequenceName) {
+		return "create sequence " + sequenceName + " as integer start with 1 increment by 1 minvalue 1 nomaxvalue nocycle nocache"; //simple default settings..
 	}
 
 	@Override
@@ -118,12 +130,7 @@ public class DB2390Dialect extends DB2Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LEGACY_LIMIT_HANDLER;
-		}
-		else {
-			return LIMIT_HANDLER;
-		}
+		return isLegacyLimitHandlerBehaviorEnabled() ? LEGACY_LIMIT_HANDLER : LIMIT_HANDLER;
 	}
 
 	@Override

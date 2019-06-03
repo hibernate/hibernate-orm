@@ -8,9 +8,6 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.query.spi.QueryEngine;
-
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15 and higher.
  * <p/>
@@ -36,10 +33,18 @@ public class SybaseASE15Dialect extends SybaseDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
+	public String currentDate() {
+		return "current_date()";
+	}
 
-		CommonFunctionFactory.currentDateTimeBigdatetimeParens( queryEngine );
+	@Override
+	public String currentTime() {
+		return "current_time()";
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return "current_bigdatetime()";
 	}
 
 	private void registerSybaseKeywords() {

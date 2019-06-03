@@ -385,7 +385,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("from EntityOfBasics e where e.theDate > current date and e.theTime > current time and e.theTimestamp > current datetime")
 							.list();
-					session.createQuery("select current_instant, current instant from EntityOfBasics e")
+					session.createQuery("select current instant from EntityOfBasics e")
 							.list();
 				}
 		);

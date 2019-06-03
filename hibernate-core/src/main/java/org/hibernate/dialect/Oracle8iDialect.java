@@ -175,7 +175,6 @@ public class Oracle8iDialect extends Dialect {
 		CommonFunctionFactory.characterLength_length( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
-		CommonFunctionFactory.currentDateTimeTimestamp_sysdate( queryEngine );
 
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
@@ -188,7 +187,21 @@ public class Oracle8iDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new OracleExtractEmulation() );
+	}
 
+	@Override
+	public String currentDate() {
+		return currentTimestamp();
+	}
+
+	@Override
+	public String currentTime() {
+		return currentTimestamp();
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return "sysdate";
 	}
 
 	@Override

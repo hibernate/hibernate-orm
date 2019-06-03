@@ -9,10 +9,8 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
-import org.hibernate.query.spi.QueryEngine;
 
 /**
  * SQL Dialect for Sybase Anywhere
@@ -32,10 +30,18 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
+	public String currentDate() {
+		return "current date";
+	}
 
-		CommonFunctionFactory.currentDateTimeTimestampSpaces( queryEngine );
+	@Override
+	public String currentTime() {
+		return "current time";
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return "current timestamp";
 	}
 
 	/**

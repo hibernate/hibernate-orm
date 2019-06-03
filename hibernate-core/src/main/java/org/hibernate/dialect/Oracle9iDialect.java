@@ -97,9 +97,36 @@ public class Oracle9iDialect extends Oracle8iDialect {
 
 		//Oracle has had coalesce() since 9.0.1
 		CommonFunctionFactory.coalesce( queryEngine );
+	}
 
-		//current_date , current_timestamp, and localtimestamp were introduced in Oracle 9
-		CommonFunctionFactory.currentDateTimeTimestamp_currentDateTimestampLocaltimestamp( queryEngine );
+	@Override
+	public String currentDate() {
+		return "current_date";
+	}
+
+	@Override
+	public String currentTime() {
+		return currentTimestamp();
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return currentTimestampWithTimeZone();
+	}
+
+	@Override
+	public String currentLocalTime() {
+		return currentLocalTimestamp();
+	}
+
+	@Override
+	public String currentLocalTimestamp() {
+		return "localtimestamp";
+	}
+
+	@Override
+	public String currentTimestampWithTimeZone() {
+		return "current_timestamp";
 	}
 
 	@Override

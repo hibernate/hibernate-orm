@@ -41,6 +41,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.CurrentFunction;
 import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
@@ -412,11 +413,6 @@ public abstract class Dialect implements ConversionContext {
 		CommonFunctionFactory.cast(queryEngine);
 		CommonFunctionFactory.extract(queryEngine);
 
-		//ANSI current date/time functions, supported on almost every database
-
-		CommonFunctionFactory.currentDateTimeTimestamp(queryEngine);
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey("current_instant", "current instant");
-
 		//comparison functions supported on every known database
 
 		CommonFunctionFactory.leastGreatest(queryEngine);
@@ -435,12 +431,27 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.formatdatetime_toChar(queryEngine);
 
-		//timestampadd/timestampdiff implemented by Dialect itself
+		//timestampadd/timestampdiff delegated back to the Dialect itself
 
 		queryEngine.getSqmFunctionRegistry().register("timestampadd", new TimestampaddFunction(this) );
 		queryEngine.getSqmFunctionRegistry().register("timestampdiff", new TimestampdiffFunction(this) );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
+
+		//ANSI SQL (and JPA) current date/time/timestamp functions, supported
+		//natively on almost every database, delegated back to the Dialect
+
+		queryEngine.getSqmFunctionRegistry().register("current_date", new CurrentFunction("current_date", currentDate(), StandardSpiBasicTypes.DATE) );
+		queryEngine.getSqmFunctionRegistry().register("current_time", new CurrentFunction("current_time", currentTime(), StandardSpiBasicTypes.TIME) );
+		queryEngine.getSqmFunctionRegistry().register("current_timestamp", new CurrentFunction("current_timestamp", currentTimestamp(), StandardSpiBasicTypes.TIMESTAMP) );
+
+		//HQL current instant/date/time/datetime functions, delegated back to the Dialect
+
+		queryEngine.getSqmFunctionRegistry().register("current date", new CurrentFunction("current date", currentDate(), StandardSpiBasicTypes.LOCAL_DATE) );
+		queryEngine.getSqmFunctionRegistry().register("current time", new CurrentFunction("current time", currentLocalTime(), StandardSpiBasicTypes.LOCAL_TIME) );
+		queryEngine.getSqmFunctionRegistry().register("current datetime", new CurrentFunction("current datetime", currentLocalTimestamp(), StandardSpiBasicTypes.LOCAL_DATE_TIME) );
+		queryEngine.getSqmFunctionRegistry().register("current offset datetime", new CurrentFunction("current offset datetime", currentTimestampWithTimeZone(), StandardSpiBasicTypes.OFFSET_DATE_TIME) );
+		queryEngine.getSqmFunctionRegistry().register("current instant", new CurrentFunction("current instant", currentTimestamp(), StandardSpiBasicTypes.INSTANT) );
 	}
 
 	public interface Renderer {
@@ -449,6 +460,30 @@ public abstract class Dialect implements ConversionContext {
 
 	public interface Appender {
 		void append(String text);
+	}
+
+	public String currentDate() {
+		return "current_date";
+	}
+
+	public String currentTime() {
+		return "current_time";
+	}
+
+	public String currentTimestamp() {
+		return "current_timestamp";
+	}
+
+	public String currentLocalTime() {
+		return currentTime();
+	}
+
+	public String currentLocalTimestamp() {
+		return currentTimestamp();
+	}
+
+	public String currentTimestampWithTimeZone() {
+		return currentTimestamp();
 	}
 
 	/**

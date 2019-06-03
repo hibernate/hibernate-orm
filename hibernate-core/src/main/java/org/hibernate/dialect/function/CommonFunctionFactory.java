@@ -1222,24 +1222,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	/**
-	 * MySQL 5.7 precision defaults to seconds, but microseconds is better
-	 */
-	public static void currentTimestampExplicitMicros(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("current_timestamp", "current_timestamp(6)")
-				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("current datetime", "current_timestamp(6)")
-				.setInvariantType( StandardSpiBasicTypes.LOCAL_DATE_TIME )
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("current instant", "current_timestamp(6)")
-				.setInvariantType( StandardSpiBasicTypes.INSTANT )
-				.setExactArgumentCount( 0 )
-				.register();
-	}
-
 	public static void leastGreatest(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "least" )
 				.setMinArgumentCount( 1 )

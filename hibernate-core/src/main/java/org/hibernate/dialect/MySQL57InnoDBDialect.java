@@ -18,21 +18,8 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 @Deprecated
 public class MySQL57InnoDBDialect extends MySQL5InnoDBDialect {
 
-	public MySQL57InnoDBDialect() {
-		upgradeTo57();
-	}
-
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		upgradeTo57( queryEngine );
-	}
-
-	/**
-	 * @see <a href="https://dev.mysql.com/worklog/task/?id=7019">MySQL 5.7 work log</a>
-	 * @return supports IN clause row value expressions
-	 */
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
+	int getVersion() {
+		return 570;
 	}
 }

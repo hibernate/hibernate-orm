@@ -13,21 +13,9 @@ import java.sql.Types;
 
 public class MariaDB102Dialect extends MariaDB10Dialect {
 
-	public MariaDB102Dialect() {
-		super();
-
-		this.registerColumnType( Types.JAVA_OBJECT, "json" );
-	}
-
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "json_valid", StandardSpiBasicTypes.NUMERIC_BOOLEAN );
+	int getMariaVersion() {
+		return 1020;
 	}
 
-		@Override
-	public boolean supportsColumnCheck() {
-		return true;
-	}
 }

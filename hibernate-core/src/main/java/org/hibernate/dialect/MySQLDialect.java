@@ -12,11 +12,13 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.JDBCException;
+import org.hibernate.LockOptions;
 import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.MySQLExtractEmulation;
+import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -28,6 +30,8 @@ import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -39,7 +43,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
@@ -53,6 +56,10 @@ public class MySQLDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 	private MySQLStorageEngine storageEngine;
+
+	int getVersion() {
+		return 400;
+	}
 
 	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -94,10 +101,30 @@ public class MySQLDialect extends Dialect {
 
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" ); //it's just a synonym
 
-		registerVarcharTypes();
+		int maxVarcharLen = getVersion()<500 ? 255 : 65535;
 
-		registerColumnType( Types.TIMESTAMP, "datetime" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
+		registerColumnType( Types.VARCHAR, "longtext" );
+//		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
+//		registerColumnType( Types.VARCHAR, 65535, "text" );
+		registerColumnType( Types.VARCHAR, maxVarcharLen, "varchar($l)" );
+		registerColumnType( Types.LONGVARCHAR, "longtext" );
+
+		registerColumnType( Types.VARBINARY, "longblob" );
+//		registerColumnType( Types.VARBINARY, 16777215, "mediumblob" );
+//		registerColumnType( Types.VARBINARY, 65535, "bloc" );
+		registerColumnType( Types.VARBINARY, maxVarcharLen, "varbinary($l)" );
+		registerColumnType( Types.LONGVARBINARY, "longblob" );
+
+		if ( getVersion() < 570) {
+			registerColumnType( Types.TIMESTAMP, "datetime" );
+			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
+		}
+		else {
+			// Since 5.7 we can explicitly specify a fractional second
+			// precision for the timestamp-like types
+			registerColumnType(Types.TIMESTAMP, "datetime($p)");
+			registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
+		}
 
 		registerColumnType( Types.BLOB, "longblob" );
 //		registerColumnType( Types.BLOB, 16777215, "mediumblob" );
@@ -107,32 +134,18 @@ public class MySQLDialect extends Dialect {
 //		registerColumnType( Types.CLOB, 65535, "text" );
 		registerColumnType( Types.NCLOB, "longtext" );
 
+		if ( getVersion() >= 570) {
+			// MySQL 5.7 brings JSON native support with a dedicated datatype
+			// https://dev.mysql.com/doc/refman/5.7/en/json.html
+			registerColumnType(Types.JAVA_OBJECT, "json");
+		}
+
 		registerKeyword( "key" );
 
 		getDefaultProperties().setProperty( Environment.MAX_FETCH_DEPTH, "2" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		uniqueDelegate = new MySQLUniqueDelegate( this );
-	}
-
-	void upgradeTo57() {
-		// Since 5.7 we can explicitly specify a fractional second
-		// precision for the timestamp-like types
-		registerColumnType(Types.TIMESTAMP, "datetime($p)");
-		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
-
-		// MySQL 5.7 brings JSON native support with a dedicated datatype
-		// https://dev.mysql.com/doc/refman/5.7/en/json.html
-		registerColumnType(Types.JAVA_OBJECT, "json");
-
-	}
-
-	void upgradeTo57(QueryEngine queryEngine) {
-		// MySQL timestamp type defaults to precision 0 (seconds) but
-		// we want the standard default precision of 6 (microseconds)
-		CommonFunctionFactory.currentTimestampExplicitMicros( queryEngine );
-		CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
-
 	}
 
 //	@Override
@@ -180,7 +193,6 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.substr( queryEngine );
 		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.sysdateParens( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
@@ -195,7 +207,24 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
 		CommonFunctionFactory.makedateMaketime( queryEngine );
 
+		if ( getVersion() < 570 ) {
+			CommonFunctionFactory.sysdateParens( queryEngine );
+		}
+		else {
+			// MySQL timestamp type defaults to precision 0 (seconds) but
+			// we want the standard default precision of 6 (microseconds)
+			CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
+		}
+
 		queryEngine.getSqmFunctionRegistry().register( "extract", new MySQLExtractEmulation() );
+	}
+
+	/**
+	 * MySQL 5.7 precision defaults to seconds, but microseconds is better
+	 */
+	@Override
+	public String currentTimestamp() {
+		return getVersion() < 570 ? super.currentTimestamp() : "current_timestamp(6)";
 	}
 
 	@Override
@@ -239,19 +268,49 @@ public class MySQLDialect extends Dialect {
 		}
 	}
 
-	protected void registerVarcharTypes() {
-		registerColumnType( Types.VARCHAR, "longtext" );
-//		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
-//		registerColumnType( Types.VARCHAR, 65535, "text" );
-		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
-		registerColumnType( Types.LONGVARCHAR, "longtext" );
-
-		registerColumnType( Types.VARBINARY, "longblob" );
-//		registerColumnType( Types.VARBINARY, 16777215, "mediumblob" );
-//		registerColumnType( Types.VARBINARY, 65535, "bloc" );
-		registerColumnType( Types.VARBINARY, 255, "varbinary($l)" );
-		registerColumnType( Types.LONGVARBINARY, "longblob" );
+	/**
+	 * @see <a href="https://dev.mysql.com/worklog/task/?id=7019">MySQL 5.7 work log</a>
+	 * @return true for MySQL 5.7 and above
+	 */
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getVersion() >= 570;
 	}
+
+	@Override
+	public boolean supportsUnionAll() {
+		return getVersion() >= 500;
+	}
+
+	@Override
+	public boolean supportsColumnCheck() {
+		return false;
+	}
+
+	@Override
+	public String getQueryHintString(String query, String hints) {
+		return getVersion() < 500
+				? super.getQueryHintString( query, hints )
+				: IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+	}
+
+
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return getVersion() < 500 ? super.getViolatedConstraintNameExtracter() : EXTRACTER;
+	}
+
+	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
+		@Override
+		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
+			final int sqlState = Integer.parseInt( JdbcExceptionHelper.extractSqlState( sqle ) );
+			switch ( sqlState ) {
+				case 23000:
+					return extractUsingTemplate( " for key '", "'", sqle.getMessage() );
+				default:
+					return null;
+			}
+		}
+	};
 
 	@Override
 	public String getAddColumnString() {
@@ -492,17 +551,6 @@ public class MySQLDialect extends Dialect {
 		return " for update";
 	}
 
-	@Override
-	public String getWriteLockString(int timeout) {
-		return " for update";
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		return " lock in share mode";
-	}
-
-
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -541,23 +589,20 @@ public class MySQLDialect extends Dialect {
 			@Override
 			public JDBCException convert(SQLException sqlException, String message, String sql) {
 				switch ( sqlException.getErrorCode() ) {
-					case 1205: {
+					case 1205:
 						return new PessimisticLockException( message, sqlException, sql );
-					}
 					case 1207:
-					case 1206: {
+					case 1206:
 						return new LockAcquisitionException( message, sqlException, sql );
-					}
 				}
 
 				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 
-				if ( "41000".equals( sqlState ) ) {
-					return new LockTimeoutException( message, sqlException, sql );
-				}
-
-				if ( "40001".equals( sqlState ) ) {
-					return new LockAcquisitionException( message, sqlException, sql );
+				switch (sqlState) {
+					case "41000":
+						return new LockTimeoutException(message, sqlException, sql);
+					case "40001":
+						return new LockAcquisitionException(message, sqlException, sql);
 				}
 
 				return null;
@@ -587,11 +632,8 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getTableTypeString() {
-		return storageEngine.getTableTypeString( getEngineKeyword());
-	}
-
-	protected String getEngineKeyword() {
-		return "type";
+		String engineKeyword = getVersion() < 500 ? "type" : "engine";
+		return storageEngine.getTableTypeString( engineKeyword );
 	}
 
 	@Override
@@ -605,7 +647,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return MyISAMStorageEngine.INSTANCE;
+		return getVersion() < 550 ? MyISAMStorageEngine.INSTANCE : InnoDBStorageEngine.INSTANCE;
 	}
 
 	@Override
@@ -685,5 +727,105 @@ public class MySQLDialect extends Dialect {
 				.replace("SSS", "%f")
 				.replace("SS", "%f")
 				.replace("S", "%f");
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		if ( getVersion() >= 800 ) {
+			switch (timeout) {
+				case LockOptions.NO_WAIT:
+					return getForUpdateNowaitString();
+				case LockOptions.SKIP_LOCKED:
+					return getForUpdateSkipLockedString();
+			}
+		}
+		return " for update";
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		if ( getVersion() >= 800 ) {
+			switch (timeout) {
+				case LockOptions.NO_WAIT:
+					return getForUpdateNowaitString(aliases);
+				case LockOptions.SKIP_LOCKED:
+					return getForUpdateSkipLockedString(aliases);
+			}
+		}
+		return super.getWriteLockString( aliases, timeout );
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		if ( getVersion() >= 800 ) {
+			String readLockString = " for share";
+			switch (timeout) {
+				case LockOptions.NO_WAIT:
+					return readLockString + " nowait ";
+				case LockOptions.SKIP_LOCKED:
+					return readLockString + " skip locked ";
+			}
+		}
+		return " lock in share mode";
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		if ( getVersion() < 800 ) {
+			return super.getReadLockString( aliases, timeout );
+		}
+
+		String readLockString = String.format( " for share of %s ", aliases );
+		switch (timeout) {
+			case LockOptions.NO_WAIT:
+				return readLockString + " nowait ";
+			case LockOptions.SKIP_LOCKED:
+				return readLockString + " skip locked ";
+		}
+		return readLockString;
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString() {
+		return getVersion() >= 800
+				? " for update skip locked"
+				: super.getForUpdateSkipLockedString();
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString(String aliases) {
+		return getVersion() >= 800
+				? getForUpdateString() + " of " + aliases + " skip locked"
+				: super.getForUpdateSkipLockedString( aliases );
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return getVersion() >= 800
+				? getForUpdateString() + " nowait "
+				: super.getForUpdateNowaitString();
+	}
+
+	@Override
+	public String getForUpdateNowaitString(String aliases) {
+		return getVersion() >= 800
+				? getForUpdateString( aliases ) + " nowait "
+				: super.getForUpdateNowaitString( aliases );
+	}
+
+	@Override
+	public String getForUpdateString(String aliases) {
+		return getVersion() >= 800
+				? getForUpdateString() + " of " + aliases
+				: super.getForUpdateString( aliases );
+	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		return getVersion() >= 800;
+	}
+
+	public boolean supportsNoWait() {
+		return getVersion() >= 800;
 	}
 }

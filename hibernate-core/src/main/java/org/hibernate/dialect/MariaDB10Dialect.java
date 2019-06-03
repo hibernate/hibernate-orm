@@ -11,12 +11,9 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 public class MariaDB10Dialect extends MariaDB53Dialect {
 
-	public MariaDB10Dialect() {
-		super();
+	@Override
+	int getMariaVersion() {
+		return 1000;
 	}
 
-	@Override
-	public boolean supportsIfExistsBeforeConstraintName() {
-		return true;
-	}
 }

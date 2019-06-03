@@ -6,24 +6,21 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
-
 /**
  * @author Vlad Mihalcea
  */
 public class MariaDB53Dialect extends MariaDBDialect {
 
-	public MariaDB53Dialect() {
-		upgradeTo57();
+	@Override
+	int getMariaVersion() {
+		return 530;
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		upgradeTo57( queryEngine );
+	int getVersion() {
+		//this is a bit questionable: does
+		//MariaBD 5.3 really support *every*
+		//feature of MySQL 5.7?
+		return 570;
 	}
 }

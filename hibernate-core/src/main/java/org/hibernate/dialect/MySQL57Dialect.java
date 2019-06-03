@@ -15,21 +15,8 @@ import org.hibernate.query.spi.QueryEngine;
  */
 public class MySQL57Dialect extends MySQL55Dialect {
 
-	public MySQL57Dialect() {
-		upgradeTo57();
-	}
-
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		upgradeTo57( queryEngine );
-	}
-
-	/**
-	 * @see <a href="https://dev.mysql.com/worklog/task/?id=7019">MySQL 5.7 work log</a>
-	 * @return supports IN clause row value expressions
-	 */
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
+	int getVersion() {
+		return 570;
 	}
 }

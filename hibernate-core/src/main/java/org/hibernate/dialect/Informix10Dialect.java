@@ -6,17 +6,14 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.pagination.Informix10LimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-
 /**
- * Since version 10.00.xC3 Informix has limit/offset support which was introduced in July 2005. 
+ * Dialect for Informix 10
  */
 public class Informix10Dialect extends InformixDialect {
 
 	@Override
-	public LimitHandler getLimitHandler() {
-		return Informix10LimitHandler.INSTANCE;
+	int getVersion() {
+		return 1000;
 	}
-	
+
 }

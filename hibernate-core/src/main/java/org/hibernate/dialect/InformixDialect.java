@@ -15,6 +15,7 @@ import org.hibernate.dialect.function.InformixExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
+import org.hibernate.dialect.pagination.Informix10LimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
@@ -32,14 +33,17 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
- * Informix dialect.<br>
- * <br>
- * Seems to work with Informix Dynamic Server Version 7.31.UD3,  Informix JDBC driver version 2.21JC3.
+ * Dialect for Informix 7.31.UD3 with Informix
+ * JDBC driver 2.21JC3 and above.
  *
  * @author Steve Molitor
  */
 public class InformixDialect extends Dialect {
-	
+
+	int getVersion() {
+		return 731;
+	}
+
 	private final UniqueDelegate uniqueDelegate;
 
 	/**
@@ -230,10 +234,17 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
+		if ( getVersion() >= 1000 ) {
+			// Since version 10.00.xC3 Informix has limit/offset
+ 			// support which was introduced in July 2005.
+			return Informix10LimitHandler.INSTANCE;
+		}
+		else if ( isLegacyLimitHandlerBehaviorEnabled() ) {
 			return LegacyFirstLimitHandler.INSTANCE;
 		}
-		return FirstLimitHandler.INSTANCE;
+		else {
+			return FirstLimitHandler.INSTANCE;
+		}
 	}
 
 	@Override

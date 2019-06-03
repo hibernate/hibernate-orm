@@ -284,6 +284,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public JoinFragment createOuterJoinFragment() {
 		return getVersion() < 1400
 				? new Sybase11JoinFragment()
@@ -329,11 +330,13 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return getVersion() >= 1570;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimitOffset() {
 		return false;
 	}
@@ -380,6 +383,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		//TODO: is this really correct?
 		return getVersion() < 1570

@@ -23,7 +23,6 @@ import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.MckoiCaseFragment;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * An SQL dialect compatible with McKoi SQL
@@ -104,6 +103,7 @@ public class MckoiDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return new MckoiCaseFragment();
 	}

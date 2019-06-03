@@ -69,6 +69,7 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return new DerbyCaseFragment();
 	}

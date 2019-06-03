@@ -18,7 +18,6 @@ import org.hibernate.query.spi.QueryEngine;
  *
  * @author Jim Mlodgenski
  */
-@SuppressWarnings("deprecation")
 public class PostgresPlusDialect extends PostgreSQLDialect {
 	/**
 	 * Constructs a PostgresPlusDialect

@@ -24,7 +24,6 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  * @author Fredrik lund <fredrik.alund@mimer.se>
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class MimerSQLDialect extends Dialect {
 
 	public MimerSQLDialect() {
@@ -118,6 +117,7 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return false;
 	}

@@ -42,7 +42,6 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
@@ -213,21 +212,25 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String sql, boolean hasOffset) {
 		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean bindLimitParametersFirst() {
 		return false;
 	}

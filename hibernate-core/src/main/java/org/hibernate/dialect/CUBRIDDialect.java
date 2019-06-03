@@ -22,7 +22,6 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorCUBRIDDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.TemporalUnit.HOUR;
 import static org.hibernate.query.TemporalUnit.MINUTE;

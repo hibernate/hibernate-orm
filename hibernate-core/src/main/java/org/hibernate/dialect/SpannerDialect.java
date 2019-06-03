@@ -612,6 +612,7 @@ public class SpannerDialect extends Dialect {
 	 * @return {@code false}.
 	 */
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsUnique() {
 		return false;
 	}
@@ -622,6 +623,7 @@ public class SpannerDialect extends Dialect {
 	 * @return {@code false}.
 	 */
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsNotNullUnique() {
 		return false;
 	}
@@ -632,11 +634,13 @@ public class SpannerDialect extends Dialect {
 	 * @return {@code false}.
 	 */
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsUniqueConstraintInCreateAlterTable() {
 		return false;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getAddUniqueConstraintString(String constraintName) {
 		return "";
 	}
@@ -664,21 +668,25 @@ public class SpannerDialect extends Dialect {
 	/* Limits and offsets */
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimitOffset() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsVariableLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String sql, boolean hasOffset) {
 		return sql + ( hasOffset ? " limit ? offset ?" : " limit ?" );
 	}

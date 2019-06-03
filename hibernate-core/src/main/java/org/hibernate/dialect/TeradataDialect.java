@@ -533,6 +533,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		return getVersion() < 1400
 				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )

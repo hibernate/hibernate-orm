@@ -51,7 +51,6 @@ import static org.hibernate.query.TemporalUnit.NANOSECOND;
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class MySQLDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
@@ -341,6 +340,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
@@ -356,6 +356,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String sql, boolean hasOffset) {
 		return sql + (hasOffset ? " limit ?, ?" : " limit ?");
 	}

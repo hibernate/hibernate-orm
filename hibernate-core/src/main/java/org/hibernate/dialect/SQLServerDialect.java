@@ -36,7 +36,6 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
@@ -151,6 +150,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String querySelect, int offset, int limit) {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
@@ -169,7 +169,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return getDefaultLimitHandler();
 	}
 
-	protected LimitHandler getDefaultLimitHandler() {
+	private LimitHandler getDefaultLimitHandler() {
 		if ( getVersion() >= 2012 ) {
 			return new SQLServer2012LimitHandler();
 		}
@@ -187,21 +187,25 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimitOffset() {
 		return getVersion() >= 2012;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean useMaxForLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsVariableLimit() {
 		return false;
 	}
@@ -236,6 +240,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ", readpast" : "";
 
 			switch ( lockMode ) {
+				//noinspection deprecation
 				case UPGRADE:
 				case PESSIMISTIC_WRITE:
 				case WRITE:
@@ -252,6 +257,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 		else {
 			switch ( lockOptions.getLockMode() ) {
+				//noinspection deprecation
 				case UPGRADE:
 				case UPGRADE_NOWAIT:
 				case PESSIMISTIC_WRITE:

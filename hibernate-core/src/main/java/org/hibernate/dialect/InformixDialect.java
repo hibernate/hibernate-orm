@@ -174,12 +174,8 @@ public class InformixDialect extends Dialect {
 	public String getAddForeignKeyConstraintString(
 			String constraintName,
 			String foreignKeyDefinition) {
-		return new StringBuilder( 30 )
-				.append( " add constraint " )
-				.append( foreignKeyDefinition )
-				.append( " constraint " )
-				.append( constraintName )
-				.toString();
+		return " add constraint " + foreignKeyDefinition
+				+ " constraint " + constraintName;
 	}
 
 	/**
@@ -248,21 +244,25 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean useMaxForLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimitOffset() {
 		return false;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String querySelect, int offset, int limit) {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
@@ -274,6 +274,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsVariableLimit() {
 		return false;
 	}

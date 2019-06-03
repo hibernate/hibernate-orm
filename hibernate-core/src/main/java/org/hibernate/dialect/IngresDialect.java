@@ -7,7 +7,6 @@
 package org.hibernate.dialect;
 
 import java.sql.Types;
-import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -58,7 +57,6 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * @author Max Rydahl Andersen
  * @author Raymond Fan
  */
-@SuppressWarnings("deprecation")
 public class IngresDialect extends Dialect {
 
 	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
@@ -153,7 +151,7 @@ public class IngresDialect extends Dialect {
 		if ( getVersion() < 1000 ) {
 			// There is no support for a native boolean type that accepts values
 			// of true, false or unknown. Using the tinyint type requires
-			// substitions of true and false.
+			// substitutions of true and false.
 			getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
 		}
 	}
@@ -342,11 +340,13 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String querySelect, int offset, int limit) {
 		if ( getVersion() >= 930 ) {
 			final StringBuilder soff = new StringBuilder( " offset " + offset );
@@ -429,16 +429,19 @@ public class IngresDialect extends Dialect {
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimitOffset() {
 		return getVersion() >= 930;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsVariableLimit() {
 		return false;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean useMaxForLimit() {
 		return getVersion() < 930;
 	}

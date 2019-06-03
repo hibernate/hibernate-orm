@@ -11,7 +11,7 @@ package org.hibernate.dialect;
  * (specifically: avoids ANSI JOIN syntax)
  *
  * @author Colm O' Flaherty
- * @deprecated use {@link SybaseASEDialect}
+ * @deprecated use {@link SybaseASEDialect} instead
  */
 @Deprecated
 public class Sybase11Dialect extends SybaseASEDialect {}

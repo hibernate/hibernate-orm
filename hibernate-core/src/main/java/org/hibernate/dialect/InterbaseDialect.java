@@ -24,7 +24,6 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class InterbaseDialect extends Dialect {
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
@@ -125,21 +124,25 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String sql, boolean hasOffset) {
 		return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean bindLimitParametersFirst() {
 		return false;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean bindLimitParametersInReverseOrder() {
 		return false;
 	}

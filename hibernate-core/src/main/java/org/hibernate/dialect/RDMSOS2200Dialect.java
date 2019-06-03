@@ -47,7 +47,6 @@ import static org.hibernate.query.TemporalUnit.NANOSECOND;
  *
  * @author Ploski and Hanson
  */
-@SuppressWarnings("deprecation")
 public class RDMSOS2200Dialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -358,6 +357,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
 	}
@@ -371,16 +371,19 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimitOffset() {
 		return false;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String sql, int offset, int limit) {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
@@ -389,6 +392,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsVariableLimit() {
 		return false;
 	}

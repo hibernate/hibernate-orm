@@ -51,7 +51,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
@@ -69,7 +68,6 @@ import static org.hibernate.query.TemporalUnit.NANOSECOND;
  * @author Phillip Baird
  * @author Fred Toussi
  */
-@SuppressWarnings("deprecation")
 public class HSQLDialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -296,11 +294,13 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String sql, boolean hasOffset) {
 		if ( hsqldbVersion < 200 ) {
 			return new StringBuilder( sql.length() + 10 )
@@ -317,6 +317,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean bindLimitParametersFirst() {
 		return hsqldbVersion < 200;
 	}
@@ -617,7 +618,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	private static class ReadUncommittedLockingStrategy extends SelectLockingStrategy {
-		public ReadUncommittedLockingStrategy(Lockable lockable, LockMode lockMode) {
+		private ReadUncommittedLockingStrategy(Lockable lockable, LockMode lockMode) {
 			super( lockable, lockMode );
 		}
 

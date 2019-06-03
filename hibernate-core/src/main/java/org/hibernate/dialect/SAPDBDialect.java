@@ -202,6 +202,7 @@ public class SAPDBDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
 	}

@@ -74,7 +74,6 @@ import static org.hibernate.query.TemporalUnit.conversionFactor;
  * @author Steve Ebersole
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class OracleDialect extends Dialect {
 
 	int getVersion() {
@@ -523,6 +522,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public JoinFragment createOuterJoinFragment() {
 		return getVersion() < 10 ? new OracleJoinFragment() : new ANSIJoinFragment();
 	}
@@ -539,6 +539,7 @@ public class OracleDialect extends Dialect {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return getVersion() < 9
 				? new DecodeCaseFragment()
@@ -552,6 +553,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String sql, boolean hasOffset) {
 		sql = sql.trim();
 
@@ -595,21 +597,10 @@ public class OracleDialect extends Dialect {
 		return pagingSelect.toString();
 	}
 
-	/**
-	 * Allows access to the basic {@link Dialect#getSelectClauseNullString}
-	 * implementation...
-	 *
-	 * @param sqlType The {@link Types} mapping type code
-	 * @return The appropriate select cluse fragment
-	 */
-	public String getBasicSelectClauseNullString(int sqlType) {
-		return super.getSelectClauseNullString( sqlType );
-	}
-
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		if ( getVersion() >= 9  ) {
-			return getBasicSelectClauseNullString( sqlType );
+			return super.getSelectClauseNullString(sqlType);
 		}
 		else {
 			switch(sqlType) {
@@ -730,6 +721,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
@@ -745,11 +737,13 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean useMaxForLimit() {
 		return true;
 	}
@@ -1018,10 +1012,10 @@ public class OracleDialect extends Dialect {
 		return true;
 	}
 
-	protected String statementType(String sql) {
+	private String statementType(String sql) {
 		Matcher matcher = SQL_STATEMENT_TYPE_PATTERN.matcher( sql );
 
-		if(matcher.matches() && matcher.groupCount() == 1) {
+		if ( matcher.matches() && matcher.groupCount() == 1 ) {
 			return matcher.group(1);
 		}
 

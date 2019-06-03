@@ -594,6 +594,7 @@ public class Cache71Dialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public JoinFragment createOuterJoinFragment() {
 		// Create an OuterJoinGenerator for this dialect.
 		return new CacheJoinFragment();
@@ -619,7 +620,7 @@ public class Cache71Dialect extends Dialect {
 	/**
 	 * The Cache ViolatedConstraintNameExtracter.
 	 */
-	public static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
+	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
 		@Override
 		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
 			return extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() );

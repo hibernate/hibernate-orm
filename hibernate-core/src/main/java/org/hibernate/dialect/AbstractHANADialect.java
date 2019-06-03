@@ -320,6 +320,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
 	}
@@ -488,9 +489,9 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(final String sql, final boolean hasOffset) {
-		return new StringBuilder( sql.length() + 20 ).append( sql ).append( hasOffset ? " limit ? offset ?" : " limit ?" )
-				.toString();
+		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
 	}
 
 	@Override
@@ -684,6 +685,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
@@ -1183,7 +1185,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		final int maxLobPrefetchSize;
 
-		public HANANClobSqlDescriptor(int maxLobPrefetchSize) {
+		private HANANClobSqlDescriptor(int maxLobPrefetchSize) {
 			this.maxLobPrefetchSize = maxLobPrefetchSize;
 		}
 
@@ -1430,9 +1432,9 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		private static final long serialVersionUID = -2476600722093442047L;
 
-		final int maxLobPrefetchSize;
+		private final int maxLobPrefetchSize;
 
-		public HANAStreamBlobTypeDescriptor(int maxLobPrefetchSize) {
+		private HANAStreamBlobTypeDescriptor(int maxLobPrefetchSize) {
 			this.maxLobPrefetchSize = maxLobPrefetchSize;
 		}
 
@@ -1532,7 +1534,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 
 	private static class CloseSuppressingReader extends FilterReader {
-		protected CloseSuppressingReader(final Reader in) {
+		private CloseSuppressingReader(final Reader in) {
 			super( in );
 		}
 
@@ -1544,7 +1546,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	private static class CloseSuppressingInputStream extends FilterInputStream {
 
-		protected CloseSuppressingInputStream(final InputStream in) {
+		private CloseSuppressingInputStream(final InputStream in) {
 			super( in );
 		}
 
@@ -1558,7 +1560,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		private byte[] bytes = null;
 
-		public MaterializedBlob(byte[] bytes) {
+		private MaterializedBlob(byte[] bytes) {
 			this.setBytes( bytes );
 		}
 
@@ -1650,7 +1652,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		private String data;
 
-		public MaterializedNClob(String data) {
+		private MaterializedNClob(String data) {
 			this.data = data;
 		}
 

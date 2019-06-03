@@ -73,7 +73,6 @@ import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTim
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class PostgreSQLDialect extends Dialect {
 
 	int getVersion() {
@@ -456,16 +455,19 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getLimitString(String sql, boolean hasOffset) {
 		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
 	}
@@ -497,6 +499,7 @@ public class PostgreSQLDialect extends Dialect {
 			lockMode = lockOptions.getLockMode();
 		}
 		switch ( lockMode ) {
+			//noinspection deprecation
 			case UPGRADE:
 				return getForUpdateString(aliases);
 			case PESSIMISTIC_READ:
@@ -504,6 +507,7 @@ public class PostgreSQLDialect extends Dialect {
 			case PESSIMISTIC_WRITE:
 				return getWriteLockString( aliases, lockOptions.getTimeOut() );
 			case UPGRADE_NOWAIT:
+				//noinspection deprecation
 			case FORCE:
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return getForUpdateNowaitString(aliases);
@@ -945,7 +949,7 @@ public class PostgreSQLDialect extends Dialect {
 		/**
 		 * Singleton access
 		 */
-		public static final PostgresUUIDType INSTANCE = new PostgresUUIDType();
+		private static final PostgresUUIDType INSTANCE = new PostgresUUIDType();
 
 		/**
 		 * Postgres reports its UUID type as {@link java.sql.Types#OTHER}.  Unfortunately
@@ -954,7 +958,7 @@ public class PostgreSQLDialect extends Dialect {
 		 * So here we define a "magic value" that is a (hopefully no collisions)
 		 * unique key within the {@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry}
 		 */
-		public static final int JDBC_TYPE_CODE = 3975;
+		private static final int JDBC_TYPE_CODE = 3975;
 
 		@Override
 		public int getJdbcTypeCode() {

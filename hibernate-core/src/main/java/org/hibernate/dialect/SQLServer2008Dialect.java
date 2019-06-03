@@ -6,13 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
-import org.hibernate.NullPrecedence;
-import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
-
 /**
  * A dialect for Microsoft SQL Server 2008 with JDBC Driver 3.0 and above
  *
@@ -20,54 +13,8 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  */
 public class SQLServer2008Dialect extends SQLServer2005Dialect {
 
-	private static final int NVARCHAR_MAX_LENGTH = 4000;
-	/**
-	 * Constructs a SQLServer2008Dialect
-	 */
-	public SQLServer2008Dialect() {
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetimeoffset($p)" );
-
-		registerColumnType( Types.NVARCHAR, NVARCHAR_MAX_LENGTH, "nvarchar($l)" );
-		registerColumnType( Types.NVARCHAR, "nvarchar(MAX)" );
+	int getVersion() {
+		return 2008;
 	}
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
-
-		CommonFunctionFactory.locate_charindex( queryEngine );
-
-		CommonFunctionFactory.stddevPopSamp_stdevp( queryEngine );
-		CommonFunctionFactory.varPopSamp_varp( queryEngine );
-	}
-
-	@Override
-	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
-		final StringBuilder orderByElement = new StringBuilder();
-
-		if ( nulls != null && !NullPrecedence.NONE.equals( nulls ) ) {
-			// Workaround for NULLS FIRST / LAST support.
-			orderByElement.append( "case when " ).append( expression ).append( " is null then " );
-			if ( NullPrecedence.FIRST.equals( nulls ) ) {
-				orderByElement.append( "0 else 1" );
-			}
-			else {
-				orderByElement.append( "1 else 0" );
-			}
-			orderByElement.append( " end, " );
-		}
-
-		// Nulls precedence has already been handled so passing NONE value.
-		orderByElement.append( super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE ) );
-
-		return orderByElement.toString();
-	}
-
-	@Override
-	public boolean supportsValuesList() {
-		return true;
-	}
 }

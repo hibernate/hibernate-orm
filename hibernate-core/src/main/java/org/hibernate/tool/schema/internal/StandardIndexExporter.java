@@ -47,29 +47,28 @@ public class StandardIndexExporter implements Exporter<Index> {
 		else {
 			indexNameForCreation = index.getName().render( jdbcEnvironment.getDialect() );
 		}
-		final StringBuilder buf = new StringBuilder()
-				.append( "create index " )
-				.append( indexNameForCreation )
-				.append( " on " )
-				.append( tableName )
-				.append( " (" );
 
+		final StringBuilder columnList = new StringBuilder();
 		boolean first = true;
 		for ( PhysicalColumn column : index.getColumns() ) {
 			if ( first ) {
 				first = false;
 			}
 			else {
-				buf.append( ", " );
+				columnList.append( ", " );
 			}
-			buf.append( ( column.getName().render( jdbcEnvironment.getDialect() ) ) );
+			columnList.append( column.getName().render( jdbcEnvironment.getDialect() ) );
 			String orderMap = index.getColumnOrderMap( column );
 			if ( StringHelper.isNotEmpty( orderMap ) ) {
-				buf.append( " " ).append( orderMap );
+				columnList.append( " " ).append( orderMap );
 			}
 		}
-		buf.append( ")" );
-		return new String[] { buf.toString() };
+
+		return new String[] {
+				"create index " + indexNameForCreation +
+				" on " + tableName +
+				" (" + columnList + ")"
+		};
 	}
 
 	@Override

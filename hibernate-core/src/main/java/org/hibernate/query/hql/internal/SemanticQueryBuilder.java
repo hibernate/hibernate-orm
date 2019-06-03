@@ -2999,24 +2999,20 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmLiteral<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
 		// todo (6.0) : we should delay this until we are walking the SQM
 
-		if ( ctx.STRING_LITERAL() != null ) {
-			final String trimCharText = ctx.STRING_LITERAL().getText();
+		final String trimCharText =
+				ctx.STRING_LITERAL() != null
+						? ctx.STRING_LITERAL().getText()
+						: " "; // JPA says space is the default
+
 			if ( trimCharText.length() != 1 ) {
-				throw new SemanticException( "Expecting [trim character] for TRIM function to be  single character, found : " + trimCharText );
+				throw new SemanticException( "Trim character for trim() function must be single character, found: " + trimCharText );
 			}
+
 			return new SqmLiteral<>(
 					trimCharText.charAt( 0 ),
 					basicType( Character.class ),
 					creationContext.getNodeBuilder()
 			);
-		}
-
-		// JPA says space is the default
-		return new SqmLiteral<>(
-				' ',
-				basicType( Character.class ),
-				creationContext.getNodeBuilder()
-		);
 	}
 
 	@Override

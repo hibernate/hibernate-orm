@@ -399,7 +399,7 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-		return bool ? "true" : "false";
+		return String.valueOf( bool );
 	}
 
 	@Override

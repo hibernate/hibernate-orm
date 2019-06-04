@@ -1003,10 +1003,9 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-		if ( this.useLegacyBooleanType ) {
-			return bool ? "1" : "0";
-		}
-		return bool ? "true" : "false";
+		return this.useLegacyBooleanType
+				? super.toBooleanValueString( bool )
+				: String.valueOf( bool );
 	}
 
 	@Override

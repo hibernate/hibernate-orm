@@ -60,7 +60,9 @@ public class DerbyDialect extends DB2Dialect {
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-		return getDerbyVersion() < 1070 ? super.toBooleanValueString( bool ) : String.valueOf( bool );
+		return getDerbyVersion() < 1070
+				? super.toBooleanValueString( bool )
+				: String.valueOf( bool );
 	}
 
 	@Override

@@ -9,7 +9,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.PostgresExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.PostgreSQL81IdentityColumnSupport;
+import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -65,11 +65,7 @@ import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiDat
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTimeLiteral;
 
 /**
- * An SQL dialect for Postgres
- * <p/>
- * For discussion of BLOB support in Postgres, as of 8.4, have a peek at
- * <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
- * For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
+ * An SQL dialect for Postgres 8 and above.
  *
  * @author Gavin King
  */
@@ -310,7 +306,6 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.insert_overlay( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine ); //was introduced in Postgres 9 apparently
 
@@ -319,51 +314,27 @@ public class PostgreSQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
 
 		if ( getVersion() >= 940 ) {
-			queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_interval" )
-					.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-					.setArgumentCountBetween( 1, 7 )
-					.register();
-			queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamp" )
-					.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-					.setExactArgumentCount( 6 )
-					.register();
-			queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_timestamptz" )
-					.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
-					.setArgumentCountBetween( 6, 7 )
-					.register();
-			queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_date" )
-					.setInvariantType( StandardSpiBasicTypes.DATE )
-					.setExactArgumentCount( 3 )
-					.register();
-			queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "make_time" )
-					.setInvariantType( StandardSpiBasicTypes.TIME )
-					.setExactArgumentCount( 3 )
-					.register();
+			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
 		}
 	}
 
 	@Override
 	public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		SqlTypeDescriptor descriptor;
+		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
+		// <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
+ 		// For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
 		switch ( sqlCode ) {
-			case Types.BLOB: {
+			case Types.BLOB:
 				// Force BLOB binding.  Otherwise, byte[] fields annotated
 				// with @Lob will attempt to use
 				// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
 				// dialect uses oid for Blobs, byte arrays cannot be used.
-				descriptor = BlobSqlDescriptor.BLOB_BINDING;
-				break;
-			}
-			case Types.CLOB: {
-				descriptor = ClobSqlDescriptor.CLOB_BINDING;
-				break;
-			}
-			default: {
-				descriptor = super.getSqlTypeDescriptorOverride( sqlCode );
-				break;
-			}
+				return BlobSqlDescriptor.BLOB_BINDING;
+			case Types.CLOB:
+				return ClobSqlDescriptor.CLOB_BINDING;
+			default:
+				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
-		return descriptor;
 	}
 
 	@Override
@@ -482,7 +453,7 @@ public class PostgreSQLDialect extends Dialect {
 		/*
 		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
 		 */
-		if ( "".equals( aliases ) ) {
+		if ( aliases.isEmpty() ) {
 			LockMode lockMode = lockOptions.getLockMode();
 			final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
 			while ( itr.hasNext() ) {
@@ -611,7 +582,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-		return bool ? "true" : "false";
+		return String.valueOf( bool );
 	}
 
 	@Override
@@ -650,19 +621,17 @@ public class PostgreSQLDialect extends Dialect {
 			@Override
 			public JDBCException convert(SQLException sqlException, String message, String sql) {
 				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-
-				if ( "40P01".equals( sqlState ) ) {
-					// DEADLOCK DETECTED
-					return new LockAcquisitionException( message, sqlException, sql );
+				switch ( sqlState ) {
+					case "40P01":
+						// DEADLOCK DETECTED
+						return new LockAcquisitionException(message, sqlException, sql);
+					case "55P03":
+						// LOCK NOT AVAILABLE
+						return new PessimisticLockException(message, sqlException, sql);
+					default:
+						// returning null allows other delegates to operate
+						return null;
 				}
-
-				if ( "55P03".equals( sqlState ) ) {
-					// LOCK NOT AVAILABLE
-					return new PessimisticLockException( message, sqlException, sql );
-				}
-
-				// returning null allows other delegates to operate
-				return null;
 			}
 		};
 	}
@@ -685,42 +654,24 @@ public class PostgreSQLDialect extends Dialect {
 		return true;
 	}
 
-	/**
-	 * only necessary for postgre < 7.4  See http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/doc/src/sgml/ref/create_sequence.sgml
-	 * <p/>
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
+		// Only necessary for postgres < 7.4
+		// See http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/doc/src/sgml/ref/create_sequence.sgml
+		String minOrMaxValue;
 		if ( initialValue < 0 && incrementSize > 0 ) {
-			return
-					String.format(
-							"%s minvalue %d start %d increment %d",
-							getCreateSequenceString( sequenceName ),
-							initialValue,
-							initialValue,
-							incrementSize
-					);
+			minOrMaxValue = " minvalue " + initialValue;
 		}
 		else if ( initialValue > 0 && incrementSize < 0 ) {
-			return
-					String.format(
-							"%s maxvalue %d start %d increment %d",
-							getCreateSequenceString( sequenceName ),
-							initialValue,
-							initialValue,
-							incrementSize
-					);
+			minOrMaxValue = " maxvalue " + initialValue;
 		}
 		else {
-			return
-					String.format(
-							"%s start %d increment %d",
-							getCreateSequenceString( sequenceName ),
-							initialValue,
-							incrementSize
-					);
+			minOrMaxValue = "";
 		}
+		return getCreateSequenceString( sequenceName )
+				+ minOrMaxValue
+				+ " start with " + initialValue
+				+ " increment by " + incrementSize;
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -790,7 +741,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new PostgreSQL81IdentityColumnSupport();
+		return new PostgreSQLIdentityColumnSupport();
 	}
 
 	@Override

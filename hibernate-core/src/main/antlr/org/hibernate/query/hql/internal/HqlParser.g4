@@ -679,6 +679,7 @@ standardFunction
 	| currentDate
 	| currentTime
 	| currentDatetime
+	| currentOffsetDatetime
 	| currentInstant
 	;
 
@@ -876,6 +877,10 @@ currentTime
 
 currentDatetime
 	: CURRENT DATETIME
+	;
+
+currentOffsetDatetime
+	: CURRENT OFFSET DATETIME
 	;
 
 currentInstant

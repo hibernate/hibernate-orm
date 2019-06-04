@@ -1536,6 +1536,16 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public SqmExpression visitCurrentOffsetDatetime(HqlParser.CurrentOffsetDatetimeContext ctx) {
+		return getFunctionTemplate("current offset datetime")
+				.makeSqmFunctionExpression(
+						basicType( OffsetDateTime.class ),
+						creationContext.getQueryEngine(),
+						creationContext.getDomainModel().getTypeConfiguration()
+				);
+	}
+
+	@Override
 	public SqmExpression visitCurrentInstant(HqlParser.CurrentInstantContext ctx) {
 		return getFunctionTemplate("current instant")
 				.makeSqmFunctionExpression(

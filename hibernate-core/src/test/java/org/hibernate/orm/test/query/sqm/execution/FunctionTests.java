@@ -377,15 +377,17 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	public void testCurrentDateTimeFunctions() {
 		inTransaction(
 				session -> {
-					session.createQuery("select current_time, current_date, current_timestamp from EntityOfBasics e")
+					session.createQuery("select current_time, current_date, current_timestamp from EntityOfBasics")
 							.list();
-					session.createQuery("select current time, current date, current datetime from EntityOfBasics e")
+					session.createQuery("select current time, current date, current datetime from EntityOfBasics")
 							.list();
 					session.createQuery("from EntityOfBasics e where e.theDate > current_date and e.theTime > current_time and e.theTimestamp > current_timestamp")
 							.list();
 					session.createQuery("from EntityOfBasics e where e.theDate > current date and e.theTime > current time and e.theTimestamp > current datetime")
 							.list();
-					session.createQuery("select current instant from EntityOfBasics e")
+					session.createQuery("select current instant from EntityOfBasics")
+							.list();
+					session.createQuery("select current offset datetime from EntityOfBasics")
 							.list();
 				}
 		);

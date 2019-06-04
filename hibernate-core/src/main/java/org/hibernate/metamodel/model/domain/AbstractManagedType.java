@@ -28,6 +28,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Commonality for Hibernate's implementations of the JPA {@link ManagedType}
@@ -48,8 +49,9 @@ public abstract class AbstractManagedType<J>
 	protected AbstractManagedType(
 			String hibernateTypeName,
 			JavaTypeDescriptor<J> javaTypeDescriptor,
-			ManagedDomainType<? super J> superType) {
-		super( javaTypeDescriptor );
+			ManagedDomainType<? super J> superType,
+			TypeConfiguration typeConfiguration) {
+		super( javaTypeDescriptor, typeConfiguration );
 		this.hibernateTypeName = hibernateTypeName;
 		this.superType = superType;
 

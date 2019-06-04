@@ -15,6 +15,7 @@ import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Standard Hibernate implementation of JPA's {@link javax.persistence.metamodel.EmbeddableType}
@@ -27,13 +28,17 @@ public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
 		implements EmbeddableDomainType<J>, Serializable {
 
-	public EmbeddableTypeImpl(JavaTypeDescriptor<J> javaTypeDescriptor, NodeBuilder nodeBuilder) {
-		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null );
+	public EmbeddableTypeImpl(
+			JavaTypeDescriptor<J> javaTypeDescriptor,
+			NodeBuilder nodeBuilder,
+			TypeConfiguration typeConfiguration) {
+		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, typeConfiguration );
 	}
 
 	public EmbeddableTypeImpl(
 			String name,
-			NodeBuilder nodeBuilder) {
+			NodeBuilder nodeBuilder,
+			TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
 		super(
 				name,
@@ -41,7 +46,8 @@ public class EmbeddableTypeImpl<J>
 						.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( Map.class ),
-				null
+				null,
+				typeConfiguration
 		);
 	}
 

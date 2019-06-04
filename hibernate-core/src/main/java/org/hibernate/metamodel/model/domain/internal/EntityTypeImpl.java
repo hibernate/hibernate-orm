@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines the Hibernate implementation of the JPA {@link EntityType} contract.
@@ -36,14 +37,16 @@ public class EntityTypeImpl<J>
 	public EntityTypeImpl(
 			JavaTypeDescriptor<J> javaTypeDescriptor,
 			IdentifiableDomainType<? super J> superType,
-			PersistentClass persistentClass) {
+			PersistentClass persistentClass,
+			TypeConfiguration typeConfiguration) {
 		super(
 				persistentClass.getEntityName(),
 				javaTypeDescriptor,
 				superType,
 				persistentClass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
 				persistentClass.hasIdentifierProperty(),
-				persistentClass.isVersioned()
+				persistentClass.isVersioned(),
+				typeConfiguration
 		);
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 	}

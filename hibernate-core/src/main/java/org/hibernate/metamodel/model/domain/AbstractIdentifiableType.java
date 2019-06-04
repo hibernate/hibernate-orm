@@ -15,6 +15,7 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
@@ -45,8 +46,9 @@ public abstract class AbstractIdentifiableType<J>
 			IdentifiableDomainType<? super J> superType,
 			boolean hasIdClass,
 			boolean hasIdentifierProperty,
-			boolean versioned) {
-		super( typeName, javaTypeDescriptor, superType );
+			boolean versioned,
+			TypeConfiguration typeConfiguration) {
+		super( typeName, javaTypeDescriptor, superType, typeConfiguration );
 		this.hasIdClass = hasIdClass;
 		this.hasIdentifierProperty = hasIdentifierProperty;
 		this.isVersioned = versioned;

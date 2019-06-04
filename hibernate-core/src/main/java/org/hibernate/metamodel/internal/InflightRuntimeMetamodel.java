@@ -194,9 +194,9 @@ public class InflightRuntimeMetamodel {
 			);
 
 			for ( PersistentClass entityBinding : bootMetamodel.getEntityBindings() ) {
-				locateOrBuildEntityType( entityBinding, context );
+				locateOrBuildEntityType( entityBinding, context, typeConfiguration );
 			}
-			handleUnusedMappedSuperclasses( context );
+			handleUnusedMappedSuperclasses( context, typeConfiguration );
 
 			context.wrapUp();
 
@@ -339,22 +339,23 @@ public class InflightRuntimeMetamodel {
 		}
 	}
 
-	private static void handleUnusedMappedSuperclasses(MetadataContext context) {
+	private static void handleUnusedMappedSuperclasses(MetadataContext context, TypeConfiguration typeConfiguration) {
 		final Set<MappedSuperclass> unusedMappedSuperclasses = context.getUnusedMappedSuperclasses();
 		if ( !unusedMappedSuperclasses.isEmpty() ) {
 			for ( MappedSuperclass mappedSuperclass : unusedMappedSuperclasses ) {
 				log.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
-				locateOrBuildMappedSuperclassType( mappedSuperclass, context );
+				locateOrBuildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
 			}
 		}
 	}
 
 	private static MappedSuperclassDomainType<?> locateOrBuildMappedSuperclassType(
 			MappedSuperclass mappedSuperclass,
-			MetadataContext context) {
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
 		MappedSuperclassDomainType<?> mappedSuperclassType = context.locateMappedSuperclassType( mappedSuperclass );
 		if ( mappedSuperclassType == null ) {
-			mappedSuperclassType = buildMappedSuperclassType( mappedSuperclass, context );
+			mappedSuperclassType = buildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
 		}
 		return mappedSuperclassType;
 	}
@@ -362,17 +363,18 @@ public class InflightRuntimeMetamodel {
 	@SuppressWarnings("unchecked")
 	private static MappedSuperclassTypeImpl<?> buildMappedSuperclassType(
 			MappedSuperclass mappedSuperclass,
-			MetadataContext context) {
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
 		final MappedSuperclass superMappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
 		IdentifiableDomainType<?> superType = superMappedSuperclass == null
 				? null
-				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context );
+				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
 		//no mappedSuperclass, check for a super entity
 		if ( superType == null ) {
 			final PersistentClass superPersistentClass = mappedSuperclass.getSuperPersistentClass();
 			superType = superPersistentClass == null
 					? null
-					: locateOrBuildEntityType( superPersistentClass, context );
+					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
 		}
 		final JavaTypeDescriptor javaTypeDescriptor = context.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
@@ -380,7 +382,8 @@ public class InflightRuntimeMetamodel {
 		MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(
 				javaTypeDescriptor,
 				mappedSuperclass,
-				superType
+				superType,
+				typeConfiguration
 		);
 
 		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
@@ -389,28 +392,32 @@ public class InflightRuntimeMetamodel {
 
 	private static EntityDomainType<?> locateOrBuildEntityType(
 			PersistentClass persistentClass,
-			MetadataContext context) {
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
 		EntityDomainType<?> entityType = context.locateEntityType( persistentClass );
 		if ( entityType == null ) {
-			entityType = buildEntityType( persistentClass, context );
+			entityType = buildEntityType( persistentClass, context, typeConfiguration );
 		}
 		return entityType;
 	}
 
 	@SuppressWarnings("unchecked")
-	private static EntityTypeImpl<?> buildEntityType(PersistentClass persistentClass, MetadataContext context) {
+	private static EntityTypeImpl<?> buildEntityType(
+			PersistentClass persistentClass,
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
 		final Class javaType = persistentClass.getMappedClass();
 		context.pushEntityWorkedOn( persistentClass );
 		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
 		IdentifiableDomainType<?> superType = superMappedSuperclass == null
 				? null
-				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context );
+				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
 		//no mappedSuperclass, check for a super entity
 		if ( superType == null ) {
 			final PersistentClass superPersistentClass = persistentClass.getSuperclass();
 			superType = superPersistentClass == null
 					? null
-					: locateOrBuildEntityType( superPersistentClass, context );
+					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
 		}
 
 		final JavaTypeDescriptor javaTypeDescriptor = context.getTypeConfiguration()
@@ -419,7 +426,8 @@ public class InflightRuntimeMetamodel {
 		EntityTypeImpl entityType = new EntityTypeImpl(
 				javaTypeDescriptor,
 				superType,
-				persistentClass
+				persistentClass,
+				typeConfiguration
 		);
 		context.registerEntityType( persistentClass, entityType );
 		context.popEntityWorkedOn( persistentClass );

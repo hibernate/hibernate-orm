@@ -77,12 +77,12 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		mappedSuperclassTypeMap = runtimeMetamodel.getJpaMappedSuperclassTypeMap();
 		embeddableDescriptorMap = runtimeMetamodel.getJpaEmbeddableDescriptorMap();
 
-		entityDescriptorMap.values()
-				.forEach( domainType -> ( (AbstractDomainType) domainType ).injectJpaMetamodel( this ) );
-		mappedSuperclassTypeMap.values().forEach( domainType -> ( (AbstractDomainType) domainType ).injectJpaMetamodel(
-				this ) );
-		entityDescriptorMap.values()
-				.forEach( domainType -> ( (AbstractDomainType) domainType ).injectJpaMetamodel( this ) );
+//		entityDescriptorMap.values()
+//				.forEach( domainType -> ( (AbstractDomainType) domainType ).injectJpaMetamodel( this ) );
+//		mappedSuperclassTypeMap.values().forEach( domainType -> ( (AbstractDomainType) domainType ).injectJpaMetamodel(
+//				this ) );
+//		entityDescriptorMap.values()
+//				.forEach( domainType -> ( (AbstractDomainType) domainType ).injectJpaMetamodel( this ) );
 
 		nameToImportNameMap = runtimeMetamodel.getNameToImportNameMap();
 		entityProxyInterfaceMap = runtimeMetamodel.getEntityProxyInterfaceMap();

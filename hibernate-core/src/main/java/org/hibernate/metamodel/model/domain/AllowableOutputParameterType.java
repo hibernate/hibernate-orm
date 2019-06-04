@@ -10,13 +10,14 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Specialization of DomainType for types that can be used as a
  * parameter output for a {@link org.hibernate.procedure.ProcedureCall}
  *
- * @apiNote Generally speaking, an allowable output parameter type
- * can only effectively be a basic type.
+ * @apiNote We assume a type that maps to exactly one SQL value, hence
+ * {@link #getSqlTypeDescriptor()}
  *
  * @author Steve Ebersole
  */
@@ -27,6 +28,11 @@ public interface AllowableOutputParameterType<J> extends AllowableParameterType<
 	 * @return {@code true} indicates that @{link #extract} calls will not fail due to {@link IllegalStateException}.
 	 */
 	boolean canDoExtraction();
+
+	/**
+	 * Descriptor for the SQL type mapped by this type.
+	 */
+	SqlTypeDescriptor getSqlTypeDescriptor();
 
 	/**
 	 * Perform the extraction
@@ -46,7 +52,7 @@ public interface AllowableOutputParameterType<J> extends AllowableParameterType<
 	 * Perform the extraction
 	 *
 	 * @param statement The CallableStatement from which to extract the parameter value(s).
-	 * @param paramNames The parameter names.
+	 * @param paramName The parameter names.
 	 * @param session The originating session
 	 *
 	 * @return The extracted value.
@@ -54,5 +60,5 @@ public interface AllowableOutputParameterType<J> extends AllowableParameterType<
 	 * @throws SQLException Indicates an issue calling into the CallableStatement
 	 * @throws IllegalStateException Thrown if this method is called on instances that return {@code false} for {@link #canDoExtraction}
 	 */
-	J extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session) throws SQLException;
+	J extract(CallableStatement statement, String paramName, SharedSessionContractImplementor session) throws SQLException;
 }

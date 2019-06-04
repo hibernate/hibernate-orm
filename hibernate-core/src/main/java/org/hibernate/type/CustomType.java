@@ -326,10 +326,10 @@ public class CustomType
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session)
+	public Object extract(CallableStatement statement, String paramName, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( canDoExtraction() ) {
-			return ((ProcedureParameterExtractionAware) getUserType() ).extract( statement, paramNames, session );
+			return ((ProcedureParameterExtractionAware) getUserType() ).extract( statement, paramName, session );
 		}
 		else {
 			throw new UnsupportedOperationException(

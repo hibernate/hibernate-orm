@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.spi;
 
-import org.hibernate.engine.loading.internal.LoadingCollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

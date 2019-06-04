@@ -386,10 +386,10 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public T extract(CallableStatement statement, String[] paramNames, final SharedSessionContractImplementor session) throws SQLException {
+	public T extract(CallableStatement statement, String paramName, final SharedSessionContractImplementor session) throws SQLException {
 		return remapSqlTypeDescriptor( session ).getExtractor( javaTypeDescriptor ).extract(
 				statement,
-				paramNames,
+				paramName,
 				session
 		);
 	}

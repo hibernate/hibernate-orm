@@ -16,6 +16,8 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -34,7 +36,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 
 	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, AllowableOutputParameterType ormType) {
 		this.procedureCall = procedureCall;
-		this.jdbcTypeCode = ormType.getSqlTypeDescriptor().getJdbcTypeCode();
+		this.jdbcTypeCode = ormType.getSqlTypeDescriptor().getSqlType();
 
 		this.ormType = ormType;
 	}
@@ -57,7 +59,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 					.getDescriptor( getJdbcTypeCode() );
 			final JavaTypeDescriptor javaTypeMapping = sqlTypeDescriptor
 					.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
-			ormType = typeConfiguration.getBasicTypeRegistry().getBasicType( javaTypeMapping.getJavaType() );
+			ormType = typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaType() );
 			parameterExtractor = new JdbcCallParameterExtractorImpl( procedureCall.getProcedureName(), null, 0, ormType );
 			refCursorExtractor = null;
 		}

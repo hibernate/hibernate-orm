@@ -808,7 +808,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session)
+	public Object extract(CallableStatement statement, String paramName, SharedSessionContractImplementor session)
 			throws SQLException {
 		// for this form to work all sub-property spans must be one (1)...
 
@@ -816,7 +816,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 		int indx = 0;
 		boolean notNull = false;
-		for ( String paramName : paramNames ) {
+		for ( String paramName : paramName ) {
 			// we know this cast is safe from canDoExtraction
 			final ProcedureParameterExtractionAware propertyType = (ProcedureParameterExtractionAware) propertyTypes[indx];
 			final Object value = propertyType.extract( statement, new String[] {paramName}, session );

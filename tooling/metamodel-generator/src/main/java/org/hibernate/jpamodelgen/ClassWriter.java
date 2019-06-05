@@ -220,6 +220,8 @@ public final class ClassWriter {
 	}
 
 	private static String writeStaticMetaModelAnnotation(MetaEntity entity) {
-		return "@" + entity.importType( "javax.persistence.metamodel.StaticMetamodel" ) + "(" + entity.getSimpleName() + ".class)";
+		// HHH-13408 The entity package may differ from metamodel package
+		String entityClass = entity.importType(entity.getQualifiedName());
+		return "@" + entity.importType( "javax.persistence.metamodel.StaticMetamodel" ) + "(" + entityClass + ".class)";
 	}
 }

@@ -25,4 +25,6 @@ public interface QueryImplementor<R> extends Query<R> {
 	void setOptionalEntityName(String entityName);
 
 	void setOptionalObject(Object optionalObject);
+
+	QueryParameterBindings getParameterBindings();
 }

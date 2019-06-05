@@ -41,12 +41,12 @@ public class SessionFactoryRegistry {
 	/**
 	 * A map for mapping the UUID of a SessionFactory to the corresponding SessionFactory instance
 	 */
-	private final ConcurrentHashMap<String, SessionFactory> sessionFactoryMap = new ConcurrentHashMap<String, SessionFactory>();
+	private final ConcurrentHashMap<String, SessionFactoryImplementor> sessionFactoryMap = new ConcurrentHashMap<>();
 
 	/**
 	 * A cross-reference for mapping a SessionFactory name to its UUID.  Not all SessionFactories get named,
 	 */
-	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<String, String>();
+	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<>();
 
 	private SessionFactoryRegistry() {
 		LOG.debugf( "Initializing SessionFactoryRegistry : %s", this );
@@ -65,7 +65,7 @@ public class SessionFactoryRegistry {
 			String uuid,
 			String name,
 			boolean isNameAlsoJndiName,
-			SessionFactory instance,
+			SessionFactoryImplementor instance,
 			JndiService jndiService) {
 		if ( uuid == null ) {
 			throw new IllegalArgumentException( "SessionFactory UUID cannot be null" );
@@ -143,16 +143,16 @@ public class SessionFactoryRegistry {
 	 *
 	 * @return The SessionFactory
 	 */
-	public SessionFactory getNamedSessionFactory(String name) {
+	public SessionFactoryImplementor getNamedSessionFactory(String name) {
 		LOG.debugf( "Lookup: name=%s", name );
 		final String uuid = nameUuidXref.get( name );
 		// protect against NPE -- see HHH-8428
 		return uuid == null ? null : getSessionFactory( uuid );
 	}
 
-	public SessionFactory getSessionFactory(String uuid) {
+	public SessionFactoryImplementor getSessionFactory(String uuid) {
 		LOG.debugf( "Lookup: uid=%s", uuid );
-		final SessionFactory sessionFactory = sessionFactoryMap.get( uuid );
+		final SessionFactoryImplementor sessionFactory = sessionFactoryMap.get( uuid );
 		if ( sessionFactory == null && LOG.isDebugEnabled() ) {
 			LOG.debugf( "Not found: %s", uuid );
 			LOG.debug( sessionFactoryMap.toString() );
@@ -160,8 +160,8 @@ public class SessionFactoryRegistry {
 		return sessionFactory;
 	}
 
-	public SessionFactory findSessionFactory(String uuid, String name) {
-		SessionFactory sessionFactory = getSessionFactory( uuid );
+	public SessionFactoryImplementor findSessionFactory(String uuid, String name) {
+		SessionFactoryImplementor sessionFactory = getSessionFactory( uuid );
 		if ( sessionFactory == null && StringHelper.isNotEmpty( name ) ) {
 			sessionFactory = getNamedSessionFactory( name );
 		}
@@ -205,10 +205,13 @@ public class SessionFactoryRegistry {
 			LOG.factoryUnboundFromName( jndiName );
 
 			final String uuid = nameUuidXref.remove( jndiName );
+			//noinspection StatementWithEmptyBody
 			if ( uuid == null ) {
 				// serious problem... but not sure what to do yet
 			}
-			sessionFactoryMap.remove( uuid );
+			else {
+				sessionFactoryMap.remove( uuid );
+			}
 		}
 
 		@Override

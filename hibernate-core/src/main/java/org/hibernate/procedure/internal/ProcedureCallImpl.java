@@ -45,14 +45,11 @@ import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.procedure.ProcedureParameter;
-import org.hibernate.query.procedure.internal.ProcedureParamBindings;
-import org.hibernate.query.procedure.internal.ProcedureParameterImpl;
-import org.hibernate.query.procedure.internal.ProcedureParameterMetadataImpl;
-import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -108,8 +105,8 @@ public class ProcedureCallImpl<R>
 		super( session );
 		this.procedureName = procedureName;
 
-		this.parameterMetadata = new ProcedureParameterMetadataImpl( this );
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, this );
+		this.parameterMetadata = new ProcedureParameterMetadataImpl();
+		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.synchronizedQuerySpaces = null;
 		this.domainResultProducers = null;
@@ -128,8 +125,8 @@ public class ProcedureCallImpl<R>
 
 		this.procedureName = procedureName;
 
-		this.parameterMetadata = new ProcedureParameterMetadataImpl( this );
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, this );
+		this.parameterMetadata = new ProcedureParameterMetadataImpl();
+		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.domainResultProducers = CollectionHelper.arrayList( resultClasses.length );
 		this.synchronizedQuerySpaces = new HashSet<>();
@@ -159,8 +156,8 @@ public class ProcedureCallImpl<R>
 
 		this.procedureName = procedureName;
 
-		this.parameterMetadata = new ProcedureParameterMetadataImpl( this );
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, this );
+		this.parameterMetadata = new ProcedureParameterMetadataImpl();
+		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.domainResultProducers = CollectionHelper.arrayList( resultSetMappingNames.length );
 		this.synchronizedQuerySpaces = new HashSet<>();
@@ -183,8 +180,8 @@ public class ProcedureCallImpl<R>
 		super( session );
 		this.procedureName = memento.getCallableName();
 
-		this.parameterMetadata = new ProcedureParameterMetadataImpl( this, memento );
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, this );
+		this.parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
+		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.domainResultProducers = new ArrayList<>();
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
@@ -238,6 +235,11 @@ public class ProcedureCallImpl<R>
 	@Override
 	public DomainParameterBindingContext getDomainParameterBindingContext() {
 		return this;
+	}
+
+	@Override
+	public QueryParameterBindings getParameterBindings() {
+		return paramBindings;
 	}
 
 
@@ -299,13 +301,11 @@ public class ProcedureCallImpl<R>
 	@SuppressWarnings("unchecked")
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
 		final ProcedureParameterImpl procedureParameter = new ProcedureParameterImpl(
-				this,
 				position,
 				mode,
 				javaType,
-				getSession().getFactory().getMetamodel().resolveQueryParameterType( javaType )
+				getSessionFactory().getDomainModel().resolveQueryParameterType( javaType )
 		);
-
 		registerParameter( procedureParameter );
 		return procedureParameter;
 	}
@@ -328,13 +328,12 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> type, ParameterMode mode) {
+	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> javaType, ParameterMode mode) {
 		final ProcedureParameterImpl parameter = new ProcedureParameterImpl(
-				this,
 				name,
 				mode,
-				type,
-				getSession().getFactory().getMetamodel().resolveQueryParameterType( type )
+				javaType,
+				getSessionFactory().getDomainModel().resolveQueryParameterType( javaType )
 		);
 
 		registerParameter( parameter );
@@ -408,7 +407,7 @@ public class ProcedureCallImpl<R>
 					public void accept(QueryParameter queryParameter) {
 						try {
 							final ProcedureParameterImplementor registration = (ProcedureParameterImplementor) queryParameter;
-							registration.prepare( statement, i );
+							registration.prepare( statement, i, ProcedureCallImpl.this );
 							if ( registration.getMode() == ParameterMode.REF_CURSOR ) {
 								i++;
 							}
@@ -525,14 +524,14 @@ public class ProcedureCallImpl<R>
 		);
 	}
 
-	private static List<NamedCallableQueryMementoImpl.ParameterMemento> toParameterMementos(
+	private static List<NamedCallableQueryMemento.ParameterMemento> toParameterMementos(
 			ProcedureParameterMetadataImpl parameterMetadata) {
 		if ( parameterMetadata.getParameterStrategy() == ParameterStrategy.UNKNOWN ) {
 			// none...
 			return Collections.emptyList();
 		}
 
-		final List<NamedCallableQueryMementoImpl.ParameterMemento> mementos = new ArrayList<>();
+		final List<NamedCallableQueryMemento.ParameterMemento> mementos = new ArrayList<>();
 
 		parameterMetadata.visitRegistrations(
 				queryParameter -> {
@@ -922,5 +921,4 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalPrecision) {
 		return (ProcedureCallImplementor<R>) super.setParameter( position, value, temporalPrecision );
 	}
-
 }

@@ -1666,7 +1666,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	private boolean isSelect() {
-		return getProducer().getFactory().getQueryPlanCache()
+		return getProducer().getFactory().getQueryInterpretationCache()
 				.getHQLQueryPlan( getQueryString(), false, Collections.<String, Filter>emptyMap() )
 				.isSelect();
 	}

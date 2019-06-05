@@ -8,15 +8,18 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
-import java.util.List;
-import java.util.function.Supplier;
+import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
-import org.hibernate.procedure.ParameterRegistration;
+import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.internal.OutputsImpl;
+import org.hibernate.sql.exec.ExecutionException;
 
 /**
  * Implementation of ProcedureResult.  Defines centralized access to all of the results of a procedure call.
@@ -27,7 +30,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 	private final ProcedureCallImpl procedureCall;
 	private final CallableStatement callableStatement;
 
-	private final ParameterRegistrationImplementor[] refCursorParameters;
+	private final ProcedureParameterImplementor[] refCursorParameters;
 	private int refCursorParamIndex;
 
 	ProcedureOutputsImpl(ProcedureCallImpl procedureCall, CallableStatement callableStatement) {
@@ -39,18 +42,34 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 	}
 
 	@Override
-	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration) {
-		return ( (ParameterRegistrationImplementor<T>) parameterRegistration ).extract( callableStatement );
+	public <T> T getOutputParameterValue(ProcedureParameter<T> parameter) {
+		final AllowableParameterType<T> hibernateType = parameter.getHibernateType();
+		if ( hibernateType instanceof AllowableOutputParameterType<?> ) {
+			try {
+				//noinspection unchecked
+				return (T) ( (AllowableOutputParameterType<?>) hibernateType ).extract(
+						callableStatement,
+						parameter.getPosition(),
+						procedureCall.getSession()
+				);
+			}
+			catch (SQLException e) {
+				throw new ExecutionException( "Error extracting procedure output parameter value [" + parameter + "]", e );
+			}
+		}
+		else {
+			throw new ParameterMisuseException( "Parameter type cannot extract procedure output parameters" );
+		}
 	}
 
 	@Override
 	public Object getOutputParameterValue(String name) {
-		return procedureCall.getParameterRegistration( name ).extract( callableStatement );
+		return getOutputParameterValue( procedureCall.getParameterMetadata().getQueryParameter( name ) );
 	}
 
 	@Override
 	public Object getOutputParameterValue(int position) {
-		return procedureCall.getParameterRegistration( position ).extract( callableStatement );
+		return getOutputParameterValue( procedureCall.getParameterMetadata().getQueryParameter( position ) );
 	}
 
 	@Override
@@ -80,7 +99,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 		@Override
 		protected Output buildExtendedReturn() {
 			ProcedureOutputsImpl.this.refCursorParamIndex++;
-			final ParameterRegistrationImplementor refCursorParam = ProcedureOutputsImpl.this.refCursorParameters[refCursorParamIndex];
+			final ProcedureParameterImplementor refCursorParam = ProcedureOutputsImpl.this.refCursorParameters[refCursorParamIndex];
 			ResultSet resultSet;
 			if ( refCursorParam.getName() != null ) {
 				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()

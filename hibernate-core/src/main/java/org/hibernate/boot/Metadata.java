@@ -8,6 +8,7 @@ package org.hibernate.boot;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -113,26 +114,31 @@ public interface Metadata extends Mapping {
 	/**
 	 * Retrieve named query metadata by name.
 	 *
-	 * @param name The query name
-	 *
 	 * @return The named query metadata, or {@code null}.
 	 */
 	NamedHqlQueryDefinition getNamedHqlQueryMapping(String name);
 
-	java.util.Collection<NamedHqlQueryDefinition> getNamedHqlQueryMappings();
+	/**
+	 * Visit all named HQL query definitions
+	 */
+	void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer);
 
 	/**
 	 * Retrieve named SQL query metadata.
-	 *
-	 * @param name The SQL query name.
 	 *
 	 * @return The named query metadata, or {@code null}
 	 */
 	NamedNativeQueryDefinition getNamedNativeQueryMapping(String name);
 
-	java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryMappings();
+	/**
+	 * Visit all named native query definitions
+	 */
+	void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer);
 
-	java.util.Collection<NamedProcedureCallDefinition> getNamedProcedureCallMappings();
+	/**
+	 * Visit all named callable query definitions
+	 */
+	void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer);
 
 	/**
 	 * Retrieve the metadata for a named SQL result set mapping.
@@ -143,12 +149,13 @@ public interface Metadata extends Mapping {
 	 */
 	NamedResultSetMappingDefinition getResultSetMapping(String name);
 
-	Map<String, NamedResultSetMappingDefinition> getResultSetMappingDefinitions();
+	/**
+	 * Visit all named SQL result set mapping definitions
+	 */
+	void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDefinition> definitionConsumer);
 
 	/**
 	 * Retrieve a type definition by name.
-	 *
-	 * @param typeName The name of the type definition to retrieve.
 	 *
 	 * @return The named type definition, or {@code null}
 	 */

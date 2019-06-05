@@ -31,6 +31,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.spi.NameableQuery;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.Type;
 
@@ -38,11 +39,15 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 @Incubating
-public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R> {
+public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R>, NameableQuery {
 	NativeQueryImplementor setCollectionKey(Serializable key);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - NativeQuery
+
+
+	@Override
+	NamedNativeQueryMemento toMemento(String name);
 
 	@Override
 	NativeQueryImplementor<R> addScalar(String columnAlias);

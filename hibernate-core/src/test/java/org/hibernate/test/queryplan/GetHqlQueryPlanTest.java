@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.query.spi.QueryPlanCache;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -45,7 +45,7 @@ public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testHqlQueryPlan() {
 		Session s = openSession();
-		QueryPlanCache cache = ( ( SessionImplementor ) s ).getFactory().getQueryPlanCache();
+		QueryInterpretationCache cache = ( ( SessionImplementor ) s ).getFactory().getQueryInterpretationCache();
 		assertTrue( getEnabledFilters( s ).isEmpty() );
 
 		HQLQueryPlan plan1 = cache.getHQLQueryPlan( "from Person", false, getEnabledFilters( s ) );
@@ -72,7 +72,7 @@ public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-12413")
 	public void testExpandingQueryStringMultipleTimesWorks() {
 		doInHibernate( this::sessionFactory, session -> {
-			QueryPlanCache cache = ( ( SessionImplementor ) session ).getFactory().getQueryPlanCache();
+			QueryInterpretationCache cache = ( ( SessionImplementor ) session ).getFactory().getQueryInterpretationCache();
 
 			String queryString = "from Person where name in :names";
 			HQLQueryPlan plan = cache.getHQLQueryPlan( queryString, false, getEnabledFilters( session ) );
@@ -105,7 +105,7 @@ public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testHqlQueryPlanWithEnabledFilter() {
 		Session s = openSession();
-		QueryPlanCache cache = ( (SessionImplementor) s ).getFactory().getQueryPlanCache();
+		QueryInterpretationCache cache = ( (SessionImplementor) s ).getFactory().getQueryInterpretationCache();
 
 		HQLQueryPlan plan1A = cache.getHQLQueryPlan( "from Person", true, getEnabledFilters( s ) );
 		HQLQueryPlan plan1B = cache.getHQLQueryPlan( "from Person", false, getEnabledFilters( s ) );

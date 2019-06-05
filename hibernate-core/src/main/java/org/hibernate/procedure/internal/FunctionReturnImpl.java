@@ -14,8 +14,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
-import org.hibernate.query.QueryParameter;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -108,17 +108,13 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	}
 
 	@Override
-	public ParameterMemento toMemento() {
-		// todo (6.0) : do we need a FunctionReturnMemento?
-		return new ParameterMemento() {
-			@Override
-			public QueryParameter toQueryParameter(SharedSessionContractImplementor session) {
-				if ( ormType != null ) {
-					return new FunctionReturnImpl( procedureCall, ormType );
-				}
-				else {
-					return new FunctionReturnImpl( procedureCall, jdbcTypeCode );
-				}
+	public NamedCallableQueryMemento.ParameterMemento toMemento() {
+		return session -> {
+			if ( ormType != null ) {
+				return new FunctionReturnImpl( procedureCall, ormType );
+			}
+			else {
+				return new FunctionReturnImpl( procedureCall, jdbcTypeCode );
 			}
 		};
 	}

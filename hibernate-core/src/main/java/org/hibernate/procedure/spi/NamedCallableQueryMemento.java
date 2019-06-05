@@ -14,7 +14,6 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.NamedQueryMemento;
 
 /**
@@ -70,7 +69,7 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento {
 	 */
 	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session);
 
-	interface ParameterMemento {
+	interface ParameterMemento extends NamedQueryMemento.ParameterMemento {
 		ProcedureParameterImplementor resolve(SharedSessionContractImplementor session);
 	}
 }

@@ -34,6 +34,8 @@ public interface AllowableOutputParameterType<J> extends AllowableParameterType<
 	 */
 	SqlTypeDescriptor getSqlTypeDescriptor();
 
+
+
 	/**
 	 * Perform the extraction
 	 *

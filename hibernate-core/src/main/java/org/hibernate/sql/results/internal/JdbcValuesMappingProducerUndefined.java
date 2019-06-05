@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.JdbcValueExtractor;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.results.internal.StandardResultSetMapping;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.JdbcValuesMapping;

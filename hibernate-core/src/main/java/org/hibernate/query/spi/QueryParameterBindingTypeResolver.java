@@ -15,6 +15,6 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
  * @author Steve Ebersole
  */
 public interface QueryParameterBindingTypeResolver {
-	AllowableParameterType resolveParameterBindType(Object bindValue);
-	AllowableParameterType resolveParameterBindType(Class clazz);
+	AllowableParameterType<?> resolveParameterBindType(Object bindValue);
+	AllowableParameterType<?> resolveParameterBindType(Class<?> clazz);
 }

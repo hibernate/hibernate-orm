@@ -6,30 +6,38 @@
  */
 package org.hibernate.query.spi;
 
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.persistence.Parameter;
 
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.QueryParameter;
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public interface ParameterMetadataImplementor extends ParameterMetadata {
-	@FunctionalInterface
-	interface ParameterCollector {
-		<P extends QueryParameterImplementor<?>> void collect(P queryParameter);
+	void visitParameters(Consumer<QueryParameterImplementor<?>> consumer);
+
+	default void collectAllParameters(Consumer<QueryParameterImplementor<?>> collector) {
+		visitParameters( collector );
 	}
 
-	void collectAllParameters(ParameterCollector collector);
+	@Override
+	default void visitRegistrations(Consumer<? extends QueryParameter<?>> action) {
+		//noinspection unchecked
+		visitParameters( (Consumer) action );
+	}
 
 	boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter);
 
 	@Override
-	QueryParameterImplementor<?> getQueryParameter(String name);
+	ProcedureParameterImplementor<?> getQueryParameter(String name);
 
 	@Override
-	QueryParameterImplementor<?> getQueryParameter(int positionLabel);
+	ProcedureParameterImplementor<?> getQueryParameter(int positionLabel);
 
 	@Override
-	QueryParameterImplementor<?> resolve(Parameter param);
+	ProcedureParameterImplementor<?> resolve(Parameter param);
 }

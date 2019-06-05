@@ -13,12 +13,12 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryPlanCache;
+import org.hibernate.query.spi.QueryInterpretationCache;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmInterpretationsKey implements QueryPlanCache.Key {
+public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	@SuppressWarnings("WeakerAccess")
 	public static SqmInterpretationsKey generateFrom(QuerySqmImpl query) {
 		if ( !isCacheable( query ) ) {
@@ -33,7 +33,7 @@ public class SqmInterpretationsKey implements QueryPlanCache.Key {
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	public static QueryPlanCache.Key generateNonSelectKey(QuerySqmImpl query) {
+	public static QueryInterpretationCache.Key generateNonSelectKey(QuerySqmImpl query) {
 		// todo (6.0) : do we want to cache non-select plans?  If so, what requirements?
 		//		- very minimum is that it be a "simple" (non-multi-table) statement
 		//

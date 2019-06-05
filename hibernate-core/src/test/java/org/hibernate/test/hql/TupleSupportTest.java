@@ -14,7 +14,6 @@ import javax.persistence.Id;
 import java.util.Collections;
 
 import org.hibernate.Filter;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -23,13 +22,10 @@ import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -81,7 +77,7 @@ public class TupleSupportTest extends BaseUnitTestCase {
 	@Test
 	public void testImplicitTupleNotEquals() {
 		final String hql = "from TheEntity e where e.compositeValue <> :p1";
-		HQLQueryPlan queryPlan = ( (SessionFactoryImplementor) sessionFactory ).getQueryPlanCache()
+		HQLQueryPlan queryPlan = ( (SessionFactoryImplementor) sessionFactory ).getQueryInterpretationCache()
 				.getHQLQueryPlan( hql, false, Collections.<String,Filter>emptyMap() );
 
 		assertEquals( 1, queryPlan.getSqlStrings().length );
@@ -92,7 +88,7 @@ public class TupleSupportTest extends BaseUnitTestCase {
 	@Test
 	public void testImplicitTupleNotInList() {
 		final String hql = "from TheEntity e where e.compositeValue not in (:p1,:p2)";
-		HQLQueryPlan queryPlan = ( (SessionFactoryImplementor) sessionFactory ).getQueryPlanCache()
+		HQLQueryPlan queryPlan = ( (SessionFactoryImplementor) sessionFactory ).getQueryInterpretationCache()
 				.getHQLQueryPlan( hql, false, Collections.<String,Filter>emptyMap() );
 
 		assertEquals( 1, queryPlan.getSqlStrings().length );

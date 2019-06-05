@@ -19,7 +19,7 @@ import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryPlanCache;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
@@ -131,8 +131,8 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 		Map<String,HibernateException> errors = new HashMap<>();
 
 		final SemanticQueryProducer sqmProducer = queryEngine.getSemanticQueryProducer();
-		final QueryPlanCache queryPlanCache = queryEngine.getQueryPlanCache();
-		final boolean cachingEnabled = queryPlanCache.isEnabled();
+		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
+		final boolean cachingEnabled = interpretationCache.isEnabled();
 
 		// Check named HQL queries
 		log.debugf( "Checking %s named HQL queries", hqlMementoMap.size() );
@@ -144,7 +144,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 
 				if ( cachingEnabled ) {
 					// todo (6.0) : need to cache these; however atm that requires producing a SqmQueryImpl
-					// queryEngine.getQueryPlanCache().getHQLQueryPlan( hqlMemento.getQueryString(), false, Collections.EMPTY_MAP );
+					// queryEngine.getQueryInterpretationCache().getHQLQueryPlan( hqlMemento.getQueryString(), false, Collections.EMPTY_MAP );
 				}
 			}
 			catch ( HibernateException e ) {

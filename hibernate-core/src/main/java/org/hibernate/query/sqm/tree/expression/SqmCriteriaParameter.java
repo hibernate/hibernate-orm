@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -110,7 +111,7 @@ public class SqmCriteriaParameter<T>
 	}
 
 	@Override
-	public ParameterMemento toMemento() {
+	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		throw new UnsupportedOperationException( "ParameterMemento cannot be extracted from Criteria query parameter" );
 	}
 }

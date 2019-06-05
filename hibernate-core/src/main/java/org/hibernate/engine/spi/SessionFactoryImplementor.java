@@ -15,13 +15,11 @@ import javax.persistence.EntityGraph;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.Metamodel;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -38,18 +36,12 @@ import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
-import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.query.spi.QueryPlanCache;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.sql.ast.produce.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
@@ -118,38 +110,6 @@ public interface SessionFactoryImplementor
 	ServiceRegistryImplementor getServiceRegistry();
 
 	/**
-	 * Get the factory scoped interceptor for this factory.
-	 *
-	 * @return The factory scope interceptor, or null if none.
-	 *
-	 * @deprecated (since 5.2) if access to the SessionFactory-scoped Interceptor is needed, use
-	 * {@link SessionFactoryOptions#getInterceptor()} instead.  However, generally speaking this access
-	 * is not needed.
-	 */
-	@Deprecated
-	Interceptor getInterceptor();
-
-	/**
-	 * Access to the cachres of HQL/JPQL and native query plans.
-	 *
-	 * @return The query plan cache
-	 *
-	 * @deprecated (since 5.2) it will be replaced with the new QueryEngine concept introduced in 6.0
-	 */
-	@Deprecated
-	QueryPlanCache getQueryPlanCache();
-
-	/**
-	 * Provides access to the named query repository
-	 *
-	 * @return The repository for named query definitions
-	 *
-	 * @deprecated (since 5.2) it will be replaced with the new QueryEngine concept introduced in 6.0
-	 */
-	@Deprecated
-	NamedQueryRepository getNamedQueryRepository();
-
-	/**
 	 * Retrieve fetch profile by name.
 	 *
 	 * @param name The name of the profile to retrieve.
@@ -213,78 +173,11 @@ public interface SessionFactoryImplementor
 	// Deprecations
 
 	/**
-	 * Get the return types of a query
-	 *
-	 * @deprecated No replacement.
-	 */
-	@Deprecated
-	default Type[] getReturnTypes(String queryString) {
-		throw new UnsupportedOperationException( "Concept of query return org.hibernate.type.Types is no longer supported" );
-	}
-
-	/**
-	 * Get the return aliases of a query
-	 *
-	 * @deprecated No replacement.
-	 */
-	@Deprecated
-	default String[] getReturnAliases(String queryString) {
-		throw new UnsupportedOperationException( "Access to of query return aliases via Sessionfactory is no longer supported" );
-	}
-
-
-
-	/**
 	 * @deprecated (since 5.2) Just use {@link #getStatistics} (with covariant return here as {@link StatisticsImplementor}).
 	 */
 	@Deprecated
 	default StatisticsImplementor getStatisticsImplementor() {
 		return getStatistics();
-	}
-
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// NamedQueryRepository
-
-	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getHqlQueryMemento} instead.
-	 */
-	@Deprecated
-	default NamedHqlQueryMemento getNamedQuery(String queryName) {
-		return getNamedQueryRepository().getHqlQueryMemento( queryName );
-	}
-
-	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerHqlQueryMemento} instead.
-	 */
-	@Deprecated
-	default void registerNamedQueryDefinition(String name, NamedHqlQueryMementoImpl memento) {
-		getNamedQueryRepository().registerHqlQueryMemento( name, memento );
-	}
-
-	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getNativeQueryMemento} instead.
-	 */
-	@Deprecated
-	default NamedNativeQueryMemento getNamedSQLQuery(String queryName) {
-		return getNamedQueryRepository().getNativeQueryMemento( queryName );
-	}
-
-	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#registerNativeQueryMemento} instead.
-	 */
-	@Deprecated
-	default void registerNamedSQLQueryDefinition(String name, NamedNativeQueryMemento memento) {
-		getNamedQueryRepository().registerNativeQueryMemento( name, memento );
-	}
-
-	/**
-	 * @deprecated (since 5.2) Use {@link NamedQueryRepository#getResultSetMappingMemento} instead.
-	 */
-	@Deprecated
-	default NamedResultSetMappingMemento getResultSetMapping(String name) {
-		return getNamedQueryRepository().getResultSetMappingMemento( name );
 	}
 
 	/**

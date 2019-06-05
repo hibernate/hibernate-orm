@@ -7,7 +7,6 @@
 package org.hibernate.procedure.spi;
 
 import org.hibernate.procedure.FunctionReturn;
-import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
 
 /**
  * @author Steve Ebersole

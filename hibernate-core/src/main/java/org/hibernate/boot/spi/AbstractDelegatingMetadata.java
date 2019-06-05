@@ -10,19 +10,17 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.FetchProfile;
@@ -118,13 +116,13 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public NamedHqlQueryMementoImpl getNamedHqlQueryMapping(String name) {
+	public NamedHqlQueryDefinition getNamedHqlQueryMapping(String name) {
 		return delegate.getNamedHqlQueryMapping( name );
 	}
 
 	@Override
-	public Collection<NamedHqlQueryMementoImpl> getNamedHqlQueryMappings() {
-		return delegate.getNamedHqlQueryMappings();
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+		delegate.visitNamedHqlQueryDefinitions( definitionConsumer );
 	}
 
 	@Override
@@ -133,23 +131,23 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public Collection<NamedNativeQueryDefinition> getNamedNativeQueryMappings() {
-		return delegate.getNamedNativeQueryMappings();
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+		delegate.visitNamedNativeQueryDefinitions( definitionConsumer );
 	}
 
 	@Override
-	public Collection<NamedProcedureCallDefinitionImpl> getNamedProcedureCallMappings() {
-		return delegate.getNamedProcedureCallMappings();
+	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
+		delegate.visitNamedProcedureCallDefinition( definitionConsumer );
 	}
 
 	@Override
-	public ResultSetMappingDescriptor getResultSetMapping(String name) {
+	public NamedResultSetMappingDefinition getResultSetMapping(String name) {
 		return delegate.getResultSetMapping( name );
 	}
 
 	@Override
-	public Map<String, ResultSetMappingDescriptor> getResultSetMappingDefinitions() {
-		return delegate.getResultSetMappingDefinitions();
+	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDefinition> definitionConsumer) {
+		delegate.visitNamedResultSetMappingDefinition( definitionConsumer );
 	}
 
 	@Override
@@ -222,11 +220,6 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	@Deprecated
 	public TypeResolver getTypeResolver() {
 		return delegate.getTypeResolver();
-	}
-
-	@Override
-	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImpl sessionFactory) {
-		return delegate.buildNamedQueryRepository( sessionFactory );
 	}
 
 	@Override

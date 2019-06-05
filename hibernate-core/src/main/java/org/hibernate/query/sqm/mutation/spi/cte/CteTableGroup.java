@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 

@@ -16,26 +16,19 @@ import java.sql.SQLException;
  */
 public interface ValueBinder<X> {
 	/**
-	 * Bind a value to a prepared statement.
+	 * Bind a value to a prepared statement by index
 	 *
-	 * @param st The prepared statement to which to bind the value.
-	 * @param value The value to bind.
-	 * @param index The position at which to bind the value within the prepared statement
-	 * @param options The options.
+	 * @apiNote Also works for callables since {@link CallableStatement} extends
+	 * {@link PreparedStatement}
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	public void bind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException;
+	void bind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException;
 
 	/**
-	 * Bind a value to a CallableStatement.
-	 *
-	 * @param st The prepared statement to which to bind the value.
-	 * @param value The value to bind.
-	 * @param name The name to bind the value within the prepared statement
-	 * @param options The options.
+	 * Bind a value to a callable statement by name
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	public void bind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException;
+	void bind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException;
 }

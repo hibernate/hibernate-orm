@@ -97,6 +97,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
@@ -259,6 +261,10 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
+	}
+
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+
 	}
 
 	/**
@@ -2735,6 +2741,20 @@ public abstract class Dialect implements ConversionContext {
 	@Deprecated
 	public boolean useFollowOnLocking() {
 		return useFollowOnLocking( null );
+	}
+
+	/**
+	 * Some dialects have trouble applying pessimistic locking depending upon what other query options are
+	 * specified (paging, ordering, etc).  This method allows these dialects to request that locking be applied
+	 * by subsequent selects.
+	 *
+	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
+	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
+	 *
+	 * @since 5.2
+	 */
+	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
+		return false;
 	}
 
 	/**

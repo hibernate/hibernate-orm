@@ -9,8 +9,8 @@ package org.hibernate.procedure.internal;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.internal.QueryParameterBindingImpl;
 import org.hibernate.query.procedure.ProcedureParameterBinding;
-import org.hibernate.query.procedure.spi.ProcedureParameterBindingImplementor;
-import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.procedure.spi.ProcedureParameterBindingImplementor;
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 
 /**

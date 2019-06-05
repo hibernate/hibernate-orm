@@ -160,14 +160,8 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
-	public void visitRegistrations(Consumer<? extends QueryParameter<?>> action) {
-		//noinspection unchecked
-		queryParameters.forEach( (Consumer) action );
-	}
-
-	@Override
-	public void collectAllParameters(ParameterCollector collector) {
-		queryParameters.forEach( collector::collect );
+	public void visitParameters(Consumer<QueryParameterImplementor<?>> consumer) {
+		queryParameters.forEach( consumer );
 	}
 
 	@Override

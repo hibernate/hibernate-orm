@@ -16,4 +16,6 @@ public interface QueryParameterImplementor<T> extends QueryParameter<T> {
 	void disallowMultiValuedBinding();
 
 	void applyAnticipatedType(AllowableParameterType type);
+
+	NamedQueryMemento.ParameterMemento toMemento();
 }

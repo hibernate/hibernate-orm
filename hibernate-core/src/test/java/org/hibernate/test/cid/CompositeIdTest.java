@@ -44,7 +44,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNonDistinctCountOfEntityWithCompositeId() {
 		// the check here is all based on whether we had commas in the expressions inside the count
-		final HQLQueryPlan plan = sessionFactory().getQueryPlanCache().getHQLQueryPlan(
+		final HQLQueryPlan plan = sessionFactory().getQueryInterpretationCache().getHQLQueryPlan(
 				"select count(o) from Order o",
 				false,
 				Collections.EMPTY_MAP
@@ -70,7 +70,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	public void testDistinctCountOfEntityWithCompositeId() {
 		// today we do not account for Dialects supportsTupleDistinctCounts() is false.  though really the only
 		// "option" there is to throw an error.
-		final HQLQueryPlan plan = sessionFactory().getQueryPlanCache().getHQLQueryPlan(
+		final HQLQueryPlan plan = sessionFactory().getQueryInterpretationCache().getHQLQueryPlan(
 				"select count(distinct o) from Order o",
 				false,
 				Collections.EMPTY_MAP

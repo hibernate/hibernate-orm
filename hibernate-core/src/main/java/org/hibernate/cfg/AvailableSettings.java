@@ -18,7 +18,7 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.spi.QueryPlanCache;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -1218,14 +1218,14 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String QUERY_PLAN_CACHE_ENABLED = "hibernate.query.plan_cache_enabled";
 
 	/**
-	 * The maximum number of strong references maintained by {@link QueryPlanCache}. Default is 128.
+	 * The maximum number of strong references maintained by {@link QueryInterpretationCache}. Default is 128.
 	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE}
 	 */
 	@Deprecated
 	String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
 
 	/**
-	 * The maximum number of soft references maintained by {@link QueryPlanCache}. Default is 2048.
+	 * The maximum number of soft references maintained by {@link QueryInterpretationCache}. Default is 2048.
 	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_MAX_SIZE}
 	 */
 	@Deprecated
@@ -1239,13 +1239,13 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *     <li>{@link org.hibernate.engine.query.spi.NativeSQLQueryPlan}</li>
 	 * </ul>
 	 *
-	 * maintained by {@link QueryPlanCache}. Default is 2048.
+	 * maintained by {@link QueryInterpretationCache}. Default is 2048.
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 
 	/**
 	 * The maximum number of {@link ParameterMetadataImpl} maintained
-	 * by {@link QueryPlanCache}. Default is 128.
+	 * by {@link QueryInterpretationCache}. Default is 128.
 	 */
 	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
 

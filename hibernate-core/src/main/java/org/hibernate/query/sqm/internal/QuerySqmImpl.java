@@ -39,7 +39,7 @@ import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.spi.QueryPlanCache;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
@@ -317,15 +317,15 @@ public class QuerySqmImpl<R>
 
 		SelectQueryPlan<R> queryPlan = null;
 
-		final QueryPlanCache.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
+		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryEngine().getQueryPlanCache().getSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryEngine().getInterpretationCache().getSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = buildSelectQueryPlan();
 			if ( cacheKey != null ) {
-				getSession().getFactory().getQueryEngine().getQueryPlanCache().cacheSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryEngine().getInterpretationCache().cacheSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 
@@ -400,15 +400,15 @@ public class QuerySqmImpl<R>
 
 		NonSelectQueryPlan queryPlan = null;
 
-		final QueryPlanCache.Key cacheKey = SqmInterpretationsKey.generateNonSelectKey( this );
+		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.generateNonSelectKey( this );
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryEngine().getQueryPlanCache().getNonSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryEngine().getInterpretationCache().getNonSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = buildNonSelectQueryPlan();
 			if ( cacheKey != null ) {
-				getSession().getFactory().getQueryEngine().getQueryPlanCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryEngine().getInterpretationCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 

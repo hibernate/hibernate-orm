@@ -157,7 +157,7 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
     @TestForIssue(jiraKey = "HHH-11538")
     public void testNoImpliedJoinGeneratedForEqualityComparison() {
         doInHibernate( this::sessionFactory, session -> {
-            final HQLQueryPlan plan = sessionFactory().getQueryPlanCache().getHQLQueryPlan(
+            final HQLQueryPlan plan = sessionFactory().getQueryInterpretationCache().getHQLQueryPlan(
                     "select r.id, cust.name " +
                             "from FinancialRecord r " +
                             "	join Customer cust on r.customer = cust" +

@@ -73,7 +73,6 @@ import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.engine.query.spi.ReturnMetadata;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionEventListenerManager;
@@ -97,15 +96,18 @@ import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
-import org.hibernate.query.spi.QueryPlanCache;
+import org.hibernate.query.hql.spi.HqlQueryImplementor;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.NativeQuery;
@@ -125,9 +127,9 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -180,8 +182,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient NodeBuilder criteriaBuilder;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
-	private final transient NamedQueryRepository namedQueryRepository;
-	private final transient QueryPlanCache queryPlanCache;
+	private final transient QueryEngine queryEngine;
 
 	private final transient CurrentSessionContext currentSessionContext;
 
@@ -212,6 +213,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				.buildServiceRegistry( this, options );
 
 		prepareEventListeners( metadata );
+
+		this.queryEngine = QueryEngine.from( this, metadata );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
@@ -244,7 +247,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
-		this.criteriaBuilder = new SqmCriteriaNodeBuilder.create( this );
+		this.criteriaBuilder = SqmCriteriaNodeBuilder.create( this );
 		this.jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
 		for ( SessionFactoryObserver sessionFactoryObserver : options.getSessionFactoryObservers() ) {
@@ -258,8 +261,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
-
-		this.queryPlanCache = new QueryPlanCache( this );
 
 		class IntegratorObserver implements SessionFactoryObserver {
 			private ArrayList<Integrator> integrators = new ArrayList<>();
@@ -301,9 +302,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.metamodel = (MetamodelImplementor) metadata.getTypeConfiguration().scope( this )
 					.create( metadata, determineJpaMetaModelPopulationSetting( properties ) );
 
-			//Named Queries:
-			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );
-
 			settings.getMultiTableBulkIdStrategy().prepare(
 					jdbcServices,
 					buildLocalConnectionAccess(),
@@ -319,26 +317,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			);
 
 			currentSessionContext = buildCurrentSessionContext();
-
-			//checking for named queries
-			if ( settings.isNamedQueryStartupCheckingEnabled() ) {
-				final Map<String, HibernateException> errors = checkNamedQueries();
-				if ( !errors.isEmpty() ) {
-					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-					String separator = System.lineSeparator();
-
-					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
-						LOG.namedQueryError( entry.getKey(), entry.getValue() );
-
-						failingQueries
-							.append( separator)
-							.append( entry.getKey() )
-							.append( " failed because of: " )
-							.append( entry.getValue() );
-					}
-					throw new HibernateException( failingQueries.toString() );
-				}
-			}
 
 			// this needs to happen after persisters are all ready to go...
 			this.fetchProfiles = new HashMap<>();
@@ -408,7 +386,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		eventListenerRegistry.prepare( metadata );
 
 		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
-			if ( !String.class.isInstance( entry.getKey() ) ) {
+			if ( !(entry.getKey() instanceof String) ) {
 				continue;
 			}
 			final String propertyName = (String) entry.getKey();
@@ -421,6 +399,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
 			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
 			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
+				//noinspection unchecked
 				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
 			}
 		}
@@ -535,6 +514,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return getMetamodel().getTypeConfiguration();
+	}
+
+	@Override
+	public QueryEngine getQueryEngine() {
+		return null;
+	}
+
+	@Override
 	public JdbcServices getJdbcServices() {
 		return jdbcServices;
 	}
@@ -555,25 +544,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return metamodel.getTypeConfiguration().getTypeResolver();
 	}
 
-	public QueryPlanCache getQueryPlanCache() {
-		return queryPlanCache;
-	}
-
-	private Map<String,HibernateException> checkNamedQueries() throws HibernateException {
-		return namedQueryRepository.checkNamedQueries( queryPlanCache );
-	}
-
 	@Override
 	public DeserializationResolver getDeserializationResolver() {
-		return new DeserializationResolver() {
-			@Override
-			public SessionFactoryImplementor resolve() {
-				return (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
-						uuid,
-						name
-				);
-			}
-		};
+		return (DeserializationResolver) () -> (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+				uuid,
+				name
+		);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -702,29 +678,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		);
 	}
 
-	@Override
-	public NamedQueryRepository getNamedQueryRepository() {
-		return namedQueryRepository;
-	}
-
-
 	public Type getIdentifierType(String className) throws MappingException {
 		return getMetamodel().entityPersister( className ).getIdentifierType();
 	}
 	public String getIdentifierPropertyName(String className) throws MappingException {
 		return getMetamodel().entityPersister( className ).getIdentifierPropertyName();
-	}
-
-	public Type[] getReturnTypes(String queryString) throws HibernateException {
-		final ReturnMetadata metadata = queryPlanCache.getHQLQueryPlan( queryString, false, Collections.EMPTY_MAP )
-				.getReturnMetadata();
-		return metadata == null ? null : metadata.getReturnTypes();
-	}
-
-	public String[] getReturnAliases(String queryString) throws HibernateException {
-		final ReturnMetadata metadata = queryPlanCache.getHQLQueryPlan( queryString, false, Collections.EMPTY_MAP )
-				.getReturnMetadata();
-		return metadata == null ? null : metadata.getReturnAliases();
 	}
 
 	public ClassMetadata getClassMetadata(Class persistentClass) throws HibernateException {
@@ -800,9 +758,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			metamodel.close();
 		}
 
-		if ( queryPlanCache != null ) {
-			queryPlanCache.cleanup();
-		}
+		queryEngine.close();
 
 		if ( delayedDropAction != null ) {
 			delayedDropAction.perform( serviceRegistry );
@@ -839,31 +795,34 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		// first, handle StoredProcedureQuery
 		try {
-			final ProcedureCall unwrapped = query.unwrap( ProcedureCall.class );
+			final ProcedureCallImplementor unwrapped = query.unwrap( ProcedureCallImplementor.class );
 			if ( unwrapped != null ) {
-				addNamedStoredProcedureQuery( name, unwrapped );
+				getQueryEngine().getNamedQueryRepository().registerCallableQueryMemento(
+						name,
+						unwrapped.toMemento( name )
+				);
 				return;
 			}
 		}
 		catch ( PersistenceException ignore ) {
-			// this means 'query' is not a StoredProcedureQueryImpl
+			// this means 'query' is not a ProcedureCallImplementor
 		}
 
 		// then try as a native-SQL or JPQL query
 		try {
-			org.hibernate.query.Query hibernateQuery = query.unwrap( org.hibernate.query.Query.class );
+			QueryImplementor<?> hibernateQuery = query.unwrap( QueryImplementor.class );
 			if ( hibernateQuery != null ) {
 				// create and register the proper NamedQueryDefinition...
-				if ( NativeQuery.class.isInstance( hibernateQuery ) ) {
-					getNamedQueryRepository().registerNamedSQLQueryDefinition(
+				if ( hibernateQuery instanceof NativeQueryImplementor ) {
+					getQueryEngine().getNamedQueryRepository().registerNativeQueryMemento(
 							name,
-							extractSqlQueryDefinition( (NativeQuery) hibernateQuery, name )
+							( (NativeQueryImplementor) hibernateQuery ).toMemento( name )
 					);
 				}
 				else {
-					getNamedQueryRepository().registerNamedQueryDefinition(
+					getQueryEngine().getNamedQueryRepository().registerHqlQueryMemento(
 							name,
-							extractHqlQueryDefinition( hibernateQuery, name )
+							( ( HqlQueryImplementor ) hibernateQuery ).toMemento( name )
 					);
 				}
 				return;
@@ -880,56 +839,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 						query
 				)
 		);
-	}
-
-	private void addNamedStoredProcedureQuery(String name, ProcedureCall procedureCall) {
-		getNamedQueryRepository().registerNamedProcedureCallMemento(
-				name,
-				procedureCall.extractMemento( procedureCall.getHints() )
-		);
-	}
-
-	private NamedSQLQueryDefinition extractSqlQueryDefinition(org.hibernate.query.NativeQuery nativeSqlQuery, String name) {
-		final NamedNativeQueryMementoBuilder builder = new NamedNativeQueryMementoBuilder( name );
-		fillInNamedQueryBuilder( builder, nativeSqlQuery );
-		builder.setCallable( nativeSqlQuery.isCallable() )
-				.setQuerySpaces( nativeSqlQuery.getSynchronizedQuerySpaces() )
-				.setQueryReturns( nativeSqlQuery.getQueryReturns() );
-		return builder.createNamedQueryDefinition();
-	}
-
-	private NamedHqlQueryMementoImpl extractHqlQueryDefinition(org.hibernate.query.Query hqlQuery, String name) {
-		final NamedHqlQueryMemento.Builder builder = new NamedHqlQueryMemento.Builder( name );
-		fillInNamedQueryBuilder( builder, hqlQuery );
-		// LockOptions only valid for HQL/JPQL queries...
-		builder.setLockOptions( hqlQuery.getLockOptions().makeCopy() );
-		return builder.createNamedQueryDefinition();
-	}
-
-	private void fillInNamedQueryBuilder(NamedHqlQueryMemento.Builder builder, org.hibernate.query.Query query) {
-		builder.setQuery( query.getQueryString() )
-				.setComment( query.getComment() )
-				.setCacheable( query.isCacheable() )
-				.setCacheRegion( query.getCacheRegion() )
-				.setCacheMode( query.getCacheMode() )
-				.setReadOnly( query.isReadOnly() )
-				.setFlushMode( query.getHibernateFlushMode() );
-
-		if ( query.getQueryOptions().getFirstRow() != null ) {
-			builder.setFirstResult( query.getQueryOptions().getFirstRow() );
-		}
-
-		if ( query.getQueryOptions().getMaxRows() != null ) {
-			builder.setMaxResults( query.getQueryOptions().getMaxRows() );
-		}
-
-		if ( query.getQueryOptions().getTimeout() != null ) {
-			builder.setTimeout( query.getQueryOptions().getTimeout() );
-		}
-
-		if ( query.getQueryOptions().getFetchSize() != null ) {
-			builder.setFetchSize( query.getQueryOptions().getFetchSize() );
-		}
 	}
 
 	@Override
@@ -1039,6 +948,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public JpaMetamodel getJpaMetamodel() {
+		return getMetamodel().getJpaMetamodel();
+	}
+
+	@Override
+	public Integer getMaximumFetchDepth() {
+		return getSessionFactoryOptions().getMaximumFetchDepth();
+	}
+
+	@Override
 	public ServiceRegistryImplementor getServiceRegistry() {
 		return serviceRegistry;
 	}
@@ -1061,7 +980,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Type resolveParameterBindType(Object bindValue) {
+	public AllowableParameterType<?> resolveParameterBindType(Object bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
@@ -1071,27 +990,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Type resolveParameterBindType(Class clazz){
-		String typename = clazz.getName();
-		Type type = getTypeResolver().heuristicType( typename );
-		boolean serializable = type != null && type instanceof SerializableType;
-		if ( type == null || serializable ) {
-			try {
-				getMetamodel().entityPersister( clazz.getName() );
-			}
-			catch (MappingException me) {
-				if ( serializable ) {
-					return type;
-				}
-				else {
-					throw new HibernateException( "Could not determine a type for class: " + typename );
-				}
-			}
-			return getTypeHelper().entity( clazz );
-		}
-		else {
-			return type;
-		}
+	public AllowableParameterType<?> resolveParameterBindType(Class<?> javaType) {
+		return getMetamodel().resolveQueryParameterType( javaType );
 	}
 
 	public static Interceptor configuredInterceptor(Interceptor interceptor, SessionFactoryOptions options) {

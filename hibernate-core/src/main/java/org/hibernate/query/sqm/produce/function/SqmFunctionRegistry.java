@@ -198,7 +198,7 @@ public class SqmFunctionRegistry {
 	}
 
 	/**
-	 * Overlay (put on top) the functions registered here on top of the
+	 * Overlay the functions registered here on top of the
 	 * incoming registry, potentially overriding its registrations
 	 */
 	public void overlay(SqmFunctionRegistry registryToOverly) {

@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -79,12 +80,12 @@ import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -228,7 +229,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImpl sessionFactory) {
+	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
 		throw new UnsupportedOperationException( "#buildNamedQueryRepository should not be called on InFlightMetadataCollector" );
 	}
 
@@ -534,8 +535,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public java.util.Collection<NamedHqlQueryDefinition> getNamedHqlQueryMappings() {
-		return namedQueryMap.values();
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+		namedQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
@@ -580,8 +581,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryMappings() {
-		return namedNativeQueryMap.values();
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+		namedNativeQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
@@ -615,9 +616,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named stored-procedure handling
 
+
 	@Override
-	public java.util.Collection<NamedProcedureCallDefinition> getNamedProcedureCallMappings() {
-		return namedProcedureCallMap.values();
+	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
+		namedProcedureCallMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
@@ -649,13 +651,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// result-set mapping handling
 
 	@Override
-	public Map<String, NamedResultSetMappingDefinition> getResultSetMappingDefinitions() {
-		return sqlResultSetMappingMap;
+	public NamedResultSetMappingDefinition getResultSetMapping(String name) {
+		return sqlResultSetMappingMap.get( name );
 	}
 
 	@Override
-	public NamedResultSetMappingDefinition getResultSetMapping(String name) {
-		return sqlResultSetMappingMap.get( name );
+	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDefinition> definitionConsumer) {
+		sqlResultSetMappingMap.values().forEach( definitionConsumer );
 	}
 
 	@Override

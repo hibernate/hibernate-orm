@@ -9,14 +9,13 @@ package org.hibernate.sql.results.spi;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
- * The "resolved" form of {@link JdbcValuesMappingProducer} providing access
+ * The "resolved" form of {@link JdbcValuesMappingDescriptor} providing access
  * to resolved JDBC results ({@link SqlSelection}) descriptors and resolved
  * domain results ({@link DomainResult}) descriptors.
  *
- * @see JdbcValuesMappingProducer#resolve
+ * @see JdbcValuesMappingDescriptor#resolve
  *
  * @author Steve Ebersole
  */
@@ -27,13 +26,9 @@ public interface JdbcValuesMapping {
 	 */
 	Set<SqlSelection> getSqlSelections();
 
-	List<DomainResult<?>> getDomainResults();
+	List<DomainResult> getDomainResults();
 
-	default List<DomainResultAssembler<?>> resolveAssemblers(
+	List<DomainResultAssembler> resolveAssemblers(
 			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState) {
-		return getDomainResults().stream()
-				.map( domainResult -> domainResult.createResultAssembler( initializerConsumer, creationState ) )
-				.collect( Collectors.toList() );
-	}
+			AssemblerCreationState creationState);
 }

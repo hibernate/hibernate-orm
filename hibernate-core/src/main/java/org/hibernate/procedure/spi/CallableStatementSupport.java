@@ -10,8 +10,9 @@ import java.sql.CallableStatement;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.internal.FunctionReturnImpl;
-import org.hibernate.query.procedure.internal.ProcedureParamBindings;
+import org.hibernate.procedure.internal.ProcedureParamBindings;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.sql.exec.spi.JdbcCall;
 
 /**
  * @author Steve Ebersole

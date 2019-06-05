@@ -22,7 +22,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
-	private final QueryParameter<T> queryParameter;
 	private final QueryParameterBindingTypeResolver typeResolver;
 	private final boolean isBindingValidationRequired;
 
@@ -30,6 +29,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	private boolean isMultiValued;
 
 	private AllowableParameterType<T> bindType;
+	private TemporalType explicitTemporalPrecision;
 
 	private T bindValue;
 	private Collection<T> bindValues;
@@ -40,7 +40,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			QueryParameter<T> queryParameter,
 			QueryParameterBindingTypeResolver typeResolver,
 			boolean isBindingValidationRequired) {
-		this.queryParameter = queryParameter;
 		this.typeResolver = typeResolver;
 		this.isBindingValidationRequired = isBindingValidationRequired;
 		this.bindType = queryParameter.getHibernateType();
@@ -51,7 +50,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			QueryParameterBindingTypeResolver typeResolver,
 			AllowableParameterType<T> bindType,
 			boolean isBindingValidationRequired) {
-		this.queryParameter = queryParameter;
 		this.typeResolver = typeResolver;
 		this.isBindingValidationRequired = isBindingValidationRequired;
 		this.bindType = bindType;
@@ -60,6 +58,11 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	@Override
 	public AllowableParameterType<T> getBindType() {
 		return bindType;
+	}
+
+	@Override
+	public TemporalType getExplicitTemporalPrecision() {
+		return explicitTemporalPrecision;
 	}
 
 	@Override
@@ -99,7 +102,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		this.bindValue = value;
 
 		if ( bindType == null ) {
-			this.bindType = typeResolver.resolveParameterBindType( value );
+			//noinspection unchecked
+			this.bindType = (AllowableParameterType) typeResolver.resolveParameterBindType( value );
 		}
 	}
 
@@ -129,6 +133,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 				getBindType().getJavaType(),
 				getBindType()
 		);
+
+		this.explicitTemporalPrecision = temporalTypePrecision;
 	}
 
 
@@ -153,7 +159,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		this.bindValues = values;
 
 		if ( bindType == null && !values.isEmpty() ) {
-			this.bindType = typeResolver.resolveParameterBindType( values.iterator().next() );
+			//noinspection unchecked
+			this.bindType = (AllowableParameterType) typeResolver.resolveParameterBindType( values.iterator().next() );
 		}
 
 	}
@@ -173,12 +180,13 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			TypeConfiguration typeConfiguration) {
 		setBindValues( values );
 
-		final Object exampleValue = values.isEmpty() ? null : values.iterator().next();
 		this.bindType = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 				temporalTypePrecision,
 				bindType,
 				typeConfiguration
 		);
+
+		this.explicitTemporalPrecision = temporalTypePrecision;
 	}
 
 

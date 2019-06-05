@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -38,7 +39,6 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
@@ -85,6 +85,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, SQLFunction> sqlFunctionMap;
 	private final Database database;
 
+	@SuppressWarnings("WeakerAccess")
 	public MetadataImpl(
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
@@ -234,8 +235,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public java.util.Collection<NamedHqlQueryDefinition> getNamedHqlQueryMappings() {
-		return namedQueryMap.values();
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+		namedQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
@@ -244,13 +245,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public java.util.Collection<NamedNativeQueryDefinition> getNamedNativeQueryMappings() {
-		return namedNativeQueryMap.values();
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+		namedNativeQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public java.util.Collection<NamedProcedureCallDefinition> getNamedProcedureCallMappings() {
-		return namedProcedureCallMap.values();
+	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
+		namedProcedureCallMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
@@ -259,8 +260,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Map<String, NamedResultSetMappingDefinition> getResultSetMappingDefinitions() {
-		return sqlResultSetMappingMap;
+	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDefinition> definitionConsumer) {
+		sqlResultSetMappingMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
@@ -318,7 +319,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImpl sessionFactory) {
+	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
 		return new NamedQueryRepositoryImpl(
 				buildNamedHqlMementos( sessionFactory ),
 				buildNamedNativeMementos( sessionFactory ),
@@ -335,7 +336,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return map;
 	}
 
-	private Map<String, NamedNativeQueryMemento> buildNamedNativeMementos(SessionFactoryImpl sessionFactory) {
+	private Map<String, NamedNativeQueryMemento> buildNamedNativeMementos(SessionFactoryImplementor sessionFactory) {
 		final HashMap<String, NamedNativeQueryMemento> map = new HashMap<>();
 		if ( namedNativeQueryMap != null ) {
 			namedNativeQueryMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
@@ -351,7 +352,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return map;
 	}
 
-	private Map<String, NamedResultSetMappingMemento> buildResultSetMappingMementos(SessionFactoryImpl sessionFactory) {
+	private Map<String, NamedResultSetMappingMemento> buildResultSetMappingMementos(SessionFactoryImplementor sessionFactory) {
 		final HashMap<String, NamedResultSetMappingMemento> map = new HashMap<>();
 		if ( sqlResultSetMappingMap != null ) {
 			sqlResultSetMappingMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );

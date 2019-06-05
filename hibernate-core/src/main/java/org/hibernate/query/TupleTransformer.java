@@ -6,11 +6,13 @@
  */
 package org.hibernate.query;
 
+import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
+
 /**
  * User hook for applying transformations of the query result tuples (the result "row").
  *
  * Ultimately, gets wrapped in a
- * {@link org.hibernate.sql.exec.internal.RowTransformerTupleTransformerAdapter}
+ * {@link RowTransformerTupleTransformerAdapter}
  * to adapt the TupleTransformer to the {@link org.hibernate.sql.exec.spi.RowTransformer}
  * contract, which is the thing actually used to process the results internally.
  *

@@ -33,6 +33,7 @@ import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
@@ -315,5 +316,8 @@ public interface SessionFactoryOptions {
 		return false;
 	}
 
+	SqmFunctionRegistry getSqmFunctionRegistry();
+
 	boolean isOmitJoinOfSuperclassTablesEnabled();
+
 }

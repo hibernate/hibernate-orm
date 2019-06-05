@@ -26,6 +26,8 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 		return list();
 	}
 
+	ParameterStrategy getParameterStrategy();
+
 	@Override
 	default R getSingleResult() {
 		return uniqueResult();

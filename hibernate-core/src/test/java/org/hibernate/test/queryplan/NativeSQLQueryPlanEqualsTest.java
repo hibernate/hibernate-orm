@@ -9,7 +9,7 @@ package org.hibernate.test.queryplan;
 import org.junit.Test;
 
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
-import org.hibernate.query.spi.QueryPlanCache;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
@@ -29,7 +29,7 @@ public class NativeSQLQueryPlanEqualsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNativeSQLQuerySpecEquals() {
-		QueryPlanCache cache = new QueryPlanCache( sessionFactory() );
+		QueryInterpretationCache cache = new QueryInterpretationCache( sessionFactory() );
 		NativeSQLQuerySpecification firstSpec = createSpec();
 
 		NativeSQLQuerySpecification secondSpec = createSpec();

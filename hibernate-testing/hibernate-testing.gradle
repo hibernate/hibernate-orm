@@ -11,16 +11,31 @@ description = 'Support for testing Hibernate ORM functionality'
 
 dependencies {
     compile project( ':hibernate-core' )
-    compile( libraries.jta )
+
     compile( libraries.junit )
+    compile( libraries.junit5_api )
+    compile( libraries.junit5_jupiter )
+    compile( libraries.junit5_params )
+    compile( 'org.hamcrest:hamcrest-all:1.3' )
+
+    runtime( libraries.junit5_vintage )
+    runtime( libraries.junit5_jupiter )
+
     compile( libraries.byteman )
     compile( libraries.byteman_install )
     compile( libraries.byteman_bmunit )
     compile( libraries.xapool )
     compile( libraries.log4j )
-    compile ( libraries.jboss_jta ) {
-        transitive=false;
+    compile( libraries.jboss_jta ) {
+        transitive = false;
     }
+    compile( 'javax.money:money-api:1.0.1' )
+    compile( 'org.javamoney:moneta:1.1' )
+
+    annotationProcessor( project( ':hibernate-jpamodelgen' ) )
+
+    testRuntime( libraries.h2 )
+    testRuntime( libraries.log4j )
 }
 
 // resources inherently exclude sources

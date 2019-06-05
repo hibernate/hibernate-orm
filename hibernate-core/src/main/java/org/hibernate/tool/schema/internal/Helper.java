@@ -14,7 +14,9 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.CoreLogging;

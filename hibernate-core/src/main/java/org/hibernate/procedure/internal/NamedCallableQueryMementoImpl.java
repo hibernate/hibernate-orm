@@ -19,7 +19,7 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.NamedQueryMemento;
 
@@ -32,7 +32,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	private final String callableName;
 
 	private final ParameterStrategy parameterStrategy;
-	private final List<ParameterMemento> parameterMementos;
+	private final List<NamedCallableQueryMemento.ParameterMemento> parameterMementos;
 
 	private final String[] resultSetMappingNames;
 	private final Class[] resultSetMappingClasses;
@@ -47,7 +47,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			String name,
 			String callableName,
 			ParameterStrategy parameterStrategy,
-			List<ParameterMemento> parameterMementos,
+			List<NamedCallableQueryMemento.ParameterMemento> parameterMementos,
 			String[] resultSetMappingNames,
 			Class[] resultSetMappingClasses,
 			Set<String> querySpaces,
@@ -86,7 +86,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public List<ParameterMemento> getParameterMementos() {
+	public List<NamedCallableQueryMemento.ParameterMemento> getParameterMementos() {
 		return parameterMementos;
 	}
 
@@ -140,7 +140,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	/**
 	 * A "disconnected" copy of the metadata for a parameter, that can be used in ProcedureCallMementoImpl.
 	 */
-	public static class ParameterMementoImpl implements ParameterMemento {
+	public static class ParameterMementoImpl implements NamedCallableQueryMemento.ParameterMemento {
 		private final Integer position;
 		private final String name;
 		private final ParameterMode mode;

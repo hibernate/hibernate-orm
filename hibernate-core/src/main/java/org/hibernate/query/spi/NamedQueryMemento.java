@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Named Query mementos are stored in the QueryEngine's
@@ -46,4 +47,8 @@ public interface NamedQueryMemento {
 	String getComment();
 
 	Map<String, Object> getHints();
+
+	interface ParameterMemento {
+		QueryParameterImplementor resolve(SharedSessionContractImplementor session);
+	}
 }

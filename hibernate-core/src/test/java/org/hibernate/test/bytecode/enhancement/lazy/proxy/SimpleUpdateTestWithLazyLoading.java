@@ -24,6 +24,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -39,8 +40,8 @@ import org.hamcrest.MatcherAssert;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
@@ -94,8 +95,10 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void updateSimpleField() {
-		String updatedName = "Barrabas";
+		String updatedName = "Barrabas_";
 		doInHibernate( this::sessionFactory, s -> {
+			final Statistics stats = sessionFactory().getStatistics();
+			stats.clear();
 			Child loadedChild = s.load( Child.class, lastChildID );
 
 			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
@@ -103,6 +106,11 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 			MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
 
 			loadedChild.setName( updatedName );
+			assertEquals( 0, stats.getPrepareStatementCount() );
+			assertThat( loadedChild.getName(), is( updatedName ) );
+			assertEquals( 0, stats.getPrepareStatementCount() );
+
+
 		} );
 
 		doInHibernate( this::sessionFactory, s -> {
@@ -113,23 +121,30 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void testUpdateAssociation() {
-		String updatedName = "Barrabas";
+		String updatedName = "Barrabas_";
 		String parentName = "Yodit";
 		doInHibernate( this::sessionFactory, s -> {
+			final Statistics stats = sessionFactory().getStatistics();
+			stats.clear();
 			Child loadedChild = s.load( Child.class, lastChildID );
 
 			loadedChild.setName( updatedName );
 
 			Parent parent = new Parent();
 			parent.setName( parentName );
-			loadedChild.parent = parent;
+
+			assertEquals( 0, stats.getPrepareStatementCount() );
+			loadedChild.setParent( parent );
+			assertEquals( 0, stats.getPrepareStatementCount() );
+			assertThat( loadedChild.getParent().getName(), is( parentName ) );
+			assertEquals( 0, stats.getPrepareStatementCount() );
 			s.save( parent );
 		} );
 
 		doInHibernate( this::sessionFactory, s -> {
 			Child loadedChild = s.load( Child.class, lastChildID );
 			assertThat( loadedChild.getName(), is( updatedName ) );
-			assertThat( loadedChild.parent.getName(), is(parentName) );
+			assertThat( loadedChild.getParent().getName(), is( parentName ) );
 		} );
 	}
 
@@ -186,6 +201,14 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		public Parent getParent() {
+			return parent;
+		}
+
+		public void setParent(Parent parent) {
+			this.parent = parent;
 		}
 	}
 }

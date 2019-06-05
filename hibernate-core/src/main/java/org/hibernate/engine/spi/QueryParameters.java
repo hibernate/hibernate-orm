@@ -24,10 +24,9 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -572,7 +571,7 @@ public final class QueryParameters {
 							// should process tokens till reaching the number of "?" corresponding to the
 							// numberOfParametersCoveredBy of the compositeType
 							int paramIndex = 1;
-							final int numberOfParametersCoveredBy = getNumberOfParametersCoveredBy( ((ComponentType) type).getSubtypes() );
+							final int numberOfParametersCoveredBy = getNumberOfParametersCoveredBy( ((CompositeType) type).getSubtypes() );
 							while ( paramIndex < numberOfParametersCoveredBy ) {
 								final String nextToken = tokens.nextToken();
 								if ( "?".equals( nextToken ) ) {
@@ -597,7 +596,7 @@ public final class QueryParameters {
 		int numberOfParameters = 0;
 		for ( Type type : subtypes ) {
 			if ( type.isComponentType() ) {
-				numberOfParameters = numberOfParameters + getNumberOfParametersCoveredBy( ((ComponentType) type).getSubtypes() );
+				numberOfParameters = numberOfParameters + getNumberOfParametersCoveredBy( ((CompositeType) type).getSubtypes() );
 			}
 			else {
 				numberOfParameters++;

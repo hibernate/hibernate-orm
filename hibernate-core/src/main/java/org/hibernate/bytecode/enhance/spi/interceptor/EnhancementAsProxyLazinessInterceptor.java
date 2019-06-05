@@ -143,7 +143,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		// skip initialization on call to identifier attribute setter
 		if ( ! identifierAttributeNames.contains( attributeName ) ) {
 			try {
-				forceInitialize( target, attributeName );
+				initializeEnhancedEntityUsedAsProxyAfterWrite( target, attributeName );
 			}
 			finally {
 				initialized = true;
@@ -151,6 +151,57 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		}
 
 		return newValue;
+	}
+
+	public Object initializeEnhancedEntityUsedAsProxyAfterWrite(Object target, String attributeName) {
+		BytecodeLogger.LOGGER.tracef(
+				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
+				entityKey.getEntityName(),
+				entityKey.getIdentifier(),
+				attributeName
+		);
+
+		return EnhancementHelper.performWork(
+				this,
+				(session, isTemporarySession) -> {
+					final EntityPersister persister = session.getFactory()
+							.getMetamodel()
+							.entityPersister( getEntityName() );
+
+					if ( isTemporarySession ) {
+						// Add an entry for this entity in the PC of the temp Session
+						// NOTE : a few arguments that would be nice to pass along here...
+						//		1) loadedState if we know any - since this is an uninitialized "proxy",
+						//		all attributes are not yet fetched
+						final Object[] loadedState = ArrayHelper.filledArray(
+								LazyPropertyInitializer.UNFETCHED_PROPERTY,
+								Object.class,
+								persister.getPropertyTypes().length
+						);
+						//		2) does a row exist in the db for this entity?
+						final boolean existsInDb = true;
+						session.getPersistenceContext().addEntity(
+								target,
+								Status.READ_ONLY,
+								loadedState,
+								entityKey,
+								persister.getVersion( target ),
+								LockMode.NONE,
+								existsInDb,
+								persister,
+								true
+						);
+					}
+
+					return persister.initializeEnhancedEntityUsedAsProxyAfterWrite(
+							target,
+							attributeName,
+							session
+					);
+				},
+				getEntityName(),
+				attributeName
+		);
 	}
 
 	@Override

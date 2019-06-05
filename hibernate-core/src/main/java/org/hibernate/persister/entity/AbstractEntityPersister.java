@@ -4352,6 +4352,43 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public Object initializeEnhancedEntityUsedAsProxyAfterWrite(
+			Object entity,
+			String nameOfAttributeBeingAccessed,
+			SharedSessionContractImplementor session) {
+		final BytecodeEnhancementMetadata enhancementMetadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
+		final BytecodeLazyAttributeInterceptor currentInterceptor = enhancementMetadata.extractLazyInterceptor( entity );
+		if ( currentInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+			final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) currentInterceptor;
+
+			final LazyAttributeLoadingInterceptor interceptor = enhancementMetadata.injectInterceptor(
+					entity,
+					proxyInterceptor.getEntityKey().getIdentifier(),
+					session
+			);
+
+			final Object value;
+			if ( nameOfAttributeBeingAccessed == null ) {
+				return null;
+			}
+			else if ( interceptor.isAttributeLoaded( nameOfAttributeBeingAccessed ) ) {
+				value = getEntityTuplizer().getPropertyValue( entity, nameOfAttributeBeingAccessed );
+			}
+			else {
+				value = ( (LazyPropertyInitializer) this ).initializeLazyProperty( nameOfAttributeBeingAccessed, entity, session );
+			}
+
+			return interceptor.readObject(
+					entity,
+					nameOfAttributeBeingAccessed,
+					value
+			);
+		}
+
+		throw new IllegalStateException(  );
+	}
+
+	@Override
 	public List multiLoad(Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
 		return DynamicBatchingEntityLoaderBuilder.INSTANCE.multiLoad(
 				this,

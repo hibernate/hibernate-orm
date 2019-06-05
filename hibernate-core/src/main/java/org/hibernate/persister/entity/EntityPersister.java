@@ -148,6 +148,15 @@ public interface EntityPersister extends EntityDefinition {
 		);
 	}
 
+	default Object initializeEnhancedEntityUsedAsProxyAfterWrite(
+			Object entity,
+			String nameOfAttributeBeingAccessed,
+			SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException(
+				"Initialization of entity enhancement used to act like a proxy is not supported by this EntityPersister : " + getClass().getName()
+		);
+	}
+
 	/**
 	 * Determine whether the given name represents a subclass entity
 	 * (or this entity itself) of the entity mapped by this persister.

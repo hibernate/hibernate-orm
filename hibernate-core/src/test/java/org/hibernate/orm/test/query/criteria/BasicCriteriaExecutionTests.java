@@ -88,7 +88,7 @@ public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTes
 
 		criteria.select( root );
 
-		criteria.orderBy(criteriaBuilder.asc(root.get("id")));
+		criteria.orderBy( criteriaBuilder.asc( root.get("id") ) );
 
 		sessionFactoryScope().inSession(
 				session -> session.createQuery( criteria ).list()

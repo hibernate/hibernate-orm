@@ -11,10 +11,6 @@ buildscript {
 	repositories {
 		jcenter()
 		mavenCentral()
-		maven {
-			name 'jboss-snapshots'
-			url 'http://repository.jboss.org/nexus/content/repositories/snapshots/'
-		}
 	}
 	dependencies {
 		classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'

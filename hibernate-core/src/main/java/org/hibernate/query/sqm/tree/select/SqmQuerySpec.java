@@ -328,7 +328,7 @@ public class SqmQuerySpec<T> implements SqmNode, SqmFromClauseContainer, SqmWher
 		if ( getOrderByClause() == null ) {
 			setOrderByClause( new SqmOrderByClause() );
 		}
-		getOrderByClause().addSortSpecification((SqmSortSpecification) sortSpecification);
+		getOrderByClause().addSortSpecification( (SqmSortSpecification) sortSpecification );
 		return this;
 	}
 

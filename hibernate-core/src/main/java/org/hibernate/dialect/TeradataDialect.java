@@ -37,8 +37,6 @@ import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
-
 /**
  * A dialect for the Teradata database created by MCR as part of the
  * dialect certification process.
@@ -110,36 +108,36 @@ public class TeradataDialect extends Dialect {
 
 	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
 		//TODO: TOTALLY UNTESTED CODE!
-		if (unit == NANOSECOND) {
-			sqlAppender.append("1e9*");
-
-		}
-		sqlAppender.append("((");
+		sqlAppender.append("cast((");
 		to.render();
 		sqlAppender.append(" - ");
 		from.render();
 		sqlAppender.append(") ");
 		switch (unit) {
 			case NANOSECOND:
-				sqlAppender.append("second(19,9)");
+				//default fractional precision is 6, the maximum
+				sqlAppender.append("second");
 				break;
 			case WEEK:
-				sqlAppender.append("day(19,0)");
+				sqlAppender.append("day");
 				break;
 			case QUARTER:
-				sqlAppender.append("month(19,0)");
+				sqlAppender.append("month");
 				break;
 			default:
 				sqlAppender.append( unit.toString() );
-				sqlAppender.append("(19,0)");
 		}
-		sqlAppender.append(")");
+		sqlAppender.append("(4)");
+		sqlAppender.append(" as bigint)");
 		switch (unit) {
 			case WEEK:
 				sqlAppender.append("/7");
 				break;
 			case QUARTER:
 				sqlAppender.append("/3");
+				break;
+			case NANOSECOND:
+				sqlAppender.append("*1e9");
 				break;
 		}
 	}

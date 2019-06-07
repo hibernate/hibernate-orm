@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.produce.function.spi;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
@@ -40,7 +41,7 @@ public class MultipatternSqmFunctionTemplate extends AbstractSqmFunctionTemplate
 	}
 
 	private static int last(SqmFunctionTemplate[] functions) {
-		return functions.length;
+		return functions.length-1;
 	}
 
 	/**
@@ -55,12 +56,15 @@ public class MultipatternSqmFunctionTemplate extends AbstractSqmFunctionTemplate
 	 *                  where array position corresponds to
 	 *                  arity.
 	 */
-	public MultipatternSqmFunctionTemplate(SqmFunctionTemplate[] functions) {
+	public MultipatternSqmFunctionTemplate(
+			SqmFunctionTemplate[] functions,
+			FunctionReturnTypeResolver type) {
 		super(
 				StandardArgumentsValidators.between(
 					first(functions),
 					last(functions)
-				)
+				),
+				type
 		);
 		this.functions = functions;
 	}

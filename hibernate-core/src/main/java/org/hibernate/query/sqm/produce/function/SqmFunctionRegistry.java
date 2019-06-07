@@ -289,15 +289,18 @@ public class SqmFunctionRegistry {
 			String pattern = patterns[i];
 			if ( pattern != null ) {
 				templates[i] =
-						patternTemplateBuilder(name, pattern)
-								.setExactArgumentCount(i)
-								.setInvariantType(type)
+						patternTemplateBuilder( name, pattern )
+								.setExactArgumentCount( i )
+								.setInvariantType( type )
 								.template();
 			}
 		}
 
-		MultipatternSqmFunctionTemplate function = new MultipatternSqmFunctionTemplate(templates);
-		register( name, function);
+		MultipatternSqmFunctionTemplate function = new MultipatternSqmFunctionTemplate(
+				templates,
+				StandardFunctionReturnTypeResolvers.invariant( type )
+		);
+		register( name, function );
 		return function;
 	}
 

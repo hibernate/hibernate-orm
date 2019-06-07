@@ -44,7 +44,7 @@ public class MySQLExtractEmulation
 	public MySQLExtractEmulation() {
 		super(
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.useArgType( 1 )
 		);
 	}
 

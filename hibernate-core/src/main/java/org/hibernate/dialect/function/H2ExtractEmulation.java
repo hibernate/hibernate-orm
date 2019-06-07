@@ -36,7 +36,7 @@ public class H2ExtractEmulation
 	public H2ExtractEmulation() {
 		super(
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.useArgType( 1 )
 		);
 	}
 

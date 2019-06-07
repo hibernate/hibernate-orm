@@ -47,7 +47,7 @@ public class RDMSExtractEmulation
 	public RDMSExtractEmulation() {
 		super(
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.useArgType( 1 )
 		);
 	}
 

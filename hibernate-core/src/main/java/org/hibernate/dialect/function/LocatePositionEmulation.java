@@ -43,6 +43,6 @@ public class LocatePositionEmulation
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(arg0 in arg1)";
+		return "(pattern in string)";
 	}
 }

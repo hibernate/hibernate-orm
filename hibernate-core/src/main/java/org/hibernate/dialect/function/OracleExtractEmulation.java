@@ -41,7 +41,7 @@ public class OracleExtractEmulation
 	public OracleExtractEmulation() {
 		super(
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.useArgType( 1 )
 		);
 	}
 

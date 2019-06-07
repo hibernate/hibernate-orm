@@ -74,7 +74,7 @@ public class TimestampWithTimeZoneSqlDescriptor extends AbstractTemplateSqlTypeD
 					// supposed to be supported in JDBC 4.2
 					st.setObject( index, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
 				}
-				catch (SQLException e) {
+				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
 					final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, executionContext.getSession() );
 					st.setTimestamp( index, timestamp );
@@ -93,7 +93,7 @@ public class TimestampWithTimeZoneSqlDescriptor extends AbstractTemplateSqlTypeD
 					// supposed to be supported in JDBC 4.2
 					st.setObject( name, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
 				}
-				catch (SQLException e) {
+				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
 					final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, executionContext.getSession() );
 					st.setTimestamp( name, timestamp );
@@ -113,7 +113,7 @@ public class TimestampWithTimeZoneSqlDescriptor extends AbstractTemplateSqlTypeD
 					// supposed to be supported in JDBC 4.2
 					return javaTypeDescriptor.wrap( rs.getObject( position, OffsetDateTime.class ), executionContext.getSession() );
 				}
-				catch (SQLException e) {
+				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
 					return javaTypeDescriptor.wrap( rs.getTimestamp( position ), executionContext.getSession() );
 				}
@@ -125,7 +125,7 @@ public class TimestampWithTimeZoneSqlDescriptor extends AbstractTemplateSqlTypeD
 					// supposed to be supported in JDBC 4.2
 					return javaTypeDescriptor.wrap( statement.getObject( position, OffsetDateTime.class ), executionContext.getSession() );
 				}
-				catch (SQLException e) {
+				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
 					return javaTypeDescriptor.wrap( statement.getTimestamp( position ), executionContext.getSession() );
 				}
@@ -137,7 +137,7 @@ public class TimestampWithTimeZoneSqlDescriptor extends AbstractTemplateSqlTypeD
 					// supposed to be supported in JDBC 4.2
 					return javaTypeDescriptor.wrap( statement.getObject( name, OffsetDateTime.class ), executionContext.getSession() );
 				}
-				catch (SQLException e) {
+				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
 					return javaTypeDescriptor.wrap( statement.getTimestamp( name ), executionContext.getSession() );
 				}

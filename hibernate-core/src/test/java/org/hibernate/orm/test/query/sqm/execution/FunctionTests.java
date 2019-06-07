@@ -216,6 +216,15 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list().get(0), is("xxyyxx") );
 					assertThat( session.createQuery("select overlay('xxxxxx' placing ' yy ' from 3 for 2) from EntityOfBasics")
 							.list().get(0), is("xx yy xx") );
+
+					session.createQuery("select overlay(?2 placing ?1 from 3) from EntityOfBasics")
+							.setParameter(1, "yy")
+							.setParameter(2, "xxxxxx")
+							.list();
+					session.createQuery("select overlay(:text placing :rep from 3) from EntityOfBasics")
+							.setParameter("rep", "yy")
+							.setParameter("text", "xxxxxx")
+							.list();
 				}
 		);
 	}

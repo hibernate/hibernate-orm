@@ -175,7 +175,7 @@ public class DomainParameterXref {
 
 	public void addCriteriaAdjustment(
 			QueryParameterImplementor<?> domainParam,
-			SqmCriteriaParameter originalSqmParameter,
+			SqmParameter originalSqmParameter,
 			SqmParameter adjustment) {
 		QueryLogger.QUERY_LOGGER.debugf( "Adding JPA-param xref adjustment : %s", originalSqmParameter );
 		sqmParamsByQueryParam.get( domainParam ).add( adjustment );

@@ -707,12 +707,13 @@ public abstract class BaseSqmToSqlAstConverter
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
 		if ( jdbcParamsBySqmParam.containsKey( sqmParameter ) ) {
-			// this is a "correction" in the case where a Criteria
-			assert sqmParameter instanceof SqmCriteriaParameter;
 			final SqmParameter copy = sqmParameter.copy();
+			//Note: this is not necessarily only for Criteria
+			//      queries ... can also happen when we have
+			//      fancy function emulation
 			domainParameterXref.addCriteriaAdjustment(
 					domainParameterXref.getQueryParameter( sqmParameter ),
-					(SqmCriteriaParameter) sqmParameter,
+					sqmParameter,
 					copy
 			);
 

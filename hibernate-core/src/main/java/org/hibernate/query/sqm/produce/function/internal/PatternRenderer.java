@@ -91,10 +91,6 @@ public class PatternRenderer {
 //		return pattern;
 //	}
 
-	public int getAnticipatedNumberOfArguments() {
-		return paramIndexes.length;
-	}
-
 	public int getParamCount() {
 		return paramCount;
 	}
@@ -110,8 +106,8 @@ public class PatternRenderer {
 			List<SqlAstNode> args,
 			SqlAstWalker walker) {
 		final int numberOfArguments = args.size();
-		if ( getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments() ) {
-			LOG.missingArguments( getAnticipatedNumberOfArguments(), numberOfArguments );
+		if ( numberOfArguments != paramCount ) {
+			LOG.missingArguments( paramCount, numberOfArguments );
 		}
 
 		for ( int i = 0; i < chunks.length; ++i ) {

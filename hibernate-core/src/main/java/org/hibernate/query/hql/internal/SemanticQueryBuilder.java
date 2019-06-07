@@ -68,6 +68,7 @@ import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.internal.SqmDmlCreationProcessingState;
 import org.hibernate.query.sqm.produce.internal.SqmQuerySpecCreationProcessingStateStandardImpl;
@@ -166,6 +167,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.jboss.logging.Logger;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
@@ -2122,7 +2124,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		SqmFunctionTemplate functionTemplate = getFunctionTemplate( functionName );
 		if (functionTemplate == null) {
-			functionTemplate = new NamedSqmFunctionTemplate( functionName, true, null, null );
+			functionTemplate = new NamedSqmFunctionTemplate( functionName, true, null,
+					StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.OBJECT_TYPE ) );
 		}
 		return functionTemplate.makeSqmFunctionExpression(
 				functionArguments,
@@ -2149,7 +2152,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		SqmFunctionTemplate functionTemplate = getFunctionTemplate(functionName);
 		if (functionTemplate == null) {
-			functionTemplate = new NamedSqmFunctionTemplate( functionName, true, null, null );
+			functionTemplate = new NamedSqmFunctionTemplate( functionName, true, null,
+					StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.OBJECT_TYPE ) );
 		}
 		return functionTemplate.makeSqmFunctionExpression(
 				functionArguments,

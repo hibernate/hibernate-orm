@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.sql.SqlExpressableType;
@@ -102,14 +103,18 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		SqlExpressableType type = getExpressableType();
+		if ( type==null ) {
+			throw new SemanticException("function return type is unknown, so function cannot occur in select");
+		}
 		return new BasicResultImpl(
 				resultVariable,
 				creationState.getSqlExpressionResolver().resolveSqlSelection(
 						this,
-						getExpressableType().getJavaTypeDescriptor(),
+						type.getJavaTypeDescriptor(),
 						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 				),
-				getExpressableType()
+				type
 		);
 	}
 

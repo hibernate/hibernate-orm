@@ -180,6 +180,7 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
+		CommonFunctionFactory.overlayCharacterLength_overlay( queryEngine );
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );

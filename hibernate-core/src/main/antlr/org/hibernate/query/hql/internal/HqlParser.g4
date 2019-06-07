@@ -650,6 +650,7 @@ standardFunction
 	| substringFunction
 	| leftFunction
 	| rightFunction
+	| overlayFunction
 	| replaceFunction
 	| trimFunction
 	| upperFunction
@@ -751,6 +752,26 @@ locateFunctionStringArgument
 	;
 
 locateFunctionStartArgument
+	: expression
+	;
+
+overlayFunction
+	: OVERLAY LEFT_PAREN overlayFunctionStringArgument PLACING overlayFunctionReplacementArgument FROM overlayFunctionStartArgument (FOR overlayFunctionLengthArgument)? RIGHT_PAREN
+	;
+
+overlayFunctionStringArgument
+	: expression
+	;
+
+overlayFunctionReplacementArgument
+	: expression
+	;
+
+overlayFunctionStartArgument
+	: expression
+	;
+
+overlayFunctionLengthArgument
 	: expression
 	;
 

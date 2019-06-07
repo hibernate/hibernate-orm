@@ -28,6 +28,7 @@ import java.util.List;
 public class MultipatternSqmFunctionTemplate extends AbstractSqmFunctionTemplate {
 
 	private SqmFunctionTemplate[] functions;
+	private String argumentListSignature;
 
 	private static int first(SqmFunctionTemplate[] functions) {
 		for (int i=0; i<functions.length; i++) {
@@ -77,5 +78,16 @@ public class MultipatternSqmFunctionTemplate extends AbstractSqmFunctionTemplate
 						queryEngine,
 						typeConfiguration
 				);
+	}
+
+	@Override
+	public String getArgumentListSignature() {
+		return argumentListSignature == null
+				? super.getArgumentListSignature()
+				: argumentListSignature;
+	}
+
+	public void setArgumentListSignature(String argumentListSignature) {
+		this.argumentListSignature = argumentListSignature;
 	}
 }

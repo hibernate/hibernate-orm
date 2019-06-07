@@ -307,6 +307,7 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
 		CommonFunctionFactory.insert_overlay( queryEngine );
+		CommonFunctionFactory.overlay( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine ); //was introduced in Postgres 9 apparently
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new PostgresExtractEmulation() );

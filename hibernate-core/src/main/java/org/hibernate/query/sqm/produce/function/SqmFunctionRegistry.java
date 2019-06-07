@@ -232,12 +232,12 @@ public class SqmFunctionRegistry {
 	 *
 	 * i.e. a function which accepts 0-1 arguments.
 	 */
-	public void registerNullaryUnaryPattern(
+	public MultipatternSqmFunctionTemplate registerNullaryUnaryPattern(
 			String name,
 			StandardBasicTypes.StandardBasicType<?> type,
 			String pattern0,
 			String pattern1) {
-		registerPatterns( name, type, pattern0, pattern1 );
+		return registerPatterns( name, type, pattern0, pattern1 );
 	}
 
 	/**
@@ -245,12 +245,12 @@ public class SqmFunctionRegistry {
 	 *
 	 * i.e. a function which accepts 1-2 arguments.
 	 */
-	public void registerUnaryBinaryPattern(
+	public MultipatternSqmFunctionTemplate registerUnaryBinaryPattern(
 			String name,
 			StandardBasicTypes.StandardBasicType<?> type,
 			String pattern1,
 			String pattern2) {
-		registerPatterns( name, type, null, pattern1, pattern2 );
+		return registerPatterns( name, type, null, pattern1, pattern2 );
 	}
 
 	/**
@@ -258,15 +258,28 @@ public class SqmFunctionRegistry {
 	 *
 	 * i.e. a function which accepts 2-3 arguments.
 	 */
-	public void registerBinaryTernaryPattern(
+	public MultipatternSqmFunctionTemplate registerBinaryTernaryPattern(
 			String name,
 			StandardBasicTypes.StandardBasicType<?> type,
 			String pattern2,
 			String pattern3) {
-		registerPatterns( name, type, null, null, pattern2, pattern3 );
+		return registerPatterns( name, type, null, null, pattern2, pattern3 );
 	}
 
-	private void registerPatterns(
+	/**
+	 * Register a ternary/quaternary function.
+	 *
+	 * i.e. a function which accepts 3-4 arguments.
+	 */
+	public MultipatternSqmFunctionTemplate registerTernaryQuaternaryPattern(
+			String name,
+			StandardBasicTypes.StandardBasicType<?> type,
+			String pattern3,
+			String pattern4) {
+		return registerPatterns( name, type, null, null, null, pattern3, pattern4 );
+	}
+
+	private MultipatternSqmFunctionTemplate registerPatterns(
 			String name,
 			StandardBasicTypes.StandardBasicType<?> type,
 			String... patterns) {
@@ -283,7 +296,9 @@ public class SqmFunctionRegistry {
 			}
 		}
 
-		register( name, new MultipatternSqmFunctionTemplate(templates) );
+		MultipatternSqmFunctionTemplate function = new MultipatternSqmFunctionTemplate(templates);
+		register( name, function);
+		return function;
 	}
 
 }

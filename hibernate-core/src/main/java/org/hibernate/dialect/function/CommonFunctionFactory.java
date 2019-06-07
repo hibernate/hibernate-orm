@@ -1102,6 +1102,28 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * ANSI SQL form, supported by Postgres, HSQL
+	 */
+	public static void overlay(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerTernaryQuaternaryPattern("overlay", StandardSpiBasicTypes.STRING,
+				"overlay(?1 placing ?2 from ?3)",
+				"overlay(?1 placing ?2 from ?3 for ?4)")
+				.setArgumentListSignature("(string placing replacement from start[ for length])");
+	}
+
+	/**
+	 * For DB2 which has a broken implementation of overlay()
+	 */
+	public static void overlayCharacterLength_overlay(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerTernaryQuaternaryPattern("overlay", StandardSpiBasicTypes.STRING,
+				//use character_length() here instead of length()
+				//because DB2 doesn't like "length(?)"
+				"overlay(?1 placing ?2 from ?3 for character_length(?2))",
+				"overlay(?1 placing ?2 from ?3 for ?4)")
+				.setArgumentListSignature("(string placing replacement from start[ for length])");
+	}
+
 	public static void replace(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("replace")
 				.setInvariantType( StandardSpiBasicTypes.STRING )

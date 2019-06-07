@@ -42,6 +42,7 @@ import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CurrentFunction;
+import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
@@ -402,10 +403,15 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.length_characterLength(queryEngine);
 
-		//Very few databases support ANSI-style position() function, so define
+		//Only some databases support ANSI-style position() function, so define
 		//it here as an alias for locate()
 
 		queryEngine.getSqmFunctionRegistry().register("position", new LocatePositionEmulation());
+
+		//Very few databases support ANSI-style overlay() function, so define
+		//it here in terms of either insert() or concat()/substring()
+
+		queryEngine.getSqmFunctionRegistry().register("overlay", new InsertSubstringOverlayEmulation());
 
 		//ANSI SQL functions with weird syntax, not supported on every database
 

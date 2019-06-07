@@ -205,6 +205,22 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testOverlayFunction() {
+		inTransaction(
+				session -> {
+					assertThat( session.createQuery("select overlay('hello world' placing 'goodbye' from 1 for 5) from EntityOfBasics")
+							.list().get(0), is("goodbye world") );
+					assertThat( session.createQuery("select overlay('hello world' placing 'goodbye' from 7 for 5) from EntityOfBasics")
+							.list().get(0), is("hello goodbye") );
+					assertThat( session.createQuery("select overlay('xxxxxx' placing 'yy' from 3) from EntityOfBasics")
+							.list().get(0), is("xxyyxx") );
+					assertThat( session.createQuery("select overlay('xxxxxx' placing ' yy ' from 3 for 2) from EntityOfBasics")
+							.list().get(0), is("xx yy xx") );
+				}
+		);
+	}
+
+	@Test
 	public void testReplaceFunction() {
 		inTransaction(
 				session -> {

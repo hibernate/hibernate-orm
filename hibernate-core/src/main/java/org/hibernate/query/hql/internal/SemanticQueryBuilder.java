@@ -2812,6 +2812,26 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public Object visitOverlayFunction(HqlParser.OverlayFunctionContext ctx) {
+
+		final SqmExpression<?> string = (SqmExpression) ctx.overlayFunctionStringArgument().accept( this );
+		final SqmExpression<?> replacement = (SqmExpression) ctx.overlayFunctionReplacementArgument().accept( this );
+		final SqmExpression<?> start = (SqmExpression) ctx.overlayFunctionStartArgument().accept( this );
+		final SqmExpression<?> length = ctx.overlayFunctionLengthArgument() == null
+				? null
+				: (SqmExpression) ctx.overlayFunctionLengthArgument().accept( this );
+
+		return getFunctionTemplate("overlay").makeSqmFunctionExpression(
+				length == null
+						? asList( string, replacement, start )
+						: asList( string, replacement, start, length ),
+				basicType( String.class ),
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
+		);
+	}
+
+	@Override
 	public Object visitReplaceFunction(HqlParser.ReplaceFunctionContext ctx) {
 
 		final SqmExpression<?> string = (SqmExpression) ctx.replaceFunctionStringArgument().accept( this );

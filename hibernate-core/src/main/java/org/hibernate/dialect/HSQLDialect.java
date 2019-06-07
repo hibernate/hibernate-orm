@@ -197,6 +197,7 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
 		CommonFunctionFactory.insert( queryEngine );
+		CommonFunctionFactory.overlay( queryEngine );
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );

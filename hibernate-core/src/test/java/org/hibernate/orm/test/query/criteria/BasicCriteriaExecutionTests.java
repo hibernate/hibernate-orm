@@ -77,4 +77,21 @@ public class BasicCriteriaExecutionTests extends BaseSessionFactoryFunctionalTes
 				session -> session.createQuery( criteria ).setParameter( param, 1 ).list()
 		);
 	}
+
+	@Test
+	public void testExecutingBasicCriteriaQueryOrderBy() {
+		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getQueryEngine().getCriteriaBuilder();
+
+		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+
+		final JpaRoot<BasicEntity> root = criteria.from( BasicEntity.class );
+
+		criteria.select( root );
+
+		criteria.orderBy(criteriaBuilder.asc(root.get("id")));
+
+		sessionFactoryScope().inSession(
+				session -> session.createQuery( criteria ).list()
+		);
+	}
 }

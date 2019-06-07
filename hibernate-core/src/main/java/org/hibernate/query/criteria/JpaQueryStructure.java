@@ -84,6 +84,7 @@ public interface JpaQueryStructure<T> extends JpaCriteriaNode {
 
 	JpaQueryStructure<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
 
+	JpaQueryStructure<T> setSortSpecification(JpaOrder sortSpecifications);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit clause

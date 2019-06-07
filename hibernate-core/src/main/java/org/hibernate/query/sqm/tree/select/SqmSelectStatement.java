@@ -135,7 +135,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public SqmSelectStatement<T> orderBy(Order... orders) {
 		for ( Order order : orders ) {
-			getQuerySpec().getOrderByClause().addSortSpecification( (SqmSortSpecification) order );
+			getQuerySpec().setSortSpecification((SqmSortSpecification) order);
 		}
 		return this;
 	}
@@ -143,7 +143,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public SqmSelectStatement<T> orderBy(List<Order> orders) {
 		for ( Order order : orders ) {
-			getQuerySpec().getOrderByClause().addSortSpecification( (SqmSortSpecification) order );
+			getQuerySpec().setSortSpecification((SqmSortSpecification) order);
 		}
 		return this;
 	}

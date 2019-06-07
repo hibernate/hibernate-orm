@@ -324,6 +324,15 @@ public class SqmQuerySpec<T> implements SqmNode, SqmFromClauseContainer, SqmWher
 	}
 
 	@Override
+	public JpaQueryStructure<T> setSortSpecification(JpaOrder sortSpecification) {
+		if ( getOrderByClause() == null ) {
+			setOrderByClause( new SqmOrderByClause() );
+		}
+		getOrderByClause().addSortSpecification((SqmSortSpecification) sortSpecification);
+		return this;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public SqmExpression getLimit() {
 		return getLimitExpression();

@@ -21,6 +21,12 @@ public enum Database {
 	CACHE {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
+			final String databaseName = info.getDatabaseName();
+
+			if ( databaseName.startsWith( "Cache" ) ) {
+				return new CacheDialect();
+			}
+
 			return null;
 		}
 	},
@@ -104,6 +110,12 @@ public enum Database {
 	FRONTBASE {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
+			final String databaseName = info.getDatabaseName();
+
+			if ( databaseName.startsWith( "FrontBase" ) ) {
+				return new FrontBaseDialect();
+			}
+
 			return null;
 		}
 	},
@@ -147,9 +159,10 @@ public enum Database {
 	INFORMIX {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
+			final String databaseName = info.getDatabaseName().toLowerCase();
 
-			if ( "Informix Dynamic Server".equals( databaseName ) ) {
+			//usually "Informix Dynamic Server"
+			if ( databaseName.startsWith("informix") ) {
 				return new InformixDialect(info);
 			}
 
@@ -159,9 +172,9 @@ public enum Database {
 	INGRES {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
+			final String databaseName = info.getDatabaseName().toLowerCase();
 
-			if ( "ingres".equalsIgnoreCase( databaseName ) ) {
+			if ( databaseName.startsWith("ingres") ) {
 				return new IngresDialect(info);
 			}
 			return null;
@@ -170,6 +183,11 @@ public enum Database {
 	INTERBASE {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
+			final String databaseName = info.getDatabaseName().toLowerCase();
+
+			if ( databaseName.startsWith("interbase") ) {
+				return new InterbaseDialect();
+			}
 			return null;
 		}
 	},
@@ -188,9 +206,9 @@ public enum Database {
 	MAXDB {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
+			final String databaseName = info.getDatabaseName().toLowerCase();
 
-			if ("SAP DB".equalsIgnoreCase( databaseName ) ) {
+			if ( databaseName.startsWith("sap db") || databaseName.startsWith("maxdb") ) {
 				return new SAPDBDialect();
 			}
 
@@ -200,6 +218,12 @@ public enum Database {
 	MCKOI {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
+			final String databaseName = info.getDatabaseName().toLowerCase();
+
+			if ( databaseName.startsWith("mckoi") ) {
+				return new MckoiDialect();
+			}
+
 			return null;
 		}
 	},
@@ -242,6 +266,11 @@ public enum Database {
 	POINTBASE {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
+			final String databaseName = info.getDatabaseName().toLowerCase();
+
+			if ( databaseName.startsWith("pointbase") ) {
+				return new PointbaseDialect();
+			}
 			return null;
 		}
 	},
@@ -260,6 +289,12 @@ public enum Database {
 	PROGRESS {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
+			final String databaseName = info.getDatabaseName().toLowerCase();
+
+			if ( databaseName.startsWith("progress") || databaseName.startsWith("openedge") ) {
+				return new ProgressDialect();
+			}
+
 			return null;
 		}
 	},
@@ -280,7 +315,8 @@ public enum Database {
 		public Dialect resolveDialect(DialectResolutionInfo info) {
 			final String databaseName = info.getDatabaseName();
 
-			if ( "Sybase SQL Server".equals( databaseName ) || "Adaptive Server Enterprise".equals( databaseName ) ) {
+			if ( "Sybase SQL Server".equals( databaseName ) || "Adaptive Server Enterprise".equals( databaseName )
+					|| databaseName.toLowerCase().startsWith( "ase" ) ) {
 				return new SybaseASEDialect(info);
 			}
 
@@ -296,7 +332,7 @@ public enum Database {
 		public Dialect resolveDialect(DialectResolutionInfo info) {
 			final String databaseName = info.getDatabaseName();
 
-			if ( databaseName.equals( "Teradata" ) ) {
+			if ( "Teradata".equals( databaseName ) ) {
 				return new TeradataDialect(info);
 			}
 			return null;
@@ -305,6 +341,11 @@ public enum Database {
 	TIMESTEN {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
+			final String databaseName = info.getDatabaseName().toLowerCase();
+
+			if ( databaseName.startsWith("timesten") ) {
+				return new TimesTenDialect();
+			}
 			return null;
 		}
 	};

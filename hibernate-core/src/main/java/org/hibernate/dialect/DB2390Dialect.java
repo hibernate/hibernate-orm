@@ -11,6 +11,7 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.RowSelection;
 
 
@@ -26,6 +27,10 @@ public class DB2390Dialect extends DB2Dialect {
 
 	int get390Version() {
 		return version;
+	}
+
+	public DB2390Dialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() );
 	}
 
 	public DB2390Dialect() {

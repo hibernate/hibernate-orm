@@ -10,7 +10,10 @@ package org.hibernate.dialect;
  * Dialect for Derby 10.7
  *
  * @author Strong Liu
+ *
+ * @deprecated use {@code DerbyDialect(1070)}
  */
+@Deprecated
 public class DerbyTenSevenDialect extends DerbyDialect {
 
 	public DerbyTenSevenDialect() {

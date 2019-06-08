@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -22,6 +23,10 @@ public class MariaDBDialect extends MySQLDialect {
 
 	private final int version;
 
+	int getMariaVersion() {
+		return version;
+	}
+
 	public MariaDBDialect() {
 		this(500);
 	}
@@ -31,6 +36,10 @@ public class MariaDBDialect extends MySQLDialect {
 		this.version = version;
 	}
 
+	public MariaDBDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
@@ -38,10 +47,6 @@ public class MariaDBDialect extends MySQLDialect {
 		if ( getMariaVersion() >= 1020 ) {
 			queryEngine.getSqmFunctionRegistry().registerNamed("json_valid", StandardSpiBasicTypes.NUMERIC_BOOLEAN);
 		}
-	}
-
-	int getMariaVersion() {
-		return version;
 	}
 
 	public boolean supportsRowValueConstructorSyntaxInInList() {

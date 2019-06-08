@@ -10,10 +10,14 @@ package org.hibernate.dialect;
  * An SQL dialect for Postgres 8.2 and later, adds support for "if exists" when dropping tables
  * 
  * @author edalquist
+ *
+ * @deprecated use {@code PostgreSQLDialect(820)}
  */
+@Deprecated
 public class PostgreSQL82Dialect extends PostgreSQLDialect {
 
 	public PostgreSQL82Dialect() {
 		super(820);
 	}
+
 }

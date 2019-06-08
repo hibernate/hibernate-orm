@@ -8,7 +8,10 @@ package org.hibernate.dialect;
 
 /**
  * A dialect for the Teradata 14
+ *
+ * @deprecated use {@code TeradataDialect(14)}
  */
+@Deprecated
 public class Teradata14Dialect extends TeradataDialect {
 
 	public Teradata14Dialect() {

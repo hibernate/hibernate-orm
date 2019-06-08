@@ -14,6 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.RowSelection;
@@ -43,6 +44,10 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	private final LimitHandler limitHandler = new DerbyLimitHandler();
+
+	public DerbyDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+	}
 
 	public DerbyDialect() {
 		this(1000);

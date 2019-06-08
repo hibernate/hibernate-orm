@@ -21,15 +21,16 @@ import org.hibernate.sql.ForUpdateFragment;
 
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15.7 and higher.
- * <p/>
  *
  * @author Junyan Ren
+ *
+ * @deprecated use {@code SybaseASEDialect(1570)}
  */
-public class SybaseASE157Dialect extends SybaseASE15Dialect {
+@Deprecated
+public class SybaseASE157Dialect extends SybaseASEDialect {
 
-	@Override
-	int getVersion() {
-		return 1570;
+	public SybaseASE157Dialect() {
+		super(1570);
 	}
 
 }

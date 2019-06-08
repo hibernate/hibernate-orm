@@ -6,6 +6,12 @@
  */
 package org.hibernate.dialect;
 
+/**
+ * A dialect for Oracle 8i databases.
+ *
+ * @deprecated use {@code OracleDialect(8)}
+ */
+@Deprecated
 public class Oracle8iDialect extends OracleDialect {
 
 	public Oracle8iDialect() {

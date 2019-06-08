@@ -6,11 +6,10 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
-
-import java.sql.Types;
-
+/**
+ * @deprecated use {@code MariaDBDialect(1020)}
+ */
+@Deprecated
 public class MariaDB102Dialect extends MariaDBDialect {
 
 	public MariaDB102Dialect() {

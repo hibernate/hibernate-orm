@@ -12,7 +12,10 @@ package org.hibernate.dialect;
  * after ALTER TABLE.
  * 
  * @author Mark Robinson
+ *
+ * @deprecated use {@code PostgreSQLDialect(920)}
  */
+@Deprecated
 public class PostgreSQL92Dialect extends PostgreSQLDialect {
 
 	public PostgreSQL92Dialect() {

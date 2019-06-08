@@ -11,8 +11,10 @@ package org.hibernate.dialect;
  *
  * @author Simon Johnston
  * @author Scott Marlow
+ *
+ * @deprecated use {@code DerbyDialect(1050)}
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class DerbyTenFiveDialect extends DerbyDialect {
 
 	public DerbyTenFiveDialect() {

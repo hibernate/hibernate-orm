@@ -20,6 +20,7 @@ import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -44,6 +45,10 @@ public class InformixDialect extends Dialect {
 
 	int getVersion() {
 		return version;
+	}
+
+	public InformixDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() );
 	}
 
 	private final UniqueDelegate uniqueDelegate;

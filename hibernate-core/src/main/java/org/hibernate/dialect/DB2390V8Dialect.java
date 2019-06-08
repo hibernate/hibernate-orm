@@ -11,7 +11,10 @@ package org.hibernate.dialect;
  * An SQL dialect for DB2/390 version 8.
  *
  * @author Tobias Sternvik
+ *
+ * @deprecated use {@code DB2390Dialect(8)}
  */
+@Deprecated
 public class DB2390V8Dialect extends DB2390Dialect {
 
 	public DB2390V8Dialect() {

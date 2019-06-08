@@ -11,7 +11,10 @@ package org.hibernate.dialect;
  *
  * @author Yoryos Valotasios
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ *
+ * @deprecated use {@code SQLServerDialect(9)}
  */
+@Deprecated
 public class SQLServer2005Dialect extends SQLServerDialect {
 
 	public SQLServer2005Dialect() {

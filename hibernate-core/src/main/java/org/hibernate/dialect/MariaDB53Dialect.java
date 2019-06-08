@@ -8,7 +8,10 @@ package org.hibernate.dialect;
 
 /**
  * @author Vlad Mihalcea
+ *
+ * @deprecated use {@code MariaDBDialect(530)}
  */
+@Deprecated
 public class MariaDB53Dialect extends MariaDBDialect {
 
 	public MariaDB53Dialect() {

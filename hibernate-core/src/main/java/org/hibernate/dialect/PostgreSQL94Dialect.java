@@ -7,8 +7,12 @@
 package org.hibernate.dialect;
 
 /**
- * An SQL dialect for Postgres 9.4 and later. Adds support for various date and time functions
+ * An SQL dialect for Postgres 9.4 and later.
+ * Adds support for various date and time functions
+ *
+ * @deprecated use {@code PostgreSQLDialect(940)}
  */
+@Deprecated
 public class PostgreSQL94Dialect extends PostgreSQLDialect {
 
 	public PostgreSQL94Dialect() {

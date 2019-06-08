@@ -6,6 +6,10 @@
  */
 package org.hibernate.dialect;
 
+/**
+ * @deprecated use {@code MariaDBDialect(1000)}
+ */
+@Deprecated
 public class MariaDB10Dialect extends MariaDBDialect {
 
 	public MariaDB10Dialect() {

@@ -8,11 +8,12 @@ package org.hibernate.dialect;
 
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15 and higher.
- * <p/>
- * TODO : verify if this also works with 12/12.5
  *
  * @author Gavin King
+ *
+ * @deprecated use {@code SybaseASEDialect(1500)}
  */
+@Deprecated
 public class SybaseASE15Dialect extends SybaseASEDialect {
 
 	public SybaseASE15Dialect() {

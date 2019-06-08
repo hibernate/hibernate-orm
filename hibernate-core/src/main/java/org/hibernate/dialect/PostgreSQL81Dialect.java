@@ -6,6 +6,10 @@
  */
 package org.hibernate.dialect;
 
+/**
+ * @deprecated use {@code PostgreSQLDialect(810)}
+ */
+@Deprecated
 public class PostgreSQL81Dialect extends PostgreSQLDialect {
 
 	public PostgreSQL81Dialect() {

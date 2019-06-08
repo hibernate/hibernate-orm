@@ -3446,7 +3446,7 @@ public abstract class Dialect implements ConversionContext {
 		//most databases support a datetime format
 		//copied from Oracle's to_char() function,
 		//with some minor variation
-		return Oracle8iDialect.datetimeFormat( format, true ).result();
+		return OracleDialect.datetimeFormat( format, true ).result();
 	}
 
 	public String translateExtractField(TemporalUnit unit) {

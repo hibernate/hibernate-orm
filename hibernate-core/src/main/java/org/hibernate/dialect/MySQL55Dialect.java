@@ -10,7 +10,10 @@ package org.hibernate.dialect;
  * An SQL dialect for MySQL 5.5.x specific features.
  *
  * @author Vlad Mihalcea
+ *
+ * @deprecated use {@code MySQLDialect(550)}
  */
+@Deprecated
 public class MySQL55Dialect extends MySQLDialect {
 
 	public MySQL55Dialect() {

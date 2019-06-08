@@ -4,6 +4,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SybaseASE157LimitHandler;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -28,6 +29,10 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	int getVersion() {
 		return version;
+	}
+
+	public SybaseASEDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
 
 	public SybaseASEDialect() {

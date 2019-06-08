@@ -14,7 +14,10 @@ package org.hibernate.dialect;
  * "ANSI join syntax".
  *
  * @author Steve Ebersole
+ *
+ * @deprecated use {@code OracleDialect(10)}
  */
+@Deprecated
 public class Oracle10gDialect extends OracleDialect {
 
 	public Oracle10gDialect() {

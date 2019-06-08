@@ -11,7 +11,10 @@ package org.hibernate.dialect;
  * Adds support for "if exists" when dropping constraints
  * 
  * @author edalquist
+ *
+ * @deprecated use {@code PostgreSQLDialect(900)}
  */
+@Deprecated
 public class PostgreSQL9Dialect extends PostgreSQLDialect {
 
 	public PostgreSQL9Dialect() {

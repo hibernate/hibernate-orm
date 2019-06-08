@@ -11,7 +11,10 @@ package org.hibernate.dialect;
  * Adds support for Materialized view.
  *
  * @author Dionis Argiri
+ *
+ * @deprecated use {@code PostgreSQLDialect(810)}
  */
+@Deprecated
 public class PostgreSQL93Dialect extends PostgreSQLDialect {
 
 	public PostgreSQL93Dialect() {

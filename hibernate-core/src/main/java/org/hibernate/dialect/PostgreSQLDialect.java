@@ -13,6 +13,7 @@ import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -75,6 +76,10 @@ public class PostgreSQLDialect extends Dialect {
 
 	int getVersion() {
 		return version;
+	}
+
+	public PostgreSQLDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
@@ -770,7 +775,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public Replacer datetimeFormat(String format) {
-		return Oracle8iDialect.datetimeFormat(format, true)
+		return OracleDialect.datetimeFormat(format, true)
 				.replace("SSSSSS", "US")
 				.replace("SSSSS", "US")
 				.replace("SSSS", "US")

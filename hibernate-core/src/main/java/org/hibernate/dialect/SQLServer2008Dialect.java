@@ -10,7 +10,10 @@ package org.hibernate.dialect;
  * A dialect for Microsoft SQL Server 2008 with JDBC Driver 3.0 and above
  *
  * @author Gavin King
+ *
+ * @deprecated use {@code SQLServerDialect(10)}
  */
+@Deprecated
 public class SQLServer2008Dialect extends SQLServerDialect {
 
 	public SQLServer2008Dialect() {

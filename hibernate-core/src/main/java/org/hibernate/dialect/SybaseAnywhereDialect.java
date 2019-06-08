@@ -14,7 +14,6 @@ import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 
 /**
  * SQL Dialect for Sybase Anywhere
- * extending Sybase (Enterprise) Dialect
  * (Tested on ASA 8.x)
  */
 public class SybaseAnywhereDialect extends SybaseDialect {

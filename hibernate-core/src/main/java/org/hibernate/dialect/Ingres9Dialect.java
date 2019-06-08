@@ -22,7 +22,10 @@ package org.hibernate.dialect;
  *
  * @author Enrico Schenk
  * @author Raymond Fan
+ *
+ * @deprecated use {@code IngresDialect(930)}
  */
+@Deprecated
 public class Ingres9Dialect extends IngresDialect {
 
 	public Ingres9Dialect() {

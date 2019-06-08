@@ -10,7 +10,10 @@ package org.hibernate.dialect;
  * A dialect for Microsoft SQL Server 2012
  *
  * @author Brett Meyer
+ *
+ * @deprecated use {@code SQLServerDialect(11)}
  */
+@Deprecated
 public class SQLServer2012Dialect extends SQLServerDialect {
 
 	public SQLServer2012Dialect() {

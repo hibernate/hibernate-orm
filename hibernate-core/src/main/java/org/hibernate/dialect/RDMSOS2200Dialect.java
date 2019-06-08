@@ -431,7 +431,7 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
-		return Oracle8iDialect.datetimeFormat( format, true ) //Does it really support FM?
+		return OracleDialect.datetimeFormat( format, true ) //Does it really support FM?
 				.replace("SSSSSS", "MLS")
 				.replace("SSSSS", "MLS")
 				.replace("SSSS", "MLS")

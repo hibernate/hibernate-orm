@@ -24,6 +24,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -32,7 +33,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
- * A dialect for Microsoft SQL Server 2000
+ * A dialect for Microsoft SQL Server 2000 and above
  *
  * @author Gavin King
  */
@@ -43,6 +44,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	int getVersion() {
 		return version;
+	}
+
+	public SQLServerDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() );
 	}
 
 	public SQLServerDialect() {

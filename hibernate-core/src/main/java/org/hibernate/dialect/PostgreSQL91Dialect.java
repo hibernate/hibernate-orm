@@ -11,10 +11,14 @@ package org.hibernate.dialect;
  * adds support for PARTITION BY as a keyword.
  * 
  * @author Mark Robinson
+ *
+ * @deprecated use {@code PostgreSQLDialect(910)}
  */
+@Deprecated
 public class PostgreSQL91Dialect extends PostgreSQLDialect {
 
 	public PostgreSQL91Dialect() {
 		super(910);
 	}
+
 }

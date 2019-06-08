@@ -8,7 +8,10 @@ package org.hibernate.dialect;
 
 /**
  * @author Gail Badner
+ *
+ * @deprecated use {@code MySQLDialect(570)}
  */
+@Deprecated
 public class MySQL57Dialect extends MySQLDialect {
 
 	public MySQL57Dialect() {

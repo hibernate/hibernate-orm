@@ -49,14 +49,14 @@ public enum Database {
 
 				String databaseVersion = info.getDatabaseVersion();
 				if ( databaseVersion==null ) {
-					return new DB2Dialect( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+					return new DB2Dialect(info);
 				}
 				//See https://www.ibm.com/support/knowledgecenter/SSEPEK_12.0.0/java/src/tpc/imjcc_c0053013.html
 				switch ( databaseVersion.substring(0,3) ) {
 					case "SQL": // Linux, UNIX, Windows
-						return new DB2Dialect( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+						return new DB2Dialect(info);
 					case "DSN": // z/OS
-						return new DB2390Dialect( info.getDatabaseMajorVersion() );
+						return new DB2390Dialect(info);
 					case "QSQ": // i
 						return new DB2400Dialect();
 				}
@@ -71,7 +71,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "Apache Derby".equals( databaseName ) ) {
-				return new DerbyDialect( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+				return new DerbyDialect(info);
 			}
 
 			return null;
@@ -113,7 +113,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "H2".equals( databaseName ) ) {
-				return new H2Dialect( info.getDatabaseMajorVersion()*100 + info.getDatabaseMinorVersion()*10 );
+				return new H2Dialect(info);
 			}
 
 			return null;
@@ -138,7 +138,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "HSQL Database Engine".equals( databaseName ) ) {
-				return new HSQLDialect( info.getDatabaseMajorVersion()*100 + info.getDatabaseMinorVersion()*10 );
+				return new HSQLDialect(info);
 			}
 
 			return null;
@@ -150,7 +150,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "Informix Dynamic Server".equals( databaseName ) ) {
-				return new InformixDialect( info.getDatabaseMajorVersion() );
+				return new InformixDialect(info);
 			}
 
 			return null;
@@ -162,7 +162,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "ingres".equalsIgnoreCase( databaseName ) ) {
-				return new IngresDialect( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+				return new IngresDialect(info);
 			}
 			return null;
 		}
@@ -179,7 +179,7 @@ public enum Database {
 			String driverName = info.getDriverName();
 
 			if ( driverName != null && driverName.startsWith( "MariaDB" ) ) {
-				return new MariaDBDialect( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+				return new MariaDBDialect(info);
 			}
 
 			return null;
@@ -221,7 +221,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "MySQL".equals( databaseName ) ) {
-				return new MySQLDialect( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+				return new MySQLDialect(info);
 			}
 
 			return null;
@@ -233,7 +233,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "Oracle".equals( databaseName ) ) {
-				return new OracleDialect( info.getDatabaseMajorVersion() );
+				return new OracleDialect(info);
 			}
 
 			return null;
@@ -251,7 +251,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( "PostgreSQL".equals( databaseName ) ) {
-				return new PostgreSQLDialect( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+				return new PostgreSQLDialect(info);
 			}
 
 			return null;
@@ -267,10 +267,9 @@ public enum Database {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
 			final String databaseName = info.getDatabaseName();
-			int version = info.getDatabaseMajorVersion();
 
 			if ( databaseName.startsWith( "Microsoft SQL Server" ) ) {
-				return new SQLServerDialect(version);
+				return new SQLServerDialect(info);
 			}
 
 			return null;
@@ -280,10 +279,9 @@ public enum Database {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
 			final String databaseName = info.getDatabaseName();
-			int version = info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10;
 
 			if ( "Sybase SQL Server".equals( databaseName ) || "Adaptive Server Enterprise".equals( databaseName ) ) {
-				return new SybaseASEDialect(version);
+				return new SybaseASEDialect(info);
 			}
 
 			if ( databaseName.startsWith( "Adaptive Server Anywhere" ) || "SQL Anywhere".equals( databaseName ) ) {
@@ -299,7 +297,7 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( databaseName.equals( "Teradata" ) ) {
-				return new TeradataDialect( info.getDatabaseMajorVersion() );
+				return new TeradataDialect(info);
 			}
 			return null;
 		}

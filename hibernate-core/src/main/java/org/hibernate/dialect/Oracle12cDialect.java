@@ -19,7 +19,10 @@ import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
  * An SQL dialect for Oracle 12c.
  *
  * @author zhouyanming (zhouyanming@gmail.com)
+ *
+ * @deprecated use {@code OracleDialect(12)}
  */
+@Deprecated
 public class Oracle12cDialect extends OracleDialect {
 
 	public Oracle12cDialect() {

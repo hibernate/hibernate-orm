@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -53,7 +53,7 @@ public class DB2FormatEmulation
 		Format format = (Format) arguments.get(1);
 
 		sqlAppender.appendSql("(");
-		String[] bits = Oracle8iDialect.datetimeFormat( format.getFormat(), false ).result().split("\"");
+		String[] bits = OracleDialect.datetimeFormat( format.getFormat(), false ).result().split("\"");
 		boolean first = true;
 		for ( int i=0; i<bits.length; i++ ) {
 			String bit = bits[i];

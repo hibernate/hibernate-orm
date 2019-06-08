@@ -25,6 +25,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.dialect.unique.DB2UniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -90,8 +91,11 @@ public class DB2Dialect extends Dialect {
 		}
 	};
 
-
 	private final UniqueDelegate uniqueDelegate;
+
+	public DB2Dialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+	}
 
 	public DB2Dialect() {
 		this(900);
@@ -715,7 +719,7 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String translateDatetimeFormat(String format) {
 		//DB2 does not need nor support FM
-		return Oracle8iDialect.datetimeFormat( format, false ).result();
+		return OracleDialect.datetimeFormat( format, false ).result();
 	}
 
 	@Override

@@ -7,8 +7,12 @@
 package org.hibernate.dialect;
 
 /**
- * An SQL dialect for Postgres 9.5 and later. Adds support for SKIP LOCKED.
+ * An SQL dialect for Postgres 9.5 and later.
+ * Adds support for SKIP LOCKED.
+ *
+ * @deprecated use {@code PostgreSQLDialect(950)}
  */
+@Deprecated
 public class PostgreSQL95Dialect extends PostgreSQLDialect {
 
 	public PostgreSQL95Dialect() {

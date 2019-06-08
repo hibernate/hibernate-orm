@@ -13,7 +13,10 @@ package org.hibernate.dialect;
  * seem to properly handle it in all cases.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated use {@code OracleDialect(9)}
  */
+@Deprecated
 public class Oracle9iDialect extends OracleDialect {
 
 	public Oracle9iDialect() {

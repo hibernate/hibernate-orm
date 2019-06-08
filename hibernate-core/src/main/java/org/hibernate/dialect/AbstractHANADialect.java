@@ -1731,6 +1731,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public String translateDatetimeFormat(String format) {
 		//I don't think HANA needs FM
-		return Oracle8iDialect.datetimeFormat( format, false ).result();
+		return OracleDialect.datetimeFormat( format, false ).result();
 	}
 }

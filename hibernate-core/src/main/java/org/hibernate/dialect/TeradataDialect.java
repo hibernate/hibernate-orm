@@ -17,6 +17,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Teradata14IdentityColumnSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
@@ -52,6 +53,10 @@ public class TeradataDialect extends Dialect {
 	}
 	
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
+
+	public TeradataDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() );
+	}
 
 	public TeradataDialect() {
 		this(12);

@@ -1535,7 +1535,7 @@ public class CommonFunctionFactory {
 	/**
 	 * Usually Oracle-style (except for Informix which quite close to MySQL-style)
 	 *
-	 * @see org.hibernate.dialect.Oracle8iDialect#datetimeFormat
+	 * @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 * @see org.hibernate.dialect.InformixDialect#datetimeFormat
 	 */
 	public static void formatdatetime_toChar(QueryEngine queryEngine) {
@@ -1575,7 +1575,7 @@ public class CommonFunctionFactory {
 	/**
 	 * HANA's name for to_char() is still Oracle-style
 	 *
-	 *  @see org.hibernate.dialect.Oracle8iDialect#datetimeFormat
+	 *  @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 */
 	public static void formatdatetime_toVarchar(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "to_varchar")

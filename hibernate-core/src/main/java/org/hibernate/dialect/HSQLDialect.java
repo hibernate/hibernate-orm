@@ -30,6 +30,7 @@ import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -112,6 +113,10 @@ public class HSQLDialect extends Dialect {
 
 	int getVersion() {
 		return version;
+	}
+
+	public HSQLDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion()*100 + info.getDatabaseMinorVersion()*10 );
 	}
 
 	public HSQLDialect() {
@@ -722,7 +727,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
-		return Oracle8iDialect.datetimeFormat(format, false)
+		return OracleDialect.datetimeFormat(format, false)
 				.replace("SSSSSS", "FF")
 				.replace("SSSSS", "FF")
 				.replace("SSSS", "FF")

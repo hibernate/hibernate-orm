@@ -15,6 +15,7 @@ import org.hibernate.dialect.identity.Ingres10IdentityColumnSupport;
 import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -90,6 +91,10 @@ public class IngresDialect extends Dialect {
 
 	int getVersion() {
 		return version;
+	}
+
+	public IngresDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
 
 	public IngresDialect() {

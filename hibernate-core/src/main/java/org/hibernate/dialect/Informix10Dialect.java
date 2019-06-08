@@ -8,10 +8,14 @@ package org.hibernate.dialect;
 
 /**
  * Dialect for Informix 10
+ *
+ * @deprecated use {@code InformixDialect(10)}
  */
+@Deprecated
 public class Informix10Dialect extends InformixDialect {
 
 	public Informix10Dialect() {
 		super(10);
 	}
+
 }

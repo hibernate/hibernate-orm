@@ -16,7 +16,10 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * An SQL dialect for MariaDB 10.3 and later, provides sequence support, lock-timeouts, etc.
  * 
  * @author Philippe Marschall
+ *
+ * @deprecated use {@code MariaDBDialect(1030)}
  */
+@Deprecated
 public class MariaDB103Dialect extends MariaDBDialect {
 
 	public MariaDB103Dialect() {

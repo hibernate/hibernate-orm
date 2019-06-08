@@ -294,7 +294,7 @@ public class CUBRIDDialect extends Dialect {
 	public String translateDatetimeFormat(String format) {
 		//I do not know if CUBRID supports FM, but it
 		//seems that it does pad by default, so it needs it!
-		return Oracle8iDialect.datetimeFormat( format, true )
+		return OracleDialect.datetimeFormat( format, true )
 				.replace("SSSSSS", "FF")
 				.replace("SSSSS", "FF")
 				.replace("SSSS", "FF")

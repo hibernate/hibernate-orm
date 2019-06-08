@@ -16,10 +16,14 @@ package org.hibernate.dialect;
  * </ul>
  *
  * @author Raymond Fan
+ *
+ * @deprecated use {@code IngresDialect(1000)}
  */
+@Deprecated
 public class Ingres10Dialect extends IngresDialect {
 
 	public Ingres10Dialect() {
 		super(1000);
 	}
+
 }

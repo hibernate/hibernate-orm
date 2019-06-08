@@ -142,15 +142,16 @@ import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcTim
  * Represents a dialect of SQL implemented by a particular RDBMS. Subclasses
  * implement Hibernate compatibility with different database platforms.
  *
- * Subclasses should provide a public default constructor that registers a
- * set of type mappings from JDBC type codes to database native type names,
- * along with default Hibernate properties.
+ * Subclasses must provide a public constructor that registers a set of type
+ * mappings from JDBC type codes to database native type names, along with
+ * default Hibernate properties. This constructor may have no parameters, or
+ * it may have a single parameter of type
+ * {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
  *
  * Subclasses should be immutable.
  *
  * @author Gavin King, David Channon
  */
-@SuppressWarnings("deprecation")
 public abstract class Dialect implements ConversionContext {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Dialect.class );
 
@@ -162,7 +163,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Defines a "no batching" batch size constant
 	 */
-	public static final String NO_BATCH = "0";
+	protected static final String NO_BATCH = "0";
 
 	/**
 	 * Characters used as opening for quoting SQL identifiers
@@ -537,7 +538,11 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return The specified Dialect
 	 * @throws HibernateException If no dialect was specified, or if it could not be instantiated.
+	 *
+	 * @deprecated this just calls the default constructor and does not pass in the
+	 *             {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
 	 */
+	@Deprecated
 	public static Dialect getDialect() throws HibernateException {
 		return instantiateDialect( Environment.getProperties().getProperty( Environment.DIALECT ) );
 	}
@@ -549,7 +554,11 @@ public abstract class Dialect implements ConversionContext {
 	 * @param props The properties to use for finding the dialect class to use.
 	 * @return The specified Dialect
 	 * @throws HibernateException If no dialect was specified, or if it could not be instantiated.
+	 *
+	 * @deprecated this just calls the default constructor and does not pass in the
+	 *             {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
 	 */
+	@Deprecated
 	public static Dialect getDialect(Properties props) throws HibernateException {
 		final String dialectName = props.getProperty( Environment.DIALECT );
 		if ( dialectName == null ) {
@@ -558,6 +567,7 @@ public abstract class Dialect implements ConversionContext {
 		return instantiateDialect( dialectName );
 	}
 
+	@Deprecated
 	private static Dialect instantiateDialect(String dialectName) throws HibernateException {
 		if ( dialectName == null ) {
 			throw new HibernateException( "The dialect was not set. Set the property hibernate.dialect." );
@@ -672,7 +682,6 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return the database type name
 	 *
-	 * @throws HibernateException
 	 */
 	public String getTypeName(int code, Size size) throws HibernateException {
 		if ( size == null ) {
@@ -702,7 +711,6 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return the database type name
 	 *
-	 * @throws HibernateException
 	 */
 	public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor, Size size) {
 		return getTypeName( sqlTypeDescriptor.getJdbcTypeCode(), size );
@@ -818,7 +826,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * The legacy behavior of Hibernate.  LOBs are not processed by merge
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	protected static final LobMergeStrategy LEGACY_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
 		public Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session) {
@@ -839,7 +847,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Merge strategy based on transferring contents based on streams.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("unused")
 	protected static final LobMergeStrategy STREAM_XFER_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
 		public Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session) {
@@ -1741,6 +1749,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param keyColumnNames a map of key columns indexed by aliased table names.
 	 * @return the modified SQL string.
 	 */
+	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
@@ -1935,7 +1944,12 @@ public abstract class Dialect implements ConversionContext {
 	 * current timestamp.
 	 *
 	 * @return The function name.
+	 *
+	 * @deprecated use {@link #currentTimestamp()},
+	 *                 {@link #currentLocalTimestamp()}, or
+	 *                 {@link #currentTimestampWithTimeZone()}.
 	 */
+	@Deprecated
 	public String getCurrentTimestampSQLFunctionName() {
 		// the standard SQL function name is current_timestamp...
 		return "current_timestamp";
@@ -1971,7 +1985,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The Dialect's preferred SQLExceptionConverter, or null to
 	 * indicate that the default {@link SQLExceptionConverter} should be used.
 	 *
-	 * @see {@link #buildSQLExceptionConversionDelegate()}
+	 * @see #buildSQLExceptionConversionDelegate()
 	 * @deprecated {@link #buildSQLExceptionConversionDelegate()} should be
 	 * overridden instead.
 	 */
@@ -2056,6 +2070,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return This dialect's {@link org.hibernate.sql.JoinFragment} strategy.
 	 */
+	@Deprecated
 	public JoinFragment createOuterJoinFragment() {
 		return new ANSIJoinFragment();
 	}
@@ -2067,6 +2082,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return This dialect's {@link org.hibernate.sql.CaseFragment} strategy.
 	 */
+	@Deprecated
 	public CaseFragment createCaseFragment() {
 		return new ANSICaseFragment();
 	}
@@ -2164,8 +2180,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * @deprecated These are only ever used (if at all) from the code that handles identifier quoting.  So
-	 * see {@link #buildIdentifierHelper} instead
+	 * @deprecated These are only ever used (if at all) from the code that handles identifier quoting.
+	 * So see {@link #buildIdentifierHelper} instead
 	 */
 	@Deprecated
 	public Set<String> getKeywords() {
@@ -2498,12 +2514,8 @@ public abstract class Dialect implements ConversionContext {
 	public String getAddForeignKeyConstraintString(
 			String constraintName,
 			String foreignKeyDefinition) {
-		return new StringBuilder( 30 )
-				.append( " add constraint " )
-				.append( quote( constraintName ) )
-				.append( " " )
-				.append( foreignKeyDefinition )
-				.toString();
+		return " add constraint " + quote(constraintName)
+				+ " " + foreignKeyDefinition;
 	}
 
 	/**
@@ -3145,12 +3157,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getQueryHintString(String query, List<String> hintList) {
 		final String hints = String.join( ", ", hintList );
-
-		if ( StringHelper.isEmpty( hints ) ) {
-			return query;
-		}
-
-		return getQueryHintString( query, hints );
+		return StringHelper.isEmpty(hints) ? query : getQueryHintString(query, hints);
 	}
 
 	/**

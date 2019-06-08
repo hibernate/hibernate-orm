@@ -662,47 +662,21 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		//starts with 1, implicitly
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
 	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
+		String minOrMaxValue;
 		if ( initialValue < 0 && incrementSize > 0 ) {
-			return
-				String.format(
-						"%s minvalue %d start with %d increment by %d",
-						getCreateSequenceString( sequenceName ),
-						initialValue,
-						initialValue,
-						incrementSize
-				);
+			minOrMaxValue = " minvalue " + initialValue;
 		}
 		else if ( initialValue > 0 && incrementSize < 0 ) {
-			return
-				String.format(
-						"%s maxvalue %d start with %d increment by %d",
-						getCreateSequenceString( sequenceName ),
-						initialValue,
-						initialValue,
-						incrementSize
-				);
+			minOrMaxValue = " maxvalue " + initialValue;
 		}
 		else {
-			return
-				String.format(
-						"%s start with %d increment by  %d",
-						getCreateSequenceString( sequenceName ),
-						initialValue,
-						incrementSize
-				);
+			minOrMaxValue = "";
 		}
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
+		return getCreateSequenceString( sequenceName )
+				+ minOrMaxValue
+				+ " start with " + initialValue
+				+ " increment by " + incrementSize;
 	}
 
 	@Override

@@ -83,16 +83,6 @@ public class MckoiDialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
-	}
-
-	@Override
 	public String getForUpdateString() {
 		return "";
 	}

@@ -1179,33 +1179,47 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Typically dialects which support sequences can create a sequence
-	 * with a single command.  This is convenience form of
-	 * {@link #getCreateSequenceStrings} to help facilitate that.
+	 * Typically dialects which support sequences can create a sequence with
+	 * a single command. This method is a convenience making it easier to
+	 * implement {@link #getCreateSequenceStrings(String,int,int)} for these
+	 * dialects.
 	 * <p/>
-	 * Dialects which support sequences and can create a sequence in a
-	 * single command need *only* override this method.  Dialects
-	 * which support sequences but require multiple commands to create
-	 * a sequence should instead override {@link #getCreateSequenceStrings}.
+	 * The default definition is to return {@code create sequence sequenceName}
+	 * for the argument {@code sequenceName}. Dialects need to override this
+	 * method if a sequence created in this manner does not start at 1, or if
+	 * the syntax is nonstandard.
+	 * <p/>
+	 * Dialects which support sequences and can create a sequence in a single
+	 * command need *only* override this method. Dialects which support
+	 * sequences but require multiple commands to create a sequence should
+	 * override {@link #getCreateSequenceStrings(String,int,int)} instead.
 	 *
 	 * @param sequenceName The name of the sequence
 	 * @return The sequence creation command
 	 * @throws MappingException If sequences are not supported.
 	 */
 	protected String getCreateSequenceString(String sequenceName) throws MappingException {
+		if ( supportsSequences() ) {
+			return "create sequence " + sequenceName;
+		}
 		throw new MappingException( getClass().getName() + " does not support sequences" );
 	}
 
 	/**
+	 * Typically dialects which support sequences can create a sequence with
+	 * a single command. This method is a convenience making it easier to
+	 * implement {@link #getCreateSequenceStrings(String,int,int)} for these
+	 * dialects.
+	 * <p/>
 	 * Overloaded form of {@link #getCreateSequenceString(String)}, additionally
 	 * taking the initial value and increment size to be applied to the sequence
 	 * definition.
 	 * </p>
 	 * The default definition is to suffix {@link #getCreateSequenceString(String)}
-	 * with the string: " start with {initialValue} increment by {incrementSize}" where
-	 * {initialValue} and {incrementSize} are replacement placeholders.  Generally
-	 * dialects should only need to override this method if different key phrases
-	 * are used to apply the allocation information.
+	 * with the string: {@code start with initialValue increment by incrementSize}
+	 * for the arguments {@code initialValue} and {@code incrementSize}. Dialects
+	 * need to override this method if different key phrases are used to apply the
+	 * allocation information.
 	 *
 	 * @param sequenceName The name of the sequence
 	 * @param initialValue The initial value to apply to 'create sequence' statement
@@ -1246,6 +1260,9 @@ public abstract class Dialect implements ConversionContext {
 	 * @throws MappingException If sequences are not supported.
 	 */
 	protected String getDropSequenceString(String sequenceName) throws MappingException {
+		if ( supportsSequences() ) {
+			return "drop sequence " + sequenceName;
+		}
 		throw new MappingException( getClass().getName() + " does not support sequences" );
 	}
 
@@ -3198,8 +3215,6 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * By default interpret this based on DatabaseMetaData.
-	 *
-	 * @return
 	 */
 	public NameQualifierSupport getNameQualifierSupport() {
 		return null;

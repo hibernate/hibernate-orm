@@ -398,15 +398,9 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		//starts with 1, implicitly
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
 	public String getDropSequenceString(String sequenceName) {
 		return getVersion() < 820
-				? "drop sequence " + sequenceName
+				? super.getDropSequenceString( sequenceName )
 				: "drop sequence if exists " + sequenceName;
 	}
 

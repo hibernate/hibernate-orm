@@ -399,11 +399,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateSequenceString(final String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
 	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
 		if ( incrementSize == 0 ) {
 			throw new MappingException( "Unable to create the sequence [" + sequenceName + "]: the increment size must not be 0" );
@@ -438,11 +433,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public String getCurrentTimestampSelectString() {
 		return "select current_timestamp from sys.dummy";
-	}
-
-	@Override
-	public String getDropSequenceString(final String sequenceName) {
-		return "drop sequence " + sequenceName;
 	}
 
 	@Override

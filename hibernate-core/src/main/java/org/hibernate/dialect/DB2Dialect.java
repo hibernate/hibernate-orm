@@ -339,13 +339,8 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
 	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName + " restrict";
+		return super.getDropSequenceString( sequenceName ) + " restrict";
 	}
 
 	@Override

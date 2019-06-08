@@ -201,16 +201,6 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
-	}
-
-	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "select " + getSelectSequenceNextValString( sequenceName ) + " from informix.systables where tabid=1";
 	}

@@ -397,7 +397,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	protected String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName + " if exists";
+		return super.getDropSequenceString( sequenceName ) + " if exists";
 	}
 
 	@Override
@@ -601,12 +601,6 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public String getCurrentTimestampSelectString() {
 		return "call current_timestamp";
-	}
-
-	@Override
-	public String getCurrentTimestampSQLFunctionName() {
-		// the standard SQL function name is current_timestamp...
-		return "current_timestamp";
 	}
 
 	/**

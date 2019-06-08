@@ -190,16 +190,6 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
-	}
-
-	@Override
 	public String getQuerySequencesString() {
 		return "select name from sys.sequences";
 	}

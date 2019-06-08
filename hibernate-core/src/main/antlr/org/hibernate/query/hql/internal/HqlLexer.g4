@@ -16,6 +16,8 @@ WS : WS_CHAR+ -> skip;
 fragment
 WS_CHAR : [ \f\t\r\n];
 
+COMMENT : '/*' (~'*' | '*' ~'/' )* '*/' -> skip;
+
 fragment
 DIGIT : [0-9];
 

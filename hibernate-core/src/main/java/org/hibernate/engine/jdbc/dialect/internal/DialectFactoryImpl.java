@@ -122,7 +122,10 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	 */
 	private Dialect determineDialect(DialectResolutionInfoSource resolutionInfoSource) {
 		if ( resolutionInfoSource == null ) {
-			throw new HibernateException( "Access to DialectResolutionInfo cannot be null when 'hibernate.dialect' not set" );
+			throw new HibernateException(
+					"Unable to determine Dialect without JDBC metadata "
+					+ "(please set 'javax.persistence.jdbc.url', 'hibernate.connection.url', or 'hibernate.dialect')"
+			);
 		}
 
 		final DialectResolutionInfo info = resolutionInfoSource.getDialectResolutionInfo();
@@ -130,9 +133,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 
 		if ( dialect == null ) {
 			throw new HibernateException(
-					"Unable to determine Dialect to use [name=" + info.getDatabaseName() +
-							", majorVersion=" + info.getDatabaseMajorVersion() +
-							"]; user must register resolver or explicitly set 'hibernate.dialect'"
+					"Unable to determine Dialect for " + info.getDatabaseName() + " "
+					+ info.getDatabaseMajorVersion() + "." + info.getDatabaseMinorVersion()
+					+ " (please set 'hibernate.dialect' or register a Dialect resolver)"
 			);
 		}
 

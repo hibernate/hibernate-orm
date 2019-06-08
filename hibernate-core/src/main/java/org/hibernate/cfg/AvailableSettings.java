@@ -1273,20 +1273,36 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 	/**
 	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
-	 * not available (aka, mainly in generating scripts).  In such cases, a value for this setting
-	 * *must* be specified.
+	 * not available (aka, mainly in generating scripts).  In such cases, a value for this setting *must* be
+	 * specified.
 	 * <p/>
 	 * The value of this setting is expected to match the value returned by
 	 * {@link java.sql.DatabaseMetaData#getDatabaseProductName()} for the target database.
 	 * <p/>
-	 * Additionally specifying {@value #HBM2DDL_DB_MAJOR_VERSION} and/or {@value #HBM2DDL_DB_MINOR_VERSION}
-	 * may be required to understand exactly how to generate the required schema commands.
+	 * Additionally specifying {@value #HBM2DDL_DB_VERSION}, {@value #HBM2DDL_DB_MAJOR_VERSION} and/or
+	 * {@value #HBM2DDL_DB_MINOR_VERSION} may be required to determine exactly how to generate the required
+	 * schema commands.
 	 *
+	 * @see #HBM2DDL_DB_VERSION
 	 * @see #HBM2DDL_DB_MAJOR_VERSION
 	 * @see #HBM2DDL_DB_MINOR_VERSION
 	 */
 	@SuppressWarnings("JavaDoc")
 	String HBM2DDL_DB_NAME = "javax.persistence.database-product-name";
+
+	/**
+	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
+	 * not available (aka, mainly in generating scripts).  This value is used to help more precisely determine
+	 * how to perform schema generation tasks for the underlying database in cases where
+	 * {@value #HBM2DDL_DB_NAME} does not provide enough distinction.
+	 * <p/>
+	 * The value of this setting is expected to match the value returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()} for the target database.
+	 *
+	 * @see #HBM2DDL_DB_NAME
+	 */
+	@SuppressWarnings("JavaDoc")
+	String HBM2DDL_DB_VERSION = "javax.persistence.database-product-version";
 
 	/**
 	 * Specifies the major version of the underlying database, as would be returned by

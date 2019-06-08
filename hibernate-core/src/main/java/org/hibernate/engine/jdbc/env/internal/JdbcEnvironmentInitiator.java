@@ -73,17 +73,17 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 						@Override
 						public String getDatabaseVersion() {
-							return null; //TODO!!
+							return (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_VERSION );
 						}
 
 						@Override
 						public int getDatabaseMajorVersion() {
-							return (Integer) configurationValues.get( AvailableSettings.HBM2DDL_DB_MAJOR_VERSION );
+							return (Integer) configurationValues.getOrDefault( AvailableSettings.HBM2DDL_DB_MAJOR_VERSION, 0 );
 						}
 
 						@Override
 						public int getDatabaseMinorVersion() {
-							return (Integer) configurationValues.get( AvailableSettings.HBM2DDL_DB_MINOR_VERSION );
+							return (Integer) configurationValues.getOrDefault( AvailableSettings.HBM2DDL_DB_MINOR_VERSION, 0 );
 						}
 
 						@Override

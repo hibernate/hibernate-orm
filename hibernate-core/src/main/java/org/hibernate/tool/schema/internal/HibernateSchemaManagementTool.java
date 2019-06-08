@@ -205,6 +205,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		// see if a specific Dialect override has been provided...
 		final String explicitDbName = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_NAME );
 		if ( StringHelper.isNotEmpty( explicitDbName ) ) {
+			final String explicitDbVersion = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_VERSION );
 			final String explicitDbMajor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MAJOR_VERSION );
 			final String explicitDbMinor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MINOR_VERSION );
 
@@ -217,7 +218,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 						@Override
 						public String getDatabaseVersion() {
-							return null; //TODO!!
+							return explicitDbVersion;
 						}
 
 						@Override

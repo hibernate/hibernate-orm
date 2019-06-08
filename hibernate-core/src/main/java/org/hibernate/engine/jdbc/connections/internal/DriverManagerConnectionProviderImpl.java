@@ -24,6 +24,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -103,10 +104,36 @@ public class DriverManagerConnectionProviderImpl
 	private static ConnectionCreator buildCreator(Map configurationValues, ServiceRegistryImplementor serviceRegistry) {
 		final ConnectionCreatorBuilder connectionCreatorBuilder = new ConnectionCreatorBuilder( serviceRegistry );
 
-		final String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
-		connectionCreatorBuilder.setDriver( loadDriverIfPossible( driverClassName, serviceRegistry ) );
+		final String url = (String) configurationValues.get( AvailableSettings.URL );
 
-		if ( driverClassName == null ) {
+		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
+		if ( driverClassName != null ) {
+			connectionCreatorBuilder.setDriver( loadDriverIfPossible( driverClassName, serviceRegistry ) );
+		}
+		else if ( url != null ) {
+			//try to guess the driver class from the JDBC URL
+			for ( Database database: Database.values() ) {
+				if ( database.matchesUrl( url ) ) {
+					driverClassName = database.getDriverClassName( url );
+					if (driverClassName != null) {
+						try {
+							connectionCreatorBuilder.setDriver( loadDriverIfPossible(driverClassName, serviceRegistry) );
+						}
+						catch (Exception e) {
+							//swallow it, since this was not
+							//an explicit setting by the user
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		if ( driverClassName != null ) {
+			log.loadedDriver( driverClassName );
+		}
+		else {
+			//we're hoping that the driver is already loaded
 			log.noDriver( AvailableSettings.DRIVER );
 			StringBuilder list = new StringBuilder();
 			Enumeration<Driver> drivers = DriverManager.getDrivers();
@@ -118,11 +145,7 @@ public class DriverManagerConnectionProviderImpl
 			}
 			log.loadedDrivers( list.toString() );
 		}
-		else {
-			log.usingDriver( driverClassName );
-		}
 
-		final String url = (String) configurationValues.get( AvailableSettings.URL );
 		if ( url == null ) {
 			final String msg = log.jdbcUrlNotSpecified( AvailableSettings.URL );
 			log.error( msg );

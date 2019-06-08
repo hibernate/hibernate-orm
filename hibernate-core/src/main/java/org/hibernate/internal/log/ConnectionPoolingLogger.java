@@ -50,8 +50,8 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	String jdbcUrlNotSpecified(String property);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Loaded JDBC driver class %s", id = 10001005)
-	void usingDriver(String driverClassName);
+	@Message(value = "Loaded JDBC driver class: %s", id = 10001005)
+	void loadedDriver(String driverClassName);
 
 	@LogMessage(level = INFO)
 	@Message(value = "No JDBC driver class specified by %s", id = 10001010)

@@ -81,7 +81,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	private static final Map<String,String> LEGACY_CONNECTION_PROVIDER_MAPPING;
 
 	static {
-		LEGACY_CONNECTION_PROVIDER_MAPPING = new HashMap<String,String>( 5 );
+		LEGACY_CONNECTION_PROVIDER_MAPPING = new HashMap<>( 5 );
 
 		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
 				"org.hibernate.connection.DatasourceConnectionProvider",

@@ -17,11 +17,9 @@ package org.hibernate.dialect;
  *
  * @author Raymond Fan
  */
-public class Ingres10Dialect extends Ingres9Dialect {
+public class Ingres10Dialect extends IngresDialect {
 
-	@Override
-	int getVersion() {
-		return 1000;
+	public Ingres10Dialect() {
+		super(1000);
 	}
-
 }

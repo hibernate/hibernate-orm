@@ -25,9 +25,8 @@ package org.hibernate.dialect;
  */
 public class Ingres9Dialect extends IngresDialect {
 
-	@Override
-	int getVersion() {
-		return 930;
+	public Ingres9Dialect() {
+		super(930);
 	}
 
 }

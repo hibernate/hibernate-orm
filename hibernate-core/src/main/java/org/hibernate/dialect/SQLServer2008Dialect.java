@@ -11,10 +11,10 @@ package org.hibernate.dialect;
  *
  * @author Gavin King
  */
-public class SQLServer2008Dialect extends SQLServer2005Dialect {
+public class SQLServer2008Dialect extends SQLServerDialect {
 
-	int getVersion() {
-		return 2008;
+	public SQLServer2008Dialect() {
+		super(10);
 	}
 
 }

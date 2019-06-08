@@ -11,9 +11,7 @@ package org.hibernate.dialect;
  */
 public class Informix10Dialect extends InformixDialect {
 
-	@Override
-	int getVersion() {
-		return 1000;
+	public Informix10Dialect() {
+		super(10);
 	}
-
 }

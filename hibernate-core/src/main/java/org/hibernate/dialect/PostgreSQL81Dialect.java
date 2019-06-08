@@ -8,9 +8,8 @@ package org.hibernate.dialect;
 
 public class PostgreSQL81Dialect extends PostgreSQLDialect {
 
-	@Override
-	int getVersion() {
-		return 810;
+	public PostgreSQL81Dialect() {
+		super(810);
 	}
 
 }

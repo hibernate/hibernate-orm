@@ -8,8 +8,8 @@ package org.hibernate.dialect;
 
 public class Oracle8iDialect extends OracleDialect {
 
-	int getVersion() {
-		return 8;
+	public Oracle8iDialect() {
+		super(8);
 	}
 
 }

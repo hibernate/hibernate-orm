@@ -39,20 +39,25 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
+	private final int version;
+
 	int getVersion() {
-		return 2000;
+		return version;
 	}
 
-	/**
-	 * Constructs a SQLServerDialect
-	 */
 	public SQLServerDialect() {
+		this(8);
+	}
+
+	public SQLServerDialect(int version) {
 		super();
+		this.version = version;
+
 		//there is no 'double' type in SQL server
 		//but 'float' is double precision by default
 		registerColumnType( Types.DOUBLE, "float" );
 
-		if ( getVersion() >= 2008 ) {
+		if ( getVersion() >= 10 ) {
 			registerColumnType( Types.DATE, "date" );
 			registerColumnType( Types.TIME, "time" );
 			registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
@@ -65,7 +70,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerColumnType( Types.VARCHAR, 8000, "varchar($l)" );
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
 
-		if (getVersion() < 2005) {
+		if ( getVersion() < 9 ) {
 			registerColumnType( Types.VARBINARY, "image" );
 			registerColumnType( Types.VARCHAR, "text" );
 		}
@@ -96,13 +101,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		CommonFunctionFactory.truncate_round( queryEngine );
 
-		if ( getVersion() >= 2008 ) {
+		if ( getVersion() >= 10 ) {
 			CommonFunctionFactory.locate_charindex( queryEngine );
 			CommonFunctionFactory.stddevPopSamp_stdevp( queryEngine );
 			CommonFunctionFactory.varPopSamp_varp( queryEngine );
 		}
 
-		if ( getVersion() >= 2012 ) {
+		if ( getVersion() >= 11 ) {
 			CommonFunctionFactory.formatdatetime_format( queryEngine );
 
 			//actually translate() was added in 2017 but
@@ -170,10 +175,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	private LimitHandler getDefaultLimitHandler() {
-		if ( getVersion() >= 2012 ) {
+		if ( getVersion() >= 11 ) {
 			return new SQLServer2012LimitHandler();
 		}
-		else if ( getVersion() >= 2005 ) {
+		else if ( getVersion() >= 9 ) {
 			return new SQLServer2005LimitHandler();
 		}
 		else {
@@ -183,13 +188,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsValuesList() {
-		return getVersion() >= 2008;
+		return getVersion() >= 10;
 	}
 
 	@Override
 	@SuppressWarnings("deprecation")
 	public boolean supportsLimitOffset() {
-		return getVersion() >= 2012;
+		return getVersion() >= 11;
 	}
 
 	@Override
@@ -227,7 +232,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		if ( getVersion() >= 2005 ) {
+		if ( getVersion() >= 9 ) {
 			LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
 			if (lockMode == null) {
 				lockMode = lockOptions.getLockMode();
@@ -335,22 +340,22 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsNonQueryWithCTE() {
-		return getVersion() >= 2005;
+		return getVersion() >= 9;
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion() >= 2005;
+		return getVersion() >= 9;
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion() >= 2005 ;
+		return getVersion() >= 9;
 	}
 
 	@Override
 	public boolean supportsSequences() {
-		return getVersion() >= 2012;
+		return getVersion() >= 11;
 	}
 
 	@Override
@@ -380,7 +385,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return getVersion() < 2012
+		return getVersion() < 11
 				? super.getQuerySequencesString() //null
 				// The upper-case name should work on both case-sensitive
 				// and case-insensitive collations.
@@ -389,7 +394,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getQueryHintString(String sql, String hints) {
-		if ( getVersion() < 2012 ) {
+		if ( getVersion() < 11 ) {
 			return super.getQueryHintString( sql, hints );
 		}
 
@@ -414,7 +419,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
-		if ( getVersion() < 2008 ) {
+		if ( getVersion() < 10 ) {
 			return super.renderOrderByElement( expression, collation, order, nulls );
 		}
 
@@ -440,7 +445,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		if ( getVersion() < 2005 ) {
+		if ( getVersion() < 9 ) {
 			return super.buildSQLExceptionConversionDelegate(); //null
 		}
 		return new SQLExceptionConversionDelegate() {

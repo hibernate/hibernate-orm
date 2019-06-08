@@ -6,14 +6,10 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
+public class MariaDB10Dialect extends MariaDBDialect {
 
-public class MariaDB10Dialect extends MariaDB53Dialect {
-
-	@Override
-	int getMariaVersion() {
-		return 1000;
+	public MariaDB10Dialect() {
+		super(1000);
 	}
 
 }

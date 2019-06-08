@@ -200,8 +200,13 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			doesDataDefinitionCauseTransactionCommit = databaseMetaData.dataDefinitionCausesTransactionCommit();
 			extraKeywords = parseKeywords( databaseMetaData.getSQLKeywords() );
 			sqlStateType = SQLStateType.interpretReportedSQLStateType( databaseMetaData.getSQLStateType() );
-			lobLocatorUpdateCopy = databaseMetaData.locatorsUpdateCopy();
-			typeInfoSet = new LinkedHashSet<TypeInfo>();
+			try {
+				lobLocatorUpdateCopy = databaseMetaData.locatorsUpdateCopy();
+			}
+			catch (SQLException sql) {
+				//ignore, the database might not support this at all
+			}
+			typeInfoSet = new LinkedHashSet<>();
 			typeInfoSet.addAll( TypeInfo.extractTypeInfo( databaseMetaData ) );
 			return this;
 		}

@@ -14,9 +14,7 @@ package org.hibernate.dialect;
  */
 public class DB2390V8Dialect extends DB2390Dialect {
 
-	@Override
-	int get390Version() {
-		return 800;
+	public DB2390V8Dialect() {
+		super(8);
 	}
-
 }

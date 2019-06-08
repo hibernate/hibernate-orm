@@ -11,8 +11,8 @@ package org.hibernate.dialect;
  */
 public class Teradata14Dialect extends TeradataDialect {
 
-	int getVersion() {
-		return 1400;
+	public Teradata14Dialect() {
+		super(14);
 	}
 
 }

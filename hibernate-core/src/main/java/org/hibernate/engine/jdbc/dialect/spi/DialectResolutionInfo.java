@@ -32,6 +32,16 @@ public interface DialectResolutionInfo {
 	public String getDatabaseName();
 
 	/**
+	 * Obtain access to the database version, as returned from {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()}
+	 * for the target database
+	 *
+	 * @return The database version
+	 *
+	 * @see java.sql.DatabaseMetaData#getDatabaseProductVersion()
+	 */
+	public String getDatabaseVersion();
+
+	/**
 	 * Obtain access to the database major version, as returned from
 	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion()} for the target database.
 	 *

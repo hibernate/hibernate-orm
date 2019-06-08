@@ -36,18 +36,21 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  */
 public class DerbyDialect extends DB2Dialect {
 
+	private final int version;
+
 	int getDerbyVersion() {
-		return 1000;
+		return version;
 	}
 
 	private final LimitHandler limitHandler = new DerbyLimitHandler();
 
-	/**
-	 * Constructs a DerbyDialect
-	 */
-	@SuppressWarnings("deprecation")
 	public DerbyDialect() {
+		this(1000);
+	}
+
+	public DerbyDialect(int version) {
 		super();
+		this.version = version;
 
 		registerDerbyKeywords();
 	}

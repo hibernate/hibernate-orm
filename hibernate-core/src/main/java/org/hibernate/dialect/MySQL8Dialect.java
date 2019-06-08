@@ -9,9 +9,11 @@ package org.hibernate.dialect;
 /**
  * @author Vlad Mihalcea
  */
-public class MySQL8Dialect extends MySQL57Dialect {
+public class MySQL8Dialect extends MySQLDialect {
 
 	public MySQL8Dialect() {
+		super(800);
+
 		// MySQL doesn't add the new reserved keywords to their JDBC driver to preserve backward compatibility.
 
 		registerKeyword("CUME_DIST");
@@ -33,8 +35,4 @@ public class MySQL8Dialect extends MySQL57Dialect {
 		registerKeyword("ROW_NUMBER");
 	}
 
-	@Override
-	int getVersion() {
-		return 800;
-	}
 }

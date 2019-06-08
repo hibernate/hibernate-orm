@@ -24,12 +24,19 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	private static final SybaseASE157LimitHandler LIMIT_HANDLER = new SybaseASE157LimitHandler();
 
+	private final int version;
+
 	int getVersion() {
-		return 1100;
+		return version;
 	}
 
 	public SybaseASEDialect() {
+		this(1100);
+	}
+
+	public SybaseASEDialect(int version) {
 		super();
+		this.version = version;
 
 		if ( getVersion() >= 1500 ) {
 			//bigint was added in version 15

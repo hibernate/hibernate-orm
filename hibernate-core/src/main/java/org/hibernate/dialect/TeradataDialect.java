@@ -45,17 +45,21 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  */
 public class TeradataDialect extends Dialect {
 
+	private int version;
+
 	int getVersion() {
-		return 1200;
+		return version;
 	}
 	
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
-	/**
-	 * Constructor
-	 */
 	public TeradataDialect() {
+		this(12);
+	}
+
+	public TeradataDialect(int version) {
 		super();
+		this.version = version;
 
 		registerColumnType( Types.BOOLEAN, "byteint" );
 		registerColumnType( Types.BIT, 1, "byteint" );
@@ -67,7 +71,7 @@ public class TeradataDialect extends Dialect {
 		registerColumnType( Types.VARBINARY, "varbyte($l)" );
 		registerColumnType( Types.LONGVARBINARY, "varbyte($l)" );
 
-		if ( getVersion() < 1300 ) {
+		if ( getVersion() < 13 ) {
 			registerColumnType( Types.BIGINT, "numeric(19,0)" );
 		}
 		else {
@@ -88,7 +92,7 @@ public class TeradataDialect extends Dialect {
 		registerKeyword( "account" );
 		registerKeyword( "class" );
 
-		if ( getVersion() < 1400 ) {
+		if ( getVersion() < 14 ) {
 			// use getBytes instead of getBinaryStream
 			getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
 			// no batch statements
@@ -103,7 +107,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public int getDefaultDecimalPrecision() {
-		return getVersion() < 1400 ? 18 : 38;
+		return getVersion() < 14 ? 18 : 38;
 	}
 
 	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
@@ -204,7 +208,7 @@ public class TeradataDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		if ( getVersion() >= 1400 ) {
+		if ( getVersion() >= 14 ) {
 
 			//list actually taken from Teradata 15 docs
 			CommonFunctionFactory.lastDay( queryEngine );
@@ -241,7 +245,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public String getAddColumnString() {
-		return getVersion() < 1400 ? "Add Column" : "Add";
+		return getVersion() < 14 ? "Add Column" : "Add";
 	}
 
 	@Override
@@ -290,7 +294,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public boolean areStringComparisonsCaseInsensitive() {
-		return getVersion() < 1400;
+		return getVersion() < 14;
 	}
 
 	@Override
@@ -398,7 +402,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return getVersion() < 1400 ? super.getViolatedConstraintNameExtracter() : EXTRACTER;
+		return getVersion() < 14 ? super.getViolatedConstraintNameExtracter() : EXTRACTER;
 	}
 
 	private static ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
@@ -442,12 +446,12 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
-		return getVersion() >= 1400;
+		return getVersion() >= 14;
 	}
 
 	@Override
 	public String getWriteLockString(int timeout) {
-		if ( getVersion() < 1400 ) {
+		if ( getVersion() < 14 ) {
 			return super.getWriteLockString( timeout );
 		}
 		String sMsg = " Locking row for write ";
@@ -459,7 +463,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public String getReadLockString(int timeout) {
-		if ( getVersion() < 1400 ) {
+		if ( getVersion() < 14 ) {
 			return super.getReadLockString( timeout );
 		}
 		String sMsg = " Locking row for read  ";
@@ -525,7 +529,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return getVersion() < 1400
+		return getVersion() < 14
 				? super.getIdentityColumnSupport()
 				: new Teradata14IdentityColumnSupport();
 	}
@@ -533,7 +537,7 @@ public class TeradataDialect extends Dialect {
 	@Override
 	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
-		return getVersion() < 1400
+		return getVersion() < 14
 				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
 				: new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString() + " " + sql;
 	}

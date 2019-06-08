@@ -6,14 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.SQLException;
-import java.sql.Types;
-
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.internal.util.JdbcExceptionHelper;
-
 /**
  * An SQL dialect for MySQL 5.x specific features.
  *
@@ -21,8 +13,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
  */
 public class MySQL5Dialect extends MySQLDialect {
 
-	@Override
-	int getVersion() {
-		return 500;
+	public MySQL5Dialect() {
+		super(500);
 	}
+
 }

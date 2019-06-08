@@ -9,11 +9,10 @@ package org.hibernate.dialect;
 /**
  * An SQL dialect for Postgres 9.4 and later. Adds support for various date and time functions
  */
-public class PostgreSQL94Dialect extends PostgreSQL93Dialect {
+public class PostgreSQL94Dialect extends PostgreSQLDialect {
 
-	@Override
-	int getVersion() {
-		return 940;
+	public PostgreSQL94Dialect() {
+		super(940);
 	}
 
 }

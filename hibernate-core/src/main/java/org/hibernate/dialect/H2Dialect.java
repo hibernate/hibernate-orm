@@ -39,7 +39,6 @@ import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -74,42 +73,28 @@ public class H2Dialect extends Dialect {
 		}
 	};
 
-	private final String querySequenceString;
-	private final SequenceInformationExtractor sequenceInformationExtractor;
+//	private final String querySequenceString;
+//	private final SequenceInformationExtractor sequenceInformationExtractor;
 
-	/**
-	 * Constructs a H2Dialect
-	 */
 	public H2Dialect() {
+		this(0);
+	}
+
+	public H2Dialect(int version) {
 		super();
 
-		int buildId = Integer.MIN_VALUE;
-
-		try {
-			// HHH-2300
-			final Class h2ConstantsClass = ReflectHelper.classForName( "org.h2.engine.Constants" );
-			final int majorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MAJOR" ).get( null );
-			final int minorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MINOR" ).get( null );
-			buildId = (Integer) h2ConstantsClass.getDeclaredField( "BUILD_ID" ).get( null );
-
-			if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
-				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
-			}
-		}
-		catch ( Exception e ) {
-			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
-			// not using the correct classloader
-			LOG.undeterminedH2Version();
+		if ( version <= 120 ) {
+			warnIfNecessary();
 		}
 
-		if ( buildId >= 32 ) {
-			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
-			this.querySequenceString = "select * from information_schema.sequences";
-		}
-		else {
-			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
-			this.querySequenceString = null;
-		}
+//		if ( buildId >= 32 ) {
+//			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+//			this.querySequenceString = "select * from information_schema.sequences";
+//		}
+//		else {
+//			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
+//			this.querySequenceString = null;
+//		}
 
 		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
 //		registerColumnType( Types.BIT, "bit" );
@@ -117,6 +102,26 @@ public class H2Dialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	private static void warnIfNecessary() {
+		try {
+			// HHH-2300
+			final Class h2ConstantsClass = ReflectHelper.classForName("org.h2.engine.Constants");
+			final int majorVersion = (Integer) h2ConstantsClass.getDeclaredField("VERSION_MAJOR").get( null );
+			final int minorVersion = (Integer) h2ConstantsClass.getDeclaredField("VERSION_MINOR").get( null );
+			int buildId = (Integer) h2ConstantsClass.getDeclaredField("BUILD_ID").get( null );
+
+			if ( !( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
+				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
+			}
+		}
+		catch (Exception e) {
+			// probably H2 not in the classpath, though in certain app server
+			// environments it might just mean we are not using the correct
+			// classloader
+			LOG.undeterminedH2Version();
+		}
 	}
 
 	@Override
@@ -277,12 +282,12 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return querySequenceString;
+		return "select * from information_schema.sequences";
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return sequenceInformationExtractor;
+		return SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 	}
 
 	@Override

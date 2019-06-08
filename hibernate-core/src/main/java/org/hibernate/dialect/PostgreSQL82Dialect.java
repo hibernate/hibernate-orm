@@ -11,11 +11,9 @@ package org.hibernate.dialect;
  * 
  * @author edalquist
  */
-public class PostgreSQL82Dialect extends PostgreSQL81Dialect {
+public class PostgreSQL82Dialect extends PostgreSQLDialect {
 
-	@Override
-	int getVersion() {
-		return 820;
+	public PostgreSQL82Dialect() {
+		super(820);
 	}
-
 }

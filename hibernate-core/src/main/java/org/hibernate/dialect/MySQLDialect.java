@@ -55,9 +55,10 @@ public class MySQLDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 	private MySQLStorageEngine storageEngine;
+	private int version;
 
 	int getVersion() {
-		return 400;
+		return version;
 	}
 
 	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
@@ -73,17 +74,19 @@ public class MySQLDialect extends Dialect {
 		}
 	};
 
-	/**
-	 * Constructs a MySQLDialect
-	 */
 	public MySQLDialect() {
+		this(400);
+	}
+
+	public MySQLDialect(int version) {
 		super();
+		this.version = version;
 
 		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
-		if(storageEngine == null) {
+		if (storageEngine == null) {
 			storageEngine = System.getProperty( Environment.STORAGE_ENGINE );
 		}
-		if(storageEngine == null) {
+		if (storageEngine == null) {
 			this.storageEngine = getDefaultMySQLStorageEngine();
 		}
 		else if( "innodb".equals( storageEngine.toLowerCase() ) ) {
@@ -100,7 +103,7 @@ public class MySQLDialect extends Dialect {
 
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" ); //it's just a synonym
 
-		int maxVarcharLen = getVersion()<500 ? 255 : 65535;
+		int maxVarcharLen = getVersion() < 500 ? 255 : 65535;
 
 		registerColumnType( Types.VARCHAR, "longtext" );
 //		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );

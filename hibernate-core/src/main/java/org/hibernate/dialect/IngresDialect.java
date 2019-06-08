@@ -86,15 +86,22 @@ public class IngresDialect extends Dialect {
 		}
 	};
 
+	private final int version;
+
 	int getVersion() {
-		return 920;
+		return version;
+	}
+
+	public IngresDialect() {
+		this(920);
 	}
 
 	/**
 	 * Constructs a IngresDialect
 	 */
-	public IngresDialect() {
+	public IngresDialect(int version) {
 		super();
+		this.version = version;
 
 		if ( getVersion() < 1000 ) {
 			registerColumnType( Types.BIT, 1, "tinyint" );

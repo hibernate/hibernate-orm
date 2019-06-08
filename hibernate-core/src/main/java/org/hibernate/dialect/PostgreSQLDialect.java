@@ -71,8 +71,10 @@ import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTim
  */
 public class PostgreSQLDialect extends Dialect {
 
+	private final int version;
+
 	int getVersion() {
-		return 800;
+		return version;
 	}
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
@@ -93,11 +95,13 @@ public class PostgreSQLDialect extends Dialect {
 		}
 	};
 
-	/**
-	 * Constructs a PostgreSQL81Dialect
-	 */
 	public PostgreSQLDialect() {
+		this(800);
+	}
+
+	public PostgreSQLDialect(int version) {
 		super();
+		this.version = version;
 
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint, not even in Postgres 11
 

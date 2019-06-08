@@ -14,8 +14,8 @@ package org.hibernate.dialect;
  */
 public class SQLServer2005Dialect extends SQLServerDialect {
 
-	int getVersion() {
-		return 2005;
+	public SQLServer2005Dialect() {
+		super(9);
 	}
 
 }

@@ -13,11 +13,10 @@ package org.hibernate.dialect;
  * 
  * @author Mark Robinson
  */
-public class PostgreSQL92Dialect extends PostgreSQL91Dialect {
+public class PostgreSQL92Dialect extends PostgreSQLDialect {
 
-	@Override
-	int getVersion() {
-		return 920;
+	public PostgreSQL92Dialect() {
+		super(920);
 	}
 
 }

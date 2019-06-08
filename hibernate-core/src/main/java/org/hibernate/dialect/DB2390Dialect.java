@@ -22,8 +22,19 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class DB2390Dialect extends DB2Dialect {
 
+	private final int version;
+
 	int get390Version() {
-		return 700;
+		return version;
+	}
+
+	public DB2390Dialect() {
+		this(7);
+	}
+
+	public DB2390Dialect(int version) {
+		super();
+		this.version = version;
 	}
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
@@ -80,12 +91,12 @@ public class DB2390Dialect extends DB2Dialect {
 
 	@Override
 	public boolean supportsSequences() {
-		return get390Version() >= 800;
+		return get390Version() >= 8;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return get390Version() < 800 ? null : "select * from sysibm.syssequences";
+		return get390Version() < 8 ? null : "select * from sysibm.syssequences";
 	}
 
 	public String getSequenceNextValString(String sequenceName) {

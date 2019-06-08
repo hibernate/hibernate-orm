@@ -11,11 +11,9 @@ package org.hibernate.dialect;
  *
  * @author Strong Liu
  */
-public class DerbyTenSevenDialect extends DerbyTenSixDialect {
+public class DerbyTenSevenDialect extends DerbyDialect {
 
-	@Override
-	int getDerbyVersion() {
-		return 1070;
+	public DerbyTenSevenDialect() {
+		super(1070);
 	}
-
 }

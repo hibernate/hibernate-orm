@@ -18,10 +18,17 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * @author Vlad Mihalcea
  * @author Gavin King
  */
-public class MariaDBDialect extends MySQL5Dialect {
+public class MariaDBDialect extends MySQLDialect {
+
+	private final int version;
 
 	public MariaDBDialect() {
-		super();
+		this(500);
+	}
+
+	public MariaDBDialect(int version) {
+		super(version < 530 ? 500 : 570);
+		this.version = version;
 	}
 
 	@Override
@@ -34,7 +41,7 @@ public class MariaDBDialect extends MySQL5Dialect {
 	}
 
 	int getMariaVersion() {
-		return 500;
+		return version;
 	}
 
 	public boolean supportsRowValueConstructorSyntaxInInList() {

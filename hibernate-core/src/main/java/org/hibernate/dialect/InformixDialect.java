@@ -40,18 +40,25 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  */
 public class InformixDialect extends Dialect {
 
+	private final int version;
+
 	int getVersion() {
-		return 731;
+		return version;
 	}
 
 	private final UniqueDelegate uniqueDelegate;
+
+	public InformixDialect() {
+		this(7);
+	}
 
 	/**
 	 * Creates new <code>InformixDialect</code> instance. Sets up the JDBC /
 	 * Informix type mappings.
 	 */
-	public InformixDialect() {
+	public InformixDialect(int version) {
 		super();
+		this.version = version;
 
 		// Informix doesn't have a bit type
 		registerColumnType( Types.BIT, 1, "boolean" );
@@ -230,7 +237,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( getVersion() >= 1000 ) {
+		if ( getVersion() >= 10 ) {
 			// Since version 10.00.xC3 Informix has limit/offset
  			// support which was introduced in July 2005.
 			return Informix10LimitHandler.INSTANCE;
@@ -290,22 +297,28 @@ public class InformixDialect extends Dialect {
 			String constraintName = null;
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 
-			if ( errorCode == -268 ) {
-				constraintName = extractUsingTemplate( "Unique constraint (", ") violated.", sqle.getMessage() );
-			}
-			else if ( errorCode == -691 ) {
-				constraintName = extractUsingTemplate(
-						"Missing key in referenced table for referential constraint (",
-						").",
-						sqle.getMessage()
-				);
-			}
-			else if ( errorCode == -692 ) {
-				constraintName = extractUsingTemplate(
-						"Key value for constraint (",
-						") is still being referenced.",
-						sqle.getMessage()
-				);
+			switch (errorCode) {
+				case -268:
+					constraintName = extractUsingTemplate(
+							"Unique constraint (",
+							") violated.",
+							sqle.getMessage()
+					);
+					break;
+				case -691:
+					constraintName = extractUsingTemplate(
+							"Missing key in referenced table for referential constraint (",
+							").",
+							sqle.getMessage()
+					);
+					break;
+				case -692:
+					constraintName = extractUsingTemplate(
+							"Key value for constraint (",
+							") is still being referenced.",
+							sqle.getMessage()
+					);
+					break;
 			}
 
 			if ( constraintName != null ) {

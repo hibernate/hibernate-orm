@@ -14,11 +14,10 @@ package org.hibernate.dialect;
  *
  * @author Steve Ebersole
  */
-public class Oracle9iDialect extends Oracle8iDialect {
+public class Oracle9iDialect extends OracleDialect {
 
-	@Override
-	int getVersion() {
-		return 9;
+	public Oracle9iDialect() {
+		super(9);
 	}
 
 }

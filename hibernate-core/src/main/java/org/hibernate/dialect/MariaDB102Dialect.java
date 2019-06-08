@@ -11,11 +11,10 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import java.sql.Types;
 
-public class MariaDB102Dialect extends MariaDB10Dialect {
+public class MariaDB102Dialect extends MariaDBDialect {
 
-	@Override
-	int getMariaVersion() {
-		return 1020;
+	public MariaDB102Dialect() {
+		super(1020);
 	}
 
 }

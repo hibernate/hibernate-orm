@@ -216,6 +216,11 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 						}
 
 						@Override
+						public String getDatabaseVersion() {
+							return null; //TODO!!
+						}
+
+						@Override
 						public int getDatabaseMajorVersion() {
 							return StringHelper.isEmpty( explicitDbMajor )
 									? NO_VERSION

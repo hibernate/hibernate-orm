@@ -14,4 +14,8 @@ package org.hibernate.dialect;
  * @deprecated use {@link SybaseASEDialect} instead
  */
 @Deprecated
-public class Sybase11Dialect extends SybaseASEDialect {}
+public class Sybase11Dialect extends SybaseASEDialect {
+	public Sybase11Dialect() {
+		super();
+	}
+}

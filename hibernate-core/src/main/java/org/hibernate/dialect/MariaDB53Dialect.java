@@ -11,16 +11,8 @@ package org.hibernate.dialect;
  */
 public class MariaDB53Dialect extends MariaDBDialect {
 
-	@Override
-	int getMariaVersion() {
-		return 530;
+	public MariaDB53Dialect() {
+		super(530);
 	}
 
-	@Override
-	int getVersion() {
-		//this is a bit questionable: does
-		//MariaBD 5.3 really support *every*
-		//feature of MySQL 5.7?
-		return 570;
-	}
 }

@@ -15,9 +15,7 @@ package org.hibernate.dialect;
 @SuppressWarnings("deprecation")
 public class DerbyTenFiveDialect extends DerbyDialect {
 
-	@Override
-	int getDerbyVersion() {
-		return 1050;
+	public DerbyTenFiveDialect() {
+		super(1050);
 	}
-
 }

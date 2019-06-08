@@ -56,8 +56,10 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  */
 public class DB2Dialect extends Dialect {
 
+	private final int version;
+
 	int getVersion() {
-		return 900;
+		return version;
 	}
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
@@ -91,11 +93,17 @@ public class DB2Dialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 
+	public DB2Dialect() {
+		this(900);
+	}
+
 	/**
 	 * Constructs a DB2Dialect
 	 */
-	public DB2Dialect() {
+	public DB2Dialect(int version) {
 		super();
+		this.version = version;
+
 		registerColumnType( Types.BIT, 1, "boolean" ); //no bit
 		registerColumnType( Types.BIT, "smallint" ); //no bit
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint

@@ -9,11 +9,10 @@ package org.hibernate.dialect;
 /**
  * An SQL dialect for Postgres 9.5 and later. Adds support for SKIP LOCKED.
  */
-public class PostgreSQL95Dialect extends PostgreSQL94Dialect {
+public class PostgreSQL95Dialect extends PostgreSQLDialect {
 
-	@Override
-	int getVersion() {
-		return 950;
+	public PostgreSQL95Dialect() {
+		super(950);
 	}
 
 }

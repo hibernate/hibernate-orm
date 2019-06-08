@@ -76,8 +76,10 @@ import static org.hibernate.query.TemporalUnit.conversionFactor;
  */
 public class OracleDialect extends Dialect {
 
+	private final int version;
+
 	int getVersion() {
-		return 8;
+		return version;
 	}
 
 	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b" );
@@ -153,11 +155,14 @@ public class OracleDialect extends Dialect {
 		}
 	};
 
-	/**
-	 * Constructs a Oracle8iDialect
-	 */
 	public OracleDialect() {
+		this(8);
+	}
+
+	public OracleDialect(int version) {
 		super();
+		this.version = version;
+
 		registerCharacterTypeMappings();
 		registerNumericTypeMappings();
 		registerDateTimeTypeMappings();

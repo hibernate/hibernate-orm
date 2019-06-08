@@ -9,10 +9,10 @@ package org.hibernate.dialect;
 /**
  * @author Gail Badner
  */
-public class MySQL57Dialect extends MySQL55Dialect {
+public class MySQL57Dialect extends MySQLDialect {
 
-	@Override
-	int getVersion() {
-		return 570;
+	public MySQL57Dialect() {
+		super(570);
 	}
+
 }

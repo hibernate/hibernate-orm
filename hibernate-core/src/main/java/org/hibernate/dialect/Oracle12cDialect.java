@@ -20,11 +20,9 @@ import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
  *
  * @author zhouyanming (zhouyanming@gmail.com)
  */
-public class Oracle12cDialect extends Oracle10gDialect {
+public class Oracle12cDialect extends OracleDialect {
 
-	@Override
-	int getVersion() {
-		return 12;
+	public Oracle12cDialect() {
+		super(12);
 	}
-
 }

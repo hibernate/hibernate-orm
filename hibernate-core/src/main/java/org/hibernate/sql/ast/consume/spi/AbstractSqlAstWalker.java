@@ -165,14 +165,26 @@ public abstract class AbstractSqlAstWalker
 		}
 
 		visitSelectClause( querySpec.getSelectClause() );
-		visitFromClause( querySpec.getFromClause() );
 
-		if ( querySpec.getWhereClauseRestrictions() != null && !querySpec.getWhereClauseRestrictions().isEmpty() ) {
+		FromClause fromClause = querySpec.getFromClause();
+		if ( fromClause == null || fromClause.getRoots().isEmpty() ) {
+			String fromDual = getJdbcServices().getDialect().getFromDual();
+			if ( !fromDual.isEmpty() ) {
+				appendSql(" ");
+				appendSql( fromDual );
+			}
+		}
+		else {
+			visitFromClause( fromClause );
+		}
+
+		Predicate whereClauseRestrictions = querySpec.getWhereClauseRestrictions();
+		if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty() ) {
 			appendSql( " where " );
 
 			clauseStack.push( Clause.WHERE );
 			try {
-				querySpec.getWhereClauseRestrictions().accept( this );
+				whereClauseRestrictions.accept( this );
 			}
 			finally {
 				clauseStack.pop();

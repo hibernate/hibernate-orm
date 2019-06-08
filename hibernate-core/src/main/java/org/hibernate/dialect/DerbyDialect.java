@@ -136,6 +136,11 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from sysibm.sysdummy1";
+	}
+
+	@Override
 	public boolean supportsCommentOn() {
 		//HHH-4531
 		return false;

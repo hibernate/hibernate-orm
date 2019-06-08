@@ -41,4 +41,14 @@ public class QueryTest extends SessionFactoryBasedFunctionalTest {
 		);
 	}
 
+	@Test
+	public void testNoFrom() {
+		inTransaction(
+				session -> {
+					session.createQuery("select 'hello'").list();
+					session.createQuery("select current_timestamp, current_date").list();
+				}
+		);
+	}
+
 }

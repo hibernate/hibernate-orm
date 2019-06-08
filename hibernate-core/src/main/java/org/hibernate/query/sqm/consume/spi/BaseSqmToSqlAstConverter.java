@@ -325,7 +325,10 @@ public abstract class BaseSqmToSqlAstConverter
 
 		try {
 			// we want to visit the from-clause first
-			visitFromClause( sqmQuerySpec.getFromClause() );
+			final SqmFromClause fromClause = sqmQuerySpec.getFromClause();
+			if ( fromClause != null) {
+				visitFromClause( fromClause );
+			}
 
 			final SqmSelectClause selectClause = sqmQuerySpec.getSelectClause();
 			if ( selectClause != null ) {

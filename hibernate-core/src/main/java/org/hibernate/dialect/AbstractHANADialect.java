@@ -878,6 +878,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from sys.dummy";
+	}
+
+	@Override
 	public String getQueryHintString(String query, List<String> hints) {
 		return query + " with hint (" + String.join( ",", hints ) + ")";
 	}

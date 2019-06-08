@@ -738,6 +738,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from dual";
+	}
+
+	@Override
 	public String getQuerySequencesString() {
 		return "select * from all_sequences";
 	}

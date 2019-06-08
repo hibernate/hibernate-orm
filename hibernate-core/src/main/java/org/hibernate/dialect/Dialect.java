@@ -1299,6 +1299,17 @@ public abstract class Dialect implements ConversionContext {
 		throw new UnsupportedOperationException( getClass().getName() + " does not support GUIDs" );
 	}
 
+	// 'from dual' support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Some databases require a bit of syntactic noise when
+	 * there are no tables in the from clause.
+	 *
+	 * @return the SQL equivalent to Oracle's {@code from dual}.
+	 */
+	public String getFromDual() {
+		return "";
+	}
 
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

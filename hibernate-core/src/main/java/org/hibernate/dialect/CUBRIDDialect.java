@@ -226,6 +226,11 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from db_root";
+	}
+
+	@Override
 	public char openQuote() {
 		return '[';
 	}

@@ -454,6 +454,12 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		//this is only necessary if the query has a where clause
+		return "from (select 0) as dual";
+	}
+
+	@Override
 	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
 	}

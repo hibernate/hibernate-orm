@@ -73,7 +73,7 @@ targetFieldsSpec
 // QUERY SPEC - general structure of root sqm or sub sqm
 
 querySpec
-	: selectClause fromClause whereClause? ( groupByClause havingClause? )? orderByClause? limitClause? offsetClause?
+	: selectClause fromClause? whereClause? ( groupByClause havingClause? )? orderByClause? limitClause? offsetClause?
 	| fromClause whereClause? ( groupByClause havingClause? )? selectClause? orderByClause? limitClause? offsetClause?
 	;
 

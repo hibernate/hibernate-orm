@@ -68,6 +68,11 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from sys.dummy";
+	}
+
+	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new SybaseAnywhereIdentityColumnSupport();
 	}

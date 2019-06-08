@@ -77,4 +77,10 @@ public class FirebirdDialect extends InterbaseDialect {
 	public LimitHandler getLimitHandler() {
 		return LIMIT_HANDLER;
 	}
+
+	@Override
+	public String getFromDual() {
+		return "from RDB$DATABASE";
+	}
+
 }

@@ -594,6 +594,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from sysibm.dual";
+	}
+
+	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		if ( getVersion() < 970 ) {
 			return sqlCode == Types.NUMERIC

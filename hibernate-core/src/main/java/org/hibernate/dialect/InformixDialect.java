@@ -282,6 +282,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from (select 0 from systables where tabid = 1) as dual";
+	}
+
+	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRACTER;
 	}

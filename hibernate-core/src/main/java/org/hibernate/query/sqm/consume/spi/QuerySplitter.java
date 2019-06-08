@@ -86,12 +86,14 @@ public class QuerySplitter {
 		// the unmapped polymorphic reference can only be a root and can be the only
 		// root.  Use that restriction to locate the unmapped polymorphic reference
 		SqmRoot unmappedPolymorphicReference = null;
-		for ( SqmRoot root : statement.getQuerySpec().getFromClause().getRoots() ) {
-			if ( root.getReferencedNavigable() instanceof SqmPolymorphicRootDescriptor ) {
-				unmappedPolymorphicReference = root;
+		SqmFromClause fromClause = statement.getQuerySpec().getFromClause();
+		if ( fromClause != null ) {
+			for ( SqmRoot root : fromClause.getRoots() ) {
+				if ( root.getReferencedNavigable() instanceof SqmPolymorphicRootDescriptor ) {
+					unmappedPolymorphicReference = root;
+				}
 			}
 		}
-
 		if ( unmappedPolymorphicReference == null ) {
 			return new SqmSelectStatement[] { statement };
 		}

@@ -473,13 +473,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmQuerySpec visitQuerySpec(HqlParser.QuerySpecContext ctx) {
 		final SqmQuerySpec sqmQuerySpec = new SqmQuerySpec( creationContext.getNodeBuilder() );
 
-		// visit from-clause first!!!
-		treatHandlerStack.push( new TreatHandlerFromClause() );
-		try {
-			sqmQuerySpec.setFromClause( visitFromClause( ctx.fromClause() ) );
-		}
-		finally {
-			treatHandlerStack.pop();
+		if ( ctx.fromClause()!=null ) {
+			// visit from-clause first!!!
+			treatHandlerStack.push( new TreatHandlerFromClause() );
+			try {
+				sqmQuerySpec.setFromClause( visitFromClause( ctx.fromClause() ) );
+			}
+			finally {
+				treatHandlerStack.pop();
+			}
 		}
 
 		final SqmSelectClause selectClause;

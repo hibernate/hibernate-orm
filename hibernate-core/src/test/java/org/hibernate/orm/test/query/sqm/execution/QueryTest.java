@@ -31,4 +31,14 @@ public class QueryTest extends SessionFactoryBasedFunctionalTest {
 		);
 	}
 
+	@Test
+	public void testSelectAfterFrom() {
+		inTransaction(
+				session -> {
+					session.createQuery("from EntityOfBasics e select e.id, e.theString").list();
+					session.createQuery("from EntityOfBasics e where e.theString is not null select e.id, e.theString order by e.theString").list();
+				}
+		);
+	}
+
 }

@@ -8,7 +8,9 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -104,6 +106,22 @@ public class DriverManagerConnectionProviderImpl
 		final String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
 		connectionCreatorBuilder.setDriver( loadDriverIfPossible( driverClassName, serviceRegistry ) );
 
+		if ( driverClassName == null ) {
+			log.noDriver( AvailableSettings.DRIVER );
+			StringBuilder list = new StringBuilder();
+			Enumeration<Driver> drivers = DriverManager.getDrivers();
+			while ( drivers.hasMoreElements() ) {
+				if ( list.length() != 0) {
+					list.append(", ");
+				}
+				list.append( drivers.nextElement().getClass().getName() );
+			}
+			log.loadedDrivers( list.toString() );
+		}
+		else {
+			log.usingDriver( driverClassName );
+		}
+
 		final String url = (String) configurationValues.get( AvailableSettings.URL );
 		if ( url == null ) {
 			final String msg = log.jdbcUrlNotSpecified( AvailableSettings.URL );
@@ -112,7 +130,7 @@ public class DriverManagerConnectionProviderImpl
 		}
 		connectionCreatorBuilder.setUrl( url );
 
-		log.usingDriver( driverClassName, url );
+		log.usingUrl( url );
 
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 

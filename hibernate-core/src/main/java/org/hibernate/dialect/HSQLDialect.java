@@ -132,19 +132,21 @@ public class HSQLDialect extends Dialect {
 
 		this.version = version;
 
-		//note that all floating point types are synonyms for 'double'
+		//Note that all floating point types are synonyms for 'double'
 
 		registerColumnType( Types.LONGVARCHAR, "longvarchar" ); //synonym for 'varchar(16M)'
 		registerColumnType( Types.LONGVARBINARY, "longvarbinary" ); //synonym for 'varbinary(16M)'
 
-		registerColumnType( Types.NCLOB, "clob" ); //HHH-10364
+		//HSQL has no 'nclob' type, but 'clob' is Unicode
+		//(See HHH-10364)
+		registerColumnType( Types.NCLOB, "clob" );
 
 		if ( this.version < 200 ) {
+			//Older versions of HSQL did not accept
+			//precision for the 'numeric' type
 			registerColumnType( Types.NUMERIC, "numeric" );
-		}
 
-		if ( this.version < 200 ) {
-			//HSQL has no Blob/Clob support .... but just put these here for now!
+			//Older versions of HSQL had no lob support
 			registerColumnType( Types.BLOB, "longvarbinary" );
 			registerColumnType( Types.CLOB, "longvarchar" );
 		}
@@ -164,8 +166,8 @@ public class HSQLDialect extends Dialect {
 			final String versionString = (String) props.getDeclaredField("THIS_VERSION").get( null );
 
 			return Integer.parseInt( versionString.substring(0, 1) ) * 100
-					+ Integer.parseInt( versionString.substring(2, 3) ) * 10
-					+ Integer.parseInt( versionString.substring(4, 5) );
+				 + Integer.parseInt( versionString.substring(2, 3) ) * 10
+				 + Integer.parseInt( versionString.substring(4, 5) );
 		}
 		catch (Throwable e) {
 			// might be a very old version, or not accessible in class path

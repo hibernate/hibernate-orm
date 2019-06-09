@@ -178,7 +178,7 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.formatdatetime( queryEngine );
+		CommonFunctionFactory.format_formatdatetime( queryEngine );
 		CommonFunctionFactory.rownum( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new H2ExtractEmulation() );

@@ -198,9 +198,9 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 2 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "format" )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.register();
+//		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "format" )
+//				.setInvariantType( StandardSpiBasicTypes.STRING )
+//				.register();
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "from_base64" )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.setExactArgumentCount( 1 )

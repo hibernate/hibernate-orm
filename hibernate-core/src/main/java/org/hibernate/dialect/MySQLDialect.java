@@ -212,7 +212,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.varPopSamp( queryEngine );
 		CommonFunctionFactory.datediff( queryEngine );
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
-		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+		CommonFunctionFactory.format_dateFormat( queryEngine );
 		CommonFunctionFactory.makedateMaketime( queryEngine );
 
 		if ( getVersion() < 570 ) {

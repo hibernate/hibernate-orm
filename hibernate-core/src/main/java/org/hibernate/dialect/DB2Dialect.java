@@ -201,7 +201,7 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.yearsMonthsDaysHoursMinutesSecondsBetween( queryEngine );
 		CommonFunctionFactory.dateTrunc( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().register( "formatdatetime", new DB2FormatEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "format", new DB2FormatEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "posstr" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )

@@ -95,12 +95,12 @@ public class DB2FormatEmulation
 				arguments,
 				impliedResultType,
 				queryEngine.getCriteriaBuilder(),
-				"formatdatetime"
+				"format"
 		);
 	}
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(datetime, pattern)";
+		return "(datetime as pattern)";
 	}
 }

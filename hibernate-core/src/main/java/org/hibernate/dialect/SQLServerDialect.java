@@ -113,7 +113,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 
 		if ( getVersion() >= 11 ) {
-			CommonFunctionFactory.formatdatetime_format( queryEngine );
+			CommonFunctionFactory.format_format( queryEngine );
 
 			//actually translate() was added in 2017 but
 			//it's not worth adding a new dialect for that!

@@ -1588,11 +1588,11 @@ public class CommonFunctionFactory {
 	/**
 	 * H2-style (uses Java's SimpleDateFormat directly so no need to translate format)
 	 */
-	public static void formatdatetime(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime")
+	public static void format_formatdatetime(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("format", "formatdatetime")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
-				.setArgumentListSignature("(datetime, pattern)")
+				.setArgumentListSignature("(datetime as pattern)")
 				.register();
 	}
 
@@ -1602,11 +1602,11 @@ public class CommonFunctionFactory {
 	 * @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 * @see org.hibernate.dialect.InformixDialect#datetimeFormat
 	 */
-	public static void formatdatetime_toChar(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "to_char")
+	public static void format_toChar(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("format", "to_char")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
-				.setArgumentListSignature("(datetime, pattern)")
+				.setArgumentListSignature("(datetime as pattern)")
 				.register();
 	}
 
@@ -1615,11 +1615,11 @@ public class CommonFunctionFactory {
 	 *
 	 * @see org.hibernate.dialect.MySQLDialect#datetimeFormat
 	 */
-	public static void formatdatetime_dateFormat(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "date_format")
+	public static void format_dateFormat(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("format", "date_format")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
-				.setArgumentListSignature("(datetime, pattern)")
+				.setArgumentListSignature("(datetime as pattern)")
 				.register();
 	}
 
@@ -1628,11 +1628,11 @@ public class CommonFunctionFactory {
 	 *
 	 * @see org.hibernate.dialect.SQLServerDialect#datetimeFormat
 	 */
-	public static void formatdatetime_format(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "format")
+	public static void format_format(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("format", "format")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
-				.setArgumentListSignature("(datetime, pattern)")
+				.setArgumentListSignature("(datetime as pattern)")
 				.register();
 	}
 
@@ -1641,11 +1641,11 @@ public class CommonFunctionFactory {
 	 *
 	 *  @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 */
-	public static void formatdatetime_toVarchar(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("formatdatetime", "to_varchar")
+	public static void format_toVarchar(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("format", "to_varchar")
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount(2)
-				.setArgumentListSignature("(datetime, pattern)")
+				.setArgumentListSignature("(datetime as pattern)")
 				.register();
 	}
 

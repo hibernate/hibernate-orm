@@ -2498,7 +2498,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			case NANOSECOND:
 				return extractNanoseconds( expressionToExtract );
 			case OFFSET:
-				// use formatdatetime(arg, 'xxx') to get the offset
+				// use format(arg, 'xxx') to get the offset
 				return extractOffsetUsingFormat( expressionToExtract );
 			case DATE:
 			case TIME:
@@ -2562,7 +2562,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	private SqmExpression<ZoneOffset> extractOffsetUsingFormat(
 			SqmExpression<?> expressionToExtract) {
-		return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
+		return getFunctionTemplate("format").makeSqmFunctionExpression(
 				asList(
 						expressionToExtract,
 						new SqmFormat(
@@ -2689,7 +2689,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final SqmExpression<?> expressionToCast = (SqmExpression) ctx.expression().accept( this );
 		final SqmLiteral<?> format = (SqmLiteral) ctx.format().accept( this );
 
-		return getFunctionTemplate("formatdatetime").makeSqmFunctionExpression(
+		return getFunctionTemplate("format").makeSqmFunctionExpression(
 				asList( expressionToCast, format ),
 				basicType( String.class ),
 				creationContext.getQueryEngine(),

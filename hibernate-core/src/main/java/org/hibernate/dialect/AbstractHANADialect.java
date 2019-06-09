@@ -317,7 +317,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
 		CommonFunctionFactory.daysBetween( queryEngine );
 		CommonFunctionFactory.secondsBetween( queryEngine );
-		CommonFunctionFactory.formatdatetime_toVarchar( queryEngine );
+		CommonFunctionFactory.format_toVarchar( queryEngine );
 		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new HANAExtractEmulation() );

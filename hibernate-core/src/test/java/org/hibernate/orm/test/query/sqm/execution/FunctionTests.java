@@ -254,6 +254,31 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testPadFunction() {
+		inTransaction(
+				session -> {
+					assertThat(session.createQuery("select pad('hello' with 10 leading)").getSingleResult(),
+							is("     hello"));
+					assertThat(session.createQuery("select pad('hello' with 10 trailing)").getSingleResult(),
+							is("hello     "));
+					assertThat(session.createQuery("select pad('hello' with 10 leading '.')").getSingleResult(),
+							is(".....hello"));
+					assertThat(session.createQuery("select pad('hello' with 10 trailing '.')").getSingleResult(),
+							is("hello....."));
+
+					session.createQuery("select pad(?1 with ?2 leading)")
+							.setParameter(1, "hello")
+							.setParameter(2, 10)
+							.getSingleResult();
+					session.createQuery("select pad(:string with :length leading)")
+							.setParameter("string", "hello")
+							.setParameter("length", 10)
+							.getSingleResult();
+				}
+		);
+	}
+
+	@Test
 	public void testCastFunction() {
 		inTransaction(
 				session -> {

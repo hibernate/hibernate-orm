@@ -654,6 +654,7 @@ standardFunction
 	| overlayFunction
 	| replaceFunction
 	| trimFunction
+	| padFunction
 	| upperFunction
 	| lowerFunction
 	| locateFunction
@@ -730,6 +731,23 @@ trimSpecification
 
 trimCharacter
 	: STRING_LITERAL
+	;
+
+padFunction
+	: PAD LEFT_PAREN expression WITH padLength padSpecification padCharacter? RIGHT_PAREN
+	;
+
+padSpecification
+	: LEADING
+	| TRAILING
+	;
+
+padCharacter
+	: STRING_LITERAL
+	;
+
+padLength
+	: expression
 	;
 
 upperFunction
@@ -1052,9 +1070,10 @@ identifier
 	| OR
 	| ORDER
 	| OUTER
+	| PAD
 	| POSITION
-	| QUARTER
 	| POWER
+	| QUARTER
 	| REPLACE
 	| ROUND
 	| RIGHT

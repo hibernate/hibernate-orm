@@ -165,7 +165,6 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.substr( queryEngine );

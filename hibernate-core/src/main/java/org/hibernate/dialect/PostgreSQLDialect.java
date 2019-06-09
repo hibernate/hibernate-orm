@@ -288,7 +288,6 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.cbrt( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.md5( queryEngine );

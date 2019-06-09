@@ -196,7 +196,6 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.bitand( queryEngine );
 		CommonFunctionFactory.bitor( queryEngine );

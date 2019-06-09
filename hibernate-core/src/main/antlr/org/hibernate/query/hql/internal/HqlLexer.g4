@@ -221,6 +221,7 @@ OR					: [oO] [rR];
 ORDER				: [oO] [rR] [dD] [eE] [rR];
 OUTER				: [oO] [uU] [tT] [eE] [rR];
 OVERLAY				: [oO] [vV] [eE] [rR] [lL] [aA] [yY];
+PAD					: [pP] [aA] [dD];
 PLACING				: [pP] [lL] [aA] [cC] [iI] [nN] [gG];
 POSITION			: [pP] [oO] [sS] [iI] [tT] [iI] [oO] [nN];
 POWER				: [pP] [oO] [wW] [eE] [rR];

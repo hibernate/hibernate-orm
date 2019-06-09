@@ -44,6 +44,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CurrentFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.LocatePositionEmulation;
+import org.hibernate.dialect.function.LpadRpadPadEmulation;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -347,6 +348,7 @@ public abstract class Dialect implements ConversionContext {
 	 * And a number of additional "standard" functions:
 	 *
 	 *      * format
+	 *      * pad
 	 *      * left, right
 	 *      * replace
 	 *      * least, greatest
@@ -428,6 +430,11 @@ public abstract class Dialect implements ConversionContext {
 		//database, so define it here as an alias for coalesce(arg1,arg2)
 
 		queryEngine.getSqmFunctionRegistry().register("ifnull", new CoalesceIfnullEmulation());
+
+		//lpad(), rpad(), and pad()
+
+		CommonFunctionFactory.pad( queryEngine );
+		queryEngine.getSqmFunctionRegistry().register("pad", new LpadRpadPadEmulation());
 
 		//legacy Hibernate convenience function for casting to string, defined
 		//here as an alias for cast(arg as String)

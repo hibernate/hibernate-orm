@@ -178,7 +178,6 @@ public class SpannerDialect extends Dialect {
 
 		// String Functions
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.substr( queryEngine );

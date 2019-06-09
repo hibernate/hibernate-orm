@@ -187,7 +187,6 @@ public class OracleDialect extends Dialect {
 		CommonFunctionFactory.log( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.substr( queryEngine );

@@ -109,7 +109,6 @@ public class CUBRIDDialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );

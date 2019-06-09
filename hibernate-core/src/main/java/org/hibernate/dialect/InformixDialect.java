@@ -121,7 +121,6 @@ public class InformixDialect extends Dialect {
 		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );

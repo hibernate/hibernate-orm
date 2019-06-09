@@ -163,7 +163,6 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.substr( queryEngine );

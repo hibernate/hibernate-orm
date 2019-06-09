@@ -218,7 +218,6 @@ public class TeradataDialect extends Dialect {
 			//list actually taken from Teradata 15 docs
 			CommonFunctionFactory.lastDay( queryEngine );
 			CommonFunctionFactory.initcap( queryEngine );
-			CommonFunctionFactory.pad( queryEngine );
 			CommonFunctionFactory.trim2( queryEngine );
 			CommonFunctionFactory.soundex( queryEngine );
 			CommonFunctionFactory.ascii( queryEngine );

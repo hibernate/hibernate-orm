@@ -3002,6 +3002,53 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public SqmExpression visitPadFunction(HqlParser.PadFunctionContext ctx) {
+		final SqmExpression source = (SqmExpression) ctx.expression().accept( this );
+		SqmExpression length = (SqmExpression) ctx.padLength().accept(this);
+		SqmTrimSpecification padSpec = (SqmTrimSpecification) ctx.padSpecification().accept(this);
+		SqmLiteral<Character> padChar = (SqmLiteral) ctx.padCharacter().accept(this);
+
+		return getFunctionTemplate("pad").makeSqmFunctionExpression(
+				asList( source, length, padSpec, padChar ),
+				basicType( String.class ),
+				creationContext.getQueryEngine(),
+				creationContext.getDomainModel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmTrimSpecification visitPadSpecification(HqlParser.PadSpecificationContext ctx) {
+		TrimSpec spec;
+		if ( ctx.LEADING() != null ) {
+			spec = TrimSpec.LEADING;
+		}
+		else {
+			spec = TrimSpec.TRAILING;
+		}
+		return new SqmTrimSpecification( spec, creationContext.getNodeBuilder() );
+	}
+
+	@Override
+	public SqmLiteral<Character> visitPadCharacter(HqlParser.PadCharacterContext ctx) {
+		// todo (6.0) : we should delay this until we are walking the SQM
+
+		final String padCharText =
+				ctx.STRING_LITERAL() != null
+						? ctx.STRING_LITERAL().getText()
+						: " ";
+
+		if ( padCharText.length() != 1 ) {
+			throw new SemanticException( "Pad character for pad() function must be single character, found: " + padCharText );
+		}
+
+		return new SqmLiteral<>(
+				padCharText.charAt( 0 ),
+				basicType( Character.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
 	public SqmExpression visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
 		final SqmExpression source = (SqmExpression) ctx.expression().accept( this );
 

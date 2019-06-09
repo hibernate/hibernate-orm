@@ -294,7 +294,6 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.cosh( queryEngine );

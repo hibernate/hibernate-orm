@@ -143,7 +143,12 @@ public class InformixDialect extends Dialect {
 		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardSpiBasicTypes.INTEGER,
+				"instr(?2, ?1)",
+				"instr(?2, ?1, ?3)"
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		//coalesce() and nullif() both supported since Informix 12
 		queryEngine.getSqmFunctionRegistry().register( "extract", new InformixExtractEmulation() );

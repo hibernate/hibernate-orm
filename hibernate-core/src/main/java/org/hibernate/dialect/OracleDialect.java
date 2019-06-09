@@ -219,7 +219,12 @@ public class OracleDialect extends Dialect {
 			CommonFunctionFactory.coalesce( queryEngine );
 		}
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "instr(?2, ?1)", "instr(?2, ?1, ?3)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardSpiBasicTypes.INTEGER,
+				"instr(?2, ?1)",
+				"instr(?2, ?1, ?3)"
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new OracleExtractEmulation() );
 	}

@@ -110,7 +110,10 @@ public class SAPDBDialect extends Dialect {
 				.setArgumentCountBetween( 2, 4 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "index(?2, ?1)", "index(?2, ?1, ?3)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardSpiBasicTypes.INTEGER, "index(?2, ?1)", "index(?2, ?1, ?3)"
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation() );
 

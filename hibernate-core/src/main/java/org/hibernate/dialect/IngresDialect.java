@@ -218,10 +218,15 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.position( queryEngine );
-		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+		CommonFunctionFactory.format_dateFormat( queryEngine );
 		CommonFunctionFactory.dateTrunc( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardSpiBasicTypes.INTEGER,
+				"position(?1 in ?2)",
+				"(position(?1 in substring(?2 from ?3)) + (?3) - 1)"
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1', ?2)", StandardSpiBasicTypes.INTEGER );
 

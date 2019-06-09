@@ -116,7 +116,12 @@ public class CacheDialect extends Dialect {
 		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardSpiBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardSpiBasicTypes.INTEGER,
+				"$find(?2, ?1)",
+				"$find(?2, ?1, ?3)"
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		useJdbcEscape(queryEngine, "sin");
 		useJdbcEscape(queryEngine, "cos");

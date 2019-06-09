@@ -1109,7 +1109,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("locate")
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween(2, 3)
-				.setArgumentListSignature("(pattern, string, start)")
+				.setArgumentListSignature("(pattern, string[, start])")
 				.register();
 	}
 
@@ -1120,7 +1120,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "charindex" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 3 )
-				.setArgumentListSignature("(pattern, string, start)")
+				.setArgumentListSignature("(pattern, string[, start])")
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "locate", "charindex" );
 	}

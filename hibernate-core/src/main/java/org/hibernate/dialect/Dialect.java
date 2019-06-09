@@ -306,67 +306,89 @@ public abstract class Dialect implements ConversionContext {
 	 * These required functions include the functions defined by the JPA
 	 * query language specification:
 	 *
-	 * 		* avg
-	 * 		* count
-	 * 		* max, min
-	 * 		* sum
+	 *   * avg(arg)							- aggregate function
+	 *   * count([distinct ]arg)			- aggregate function
+	 *   * max(arg)							- aggregate function
+	 *   * min(arg)							- aggregate function
+	 *   * sum(arg)							- aggregate function
 	 *
-	 * 		* coalesce
-	 * 		* nullif
+	 *   * coalesce(arg0, arg1, ...)
+	 *   * nullif(arg0, arg1)
 	 *
-	 * 		* concat
-	 * 		* locate
-	 * 		* substring
-	 * 		* trim
-	 * 		* lower, upper
-	 * 		* length
+	 *   * lower(arg)
+	 *   * upper(arg)
+	 *   * length(arg)
+	 *   * concat(arg0, arg1, ...)
+	 *   * locate(pattern, string[, start])
+	 *   * substring(string, start[, length])
+	 *   * trim([[spec ][character ]from] string)
 	 *
-	 * 		* abs
-	 * 		* mod
-	 * 		* sqrt
+	 *   * abs(arg)
+	 *   * mod(arg0, arg1)
+	 *   * sqrt(arg)
 	 *
-	 * 		* current_date
-	 * 		* current_time
-	 * 		* current_timestamp
+	 *   * current_date
+	 *   * current_time
+	 *   * current_timestamp
 	 *
 	 * Along with an additional set of functions defined by ANSI SQL:
 	 *
-	 * 		* cast
-	 * 		* extract
-	 *      * ln, exp
-	 *      * power
-	 *      * floor, ceiling
-	 *      * position (alternative syntax for locate)
+	 *   * any(arg)							- aggregate function
+	 *   * every(arg)						- aggregate function
+	 *
+	 *   * cast(arg as Type)
+	 *   * extract(field from arg)
+	 *
+	 *   * ln(arg)
+	 *   * exp(arg)
+	 *   * power(arg0, arg1)
+	 *   * floor(arg)
+	 *   * ceiling(arg)
+	 *
+	 *   * position(pattern in string)
+	 *   * substring(string from start[ for length])
+	 *   * overlay(string placing replacement from start[ for length])
 	 *
 	 * And the following functions for working with java.time types:
 	 *
-	 *      * current date
-	 *      * current time
-	 *      * current datetime
-	 *      * current instant
+	 *   * current date
+	 *   * current time
+	 *   * current datetime
+	 *   * current offset datetime
+	 *   * current instant
 	 *
 	 * And a number of additional "standard" functions:
 	 *
-	 *      * format
-	 *      * pad
-	 *      * left, right
-	 *      * replace
-	 *      * least, greatest
-	 *      * sign
-	 *      * sin, cos, tan, asin, acos, atan, atan2
-	 *      * round
-	 * 	    * ifnull        - two-argument synonym of coalesce(a, b)
-	 * 		* str           - synonym of cast(a as String)
+	 *   * left(string, length)
+	 *   * right(string, length)
+	 *   * replace(string, pattern, replacement)
+	 *   * pad(string with length spec[ character])
+	 *
+	 *   * sign(arg)
+	 *   * sin(arg)
+	 *   * cos(arg)
+	 *   * tan(arg)
+	 *   * asin(arg)
+	 *   * acos(arg)
+	 *   * atan(arg)
+	 *   * atan2(arg0, arg1)
+	 *   * round(arg0, arg1)
+	 *   * least(arg0, arg1, ...)
+	 *   * greatest(arg0, arg1, ...)
+	 *
+	 *   * format(datetime as pattern)
+	 *   * str(arg)					- synonym of cast(a as String)
+	 *   * ifnull(arg0, arg1)		- synonym of coalesce(a, b)
 	 *
 	 * Finally, the following functions are defined as abbreviations
 	 * for extract(), and desugared by the parser:
 	 *
-	 * 		* second		- synonym of extract(second from a)
-	 * 		* minute		- synonym of extract(minute from a)
-	 * 		* hour			- synonym of extract(hour from a)
-	 * 		* day			- synonym of extract(day from a)
-	 * 		* month			- synonym of extract(month from a)
-	 * 		* year			- synonym of extract(year from a)
+	 *   * second(arg)				- synonym of extract(second from a)
+	 *   * minute(arg)				- synonym of extract(minute from a)
+	 *   * hour(arg)				- synonym of extract(hour from a)
+	 *   * day(arg)					- synonym of extract(day from a)
+	 *   * month(arg)				- synonym of extract(month from a)
+	 *   * year(arg)				- synonym of extract(year from a)
 	 *
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
@@ -374,6 +396,11 @@ public abstract class Dialect implements ConversionContext {
 		//aggregate functions, supported on every database
 
 		CommonFunctionFactory.aggregates(queryEngine);
+
+		//the ANSI SQL-defined aggregate functions any() and every() are only
+		//supported on one database, but can be emulated using sum() and case,
+		//though there is a more natural mapping on some databases
+
 		CommonFunctionFactory.everyAny_sumCase(queryEngine);
 
 		//math functions supported on almost every database
@@ -384,8 +411,8 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.trigonometry(queryEngine);
 
-		//coalesce() function, must be redefined in terms of nvl() for platforms
-		//which don't support it natively
+		//coalesce() function, supported by most databases, must be emulated
+		//in terms of nvl() for platforms which don't support it natively
 
 		CommonFunctionFactory.coalesce(queryEngine);
 
@@ -393,33 +420,49 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.nullif(queryEngine);
 
-		//string functions, must be redefined where not supported
+		//string functions, must be emulated where not supported
 
-		CommonFunctionFactory.locate(queryEngine);
-		CommonFunctionFactory.substring(queryEngine);
 		CommonFunctionFactory.leftRight(queryEngine);
 		CommonFunctionFactory.replace(queryEngine);
 		CommonFunctionFactory.concat(queryEngine);
 		CommonFunctionFactory.lowerUpper(queryEngine);
 
+		//there are two forms of substring(), the JPA standard syntax, which
+		//separates arguments using commas, and the ANSI SQL standard syntax
+		//with named arguments (we support both)
+
+		CommonFunctionFactory.substring(queryEngine);
+
+		//the JPA locate() function is especially tricky to emulate, calling
+		//for lots of Dialect-specific customization
+
+		CommonFunctionFactory.locate(queryEngine);
+
 		//JPA string length() function, a synonym for ANSI SQL character_length()
 
 		CommonFunctionFactory.length_characterLength(queryEngine);
 
-		//Only some databases support ANSI-style position() function, so define
-		//it here as an alias for locate()
+		//only some databases support the ANSI SQL-style position() function, so
+		//define it here as an alias for locate()
 
 		queryEngine.getSqmFunctionRegistry().register("position", new LocatePositionEmulation());
 
-		//Very few databases support ANSI-style overlay() function, so define
+		//very few databases support ANSI-style overlay() function, so emulate
 		//it here in terms of either insert() or concat()/substring()
 
 		queryEngine.getSqmFunctionRegistry().register("overlay", new InsertSubstringOverlayEmulation());
 
-		//ANSI SQL functions with weird syntax, not supported on every database
+		//ANSI SQL functions with weird syntax, supported on all the databases
+		//we care most about
 
 		CommonFunctionFactory.trim(queryEngine);
 		CommonFunctionFactory.cast(queryEngine);
+
+		//ANSI SQL extract() function is supported on the databases we care most
+		//about (though it is called datepart() in some of them) but HQL defines
+		//additional non-standard temporal field types, which must be emulated in
+		//a dialect-specific way
+
 		CommonFunctionFactory.extract(queryEngine);
 
 		//comparison functions supported on every known database
@@ -431,9 +474,14 @@ public abstract class Dialect implements ConversionContext {
 
 		queryEngine.getSqmFunctionRegistry().register("ifnull", new CoalesceIfnullEmulation());
 
-		//lpad(), rpad(), and pad()
+		//rpad() and pad() are supported on almost every database, and emulated
+		//where not supported, but they're not considered "standard" ... instead
+		//they're used to implement pad()
 
 		CommonFunctionFactory.pad( queryEngine );
+
+		//pad() is a function we've designed to look like ANSI trim()
+
 		queryEngine.getSqmFunctionRegistry().register("pad", new LpadRpadPadEmulation());
 
 		//legacy Hibernate convenience function for casting to string, defined
@@ -441,11 +489,14 @@ public abstract class Dialect implements ConversionContext {
 
 		queryEngine.getSqmFunctionRegistry().register("str", new CastStrEmulation());
 
-		//datetime formatting function, Oracle-style to_char() on most databases
+		//format() function for datetimes, emulated on many databases using the
+		//Oracle-style to_char() function, and on others using their native
+		//formatting functions
 
-		CommonFunctionFactory.formatdatetime_toChar(queryEngine);
+		CommonFunctionFactory.format_toChar(queryEngine);
 
-		//timestampadd/timestampdiff delegated back to the Dialect itself
+		//timestampadd()/timestampdiff() delegated back to the Dialect itself
+		//since there is a great variety of different ways to emulate them
 
 		queryEngine.getSqmFunctionRegistry().register("timestampadd", new TimestampaddFunction(this) );
 		queryEngine.getSqmFunctionRegistry().register("timestampdiff", new TimestampdiffFunction(this) );

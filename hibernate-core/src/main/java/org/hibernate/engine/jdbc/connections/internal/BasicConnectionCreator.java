@@ -19,6 +19,7 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -112,10 +113,15 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 	);
 
 	protected JDBCException convertSqlException(String message, SQLException e) {
-		// if JdbcServices#getSqlExceptionHelper is available, use it...
-		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-		if ( jdbcServices != null && jdbcServices.getSqlExceptionHelper() != null ) {
-			return jdbcServices.getSqlExceptionHelper().convert( e, message, null );
+		try {
+			// if JdbcServices#getSqlExceptionHelper is available, use it...
+			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+			if ( jdbcServices != null && jdbcServices.getSqlExceptionHelper() != null ) {
+				return jdbcServices.getSqlExceptionHelper().convert( e, message, null );
+			}
+		}
+		catch (ServiceException se) {
+			//swallow it because we're in the process of initializing JdbcServices
 		}
 
 		// likely we are still in the process of initializing the ServiceRegistry, so use the simplified

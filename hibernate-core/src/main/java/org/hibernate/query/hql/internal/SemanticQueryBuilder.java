@@ -3005,11 +3005,14 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmExpression visitPadFunction(HqlParser.PadFunctionContext ctx) {
 		final SqmExpression source = (SqmExpression) ctx.expression().accept( this );
 		SqmExpression length = (SqmExpression) ctx.padLength().accept(this);
-		SqmTrimSpecification padSpec = (SqmTrimSpecification) ctx.padSpecification().accept(this);
-		SqmLiteral<Character> padChar = (SqmLiteral) ctx.padCharacter().accept(this);
-
+		SqmTrimSpecification padSpec = visitPadSpecification( ctx.padSpecification() );
+		SqmLiteral<Character> padChar = ctx.padCharacter() == null
+				? null
+				: visitPadCharacter( ctx.padCharacter() );
 		return getFunctionTemplate("pad").makeSqmFunctionExpression(
-				asList( source, length, padSpec, padChar ),
+				padChar != null
+						? asList( source, length, padSpec, padChar )
+						: asList( source, length, padSpec ),
 				basicType( String.class ),
 				creationContext.getQueryEngine(),
 				creationContext.getDomainModel().getTypeConfiguration()
@@ -3033,7 +3036,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		// todo (6.0) : we should delay this until we are walking the SQM
 
 		final String padCharText =
-				ctx.STRING_LITERAL() != null
+				ctx != null && ctx.STRING_LITERAL() != null
 						? ctx.STRING_LITERAL().getText()
 						: " ";
 
@@ -3051,11 +3054,13 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmExpression visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
 		final SqmExpression source = (SqmExpression) ctx.expression().accept( this );
+		SqmTrimSpecification trimSpec = visitTrimSpecification( ctx.trimSpecification() );
+		SqmLiteral<Character> trimChar = visitTrimCharacter( ctx.trimCharacter() );
 
 		return getFunctionTemplate("trim").makeSqmFunctionExpression(
 				asList(
-						(SqmTrimSpecification) ctx.trimSpecification().accept( this ),
-						(SqmLiteral<Character>) ctx.trimCharacter().accept( this ),
+						trimSpec,
+						trimChar,
 						source
 				),
 				basicType( String.class ),
@@ -3068,11 +3073,13 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmTrimSpecification visitTrimSpecification(HqlParser.TrimSpecificationContext ctx) {
 		TrimSpec spec = TrimSpec.BOTH;	// JPA says the default is BOTH
 
-		if ( ctx.LEADING() != null ) {
-			spec = TrimSpec.LEADING;
-		}
-		else if ( ctx.TRAILING() != null ) {
-			spec = TrimSpec.TRAILING;
+		if ( ctx != null ) {
+			if ( ctx.LEADING() != null ) {
+				spec = TrimSpec.LEADING;
+			}
+			else if ( ctx.TRAILING() != null ) {
+				spec = TrimSpec.TRAILING;
+			}
 		}
 
 		return new SqmTrimSpecification( spec, creationContext.getNodeBuilder() );
@@ -3083,7 +3090,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		// todo (6.0) : we should delay this until we are walking the SQM
 
 		final String trimCharText =
-				ctx.STRING_LITERAL() != null
+				ctx != null && ctx.STRING_LITERAL() != null
 						? ctx.STRING_LITERAL().getText()
 						: " "; // JPA says space is the default
 

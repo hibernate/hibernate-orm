@@ -156,6 +156,7 @@ public class HSQLDialect extends Dialect {
 		}
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+		getDefaultProperties().setProperty( Environment.QUERY_LITERAL_RENDERING, "literal" );
 
 		limitHandler = new HSQLLimitHandler();
 	}
@@ -237,7 +238,6 @@ public class HSQLDialect extends Dialect {
 		if ( version > 219 ) {
 			CommonFunctionFactory.rownum( queryEngine );
 		}
-
 	}
 
 	@Override

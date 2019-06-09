@@ -21,8 +21,6 @@ import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
-
 /**
  * A dialect for Mimer SQL 11.
  *
@@ -52,6 +50,7 @@ public class MimerSQLDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
+		getDefaultProperties().setProperty( Environment.QUERY_LITERAL_RENDERING, "literal" );
 	}
 
 	@Override

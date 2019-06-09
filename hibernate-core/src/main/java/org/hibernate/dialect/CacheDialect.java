@@ -238,23 +238,6 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		// Completely optional cascading drop clause.
-		return "";
-	}
-
-	@Override
-	public boolean dropConstraints() {
-		// Do we need to drop constraints before dropping tables in this dialect?
-		return true;
-	}
-
-	@Override
-	public boolean supportsCascadeDelete() {
-		return true;
-	}
-
-	@Override
 	public boolean hasSelfReferentialForeignKeyBug() {
 		return true;
 	}
@@ -374,11 +357,6 @@ public class CacheDialect extends Dialect {
 		return false;
 	}
 
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsVariableLimit() {
-		return true;
-	}
 
 	@Override
 	@SuppressWarnings("deprecation")

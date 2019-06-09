@@ -181,6 +181,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
+//		CommonFunctionFactory.replicate( queryEngine ); //synonym for more common repeat()
 		CommonFunctionFactory.initcap( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
 		CommonFunctionFactory.substr( queryEngine );

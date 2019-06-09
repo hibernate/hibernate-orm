@@ -210,7 +210,6 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );

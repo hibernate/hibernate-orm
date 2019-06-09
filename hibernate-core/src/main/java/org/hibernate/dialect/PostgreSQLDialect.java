@@ -298,7 +298,6 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 		CommonFunctionFactory.dateTrunc( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );

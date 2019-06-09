@@ -213,7 +213,6 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.monthsBetween( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		//also natively supports ANSI-style substring()
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.sysdate( queryEngine );

@@ -113,7 +113,6 @@ public class CacheDialect extends Dialect {
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(

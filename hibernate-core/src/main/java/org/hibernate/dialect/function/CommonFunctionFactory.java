@@ -315,9 +315,73 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * In MySQL the third argument is required
+	 */
+	public static void pad_space(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"lpad",
+				StandardSpiBasicTypes.STRING,
+				"lpad(?1,?2,' ')",
+				"lpad(?1,?2,?3)"
+		).setArgumentListSignature("(string, length[, padding])");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"rpad",
+				StandardSpiBasicTypes.STRING,
+				"rpad(?1,?2,' ')",
+				"rpad(?1,?2,?3)"
+		).setArgumentListSignature("(string, length[, padding])");
+	}
+
+	/**
+	 * Transact-SQL
+	 */
+	public static void pad_replicate(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"lpad",
+				StandardSpiBasicTypes.STRING,
+				"(space(?2-len(?1))+?1)",
+				"(replicate(?3,?2-len(?1))+?1)"
+		).setArgumentListSignature("(string, length[, padding])");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"rpad",
+				StandardSpiBasicTypes.STRING,
+				"(?1+space(?2-len(?1)))",
+				"(?1+replicate(?3,?2-len(?1)))"
+		).setArgumentListSignature("(string, length[, padding])");
+	}
+
+	public static void pad_repeat(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"lpad",
+				StandardSpiBasicTypes.STRING,
+				"(repeat(' ',?2-character_length(?1))||?1)",
+				"(repeat(?3,?2-character_length(?1))||?1)"
+		).setArgumentListSignature("(string, length[, padding])");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"rpad",
+				StandardSpiBasicTypes.STRING,
+				"(?1||repeat(' ',?2-character_length(?1)))",
+				"(?1||repeat(?3,?2-character_length(?1)))"
+		).setArgumentListSignature("(string, length[, padding])");
+	}
+
+	/**
+	 * SAP DB
+	 */
 	public static void pad_fill(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("lpad", StandardSpiBasicTypes.STRING, "lfill(?1,' ',?2)", "lfill(?1,?3,?2)");
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("rpad", StandardSpiBasicTypes.STRING, "rfill(?1,' ',?2)", "rfill(?1,?3,?2)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"lpad",
+				StandardSpiBasicTypes.STRING,
+				"lfill(?1,' ',?2)",
+				"lfill(?1,?3,?2)"
+		).setArgumentListSignature("(string, length[, padding])");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"rpad",
+				StandardSpiBasicTypes.STRING,
+				"rfill(?1,' ',?2)",
+				"rfill(?1,?3,?2)"
+		).setArgumentListSignature("(string, length[, padding])");
 	}
 
 	public static void reverse(QueryEngine queryEngine) {

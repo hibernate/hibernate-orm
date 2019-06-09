@@ -178,6 +178,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.pad_space( queryEngine );
 		CommonFunctionFactory.md5( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );

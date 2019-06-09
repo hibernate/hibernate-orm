@@ -96,6 +96,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.pi( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.pad_replicate( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.ascii(queryEngine);
 		CommonFunctionFactory.chr_char( queryEngine );

@@ -80,6 +80,7 @@ public class MimerSQLDialect extends Dialect {
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.pad_repeat( queryEngine );
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.position( queryEngine );

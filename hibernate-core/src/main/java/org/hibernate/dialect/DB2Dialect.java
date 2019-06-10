@@ -282,7 +282,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String getLowercaseFunction() {
-		return "lcase";
+		return getVersion() < 970 ? "lcase" : super.getLowercaseFunction();
 	}
 
 	@Override
@@ -490,8 +490,8 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String getCrossJoinSeparator() {
 		//DB2 v9.1 doesn't support 'cross join' syntax
-		// DB2 9.7 and later support "cross join"
-		return getVersion() < 970 ? ", " : " cross join ";
+		//DB2 9.7 and later support "cross join"
+		return getVersion() < 970 ? ", " : super.getCrossJoinSeparator();
 	}
 
 

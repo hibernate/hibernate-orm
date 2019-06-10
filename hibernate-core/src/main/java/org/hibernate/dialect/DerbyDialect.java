@@ -8,23 +8,44 @@ package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 
+import org.hibernate.JDBCException;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.DerbyConcatEmulation;
+import org.hibernate.dialect.function.DerbyExtractEmulation;
+import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.naming.Identifier;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.dialect.function.DerbyConcatEmulation;
+import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * Hibernate Dialect for Apache Derby / Cloudscape 10
@@ -32,18 +53,18 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  * @author Simon Johnston
  *
  */
-public class DerbyDialect extends DB2Dialect {
+public class DerbyDialect extends Dialect {
 
 	private final int version;
 
-	int getDerbyVersion() {
+	int getVersion() {
 		return version;
 	}
 
 	private final LimitHandler limitHandler = new DerbyLimitHandler() {
 		@Override
 		protected int getDerbyVersion() {
-			return DerbyDialect.this.getDerbyVersion();
+			return DerbyDialect.this.getVersion();
 		}
 	};
 
@@ -59,25 +80,135 @@ public class DerbyDialect extends DB2Dialect {
 		super();
 		this.version = version;
 
+		registerColumnType( Types.BIT, 1, "boolean" ); //no bit
+		registerColumnType( Types.BIT, "smallint" ); //no bit
+		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
+
+		//HHH-12827: map them both to the same type to
+		//           avoid problems with schema update
+//		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
+		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
+
+		registerColumnType( Types.BINARY, "varchar($l) for bit data" );
+		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
+		registerColumnType( Types.VARBINARY, "varchar($l) for bit data" );
+		registerColumnType( Types.LONGVARBINARY, "varchar($l) for bit data" );
+
+		registerColumnType( Types.BLOB, "blob($l)" );
+		registerColumnType( Types.CLOB, "clob($l)" );
+
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
+
 		registerDerbyKeywords();
+
+		getDefaultProperties().setProperty( Environment.QUERY_LITERAL_RENDERING, "literal" );
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BOOLEAN;
+	}
+
+	public int getDefaultDecimalPrecision() {
+		//this is the maximum allowed in Derby
+		return 31;
+	}
+
+	@Override
+	public int getFloatPrecision() {
+		return 23;
+	}
+
+	@Override
+	public int getDoublePrecision() {
+		return 52;
 	}
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.sinh( queryEngine );
+		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory.pi( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.trim1( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.characterLength_length( queryEngine );
+
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "extract", new DerbyExtractEmulation() );
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		if (unit == NANOSECOND) {
+			sqlAppender.append("{fn timestampadd(sql_tsi_frac_second, mod(bigint(");
+			magnitude.render();
+			sqlAppender.append("),1000000000), ");
+			sqlAppender.append("{fn timestampadd(sql_tsi_second, bigint((");
+			magnitude.render();
+			sqlAppender.append(")/1000000000), ");
+			to.render();
+			sqlAppender.append(")}");
+			sqlAppender.append(")}");
+		}
+		else {
+			sqlAppender.append("{fn timestampadd(sql_tsi_");
+			sqlAppender.append( unit.toString() );
+			sqlAppender.append(", bigint(");
+			magnitude.render();
+			sqlAppender.append("), ");
+			to.render();
+			sqlAppender.append(")}");
+		}
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("{fn timestampdiff(sql_tsi_");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("frac_second");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")}");
+	}
+
+	@Override
+	public String getAddColumnString() {
+		return "add column";
 	}
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-		return getDerbyVersion() < 1070
+		return getVersion() < 1070
 				? super.toBooleanValueString( bool )
 				: String.valueOf( bool );
 	}
 
 	@Override
 	public String getCrossJoinSeparator() {
-		return ", ";
+		//Derby 10.5 doesn't support 'cross join' syntax
+		//Derby 10.6 and later support "cross join"
+		return getVersion() < 1060 ? ", " : super.getCrossJoinSeparator();
 	}
 
 	@Override
@@ -87,13 +218,33 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return true;
+	public boolean supportsSequences() {
+		return getVersion() >= 1060;
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return getDerbyVersion() >= 1060;
+	public boolean supportsPooledSequences() {
+		return supportsSequences();
+	}
+
+	@Override
+	public String getSequenceNextValString(String sequenceName) {
+		if ( supportsSequences() ) {
+			return "values " + getSelectSequenceNextValString( sequenceName );
+		}
+		else {
+			throw new MappingException( "Derby does not support sequence prior to release 10.6.1.0" );
+		}
+	}
+
+	@Override
+	public String getSelectSequenceNextValString(String sequenceName) {
+		return "next value for " + sequenceName;
+	}
+
+	@Override
+	public String getDropSequenceString(String sequenceName) {
+		return super.getDropSequenceString( sequenceName ) + " restrict";
 	}
 
 	@Override
@@ -117,18 +268,13 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		if ( supportsSequences() ) {
-			return "values next value for " + sequenceName;
-		}
-		else {
-			throw new MappingException( "Derby does not support sequence prior to release 10.6.1.0" );
-		}
+	public String getSelectClauseNullString(int sqlType) {
+		return DB2Dialect.selectNullString( sqlType );
 	}
 
 	@Override
 	public String getFromDual() {
-		return "from sysibm.sysdummy1";
+		return "from (values 0) as dual";
 	}
 
 	@Override
@@ -152,6 +298,48 @@ public class DerbyDialect extends DB2Dialect {
 		return " for read only with rs";
 	}
 
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		return " for update of " + aliases + " with rs";
+	}
+
+	@Override
+	public boolean supportsOuterJoinForUpdate() {
+		//TODO: check this!
+		return false;
+	}
+
+	@Override
+	public boolean supportsExistsInSelect() {
+		//TODO: check this!
+		return false;
+	}
+
+	@Override
+	public boolean supportsLockTimeouts() {
+		//as far as I know, Derby doesn't support this
+		return false;
+	}
+
+	@Override
+	public boolean supportsUnionAll() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsCurrentTimestampSelection() {
+		return true;
+	}
+
+	@Override
+	public String getCurrentTimestampSelectString() {
+		return "values current timestamp";
+	}
+
+	@Override
+	public boolean isCurrentTimestampSelectStringCallable() {
+		return false;
+	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
@@ -159,8 +347,55 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new DB2IdentityColumnSupport();
+	}
+
+	@Override
 	public boolean supportsTuplesInSubqueries() {
+		//checked on Derby 10.14
 		return false;
+	}
+
+	@Override
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		//TODO: check this
+		return true;
+	}
+
+	@Override
+	public boolean supportsParametersInInsertSelect() {
+		//TODO: check this
+		return true;
+	}
+
+	@Override
+	public boolean requiresCastingOfParametersInSelectClause() {
+		//checked on Derby 10.14
+		return true;
+	}
+
+	@Override
+	public boolean supportsEmptyInList() {
+		//checked on Derby 10.14
+		return false;
+	}
+
+	@Override
+	public boolean supportsTupleDistinctCounts() {
+		//checked on Derby 10.14
+		return false;
+	}
+
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		return sqlCode == Types.NUMERIC
+				? DecimalSqlDescriptor.INSTANCE
+				: super.getSqlTypeDescriptorOverride(sqlCode);
+	}
+
+	@Override
+	public String getNotExpression( String expression ) {
+		return "not (" + expression + ")";
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -187,6 +422,72 @@ public class DerbyDialect extends DB2Dialect {
 		builder.setNameQualifierSupport( getNameQualifierSupport() );
 
 		return builder.build();
+	}
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+//				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+
+				if( "40XL1".equals( sqlState ) || "40XL2".equals( sqlState ) ) {
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				return null;
+			}
+		};
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * From Derby docs:
+	 * <pre>
+	 *     The DECLARE GLOBAL TEMPORARY TABLE statement defines a temporary table for the current connection.
+	 * </pre>
+	 *
+	 * Here we return a local-temp-table strategy even though we are creating global temp tables.
+	 * See HHH-10238 for details why...
+	 * </p>
+     */
+	@Override
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
+		return new LocalTemporaryTableStrategy( generateIdTableSupport() ) {
+			@Override
+			public AfterUseAction getAfterUseAction() {
+				return AfterUseAction.CLEAN;
+			}
+		};
+	}
+
+	protected IdTableSupport generateIdTableSupport() {
+		// todo (6.0) : come back and verify this - different on 5.3, specifically dropping after each use
+		//
+		// Prior to DB2 9.7, "real" global temporary tables that can be shared between sessions
+		// are *not* supported; even though the DB2 command says to declare a "global" temp table
+		// Hibernate treats it as a "local" temp table.
+
+		return new StandardIdTableSupport( new GlobalTempTableExporter() ) {
+			@Override
+			protected Identifier determineIdTableName(Identifier baseName) {
+				return super.determineIdTableName(baseName);
+			}
+			@Override
+			public Exporter<IdTable> getIdTableExporter() {
+				return generateIdTableExporter();
+			}
+		};
+	}
+
+	protected Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
+			@Override
+			protected String getCreateOptions() {
+				return "not logged";
+			}
+		};
 	}
 
 	private void registerDerbyKeywords() {
@@ -399,25 +700,4 @@ public class DerbyDialect extends DB2Dialect {
 		registerKeyword( "YEAR" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * From Derby docs:
-	 * <pre>
-	 *     The DECLARE GLOBAL TEMPORARY TABLE statement defines a temporary table for the current connection.
-	 * </pre>
-	 *
-	 * Here we return a local-temp-table strategy even though we are creating global temp tables.
-	 * See HHH-10238 for details why...
-	 * </p>
-     */
-	@Override
-	public SqmMutationStrategy getDefaultIdTableStrategy() {
-		return new LocalTemporaryTableStrategy( generateIdTableSupport() ) {
-			@Override
-			public AfterUseAction getAfterUseAction() {
-				return AfterUseAction.CLEAN;
-			}
-		};
-	}
 }

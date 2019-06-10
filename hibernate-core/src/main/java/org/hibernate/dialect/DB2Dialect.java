@@ -13,7 +13,6 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.JDBCException;
-import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -176,7 +175,6 @@ public class DB2Dialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(string, pattern)")
 				.register();
-
 	}
 
 	@Override
@@ -296,21 +294,6 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "values nextval for " + sequenceName;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) throws MappingException {
-		return "next value for " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return super.getDropSequenceString( sequenceName ) + " restrict";
-	}
-
-	@Override
 	public boolean supportsSequences() {
 		return true;
 	}
@@ -318,6 +301,26 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsPooledSequences() {
 		return true;
+	}
+
+	@Override
+	public String getSequenceNextValString(String sequenceName) {
+		return "values " + getSelectSequenceNextValString( sequenceName );
+	}
+
+	@Override
+	public String getSelectSequenceNextValString(String sequenceName) {
+		if ( getVersion() < 970 ) {
+			return "nextval for " + sequenceName;
+		}
+		else {
+			return "next value for " + sequenceName;
+		}
+	}
+
+	@Override
+	public String getDropSequenceString(String sequenceName) {
+		return super.getDropSequenceString( sequenceName ) + " restrict";
 	}
 
 	@Override
@@ -336,7 +339,6 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public String getForUpdateString() {
 		return " for read only with rs use and keep update locks";
 	}

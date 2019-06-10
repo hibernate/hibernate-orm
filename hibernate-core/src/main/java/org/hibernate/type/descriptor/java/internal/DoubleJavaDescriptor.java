@@ -121,6 +121,6 @@ public class DoubleJavaDescriptor extends AbstractNumericJavaDescriptor<Double> 
 	public int getDefaultSqlPrecision(Dialect dialect) {
 			//this is the number of *binary* digits
 			//in a double-precision FP number
-			return 53;
+			return dialect.getDoublePrecision();
 	}
 }

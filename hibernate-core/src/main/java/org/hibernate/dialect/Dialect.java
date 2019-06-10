@@ -3320,6 +3320,14 @@ public abstract class Dialect implements ConversionContext {
 		return 6;
 	}
 
+	public int getFloatPrecision() {
+		return 24;
+	}
+
+	public int getDoublePrecision() {
+		return 53;
+	}
+
 	public class DefaultSizeStrategyImpl implements DefaultSizeStrategy {
 		@Override
 		public Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor javaType) {

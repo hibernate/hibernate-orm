@@ -119,6 +119,6 @@ public class FloatJavaDescriptor extends AbstractNumericJavaDescriptor<Float> im
 	public int getDefaultSqlPrecision(Dialect dialect) {
 			//this is the number of *binary* digits
 			//in a single-precision FP number
-			return 24;
+			return dialect.getFloatPrecision();
 	}
 }

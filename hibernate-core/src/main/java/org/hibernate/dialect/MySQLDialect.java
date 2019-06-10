@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.NullPrecedence;
@@ -32,6 +33,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -210,6 +212,13 @@ public class MySQLDialect extends Dialect {
 		}
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new MySQLExtractEmulation() );
+	}
+
+	@Override
+	public int getFloatPrecision() {
+		//according to MySQL docs, this is
+		//the maximum precision for 4 bytes
+		return 23;
 	}
 
 	/**

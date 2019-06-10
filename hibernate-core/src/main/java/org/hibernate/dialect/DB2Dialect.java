@@ -359,11 +359,15 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
+		return selectNullString(sqlType);
+	}
+
+	static String selectNullString(int sqlType) {
 		String literal;
 		switch ( sqlType ) {
 			case Types.VARCHAR:
 			case Types.CHAR:
-				literal = "'x'";
+				literal = "''";
 				break;
 			case Types.DATE:
 				literal = "'2000-1-1'";

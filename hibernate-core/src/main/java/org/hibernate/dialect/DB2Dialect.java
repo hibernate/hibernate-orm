@@ -84,10 +84,12 @@ public class DB2Dialect extends Dialect {
 //		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 
-		registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
-		registerColumnType( Types.BINARY, 254, "char($l) for bit data" ); //should use 'binary' since version 11
-		registerColumnType( Types.VARBINARY, "varchar($l) for bit data" ); //should use 'varbinary' since version 11
-		registerColumnType( Types.LONGVARBINARY, "varchar($l) for bit data" ); //'long varchar' deprecated since at least version 9.8!
+		if ( getVersion()<1100 ) {
+			registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
+			registerColumnType( Types.BINARY, 254, "char($l) for bit data" ); //should use 'binary' since version 11
+			registerColumnType( Types.VARBINARY, "varchar($l) for bit data" ); //should use 'varbinary' since version 11
+			registerColumnType( Types.LONGVARBINARY, "varchar($l) for bit data" ); //'long varchar' deprecated since at least version 9.8!
+		}
 
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "clob($l)" );

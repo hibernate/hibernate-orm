@@ -1800,7 +1800,9 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * Default is {@code false}.
 	 *
 	 * @since 5.2.5
+	 * @deprecated this setting now has no effect
 	 */
+	@Deprecated
 	String USE_LEGACY_LIMIT_HANDLERS = "hibernate.legacy_limit_handler";
 
 

@@ -8,15 +8,13 @@ package org.hibernate.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Locale;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.InformixExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
-import org.hibernate.dialect.pagination.Informix10LimitHandler;
-import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
+import org.hibernate.dialect.pagination.SkipFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -52,6 +50,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	private final UniqueDelegate uniqueDelegate;
+	private final LimitHandler limitHandler;
 
 	public InformixDialect() {
 		this(7);
@@ -93,6 +92,18 @@ public class InformixDialect extends Dialect {
 		registerColumnType( Types.LONGVARCHAR, "clob" );
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
+
+		limitHandler = getVersion() < 10
+				? FirstLimitHandler.INSTANCE
+				: new SkipFirstLimitHandler() {
+			@Override
+			public boolean supportsVariableLimit() {
+				//according to the Informix documentation for
+				//version 11 and above, parameters are supported
+				//but I have not tested this at all!
+				return getVersion() >= 11;
+			}
+		};
 	}
 
 	@Override
@@ -237,53 +248,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( getVersion() >= 10 ) {
-			// Since version 10.00.xC3 Informix has limit/offset
- 			// support which was introduced in July 2005.
-			return Informix10LimitHandler.INSTANCE;
-		}
-		else if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LegacyFirstLimitHandler.INSTANCE;
-		}
-		else {
-			return FirstLimitHandler.INSTANCE;
-		}
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 8 )
-				.append( querySelect )
-				.insert( querySelect.toLowerCase(Locale.ROOT).indexOf( "select" ) + 6, " first " + limit )
-				.toString();
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsVariableLimit() {
-		return false;
+		return limitHandler;
 	}
 
 	@Override

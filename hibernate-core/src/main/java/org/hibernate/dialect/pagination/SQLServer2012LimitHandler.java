@@ -12,17 +12,17 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.RowSelection;
 
 /**
- * LIMIT clause handler compatible with SQL Server 2012 and later.
+ * A {@link LimitHandler} compatible with SQL Server 2012 and later.
+ * <p>
+ * SQL Server 2012 introduced support for ANSI SQL-style
+ * {@code OFFSET m ROWS FETCH NEXT n ROWS ONLY}, though it's not
+ * mentioned in the online documentation.
  *
  * @author Chris Cranford
  */
 public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 	// determines whether the limit handler used offset/fetch or 2005 behavior.
 	private boolean usedOffsetFetch;
-
-	public SQLServer2012LimitHandler() {
-
-	}
 
 	@Override
 	public boolean supportsLimit() {
@@ -34,19 +34,30 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 		return true;
 	}
 
+	/**
+	 * SQLServer mandates the following rules to use
+	 * 'OFFSET'/'FETCH':
+	 * <ul>
+	 *     <li>an 'ORDER BY' is required</li>
+	 *     <li>The 'OFFSET' clause is mandatory,
+	 *         cannot use 'FETCH ...' by itself</li>
+	 *     <li>The 'TOP' clause isn't permitted</li>
+	 * </ul>
+	 */
 	@Override
 	public String processSql(String sql, RowSelection selection) {
-		// SQLServer mandates the following rules to use OFFSET/LIMIT
-		//  * An 'ORDER BY' is required
-		//  * The 'OFFSET ...' clause is mandatory, cannot use 'FETCH ...' by itself.
-		//  * The 'TOP' clause isn't permitted with LIMIT/OFFSET.
 		if ( hasOrderBy( sql ) ) {
-			if ( !LimitHelper.useLimit( this, selection ) ) {
-				return sql;
-			}
-			return applyOffsetFetch( selection, sql, getInsertPosition( sql ) );
+			//if it has an 'order by' clause, we can use offset/fetch
+			usedOffsetFetch = true;
+			String offsetFetch = hasFirstRow( selection )
+					? " offset ? rows fetch next ? rows only"
+					: " offset 0 rows fetch next ? rows only";
+			return insertAtEnd( offsetFetch, sql );
 		}
-		return super.processSql( sql, selection );
+		else {
+			//otherwise do it the hard way
+			return super.processSql( sql, selection );
+		}
 	}
 
 	@Override
@@ -60,71 +71,39 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		// When using the offset/fetch clause, the first row is passed as-is
 		// SQLServer2005LimitHandler uses zeroBasedFirstResult + 1
-		if ( usedOffsetFetch ) {
-			return zeroBasedFirstResult;
-		}
-		return super.convertToFirstRowValue( zeroBasedFirstResult );
+		return usedOffsetFetch
+				? zeroBasedFirstResult
+				: super.convertToFirstRowValue( zeroBasedFirstResult );
 	}
 
 	@Override
 	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
 	throws SQLException {
-		if ( usedOffsetFetch && !LimitHelper.hasFirstRow( selection ) ) {
+		if ( usedOffsetFetch && !hasFirstRow( selection ) ) {
 			// apply just the max value when offset fetch applied
 			statement.setInt( index, getMaxOrLimit( selection ) );
 			return 1;
 		}
-		return super.bindLimitParametersAtEndOfQuery( selection, statement, index );
-	}
-
-	private String getOffsetFetch(RowSelection selection) {
-		if ( !LimitHelper.hasFirstRow( selection ) ) {
-			return " offset 0 rows fetch next ? rows only";
+		else {
+			return super.bindLimitParametersAtEndOfQuery( selection, statement, index );
 		}
-		return " offset ? rows fetch next ? rows only";
 	}
 
-	private int getInsertPosition(String sql) {
-		int position = sql.length() - 1;
-		for ( ; position > 0; --position ) {
-			char ch = sql.charAt( position );
-			if ( ch != ';' && ch != ' ' && ch != '\r' && ch != '\n' ) {
-				break;
-			}
-		}
-		return position + 1;
-	}
-
-	private String applyOffsetFetch(RowSelection selection, String sql, int position) {
-		usedOffsetFetch = true;
-
-		StringBuilder sb = new StringBuilder();
-		sb.append( sql.substring( 0, position ) );
-		sb.append( getOffsetFetch( selection ) );
-		if ( position > sql.length() ) {
-			sb.append( sql.substring( position - 1 ) );
-		}
-
-		return sb.toString();
-	}
-
-	private boolean hasOrderBy(String sql) {
-		int depth = 0;
-
+	private static boolean hasOrderBy(String sql) {
 		String lowerCaseSQL = sql.toLowerCase();
-
+		int depth = 0;
 		for ( int i = lowerCaseSQL.length() - 1; i >= 0; --i ) {
-			char ch = lowerCaseSQL.charAt( i );
-			if ( ch == '(' ) {
-				depth++;
+			switch ( lowerCaseSQL.charAt( i ) ) {
+				case '(':
+					depth++;
+					break;
+				case ')':
+					depth--;
+					break;
 			}
-			else if ( ch == ')' ) {
-				depth--;
-			}
-			if ( depth == 0 ) {
-				if ( lowerCaseSQL.startsWith( "order by ", i ) ) {
-					return true;
-				}
+			if ( depth == 0
+					&& lowerCaseSQL.startsWith( "order by ", i ) ) {
+				return true;
 			}
 		}
 		return false;

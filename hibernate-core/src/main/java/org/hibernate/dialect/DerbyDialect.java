@@ -8,16 +8,13 @@ package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Locale;
 
 import org.hibernate.MappingException;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.AfterUseAction;
@@ -43,7 +40,12 @@ public class DerbyDialect extends DB2Dialect {
 		return version;
 	}
 
-	private final LimitHandler limitHandler = new DerbyLimitHandler();
+	private final LimitHandler limitHandler = new DerbyLimitHandler() {
+		@Override
+		protected int getDerbyVersion() {
+			return DerbyDialect.this.getDerbyVersion();
+		}
+	};
 
 	public DerbyDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
@@ -125,17 +127,6 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return getDerbyVersion() >= 1050;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return getDerbyVersion() >= 1050;
-	}
-
-	@Override
 	public String getFromDual() {
 		return "from sysibm.sysdummy1";
 	}
@@ -172,77 +163,6 @@ public class DerbyDialect extends DB2Dialect {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * From Derby 10.5 Docs:
-	 * <pre>
-	 * Query
-	 * [ORDER BY clause]
-	 * [result offset clause]
-	 * [fetch first clause]
-	 * [FOR UPDATE clause]
-	 * [WITH {RR|RS|CS|UR}]
-	 * </pre>
-	 */
-	@Override
-	public String getLimitString(String query, final int offset, final int limit) {
-		final StringBuilder sb = new StringBuilder(query.length() + 50);
-		final String normalizedSelect = query.toLowerCase(Locale.ROOT).trim();
-		final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update") ;
-
-		if ( hasForUpdateClause( forUpdateIndex ) ) {
-			sb.append( query.substring( 0, forUpdateIndex-1 ) );
-		}
-		else if ( hasWithClause( normalizedSelect ) ) {
-			sb.append( query.substring( 0, getWithIndex( query ) - 1 ) );
-		}
-		else {
-			sb.append( query );
-		}
-
-		if ( offset == 0 ) {
-			sb.append( " fetch first " );
-		}
-		else {
-			sb.append( " offset " ).append( offset ).append( " rows fetch next " );
-		}
-
-		sb.append( limit ).append( " rows only" );
-
-		if ( hasForUpdateClause( forUpdateIndex ) ) {
-			sb.append( ' ' );
-			sb.append( query.substring( forUpdateIndex ) );
-		}
-		else if ( hasWithClause( normalizedSelect ) ) {
-			sb.append( ' ' ).append( query.substring( getWithIndex( query ) ) );
-		}
-		return sb.toString();
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		// we bind the limit and offset values directly into the sql...
-		return false;
-	}
-
-	private static boolean hasForUpdateClause(int forUpdateIndex) {
-		return forUpdateIndex >= 0;
-	}
-
-	private static boolean hasWithClause(String normalizedSelect){
-		return normalizedSelect.startsWith( "with ", normalizedSelect.length() - 7 );
-	}
-
-	private static int getWithIndex(String querySelect) {
-		int i = querySelect.lastIndexOf( "with " );
-		if ( i < 0 ) {
-			i = querySelect.lastIndexOf( "WITH " );
-		}
-		return i;
-	}
-
-
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -253,72 +173,6 @@ public class DerbyDialect extends DB2Dialect {
 	@Override
 	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
-	}
-
-	private class DerbyLimitHandler extends AbstractLimitHandler {
-		/**
-		 * {@inheritDoc}
-		 * <p/>
-		 * From Derby 10.5 Docs:
-		 * <pre>
-		 * Query
-		 * [ORDER BY clause]
-		 * [result offset clause]
-		 * [fetch first clause]
-		 * [FOR UPDATE clause]
-		 * [WITH {RR|RS|CS|UR}]
-		 * </pre>
-		 */
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final StringBuilder sb = new StringBuilder( sql.length() + 50 );
-			final String normalizedSelect = sql.toLowerCase(Locale.ROOT).trim();
-			final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update" );
-
-			if (hasForUpdateClause( forUpdateIndex )) {
-				sb.append( sql.substring( 0, forUpdateIndex - 1 ) );
-			}
-			else if (hasWithClause( normalizedSelect )) {
-				sb.append( sql.substring( 0, getWithIndex( sql ) - 1 ) );
-			}
-			else {
-				sb.append( sql );
-			}
-
-			if (LimitHelper.hasFirstRow( selection )) {
-				sb.append( " offset " ).append( selection.getFirstRow() ).append( " rows fetch next " );
-			}
-			else {
-				sb.append( " fetch first " );
-			}
-
-			sb.append( getMaxOrLimit( selection ) ).append(" rows only" );
-
-			if (hasForUpdateClause( forUpdateIndex )) {
-				sb.append( ' ' );
-				sb.append( sql.substring( forUpdateIndex ) );
-			}
-			else if (hasWithClause( normalizedSelect )) {
-				sb.append( ' ' ).append( sql.substring( getWithIndex( sql ) ) );
-			}
-			return sb.toString();
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return getDerbyVersion() >= 1050;
-		}
-
-		@Override
-		@SuppressWarnings("deprecation")
-		public boolean supportsLimitOffset() {
-			return getDerbyVersion() >= 1050;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
 	}
 
 	@Override

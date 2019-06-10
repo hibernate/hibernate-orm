@@ -8,7 +8,6 @@ package org.hibernate.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Locale;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -19,7 +18,6 @@ import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
-import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
@@ -95,7 +93,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		registerKeyword( "top" );
 		registerKeyword( "key" );
-
 	}
 
 	@Override
@@ -153,71 +150,31 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return "default values";
 	}
 
-	private static int getAfterSelectInsertPoint(String sql) {
-		final int selectIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select" );
-		final int selectDistinctIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select distinct" );
-		return selectIndex + (selectDistinctIndex == selectIndex ? 15 : 6);
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 8 )
-				.append( querySelect )
-				.insert( getAfterSelectInsertPoint( querySelect ), " top " + limit )
-				.toString();
-	}
-
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return new LegacyLimitHandler( this );
-		}
-		return getDefaultLimitHandler();
-	}
-
-	private LimitHandler getDefaultLimitHandler() {
 		if ( getVersion() >= 11 ) {
+			//this is a stateful class, don't cache
+			//it in the Dialect!
 			return new SQLServer2012LimitHandler();
 		}
 		else if ( getVersion() >= 9 ) {
+			//this is a stateful class, don't cache
+			//it in the Dialect!
 			return new SQLServer2005LimitHandler();
 		}
 		else {
-			return new TopLimitHandler( false, false );
+			return new TopLimitHandler() {
+				@Override
+				public boolean supportsVariableLimit() {
+					return false;
+				}
+			};
 		}
 	}
 
 	@Override
 	public boolean supportsValuesList() {
 		return getVersion() >= 10;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return getVersion() >= 11;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsVariableLimit() {
-		return false;
 	}
 
 	@Override

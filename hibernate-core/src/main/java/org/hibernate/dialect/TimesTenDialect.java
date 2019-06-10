@@ -19,9 +19,8 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
-import org.hibernate.dialect.pagination.FirstLimitHandler;
-import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.RowsLimitHandler;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.TemporalUnit;
@@ -54,9 +53,23 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  */
 @SuppressWarnings("deprecation")
 public class TimesTenDialect extends Dialect {
-	/**
-	 * Constructs a TimesTenDialect
-	 */
+
+	private static final LimitHandler LIMIT_HANDLER = new RowsLimitHandler() {
+		@Override
+		protected boolean atStart() {
+			return true;
+		}
+	};
+		//	private static final LimitHandler LIMIT_HANDLER = new FirstLimitHandler() {
+//		@Override
+//		public boolean supportsVariableLimit() {
+//			//according to TimesTen 11g docs,
+//			//parameters are supported in FIRST
+//			//I have not tested this!
+//			return true;
+//		}
+//	};
+
 	public TimesTenDialect() {
 		super();
 
@@ -235,43 +248,7 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LegacyFirstLimitHandler.INSTANCE;
-		}
-		return FirstLimitHandler.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean bindLimitParametersFirst() {
-		return true;
-	}
-
-	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		return new StringBuilder( querySelect.length() + 15 )
-				.append( querySelect )
-				.insert( 6, " rows " + (offset + 1) + " to " + limit )
-				.toString();
+		return LIMIT_HANDLER;
 	}
 
 	@Override

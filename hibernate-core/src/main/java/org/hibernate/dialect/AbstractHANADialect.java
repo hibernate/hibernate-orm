@@ -46,9 +46,8 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.HANAExtractEmulation;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.BinaryStream;
@@ -63,7 +62,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -130,25 +128,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 public abstract class AbstractHANADialect extends Dialect {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractHANADialect.class );
-
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return sql + ( hasOffset ? " limit ? offset ?" : " limit ?" );
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean bindLimitParametersInReverseOrder() {
-			return true;
-		}
-
-	};
 
 	// Set the LOB prefetch size. LOBs larger than this value will be read into memory as the HANA JDBC driver closes
 	// the LOB when the result set is closed.
@@ -324,12 +303,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
-	}
-
-	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return new SQLExceptionConversionDelegate() {
 			@Override
@@ -480,12 +453,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public String getForUpdateNowaitString() {
 		return getForUpdateString() + " nowait";
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(final String sql, final boolean hasOffset) {
-		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
 	}
 
 	@Override
@@ -679,12 +646,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsPooledSequences() {
 		return true;
 	}
@@ -731,7 +692,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
+		return LimitOffsetLimitHandler.INSTANCE;
 	}
 
 	@Override

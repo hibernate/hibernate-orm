@@ -46,8 +46,6 @@ import static org.hibernate.query.TemporalUnit.NANOSECOND;
  */
 public class CacheDialect extends Dialect {
 
-	private LimitHandler limitHandler;
-
 	public CacheDialect() {
 		super();
 		// Note: For object <-> SQL datatype mappings see:
@@ -66,7 +64,6 @@ public class CacheDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
-		this.limitHandler = new TopLimitHandler( true, true );
 	}
 
 	static void useJdbcEscape(QueryEngine queryEngine, String name) {
@@ -338,54 +335,7 @@ public class CacheDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return super.getLimitHandler();
-		}
-		return limitHandler;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean bindLimitParametersFirst() {
-		// Does the LIMIT clause come at the start of the SELECT statement, rather than at the end?
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean useMaxForLimit() {
-		// Does the LIMIT clause take a "maximum" row number instead of a total number of returned rows?
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, boolean hasOffset) {
-		if ( hasOffset ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-
-		// This does not support the Cache SQL 'DISTINCT BY (comma-list)' extensions,
-		// but this extension is not supported through Hibernate anyway.
-		final int insertionPoint = sql.startsWith( "select distinct" ) ? 15 : 6;
-
-		return new StringBuilder( sql.length() + 8 )
-				.append( sql )
-				.insert( insertionPoint, " TOP ? " )
-				.toString();
+		return TopLimitHandler.INSTANCE;
 	}
 
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

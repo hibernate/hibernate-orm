@@ -20,13 +20,11 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DB2FormatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.dialect.unique.DB2UniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -63,34 +61,6 @@ public class DB2Dialect extends Dialect {
 		return version;
 	}
 
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			if (LimitHelper.hasFirstRow( selection )) {
-				//nest the main query in an outer select
-				return "select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
-						+ sql + " fetch first " + getMaxOrLimit( selection ) + " rows only ) as inner2_ ) as inner1_ where rownumber_ > "
-						+ selection.getFirstRow() + " order by rownumber_";
-			}
-			return sql + " fetch first " + getMaxOrLimit( selection ) +  " rows only";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean useMaxForLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
-
 	private final UniqueDelegate uniqueDelegate;
 
 	public DB2Dialect(DialectResolutionInfo info) {
@@ -101,9 +71,6 @@ public class DB2Dialect extends Dialect {
 		this(900);
 	}
 
-	/**
-	 * Constructs a DB2Dialect
-	 */
 	public DB2Dialect(int version) {
 		super();
 		this.version = version;
@@ -368,51 +335,8 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, int offset, int limit) {
-		if ( offset == 0 ) {
-			return sql + " fetch first " + limit + " rows only";
-		}
-		//nest the main query in an outer select
-		return "select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
-				+ sql + " fetch first " + limit + " rows only ) as inner2_ ) as inner1_ where rownumber_ > "
-				+ offset + " order by rownumber_";
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 *
-	 * DB2 does have a one-based offset, however this was actually already handled in the limit string building
-	 * (the '?+1' bit).  To not mess up inheritors, I'll leave that part alone and not touch the offset here.
-	 */
-	@Override
-	@SuppressWarnings("deprecation")
-	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		return zeroBasedFirstResult;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
 	public String getForUpdateString() {
 		return " for read only with rs use and keep update locks";
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean useMaxForLimit() {
-		return true;
 	}
 
 	@Override
@@ -654,7 +578,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
+		return DB2LimitHandler.INSTANCE;
 	}
 
 	/**

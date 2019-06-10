@@ -17,11 +17,9 @@ import org.hibernate.dialect.function.H2ExtractEmulation;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -55,24 +53,6 @@ public class H2Dialect extends Dialect {
 			CoreMessageLogger.class,
 			H2Dialect.class.getName()
 	);
-
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean bindLimitParametersInReverseOrder() {
-			return true;
-		}
-	};
 
 //	private final String querySequenceString;
 //	private final SequenceInformationExtractor sequenceInformationExtractor;
@@ -218,31 +198,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, boolean hasOffset) {
-		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean bindLimitParametersFirst() {
-		return false;
+		return LimitOffsetLimitHandler.INSTANCE;
 	}
 
 	@Override

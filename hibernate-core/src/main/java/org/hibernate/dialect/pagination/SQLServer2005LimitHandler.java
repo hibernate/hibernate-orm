@@ -19,7 +19,8 @@ import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * LIMIT clause handler compatible with SQL Server 2005 and later.
+ * A {@link LimitHandler} compatible with SQL Server 2005 and later
+ * that uses {@code ROWNUMBER()}.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Chris Cranford
@@ -32,7 +33,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private static final String SELECT_DISTINCT = SELECT + " " + DISTINCT;
 	private static final String SELECT_DISTINCT_SPACE = SELECT_DISTINCT + " ";
 
-	final String SELECT_SPACE = "select ";
+	private final String SELECT_SPACE = "select ";
 
 	private static final Pattern SELECT_DISTINCT_PATTERN = buildShallowIndexPattern( SELECT_DISTINCT_SPACE, true );
 	private static final Pattern SELECT_PATTERN = buildShallowIndexPattern( SELECT + "(.*)", true );
@@ -56,13 +57,6 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private boolean topAdded;
 	private boolean isCTE;
 
-	/**
-	 * Constructs a SQLServer2005LimitHandler
-	 */
-	public SQLServer2005LimitHandler() {
-		// NOP
-	}
-
 	@Override
 	public boolean supportsLimit() {
 		return true;
@@ -74,18 +68,14 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean supportsLimitOffset() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsVariableLimit() {
 		return true;
 	}
 
 	@Override
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		// Our dialect paginated results aren't zero based. The first row should get the number 1 and so on
+		// Our dialect paginated results aren't zero based.
+		// The first row should get the number 1 and so on
 		return zeroBasedFirstResult + 1;
 	}
 
@@ -97,7 +87,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * <pre>
 	 * WITH query AS (
 	 *   SELECT inner_query.*
-	 *        , ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__
+	 *        , ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) AS __hibernate_row_nr__
 	 *     FROM ( original_query_with_top_if_order_by_present_and_all_aliased_columns ) inner_query
 	 * )
 	 * SELECT alias_list FROM query WHERE __hibernate_row_nr__ >= offset AND __hibernate_row_nr__ < offset + last
@@ -118,7 +108,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		// returns the index where the injection should start.
 		final int offset = getStatementIndex( sb );
 
-		if ( !LimitHelper.hasFirstRow( selection ) ) {
+		if ( !hasFirstRow( selection ) ) {
 			addTopExpression( sb, offset );
 		}
 		else {
@@ -131,9 +121,9 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 
 			encloseWithOuterQuery( sb, offset );
 
-			sb.insert( offset, !isCTE ? "WITH query AS (" : ", query AS (" );
-			sb.append( ") SELECT " ).append( selectClause ).append( " FROM query " );
-			sb.append( "WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?" );
+			sb.insert( offset, !isCTE ? "with query as (" : ", query as (" );
+			sb.append( ") select " ).append( selectClause ).append( " from query " );
+			sb.append( "where __hibernate_row_nr__ >= ? and __hibernate_row_nr__ < ?" );
 		}
 
 		return sb.toString();
@@ -151,7 +141,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index) throws SQLException {
-		return LimitHelper.hasFirstRow( selection ) ? super.bindLimitParametersAtEndOfQuery( selection, statement, index ) : 0;
+		return hasFirstRow( selection ) ? super.bindLimitParametersAtEndOfQuery( selection, statement, index ) : 0;
 	}
 
 	/**
@@ -236,10 +226,10 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		// adjustment for 'select distinct ' and 'select '.
 		final String sql = sb.toString().substring( startPos ).toLowerCase();
 		if ( sql.startsWith( SELECT_DISTINCT_SPACE ) ) {
-			return ( startPos + SELECT_DISTINCT_SPACE.length() );
+			return startPos + SELECT_DISTINCT_SPACE.length();
 		}
 		else if ( sql.startsWith( SELECT_SPACE ) ) {
-			return ( startPos + SELECT_SPACE.length() );
+			return startPos + SELECT_SPACE.length();
 		}
 		return startPos;
 	}
@@ -304,7 +294,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * @param offset SQL query offset.
 	 */
 	protected void encloseWithOuterQuery(StringBuilder sql, int offset) {
-		sql.insert( offset, "SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " );
+		sql.insert( offset, "select inner_query.*, row_number() over (order by current_timestamp) as __hibernate_row_nr__ from ( " );
 		sql.append( " ) inner_query " );
 	}
 
@@ -321,11 +311,11 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		final int selectDistinctPos = shallowIndexOfPattern( sql, SELECT_DISTINCT_PATTERN, offset );
 		if ( selectPos == selectDistinctPos ) {
 			// Place TOP after SELECT DISTINCT
-			sql.insert( selectDistinctPos + SELECT_DISTINCT.length(), " TOP(?)" );
+			sql.insert( selectDistinctPos + SELECT_DISTINCT.length(), " top(?)" );
 		}
 		else {
 			// Place TOP after SELECT
-			sql.insert( selectPos + SELECT.length(), " TOP(?)" );
+			sql.insert( selectPos + SELECT.length(), " top(?)" );
 		}
 		topAdded = true;
 	}

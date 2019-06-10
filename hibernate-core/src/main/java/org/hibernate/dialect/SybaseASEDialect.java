@@ -3,7 +3,7 @@ package org.hibernate.dialect;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.SybaseASE157LimitHandler;
+import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
@@ -22,8 +22,6 @@ import java.util.Map;
  * Sybase 11.9.2 and above.
  */
 public class SybaseASEDialect extends SybaseDialect {
-
-	private static final SybaseASE157LimitHandler LIMIT_HANDLER = new SybaseASE157LimitHandler();
 
 	private final int version;
 
@@ -342,18 +340,6 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return getVersion() >= 1570;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
 	public String getTableTypeString() {
 		//HHH-7298 I don't know if this would break something or cause some side affects
 		//but it is required to use 'select for update'
@@ -430,7 +416,15 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return getVersion() < 1570 ? super.getLimitHandler() : LIMIT_HANDLER;
+		if ( getVersion() < 1250 ) {
+			//support for SELECT TOP was introduced in Sybase ASE 12.5.3
+			return super.getLimitHandler();
+		}
+		return new TopLimitHandler() {
+			@Override
+			public boolean supportsVariableLimit() {
+				return false;
+			}
+		};
 	}
-
 }

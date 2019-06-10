@@ -11,6 +11,8 @@ import java.sql.Types;
 
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.TopLimitHandler;
 
 /**
  * SQL Dialect for Sybase Anywhere
@@ -77,4 +79,12 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		return new SybaseAnywhereIdentityColumnSupport();
 	}
 
+	@Override
+	public LimitHandler getLimitHandler() {
+		//TODO: support 'TOP ? START AT ?'
+		//Note: Sybase Anywhere also supports LIMIT OFFSET,
+		//      but it looks like this syntax is not enabled
+		//      by default
+		return TopLimitHandler.INSTANCE;
+	}
 }

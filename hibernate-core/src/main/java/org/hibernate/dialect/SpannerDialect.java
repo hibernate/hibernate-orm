@@ -16,6 +16,8 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.LockingStrategyException;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -664,30 +666,9 @@ public class SpannerDialect extends Dialect {
 		return '`';
 	}
 
-	/* Limits and offsets */
-
 	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsVariableLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, boolean hasOffset) {
-		return sql + ( hasOffset ? " limit ? offset ?" : " limit ?" );
+	public LimitHandler getLimitHandler() {
+		return new LimitOffsetLimitHandler();
 	}
 
 	/* Type conversion and casting */

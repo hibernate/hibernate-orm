@@ -90,13 +90,13 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportLimitCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsLimit();
+			return dialect.getLimitHandler().supportsLimit();
 		}
 	}
 
 	public static class SupportLimitAndOffsetCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsLimit() && dialect.supportsLimitOffset();
+			return dialect.getLimitHandler().supportsLimit() && dialect.getLimitHandler().supportsLimitOffset();
 		}
 	}
 

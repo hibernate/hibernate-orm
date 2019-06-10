@@ -217,12 +217,6 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return false;
-	}
-
-	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade";
 	}

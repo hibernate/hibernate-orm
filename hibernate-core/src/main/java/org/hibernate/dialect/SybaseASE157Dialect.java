@@ -6,19 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.SQLException;
-import java.util.Map;
-
-import org.hibernate.JDBCException;
-import org.hibernate.LockOptions;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.SybaseASE157LimitHandler;
-import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.exception.LockTimeoutException;
-import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.sql.ForUpdateFragment;
-
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15.7 and higher.
  *

@@ -8,11 +8,9 @@ package org.hibernate.dialect;
 
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.RowSelection;
 
 
 /**
@@ -42,58 +40,6 @@ public class DB2390Dialect extends DB2Dialect {
 		this.version = version;
 	}
 
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			if (LimitHelper.hasFirstRow( selection )) {
-				throw new UnsupportedOperationException( "query result offset is not supported" );
-			}
-			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean useMaxForLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
-
-	private static final AbstractLimitHandler LEGACY_LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsLimitOffset() {
-			return false;
-		}
-
-		@Override
-		public boolean useMaxForLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
-
 	@Override
 	public boolean supportsSequences() {
 		return get390Version() >= 8;
@@ -113,25 +59,8 @@ public class DB2390Dialect extends DB2Dialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public String getLimitString(String sql, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		if ( limit == 0 ) {
-			return sql;
-		}
-		return sql + " fetch first " + limit + " rows only ";
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
-		return isLegacyLimitHandlerBehaviorEnabled() ? LEGACY_LIMIT_HANDLER : LIMIT_HANDLER;
+		return FetchLimitHandler.INSTANCE;
 	}
 
 	@Override

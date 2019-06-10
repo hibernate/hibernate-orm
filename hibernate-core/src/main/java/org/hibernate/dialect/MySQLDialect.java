@@ -21,13 +21,11 @@ import org.hibernate.dialect.function.MySQLExtractEmulation;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.unique.MySQLUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -65,19 +63,6 @@ public class MySQLDialect extends Dialect {
 	public MySQLDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
-
-	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return sql + (hasOffset ? " limit ?, ?" : " limit ?");
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-	};
 
 	public MySQLDialect() {
 		this(400);
@@ -349,25 +334,13 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
 	public String getDropForeignKeyString() {
 		return " drop foreign key ";
 	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, boolean hasOffset) {
-		return sql + (hasOffset ? " limit ?, ?" : " limit ?");
+		return LimitLimitHandler.INSTANCE;
 	}
 
 	@Override

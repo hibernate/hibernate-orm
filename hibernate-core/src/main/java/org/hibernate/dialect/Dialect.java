@@ -36,7 +36,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
@@ -56,12 +55,9 @@ import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
 import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
@@ -184,7 +180,6 @@ public abstract class Dialect implements ConversionContext {
 
 	private final UniqueDelegate uniqueDelegate;
 
-	private boolean legacyLimitHandlerBehavior;
 	private DefaultSizeStrategy defaultSizeStrategy;
 
 
@@ -666,11 +661,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		// by default, nothing to do
-		//
-		// well, there are no types to register by default.  5.3 hacked in
-		// here though to call `resolveLegacyLimitHandlerBehavior`.  Ultimately
-		// this should be covered by the "initializable Dialect" notes below
-		resolveLegacyLimitHandlerBehavior( serviceRegistry );
 	}
 
 //	public static interface Initializable {
@@ -1377,158 +1367,8 @@ public abstract class Dialect implements ConversionContext {
 	 * @return LIMIT clause delegate.
 	 */
 	public LimitHandler getLimitHandler() {
-		return new LegacyLimitHandler( this );
+		throw new UnsupportedOperationException("this dialect does not support query pagination");
 	}
-
-	/**
-	 * Does this dialect support some form of limiting query results
-	 * via a SQL clause?
-	 *
-	 * @return True if this dialect supports some form of LIMIT.
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsLimit() {
-		return false;
-	}
-
-	/**
-	 * Does this dialect's LIMIT support (if any) additionally
-	 * support specifying an offset?
-	 *
-	 * @return True if the dialect supports an offset within the limit support.
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsLimitOffset() {
-		return supportsLimit();
-	}
-
-	/**
-	 * Does this dialect support bind variables (i.e., prepared statement
-	 * parameters) for its limit/offset?
-	 *
-	 * @return True if bind variables can be used; false otherwise.
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsVariableLimit() {
-		return supportsLimit();
-	}
-
-	/**
-	 * ANSI SQL defines the LIMIT clause to be in the form LIMIT offset, limit.
-	 * Does this dialect require us to bind the parameters in reverse order?
-	 *
-	 * @return true if the correct order is limit, offset
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean bindLimitParametersInReverseOrder() {
-		return false;
-	}
-
-	/**
-	 * Does the <tt>LIMIT</tt> clause come at the start of the
-	 * <tt>SELECT</tt> statement, rather than at the end?
-	 *
-	 * @return true if limit parameters should come before other parameters
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean bindLimitParametersFirst() {
-		return false;
-	}
-
-	/**
-	 * Does the <tt>LIMIT</tt> clause take a "maximum" row number instead
-	 * of a total number of returned rows?
-	 * <p/>
-	 * This is easiest understood via an example.  Consider you have a table
-	 * with 20 rows, but you only want to retrieve rows number 11 through 20.
-	 * Generally, a limit with offset would say that the offset = 11 and the
-	 * limit = 10 (we only want 10 rows at a time); this is specifying the
-	 * total number of returned rows.  Some dialects require that we instead
-	 * specify offset = 11 and limit = 20, where 20 is the "last" row we want
-	 * relative to offset (i.e. total number of rows = 20 - 11 = 9)
-	 * <p/>
-	 * So essentially, is limit relative from offset?  Or is limit absolute?
-	 *
-	 * @return True if limit is relative from offset; false otherwise.
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean useMaxForLimit() {
-		return false;
-	}
-
-	/**
-	 * Generally, if there is no limit applied to a Hibernate query we do not apply any limits
-	 * to the SQL query.  This option forces that the limit be written to the SQL query.
-	 *
-	 * @return True to force limit into SQL query even if none specified in Hibernate query; false otherwise.
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean forceLimitUsage() {
-		return false;
-	}
-
-	/**
-	 * Given a limit and an offset, apply the limit clause to the query.
-	 *
-	 * @param query The query to which to apply the limit.
-	 * @param offset The offset of the limit
-	 * @param limit The limit of the limit ;)
-	 * @return The modified query statement with the limit applied.
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public String getLimitString(String query, int offset, int limit) {
-		return getLimitString( query, ( offset > 0 || forceLimitUsage() )  );
-	}
-
-	/**
-	 * Apply s limit clause to the query.
-	 * <p/>
-	 * Typically dialects utilize {@link #supportsVariableLimit() variable}
-	 * limit clauses when they support limits.  Thus, when building the
-	 * select command we do not actually need to know the limit or the offest
-	 * since we will just be using placeholders.
-	 * <p/>
-	 * Here we do still pass along whether or not an offset was specified
-	 * so that dialects not supporting offsets can generate proper exceptions.
-	 * In general, dialects will override one or the other of this method and
-	 * {@link #getLimitString(String, int, int)}.
-	 *
-	 * @param query The query to which to apply the limit.
-	 * @param hasOffset Is the query requesting an offset?
-	 * @return the modified SQL
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	protected String getLimitString(String query, boolean hasOffset) {
-		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName());
-	}
-
-	/**
-	 * Hibernate APIs explicitly state that setFirstResult() should be a zero-based offset. Here we allow the
-	 * Dialect a chance to convert that value based on what the underlying db or driver will expect.
-	 * <p/>
-	 * NOTE: what gets passed into {@link #getLimitString(String,int,int)} is the zero-based offset.  Dialects which
-	 * do not {@link #supportsVariableLimit} should take care to perform any needed first-row-conversion calls prior
-	 * to injecting the limit values into the SQL string.
-	 *
-	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
-	 * @return The corresponding db/dialect specific offset.
-	 * @see org.hibernate.query.Query#setFirstResult
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		return zeroBasedFirstResult;
-	}
-
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1540,7 +1380,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsLockTimeouts() {
 		return true;
-
 	}
 
 	/**
@@ -3389,10 +3228,6 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
-	public boolean isLegacyLimitHandlerBehaviorEnabled() {
-		return legacyLimitHandlerBehavior;
-	}
-
 	/**
 	 * Inline String literal.
 	 *
@@ -3421,17 +3256,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	protected String escapeLiteral(String literal) {
 		return literal.replace("'", "''");
-	}
-
-	private void resolveLegacyLimitHandlerBehavior(ServiceRegistry serviceRegistry) {
-		// HHH-11194
-		// Temporary solution to set whether legacy limit handler behavior should be used.
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-		legacyLimitHandlerBehavior = configurationService.getSetting(
-				AvailableSettings.USE_LEGACY_LIMIT_HANDLERS,
-				StandardConverters.BOOLEAN,
-				false
-		);
 	}
 
 	/**

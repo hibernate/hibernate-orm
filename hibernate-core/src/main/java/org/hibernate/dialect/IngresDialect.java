@@ -13,13 +13,10 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Ingres10IdentityColumnSupport;
 import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.dialect.pagination.IngresLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
-import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.QueryEngine;
@@ -60,32 +57,7 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  */
 public class IngresDialect extends Dialect {
 
-	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final String soff = " offset " + selection.getFirstRow();
-			final String slim = " fetch first " + getMaxOrLimit( selection ) + " rows only";
-			final StringBuilder sb = new StringBuilder( sql.length() + soff.length() + slim.length() )
-					.append( sql );
-			if (LimitHelper.hasFirstRow( selection )) {
-				sb.append( soff );
-			}
-			if (LimitHelper.hasMaxRows( selection )) {
-				sb.append( slim );
-			}
-			return sb.toString();
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
+	private final LimitHandler limitHandler;
 
 	private final int version;
 
@@ -166,6 +138,8 @@ public class IngresDialect extends Dialect {
 			// substitutions of true and false.
 			getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
 		}
+
+		limitHandler = getVersion() < 930 ? FirstLimitHandler.INSTANCE : IngresLimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -326,14 +300,7 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LegacyFirstLimitHandler.INSTANCE;
-		}
-		return getDefaultLimitHandler();
-	}
-
-	private LimitHandler getDefaultLimitHandler() {
-		return getVersion() < 930 ? FirstLimitHandler.INSTANCE : LIMIT_HANDLER;
+		return limitHandler;
 	}
 
 	@Override
@@ -349,38 +316,6 @@ public class IngresDialect extends Dialect {
 		}
 	}
 
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( getVersion() >= 930 ) {
-			final StringBuilder soff = new StringBuilder( " offset " + offset );
-			final StringBuilder slim = new StringBuilder( " fetch first " + limit + " rows only" );
-			final StringBuilder sb = new StringBuilder( querySelect.length() + soff.length() + slim.length() )
-					.append( querySelect );
-			if ( offset > 0 ) {
-				sb.append( soff );
-			}
-			if ( limit > 0 ) {
-				sb.append( slim );
-			}
-			return sb.toString();
-		}
-		else {
-			if ( offset > 0 ) {
-				throw new UnsupportedOperationException( "query result offset is not supported" );
-			}
-			return new StringBuilder( querySelect.length() + 16 )
-					.append( querySelect )
-					.insert( 6, " first " + limit )
-					.toString();
-		}
-	}
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -437,24 +372,6 @@ public class IngresDialect extends Dialect {
 	}
 
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return getVersion() >= 930;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean useMaxForLimit() {
-		return getVersion() < 930;
-	}
 
 	@Override
 	public String getFromDual() {

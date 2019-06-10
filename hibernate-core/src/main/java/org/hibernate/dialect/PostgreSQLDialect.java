@@ -10,11 +10,9 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.PostgresExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
@@ -81,24 +79,6 @@ public class PostgreSQLDialect extends Dialect {
 	public PostgreSQLDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
-
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean bindLimitParametersInReverseOrder() {
-			return true;
-		}
-	};
 
 	public PostgreSQLDialect() {
 		this(800);
@@ -429,25 +409,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, boolean hasOffset) {
-		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
+		return LimitOffsetLimitHandler.INSTANCE;
 	}
 
 	@Override

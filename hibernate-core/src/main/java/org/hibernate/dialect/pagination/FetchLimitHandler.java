@@ -9,24 +9,25 @@ package org.hibernate.dialect.pagination;
 import org.hibernate.engine.spi.RowSelection;
 
 /**
- * A {@link LimitHandler} for older versions of Informix, Ingres,
- * and TimesTen, which supported the syntax {@code SELECT FIRST n}.
+ * A {@link LimitHandler} for databases which support the ANSI
+ * SQL standard syntax {@code FETCH FIRST m ROWS ONLY} but not
+ * {@code OFFSET n ROWS}.
  *
- * @author Chris Cranford
+ * @author Gavin King
  */
-public class FirstLimitHandler extends AbstractLimitHandler {
+public class FetchLimitHandler extends AbstractLimitHandler {
 
-	public static final FirstLimitHandler INSTANCE = new FirstLimitHandler();
+	public static final FetchLimitHandler INSTANCE = new FetchLimitHandler();
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
 		if ( !hasMaxRows( selection) ) {
 			return sql;
 		}
-		String first = supportsVariableLimit()
-				? " first ?"
-				: " first " + getMaxOrLimit(selection);
-		return insertAfterSelect( sql, first );
+		String fetch = supportsVariableLimit()
+				? " fetch first ? rows only"
+				: " fetch first " + getMaxOrLimit( selection ) + " rows only";
+		return insertBeforeForUpdate( fetch, sql );
 	}
 
 	@Override
@@ -44,8 +45,4 @@ public class FirstLimitHandler extends AbstractLimitHandler {
 		return false;
 	}
 
-	@Override
-	public final boolean bindLimitParametersFirst() {
-		return true;
-	}
 }

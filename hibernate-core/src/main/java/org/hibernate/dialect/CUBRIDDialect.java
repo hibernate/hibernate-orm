@@ -17,7 +17,7 @@ import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.CUBRIDLimitHandler;
+import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorCUBRIDDatabaseImpl;
@@ -281,7 +281,7 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return CUBRIDLimitHandler.INSTANCE;
+		return LimitLimitHandler.INSTANCE;
 	}
 
 	@Override

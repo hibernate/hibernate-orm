@@ -90,13 +90,13 @@ abstract public class DialectChecks {
 
 	public static class SupportLimitCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLimit();
+			return dialect.getLimitHandler().supportsLimit();
 		}
 	}
 
 	public static class SupportLimitAndOffsetCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLimit() && dialect.supportsLimitOffset();
+			return dialect.getLimitHandler().supportsLimit() && dialect.getLimitHandler().supportsLimitOffset();
 		}
 	}
 

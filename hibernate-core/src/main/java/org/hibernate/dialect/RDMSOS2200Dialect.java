@@ -12,6 +12,8 @@ import org.hibernate.LockMode;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
 import org.hibernate.dialect.function.RDMSExtractEmulation;
+import org.hibernate.dialect.pagination.FetchLimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -23,10 +25,7 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
@@ -52,54 +51,6 @@ public class RDMSOS2200Dialect extends Dialect {
 			CoreMessageLogger.class,
 			RDMSOS2200Dialect.class.getName()
 	);
-
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			if (hasOffset) {
-				throw new UnsupportedOperationException( "query result offset is not supported" );
-			}
-			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only ";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsLimitOffset() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
-
-	private static final AbstractLimitHandler LEGACY_LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only ";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsLimitOffset() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
 
 	/**
 	 * Constructs a RDMSOS2200Dialect
@@ -363,37 +314,7 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LEGACY_LIMIT_HANDLER;
-		}
-		return LIMIT_HANDLER;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return sql + " fetch first " + limit + " rows only ";
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsVariableLimit() {
-		return false;
+		return FetchLimitHandler.INSTANCE;
 	}
 
 	@Override

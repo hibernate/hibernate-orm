@@ -15,7 +15,6 @@ import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunctio
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -76,7 +75,7 @@ public class MimerExtractEmulation
 				break;
 		}
 		return queryEngine.getSqmFunctionRegistry()
-				.patternTemplateBuilder("extract", pattern)
+				.patternTemplateBuilder( "extract", pattern )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
 				.template()

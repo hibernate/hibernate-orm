@@ -348,6 +348,7 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getCurrentTimestampSQLFunctionName() {
 		return getVersion() >= 930 ? "current_timestamp" : "date(now)";
 	}

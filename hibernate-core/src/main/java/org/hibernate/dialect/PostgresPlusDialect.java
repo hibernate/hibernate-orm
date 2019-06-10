@@ -45,6 +45,7 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getCurrentTimestampSQLFunctionName() {
 		return "sysdate";
 	}

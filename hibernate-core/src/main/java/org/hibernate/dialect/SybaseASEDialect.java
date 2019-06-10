@@ -325,6 +325,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public String getCurrentTimestampSQLFunctionName() {
 		return "getdate()";
 	}

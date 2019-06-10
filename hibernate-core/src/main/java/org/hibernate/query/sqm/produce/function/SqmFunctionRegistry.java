@@ -74,7 +74,7 @@ public class SqmFunctionRegistry {
 				registrationKey,
 				priorRegistration
 		);
-
+		alternateKeyMap.remove( registrationKey );
 		return function;
 	}
 

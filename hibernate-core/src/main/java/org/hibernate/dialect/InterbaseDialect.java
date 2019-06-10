@@ -10,12 +10,8 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.dialect.pagination.RowsLimitHandler;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
@@ -26,30 +22,17 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  */
 public class InterbaseDialect extends Dialect {
 
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-	};
-
-	/**
-	 * Constructs a InterbaseDialect
-	 */
 	public InterbaseDialect() {
 		super();
-		registerColumnType( Types.BIT, 1, "smallint" );
+
+		registerColumnType( Types.BIT, 1, "boolean" );
 		registerColumnType( Types.BIT, "smallint" );
-		registerColumnType( Types.BOOLEAN, "smallint" );
 
 		registerColumnType( Types.TINYINT, "smallint" );
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );
+
+		registerColumnType( Types.REAL, "float");
+		registerColumnType( Types.FLOAT, "double precision");
 
 		registerColumnType( Types.VARBINARY, "blob" );
 		registerColumnType( Types.BLOB, "blob" );
@@ -60,12 +43,13 @@ public class InterbaseDialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+		getDefaultProperties().setProperty( Environment.QUERY_LITERAL_RENDERING, "literal" );
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		CommonFunctionFactory.concat_pipeOperator( queryEngine );
+	public int getDefaultDecimalPrecision() {
+		//the extremely low maximum
+		return 18;
 	}
 
 	@Override
@@ -74,13 +58,18 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSequences() {
+		return true;
+	}
+
+	@Override
 	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from RDB$DATABASE";
+		return "select " + getSelectSequenceNextValString( sequenceName ) + " " + getFromDual();
 	}
 
 	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
-		return "gen_id( " + sequenceName + ", 1 )";
+		return "gen_id(" + sequenceName + ",1)";
 	}
 
 	@Override
@@ -114,51 +103,18 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, boolean hasOffset) {
-		return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean bindLimitParametersFirst() {
-		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean bindLimitParametersInReverseOrder() {
-		return false;
+		return RowsLimitHandler.INSTANCE;
 	}
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		// TODO : not sure which (either?) is correct, could not find docs on how to do this.
-		// did find various blogs and forums mentioning that select CURRENT_TIMESTAMP
-		// does not work...
-		return "{?= call CURRENT_TIMESTAMP }";
-//		return "select CURRENT_TIMESTAMP from RDB$DATABASE";
+		return "select current_timestamp " + getFromDual();
 	}
 
 	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
-		return true;
+		return false;
 	}
 
 	@Override

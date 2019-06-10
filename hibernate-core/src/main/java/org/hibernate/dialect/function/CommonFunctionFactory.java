@@ -1331,6 +1331,15 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void leastGreatest_minMaxValue(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "least", "minValue" )
+				.setMinArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "greatest", "mxValue" )
+				.setMinArgumentCount( 1 )
+				.register();
+	}
+
 	public static void aggregates(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("max")
 				.setExactArgumentCount(1)

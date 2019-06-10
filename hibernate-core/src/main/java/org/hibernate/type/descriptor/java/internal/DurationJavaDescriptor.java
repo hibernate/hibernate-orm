@@ -121,7 +121,7 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 		// except for cosmological applications. Thirty
 		// millenia in both timelike directions should be
 		// sufficient time for most businesses!
-		return 21;
+		return Math.min( 21, dialect.getDefaultDecimalPrecision() );
 	}
 
 	@Override

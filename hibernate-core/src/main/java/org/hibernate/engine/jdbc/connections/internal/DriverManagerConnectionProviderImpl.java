@@ -107,17 +107,20 @@ public class DriverManagerConnectionProviderImpl
 		final String url = (String) configurationValues.get( AvailableSettings.URL );
 
 		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
+		boolean success = false;
 		if ( driverClassName != null ) {
 			connectionCreatorBuilder.setDriver( loadDriverIfPossible( driverClassName, serviceRegistry ) );
+			success = true;
 		}
 		else if ( url != null ) {
 			//try to guess the driver class from the JDBC URL
 			for ( Database database: Database.values() ) {
 				if ( database.matchesUrl( url ) ) {
 					driverClassName = database.getDriverClassName( url );
-					if (driverClassName != null) {
+					if ( driverClassName != null ) {
 						try {
 							connectionCreatorBuilder.setDriver( loadDriverIfPossible(driverClassName, serviceRegistry) );
+							success = true;
 						}
 						catch (Exception e) {
 							//swallow it, since this was not
@@ -129,7 +132,7 @@ public class DriverManagerConnectionProviderImpl
 			}
 		}
 
-		if ( driverClassName != null ) {
+		if ( success ) {
 			log.loadedDriver( driverClassName );
 		}
 		else {

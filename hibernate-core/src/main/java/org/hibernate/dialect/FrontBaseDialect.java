@@ -95,22 +95,19 @@ public class FrontBaseDialect extends Dialect {
 	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// Frontbase has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
-			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
+		switch (lockMode) {
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return new PessimisticForceIncrementLockingStrategy(lockable, lockMode);
+			case PESSIMISTIC_WRITE:
+				return new PessimisticWriteUpdateLockingStrategy(lockable, lockMode);
+			case PESSIMISTIC_READ:
+				return new PessimisticReadUpdateLockingStrategy(lockable, lockMode);
+			case OPTIMISTIC:
+				return new OptimisticLockingStrategy(lockable, lockMode);
+			case OPTIMISTIC_FORCE_INCREMENT:
+				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
 		}
-		else if ( lockMode==LockMode.PESSIMISTIC_WRITE) {
-			return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.PESSIMISTIC_READ) {
-			return new PessimisticReadUpdateLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.OPTIMISTIC) {
-			return new OptimisticLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.OPTIMISTIC_FORCE_INCREMENT) {
-			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode.greaterThan( LockMode.READ ) ) {
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
 			return new UpdateLockingStrategy( lockable, lockMode );
 		}
 		else {

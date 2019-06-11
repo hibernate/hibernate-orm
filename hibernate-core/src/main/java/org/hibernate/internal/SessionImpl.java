@@ -3511,7 +3511,7 @@ public final class SessionImpl
 			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( JDBCException e ) {
-			if ( accessTransaction().getRollbackOnly() ) {
+			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
 				// assume this is the similar to the WildFly / IronJacamar "feature" described under HHH-12472
 				return null;
 			}

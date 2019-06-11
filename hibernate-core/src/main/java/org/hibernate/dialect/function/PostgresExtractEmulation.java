@@ -15,7 +15,6 @@ import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunctio
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -27,7 +26,6 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * numbered from 0 to 6. This isn't consistent with what most other
  * databases do, so here we adjust the result by generating
  * {@code (extract(dow,arg)+1)).
- *
  *
  * @author Gavin King
  */
@@ -53,16 +51,16 @@ public class PostgresExtractEmulation
 				? "(extract(?1 from ?2)+1)"
 				: "extract(?1 from ?2)";
 		return queryEngine.getSqmFunctionRegistry()
-						.patternTemplateBuilder("extract", pattern)
-						.setReturnTypeResolver( useArgType(1) )
-						.setExactArgumentCount(2)
-						.template()
-						.makeSqmFunctionExpression(
-								arguments,
-								impliedResultType,
-								queryEngine,
-								typeConfiguration
-						);
+				.patternTemplateBuilder( "extract", pattern )
+				.setReturnTypeResolver( useArgType(1) )
+				.setExactArgumentCount( 2 )
+				.template()
+				.makeSqmFunctionExpression(
+						arguments,
+						impliedResultType,
+						queryEngine,
+						typeConfiguration
+				);
 	}
 
 	@Override

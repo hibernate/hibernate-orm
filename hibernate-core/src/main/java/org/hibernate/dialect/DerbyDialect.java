@@ -66,6 +66,8 @@ public class DerbyDialect extends Dialect {
 	// * pad() can only pad with blanks
 	// * can't cast() a String to Float/Double (TODO: emulate this)
 	// * can't cast String to Binary
+	// * can't select a parameter unless wrapped
+	//   in a cast or function call
 
 	private final int version;
 

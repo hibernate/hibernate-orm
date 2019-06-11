@@ -54,6 +54,11 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  */
 public class DB2Dialect extends Dialect {
 
+	// KNOWN LIMITATIONS:
+
+	// * can't select a parameter unless wrapped
+	//   in a cast or function call
+
 	private final int version;
 
 	int getVersion() {

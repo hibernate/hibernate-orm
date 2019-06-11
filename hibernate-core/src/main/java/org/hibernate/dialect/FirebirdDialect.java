@@ -40,6 +40,8 @@ public class FirebirdDialect extends Dialect {
 	// * no support for format()
 	// * extremely low maximum decimal precision (18)
 	//   making BigInteger/BigDecimal support useless
+	// * can't select a parameter unless wrapped in a
+	//   cast (not even when wrapped in a function call)
 
 	public FirebirdDialect() {
 		super();

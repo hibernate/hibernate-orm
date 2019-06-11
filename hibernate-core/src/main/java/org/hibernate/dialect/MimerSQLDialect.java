@@ -34,6 +34,8 @@ public class MimerSQLDialect extends Dialect {
 
 	// * no support for format()
 	// * can't cast non-literal String to Binary
+	// * can't select a parameter unless wrapped
+	//   in a cast or function call
 
 	public MimerSQLDialect() {
 		super();

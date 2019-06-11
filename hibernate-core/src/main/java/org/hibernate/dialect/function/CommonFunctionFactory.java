@@ -1431,6 +1431,13 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public static void power_expLn(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "power", "exp(ln(?1)*?2)")
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+	}
+
 	public static void square(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "square" )
 				.setExactArgumentCount( 1 )

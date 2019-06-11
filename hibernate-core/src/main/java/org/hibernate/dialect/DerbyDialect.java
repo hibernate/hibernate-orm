@@ -64,7 +64,6 @@ public class DerbyDialect extends Dialect {
 	// * limited set of fields for extract()
 	//   (no 'day of xxxx', nor 'week of xxxx')
 	// * no support for format()
-	// * no round() function
 	// * pad() can only pad with blanks
 	// * can't cast String to Binary
 	// * can't select a parameter unless wrapped
@@ -163,6 +162,12 @@ public class DerbyDialect extends Dialect {
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.leftRight_substrLength( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.power_expLn( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
 
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
 		queryEngine.getSqmFunctionRegistry().register( "extract", new DerbyExtractEmulation() );

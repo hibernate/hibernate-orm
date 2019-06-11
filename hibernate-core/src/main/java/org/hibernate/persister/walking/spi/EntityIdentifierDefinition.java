@@ -6,12 +6,14 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+
 /**
  * Describes aspects of the identifier for an entity
  *
  * @author Steve Ebersole
  */
-public interface EntityIdentifierDefinition {
+public interface EntityIdentifierDefinition extends ValueMapping {
 	/**
 	 * Is the entity identifier encapsulated?  Meaning, is it represented by a single attribute?
 	 *
@@ -20,7 +22,7 @@ public interface EntityIdentifierDefinition {
 	 * castable to {@link NonEncapsulatedEntityIdentifierDefinition}).
 	 *
 	 */
-	public boolean isEncapsulated();
+	boolean isEncapsulated();
 
-	public EntityDefinition getEntityDefinition();
+	EntityDefinition getEntityDefinition();
 }

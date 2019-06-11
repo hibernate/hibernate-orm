@@ -15,7 +15,7 @@ import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.Person;
 import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.tuple.Instantiator;
+import org.hibernate.metamodel.spi.Instantiator;
 
 /**
  * @author Steve Ebersole

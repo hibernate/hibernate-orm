@@ -4,13 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.query.internal;
 
 import java.util.Objects;
 
-import org.hibernate.metamodel.model.mapping.spi.AllowableParameterType;
-import org.hibernate.query.named.spi.ParameterMemento;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AbstractQueryParameter;
+import org.hibernate.query.spi.NamedQueryMemento;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 /**
@@ -30,12 +30,10 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 		assert parameter.getName() != null;
 		assert parameter.getPosition() == null;
 
-		return new QueryParameterNamedImpl<T>(
+		return new QueryParameterNamedImpl<>(
 				parameter.getName(),
 				parameter.allowMultiValuedBinding(),
-				parameter.getAnticipatedType() != null ?
-						(AllowableParameterType) parameter.getAnticipatedType() :
-						null
+				parameter.getAnticipatedType()
 		);
 	}
 
@@ -53,6 +51,7 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 			String name,
 			boolean allowMultiValuedBinding,
 			AllowableParameterType anticipatedType) {
+		//noinspection unchecked
 		super( allowMultiValuedBinding, anticipatedType );
 		this.name = name;
 	}
@@ -63,7 +62,7 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	}
 
 	@Override
-	public ParameterMemento toMemento() {
+	public NamedQueryMemento.ParameterMemento toMemento() {
 		return session -> new QueryParameterNamedImpl( getName(), allowsMultiValuedBinding(), getHibernateType() );
 	}
 

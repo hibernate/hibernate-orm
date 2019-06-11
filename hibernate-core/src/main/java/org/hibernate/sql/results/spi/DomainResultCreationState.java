@@ -6,8 +6,48 @@
  */
 package org.hibernate.sql.results.spi;
 
+import java.util.List;
+
+import org.hibernate.LockMode;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+
 /**
  * @author Steve Ebersole
  */
 public interface DomainResultCreationState {
+	SqlAstCreationState getSqlAstCreationState();
+
+	default SqlAliasBaseManager getSAliasBaseManager() {
+		return getSqlAstCreationState().getSqlAliasBaseManager();
+	}
+
+	/**
+	 * todo (6.0) : centralize the implementation of this
+	 * 		most of the logic in the impls of this is identical.  variations (arguments) include:
+	 * 				1) given a Fetchable, determine the FetchTiming and `selected`[1].  Tricky as functional
+	 * 					interface because of the "composite return".
+	 * 				2) given a Fetchable, determine the LockMode - currently not handled very well here; should consult `#getLockOptions`
+	 * 						 - perhaps a functional interface accepting the FetchParent and Fetchable and returning the LockMode
+	 *
+	 * 			so something like:
+	 * 				List<Fetch> visitFetches(
+	 * 	 					FetchParent fetchParent,
+	 * 	 					BiFunction<FetchParent,Fetchable,(FetchTiming,`selected`)> fetchStrategyResolver,
+	 * 	 					BiFunction<FetchParent,Fetchable,LockMode> lockModeResolver)
+	 *
+	 * [1] `selected` refers to the named parameter in
+	 * {@link Fetchable#generateFetch(FetchParent, org.hibernate.engine.FetchTiming, boolean, LockMode, String, DomainResultCreationState)}.
+	 * For {@link org.hibernate.engine.FetchTiming#IMMEDIATE}, this boolean value indicates
+	 * whether the values for the generated assembler/initializers are or should be available in
+	 * the {@link JdbcValues} being processed.  For {@link org.hibernate.engine.FetchTiming#DELAYED} this
+	 * parameter has no effect
+	 *
+	 * todo (6.0) : wrt the "trickiness" of `selected[1]`, that may no longer be an issue given how TableGroups
+	 * 		are built/accessed.  Comes down to how we'd know whether to join fetch or select fetch.  Simply pass
+	 * 		along FetchStyle?
+	 *
+	 *
+	 */
+	List<Fetch> visitFetches(FetchParent fetchParent);
 }

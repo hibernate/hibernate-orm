@@ -11,9 +11,10 @@ import java.util.function.Function;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.query.QueryLogger;
 import org.hibernate.query.spi.NonSelectQueryPlan;
-import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.spi.QueryInterpretationCache;
+import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 import org.jboss.logging.Logger;
@@ -39,13 +40,16 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	 * the cache of the actual plans...
 	 */
 	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;
+
 	private final BoundedConcurrentHashMap<String, SqmStatement<?>> sqmStatementCache;
+	private final BoundedConcurrentHashMap<String, ParameterInterpretation> nativeQueryParamCache;
 
 	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount) {
 		log.debugf( "Starting QueryPlanCache(%s)", maxQueryPlanCount );
 
 		queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 		sqmStatementCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		nativeQueryParamCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 	}
 
 	@Override
@@ -76,27 +80,27 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			String queryString,
 			Function<String, SqmStatement<?>> creator) {
 		log.tracef( "QueryPlan#resolveSqmStatement(%s)", queryString );
-		SqmStatement<?> sqmStatement = sqmStatementCache.get( queryString );
-		if ( sqmStatement == null ) {
-			log.debugf( "Creating and caching SqmStatement - %s", queryString );
-			sqmStatement = creator.apply( queryString );
-			sqmStatementCache.put( queryString, sqmStatement );
-		}
-		return sqmStatement;
-	}
-
-
-	@Override
-	public SqmStatement getSqmStatement(String queryString) {
-		log.tracef( "#getSqmStatement( %s )", queryString );
-		return sqmStatementCache.get( queryString );
+		return sqmStatementCache.computeIfAbsent(
+				queryString,
+				s -> {
+					log.debugf( "Creating and caching SqmStatement - %s", queryString );
+					return creator.apply( queryString );
+				}
+		);
 	}
 
 	@Override
-	public void cacheSqmStatement(String queryString, SqmStatement sqmStatement) {
-		log.tracef( "#cacheSqmStatement( %s )", queryString );
-		// todo (6.0) : Log and stats, see HHH-12855
-		sqmStatementCache.putIfAbsent( queryString, sqmStatement );
+	public ParameterInterpretation resolveNativeQueryParameters(
+			String queryString,
+			Function<String, ParameterInterpretation> creator) {
+		log.tracef( "QueryPlan#resolveNativeQueryParameters(%s)", queryString );
+		return nativeQueryParamCache.computeIfAbsent(
+				queryString,
+				s -> {
+					log.debugf( "Creating and caching SqmStatement - %s", queryString );
+					return creator.apply( queryString );
+				}
+		);
 	}
 
 	@Override

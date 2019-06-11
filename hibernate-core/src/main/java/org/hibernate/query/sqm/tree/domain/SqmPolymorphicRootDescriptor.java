@@ -360,11 +360,6 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public <X extends DomainType> X sqmAs(Class<X> type) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Unsupported operations

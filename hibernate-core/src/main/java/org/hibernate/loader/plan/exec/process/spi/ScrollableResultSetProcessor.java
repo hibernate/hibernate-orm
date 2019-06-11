@@ -8,7 +8,6 @@ package org.hibernate.loader.plan.exec.process.spi;
 
 import java.sql.ResultSet;
 
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**

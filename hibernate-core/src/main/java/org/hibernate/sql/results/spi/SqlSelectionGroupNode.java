@@ -8,6 +8,8 @@ package org.hibernate.sql.results.spi;
 
 import java.util.function.Consumer;
 
+import org.hibernate.sql.ast.spi.SqlSelection;
+
 /**
  * @author Steve Ebersole
  */

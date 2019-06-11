@@ -19,7 +19,6 @@ import java.util.Set;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

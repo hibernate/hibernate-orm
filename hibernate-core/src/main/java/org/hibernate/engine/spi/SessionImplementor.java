@@ -20,8 +20,8 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
@@ -56,6 +56,11 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
  */
 public interface SessionImplementor
 		extends Session, SharedSessionContractImplementor, HibernateEntityManagerImplementor {
+
+	@Override
+	default SessionImplementor getSession() {
+		return this;
+	}
 
 	@Override
 	SessionFactoryImplementor getSessionFactory();
@@ -98,22 +103,17 @@ public interface SessionImplementor
 	NativeQueryImplementor createNativeQuery(String sqlString);
 
 	@Override
+	@SuppressWarnings("unchecked")
 	NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass);
 
 	@Override
 	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping);
 
 	@Override
-	NativeQueryImplementor createSQLQuery(String sqlString);
-
-	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);
 
 	@Override
 	QueryImplementor getNamedQuery(String queryName);
-
-	@Override
-	NativeQueryImplementor getNamedSQLQuery(String name);
 
 	@Override
 	<T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery);
@@ -123,21 +123,6 @@ public interface SessionImplementor
 
 	@Override
 	QueryImplementor createQuery(CriteriaDelete deleteQuery);
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @deprecated (since 5.2) - see deprecation note on super
-	 *
-	 * @return The typed query
-	 */
-	@Deprecated
-	@Override
-	<T> QueryImplementor<T> createQuery(
-			String jpaqlString,
-			Class<T> resultClass,
-			Selection selection,
-			QueryOptions queryOptions);
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe; Gail?

@@ -6,10 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.type.descriptor.ValueExtractor;
+
 /**
  * Specialization of DomainType for types that can be used as query parameter bind values
  *
  * @author Steve Ebersole
  */
 public interface AllowableParameterType<J> extends SimpleDomainType<J> {
+	ValueExtractor<J> getValueExtractor();
 }

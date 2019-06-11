@@ -23,7 +23,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.tuple.DynamicMapInstantiator;
-import org.hibernate.tuple.Instantiator;
+import org.hibernate.metamodel.spi.Instantiator;
 
 /**
  * An {@link EntityTuplizer} specific to the dynamic-map entity mode.

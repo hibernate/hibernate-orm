@@ -103,25 +103,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	}
 
 	/**
-	 * Return the query results as an <tt>Iterator</tt>. If the query
-	 * contains multiple results pre row, the results are returned in
-	 * an instance of <tt>Object[]</tt>.<br>
-	 * <br>
-	 * Entities returned as results are initialized on demand. The first
-	 * SQL query returns identifiers only.<br>
-	 *
-	 * @return the result iterator
-	 *
-	 * @deprecated Deprecated functionality with no real replacement.  Use one
-	 * {@link #list} / {@link #getResultList} instead and open Iterator
-	 * on returned List or {@link #stream()} / {@link #getResultStream()}
-	 */
-	@Deprecated
-	default Iterator<R> iterate() {
-		return list().iterator();
-	}
-
-	/**
 	 * Return the query results as <tt>ScrollableResults</tt>. The
 	 * scrollability of the returned results depends upon JDBC driver
 	 * support for scrollable <tt>ResultSet</tt>s.<br>

@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.model.convert.spi;
 
+import org.hibernate.Incubating;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 /**
  * Support for basic-value conversions.
  *
@@ -20,6 +23,7 @@ package org.hibernate.metamodel.model.convert.spi;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface BasicValueConverter<O,R> {
 	/**
 	 * Convert the relational form just retrieved from JDBC ResultSet into
@@ -32,4 +36,14 @@ public interface BasicValueConverter<O,R> {
 	 * storage into JDBC
 	 */
 	R toRelationalValue(O domainForm);
+
+	/**
+	 * Descriptor for the Java type for the domain portion of this converter
+	 */
+	JavaTypeDescriptor<O> getDomainJavaDescriptor();
+
+	/**
+	 * Descriptor for the Java type for the relational portion of this converter
+	 */
+	JavaTypeDescriptor<R> getRelationalJavaDescriptor();
 }

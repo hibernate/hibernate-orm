@@ -12,6 +12,10 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
+ *
+ *
+ * todo (6.0) : account for this in the "exception conversion" handling
+ *
  * @author Steve Ebersole
  */
 public class UnknownPathException extends SemanticException {
@@ -21,7 +25,7 @@ public class UnknownPathException extends SemanticException {
 						Locale.ROOT,
 						"Could not resolve path `%s` relative to %s (%s)",
 						name,
-						base.getReferencedPathSource().getNavigableType().getJavaTypeDescriptor().getTypeName(),
+						base.getReferencedPathSource().getSqmPathType().getTypeName(),
 						base.getNavigablePath().getFullPath()
 				)
 		);

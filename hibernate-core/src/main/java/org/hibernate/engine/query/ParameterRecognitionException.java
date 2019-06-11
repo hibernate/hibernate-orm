@@ -7,11 +7,10 @@
 package org.hibernate.engine.query;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.query.spi.ParamLocationRecognizer;
+import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 /**
- * Indicates a problem during parameter recognition via
- * {@link ParamLocationRecognizer}
+ * Indicates a problem during parameter recognition via {@link ParameterRecognizer}
  *
  * @author Steve Ebersole
  */

@@ -25,7 +25,7 @@ import org.hibernate.type.Type;
  * of how Hibernate originally understood composites (embeddables) internally.  That is in the process of changing
  * as Hibernate has added {@link org.hibernate.loader.plan.build.internal.spaces.CompositePropertyMapping}
  *
- * todo (6.0) : move to {@link org.hibernate.persister.spi} - that is its more logic home.  AFAIK this
+ * todo (6.0) : move to {@link org.hibernate.persister.spi} - that is its more logical home.  AFAIK this
  * 		has never been documented as a public API
  *
  * todo (6.0) : re-word these Javadocs
@@ -36,7 +36,9 @@ import org.hibernate.type.Type;
 public interface PropertyMapping {
 
 	/**
-	 * @asciidoc Resolve a sub-reference relative to this PropertyMapping.  E.g.,
+	 * @asciidoc
+	 *
+	 * Resolve a sub-reference relative to this PropertyMapping.  E.g.,
 	 * given the PropertyMapping for an entity named `Person` with an embedded
 	 * property `#name` calling this method with `"name"` returns the
 	 * PropertyMapping for the `Name` embeddable

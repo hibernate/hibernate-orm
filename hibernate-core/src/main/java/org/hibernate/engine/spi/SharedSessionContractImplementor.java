@@ -8,7 +8,6 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
@@ -16,11 +15,9 @@ import javax.persistence.TransactionRequiredException;
 import javax.persistence.criteria.Selection;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.ScrollMode;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
@@ -118,6 +115,11 @@ public interface SharedSessionContractImplementor
 	 * @return The UUID
 	 */
 	UUID getSessionIdentifier();
+
+	@Override
+	default SharedSessionContractImplementor getSession() {
+		return this;
+	}
 
 	/**
 	 * Checks whether the session is closed.  Provided separately from
@@ -276,42 +278,6 @@ public interface SharedSessionContractImplementor
 	 */
 	Object immediateLoad(String entityName, Serializable id) throws HibernateException;
 
-
-	/**
-	 * Execute a <tt>find()</tt> query
-	 */
-	List list(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute an <tt>iterate()</tt> query
-	 */
-	Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a <tt>scroll()</tt> query
-	 */
-	ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a criteria query
-	 */
-	ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode);
-
-	/**
-	 * Execute a criteria query
-	 */
-	List list(Criteria criteria);
-
-	/**
-	 * Execute a filter
-	 */
-	List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Iterate a filter
-	 */
-	Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
-			throws HibernateException;
 
 	/**
 	 * Get the <tt>EntityPersister</tt> for any instance

@@ -18,7 +18,7 @@ import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
+import org.hibernate.query.sqm.produce.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.produce.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;

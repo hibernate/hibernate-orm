@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm;
 
+import java.util.Locale;
 import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -35,12 +35,31 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J> {
 	 */
 	DomainType<?> getSqmPathType();
 
-	SqmPathSource<?> findSubPathSource(String name);
+	/**
+	 * Find a SqmPathSource by name relative to this source.
+	 *
+	 * @throws IllegalPathUsageException to indicate that this source cannot be de-referenced
+	 */
+	SqmPathSource<?> findSubPathSource(String name) throws IllegalPathUsageException;
 
 	/**
 	 * Create an SQM path for this source relative to the given left-hand side
 	 */
 	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmCreationState creationState);
 
-	<X extends DomainType> X sqmAs(Class<X> type);
+	default <X extends DomainType> X sqmAs(Class<X> targetType) {
+		if ( targetType.isInstance( this ) ) {
+			//noinspection unchecked
+			return (X) this;
+		}
+
+		throw new IllegalArgumentException(
+				String.format(
+						Locale.ROOT,
+						"`%s` cannot be treated as `%s`",
+						getClass().getName(),
+						targetType.getName()
+				)
+		);
+	}
 }

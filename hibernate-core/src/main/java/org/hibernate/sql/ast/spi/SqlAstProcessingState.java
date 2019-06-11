@@ -17,5 +17,7 @@ public interface SqlAstProcessingState {
 
 	SqlExpressionResolver getSqlExpressionResolver();
 
+
+
 	SqlAstCreationState getSqlAstCreationState();
 }

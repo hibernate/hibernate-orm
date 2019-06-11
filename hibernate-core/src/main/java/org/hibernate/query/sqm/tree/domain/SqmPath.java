@@ -8,22 +8,20 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.PathException;
-import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.hql.spi.SemanticPathPart;
+import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.SqmCreationHelper;
-import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Models a reference to a part of the application's domain model (a Navigable)
- * as part of an SQM tree.
+ * Models a reference to a part of the application's domain model as part of an SQM tree.
  *
  * This correlates roughly to the JPA Criteria notion of Path, hence the name.
  *
@@ -49,6 +47,9 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 */
 	String getExplicitAlias();
 
+	/**
+	 * Set the explicit alias for this path
+	 */
 	void setExplicitAlias(String explicitAlias);
 
 	/**
@@ -57,6 +58,9 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 */
 	SqmPath<?> getLhs();
 
+	/**
+	 * This node's type is its "referenced path source"
+	 */
 	@Override
 	SqmPathSource<T> getNodeType();
 
@@ -92,95 +96,4 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 			SqmCreationState creationState) {
 		throw new SemanticException( "Non-plural path [" + getNavigablePath() + "] cannot be index-accessed" );
 	}
-
-	/**
-	 * Perform any preparations needed to process the named Navigable.  Create joins?
-	 *
-	 * This should equate to resolution of implicit joins.  Given
-	 * `select p.address.city from Person p ....`, e.g.,  we'd end up with the following:
-	 *
-	 * 		1) 	Because we process the from-clause first, `Person p` is already available as an
-	 * 		   	SqmRoot with NavigablePath[Person(p)]
-	 * 		2) 	As we process the select-clause, the `p.address.city` dot-ident sequence is processed
-	 * 		   	by the registered `DotIdentifierConsumer`
-	 *
-	 *			1)	the first part (`p`) is resolved, internally, as the registered SqmRoot as an alias
-	 *				which is tracked there as its "current `SemanticPathPart`"
-	 *			2)	each "continuation"	(here `address` and then `city`) is handled by applying that
-	 *				name to the "current `SemanticPathPart`", assigning its result back as the new
-	 *				"current `SemanticPathPart`"
-	 *
-	 *					1) `address` is resolved against SqmRoot, producing a `SqmEmbeddedValuedSimplePath`
-	 *						with NavigablePath[Person(p).address].  That is registered in the PathRegistry
-	 *						in `#sqmPathMap`, but not (yet) in `#sqmFromPath`.
-	 *					2)	`city` is resolved against the SqmEmbeddedValuedSimplePath(NavigablePath[Person(p).address]).
-	 *						This triggers a few things:
-	 *
-	 *						1) 	SqmEmbeddedValuedSimplePath( Person(p).address ) is given a
-	 *							chance to prepare itself to be used as the LHS via this `#prepareForSubNavigableReference`
-	 *							method.  Here, we use that opportunity to create the implicit SqmNavigableJoin for
-	 *							the same `Person(p).address` path.  We register this join form with the PathRegistry
-	 *							which "over-writes" the previous `SqmEmbeddedValuedSimplePath` registration
-	 *						2)	Processing `city` produces a `SqmBasicValuedSimplePath( Person(p).address.city )`
-	 *							which is registered in the PathRegistry, again just in `#sqmPathMap`, but not (yet)
-	 *							in `#sqmFromPath`
-	 *
-	 * 		At this point processing would return from `DotIdentifierConsumer` back to `SemanticQueryBuilder`
-	 * 		where we call `DotIdentifierConsumer#getConsumedPart` to get the last "current part"
-	 * 		`SqmBasicValuedSimplePath( Person(p).address.city )` as the result for the fully resolved
-	 * 		dot-ident-sequence
-	 *
-	 * 	todo (6.0) : ideally we'd delay this until SQM -> SQL AST conversion : criteria-as-SQM
-	 */
-	default void prepareForSubNavigableReference(
-			SqmPathSource<?> subNavigable,
-			boolean isSubReferenceTerminal,
-			SqmCreationState creationState) {
-		SqmCreationHelper.resolveAsLhs( getLhs(), this, subNavigable, isSubReferenceTerminal, creationState );
-	}
-
-//	/**
-//	 * Treat this path as the given type.  "Cast it" to the target type.
-//	 *
-//	 * May throw an exception if the Path is not treatable as the requested type.
-//	 *
-//	 * Also recognizes any {@link Navigable} target type and applies it to the
-//	 * {@link #getReferencedPathSource()}.
-//	 *
-//	 * @apiNote This is very different from JPA's {@link #as} (and variants like
-//	 * {@link #asInteger()}, etc) which are equivalent to SQL CAST function calls.
-//	 *
-//	 * @return The "casted" reference
-//	 */
-//	@SuppressWarnings("unchecked")
-//	default <X> X sqmAs(Class<X> targetType) {
-//		if ( targetType.isInstance( this ) ) {
-//			return (X) this;
-//		}
-//
-//		if ( getReferencedPathSource().getSqmPathType()
-//				.getExpressableJavaTypeDescriptor()
-//				.getJavaType()
-//				.isAssignableFrom( targetType ) ) {
-//			return (X) ( (Navigable) getReferencedPathSource() ).as( targetType );
-//		}
-//
-//		throw new IllegalArgumentException(
-//				String.format(
-//						Locale.ROOT,
-//						"`%s` cannot be treated as `%s`",
-//						getClass().getName(),
-//						targetType.getName()
-//				)
-//		);
-//	}
-//
-//	default <X> X sqmAs(Class<X> targetType, Supplier<RuntimeException> exceptionSupplier) {
-//		try {
-//			return sqmAs( targetType );
-//		}
-//		catch (IllegalArgumentException e) {
-//			throw exceptionSupplier.get();
-//		}
-//	}
 }

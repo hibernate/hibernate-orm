@@ -16,9 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
-import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
-import org.hibernate.type.BasicType;
 
 /**
  * Definition of a named query, defined in the mapping metadata.
@@ -121,33 +119,11 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 
 	@Override
 	public HqlQueryImplementor<?> toQuery(SharedSessionContractImplementor session) {
-		return null;
+		return toQuery( session, null );
 	}
 
 	@Override
 	public <T> HqlQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
-		final QuerySqmImpl<T> query = new QuerySqmImpl<>( this, resultType, session );
-
-		for ( Map.Entry<String, String> entry : parameterTypes.entrySet() ) {
-			final BasicType hintedType = session.getFactory()
-					.getMetamodel()
-					.getTypeConfiguration()
-					.getBasicTypeRegistry()
-					.getRegisteredType( entry.getValue() );
-			final QueryParameterImplementor<Object> queryParameter = query.getParameterMetadata().getQueryParameter( entry.getKey() );
-			queryParameter.applyAnticipatedType( hintedType );
-		}
-
-
-		if ( firstResult != null ) {
-			query.setFirstResult( firstResult );
-		}
-		if ( maxResults != null ) {
-			query.setMaxResults( maxResults );
-		}
-
-		applyBaseOptions( query, session );
-
-		return query;
+		return new QuerySqmImpl<>( this, resultType, session );
 	}
 }

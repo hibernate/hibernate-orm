@@ -9,15 +9,10 @@ package org.hibernate.jpa.spi;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
-import javax.persistence.criteria.Selection;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.StaleStateException;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.Query;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.type.Type;
 
@@ -107,27 +102,4 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 		 */
 		Map<String, Class> getNamedParameterExplicitTypes();
 	}
-
-	/**
-	 * Used during "compiling" a JPA criteria query.
-	 *
-	 * @param jpaqlString The criteria query rendered as a JPA QL string
-	 * @param resultClass The result type (the type expected in the result list)
-	 * @param selection The selection(s)
-	 * @param queryOptions The options to use to build the query.
-	 * @param <T> The query type
-	 *
-	 * @deprecated (since 5.2) this method form is used to construct a "compiled" representation of
-	 * a JPA Criteria query.  However it assumes the old yucky implementation of "compilation" that
-	 * converted the Criteria into a HQL/JPQL string.  In 6.0 that is re-written from scratch to
-	 * compile to SQM, and so this method would not be needed in 6.0
-	 *
-	 * @return The typed query
-	 */
-	@Deprecated
-	<T> Query<T> createQuery(
-			String jpaqlString,
-			Class<T> resultClass,
-			Selection selection,
-			QueryOptions queryOptions);
 }

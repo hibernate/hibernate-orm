@@ -6,7 +6,6 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.graph.GraphSemantic;
 
 /**

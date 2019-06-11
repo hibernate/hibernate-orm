@@ -15,13 +15,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
+import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
@@ -30,34 +35,55 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
-import org.hibernate.query.internal.AbstractProducedQuery;
-import org.hibernate.query.internal.NativeQueryReturnBuilder;
-import org.hibernate.query.internal.NativeQueryReturnBuilderFetchImpl;
-import org.hibernate.query.internal.NativeQueryReturnBuilderRootImpl;
-import org.hibernate.query.internal.QueryParameterBindingsImpl;
-import org.hibernate.query.spi.AbstractQuery;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
-import org.hibernate.engine.query.spi.EntityGraphQueryHint;
+import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
-import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.Limit;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.internal.NativeQueryReturnBuilder;
+import org.hibernate.query.internal.NativeQueryReturnBuilderFetchImpl;
+import org.hibernate.query.internal.NativeQueryReturnBuilderRootImpl;
+import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.internal.QueryOptionsImpl;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.spi.AbstractQuery;
+import org.hibernate.query.spi.MutableQueryOptions;
+import org.hibernate.query.spi.NonSelectQueryPlan;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
+import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
+import org.hibernate.query.sql.spi.ParameterInterpretation;
+import org.hibernate.query.sql.spi.SelectInterpretationsKey;
+import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.spi.JdbcValuesMappingDescriptor;
+import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
@@ -66,96 +92,102 @@ import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 /**
  * @author Steve Ebersole
  */
-public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryImplementor<T> {
+@SuppressWarnings("WeakerAccess")
+public class NativeQueryImpl<R>
+		extends AbstractQuery<R>
+		implements NativeQueryImplementor<R>, DomainParameterBindingContext, ExecutionContext {
 	private final String sqlString;
-	private final QueryParameterBindingsImpl queryParameterBindings;
+
+	private final ParameterMetadataImplementor parameterMetadata;
+	private final List<QueryParameterImplementor<?>> occurrenceOrderedParamList;
+	private final QueryParameterBindings parameterBindings;
+
+	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
+
+	private Set<String> querySpaces;
+
+
+
 	private List<NativeSQLQueryReturn> queryReturns;
 	private List<NativeQueryReturnBuilder> queryReturnBuilders;
 	private boolean autoDiscoverTypes;
 
-	private Collection<String> querySpaces;
-
-	private final LockOptions lockOptions = new LockOptions();
 	private Serializable collectionKey;
 
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
-	 *
-	 * @param memento The representation of the defined <sql-query/>.
-	 * @param session The session to which this NativeQuery belongs.
-	 * @param parameterMetadata Metadata about parameters found in the query.
 	 */
 	public NativeQueryImpl(
 			NamedNativeQueryMemento memento,
-			SharedSessionContractImplementor session,
-			ParameterMetadata parameterMetadata) {
-		super( session, parameterMetadata );
+			Class<R> resultJavaType,
+			SharedSessionContractImplementor session) {
+		super( session );
 
+		this.sqlString = memento.getSqlString();
 
-		this.sqlString = memento.getQueryString();
-		this.querySpaces = memento.getQuerySpaces() == null ? null : new ArrayList<>( memento.getQuerySpaces() );
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
 
-		if ( memento.getResultSetRef() != null ) {
-			ResultSetMappingDescriptor definition = session.getFactory()
-					.getNamedQueryRepository()
-					.getResultSetMappingDefinition( memento.getResultSetRef() );
-			if ( definition == null ) {
-				throw new MappingException(
-						"Unable to find resultset-ref definition: " +
-								memento.getResultSetRef()
-				);
-			}
-			this.queryReturns = new ArrayList<>( Arrays.asList( definition.getQueryReturns() ) );
-		}
-		else if ( memento.getQueryReturns() != null && memento.getQueryReturns().length > 0 ) {
-			this.queryReturns = new ArrayList<>( Arrays.asList( memento.getQueryReturns() ) );
-		}
-		else {
-			this.queryReturns = new ArrayList<>();
-		}
-
-
-		this.queryParameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
-		);
+		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
+		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
 		applyOptions( memento );
+
+		// todo (6.0) : validate `resultJavaType` against specified result-set mapping
 	}
 
-	public NativeQueryImpl(
-			String sqlString,
-			boolean callable,
-			SharedSessionContractImplementor session,
-			ParameterMetadata sqlParameterMetadata) {
-		super( session, sqlParameterMetadata );
+	private ParameterInterpretation resolveParameterInterpretation(SharedSessionContractImplementor session) {
+		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
+		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
+
+		return interpretationCache.resolveNativeQueryParameters(
+					sqlString,
+					s -> {
+						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( session.getFactory() );
+
+						session.getFactory().getServiceRegistry()
+								.getService( NativeQueryInterpreter.class )
+								.recognizeParameters( sqlString, parameterRecognizer );
+
+						return new ParameterInterpretation() {
+							@Override
+							public List<QueryParameterImplementor<?>> getOccurrenceOrderedParameters() {
+								return parameterRecognizer.getParameterList();
+							}
+
+							@Override
+							public ParameterMetadataImplementor toParameterMetadata(SharedSessionContractImplementor session1) {
+								return new ParameterMetadataImpl(
+										parameterRecognizer.getPositionalQueryParameters(),
+										parameterRecognizer.getNamedQueryParameters()
+								);
+							}
+						};
+					}
+			);
+	}
+
+	protected void applyOptions(NamedNativeQueryMemento memento) {
+		super.applyOptions( memento );
+
+		this.querySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
+
+		// todo (6.0) : query returns
+	}
+
+	public NativeQueryImpl(String sqlString, SharedSessionContractImplementor session) {
+		super( session );
+
+		this.sqlString = sqlString;
 
 		this.queryReturns = new ArrayList<>();
-		this.sqlString = sqlString;
-		this.querySpaces = new ArrayList<>();
+		this.querySpaces = new HashSet<>();
 
-		this.queryParameterBindings = QueryParameterBindingsImpl.from(
-				sqlParameterMetadata,
-				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
-		);
-	}
-
-	@Override
-	protected QueryParameterBindings getQueryParameterBindings() {
-		return queryParameterBindings;
-	}
-
-	@Override
-	public NativeQuery setResultSetMapping(String name) {
-		NamedResultSetMappingMemento mapping = getSession().getFactory().getQueryEngine().getNamedQueryRepository().getResultSetMappingMemento( name );
-		if ( mapping == null ) {
-			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
-		}
-		NativeSQLQueryReturn[] returns = mapping.getQueryReturns();
-		queryReturns.addAll( Arrays.asList( returns ) );
-		return this;
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( session );
+		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
+		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 	}
 
 	@Override
@@ -164,42 +196,236 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 	}
 
 	@Override
-	public boolean isCallable() {
-		return callable;
+	public ParameterMetadataImplementor getParameterMetadata() {
+		return parameterMetadata;
 	}
 
 	@Override
-	public List<NativeSQLQueryReturn> getQueryReturns() {
-		prepareQueryReturnsIfNecessary();
-		return queryReturns;
+	public MutableQueryOptions getQueryOptions() {
+		return queryOptions;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected List<T> doList() {
-		return getProducer().list(
-				generateQuerySpecification(),
-				getQueryParameters()
-		);
-	}
-
-	private NativeSQLQuerySpecification generateQuerySpecification() {
-		return new NativeSQLQuerySpecification(
-				getQueryParameterBindings().expandListValuedParameters( getQueryString(), getProducer() ),
-				queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] ),
-				querySpaces
-		);
+	public DomainParameterBindingContext getDomainParameterBindingContext() {
+		return this;
 	}
 
 	@Override
-	public QueryParameters getQueryParameters() {
-		final QueryParameters queryParameters = super.getQueryParameters();
-		queryParameters.setCallable( callable );
-		queryParameters.setAutoDiscoverScalarTypes( autoDiscoverTypes );
-		if ( collectionKey != null ) {
-			queryParameters.setCollectionKeys( new Serializable[] {collectionKey} );
+	public Callback getCallback() {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return getSession().getFactory();
+	}
+
+	@Override
+	public <T> List<T> getLoadIdentifiers() {
+		//noinspection unchecked
+		return (List) Collections.singletonList( collectionKey );
+	}
+
+	@Override
+	public QueryParameterBindings getQueryParameterBindings() {
+		return parameterBindings;
+	}
+
+	@Override
+	public QueryParameterBindings getParameterBindings() {
+		return getQueryParameterBindings();
+	}
+
+	@Override
+	public NamedNativeQueryMemento toMemento(String name) {
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	@Override
+	protected boolean canApplyAliasSpecificLockModes() {
+		return false;
+	}
+
+	@Override
+	protected void verifySettingLockMode() {
+		throw new IllegalStateException( "Illegal attempt to set lock mode on a native query" );
+	}
+
+	@Override
+	protected void verifySettingAliasSpecificLockModes() {
+		throw new IllegalStateException( "Illegal attempt to set lock mode on a native query" );
+	}
+
+	@Override
+	public Query<R> applyGraph(RootGraph graph, GraphSemantic semantic) {
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setTupleTransformer(TupleTransformer transformer) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setTupleTransformer( transformer );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer transformer) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setResultListTransformer( transformer );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Execution
+
+	@Override
+	protected void prepareForExecution() {
+		if ( getSynchronizedQuerySpaces() != null && !getSynchronizedQuerySpaces().isEmpty() ) {
+			// The application defined query spaces on the Hibernate NativeQuery
+			// which means the query will already perform a partial flush
+			// according to the defined query spaces, no need to do a full flush.
+			return;
 		}
-		return queryParameters;
+
+		// otherwise we need to flush.  the query itself is not required to execute
+		// in a transaction; if there is no transaction, the flush would throw a
+		// TransactionRequiredException which would potentially break existing
+		// apps, so we only do the flush if a transaction is in progress.
+		//
+		// NOTE : this was added for JPA initially.  Perhaps we want to only do
+		// this from JPA usage?
+		if ( shouldFlush() ) {
+			getSession().flush();
+		}
+	}
+
+	private boolean shouldFlush() {
+		if ( getSession().isTransactionInProgress() ) {
+			FlushMode effectiveFlushMode = getHibernateFlushMode();
+			if ( effectiveFlushMode == null ) {
+				effectiveFlushMode = getSession().getHibernateFlushMode();
+			}
+
+			if ( effectiveFlushMode == FlushMode.ALWAYS ) {
+				return true;
+			}
+
+			if ( effectiveFlushMode == FlushMode.AUTO ) {
+				if ( getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	@Override
+	protected List<R> doList() {
+		//noinspection unchecked
+		return resolveSelectQueryPlan().performList( this );
+	}
+
+	@SuppressWarnings("unchecked")
+	private SelectQueryPlan<R> resolveSelectQueryPlan() {
+		final NativeQueryInterpreter interpreter = getSessionFactory().getServiceRegistry().getService( NativeQueryInterpreter.class );
+
+		SelectQueryPlan<R> queryPlan = null;
+
+
+		final JdbcValuesMappingDescriptor resultSetMapping = resolveResultMapping();
+		final RowTransformer rowTransformer = resolveRowTransformer();
+
+		final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
+		if ( cacheKey != null ) {
+			queryPlan = getSession().getFactory().getQueryEngine().getInterpretationCache().getSelectQueryPlan( cacheKey );
+		}
+
+		if ( queryPlan == null ) {
+			queryPlan = interpreter.createQueryPlan(
+					generateSelectQueryDefinition(),
+					getSessionFactory()
+			);
+			if ( cacheKey != null ) {
+				getSession().getFactory()
+						.getQueryEngine()
+						.getInterpretationCache()
+						.cacheSelectQueryPlan( cacheKey, queryPlan );
+			}
+		}
+
+		return queryPlan;
+	}
+
+	private JdbcValuesMappingDescriptor resolveResultMapping() {
+		// todo (6.0) - need to resolve SqlSelections as well as resolving ResultBuilders and FetchBuilders into QueryResult trees
+		// 		also need to account for the edge case where the user passed just the
+		//		query string and no mappings (see ResultSetMappingUndefinedImpl)
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	private RowTransformer resolveRowTransformer() {
+		// todo (6.0) - need to resolve the RowTransformer to use, if one.
+		// todo (6.0) - what about ResultListTransformer?
+		throw new NotYetImplementedFor6Exception(  );
+	}
+
+	private SelectInterpretationsKey generateSelectInterpretationsKey(JdbcValuesMappingDescriptor resultSetMapping) {
+		if ( !isCacheable( this ) ) {
+			return null;
+		}
+
+		return new SelectInterpretationsKey(
+				getQueryString(),
+				resultSetMapping,
+				getQueryOptions().getTupleTransformer(),
+				getQueryOptions().getResultListTransformer()
+		);
+	}
+
+	@SuppressWarnings("RedundantIfStatement")
+	private static boolean isCacheable(NativeQueryImpl query) {
+		if ( hasLimit( query.getQueryOptions().getLimit() ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private static boolean hasLimit(Limit limit) {
+		return limit.getFirstRow() != null || limit.getMaxRows() != null;
+	}
+
+	private NativeSelectQueryDefinition<R> generateSelectQueryDefinition() {
+		return new NativeSelectQueryDefinition() {
+			@Override
+			public String getSqlString() {
+				return NativeQueryImpl.this.getQueryString();
+			}
+
+			@Override
+			public boolean isCallable() {
+				return false;
+			}
+
+			@Override
+			public List<QueryParameterImplementor<?>> getQueryParameterList() {
+				return NativeQueryImpl.this.occurrenceOrderedParamList;
+			}
+
+			@Override
+			public JdbcValuesMappingDescriptor getResultSetMapping() {
+				return NativeQueryImpl.this.resolveResultMapping();
+			}
+
+			@Override
+			public RowTransformer getRowTransformer() {
+				return NativeQueryImpl.this.resolveRowTransformer();
+			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return querySpaces;
+			}
+		};
 	}
 
 	private void prepareQueryReturnsIfNecessary() {
@@ -221,17 +447,11 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 
 	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
-		final NativeSQLQuerySpecification nativeSQLQuerySpecification = generateQuerySpecification();
-		final QueryParameters queryParameters = getQueryParameters();
-		queryParameters.setScrollMode( scrollMode );
-		return getProducer().scroll(
-				nativeSQLQuerySpecification,
-				queryParameters
-		);
+		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
 	@Override
-	protected void beforeQuery() {
+	protected void beforeQuery(boolean txnRequired) {
 		prepareQueryReturnsIfNecessary();
 		boolean noReturns = queryReturns == null || queryReturns.isEmpty();
 		if ( noReturns ) {
@@ -253,8 +473,7 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 			}
 		}
 
-		super.beforeQuery();
-
+		super.beforeQuery( txnRequired );
 
 		if ( getSynchronizedQuerySpaces() != null && !getSynchronizedQuerySpaces().isEmpty() ) {
 			// The application defined query spaces on the Hibernate native SQLQuery which means the query will already
@@ -268,40 +487,38 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 		//
 		// NOTE : this was added for JPA initially.  Perhaps we want to only do this from JPA usage?
 		if ( shouldFlush() ) {
-			getProducer().flush();
+			getSession().flush();
 		}
-	}
-
-	@Override
-	public Iterator<T> iterate() {
-		throw new UnsupportedOperationException( "SQL queries do not currently support iteration" );
-	}
-
-	private boolean shouldFlush() {
-		if ( getProducer().isTransactionInProgress() ) {
-			FlushMode effectiveFlushMode = getHibernateFlushMode();
-			if ( effectiveFlushMode == null ) {
-				effectiveFlushMode = getProducer().getHibernateFlushMode();
-			}
-
-			if ( effectiveFlushMode == FlushMode.ALWAYS ) {
-				return true;
-			}
-
-			if ( effectiveFlushMode == FlushMode.AUTO ) {
-				if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-					return true;
-				}
-			}
-		}
-
-		return false;
 	}
 
 	protected int doExecuteUpdate() {
-		return getProducer().executeNativeUpdate(
-				generateQuerySpecification(),
-				getQueryParameters()
+			return resolveNonSelectQueryPlan().executeUpdate( this );
+	}
+
+	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
+		NonSelectQueryPlan queryPlan = null;
+
+		final QueryInterpretationCache.Key cacheKey = generateNonSelectInterpretationsKey();
+		if ( cacheKey != null ) {
+			queryPlan = getSession().getFactory().getQueryEngine().getInterpretationCache().getNonSelectQueryPlan( cacheKey );
+		}
+
+		if ( queryPlan == null ) {
+			queryPlan = new NativeNonSelectQueryPlanImpl( this );
+			if ( cacheKey != null ) {
+				getSession().getFactory().getQueryEngine().getInterpretationCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );
+			}
+		}
+
+		return queryPlan;
+	}
+
+
+	protected NonSelectInterpretationsKey generateNonSelectInterpretationsKey() {
+		// todo (6.0) - should this account for query-spaces in determining "cacheable"?
+		return new NonSelectInterpretationsKey(
+				getQueryString(),
+				getSynchronizedQuerySpaces()
 		);
 	}
 
@@ -312,12 +529,17 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addScalar(String columnAlias) {
-		return addScalar( columnAlias, null );
+	public NativeQueryImplementor<R> addScalar(String columnAlias) {
+		return addScalar( columnAlias, (BasicDomainType) null );
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addScalar(String columnAlias, Type type) {
+	public NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type) {
+		return null;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> addScalar(String columnAlias, Type type) {
 		addReturnBuilder(
 				new NativeQueryReturnBuilder() {
 					public NativeSQLQueryReturn buildReturn() {
@@ -349,34 +571,34 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addEntity(String entityName) {
+	public NativeQueryImplementor<R> addEntity(String entityName) {
 		return addEntity( StringHelper.unqualify( entityName ), entityName );
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addEntity(String tableAlias, String entityName) {
+	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName) {
 		addRoot( tableAlias, entityName );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addEntity(String tableAlias, String entityName, LockMode lockMode) {
+	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode) {
 		addRoot( tableAlias, entityName ).setLockMode( lockMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addEntity(Class entityType) {
+	public NativeQueryImplementor<R> addEntity(Class entityType) {
 		return addEntity( entityType.getName() );
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addEntity(String tableAlias, Class entityClass) {
+	public NativeQueryImplementor<R> addEntity(String tableAlias, Class entityClass) {
 		return addEntity( tableAlias, entityClass.getName() );
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode) {
+	public NativeQueryImplementor<R> addEntity(String tableAlias, Class entityClass, LockMode lockMode) {
 		return addEntity( tableAlias, entityClass.getName(), lockMode );
 	}
 
@@ -388,7 +610,7 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addJoin(String tableAlias, String path) {
+	public NativeQueryImplementor<R> addJoin(String tableAlias, String path) {
 		createFetchJoin( tableAlias, path );
 		return this;
 	}
@@ -404,36 +626,14 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName) {
+	public NativeQueryImplementor<R> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName) {
 		addFetch( tableAlias, ownerTableAlias, joinPropertyName );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addJoin(String tableAlias, String path, LockMode lockMode) {
+	public NativeQueryImplementor<R> addJoin(String tableAlias, String path, LockMode lockMode) {
 		createFetchJoin( tableAlias, path ).setLockMode( lockMode );
-		return this;
-	}
-
-	@Override
-	public String[] getReturnAliases() {
-		throw new UnsupportedOperationException( "Native (SQL) queries do not support returning aliases" );
-	}
-
-	@Override
-	public Type[] getReturnTypes() {
-		throw new UnsupportedOperationException( "Native (SQL) queries do not support returning 'return types'" );
-	}
-
-	@Override
-	public NativeQueryImplementor<T> setEntity(int position, Object val) {
-		setParameter( position, val, getProducer().getFactory().getTypeHelper().entity( resolveEntityName( val ) ) );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<T> setEntity(String name, Object val) {
-		setParameter( name, val, getProducer().getFactory().getTypeHelper().entity( resolveEntityName( val ) ) );
 		return this;
 	}
 
@@ -443,7 +643,7 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addSynchronizedQuerySpace(String querySpace) {
+	public NativeQueryImplementor<R> addSynchronizedQuerySpace(String querySpace) {
 		addQuerySpaces( querySpace );
 		return this;
 	}
@@ -451,7 +651,7 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 	protected void addQuerySpaces(String... spaces) {
 		if ( spaces != null ) {
 			if ( querySpaces == null ) {
-				querySpaces = new ArrayList<>();
+				querySpaces = new HashSet<>();
 			}
 			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
 		}
@@ -460,108 +660,123 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 	protected void addQuerySpaces(Serializable... spaces) {
 		if ( spaces != null ) {
 			if ( querySpaces == null ) {
-				querySpaces = new ArrayList<>();
+				querySpaces = new HashSet<>();
 			}
 			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
 		}
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addSynchronizedEntityName(String entityName) throws MappingException {
-		addQuerySpaces( getProducer().getFactory().getMetamodel().entityPersister( entityName ).getQuerySpaces() );
+	public NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException {
+		addQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityName ).getQuerySpaces() );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addSynchronizedEntityClass(Class entityClass) throws MappingException {
-		addQuerySpaces( getProducer().getFactory().getMetamodel().entityPersister( entityClass.getName() ).getQuerySpaces() );
+	public NativeQueryImplementor<R> addSynchronizedEntityClass(Class entityClass) throws MappingException {
+		addQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityClass.getName() ).getQuerySpaces() );
 		return this;
 	}
 
 	@Override
-	protected boolean isNativeQuery() {
-		return true;
-	}
-
-	@Override
-	public NativeQueryImplementor<T> setHibernateFlushMode(FlushMode flushMode) {
+	public NativeQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setFlushMode(FlushMode flushMode) {
-		super.setFlushMode( flushMode );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<T> setFlushMode(FlushModeType flushModeType) {
+	public NativeQueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
 		super.setFlushMode( flushModeType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setCacheMode(CacheMode cacheMode) {
+	public NativeQueryImplementor<R> setCacheMode(CacheMode cacheMode) {
 		super.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setCacheable(boolean cacheable) {
+	public NativeQueryImplementor<R> setCacheable(boolean cacheable) {
 		super.setCacheable( cacheable );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setCacheRegion(String cacheRegion) {
+	public NativeQueryImplementor<R> setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setTimeout(int timeout) {
+	public NativeQueryImplementor<R> setTimeout(int timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setFetchSize(int fetchSize) {
+	public NativeQueryImplementor<R> setFetchSize(int fetchSize) {
 		super.setFetchSize( fetchSize );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setReadOnly(boolean readOnly) {
+	public NativeQueryImplementor<R> setReadOnly(boolean readOnly) {
 		super.setReadOnly( readOnly );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setLockOptions(LockOptions lockOptions) {
+	public NativeQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		super.setLockOptions( lockOptions );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setLockMode(String alias, LockMode lockMode) {
+	public NativeQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
 		super.setLockMode( alias, lockMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setLockMode(LockModeType lockModeType) {
+	public NativeQueryImplementor<R> setLockMode(LockModeType lockModeType) {
 		throw new IllegalStateException( "Illegal attempt to set lock mode on a native SQL query" );
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setComment(String comment) {
+	@SuppressWarnings("unchecked")
+	public <T> T unwrap(Class<T> javaType) {
+		if ( javaType.isAssignableFrom( getClass() ) ) {
+			return (T) this;
+		}
+
+		if ( javaType.isAssignableFrom( ParameterMetadata.class ) ) {
+			return (T) parameterMetadata;
+		}
+
+		if ( javaType.isAssignableFrom( QueryParameterBindings.class ) ) {
+			return (T) parameterBindings;
+		}
+
+		if ( javaType.isAssignableFrom( EntityManager.class ) ) {
+			return (T) getSession();
+		}
+
+		if ( javaType.isAssignableFrom( EntityManagerFactory.class ) ) {
+			return (T) getSession().getFactory();
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type [" + javaType.getName() + "]" );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setComment(String comment) {
 		super.setComment( comment );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> addQueryHint(String hint) {
+	public NativeQueryImplementor<R> addQueryHint(String hint) {
 		super.addQueryHint( hint );
 		return this;
 	}
@@ -575,10 +790,10 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 
 	@Override
 	protected boolean applyNativeQueryLockMode(Object value) {
-		if ( LockMode.class.isInstance( value ) ) {
+		if ( value instanceof LockMode ) {
 			applyHibernateLockModeHint( (LockMode) value );
 		}
-		else if ( LockModeType.class.isInstance( value ) ) {
+		else if ( value instanceof LockModeType ) {
 			applyLockModeTypeHint( (LockModeType) value );
 		}
 		else {
@@ -598,249 +813,324 @@ public class NativeQueryImpl<T> extends AbstractQuery<T> implements NativeQueryI
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public NativeQueryImplementor<T> setParameter(QueryParameter parameter, Object value) {
+	public NativeQueryImplementor<R> setParameter(QueryParameter parameter, Object value) {
 		super.setParameter( (Parameter<Object>) parameter, value );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<T> setParameter(Parameter<P> parameter, P value) {
+	public <P> NativeQueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(String name, Object value) {
+	public NativeQueryImplementor<R> setParameter(String name, Object value) {
 		super.setParameter( name, value );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(int position, Object value) {
+	public NativeQueryImplementor<R> setParameter(int position, Object value) {
 		super.setParameter( position, value );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public NativeQueryImplementor<T> setParameter(QueryParameter parameter, Object value, Type type) {
+	public NativeQueryImplementor<R> setParameter(QueryParameter parameter, Object value, Type type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(String name, Object value, Type type) {
+	public NativeQueryImplementor<R> setParameter(String name, Object value, Type type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(int position, Object value, Type type) {
+	public NativeQueryImplementor<R> setParameter(int position, Object value, Type type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<T> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalType) {
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalType) {
 		super.setParameter( parameter, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(String name, Object value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(String name, Object value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(int position, Object value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(int position, Object value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(String name, Instant value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameterList(int position, Collection values, Type type) {
+		return setParameterList( position, values, ( AllowableParameterType) type );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(String name, Collection values, AllowableParameterType type) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameterList( name, values, type );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(int position, Collection values, AllowableParameterType type) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameterList( position, values, type );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType type) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameterList( name, values, type );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType type) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameterList( position, values, type );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(int position, Object[] values, Type type) {
+		return null;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(String name, LocalDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(String name, LocalDateTime value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(String name, ZonedDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(String name, ZonedDateTime value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(String name, OffsetDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(String name, OffsetDateTime value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(int position, Instant value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(int position, LocalDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(int position, LocalDateTime value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(int position, ZonedDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(int position, ZonedDateTime value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(int position, OffsetDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(int position, OffsetDateTime value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameterList(QueryParameter parameter, Collection values) {
+	public NativeQueryImplementor<R> setParameterList(QueryParameter parameter, Collection values) {
 		super.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameterList(String name, Collection values) {
+	public NativeQueryImplementor<R> setParameterList(String name, Collection values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameterList(String name, Collection values, Type type) {
+	public NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameterList(String name, Object[] values, Type type) {
+	public NativeQueryImplementor<R> setParameterList(String name, Object[] values, Type type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameterList(String name, Object[] values) {
+	public NativeQueryImplementor<R> setParameterList(String name, Object[] values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public NativeQueryImplementor<T> setParameter(Parameter param, Calendar value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(Parameter param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public NativeQueryImplementor<T> setParameter(Parameter param, Date value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(Parameter param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(String name, Calendar value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(String name, Date value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(int position, Calendar value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(int position, Date value, TemporalType temporalType) {
+	public NativeQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setResultTransformer(ResultTransformer transformer) {
+	public NativeQueryImplementor<R> setResultTransformer(ResultTransformer transformer) {
 		super.setResultTransformer( transformer );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setProperties(Map map) {
+	public NativeQueryImplementor<R> setProperties(Map map) {
 		super.setProperties( map );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setProperties(Object bean) {
+	public NativeQueryImplementor<R> setProperties(Object bean) {
 		super.setProperties( bean );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setMaxResults(int maxResult) {
+	public NativeQueryImplementor<R> setMaxResults(int maxResult) {
 		super.setMaxResults( maxResult );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setFirstResult(int startPosition) {
+	public NativeQueryImplementor<R> setFirstResult(int startPosition) {
 		super.setFirstResult( startPosition );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setHint(String hintName, Object value) {
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType type) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameter( parameter, value, type );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameter(String name, Object value, AllowableParameterType type) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameter( name, value, type );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameter(int position, Object value, AllowableParameterType type) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameter( position, value, type );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(int position, Collection values) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameterList( position, values );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(int position, Object[] values) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameterList( position, values );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(String name, Collection values, Class javaType) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameterList( name, values, javaType );
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(int position, Collection values, Class javaType) {
+		//noinspection unchecked
+		return (NativeQueryImplementor) super.setParameterList( position, values, javaType );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Hints
+
+	@Override
+	public NativeQueryImplementor<R> setHint(String hintName, Object value) {
 		super.setHint( hintName, value );
 		return this;
 	}
 
 	@Override
-	public Query<T> applyGraph(RootGraph graph, GraphSemantic semantic) {
-		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
-	}
-
-	@Override
-	protected void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
+	protected void applyEntityGraphQueryHint(String hintName, RootGraphImplementor entityGraph) {
 		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
 	}
 }

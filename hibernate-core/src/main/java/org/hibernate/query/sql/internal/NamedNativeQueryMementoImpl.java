@@ -103,7 +103,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
-		return new NativeQueryImpl( this, session, resultType );
+		return new NativeQueryImpl( this, resultType, session );
 	}
 
 	@Override

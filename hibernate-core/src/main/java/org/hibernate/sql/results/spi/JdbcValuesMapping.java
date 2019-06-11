@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.sql.ast.spi.SqlSelection;
+
 /**
  * The "resolved" form of {@link JdbcValuesMappingDescriptor} providing access
  * to resolved JDBC results ({@link SqlSelection}) descriptors and resolved

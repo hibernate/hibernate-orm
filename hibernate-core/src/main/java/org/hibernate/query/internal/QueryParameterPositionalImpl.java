@@ -34,7 +34,7 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 		assert parameter.getPosition() != null;
 		assert parameter.getName() == null;
 
-		return new QueryParameterPositionalImpl<T>(
+		return new QueryParameterPositionalImpl<>(
 				parameter.getPosition(),
 				parameter.allowMultiValuedBinding(),
 				parameter.getAnticipatedType()

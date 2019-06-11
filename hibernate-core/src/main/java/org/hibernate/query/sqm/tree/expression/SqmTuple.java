@@ -15,18 +15,17 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Models a tuple of values, generally defined as a series of values
- * wrapped in parentheses, e.g. `(value1, value2, ..., valueN)`
+ * wrapped in parentheses, e.g. `(value1, value2, ..., valueN)`.
  *
- * todo (6.0) : possibly a place to centralize how a tuple is handled via a
- * 		special EmbeddedValuedExpressableType as the tuple's `#getNodeType`
- * 		+
- * 		it should honor `#
+ * Differs from {@link SqmJpaCompoundSelection} in that this node can be used
+ * anywhere in the SQM tree, whereas SqmJpaCompoundSelection is only valid
+ * in the SELECT clause per JPA
  *
- * it could implement EmbeddedValuedExpressableType
  * @author Steve Ebersole
  */
 public class SqmTuple<T> extends AbstractSqmExpression<T> implements JpaCompoundSelection<T> {

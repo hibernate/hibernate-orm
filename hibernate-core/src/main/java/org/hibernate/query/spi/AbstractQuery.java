@@ -90,6 +90,7 @@ import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
 
@@ -427,7 +428,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void putIfNotNull(Map<String, Object> hints, String hintName, Enum hintValue) {
 		// centralized spot to handle the decision whether to put enums directly into the hints map
 		// or whether to put the enum name
@@ -437,7 +437,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void putIfNotNull(Map<String, Object> hints, String hintName, Object hintValue) {
 		if ( hintValue != null ) {
 			hints.put( hintName, hintValue );
@@ -507,6 +506,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					}
 				}
 				else {
+					//noinspection ConstantConditions
 					applied = false;
 				}
 			}
@@ -1243,9 +1243,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	private FlushMode sessionFlushMode;
 	private CacheMode sessionCacheMode;
 
-	@SuppressWarnings("WeakerAccess")
-	protected void beforeQuery() {
+	protected void beforeQuery(boolean requiresTxn) {
 		getQueryParameterBindings().validate();
+
+		getSession().prepareForQueryExecution( requiresTxn );
 
 		prepareForExecution();
 
@@ -1265,7 +1266,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void prepareForExecution() {
 	}
 
@@ -1351,7 +1351,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public List<R> list() {
-		beforeQuery();
+		beforeQuery( false );
 		try {
 			return doList();
 		}
@@ -1423,7 +1423,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public ScrollableResultsImplementor scroll(ScrollMode scrollMode) {
-		beforeQuery();
+		beforeQuery( false );
 		try {
 			return doScroll( scrollMode );
 		}
@@ -1454,7 +1454,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					)
 			);
 		}
-		beforeQuery();
+		beforeQuery( true );
 		try {
 			return doExecuteUpdate();
 		}

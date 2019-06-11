@@ -8,7 +8,6 @@ package org.hibernate.loader.plan.exec.process.spi;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.plan.exec.spi.LockModeResolver;
 import org.hibernate.loader.plan.spi.EntityReference;

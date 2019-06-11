@@ -372,6 +372,47 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
+	public <R> SqmTuple<R> tuple(Class<R> tupleType, JpaExpression<?>... expressions) {
+		//noinspection unchecked
+		return new SqmTuple<R>(
+				(List) asList( expressions ),
+//				getTypeConfiguration().standardExpressableTypeForJavaType( tupleType ),
+				this
+		);
+	}
+
+	@Override
+	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<JpaExpression<?>> expressions) {
+		//noinspection unchecked
+		return new SqmTuple<R>(
+				(List) expressions,
+//				getTypeConfiguration().standardExpressableTypeForJavaType( tupleType ),
+				this
+		);
+	}
+
+	@Override
+	public <R> SqmTuple<R> tuple(DomainType<R> tupleType, JpaExpression<?>... expressions) {
+		//noinspection unchecked
+		return new SqmTuple<R>(
+				(List) asList( expressions ),
+				tupleType,
+				this
+		);
+	}
+
+	@Override
+	public <R> SqmTuple<R> tuple(
+			DomainType<R> tupleType, List<JpaExpression<?>> expressions) {
+		//noinspection unchecked
+		return new SqmTuple<R>(
+				new ArrayList<>((List) expressions),
+				tupleType,
+				this
+		);
+	}
+
+	@Override
 	public JpaCompoundSelection<Object[]> array(Selection<?>[] selections) {
 		//noinspection unchecked
 		return new SqmJpaCompoundSelection(
@@ -1226,47 +1267,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	@Override
 	public <R> SqmCaseSearched<R> selectCase() {
 		return new SqmCaseSearched<>( this );
-	}
-
-	@Override
-	public <R> SqmTuple<R> tuple(Class<R> tupleType, JpaExpression<?>... expressions) {
-		//noinspection unchecked
-		return new SqmTuple<R>(
-				(List) asList( expressions ),
-//				getTypeConfiguration().standardExpressableTypeForJavaType( tupleType ),
-				this
-		);
-	}
-
-	@Override
-	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<JpaExpression<?>> expressions) {
-		//noinspection unchecked
-		return new SqmTuple<R>(
-				(List) expressions,
-//				getTypeConfiguration().standardExpressableTypeForJavaType( tupleType ),
-				this
-		);
-	}
-
-	@Override
-	public <R> SqmTuple<R> tuple(DomainType<R> tupleType, JpaExpression<?>... expressions) {
-		//noinspection unchecked
-		return new SqmTuple<R>(
-				(List) asList( expressions ),
-				tupleType,
-				this
-		);
-	}
-
-	@Override
-	public <R> SqmTuple<R> tuple(
-			DomainType<R> tupleType, List<JpaExpression<?>> expressions) {
-		//noinspection unchecked
-		return new SqmTuple<R>(
-				new ArrayList<>((List) expressions),
-				tupleType,
-				this
-		);
 	}
 
 	@Override

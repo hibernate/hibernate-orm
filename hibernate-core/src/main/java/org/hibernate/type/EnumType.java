@@ -19,6 +19,7 @@ import javax.persistence.MapKeyEnumerated;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -27,7 +28,10 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
@@ -104,11 +108,29 @@ public class EnumType<T extends Enum>
 					.getJavaTypeDescriptorRegistry()
 					.getDescriptor( enumClass );
 
+			final BasicJavaDescriptor<?> relationalJavaDescriptor = resolveRelationalJavaTypeDescriptor(
+					reader,
+					enumType,
+					enumJavaDescriptor
+			);
+
+			final SqlTypeDescriptor sqlTypeDescriptor = relationalJavaDescriptor.getJdbcRecommendedSqlType(
+					new LocalSqlTypeDescriptorIndicators( enumType, reader )
+			);
+
 			if ( isOrdinal ) {
-				this.enumValueConverter = new OrdinalEnumValueConverter( enumJavaDescriptor );
+				this.enumValueConverter = new OrdinalEnumValueConverter(
+						enumJavaDescriptor,
+						sqlTypeDescriptor,
+						relationalJavaDescriptor
+				);
 			}
 			else {
-				this.enumValueConverter = new NamedEnumValueConverter( enumJavaDescriptor );
+				this.enumValueConverter = new NamedEnumValueConverter(
+						enumJavaDescriptor,
+						sqlTypeDescriptor,
+						relationalJavaDescriptor
+				);
 			}
 		}
 		else {
@@ -128,6 +150,13 @@ public class EnumType<T extends Enum>
 				isOrdinal() ? "ORDINAL" : "NAMED",
 				enumClass.getName()
 		);
+	}
+
+	private BasicJavaDescriptor<?> resolveRelationalJavaTypeDescriptor(
+			ParameterType reader,
+			javax.persistence.EnumType enumType, EnumJavaTypeDescriptor enumJavaDescriptor) {
+		return enumJavaDescriptor.getJdbcRecommendedSqlType( new LocalSqlTypeDescriptorIndicators( enumType, reader ) )
+				.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
 	}
 
 	private javax.persistence.EnumType getEnumType(ParameterType reader) {
@@ -157,26 +186,50 @@ public class EnumType<T extends Enum>
 	}
 
 	private EnumValueConverter interpretParameters(Properties parameters) {
-		final EnumJavaTypeDescriptor javaTypeDescriptor = (EnumJavaTypeDescriptor) typeConfiguration
+		final EnumJavaTypeDescriptor enumJavaDescriptor = (EnumJavaTypeDescriptor) typeConfiguration
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( enumClass );
+
+		final ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
+		final javax.persistence.EnumType enumType = getEnumType( reader );
+		final LocalSqlTypeDescriptorIndicators localIndicators = new LocalSqlTypeDescriptorIndicators( enumType, reader );
+
+		final BasicJavaDescriptor stringJavaDescriptor = (BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
+		final BasicJavaDescriptor integerJavaDescriptor = (BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class );
+
 		if ( parameters.containsKey( NAMED ) ) {
 			final boolean useNamed = ConfigurationHelper.getBoolean( NAMED, parameters );
 			if ( useNamed ) {
-				return new NamedEnumValueConverter( javaTypeDescriptor );
+				return new NamedEnumValueConverter(
+						enumJavaDescriptor,
+						stringJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+						stringJavaDescriptor
+				);
 			}
 			else {
-				return new OrdinalEnumValueConverter( javaTypeDescriptor );
+				return new OrdinalEnumValueConverter(
+						enumJavaDescriptor,
+						integerJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+						(BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
+				);
 			}
 		}
 
 		if ( parameters.containsKey( TYPE ) ) {
 			final int type = Integer.decode( (String) parameters.get( TYPE ) );
 			if ( isNumericType( type ) ) {
-				return new OrdinalEnumValueConverter( javaTypeDescriptor );
+				return new OrdinalEnumValueConverter(
+						enumJavaDescriptor,
+						integerJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+						(BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
+				);
 			}
 			else if ( isCharacterType( type ) ) {
-				return new NamedEnumValueConverter( javaTypeDescriptor );
+				return new NamedEnumValueConverter(
+						enumJavaDescriptor,
+						stringJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+						stringJavaDescriptor
+				);
 			}
 			else {
 				throw new HibernateException(
@@ -190,7 +243,11 @@ public class EnumType<T extends Enum>
 		}
 
 		// the fallback
-		return new OrdinalEnumValueConverter( javaTypeDescriptor );
+		return new OrdinalEnumValueConverter(
+				enumJavaDescriptor,
+				integerJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
+				(BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
+		);
 	}
 
 	private boolean isCharacterType(int jdbcTypeCode) {
@@ -306,24 +363,66 @@ public class EnumType<T extends Enum>
 	@Override
 	public String toXMLString(Object value) {
 		verifyConfigured();
-		return (String) enumValueConverter.getJavaDescriptor().unwrap( (Enum) value, String.class, null );
+		return (String) enumValueConverter.getDomainJavaDescriptor().unwrap( (Enum) value, String.class, null );
 	}
 
 	@Override
 	@SuppressWarnings("RedundantCast")
 	public Object fromXMLString(String xmlValue) {
 		verifyConfigured();
-		return (T) enumValueConverter.getJavaDescriptor().wrap( xmlValue, null );
+		return (T) enumValueConverter.getDomainJavaDescriptor().wrap( xmlValue, null );
 	}
 
 	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		verifyConfigured();
-		return enumValueConverter.getJavaDescriptor().toString( (Enum) value );
+		return enumValueConverter.getDomainJavaDescriptor().toString( (Enum) value );
 	}
 
 	public boolean isOrdinal() {
 		verifyConfigured();
 		return enumValueConverter instanceof OrdinalEnumValueConverter;
+	}
+
+	private class LocalSqlTypeDescriptorIndicators implements SqlTypeDescriptorIndicators {
+		private final javax.persistence.EnumType enumType;
+		private final ParameterType reader;
+
+		public LocalSqlTypeDescriptorIndicators(javax.persistence.EnumType enumType, ParameterType reader) {
+			this.enumType = enumType;
+			this.reader = reader;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
+
+		@Override
+		public javax.persistence.EnumType getEnumeratedType() {
+			if ( enumType != null ) {
+				return enumType;
+			}
+			return typeConfiguration.getCurrentBaseSqlTypeIndicators().getEnumeratedType();
+		}
+
+		@Override
+		public boolean isNationalized() {
+			return isNationalized( reader );
+		}
+
+		private boolean isNationalized(ParameterType reader) {
+			if ( typeConfiguration.getCurrentBaseSqlTypeIndicators().isNationalized() ) {
+				return true;
+			}
+
+			for ( Annotation annotation : reader.getAnnotationsMethod() ) {
+				if ( annotation instanceof Nationalized ) {
+					return true;
+				}
+			}
+
+			return false;
+		}
 	}
 }

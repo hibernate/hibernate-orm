@@ -8,30 +8,25 @@ package org.hibernate.engine.query.internal;
 
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
-import org.hibernate.engine.query.spi.ParamLocationRecognizer;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.sql.SQLCustomQuery;
-import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.sql.internal.ParameterParser;
+import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 /**
  * @author Steve Ebersole
  */
 public class NativeQueryInterpreterStandardImpl implements NativeQueryInterpreter {
-	private final SessionFactoryImplementor sessionFactory;
-
-	public NativeQueryInterpreterStandardImpl(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
-	}
+	/**
+	 * Singleton access
+	 */
+	public static final NativeQueryInterpreterStandardImpl INSTANCE = new NativeQueryInterpreterStandardImpl();
 
 	@Override
-	public ParameterMetadataImpl getParameterMetadata(String nativeQuery) {
-		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( nativeQuery, sessionFactory );
-		return new ParameterMetadataImpl(
-				recognizer.getOrdinalParameterDescriptionMap(),
-				recognizer.getNamedParameterDescriptionMap()
-		);
+	public void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer) {
+		ParameterParser.parse( nativeQuery, recognizer );
 	}
 
 	@Override

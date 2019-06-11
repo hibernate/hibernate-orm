@@ -18,15 +18,13 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.spi.GraphImplementor;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.model.mapping.spi.EmbeddedValuedNavigable;
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
-import org.hibernate.metamodel.model.mapping.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.internal.QueryHelper;
-import org.hibernate.query.spi.ComparisonOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -79,64 +77,25 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.spi.FromClauseAccess;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
-import org.hibernate.sql.ast.produce.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.produce.spi.SqlAstQuerySpecProcessingState;
-import org.hibernate.sql.ast.produce.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.ast.produce.sqm.spi.JdbcParameterBySqmParameterAccess;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmExpressionInterpretation;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Star;
-import org.hibernate.sql.ast.tree.expression.SubQuery;
-import org.hibernate.sql.ast.tree.expression.TrimSpecification;
-import org.hibernate.sql.ast.tree.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.expression.domain.BasicValuedNavigableReference;
-import org.hibernate.sql.ast.tree.expression.domain.EmbeddableValuedNavigableReference;
-import org.hibernate.sql.ast.tree.expression.domain.EntityValuedNavigableReference;
-import org.hibernate.sql.ast.tree.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
-import org.hibernate.sql.ast.tree.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.sort.SortSpecification;
-import org.hibernate.sql.exec.internal.JdbcParametersImpl;
-import org.hibernate.sql.exec.internal.StandardJdbcParameterImpl;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
 
@@ -176,7 +135,7 @@ public abstract class BaseSqmToSqlAstConverter
 	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
 
 	private final Stack<Clause> currentClauseStack = new StandardStack<>();
-	private final Stack<SqmSelectToSqlAstConverter.Shallowness> shallownessStack = new StandardStack<>( SqmSelectToSqlAstConverter.Shallowness.NONE );
+	private final Stack<Shallowness> shallownessStack = new StandardStack<>( Shallowness.NONE );
 
 	public BaseSqmToSqlAstConverter(
 			SqlAstCreationContext creationContext,
@@ -223,7 +182,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+	public SqlAliasBaseManager getSqlAliasBaseManager() {
 		return sqlAliasBaseManager;
 	}
 
@@ -643,7 +602,8 @@ public abstract class BaseSqmToSqlAstConverter
 		jdbcParamsBySqmParam.put( sqmParameter, jdbcParametersForSqm );
 
 		if ( jdbcParametersForSqm.size() > 1 ) {
-			return new SqlTuple( jdbcParametersForSqm, sqmParameter.getNodeType() );
+			//noinspection unchecked
+			return new SqlTuple( (List) jdbcParametersForSqm );
 		}
 		else {
 			return jdbcParametersForSqm.get( 0 );
@@ -656,11 +616,17 @@ public abstract class BaseSqmToSqlAstConverter
 		if ( expressableType == null ) {
 			final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( expression );
 			final QueryParameterBinding binding = domainParameterBindings.getBinding( queryParameter );
-			expressableType = QueryHelper.determineParameterType( binding, queryParameter, creationContext.getDomainModel().getTypeConfiguration() );
+			expressableType = getCreationContext().getDomainModel().resolveQueryParameterType(
+					NullnessHelper.coalesce(
+							binding.getBindType(),
+							queryParameter.getHibernateType(),
+							expression.getAnticipatedType()
+					).getJavaType()
+			);
 
 			if ( expressableType == null ) {
 				log.debugf( "Could not determine ExpressableType for parameter [%s], falling back to Object-handling", expression );
-				expressableType = StandardSpiBasicTypes.OBJECT_TYPE;
+				expressableType = StandardBasicTypes.OBJECT_TYPE;
 			}
 
 			expression.applyInferableType( expressableType );

@@ -6,14 +6,16 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.type.Type;
 
 /**
+ * Descriptor for
  * @author Steve Ebersole
  */
-public interface AttributeDefinition {
-	public AttributeSource getSource();
-	public String getName();
-	public Type getType();
-	public boolean isNullable();
+public interface AttributeDefinition extends ValueMapping {
+	AttributeSource getSource();
+	String getName();
+	Type getType();
+	boolean isNullable();
 }

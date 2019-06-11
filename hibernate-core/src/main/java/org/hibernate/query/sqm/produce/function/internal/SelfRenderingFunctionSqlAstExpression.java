@@ -26,7 +26,7 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.Selectable;
-import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 

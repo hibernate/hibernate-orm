@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
+import org.hibernate.query.sqm.produce.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**

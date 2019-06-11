@@ -22,8 +22,8 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
 
 /**
  * Specialized SQM literal defined by an enum reference.  E.g.
@@ -33,7 +33,7 @@ import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
  */
 public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>, SemanticPathPart {
 	private final Enum enumValue;
-	private final EnumJavaDescriptor<Enum> referencedEnumTypeDescriptor;
+	private final EnumJavaTypeDescriptor<Enum> referencedEnumTypeDescriptor;
 	private final String enumValueName;
 	private final NodeBuilder nodeBuilder;
 
@@ -41,7 +41,7 @@ public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>
 
 	public SqmEnumLiteral(
 			Enum enumValue,
-			EnumJavaDescriptor<Enum> referencedEnumTypeDescriptor,
+			EnumJavaTypeDescriptor<Enum> referencedEnumTypeDescriptor,
 			String enumValueName,
 			NodeBuilder nodeBuilder) {
 		this.enumValue = enumValue;
@@ -61,7 +61,7 @@ public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>
 	}
 
 	@Override
-	public EnumJavaDescriptor<Enum> getExpressableJavaTypeDescriptor() {
+	public EnumJavaTypeDescriptor<Enum> getExpressableJavaTypeDescriptor() {
 		return referencedEnumTypeDescriptor;
 	}
 

@@ -12,7 +12,6 @@ import javax.persistence.Parameter;
 
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 
 /**
  * @author Steve Ebersole
@@ -33,11 +32,11 @@ public interface ParameterMetadataImplementor extends ParameterMetadata {
 	boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter);
 
 	@Override
-	ProcedureParameterImplementor<?> getQueryParameter(String name);
+	QueryParameterImplementor<?> getQueryParameter(String name);
 
 	@Override
-	ProcedureParameterImplementor<?> getQueryParameter(int positionLabel);
+	QueryParameterImplementor<?> getQueryParameter(int positionLabel);
 
 	@Override
-	ProcedureParameterImplementor<?> resolve(Parameter param);
+	QueryParameterImplementor<?> resolve(Parameter param);
 }

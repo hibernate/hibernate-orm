@@ -8,7 +8,9 @@ package org.hibernate.query.sql.spi;
 
 import java.util.Set;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.NamedNativeQueryDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.NamedQueryMemento;
@@ -24,6 +26,11 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	 * Informational access to the SQL query string
 	 */
 	String getSqlString();
+
+	/**
+	 * The affected query spaces.
+	 */
+	Set<String> getQuerySpaces();
 
 	/**
 	 * Convert the memento into a typed executable query
@@ -96,12 +103,14 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 			this.resultSetMappingClassName = resultSetMappingClassName;
 		}
 
-		public NamedNativeQueryMemento build() {
+		public NamedNativeQueryMemento build(SessionFactoryImplementor sessionFactory) {
 			return new NamedNativeQueryMementoImpl(
 					name,
 					queryString,
 					resultSetMappingName,
-					resultSetMappingClassName,
+					sessionFactory.getServiceRegistry()
+							.getService( ClassLoaderService.class )
+							.classForName( resultSetMappingClassName ),
 					querySpaces,
 					cacheable,
 					cacheRegion,

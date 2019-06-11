@@ -9,8 +9,6 @@ package org.hibernate.sql.results.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.convert.spi.ConvertibleValueMapping;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.Initializer;
@@ -22,27 +20,29 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class ScalarDomainResultImpl<T> implements ScalarDomainResult<T> {
 	private final String resultVariable;
-	private final SqmExpressable expressableType;
+	private final JavaTypeDescriptor<T> javaTypeDescriptor;
 
 	private final DomainResultAssembler<T> assembler;
 
 	public ScalarDomainResultImpl(
+			int valuesArrayPosition,
 			String resultVariable,
-			SqmExpressable<T> expressableType) {
+			JavaTypeDescriptor<T> javaTypeDescriptor) {
 		this.resultVariable = resultVariable;
-		this.expressableType = expressableType;
+		this.javaTypeDescriptor = javaTypeDescriptor;
 
-		this.assembler = new BasicResultAssembler<>( expressableType );
+		this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaTypeDescriptor );
 	}
 
 	public ScalarDomainResultImpl(
+			int valuesArrayPosition,
 			String resultVariable,
-			SqmExpressable<T> expressableType,
+			JavaTypeDescriptor<T> javaTypeDescriptor,
 			BasicValueConverter<T,?> valueConverter) {
 		this.resultVariable = resultVariable;
-		this.expressableType = expressableType;
+		this.javaTypeDescriptor = javaTypeDescriptor;
 
-		this.assembler = new BasicResultAssembler<>( expressableType, valueConverter );
+		this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaTypeDescriptor, valueConverter );
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class ScalarDomainResultImpl<T> implements ScalarDomainResult<T> {
 
 	@Override
 	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
-		return expressableType.getExpressableJavaTypeDescriptor();
+		return javaTypeDescriptor;
 	}
 
 	@Override

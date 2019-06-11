@@ -18,6 +18,7 @@ public interface DomainResultProducer<T> {
 	 * Produce the domain query
 	 */
 	DomainResult<T> createDomainResult(
+			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState);
 

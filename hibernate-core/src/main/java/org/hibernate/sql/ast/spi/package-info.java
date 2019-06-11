@@ -6,7 +6,6 @@
  */
 
 /**
- * Package defining an AST for describing a SQL Statement, as well as
- * for creating and consuming then
+ * Package defining support for creating and consuming SQL AST
  */
 package org.hibernate.sql.ast.spi;

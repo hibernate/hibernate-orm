@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**

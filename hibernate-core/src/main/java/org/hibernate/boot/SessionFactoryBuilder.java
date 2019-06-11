@@ -752,6 +752,20 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
 
+	/**
+	 * See the discussion on {@link org.hibernate.cfg.AvailableSettings#NATIVE_QUERY_ORDINAL_PARAMETER_BASE}
+	 * <p/>
+	 * The passed value will be validated to be either:<ul>
+	 *     <li>0</li>
+	 *     <li>1</li>
+	 *     <li>{@code null}</li>
+	 * </ul>
+	 *
+	 * @param base The base to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	SessionFactoryBuilder applyNonJpaNativeQueryOrdinalParameterBase(Integer base);
 
 	/**
 	 * Allows unwrapping this builder as another, more specific type.

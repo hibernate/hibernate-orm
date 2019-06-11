@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.EntityAliases;

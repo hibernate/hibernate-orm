@@ -20,12 +20,12 @@ public interface DomainResultAssembler<J> {
 	/**
 	 * The main "assembly" contract.  Assemble the result and return it.
 	 */
-	Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options);
+	J assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options);
 
 	/**
 	 * Convenience form of {@link #assemble(RowProcessingState, JdbcValuesSourceProcessingOptions)}
 	 */
-	default Object assemble(RowProcessingState rowProcessingState) {
+	default J assemble(RowProcessingState rowProcessingState) {
 		return assemble( rowProcessingState, rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions() );
 	}
 
@@ -33,5 +33,5 @@ public interface DomainResultAssembler<J> {
 	 * The JavaTypeDescriptor describing the Java type that this assembler
 	 * assembles.
 	 */
-	JavaTypeDescriptor<J> getJavaTypeDescriptor();
+	JavaTypeDescriptor<J> getAssembledJavaTypeDescriptor();
 }

@@ -23,13 +23,14 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
  */
 @Incubating
 public interface SqmPathRegistry {
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqmPath
+
+	/**
+	 * Register an SqmPath
+	 */
 	void register(SqmPath sqmPath);
-
-	SqmSelection findSelectionByAlias(String alias);
-
-	SqmSelection findSelectionByPosition(int position);
-
-	void register(SqmSelection selection);
 
 	/**
 	 * Find a SqmFrom by its identification variable (alias).  Will search any
@@ -69,4 +70,24 @@ public interface SqmPathRegistry {
 	 * @return The existing or just-created SqmPath
 	 */
 	SqmPath resolvePath(NavigablePath path, Function<NavigablePath, SqmPath> creator);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqmSelection
+
+	/**
+	 * Register an SqmSelection
+	 */
+	void register(SqmSelection selection);
+
+	/**
+	 * Find an SqmSelection by the explicit alias assigned to it
+	 */
+	SqmSelection findSelectionByAlias(String alias);
+
+	/**
+	 * Find an SqmSelection by its position in the SqmSelectClause
+	 */
+	SqmSelection findSelectionByPosition(int position);
+
 }

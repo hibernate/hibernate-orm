@@ -20,6 +20,7 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -119,12 +120,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 					@Override
 					public SqmPathSource<?> findSubPathSource(String name) {
-						throw new UnsupportedOperationException( "Entity discriminator cannot be de-referenced" );
-					}
-
-					@Override
-					public DomainType sqmAs(Class type) {
-						return null;
+						throw new IllegalPathUsageException( "Entity discriminator cannot be de-referenced" );
 					}
 
 					@Override

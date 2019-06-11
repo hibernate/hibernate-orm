@@ -9,6 +9,7 @@ package org.hibernate.query.spi;
 import java.util.function.Function;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
@@ -29,8 +30,8 @@ public interface QueryInterpretationCache {
 	void cacheNonSelectQueryPlan(Key key, NonSelectQueryPlan plan);
 
 	SqmStatement resolveSqmStatement(String queryString, Function<String, SqmStatement<?>> creator);
-	SqmStatement getSqmStatement(String queryString);
-	void cacheSqmStatement(String key, SqmStatement sqmStatement);
+
+	ParameterInterpretation resolveNativeQueryParameters(String queryString, Function<String, ParameterInterpretation> creator);
 
 	boolean isEnabled();
 

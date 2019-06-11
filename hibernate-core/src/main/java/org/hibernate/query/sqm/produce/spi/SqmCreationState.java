@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.produce.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
 
 /**
  * Models the state pertaining to the creation of a single SQM.

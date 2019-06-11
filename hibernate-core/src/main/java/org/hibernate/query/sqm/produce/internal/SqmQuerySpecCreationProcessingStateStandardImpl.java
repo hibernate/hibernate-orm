@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.internal;
 
-import org.hibernate.query.sqm.produce.SqmCreationProcessingState;
-import org.hibernate.query.sqm.produce.SqmQuerySpecCreationProcessingState;
+import org.hibernate.query.sqm.produce.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.produce.spi.SqmQuerySpecCreationProcessingState;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelection;

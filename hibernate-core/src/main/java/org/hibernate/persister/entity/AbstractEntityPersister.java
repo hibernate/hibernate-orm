@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -112,6 +113,7 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
@@ -1048,6 +1050,22 @@ public abstract class AbstractEntityPersister
 		}
 
 		return result;
+	}
+
+	@Override
+	public ValueMapping findValueMapping(String name) {
+		for ( AttributeDefinition attributeDefinition : attributeDefinitions ) {
+			if ( attributeDefinition.getName().equals( name ) ) {
+				return attributeDefinition;
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public void visitValueMappings(Consumer<ValueMapping> consumer) {
+		attributeDefinitions.forEach( consumer );
 	}
 
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {

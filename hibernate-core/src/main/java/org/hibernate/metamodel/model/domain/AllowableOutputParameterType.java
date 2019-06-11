@@ -10,6 +10,7 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
@@ -34,6 +35,7 @@ public interface AllowableOutputParameterType<J> extends AllowableParameterType<
 	 */
 	SqlTypeDescriptor getSqlTypeDescriptor();
 
+	ValueBinder<J> getValueBinder();
 
 
 	/**

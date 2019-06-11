@@ -11,6 +11,8 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.graph.spi.GraphImplementor;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 
 /**
  * @author Steve Ebersole
@@ -24,7 +26,7 @@ public interface SqlAstCreationState {
 
 	FromClauseAccess getFromClauseAccess();
 
-	SqlAliasBaseGenerator getSqlAliasBaseGenerator();
+	SqlAliasBaseManager getSqlAliasBaseManager();
 
 	default GraphImplementor getCurrentResultGraphNode() {
 		throw new NotYetImplementedFor6Exception( getClass() );

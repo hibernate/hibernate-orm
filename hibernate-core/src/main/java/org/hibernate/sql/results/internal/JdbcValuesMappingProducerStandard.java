@@ -15,7 +15,7 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.JdbcValuesMetadata;
-import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.SqlSelection;
 
 /**
  * Hibernate's standard ResultSetMappingDescriptor implementation for cases

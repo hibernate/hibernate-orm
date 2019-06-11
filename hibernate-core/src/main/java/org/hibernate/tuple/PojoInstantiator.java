@@ -13,10 +13,12 @@ import java.lang.reflect.Constructor;
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
+import org.hibernate.metamodel.spi.Instantiator;
 
 /**
  * Defines a POJO-based instantiator for use from the tuplizers.
@@ -96,6 +98,11 @@ public class PojoInstantiator implements Instantiator, Serializable {
 
 	protected Object applyInterception(Object entity) {
 		return entity;
+	}
+
+	@Override
+	public Object instantiate(SharedSessionContractImplementor session) {
+		return null;
 	}
 
 	public Object instantiate(Serializable id) {

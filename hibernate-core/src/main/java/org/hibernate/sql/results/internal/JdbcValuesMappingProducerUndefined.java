@@ -18,7 +18,7 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.JdbcValuesMetadata;
-import org.hibernate.sql.results.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;

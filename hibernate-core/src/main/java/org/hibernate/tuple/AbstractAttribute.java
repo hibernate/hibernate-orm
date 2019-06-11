@@ -34,4 +34,6 @@ public abstract class AbstractAttribute implements Attribute, Property {
 	public Type getType() {
 		return attributeType;
 	}
+
+
 }

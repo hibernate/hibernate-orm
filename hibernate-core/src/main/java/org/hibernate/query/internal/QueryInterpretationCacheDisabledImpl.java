@@ -8,9 +8,11 @@ package org.hibernate.query.internal;
 
 import java.util.function.Function;
 
+import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
@@ -46,12 +48,10 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	}
 
 	@Override
-	public SqmStatement getSqmStatement(String queryString) {
-		return null;
-	}
-
-	@Override
-	public void cacheSqmStatement(String key, SqmStatement sqmStatement) {
+	public ParameterInterpretation resolveNativeQueryParameters(
+			String queryString,
+			Function<String, ParameterInterpretation> creator) {
+		return creator.apply( queryString );
 	}
 
 	@Override

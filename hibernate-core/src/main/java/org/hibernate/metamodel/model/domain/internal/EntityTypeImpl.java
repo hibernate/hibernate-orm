@@ -87,11 +87,6 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
-		return null;
-	}
-
-	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.ENTITY;
 	}

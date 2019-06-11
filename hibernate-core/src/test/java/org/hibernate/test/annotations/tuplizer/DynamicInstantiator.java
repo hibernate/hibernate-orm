@@ -14,7 +14,7 @@ import java.lang.reflect.Proxy;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.tuple.Instantiator;
+import org.hibernate.metamodel.spi.Instantiator;
 
 /**
  * @author Emmanuel Bernard

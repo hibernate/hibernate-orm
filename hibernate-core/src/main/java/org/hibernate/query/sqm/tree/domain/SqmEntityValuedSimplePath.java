@@ -9,11 +9,10 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
+import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.SqmCreationHelper;
-import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 
 /**
@@ -36,8 +35,6 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		final SqmPathSource referencedPathSource = getReferencedPathSource();
 		final SqmPathSource subPathSource = referencedPathSource.findSubPathSource( name );
 
-		prepareForSubNavigableReference( subPathSource, isTerminal, creationState );
-
 		assert getLhs() == null || creationState.getProcessingStateStack()
 				.getCurrent()
 				.getPathRegistry()
@@ -50,29 +47,6 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitEntityValuedPath( this );
-	}
-
-	private boolean dereferenced;
-
-	@Override
-	public void prepareForSubNavigableReference(
-			SqmPathSource subNavigable,
-			boolean isSubReferenceTerminal,
-			SqmCreationState creationState) {
-		if ( dereferenced ) {
-			// nothing to do, already dereferenced
-			return;
-		}
-
-		log.tracef(
-				"`SqmEntityValuedSimplePath#prepareForSubNavigableReference` : %s -> %s",
-				getNavigablePath().getFullPath(),
-				subNavigable.getPathName()
-		);
-
-		SqmCreationHelper.resolveAsLhs( getLhs(), this, subNavigable, isSubReferenceTerminal, creationState );
-
-		dereferenced = true;
 	}
 
 	@Override

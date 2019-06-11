@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -35,7 +36,7 @@ public class BasicSqmPathSource<J> extends AbstractSqmPathSource<J> {
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		throw new IllegalArgumentException( "Basic paths cannot be dereferenced" );
+		throw new IllegalPathUsageException( "Basic paths cannot be dereferenced" );
 	}
 
 	@Override

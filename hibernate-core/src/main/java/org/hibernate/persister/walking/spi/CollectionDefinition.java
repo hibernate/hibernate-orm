@@ -13,9 +13,9 @@ import org.hibernate.type.CollectionType;
  * @author Steve Ebersole
  */
 public interface CollectionDefinition {
-	public CollectionPersister getCollectionPersister();
-	public CollectionType getCollectionType();
+	CollectionPersister getCollectionPersister();
+	CollectionType getCollectionType();
 
-	public CollectionIndexDefinition getIndexDefinition();
-	public CollectionElementDefinition getElementDefinition();
+	CollectionIndexDefinition getIndexDefinition();
+	CollectionElementDefinition getElementDefinition();
 }

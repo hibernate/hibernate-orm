@@ -22,7 +22,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
@@ -39,9 +38,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -49,15 +45,9 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExceptionConverter;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -65,27 +55,31 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.jpa.spi.TupleBuilderTransformer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
-import org.hibernate.query.ParameterMetadata;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.Query;
-import org.hibernate.query.sql.internal.NativeQueryImpl;
-import org.hibernate.query.internal.QueryImpl;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.sql.internal.NativeQueryImpl;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
@@ -605,111 +599,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.cacheMode = cacheMode;
 	}
 
-	protected HQLQueryPlan getQueryPlan(String query, boolean shallow) throws HibernateException {
-		return getFactory().getQueryInterpretationCache().getHQLQueryPlan( query, shallow, getLoadQueryInfluencers().getEnabledFilters() );
-	}
 
-	protected NativeSQLQueryPlan getNativeQueryPlan(NativeSQLQuerySpecification spec) throws HibernateException {
-		return getFactory().getQueryInterpretationCache().getNativeSQLQueryPlan( spec );
-	}
-
-	@Override
-	public QueryImplementor getNamedQuery(String name) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		delayedAfterCompletion();
-
-		// look as HQL/JPQL first
-		final NamedHqlQueryMemento hqlQueryMemento = factory.getNamedQueryRepository().getHqlQueryMemento( name );
-		if ( hqlQueryMemento != null ) {
-			return hqlQueryMemento.toQuery( this );
-		}
-
-		// then as a native query
-		final NamedNativeQueryMemento nativeQueryMemento = factory.getNamedQueryRepository().getNativeQueryMemento( name );
-		if ( nativeQueryMemento != null ) {
-			return nativeQueryMemento.toQuery( this );
-		}
-
-		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
-	}
-
-	protected QueryImplementor createQuery(NamedHqlQueryMemento memento) {
-		//noinspection unchecked
-		return new QuerySqmImpl( memento, null, this );
-	}
-
-	private NativeQueryImplementor createNativeQuery(NamedNativeQueryMemento queryDefinition, boolean isOrdinalParameterZeroBased) {
-		final ParameterMetadata parameterMetadata = factory.getQueryInterpretationCache().getSQLParameterMetadata(
-				queryDefinition.getQueryString(),
-				isOrdinalParameterZeroBased
-		);
-		return getNativeQueryImplementor( queryDefinition, parameterMetadata );
-	}
-
-	private NativeQueryImplementor getNativeQueryImplementor(
-			NamedNativeQueryMemento memento,
-			ParameterMetadata parameterMetadata) {
-		final NativeQueryImpl query = new NativeQueryImpl( memento, this, parameterMetadata );
-
-		initQueryFromNamedDefinition( query, memento );
-		applyQuerySettingsAndHints( query );
-
-		return query;
-	}
-
-	protected void initQueryFromNamedDefinition(Query query, NamedHqlQueryMementoImpl nqd) {
-		// todo : cacheable and readonly should be Boolean rather than boolean...
-		query.setCacheable( nqd.getCacheable() );
-		query.setCacheRegion( nqd.getCacheRegion() );
-		query.setReadOnly( nqd.getReadOnly() );
-
-		if ( nqd.getTimeout() != null ) {
-			query.setTimeout( nqd.getTimeout() );
-		}
-		if ( nqd.getFetchSize() != null ) {
-			query.setFetchSize( nqd.getFetchSize() );
-		}
-		if ( nqd.getCacheMode() != null ) {
-			query.setCacheMode( nqd.getCacheMode() );
-		}
-		if ( nqd.getComment() != null ) {
-			query.setComment( nqd.getComment() );
-		}
-		if ( nqd.getFirstResult() != null ) {
-			query.setFirstResult( nqd.getFirstResult() );
-		}
-		if ( nqd.getMaxResults() != null ) {
-			query.setMaxResults( nqd.getMaxResults() );
-		}
-		if ( nqd.getFlushMode() != null ) {
-			query.setHibernateFlushMode( nqd.getFlushMode() );
-		}
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// dynamic HQL handling
 
 	@Override
 	public QueryImplementor createQuery(String queryString) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		delayedAfterCompletion();
-
-		try {
-			final QueryImpl query = new QueryImpl(
-					this,
-					getQueryPlan( queryString, false ).getParameterMetadata(),
-					queryString
-			);
-			query.setComment( queryString );
-			applyQuerySettingsAndHints( query );
-			return query;
-		}
-		catch (RuntimeException e) {
-			markForRollbackOnly();
-			throw getExceptionConverter().convert( e );
-		}
-	}
-
-	protected void applyQuerySettingsAndHints(Query query) {
+		return createQuery( queryString, null );
 	}
 
 	@Override
@@ -720,254 +616,38 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		delayedAfterCompletion();
 
 		try {
-			// do the translation
-			final QueryImplementor<T> query = createQuery( queryString );
-			resultClassChecking( resultClass, query );
+			final QueryEngine queryEngine = getFactory().getQueryEngine();
+			final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
+			final SqmStatement sqm = interpretationCache.resolveSqmStatement(
+					queryString,
+					s -> queryEngine.getSemanticQueryProducer().interpret( queryString )
+			);
+
+			final QuerySqmImpl query = new QuerySqmImpl(
+					queryString,
+					sqm,
+					resultClass,
+					this
+			);
+
+			query.setComment( queryString );
+			applyQuerySettingsAndHints( query );
+
 			return query;
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
+			markForRollbackOnly();
 			throw getExceptionConverter().convert( e );
 		}
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess", "StatementWithEmptyBody"})
-	protected void resultClassChecking(Class resultClass, Query hqlQuery) {
-		// make sure the query is a select -> HHH-7192
-		final HQLQueryPlan queryPlan = getFactory().getQueryInterpretationCache().getHQLQueryPlan(
-				hqlQuery.getQueryString(),
-				false,
-				getLoadQueryInfluencers().getEnabledFilters()
-		);
-		if ( queryPlan.getTranslators()[0].isManipulationStatement() ) {
-			throw new IllegalArgumentException( "Update/delete queries cannot be typed" );
-		}
 
-		// do some return type validation checking
-		if ( Object[].class.equals( resultClass ) ) {
-			// no validation needed
-		}
-		else if ( Tuple.class.equals( resultClass ) ) {
-			TupleBuilderTransformer tupleTransformer = new TupleBuilderTransformer( hqlQuery );
-			hqlQuery.setResultTransformer( tupleTransformer  );
-		}
-		else {
-			final Class dynamicInstantiationClass = queryPlan.getDynamicInstantiationResultType();
-			if ( dynamicInstantiationClass != null ) {
-				if ( ! resultClass.isAssignableFrom( dynamicInstantiationClass ) ) {
-					throw new IllegalArgumentException(
-							"Mismatch in requested result type [" + resultClass.getName() +
-									"] and actual result type [" + dynamicInstantiationClass.getName() + "]"
-					);
-				}
-			}
-			else if ( queryPlan.getTranslators()[0].getReturnTypes().length == 1 ) {
-				// if we have only a single return expression, its java type should match with the requested type
-				final Type queryResultType = queryPlan.getTranslators()[0].getReturnTypes()[0];
-				if ( !resultClass.isAssignableFrom( queryResultType.getReturnedClass() ) ) {
-					throw new IllegalArgumentException(
-							"Type specified for TypedQuery [" +
-									resultClass.getName() +
-									"] is incompatible with query return type [" +
-									queryResultType.getReturnedClass() + "]"
-					);
-				}
-			}
-			else {
-				throw new IllegalArgumentException(
-						"Cannot create TypedQuery for query with more than one return using requested result type [" +
-								resultClass.getName() + "]"
-				);
-			}
-		}
-	}
-
-	@Override
-	public QueryImplementor createNamedQuery(String name) {
-		return buildQueryFromName( name, null );
-	}
-
-	protected  <T> QueryImplementor<T> buildQueryFromName(String name, Class<T> resultType) {
-		checkOpen();
-		try {
-			pulseTransactionCoordinator();
-			delayedAfterCompletion();
-
-			// todo : apply stored setting at the JPA Query level too
-
-			final NamedHqlQueryMemento hqlQueryMemento = getFactory().getQueryEngine().getNamedQueryRepository().getHqlQueryMemento( name );
-			if ( hqlQueryMemento != null ) {
-				return createQuery( hqlQueryMemento, resultType );
-			}
-
-			final NamedNativeQueryMemento nativeQueryMemento = getFactory().getQueryEngine().getNamedQueryRepository().getNativeQueryMemento( name );
-			if ( nativeQueryMemento != null ) {
-				return (QueryImplementor<T>) createNativeQuery( nativeQueryMemento, resultType );
-			}
-
-			throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
-		}
-		catch (RuntimeException e) {
-			throw !( e instanceof IllegalArgumentException ) ? new IllegalArgumentException( e ) : e;
-		}
-	}
-
-	@SuppressWarnings({"WeakerAccess", "unchecked"})
-	protected <T> QueryImplementor<T> createQuery(NamedHqlQueryMemento namedQueryDefinition, Class<T> resultType) {
-		final QueryImplementor query = createQuery( namedQueryDefinition );
-		if ( resultType != null ) {
-			resultClassChecking( resultType, query );
-		}
-		return query;
-	}
-
-	@SuppressWarnings({"WeakerAccess", "unchecked"})
-	protected <T> NativeQueryImplementor createNativeQuery(NamedNativeQueryMemento queryDefinition, Class<T> resultType) {
-		if ( resultType != null && !Tuple.class.equals( resultType ) ) {
-			resultClassChecking( resultType, queryDefinition );
-		}
-
-		final NativeQueryImpl query = new NativeQueryImpl(
-				queryDefinition,
-				this,
-				factory.getQueryInterpretationCache().getSQLParameterMetadata( queryDefinition.getQueryString(), false )
-		);
-		if ( Tuple.class.equals( resultType ) ) {
-			query.setResultTransformer( new NativeQueryTupleTransformer() );
-		}
-		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
-		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
-		if ( queryDefinition.getLockOptions() != null ) {
-			query.setLockOptions( queryDefinition.getLockOptions() );
-		}
-
-		initQueryFromNamedDefinition( query, queryDefinition );
-		applyQuerySettingsAndHints( query );
-
-		return query;
-	}
-
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected void resultClassChecking(Class resultType, NamedNativeQueryMemento namedQueryDefinition) {
-		final NativeSQLQueryReturn[] queryReturns;
-		if ( namedQueryDefinition.getQueryReturns() != null ) {
-			queryReturns = namedQueryDefinition.getQueryReturns();
-		}
-		else if ( namedQueryDefinition.getResultSetRef() != null ) {
-			final ResultSetMappingDescriptor rsMapping = getFactory().getNamedQueryRepository().getResultSetMappingDefinition( namedQueryDefinition.getResultSetRef() );
-			queryReturns = rsMapping.getQueryReturns();
-		}
-		else {
-			throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager");
-		}
-
-		if ( queryReturns.length > 1 ) {
-			throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
-		}
-
-		final NativeSQLQueryReturn nativeSQLQueryReturn = queryReturns[0];
-
-		if ( nativeSQLQueryReturn instanceof NativeSQLQueryRootReturn ) {
-			final Class<?> actualReturnedClass;
-			final String entityClassName = ( (NativeSQLQueryRootReturn) nativeSQLQueryReturn ).getReturnEntityName();
-			try {
-				actualReturnedClass = fastSessionServices.classLoaderService.classForName( entityClassName );
-			}
-			catch ( ClassLoadingException e ) {
-				throw new AssertionFailure(
-						"Unable to load class [" + entityClassName + "] declared on named native query [" +
-								namedQueryDefinition.getRegistrationName() + "]"
-				);
-			}
-			if ( !resultType.isAssignableFrom( actualReturnedClass ) ) {
-				throw buildIncompatibleException( resultType, actualReturnedClass );
-			}
-		}
-		else if ( nativeSQLQueryReturn instanceof NativeSQLQueryConstructorReturn ) {
-			final NativeSQLQueryConstructorReturn ctorRtn = (NativeSQLQueryConstructorReturn) nativeSQLQueryReturn;
-			if ( !resultType.isAssignableFrom( ctorRtn.getTargetClass() ) ) {
-				throw buildIncompatibleException( resultType, ctorRtn.getTargetClass() );
-			}
-		}
-		else {
-			log.debugf( "Skiping unhandled NativeSQLQueryReturn type : " + nativeSQLQueryReturn );
-		}
-	}
-
-	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
-		return new IllegalArgumentException(
-				"Type specified for TypedQuery [" + resultClass.getName() +
-						"] is incompatible with query return type [" + actualResultClass + "]"
-		);
-	}
-
-	@Override
-	public <R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultClass) {
-		return buildQueryFromName( name, resultClass );
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// dynamic native (SQL) query handling
 
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
 		return getNativeQueryImplementor( sqlString, false );
-	}
-
-	@Override
-	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		delayedAfterCompletion();
-
-		try {
-			NativeQueryImplementor query = createNativeQuery( sqlString );
-			handleNativeQueryResult(query, resultClass);
-			return query;
-		}
-		catch ( RuntimeException he ) {
-			throw getExceptionConverter().convert( he );
-		}
-	}
-
-	private void handleNativeQueryResult(NativeQueryImplementor query, Class resultClass) {
-		if ( Tuple.class.equals( resultClass ) ) {
-			query.setResultTransformer( new NativeQueryTupleTransformer() );
-		}
-		else {
-			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
-		}
-	}
-
-	@Override
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		delayedAfterCompletion();
-
-		try {
-			NativeQueryImplementor query = createNativeQuery( sqlString );
-			query.setResultSetMapping( resultSetMapping );
-			return query;
-		}
-		catch ( RuntimeException he ) {
-			throw getExceptionConverter().convert( he );
-		}
-	}
-
-	@Override
-	public NativeQueryImplementor getNamedNativeQuery(String name) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		delayedAfterCompletion();
-
-		final NamedNativeQueryMemento nativeQueryDefinition = factory.getQueryEngine().getNamedQueryRepository().getNativeQueryMemento( name );
-		if ( nativeQueryDefinition != null ) {
-			return createNativeQuery( nativeQueryDefinition, true );
-		}
-
-		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
-	}
-
-	@Override
-	public NativeQueryImplementor createSQLQuery(String queryString) {
-		return getNativeQueryImplementor( queryString, true );
 	}
 
 	protected NativeQueryImplementor getNativeQueryImplementor(
@@ -978,25 +658,129 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		delayedAfterCompletion();
 
 		try {
-			NativeQueryImpl query = new NativeQueryImpl(
-					queryString,
-					false,
-					this,
-					getFactory().getQueryInterpretationCache().getSQLParameterMetadata( queryString, isOrdinalParameterZeroBased )
-			);
+			NativeQueryImpl query = new NativeQueryImpl( queryString, this );
 			query.setComment( "dynamic native SQL query" );
 			return query;
 		}
-		catch ( RuntimeException he ) {
+		catch (RuntimeException he) {
 			throw getExceptionConverter().convert( he );
 		}
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		delayedAfterCompletion();
+
+		try {
+			NativeQueryImplementor query = createNativeQuery( sqlString );
+			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+			return query;
+		}
+		catch (RuntimeException he) {
+			throw getExceptionConverter().convert( he );
+		}
+	}
 
 	@Override
-	public NativeQueryImplementor getNamedSQLQuery(String name) {
-		return getNamedNativeQuery( name );
+	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		delayedAfterCompletion();
+
+		final NativeQueryImplementor query;
+		try {
+			if ( StringHelper.isNotEmpty( resultSetMapping ) ) {
+				final ResultSetMappingDescriptor resultSetMappingDescriptor = getFactory().getQueryEngine()
+						.getNamedQueryRepository()
+						.getResultSetMappingDescriptor( resultSetMapping );
+
+				if ( resultSetMappingDescriptor == null ) {
+					throw new HibernateException( "Could not resolve specified result-set mapping name : " + resultSetMapping );
+				}
+
+				query = new NativeQueryImpl( sqlString, resultSetMappingDescriptor, this );
+			}
+			else {
+				query = new NativeQueryImpl( sqlString, this );
+			}
+		}
+		catch ( RuntimeException he ) {
+			throw getExceptionConverter().convert( he );
+		}
+
+		return query;
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// named query handling
+
+	@Override
+	public QueryImplementor getNamedQuery(String queryName) {
+		return buildNamedQuery( queryName, null );
+	}
+
+	@Override
+	public QueryImplementor createNamedQuery(String name) {
+		return buildNamedQuery( name, null );
+	}
+
+	@Override
+	public <R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultClass) {
+		return buildNamedQuery( name, resultClass );
+	}
+
+	protected <T> QueryImplementor<T> buildNamedQuery(String queryName, Class<T> resultType) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		delayedAfterCompletion();
+
+		// this method can be called for either a named HQL query or a named native query
+
+		// first see if it is a named HQL query
+		final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
+				.getNamedQueryRepository()
+				.getHqlQueryMemento( queryName );
+
+		if ( namedHqlDescriptor != null ) {
+			return namedHqlDescriptor.toQuery( this, resultType );
+		}
+
+		// otherwise, see if it is a named native query
+		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
+				.getNamedQueryRepository()
+				.getNativeQueryMemento( queryName );
+
+		if ( namedNativeDescriptor != null ) {
+			return namedNativeDescriptor.toQuery( this, resultType );
+		}
+
+		// todo (6.0) : allow this for named stored procedures as well?
+		//		ultimately they are treated as a Query
+
+		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
+	}
+
+	protected void applyQuerySettingsAndHints(Query query) {
+	}
+
+
+	@Override
+	public NativeQueryImplementor getNamedNativeQuery(String queryName) {
+		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
+				.getNamedQueryRepository()
+				.getNativeQueryMemento( queryName );
+
+		if ( namedNativeDescriptor != null ) {
+			return namedNativeDescriptor.toQuery( this );
+		}
+
+		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
+	}
+
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
@@ -1013,6 +797,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 //		procedureCall.setComment( "Named stored procedure call [" + name + "]" );
 		return procedureCall;
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// dynamic ProcedureCall support
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")

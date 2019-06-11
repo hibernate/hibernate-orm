@@ -170,6 +170,11 @@ public class QuerySqmImpl<R>
 		return getSession().getFactory();
 	}
 
+	@Override
+	public QueryParameterBindings getParameterBindings() {
+		return parameterBindings;
+	}
+
 	private boolean isSelect() {
 		return sqmStatement instanceof SqmSelectStatement;
 	}

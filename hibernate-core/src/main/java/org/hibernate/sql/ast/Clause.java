@@ -39,6 +39,7 @@ public enum Clause {
 	HAVING,
 	ORDER,
 	LIMIT,
+	OFFSET,
 	CALL,
 
 	/**

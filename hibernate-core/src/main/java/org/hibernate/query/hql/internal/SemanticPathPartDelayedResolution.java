@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.type.descriptor.java.spi.EnumJavaDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 
 /**
  * A delayed resolution of a non-terminal path part
@@ -104,7 +104,7 @@ public class SemanticPathPartDelayedResolution implements SemanticPathPart, Full
 						//noinspection unchecked
 						return new SqmEnumLiteral(
 								enumValue,
-								(EnumJavaDescriptor) creationContext.getJpaMetamodel()
+								(EnumJavaTypeDescriptor) creationContext.getJpaMetamodel()
 										.getTypeConfiguration()
 										.getJavaTypeDescriptorRegistry()
 										.resolveDescriptor( referencedClass ),

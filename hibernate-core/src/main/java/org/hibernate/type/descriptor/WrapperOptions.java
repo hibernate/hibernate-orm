@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
@@ -19,6 +20,12 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface WrapperOptions {
+
+	/**
+	 * Access to the current Session
+	 */
+	SharedSessionContractImplementor getSession();
+
 	/**
 	 * Should streams be used for binding LOB values.
 	 *

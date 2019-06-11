@@ -6,11 +6,18 @@
  */
 package org.hibernate.engine.query.spi;
 
+import org.hibernate.Incubating;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.sql.internal.NativeSelectQueryPlanImpl;
+import org.hibernate.query.sql.spi.NativeNonSelectQueryDefinition;
+import org.hibernate.query.sql.spi.NativeNonSelectQueryPlan;
+import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
+import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
+import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.service.Service;
 
 /**
@@ -20,38 +27,38 @@ import org.hibernate.service.Service;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
+@Incubating
 public interface NativeQueryInterpreter extends Service {
 	/**
-	 * Returns a meta-data object with information about the named and ordinal
-	 * parameters contained in the given native query.
+	 * Parse the given native query and inform the recognizer of all
+	 * recognized parameter markers.
 	 *
-	 * @param nativeQuery the native query to analyze.
-	 *
-	 * @return a meta-data object describing the parameters of the given query.
-	 *         Must not be {@code null}.
+	 * @param nativeQuery The query to recognize parameters in
+	 * @param recognizer The recognizer to call
 	 */
-	ParameterMetadataImpl getParameterMetadata(String nativeQuery);
+	void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer);
 
 	/**
-	 * Creates a new query plan for the specified native query.
-	 *
-	 * @param specification Describes the query to create a plan for
-	 * @param sessionFactory The current session factory
-	 *
-	 * @return A query plan for the specified native query.
+	 * Creates a new query plan for the passed native query definition
 	 */
-	NativeSQLQueryPlan createQueryPlan(NativeSQLQuerySpecification specification, SessionFactoryImplementor sessionFactory);
+	default <R> NativeSelectQueryPlan<R> createQueryPlan(
+			NativeSelectQueryDefinition<R> queryDefinition,
+			SessionFactoryImplementor sessionFactory) {
+		return new NativeSelectQueryPlanImpl<R>(
+				queryDefinition.getSqlString(),
+				queryDefinition.getAffectedTableNames(),
+				queryDefinition.getQueryParameterList(),
+				queryDefinition.getResultSetMapping(),
+				queryDefinition.getRowTransformer()
+		);
+	}
 
 	/**
-	 * Creates a {@link CustomLoader} for the given {@link CustomQuery}.
-	 *
-	 * @param customQuery The CustomQuery to create a loader for
-	 * @param sessionFactory The current session factory
-	 *
-	 * @deprecated This method will be removed in 6.
+	 * Creates a new query plan for the passed native query values
 	 */
-	@Deprecated
-	default CustomLoader createCustomLoader(CustomQuery customQuery, SessionFactoryImplementor sessionFactory) {
-		return new CustomLoader( customQuery, sessionFactory );
+	default NativeNonSelectQueryPlan createQueryPlan(
+			NativeNonSelectQueryDefinition queryDefinition,
+			SessionFactoryImplementor sessionFactory) {
+		throw new NotYetImplementedFor6Exception(  );
 	}
 }

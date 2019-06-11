@@ -7,8 +7,8 @@
 package org.hibernate.engine.query;
 
 import org.hibernate.engine.query.spi.ParamLocationRecognizer;
-import org.hibernate.engine.query.spi.ParameterParser;
-import org.hibernate.engine.query.spi.ParameterParser.Recognizer;
+import org.hibernate.query.sql.internal.ParameterParser;
+import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -25,18 +25,13 @@ import static org.junit.Assert.fail;
  */
 public class ParameterParserTest {
 	@Test
-	public void testEscapeCallRecognition() {
-		assertTrue( ParameterParser.startsWithEscapeCallTemplate( "{ ? = call abc(?) }" ) );
-		assertFalse( ParameterParser.startsWithEscapeCallTemplate(
-				"from User u where u.userName = ? and u.userType = 'call'"
-		) );
-	}
-	@Test
 	public void testQuotedTextInComment() {
 		ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
 
 		ParameterParser.parse("-- 'This' should not fail the test.\n"
 									  + "SELECT column FROM Table WHERE column <> :param", recognizer);
+
+		recognizer.validate();
 
 		assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("param"));
 	}
@@ -82,7 +77,7 @@ public class ParameterParserTest {
 	@TestForIssue( jiraKey = "HHH-1237")
     public void testParseColonCharacterEscaped() {
         final StringBuilder captured = new StringBuilder();
-        Recognizer recognizer = new Recognizer() {
+        ParameterRecognizer recognizer = new ParameterRecognizer() {
             @Override
             public void outParameter(int position) {
                 fail();

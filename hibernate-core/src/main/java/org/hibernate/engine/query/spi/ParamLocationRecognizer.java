@@ -15,6 +15,8 @@ import java.util.Map;
 import org.hibernate.engine.query.ParameterRecognitionException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.query.sql.internal.ParameterParser;
+import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 /**
  * Implements a parameter parser recognizer specifically for the purpose
@@ -22,7 +24,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
  *
  * @author Steve Ebersole
  */
-public class ParamLocationRecognizer implements ParameterParser.Recognizer {
+public class ParamLocationRecognizer implements ParameterRecognizer {
 
 	private Map<String, NamedParameterDescriptor> namedParameterDescriptors;
 	private Map<Integer, OrdinalParameterDescriptor> ordinalParameterDescriptors;
@@ -57,8 +59,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 		return recognizer;
 	}
 
-	@Override
-	public void complete() {
+	public void validate() {
 		if ( inFlightNamedStateMap != null && ( inFlightOrdinalStateMap != null || inFlightJpaOrdinalStateMap != null ) ) {
 			throw mixedParamStrategy();
 		}

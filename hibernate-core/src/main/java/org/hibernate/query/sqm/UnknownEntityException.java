@@ -13,7 +13,8 @@ import org.hibernate.query.SemanticException;
  * <p/>
  * NOTE : JPA generally requires this to be reported as the far less useful
  * IllegalArgumentException.
- * todo : account for this in the "exception conversion" handling
+ *
+ * todo (6.0) : account for this in the "exception conversion" handling
  *
  * @author Steve Ebersole
  */

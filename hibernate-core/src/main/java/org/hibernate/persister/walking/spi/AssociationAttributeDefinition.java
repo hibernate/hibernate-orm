@@ -20,25 +20,25 @@ public interface AssociationAttributeDefinition extends AttributeDefinition {
 	@Override
 	AssociationType getType();
 
-	public AssociationKey getAssociationKey();
+	AssociationKey getAssociationKey();
 
-	public static enum AssociationNature {
+	enum AssociationNature {
 		ANY,
 		ENTITY,
 		COLLECTION
 	}
 
-	public AssociationNature getAssociationNature();
+	AssociationNature getAssociationNature();
 
-	public EntityDefinition toEntityDefinition();
+	EntityDefinition toEntityDefinition();
 
-	public CollectionDefinition toCollectionDefinition();
+	CollectionDefinition toCollectionDefinition();
 
-	public AnyMappingDefinition toAnyDefinition();
+	AnyMappingDefinition toAnyDefinition();
 
-	public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath);
+	FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath);
 
-	public CascadeStyle determineCascadeStyle();
+	CascadeStyle determineCascadeStyle();
 
-	public HydratedCompoundValueHandler getHydratedCompoundValueExtractor();
+	HydratedCompoundValueHandler getHydratedCompoundValueExtractor();
 }

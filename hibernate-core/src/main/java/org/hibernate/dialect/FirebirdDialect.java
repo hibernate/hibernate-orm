@@ -42,6 +42,7 @@ public class FirebirdDialect extends Dialect {
 	//   making BigInteger/BigDecimal support useless
 	// * can't select a parameter unless wrapped in a
 	//   cast (not even when wrapped in a function call)
+	// * no support for pooled sequences
 
 	public FirebirdDialect() {
 		super();

@@ -130,7 +130,7 @@ import javax.persistence.TemporalType;
 
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsDate;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTime;
-import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestamp;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestampWithMicros;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcDateLiteral;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcTimeLiteral;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsJdbcTimestampLiteral;
@@ -3400,7 +3400,7 @@ public abstract class Dialect implements ConversionContext {
 			case TIME:
 				return wrapTimeLiteral( formatAsTime(temporalAccessor) );
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestamp(temporalAccessor) );
+				return wrapTimestampLiteral( formatAsTimestampWithMicros(temporalAccessor) );
 			default:
 				throw new IllegalArgumentException();
 		}
@@ -3413,7 +3413,7 @@ public abstract class Dialect implements ConversionContext {
 			case TIME:
 				return wrapTimeLiteral( formatAsTime(date) );
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestamp(date) );
+				return wrapTimestampLiteral( formatAsTimestampWithMicros(date) );
 			default:
 				throw new IllegalArgumentException();
 		}
@@ -3426,7 +3426,7 @@ public abstract class Dialect implements ConversionContext {
 			case TIME:
 				return wrapTimeLiteral( formatAsTime(calendar) );
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestamp(calendar) );
+				return wrapTimestampLiteral( formatAsTimestampWithMicros(calendar) );
 			default:
 				throw new IllegalArgumentException();
 		}

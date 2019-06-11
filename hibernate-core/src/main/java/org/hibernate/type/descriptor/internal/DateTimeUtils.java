@@ -27,13 +27,16 @@ public final class DateTimeUtils {
 	public static final String FORMAT_STRING_DATE = "yyyy-MM-dd";
 	public static final String FORMAT_STRING_TIME_WITH_OFFSET = "HH:mm:ssxxx";
 	public static final String FORMAT_STRING_TIME = "HH:mm:ss";
-	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss.SSSSSS";
-	public static final String FORMAT_STRING_TIMESTAMP_WITH_OFFSET = "yyyy-MM-dd HH:mm:ss.SSSSSSxxx";
+	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_MILLIS = FORMAT_STRING_TIMESTAMP + ".SSS";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_MICROS = FORMAT_STRING_TIMESTAMP + ".SSSSSS";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_OFFSET = FORMAT_STRING_TIMESTAMP_WITH_MICROS + "xxx";
 
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_DATE = DateTimeFormatter.ofPattern( FORMAT_STRING_DATE, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME_WITH_OFFSET = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME_WITH_OFFSET, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME, Locale.ENGLISH );
-	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP = DateTimeFormatter.ofPattern( FORMAT_STRING_TIMESTAMP, Locale.ENGLISH );
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS = DateTimeFormatter.ofPattern(FORMAT_STRING_TIMESTAMP_WITH_MILLIS, Locale.ENGLISH );
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS = DateTimeFormatter.ofPattern(FORMAT_STRING_TIMESTAMP_WITH_MICROS, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_OFFSET = DateTimeFormatter.ofPattern( FORMAT_STRING_TIMESTAMP_WITH_OFFSET, Locale.ENGLISH );
 
 	public static final String JDBC_ESCAPE_START_DATE = "{d '";
@@ -76,10 +79,14 @@ public final class DateTimeUtils {
 			.appendOffset("+HH:mm", "+00")
 			.toFormatter();
 
-	public static String formatAsTimestamp(TemporalAccessor temporalAccessor) {
+	public static String formatAsTimestampWithMicros(TemporalAccessor temporalAccessor) {
 		return temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS)
 				? DATE_TIME_FORMATTER_TIMESTAMP_WITH_OFFSET.format( temporalAccessor )
-				: DATE_TIME_FORMATTER_TIMESTAMP.format( temporalAccessor );
+				: DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.format( temporalAccessor );
+	}
+
+	public static String formatAsTimestampWithMillis(TemporalAccessor temporalAccessor) {
+		return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.format( temporalAccessor );
 	}
 
 	public static String formatAsDate(TemporalAccessor temporalAccessor) {
@@ -95,8 +102,12 @@ public final class DateTimeUtils {
 		}
 	}
 
-	public static String formatAsTimestamp(java.util.Date date) {
-		return simpleDateFormatTimestamp().format( date );
+	public static String formatAsTimestampWithMillis(java.util.Date date) {
+		return simpleDateFormatTimestampWithMillis().format( date );
+	}
+
+	public static String formatAsTimestampWithMicros(java.util.Date date) {
+		return simpleDateFormatTimestampWithMicros().format( date );
 	}
 
 	public static String wrapAsJdbcDateLiteral(String literal) {
@@ -123,8 +134,12 @@ public final class DateTimeUtils {
 		return "timestamp '" + literal + "'";
 	}
 
-	public static SimpleDateFormat simpleDateFormatTimestamp() {
-		return new SimpleDateFormat( FORMAT_STRING_TIMESTAMP, Locale.ENGLISH );
+	public static SimpleDateFormat simpleDateFormatTimestampWithMillis() {
+		return new SimpleDateFormat(FORMAT_STRING_TIMESTAMP_WITH_MILLIS, Locale.ENGLISH );
+	}
+
+	public static SimpleDateFormat simpleDateFormatTimestampWithMicros() {
+		return new SimpleDateFormat(FORMAT_STRING_TIMESTAMP_WITH_MICROS, Locale.ENGLISH );
 	}
 
 	public static String formatAsDate(java.util.Date date) {
@@ -143,12 +158,22 @@ public final class DateTimeUtils {
 		return new SimpleDateFormat( FORMAT_STRING_TIME, Locale.ENGLISH );
 	}
 
-	public static String formatAsTimestamp(java.util.Calendar calendar) {
-		return simpleDateFormatTimestamp( calendar.getTimeZone() ).format( calendar.getTime() );
+	public static String formatAsTimestampWithMillis(java.util.Calendar calendar) {
+		return simpleDateFormatTimestampWithMillis( calendar.getTimeZone() ).format( calendar.getTime() );
 	}
 
-	public static SimpleDateFormat simpleDateFormatTimestamp(TimeZone timeZone) {
-		final SimpleDateFormat formatter = new SimpleDateFormat( FORMAT_STRING_TIMESTAMP, Locale.ENGLISH );
+	public static SimpleDateFormat simpleDateFormatTimestampWithMillis(TimeZone timeZone) {
+		final SimpleDateFormat formatter = new SimpleDateFormat(FORMAT_STRING_TIMESTAMP_WITH_MILLIS, Locale.ENGLISH );
+		formatter.setTimeZone( timeZone );
+		return formatter;
+	}
+
+	public static String formatAsTimestampWithMicros(java.util.Calendar calendar) {
+		return simpleDateFormatTimestampWithMicros( calendar.getTimeZone() ).format( calendar.getTime() );
+	}
+
+	public static SimpleDateFormat simpleDateFormatTimestampWithMicros(TimeZone timeZone) {
+		final SimpleDateFormat formatter = new SimpleDateFormat(FORMAT_STRING_TIMESTAMP_WITH_MICROS, Locale.ENGLISH );
 		formatter.setTimeZone( timeZone );
 		return formatter;
 	}

@@ -8,15 +8,23 @@ package org.hibernate.dialect;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.FirebirdExtractEmulation;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.RowsLimitHandler;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.descriptor.internal.DateTimeUtils;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
+import javax.persistence.TemporalType;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestampWithMillis;
 
 /**
  * An SQL dialect for Firebird.
@@ -82,6 +90,7 @@ public class FirebirdDialect extends Dialect {
 				"(position(?1 in substring(?2 from ?3)) + (?3) - 1)"
 		).setArgumentListSignature("(pattern, string[, start])");
 
+		queryEngine.getSqmFunctionRegistry().register( "extract", new FirebirdExtractEmulation() );
 	}
 
 	@Override
@@ -210,4 +219,40 @@ public class FirebirdDialect extends Dialect {
 		return "from rdb$database";
 	}
 
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			case DAY_OF_YEAR: return "yearday";
+			case DAY_OF_WEEK: return "weekday";
+			default: return unit.toString();
+		}
+	}
+
+	public String formatDateTimeLiteral(TemporalAccessor temporalAccessor, TemporalType precision) {
+		switch ( precision ) {
+			case TIMESTAMP:
+				return wrapTimestampLiteral( DateTimeUtils.formatAsTimestampWithMillis(temporalAccessor) );
+			default:
+				return super.formatDateTimeLiteral( temporalAccessor, precision );
+		}
+	}
+
+	public String formatDateTimeLiteral(Date date, TemporalType precision) {
+		switch ( precision ) {
+			case TIMESTAMP:
+				return wrapTimestampLiteral( DateTimeUtils.formatAsTimestampWithMillis(date) );
+			default:
+				return super.formatDateTimeLiteral( date, precision );
+		}
+	}
+
+	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision) {
+		switch ( precision ) {
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestampWithMillis(calendar) );
+			default:
+				return super.formatDateTimeLiteral( calendar, precision );
+		}
+	}
 }

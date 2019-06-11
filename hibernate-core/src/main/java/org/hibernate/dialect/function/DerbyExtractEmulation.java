@@ -21,11 +21,24 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.List;
 
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.invariant;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
- * Derby doesn't have an extract() function but we
- * can emulate it using the functions it does have.
+ * Derby doesn't have an extract() function, and has
+ * no functions at all for calendaring, but we can
+ * emulate the most basic functionality of extract()
+ * using the functions it does have.
+ *
+ * The only supported {@link TemporalUnit}s are:
+ * {@link TemporalUnit#YEAR},
+ * {@link TemporalUnit#MONTH}
+ * {@link TemporalUnit#DAY},
+ * {@link TemporalUnit#HOUR},
+ * {@link TemporalUnit#MINUTE},
+ * {@link TemporalUnit#SECOND} (along with
+ * {@link TemporalUnit#NANOSECOND},
+ * {@link TemporalUnit#DATE}, and
+ * {@link TemporalUnit#TIME}, which are desugared
+ * by the parser).
  *
  * @author Gavin King
  */

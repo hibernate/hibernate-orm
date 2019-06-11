@@ -2529,34 +2529,45 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 	}
 
-	private SqmExpression<Long> extractNanoseconds(
-			SqmExpression<?> expressionToExtract) {
-		return getFunctionTemplate("round").makeSqmFunctionExpression(
-				asList(
-						new SqmBinaryArithmetic<>(
-							BinaryArithmeticOperator.MULTIPLY,
-							getFunctionTemplate("extract").makeSqmFunctionExpression(
-									asList(
-											new SqmExtractUnit<>(
-												SECOND,
-												basicType( Float.class),
-												creationContext.getNodeBuilder()
-											),
-											expressionToExtract
-									),
-									basicType( Float.class ),
-									creationContext.getQueryEngine(),
-									creationContext.getDomainModel().getTypeConfiguration()
-							),
-							floatLiteral("1e9"),
-							basicType( Float.class ),
-							creationContext.getNodeBuilder()
-						),
-						integerLiteral("0")
-				),
+	private SqmExpression<Long> toLong(SqmExpression<?> arg) {
+		//Not every database supports round() (looking at you Derby)
+		//so use floor() instead, which is perfectly fine for this
+//		return getFunctionTemplate("round").makeSqmFunctionExpression(
+//				asList( arg, integerLiteral("0") ),
+//				basicType( Long.class ),
+//				creationContext.getQueryEngine(),
+//				creationContext.getDomainModel().getTypeConfiguration()
+//		);
+		return getFunctionTemplate("floor").makeSqmFunctionExpression(
+				arg,
 				basicType( Long.class ),
 				creationContext.getQueryEngine(),
 				creationContext.getDomainModel().getTypeConfiguration()
+		);
+	}
+
+	private SqmExpression<Long> extractNanoseconds(
+			SqmExpression<?> expressionToExtract) {
+		return toLong(
+				new SqmBinaryArithmetic<>(
+						BinaryArithmeticOperator.MULTIPLY,
+						getFunctionTemplate("extract").makeSqmFunctionExpression(
+								asList(
+										new SqmExtractUnit<>(
+											SECOND,
+											basicType( Float.class),
+											creationContext.getNodeBuilder()
+										),
+										expressionToExtract
+								),
+								basicType( Float.class ),
+								creationContext.getQueryEngine(),
+								creationContext.getDomainModel().getTypeConfiguration()
+						),
+						floatLiteral("1e9"),
+						basicType( Float.class ),
+						creationContext.getNodeBuilder()
+				)
 		);
 	}
 

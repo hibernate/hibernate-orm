@@ -318,7 +318,7 @@ public enum Database {
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
-			return "Mimer SQL Experience".equals( databaseName );
+			return databaseName.startsWith("Mimer SQL");
 		}
 		@Override
 		public String getDriverClassName(String jdbcUrl) {

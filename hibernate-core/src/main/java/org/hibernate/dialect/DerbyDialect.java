@@ -15,6 +15,7 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.DerbyCastEmulation;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
 import org.hibernate.dialect.function.DerbyExtractEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
@@ -61,10 +62,10 @@ public class DerbyDialect extends Dialect {
 	// KNOWN LIMITATIONS:
 
 	// * limited set of fields for extract()
+	//   (no 'day of xxxx', nor 'week of xxxx')
 	// * no support for format()
 	// * no round() function
 	// * pad() can only pad with blanks
-	// * can't cast() a String to Float/Double (TODO: emulate this)
 	// * can't cast String to Binary
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
@@ -165,6 +166,7 @@ public class DerbyDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
 		queryEngine.getSqmFunctionRegistry().register( "extract", new DerbyExtractEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "cast", new DerbyCastEmulation() );
 
 		//no way I can see to pad with anything other than spaces
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "lpad", "case when length(?1)<?2 then substr(char('',?2)||?1,length(?1)) else ?1 end" )

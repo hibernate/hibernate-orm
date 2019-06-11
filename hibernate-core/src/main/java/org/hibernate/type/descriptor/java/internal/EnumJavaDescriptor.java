@@ -54,12 +54,18 @@ public class EnumJavaDescriptor<E extends Enum> extends AbstractBasicJavaDescrip
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X> X unwrap(E value, Class<X> type, SharedSessionContractImplementor session) {
+		if ( Integer.class.isAssignableFrom(type) ) {
+			return (X) toOrdinal( value );
+		}
 		return (X) value;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X> E wrap(X value, SharedSessionContractImplementor session) {
+		if ( Integer.class.isInstance( value ) ) {
+			return (E) fromOrdinal( (Integer) value );
+		}
 		return (E) value;
 	}
 

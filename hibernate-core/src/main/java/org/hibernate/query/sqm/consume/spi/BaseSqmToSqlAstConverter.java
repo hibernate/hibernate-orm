@@ -83,7 +83,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
@@ -618,6 +617,7 @@ public abstract class BaseSqmToSqlAstConverter
 				);
 			}
 			else if ( appliedByUnit != null ) {
+				TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
 				// we're applying the 'by unit' operator,
 				// producing a literal scalar value, so
 				// we must convert this duration from
@@ -629,7 +629,8 @@ public abstract class BaseSqmToSqlAstConverter
 								scaledExpression.getType()
 						),
 						appliedByUnit.getUnit().getUnit(),
-						sqlExpressableTypeForLong()
+						appliedByUnit.getExpressableType()
+								.getSqlExpressableType( typeConfiguration )
 				);
 			}
 			else {
@@ -639,10 +640,6 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 
 		return navigableReference;
-	}
-
-	private SqlExpressableType sqlExpressableTypeForLong() {
-		return getCreationContext().getDomainModel().getTypeConfiguration().standardExpressableTypeForJavaType( Long.class ).getSqlExpressableType();
 	}
 
 	@Override
@@ -859,6 +856,7 @@ public abstract class BaseSqmToSqlAstConverter
 			);
 		}
 		else if ( appliedByUnit != null ) {
+			TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
 			// we're applying the 'by unit' operator,
 			// producing a literal scalar value in
 			// the given unit
@@ -869,7 +867,8 @@ public abstract class BaseSqmToSqlAstConverter
 							toDuration.getExpressableType().getSqlExpressableType()
 					),
 					appliedByUnit.getUnit().getUnit(),
-					sqlExpressableTypeForLong()
+					appliedByUnit.getExpressableType()
+							.getSqlExpressableType( typeConfiguration )
 			);
 		}
 		else {
@@ -1013,6 +1012,17 @@ public abstract class BaseSqmToSqlAstConverter
 			}
 			else if (temporalTypeToLeft && temporalTypeToRight) {
 				return transformDatetimeArithmetic( expression );
+			}
+			else if (durationToRight && appliedByUnit!=null) {
+				return new BinaryArithmeticExpression(
+						toSqlExpression( leftOperand.accept(this) ),
+						expression.getOperator(),
+						toSqlExpression( rightOperand.accept(this) ),
+						//after distributing the 'by unit' operator
+						//we get a Long value back
+						appliedByUnit.getExpressableType()
+								.getSqlExpressableType( typeConfiguration )
+				);
 			}
 			else {
 				return new BinaryArithmeticExpression(
@@ -1169,7 +1179,8 @@ public abstract class BaseSqmToSqlAstConverter
 									expression.getExpressableType().getSqlExpressableType()
 							),
 							appliedByUnit.getUnit().getUnit(),
-							sqlExpressableTypeForLong()
+							appliedByUnit.getExpressableType()
+									.getSqlExpressableType( typeConfiguration )
 					)
 			);
 		}

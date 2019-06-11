@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.MimerExtractEmulation;
@@ -28,6 +29,10 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  * @author Gavin King
  */
 public class MimerSQLDialect extends Dialect {
+
+	// KNOWN LIMITATIONS:
+
+	// * no support for format()
 
 	public MimerSQLDialect() {
 		super();
@@ -249,5 +254,10 @@ public class MimerSQLDialect extends Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new MimerSQLIdentityColumnSupport();
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		throw new NotYetImplementedFor6Exception("format() function not supported on Mimer SQL");
 	}
 }

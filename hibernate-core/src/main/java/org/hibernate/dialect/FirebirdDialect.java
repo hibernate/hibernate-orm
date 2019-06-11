@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FirebirdExtractEmulation;
@@ -33,6 +34,12 @@ import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimes
  * @author Gavin King
  */
 public class FirebirdDialect extends Dialect {
+
+	// KNOWN LIMITATIONS:
+
+	// * no support for format()
+	// * extremely low maximum decimal precision (18)
+	//   making BigInteger/BigDecimal support useless
 
 	public FirebirdDialect() {
 		super();
@@ -254,5 +261,10 @@ public class FirebirdDialect extends Dialect {
 			default:
 				return super.formatDateTimeLiteral( calendar, precision );
 		}
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		throw new NotYetImplementedFor6Exception("format() function not supported on Firebird");
 	}
 }

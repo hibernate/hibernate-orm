@@ -12,6 +12,7 @@ import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
@@ -52,9 +53,18 @@ import static org.hibernate.query.TemporalUnit.NANOSECOND;
  * Hibernate Dialect for Apache Derby / Cloudscape 10
  *
  * @author Simon Johnston
+ * @author Gavin King
  *
  */
 public class DerbyDialect extends Dialect {
+
+	// KNOWN LIMITATIONS:
+
+	// * limited set of fields for extract()
+	// * no support for format()
+	// * no round() function
+	// * pad() can only pad with blanks
+	// * can't cast() a String to Float/Double (TODO: emulate this)
 
 	private final int version;
 
@@ -502,6 +512,11 @@ public class DerbyDialect extends Dialect {
 				return "not logged";
 			}
 		};
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		throw new NotYetImplementedFor6Exception("format() function not supported on Derby");
 	}
 
 	private void registerDerbyKeywords() {

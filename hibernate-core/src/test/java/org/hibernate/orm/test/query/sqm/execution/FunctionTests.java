@@ -20,10 +20,13 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.CoreMatchers.instanceOf;
 
 /**
@@ -76,6 +79,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select 'foo' || e.theString || 'bar' from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select concat('hello',' ','world')").getSingleResult(), is("hello world") );
+					assertThat( session.createQuery("select 'hello'||' '||'world')").getSingleResult(), is("hello world") );
 				}
 		);
 	}
@@ -88,6 +93,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select coalesce(nullif('',''), nullif('bye','bye'), 'hello', 'oops')").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select ifnull(nullif('bye','bye'), 'hello')").getSingleResult(), is("hello") );
 				}
 		);
 	}
@@ -98,6 +105,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery("select nullif(e.theString, '') from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select nullif('foo', 'foo')").getSingleResult(), nullValue() );
+					assertThat( session.createQuery("select nullif('foo', 'bar')").getSingleResult(), is("foo") );
 				}
 		);
 	}
@@ -132,6 +141,13 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select round(e.theDouble, 3) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select abs(-2)").getSingleResult(), is(2) );
+					assertThat( session.createQuery("select sign(-2)").getSingleResult(), is(-1) );
+					assertThat( session.createQuery("select power(3.0,2.0)").getSingleResult(), is(9.0f) );
+					assertThat( session.createQuery("select round(32.12345,2)").getSingleResult(), is(32.12f) );
+					assertThat( session.createQuery("select mod(3,2)").getSingleResult(), is(1) );
+					assertThat( session.createQuery("select 3%2").getSingleResult(), is(1) );
+					assertThat( session.createQuery("select sqrt(9.0)").getSingleResult(), is(3.0f) );
 				}
 		);
 	}
@@ -142,6 +158,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery("select lower(e.theString), upper(e.theString) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select lower('HELLO')").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select upper('hello')").getSingleResult(), is("HELLO") );
 				}
 		);
 	}
@@ -152,6 +170,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery("select length(e.theString) from EntityOfBasics e where length(e.theString) > 1")
 							.list();
+					assertThat( session.createQuery("select length('hello')").getSingleResult(), is(5) );
 				}
 		);
 	}
@@ -168,6 +187,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select substring(e.theString from 0 for e.theInt) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select substring('hello world',4, 5)").getSingleResult(), is("lo wo") );
 				}
 		);
 	}
@@ -178,6 +198,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery("select left(e.theString, e.theInt), right(e.theString, e.theInt) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select left('hello world', 5)").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select right('hello world', 5)").getSingleResult(), is("world") );
 				}
 		);
 	}
@@ -188,6 +210,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery("select position('hello' in e.theString) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select position('world' in 'hello world')").getSingleResult(), is(7) );
 				}
 		);
 	}
@@ -200,6 +223,7 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select locate('hello', e.theString, e.theInteger) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select locate('world', 'hello world')").getSingleResult(), is(7) );
 				}
 		);
 	}
@@ -235,6 +259,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 				session -> {
 					session.createQuery("select replace(e.theString, 'hello', 'goodbye') from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select replace('hello world', 'hello', 'goodbye')").getSingleResult(), is("goodbye world") );
+					assertThat( session.createQuery("select replace('hello world', 'o', 'ooo')").getSingleResult(), is("hellooo wooorld") );
 				}
 		);
 	}
@@ -249,6 +275,10 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select trim(both ' ' from e.theString) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select trim(leading from '   hello'").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select trim(trailing from 'hello   '").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select trim(both from '   hello   '").getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select trim(both '-' from '---hello---'").getSingleResult(), is("hello") );
 				}
 		);
 	}
@@ -327,6 +357,24 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select cast('1911-10-09 12:13:14.123' as LocalDateTime) from EntityOfBasics")
 							.list();
+
+					assertThat( session.createQuery("select cast(1 as Boolean)").getSingleResult(), is(true) );
+					assertThat( session.createQuery("select cast(0 as Boolean)").getSingleResult(), is(false) );
+					assertThat( session.createQuery("select cast('123' as Integer)").getSingleResult(), is(123) );
+					assertThat( session.createQuery("select cast('123' as Long)").getSingleResult(), is(123l) );
+					assertThat( session.createQuery("select cast('123.12' as Float)").getSingleResult(), is(123.12f) );
+//					assertThat( session.createQuery("select cast('123.12' as Double)").getSingleResult(), is(123.12d) );
+
+					assertThat( session.createQuery("select cast(123 as String)").getSingleResult(), is("123") );
+//					assertThat( session.createQuery("select cast(123.12 as String)").getSingleResult(), is("123.12") );
+
+					assertThat( session.createQuery("select cast('1911-10-09' as LocalDate)").getSingleResult(), is(LocalDate.of(1911,10,9)) );
+					assertThat( session.createQuery("select cast('12:13:14' as LocalTime)").getSingleResult(), is(LocalTime.of(12,13,14)) );
+					assertThat( session.createQuery("select cast('1911-10-09 12:13:14' as LocalDateTime)").getSingleResult(), is(LocalDateTime.of(1911,10,9,12,13,14)) );
+
+					assertThat( session.createQuery("select cast(date 1911-10-09 as String)").getSingleResult(), is("1911-10-09") );
+					assertThat( session.createQuery("select cast(time 12:13:14 as String)").getSingleResult(), is("12:13:14") );
+					assertThat( (String) session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)").getSingleResult(), startsWith("1911-10-09 12:13:14") );
 				}
 		);
 	}
@@ -339,6 +387,9 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select str(e.id), str(e.theInt), str(e.theDouble) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select str(69)").getSingleResult(), is("69") );
+					assertThat( session.createQuery("select str(date 1911-10-09)").getSingleResult(), is("1911-10-09") );
+					assertThat( session.createQuery("select str(time 12:13:14)").getSingleResult(), is("12:13:14") );
 				}
 		);
 	}
@@ -386,6 +437,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select least(0.0, e.theDouble), greatest(0.0, e.theDouble, 2.0) from EntityOfBasics e")
 							.list();
+					assertThat( session.createQuery("select least(1,2,-1,3,4)").getSingleResult(), is(-1) );
+					assertThat( session.createQuery("select greatest(1,2,-1,30,4)").getSingleResult(), is(30) );
 				}
 		);
 	}
@@ -701,6 +754,13 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select extract(week of year from current date) from EntityOfBasics e")
 							.list();
+
+					assertThat( session.createQuery("select extract(year from date 1974-03-25)").getSingleResult(), is(1974) );
+					assertThat( session.createQuery("select extract(month from date 1974-03-25)").getSingleResult(), is(3) );
+					assertThat( session.createQuery("select extract(day from date 1974-03-25)").getSingleResult(), is(25) );
+
+					assertThat( session.createQuery("select extract(hour from time 12:30)").getSingleResult(), is(12) );
+					assertThat( session.createQuery("select extract(minute from time 12:30)").getSingleResult(), is(30) );
 				}
 		);
 	}

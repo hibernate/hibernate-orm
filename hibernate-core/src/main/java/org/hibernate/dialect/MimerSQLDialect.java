@@ -34,6 +34,8 @@ public class MimerSQLDialect extends Dialect {
 
 	// * no support for format()
 	// * can't cast non-literal String to Binary
+	// * no power(), exp(), ln(), sqrt() functions
+	// * no trig functions, not even sin()
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
 

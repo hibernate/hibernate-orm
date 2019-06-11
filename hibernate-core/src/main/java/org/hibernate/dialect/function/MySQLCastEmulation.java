@@ -25,17 +25,16 @@ import java.util.List;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
- * Derby's cast() function doesn't support some
- * basic typecasts, such as casting a string to
- * a floating point value, but we make it work
- * using the double() function.
+ * MySQL's cast() function has many limitations, and, in
+ * particular, since MySQL doesn't have a proper boolean
+ * type, it can't be used to cast string data to boolean.
  *
  * @author Gavin King
  */
-public class DerbyCastEmulation
+public class MySQLCastEmulation
 		extends AbstractSqmFunctionTemplate {
 
-	public DerbyCastEmulation() {
+	public MySQLCastEmulation() {
 		super(
 				StandardArgumentsValidators.exactly( 2 ),
 				StandardFunctionReturnTypeResolvers.useArgType( 2 )
@@ -53,21 +52,16 @@ public class DerbyCastEmulation
 		AllowableFunctionReturnType<?> type = targetType.getType();
 		ExpressableType<?> argType = arg.getExpressableType();
 		SqmFunctionTemplate template;
-		if ( Float.class.equals( type.getJavaType() ) ) {
+		if ( argType!=null
+				&& String.class.equals( type.getJavaType() )
+				&& Boolean.class.equals( argType.getJavaType() ) ) {
 			template = queryEngine.getSqmFunctionRegistry()
-					.patternTemplateBuilder("cast", toFloatPattern())
-					.setInvariantType( StandardSpiBasicTypes.FLOAT )
+					.patternTemplateBuilder("cast", booleanToStringPattern())
+					.setInvariantType( StandardSpiBasicTypes.STRING )
 					.setExactArgumentCount( 2 )
 					.template();
 		}
-		else if ( Double.class.equals( type.getJavaType() ) ) {
-			template = queryEngine.getSqmFunctionRegistry()
-					.patternTemplateBuilder("cast", toDoublePattern())
-					.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-					.setExactArgumentCount( 2 )
-					.template();
-		}
-		//Identical code to MySQLCastEmulation:
+		//Identical code to DerbyCastEmulation:
 		else if ( argType!=null
 				&& Boolean.class.equals( type.getJavaType() )
 				&& Number.class.isAssignableFrom( argType.getJavaType() ) ) {
@@ -101,24 +95,20 @@ public class DerbyCastEmulation
 		);
 	}
 
-	private String defaultPattern() {
+	protected String defaultPattern() {
 		return "cast(?1 as ?2)";
 	}
 
-	private String stringToBooleanPattern() {
-		return "(lower(?1)in('t','true'))";
+	protected String stringToBooleanPattern() {
+		return "if(?1 rlike '^(t|f|true|false)$', ?1 like 't%', null)";
 	}
 
-	private String numberToBooleanPattern() {
+	protected String numberToBooleanPattern() {
 		return "(?1<>0)";
 	}
 
-	private String toDoublePattern() {
-		return "double(?1)";
-	}
-
-	private String toFloatPattern() {
-		return "cast(double(?1) as real)";
+	protected String booleanToStringPattern() {
+		return "if(?1,'true','false')";
 	}
 
 	@Override

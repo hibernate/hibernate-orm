@@ -13,6 +13,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.MimerExtractEmulation;
+import org.hibernate.dialect.function.MySQLCastEmulation;
 import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -96,6 +97,16 @@ public class MimerSQLDialect extends Dialect {
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new MimerExtractEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "cast", new MySQLCastEmulation() {
+			@Override
+			protected String stringToBooleanPattern() {
+				return "case when regexp_match(lower(?1), '^(t|f|true|false)$') then lower(?1) like 't%' else null end";
+			}
+			@Override
+			protected String booleanToStringPattern() {
+				return defaultPattern();
+			}
+		} );
 	}
 
 	@Override

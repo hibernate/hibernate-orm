@@ -10,6 +10,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FirebirdExtractEmulation;
+import org.hibernate.dialect.function.MySQLCastEmulation;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.RowsLimitHandler;
 import org.hibernate.query.TemporalUnit;
@@ -100,6 +101,17 @@ public class FirebirdDialect extends Dialect {
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new FirebirdExtractEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "cast", new MySQLCastEmulation() {
+			@Override
+			protected String stringToBooleanPattern() {
+				return "iif(lower(?1) similar to 't|f|true|false', lower(?1) like 't%', null)";
+//				return "decode(lower(?1),'t',true,'f',false,'true',true,'false',false,null)";
+			}
+			@Override
+			protected String booleanToStringPattern() {
+				return "trim(decode(?1,0,'false','true'))";
+			}
+		} );
 	}
 
 	@Override

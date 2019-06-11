@@ -11,13 +11,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.MySQLCastEmulation;
 import org.hibernate.dialect.function.MySQLExtractEmulation;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -33,7 +33,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -212,6 +211,7 @@ public class MySQLDialect extends Dialect {
 		}
 
 		queryEngine.getSqmFunctionRegistry().register( "extract", new MySQLExtractEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "cast", new MySQLCastEmulation() );
 	}
 
 	@Override
@@ -449,6 +449,9 @@ public class MySQLDialect extends Dialect {
 			case Types.TINYINT:
 				//MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
 				return "signed";
+			case Types.BIT:
+				//special case for casting to Boolean
+				return "unsigned";
 			case Types.FLOAT:
 			case Types.DOUBLE:
 			case Types.REAL:

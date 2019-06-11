@@ -44,6 +44,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
@@ -150,6 +151,18 @@ public class DerbyDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
 		queryEngine.getSqmFunctionRegistry().register( "extract", new DerbyExtractEmulation() );
+
+		//no way I can see to pad with anything other than spaces
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "lpad", "case when length(?1)<?2 then substr(char('',?2)||?1,length(?1)) else ?1 end" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, length)")
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "rpad", "case when length(?1)<?2 then substr(?1||char('',?2),1,?2) else ?1 end" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, length)")
+				.register();
 	}
 
 	@Override

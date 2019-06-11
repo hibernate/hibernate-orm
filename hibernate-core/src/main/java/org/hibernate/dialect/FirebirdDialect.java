@@ -42,7 +42,6 @@ public class FirebirdDialect extends Dialect {
 	//   making BigInteger/BigDecimal support useless
 	// * can't select a parameter unless wrapped in a
 	//   cast (not even when wrapped in a function call)
-	// * no support for pooled sequences
 
 	public FirebirdDialect() {
 		super();
@@ -180,8 +179,28 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsPooledSequences() {
+		return true;
+	}
+
+	@Override
+	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) {
+		return new String[] {
+				getCreateSequenceString( sequenceName ),
+				"alter sequence " + sequenceName + " restart with " + initialValue
+		};
+	}
+
+	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "select " + getSelectSequenceNextValString( sequenceName ) + " " + getFromDual();
+	}
+
+	@Override
+	public String getSequenceNextValString(String sequenceName, int increment) {
+		return increment == 1
+				? getSequenceNextValString( sequenceName )
+				: "select gen_id(" + sequenceName + "," + increment + ") " + getFromDual();
 	}
 
 	@Override

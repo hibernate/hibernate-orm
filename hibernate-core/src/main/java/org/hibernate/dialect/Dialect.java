@@ -1190,6 +1190,21 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Generate the appropriate select statement to to retrieve the next value
+	 * of a sequence.
+	 * <p/>
+	 * This should be a "stand alone" select statement.
+	 *
+	 * @param sequenceName the name of the sequence
+	 * @param increment the increment, in case it needs to be passed explicitly
+	 * @return String The "nextval" select string.
+	 * @throws MappingException If sequences are not supported.
+	 */
+	public String getSequenceNextValString(String sequenceName, int increment) throws MappingException {
+		return getSequenceNextValString( sequenceName );
+	}
+
+	/**
 	 * Generate the select expression fragment that will retrieve the next
 	 * value of a sequence as part of another (typically DML) statement.
 	 * <p/>

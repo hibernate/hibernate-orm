@@ -141,7 +141,7 @@ public class SequenceStructure implements DatabaseStructure {
 	@Override
 	public void registerExportables(Database database) {
 		buildSequence( database );
-		this.sql = database.getJdbcEnvironment().getDialect().getSequenceNextValString( sequenceName );
+		this.sql = database.getJdbcEnvironment().getDialect().getSequenceNextValString( sequenceName, incrementSize );
 	}
 
 	@Override

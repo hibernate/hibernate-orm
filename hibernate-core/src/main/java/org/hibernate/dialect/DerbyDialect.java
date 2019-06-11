@@ -147,6 +147,7 @@ public class DerbyDialect extends Dialect {
 		CommonFunctionFactory.varPopSamp( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.leftRight_substrLength( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );

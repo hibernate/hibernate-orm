@@ -136,8 +136,8 @@ public class HSQLDialect extends Dialect {
 			final String versionString = (String) props.getDeclaredField("THIS_VERSION").get( null );
 
 			return Integer.parseInt( versionString.substring(0, 1) ) * 100
-				 + Integer.parseInt( versionString.substring(2, 3) ) * 10
-				 + Integer.parseInt( versionString.substring(4, 5) );
+				+  Integer.parseInt( versionString.substring(2, 3) ) * 10
+				+  Integer.parseInt( versionString.substring(4, 5) );
 		}
 		catch (Throwable e) {
 			// might be a very old version, or not accessible in class path

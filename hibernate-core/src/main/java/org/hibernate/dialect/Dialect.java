@@ -620,6 +620,10 @@ public abstract class Dialect implements ConversionContext {
 		return instantiateDialect( dialectName );
 	}
 
+	/**
+	 * @deprecated this just calls the default constructor and does not pass in the
+	 *             {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
+	 */
 	@Deprecated
 	private static Dialect instantiateDialect(String dialectName) throws HibernateException {
 		if ( dialectName == null ) {
@@ -1994,6 +1998,7 @@ public abstract class Dialect implements ConversionContext {
 	 * for handling this dialect's variations in how joins are handled.
 	 *
 	 * @return This dialect's {@link org.hibernate.sql.JoinFragment} strategy.
+	 * @deprecated migrating away from deprecated {@link JoinFragment}
 	 */
 	@Deprecated
 	public JoinFragment createOuterJoinFragment() {
@@ -2006,6 +2011,7 @@ public abstract class Dialect implements ConversionContext {
 	 * handled.
 	 *
 	 * @return This dialect's {@link org.hibernate.sql.CaseFragment} strategy.
+	 * @deprecated migrating away from deprecated {@link CaseFragment}
 	 */
 	@Deprecated
 	public CaseFragment createCaseFragment() {

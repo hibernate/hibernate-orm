@@ -65,6 +65,7 @@ public class DerbyDialect extends Dialect {
 	// * no round() function
 	// * pad() can only pad with blanks
 	// * can't cast() a String to Float/Double (TODO: emulate this)
+	// * can't cast String to Binary
 
 	private final int version;
 

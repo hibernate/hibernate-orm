@@ -33,6 +33,7 @@ public class MimerSQLDialect extends Dialect {
 	// KNOWN LIMITATIONS:
 
 	// * no support for format()
+	// * can't cast non-literal String to Binary
 
 	public MimerSQLDialect() {
 		super();

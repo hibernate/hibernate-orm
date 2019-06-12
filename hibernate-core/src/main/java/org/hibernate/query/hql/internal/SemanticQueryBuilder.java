@@ -54,7 +54,6 @@ import org.hibernate.metamodel.model.domain.spi.PluralValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.QueryLogger;
-import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.hql.DotIdentifierConsumer;
 import org.hibernate.query.spi.ComparisonOperator;
@@ -2493,169 +2492,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return expressionToExtract;
 		}
 
-		TemporalUnit unit = extractFieldExpression.getUnit();
-		switch ( unit ) {
-			case NANOSECOND:
-				return extractNanoseconds( expressionToExtract );
-			case OFFSET:
-				// use format(arg, 'xxx') to get the offset
-				return extractOffsetUsingFormat( expressionToExtract );
-			case DATE:
-			case TIME:
-				// use cast(arg as Type) to get the date or time part
-				// which might be javax.sql.Date / javax.sql.Time or
-				// java.time.LocalDate / java.time.LocalTime depending
-				// on the type of the expression we're extracting from
-				return extractDateOrTimeUsingCast(
-						expressionToExtract,
-						extractFieldExpression.getType()
-				);
-			case WEEK_OF_MONTH:
-				// use ceiling(extract(day of month, arg)/7.0)
-				return extractWeek( expressionToExtract, DAY_OF_MONTH );
-			case WEEK_OF_YEAR:
-				// use ceiling(extract(day of year, arg)/7.0)
-				return extractWeek( expressionToExtract, DAY_OF_YEAR );
-			default:
-				// otherwise it's something we expect the SQL dialect
-				// itself to understand, either natively, or via the
-				// registered function template for extract()
-				return getFunctionTemplate("extract").makeSqmFunctionExpression(
-						asList( extractFieldExpression, expressionToExtract ),
-						extractFieldExpression.getType(),
-						creationContext.getQueryEngine(),
-						creationContext.getDomainModel().getTypeConfiguration()
-				);
-		}
-	}
-
-	private SqmExpression<Long> toLong(SqmExpression<?> arg) {
-		//Not every database supports round() (looking at you Derby)
-		//so use floor() instead, which is perfectly fine for this
-//		return getFunctionTemplate("round").makeSqmFunctionExpression(
-//				asList( arg, integerLiteral("0") ),
-//				basicType( Long.class ),
-//				creationContext.getQueryEngine(),
-//				creationContext.getDomainModel().getTypeConfiguration()
-//		);
-		return getFunctionTemplate("floor").makeSqmFunctionExpression(
-				arg,
-				basicType( Long.class ),
+		return getFunctionTemplate("extract").makeSqmFunctionExpression(
+				asList( extractFieldExpression, expressionToExtract ),
+				extractFieldExpression.getType(),
 				creationContext.getQueryEngine(),
 				creationContext.getDomainModel().getTypeConfiguration()
-		);
-	}
-
-	private SqmExpression<Long> extractNanoseconds(
-			SqmExpression<?> expressionToExtract) {
-		return toLong(
-				new SqmBinaryArithmetic<>(
-						BinaryArithmeticOperator.MULTIPLY,
-						getFunctionTemplate("extract").makeSqmFunctionExpression(
-								asList(
-										new SqmExtractUnit<>(
-											SECOND,
-											basicType( Float.class),
-											creationContext.getNodeBuilder()
-										),
-										expressionToExtract
-								),
-								basicType( Float.class ),
-								creationContext.getQueryEngine(),
-								creationContext.getDomainModel().getTypeConfiguration()
-						),
-						floatLiteral("1e9"),
-						basicType( Float.class ),
-						creationContext.getNodeBuilder()
-				)
-		);
-	}
-
-	private SqmExpression<ZoneOffset> extractOffsetUsingFormat(
-			SqmExpression<?> expressionToExtract) {
-		return getFunctionTemplate("format").makeSqmFunctionExpression(
-				asList(
-						expressionToExtract,
-						new SqmFormat(
-								"xxx", //pattern for timezone offset
-								basicType( String.class ),
-								creationContext.getNodeBuilder()
-						)
-				),
-				basicType( ZoneOffset.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getDomainModel().getTypeConfiguration()
-		);
-	}
-
-	private SqmExpression<?> extractDateOrTimeUsingCast(
-			SqmExpression<?> expressionToExtract,
-			AllowableFunctionReturnType<?> type) {
-		return getFunctionTemplate("cast").makeSqmFunctionExpression(
-				asList(
-						expressionToExtract,
-						new SqmCastTarget<>(
-								type,
-								creationContext.getNodeBuilder()
-						)
-				),
-				type,
-				creationContext.getQueryEngine(),
-				creationContext.getDomainModel().getTypeConfiguration()
-		);
-	}
-
-	private SqmExpression<Integer> extractWeek(
-			SqmExpression<?> expressionToExtract,
-			TemporalUnit dayOf) {
-		BasicValuedExpressableType<Integer> intType = basicType( Integer.class );
-		return new SqmBinaryArithmetic<>(
-				BinaryArithmeticOperator.ADD,
-				getFunctionTemplate("ceiling").makeSqmFunctionExpression(
-						new SqmBinaryArithmetic<>(
-								BinaryArithmeticOperator.DIVIDE,
-								new SqmBinaryArithmetic<>(
-										BinaryArithmeticOperator.SUBTRACT,
-										getFunctionTemplate("extract").makeSqmFunctionExpression(
-												asList(
-														new SqmExtractUnit<>(
-																dayOf,
-																intType,
-																creationContext.getNodeBuilder()
-														),
-														expressionToExtract
-												),
-												intType,
-												creationContext.getQueryEngine(),
-												creationContext.getDomainModel().getTypeConfiguration()
-										),
-										getFunctionTemplate("extract").makeSqmFunctionExpression(
-												asList(
-														new SqmExtractUnit<>(
-																DAY_OF_WEEK,
-																intType,
-																creationContext.getNodeBuilder()
-														),
-														expressionToExtract
-												),
-												intType,
-												creationContext.getQueryEngine(),
-												creationContext.getDomainModel().getTypeConfiguration()
-										),
-										intType,
-										creationContext.getNodeBuilder()
-								),
-								floatLiteral("7.0"),
-								basicType( Float.class ),
-								creationContext.getNodeBuilder()
-						),
-						intType,
-						creationContext.getQueryEngine(),
-						creationContext.getDomainModel().getTypeConfiguration()
-				),
-				integerLiteral("1"),
-				intType,
-				creationContext.getNodeBuilder()
 		);
 	}
 

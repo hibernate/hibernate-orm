@@ -138,11 +138,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getNullColumnString() {
-		return "";
-	}
-
-	@Override
 	public boolean qualifyIndexName() {
 		return false;
 	}

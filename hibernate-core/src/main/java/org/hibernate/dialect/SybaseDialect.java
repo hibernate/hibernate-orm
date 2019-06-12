@@ -10,8 +10,6 @@ import java.sql.Types;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;

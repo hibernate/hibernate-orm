@@ -98,13 +98,13 @@ public class MySQLDialect extends Dialect {
 
 		registerColumnType( Types.VARCHAR, "longtext" );
 //		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
-//		registerColumnType( Types.VARCHAR, 65535, "text" );
+//		registerColumnType( Types.VARCHAR, maxVarcharLen, "text" );
 		registerColumnType( Types.VARCHAR, maxVarcharLen, "varchar($l)" );
 		registerColumnType( Types.LONGVARCHAR, "longtext" );
 
 		registerColumnType( Types.VARBINARY, "longblob" );
 //		registerColumnType( Types.VARBINARY, 16777215, "mediumblob" );
-//		registerColumnType( Types.VARBINARY, 65535, "bloc" );
+//		registerColumnType( Types.VARBINARY, maxVarcharLen, "blob" );
 		registerColumnType( Types.VARBINARY, maxVarcharLen, "varbinary($l)" );
 		registerColumnType( Types.LONGVARBINARY, "longblob" );
 
@@ -121,10 +121,10 @@ public class MySQLDialect extends Dialect {
 
 		registerColumnType( Types.BLOB, "longblob" );
 //		registerColumnType( Types.BLOB, 16777215, "mediumblob" );
-//		registerColumnType( Types.BLOB, 65535, "blob" );
+//		registerColumnType( Types.BLOB, maxVarcharLen, "blob" );
 		registerColumnType( Types.CLOB, "longtext" );
 //		registerColumnType( Types.CLOB, 16777215, "mediumtext" );
-//		registerColumnType( Types.CLOB, 65535, "text" );
+//		registerColumnType( Types.CLOB, maxVarcharLen, "text" );
 		registerColumnType( Types.NCLOB, "longtext" );
 
 		if ( getVersion() >= 570) {

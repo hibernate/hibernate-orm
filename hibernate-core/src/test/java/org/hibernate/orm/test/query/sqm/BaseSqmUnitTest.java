@@ -69,4 +69,9 @@ public abstract class BaseSqmUnitTest
 	public Integer getMaximumFetchDepth() {
 		return sessionFactory().getMaximumFetchDepth();
 	}
+
+	@Override
+	public QueryEngine getQueryEngine() {
+		return sessionFactory().getQueryEngine();
+	}
 }

@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.produce.spi;
 
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -21,4 +22,6 @@ public interface SqlAstCreationContext {
 	ServiceRegistry getServiceRegistry();
 
 	Integer getMaximumFetchDepth();
+
+	QueryEngine getQueryEngine();
 }

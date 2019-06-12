@@ -17,6 +17,8 @@ import java.util.function.Supplier;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.dialect.function.TimestampaddFunction;
+import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.util.collections.Stack;
@@ -26,6 +28,7 @@ import org.hibernate.metamodel.model.domain.spi.EmbeddedValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.ComparisonOperator;
@@ -83,6 +86,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.internal.SqlAstQuerySpecProcessingStateImpl;
@@ -150,7 +154,6 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
-import static org.hibernate.query.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.TemporalUnit.DAY;
@@ -605,33 +608,28 @@ public abstract class BaseSqmToSqlAstConverter
 				// we're adding this variable duration to the
 				// given date or timestamp, producing an
 				// adjusted date or timestamp
-				return new BinaryArithmeticExpression(
-						adjustedTimestamp,
-						ADD,
-						new Duration(
-								scaledExpression,
-								NANOSECOND,
-								scaledExpression.getType()
-						),
-						adjustedTimestamp.getType()
+				return timestampadd().expression(
+						new ExtractUnit( NANOSECOND, basicType( Long.class ) ),
+						scaledExpression,
+						adjustedTimestamp
 				);
 			}
 			else if ( appliedByUnit != null ) {
-				TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
 				// we're applying the 'by unit' operator,
 				// producing a literal scalar value, so
 				// we must convert this duration from
 				// nanoseconds to the given unit
-				return new Conversion(
-						new Duration(
-								scaledExpression,
-								NANOSECOND,
-								scaledExpression.getType()
-						),
-						appliedByUnit.getUnit().getUnit(),
+
+				SqlExpressableType durationType = scaledExpression.getType();
+				Duration duration = new Duration( scaledExpression, NANOSECOND, durationType);
+
+				TemporalUnit appliedUnit = appliedByUnit.getUnit().getUnit();
+				TypeConfiguration typeConfiguration =
+						getCreationContext().getDomainModel().getTypeConfiguration();
+				SqlExpressableType scalarType =
 						appliedByUnit.getExpressableType()
-								.getSqlExpressableType( typeConfiguration )
-				);
+								.getSqlExpressableType( typeConfiguration );
+				return new Conversion( duration, appliedUnit, scalarType );
 			}
 			else {
 				// a "bare" Duration value in nanoseconds
@@ -844,40 +842,28 @@ public abstract class BaseSqmToSqlAstConverter
 			if ( appliedByUnit != null ) {
 				throw new IllegalStateException();
 			}
-			return new BinaryArithmeticExpression(
-					adjustedTimestamp,
-					BinaryArithmeticOperator.ADD,
-					new Duration(
-							scaledMagnitude,
-							unit.getUnit(),
-							toDuration.getExpressableType().getSqlExpressableType()
-					),
-					adjustedTimestamp.getType()
-			);
-		}
-		else if ( appliedByUnit != null ) {
-			TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
-			// we're applying the 'by unit' operator,
-			// producing a literal scalar value in
-			// the given unit
-			return new Conversion(
-					new Duration(
-							scaledMagnitude,
-							unit.getUnit(),
-							toDuration.getExpressableType().getSqlExpressableType()
-					),
-					appliedByUnit.getUnit().getUnit(),
-					appliedByUnit.getExpressableType()
-							.getSqlExpressableType( typeConfiguration )
-			);
+			return timestampadd().expression( unit, scaledMagnitude, adjustedTimestamp );
 		}
 		else {
-			// a "bare" Duration value (gets rendered as nanoseconds)
-			return new Duration(
-					scaledMagnitude,
-					unit.getUnit(),
-					toDuration.getExpressableType().getSqlExpressableType()
-			);
+			SqlExpressableType durationType = toDuration.getExpressableType().getSqlExpressableType();
+			Duration duration = new Duration( scaledMagnitude, unit.getUnit(), durationType );
+
+			if ( appliedByUnit != null ) {
+				// we're applying the 'by unit' operator,
+				// producing a literal scalar value in
+				// the given unit
+				TemporalUnit appliedUnit = appliedByUnit.getUnit().getUnit();
+				TypeConfiguration typeConfiguration =
+						getCreationContext().getDomainModel().getTypeConfiguration();
+				SqlExpressableType scalarType =
+						appliedByUnit.getExpressableType()
+								.getSqlExpressableType( typeConfiguration );
+				return new Conversion( duration, appliedUnit, scalarType );
+			}
+			else {
+				// a "bare" Duration value (gets rendered as nanoseconds)
+				return duration;
+			}
 		}
 	}
 
@@ -984,6 +970,10 @@ public abstract class BaseSqmToSqlAstConverter
 
 	private UnaryArithmeticOperator interpret(UnaryArithmeticOperator operator) {
 		return operator;
+	}
+
+	private <J> SqlExpressableType basicType(Class<J> javaType) {
+		return creationContext.getDomainModel().getTypeConfiguration().standardExpressableTypeForJavaType( javaType ).getSqlExpressableType();
 	}
 
 	@Override
@@ -1130,18 +1120,20 @@ public abstract class BaseSqmToSqlAstConverter
 		// must apply the scale, and the 'by unit'
 		// ts1 - ts2
 
-		BinaryArithmeticExpression difference = cleanly(() ->
-				new BinaryArithmeticExpression(
-						toSqlExpression( expression.getLeftHandOperand().accept(this) ),
-						operator,
-						toSqlExpression( expression.getRightHandOperand().accept(this) ),
-						expression.getExpressableType().getSqlExpressableType()
-				)
-		);
+		Expression left = cleanly(() -> toSqlExpression( expression.getLeftHandOperand().accept(this) ));
+		Expression right = cleanly(() -> toSqlExpression( expression.getRightHandOperand().accept(this) ));
 
 		TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
-		boolean leftTimestamp = typeConfiguration.isTimestampType( expression.getLeftHandOperand().getExpressableType()) ;
+		boolean leftTimestamp = typeConfiguration.isTimestampType( expression.getLeftHandOperand().getExpressableType() ) ;
 		boolean rightTimestamp = typeConfiguration.isTimestampType( expression.getRightHandOperand().getExpressableType() );
+
+		// even though no database really supports
+		// nanosecond precision for timestamps, the
+		// "native" precision of the Java Duration
+		// type is nanoseconds, so we use it here,
+		// unless we're dealing with Dates
+
+		TemporalUnit baseUnit = rightTimestamp || leftTimestamp ? NANOSECOND : DAY;
 
 		if (adjustedTimestamp != null) {
 			if ( appliedByUnit != null ) {
@@ -1150,48 +1142,40 @@ public abstract class BaseSqmToSqlAstConverter
 			// we're using the resulting duration to
 			// adjust a date or timestamp on the left
 
-			return new BinaryArithmeticExpression(
-					adjustedTimestamp,
-					ADD,
-					new Duration(
-							applyScale( difference ),
-							// even though no database supports
-							// nanosecond precision for timestamps,
-							// the "native" precision of the Java
-							// Duration type is nanoseconds, so we
-							// need to use it here to bypass the
-							// conversion to nanoseconds that
-							// happens in AbstractSqlAstWalker
-							rightTimestamp || leftTimestamp ? NANOSECOND : DAY,
-							expression.getExpressableType().getSqlExpressableType()
-					),
-					adjustedTimestamp.getType()
-			);
+			// baseUnit is the finest resolution for the
+			// temporal type, so we must use it for both
+			// the diff, and then the subsequent add
+
+			ExtractUnit unit = new ExtractUnit( baseUnit, basicType(Integer.class) );
+			Expression scaledMagnitude = applyScale( timestampdiff().expression( unit, right, left ) );
+			return timestampadd().expression( unit, scaledMagnitude, adjustedTimestamp );
 		}
 		else if (appliedByUnit != null) {
 			// we're immediately converting the resulting
 			// duration to a scalar in the given unit
-			return applyScale(
-					new Conversion( //this is only a conversion of type, not of unit!
-							new Duration(
-									difference,
-									appliedByUnit.getUnit().getUnit(),
-									expression.getExpressableType().getSqlExpressableType()
-							),
-							appliedByUnit.getUnit().getUnit(),
-							appliedByUnit.getExpressableType()
-									.getSqlExpressableType( typeConfiguration )
-					)
-			);
+
+			ExtractUnit unit = (ExtractUnit) appliedByUnit.getUnit().accept(this);
+			return applyScale( timestampdiff().expression( unit, right, left ) );
 		}
 		else {
 			// a plain "bare" Duration
-			return new Duration(
-					applyScale(difference),
-					rightTimestamp || leftTimestamp ? NANOSECOND : DAY,
-					expression.getExpressableType().getSqlExpressableType()
-			);
+			ExtractUnit unit = new ExtractUnit( baseUnit, basicType(Integer.class) );
+			SqlExpressableType durationType = expression.getExpressableType().getSqlExpressableType();
+			Expression scaledMagnitude = applyScale( timestampdiff().expression( unit, right, left)  );
+			return new Duration( scaledMagnitude, baseUnit, durationType );
 		}
+	}
+
+	private TimestampaddFunction timestampadd() {
+		return (TimestampaddFunction)
+				getCreationContext().getQueryEngine().getSqmFunctionRegistry()
+						.findFunctionTemplate("timestampadd");
+	}
+
+	private TimestampdiffFunction timestampdiff() {
+		return (TimestampdiffFunction)
+				getCreationContext().getQueryEngine().getSqmFunctionRegistry()
+						.findFunctionTemplate("timestampdiff");
 	}
 
 	private <T> T cleanly(Supplier<T> supplier) {

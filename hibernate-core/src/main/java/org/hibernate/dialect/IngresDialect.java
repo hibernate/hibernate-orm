@@ -213,25 +213,14 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("timestampadd(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		magnitude.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		return "timestampadd(?1, ?2, ?3)";
+
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("timestampdiff(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		return "timestampdiff(?1, ?2, ?3)";
 	}
 
 	@Override

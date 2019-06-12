@@ -37,6 +37,7 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -448,11 +449,17 @@ public abstract class Dialect implements ConversionContext {
 
 		queryEngine.getSqmFunctionRegistry().register("overlay", new InsertSubstringOverlayEmulation());
 
-		//ANSI SQL functions with weird syntax, supported on all the databases
-		//we care most about
+		//ANSI SQL trim() function is supported on almost all of the databases
+		//we care about, but on some it must be emulated using ltrim(), rtrim(),
+		//and replace()
 
 		CommonFunctionFactory.trim(queryEngine);
-		CommonFunctionFactory.cast(queryEngine);
+
+		//ANSI SQL cast() function is supported on the databases we care most
+		//about but in certain cases it doesn't allow some useful typecasts,
+		//which must be emulated in a dialect-specific way
+
+		queryEngine.getSqmFunctionRegistry().register("cast", new CastFunction(this));
 
 		//ANSI SQL extract() function is supported on the databases we care most
 		//about (though it is called datepart() in some of them) but HQL defines
@@ -515,14 +522,6 @@ public abstract class Dialect implements ConversionContext {
 		queryEngine.getSqmFunctionRegistry().register("current instant", new CurrentFunction("current instant", currentTimestamp(), StandardSpiBasicTypes.INSTANT) );
 	}
 
-	public interface Renderer {
-		void render();
-	}
-
-	public interface Appender {
-		void append(String text);
-	}
-
 	public String currentDate() {
 		return "current_date";
 	}
@@ -548,60 +547,127 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Write SQL equivalent to an extract() function to
-	 * the given {@link Appender}.
+	 * Obtain a pattern for the SQL equivalent to an
+	 * {@code extract()} function call. The resulting
+	 * pattern must contain ?1 and ?2 placeholders
+	 * for the arguments.
 	 *
-	 * @param unit the first argument of extract()
-	 * @param from the second argument of extract()
-	 * @param appender an {@link Appender} to write to
+	 * @param unit the first argument
 	 */
-	public void extract(
-			TemporalUnit unit,
-			Renderer from,
-			Appender appender) {
-		appender.append("extract(");
-		appender.append( translateExtractField(unit) );
-		appender.append(" from ");
-		from.render();
-		appender.append(")");
+	public String extract(TemporalUnit unit) {
+		return "extract(?1 from ?2)";
 	}
+
 	/**
-	 * Write SQL equivalent to a timestampdiff() function
-	 * to the given {@link Appender}.
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code cast()} function call. The resulting
+	 * pattern must contain ?1 and ?2 placeholders
+	 * for the arguments.
+	 */
+	public String cast() {
+		return "cast(?1 as ?2)";
+	}
+
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code cast()} function call casting a boolean
+	 * to the string type. The resulting pattern
+	 * must contain ?1 and ?2 placeholders for the
+	 * arguments.
 	 *
-	 * @param unit the first argument of timestampdiff()
-	 * @param from the second argument of timestampdiff()
-	 * @param to the third argument of timestampdiff()
-	 * @param appender an {@link Appender} to write to
+	 * This is necessary because many databases don't
+	 * have a real boolean type, and so we're using
+	 * a numeric or bit type to hold boolean values.
+	 */
+	public String castBooleanToString() {
+		return cast();
+	}
+
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code cast()} function call casting a string
+	 * to the boolean type. The resulting pattern
+	 * must contain ?1 and ?2 placeholders for the
+	 * arguments.
+	 *
+	 * This is necessary because many databases don't
+	 * have a real boolean type, and so we're using
+	 * a numeric or bit type to hold boolean values.
+	 */
+	public String castStringToBoolean() {
+		return cast();
+	}
+
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code cast()} function call casting a number
+	 * to the boolean type. The resulting pattern
+	 * must contain ?1 and ?2 placeholders for the
+	 * arguments.
+	 *
+	 * This is necessary because many databases don't
+	 * have a real boolean type, and so we're using
+	 * a numeric or bit type to hold boolean values.
+	 */
+	public String castNumberToBoolean() {
+		return cast();
+	}
+
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code cast()} function call casting a string
+	 * to the double type. The resulting pattern
+	 * must contain ?1 and ?2 placeholders for the
+	 * arguments.
+	 *
+	 * This is necessary because one database (Derby)
+	 * doesn't support this.
+	 */
+	public String castStringToDouble() {
+		return cast();
+	}
+
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code cast()} function call casting a string
+	 * to the float type. The resulting pattern
+	 * must contain ?1 and ?2 placeholders for the
+	 * arguments.
+	 *
+	 * This is necessary because one database (Derby)
+	 * doesn't support this.
+	 */
+	public String castStringToFloat() {
+		return cast();
+	}
+
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code timestampdiff()} function call. The resulting
+	 * pattern must contain ?1, ?2, and ?3 placeholders
+	 * for the arguments.
+	 *
+	 * @param unit the first argument
 	 * @param fromTimestamp true if the first argument is
 	 *                      a timestamp, false if a date
 	 * @param toTimestamp true if the second argument is
 	 *                    a timestamp, false if a date
 	 */
-	public void timestampdiff(
-			TemporalUnit unit,
-			Renderer from, Renderer to,
-			Appender appender,
-			boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
 	/**
-	 * Write SQL equivalent to a timestampadd() function
-	 * to the given {@link Appender}.
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code timestampadd()} function call. The resulting
+	 * pattern must contain ?1, ?2, and ?3 placeholders
+	 * for the arguments.
 	 *
-	 * @param unit the first argument of timestampdiff()
-	 * @param magnitude the second argument of timestampdiff()
-	 * @param to the third argument of timestampdiff()
-	 * @param sqlAppender an {@link Appender} to write to
-	 * @param timestamp true if the second argument is a
+	 * @param unit the first argument
+	 * @param timestamp true if the third argument is a
 	 *                  timestamp, false if a date
 	 */
-	public void timestampadd(
-			TemporalUnit unit,
-			Renderer magnitude, Renderer to,
-			Appender sqlAppender,
-			boolean timestamp) {
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
 		throw new NotYetImplementedFor6Exception();
 	}
 

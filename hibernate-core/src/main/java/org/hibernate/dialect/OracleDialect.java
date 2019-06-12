@@ -232,53 +232,30 @@ public class OracleDialect extends Dialect {
 	 * and {@link TemporalUnit#WEEK}.
 	 */
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+	public String extract(TemporalUnit unit) {
 		switch (unit) {
 			case DAY_OF_WEEK:
-				appender.append("to_number(to_char(");
-				from.render();
-				appender.append(",'D'))");
-				break;
+				return "to_number(to_char(?2,'D'))";
 			case DAY_OF_MONTH:
-				appender.append("to_number(to_char(");
-				from.render();
-				appender.append(",'DD'))");
-				break;
+				return "to_number(to_char(?2,'DD'))";
 			case DAY_OF_YEAR:
-				appender.append("to_number(to_char(");
-				from.render();
-				appender.append(",'DDD'))");
-				break;
+				return "to_number(to_char(?2,'DDD'))";
 			case WEEK:
-				appender.append("to_number(to_char(");
-				from.render();
-				appender.append(",'IW'))"); //the ISO week number
-				break;
+				return "to_number(to_char(?2,'IW'))"; //the ISO week number
 			default:
-				super.extract(unit, from, appender);
+				return super.extract(unit);
 		}
 	}
 
 	@Override
-	public void timestampadd(
-			TemporalUnit unit,
-			Renderer magnitude,
-			Renderer to,
-			Appender sqlAppender,
-			boolean timestamp) {
-		sqlAppender.append("(");
-		to.render();
-		boolean subtract = false;
-//		if ( magnitude.startsWith("-") ) {
-//			subtract = true;
-//			magnitude = magnitude.substring(1);
-//		}
-		sqlAppender.append(subtract ? " - " : " + ");
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		StringBuilder pattern = new StringBuilder();
+		pattern.append("(?3 + ");
 		switch ( unit ) {
 			case YEAR:
 			case QUARTER:
 			case MONTH:
-				sqlAppender.append("numtoyminterval");
+				pattern.append("numtoyminterval");
 				break;
 			case WEEK:
 			case DAY:
@@ -286,138 +263,134 @@ public class OracleDialect extends Dialect {
 			case MINUTE:
 			case SECOND:
 			case NANOSECOND:
-				sqlAppender.append("numtodsinterval");
+				pattern.append("numtodsinterval");
 				break;
 			default:
 				throw new SemanticException(unit + " is not a legal field");
 		}
-		sqlAppender.append("(");
+		pattern.append("(");
 		switch ( unit ) {
 			case QUARTER:
-				sqlAppender.append("3*(");
+				pattern.append("3*(");
 				break;
 			case WEEK:
-				sqlAppender.append("7*(");
+				pattern.append("7*(");
 				break;
 			case NANOSECOND:
-				sqlAppender.append("1e-9*(");
+				pattern.append("1e-9*(");
 				break;
 		}
-		magnitude.render();
+		pattern.append("?2");
 		switch ( unit ) {
 			case NANOSECOND:
 			case QUARTER:
 			case WEEK:
-				sqlAppender.append(")");
+				pattern.append(")");
 				break;
 		}
-		sqlAppender.append(",'");
+		pattern.append(",'");
 		switch ( unit ) {
 			case QUARTER:
-				sqlAppender.append("month");
+				pattern.append("month");
 				break;
 			case WEEK:
-				sqlAppender.append("day");
+				pattern.append("day");
 				break;
 			case NANOSECOND:
-				sqlAppender.append("second");
+				pattern.append("second");
 				break;
 			default:
-				sqlAppender.append( unit.toString() );
+				pattern.append("?1");
 		}
-		sqlAppender.append("')");
-		sqlAppender.append(")");
+		pattern.append("')");
+		pattern.append(")");
+		return pattern.toString();
 	}
 
 	@Override
-	public void timestampdiff(
+	public String timestampdiff(
 			TemporalUnit unit,
-			Renderer from, Renderer to,
-			Appender sqlAppender,
 			boolean fromTimestamp, boolean toTimestamp) {
+		StringBuilder pattern = new StringBuilder();
 		boolean timestamp = toTimestamp || fromTimestamp;
 		switch (unit) {
 			case YEAR:
-				extractField(sqlAppender, from, to, YEAR, unit);
+				extractField(pattern, YEAR, unit);
 				break;
 			case QUARTER:
 			case MONTH:
-				sqlAppender.append("(");
-				extractField(sqlAppender, from, to, YEAR, unit);
-				sqlAppender.append("+");
-				extractField(sqlAppender, from, to, MONTH, unit);
-				sqlAppender.append(")");
+				pattern.append("(");
+				extractField(pattern, YEAR, unit);
+				pattern.append("+");
+				extractField(pattern, MONTH, unit);
+				pattern.append(")");
 				break;
 			case WEEK:
 			case DAY:
-				extractField(sqlAppender, from, to, DAY, unit);
+				extractField(pattern, DAY, unit);
 				break;
 			case HOUR:
-				sqlAppender.append("(");
-				extractField(sqlAppender, from, to, DAY, unit);
+				pattern.append("(");
+				extractField(pattern, DAY, unit);
 				if (timestamp) {
-					sqlAppender.append("+");
-					extractField(sqlAppender, from, to, HOUR, unit);
+					pattern.append("+");
+					extractField(pattern, HOUR, unit);
 				}
-				sqlAppender.append(")");
+				pattern.append(")");
 				break;
 			case MINUTE:
-				sqlAppender.append("(");
-				extractField(sqlAppender, from, to, DAY, unit);
+				pattern.append("(");
+				extractField(pattern, DAY, unit);
 				if (timestamp) {
-					sqlAppender.append("+");
-					extractField(sqlAppender, from, to, HOUR, unit);
-					sqlAppender.append("+");
-					extractField(sqlAppender, from, to, MINUTE, unit);
+					pattern.append("+");
+					extractField(pattern, HOUR, unit);
+					pattern.append("+");
+					extractField(pattern, MINUTE, unit);
 				}
-				sqlAppender.append(")");
+				pattern.append(")");
 				break;
 			case NANOSECOND:
 			case SECOND:
-				sqlAppender.append("(");
-				extractField(sqlAppender, from, to, DAY, unit);
+				pattern.append("(");
+				extractField(pattern, DAY, unit);
 				if (timestamp) {
-					sqlAppender.append("+");
-					extractField(sqlAppender, from, to, HOUR, unit);
-					sqlAppender.append("+");
-					extractField(sqlAppender, from, to, MINUTE, unit);
-					sqlAppender.append("+");
-					extractField(sqlAppender, from, to, SECOND, unit);
+					pattern.append("+");
+					extractField(pattern, HOUR, unit);
+					pattern.append("+");
+					extractField(pattern, MINUTE, unit);
+					pattern.append("+");
+					extractField(pattern, SECOND, unit);
 				}
-				sqlAppender.append(")");
+				pattern.append(")");
 				break;
 			default:
 				throw new SemanticException("unrecognized field: " + unit);
 		}
+		return pattern.toString();
 	}
 
 	void extractField(
-			Appender sqlAppender,
-			Renderer from, Renderer to,
+			StringBuilder pattern,
 			TemporalUnit unit, TemporalUnit toUnit) {
-		sqlAppender.append("extract(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(" from (");
-		to.render();
-		sqlAppender.append("-");
-		from.render();
-		sqlAppender.append(") ");
+		pattern.append("extract(");
+		pattern.append( translateExtractField(unit) );
+		pattern.append(" from (?3-?2) ");
 		switch (unit) {
 			case YEAR:
 			case MONTH:
-				sqlAppender.append("year to month");
+				pattern.append("year to month");
 				break;
 			case DAY:
 			case HOUR:
 			case MINUTE:
 			case SECOND:
-				sqlAppender.append("day to second");
+				pattern.append("day to second");
 				break;
 			default:
 				throw new SemanticException(unit + " is not a legal field");
 		}
-		sqlAppender.append(")");
-		sqlAppender.append( conversionFactor(unit, toUnit) );
+		pattern.append(")");
+		pattern.append( conversionFactor(unit, toUnit) );
 	}
 
 	protected void registerCharacterTypeMappings() {

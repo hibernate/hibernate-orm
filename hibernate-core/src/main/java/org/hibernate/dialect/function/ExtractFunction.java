@@ -8,30 +8,24 @@ package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.sql.ast.consume.spi.SqlAppender;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
-import static org.hibernate.type.spi.TypeConfiguration.isTimestampType;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
  * @author Gavin King
  */
 public class ExtractFunction
-		extends AbstractSqmFunctionTemplate implements SelfRenderingFunctionSupport {
+		extends AbstractSqmFunctionTemplate {
 
 	private Dialect dialect;
 
@@ -44,33 +38,24 @@ public class ExtractFunction
 	}
 
 	@Override
-	public void render(
-			SqlAppender sqlAppender,
-			List<SqlAstNode> arguments,
-			SqlAstWalker walker) {
-		ExtractUnit field = (ExtractUnit) arguments.get(0);
-		Expression arg = (Expression) arguments.get(1);
-		TemporalUnit unit = field.getUnit();
-		dialect.extract(
-				unit,
-				() -> arg.accept( walker ),
-				sqlAppender::appendSql
-		);
-	}
-
-	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		return new SelfRenderingSqmFunction<>(
-				this,
-				arguments,
-				impliedResultType,
-				queryEngine.getCriteriaBuilder(),
-				"extract"
-		);
+		SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get(0);
+		String pattern = dialect.extract( field.getUnit() );
+		return queryEngine.getSqmFunctionRegistry()
+				.patternTemplateBuilder( "extract", pattern )
+				.setExactArgumentCount( 2 )
+				.setReturnTypeResolver( useArgType( 1 ) )
+				.template()
+				.makeSqmFunctionExpression(
+						arguments,
+						impliedResultType,
+						queryEngine,
+						typeConfiguration
+				);
 	}
 
 	@Override

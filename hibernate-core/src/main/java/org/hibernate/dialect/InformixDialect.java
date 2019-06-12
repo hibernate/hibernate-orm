@@ -181,40 +181,21 @@ public class InformixDialect extends Dialect {
 	 * {@link TemporalUnit#DAY_OF_WEEK}.
 	 */
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+	public String extract(TemporalUnit unit) {
 		switch (unit) {
 			case SECOND:
-				appender.append("to_number(to_char(");
-				from.render();
-				appender.append(",'%S'))");
-				break;
+				return "to_number(to_char(?2,'%S'))";
 			case MINUTE:
-				appender.append("to_number(to_char(");
-				from.render();
-				appender.append(",'%M'))");
-				break;
+				return "to_number(to_char(?2,'%M'))";
 			case HOUR:
-				appender.append("to_number(to_char(");
-				from.render();
-				appender.append(",'%H'))");
-				break;
+				return "to_number(to_char(?2,'%H'))";
 			case DAY_OF_WEEK:
-				appender.append("(weekday(");
-				from.render();
-				appender.append(")+1)");
-				break;
+				return "(weekday(?2)+1)";
 			case DAY_OF_MONTH:
-				appender.append("day(");
-				from.render();
-				appender.append(")");
-				break;
+				return "day(?2)";
 			default:
 				//I think week() returns the ISO week number
-				appender.append( unit.toString() );
-				appender.append("(");
-				from.render();
-				appender.append(")");
-				break;
+				return "?1(?2)";
 		}
 	}
 

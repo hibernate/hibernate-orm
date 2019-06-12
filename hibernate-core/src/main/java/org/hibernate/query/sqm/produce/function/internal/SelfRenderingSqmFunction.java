@@ -10,11 +10,17 @@ import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.sql.ast.produce.spi.SqmFunction;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmExpressionInterpretation;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.Collections.emptyList;
 
 /**
  * @author Steve Ebersole
@@ -49,9 +55,33 @@ public class SelfRenderingSqmFunction<T> extends AbstractSqmExpression<T> implem
 		return renderingSupport;
 	}
 
+	private static SqlAstNode toSqlAstNode(Object arg, SqmToSqlAstConverter walker) {
+		if (arg instanceof SqmExpressionInterpretation) {
+			return ( (SqmExpressionInterpretation) arg ).toSqlExpression( walker );
+		}
+		return (SqlAstNode) arg;
+	}
+
+	private static List<SqlAstNode> resolveSqlAstArguments(List<SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
+		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
+			return emptyList();
+		}
+
+		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>();
+		for ( SqmTypedNode sqmArgument : sqmArguments ) {
+			sqlAstArguments.add( toSqlAstNode( ((SqmVisitableNode) sqmArgument).accept( walker ), walker ) );
+		}
+		return sqlAstArguments;
+	}
+
 	@Override
-	public SelfRenderingFunctionSqlAstExpression<T> convertToSqlAst(SqmToSqlAstConverter walker) {
-		return new SelfRenderingFunctionSqlAstExpression<>( this, walker );
+	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
+		AllowableFunctionReturnType<T> type = getExpressableType();
+		return new SelfRenderingFunctionSqlAstExpression(
+				getRenderingSupport(),
+				resolveSqlAstArguments( getArguments(), walker),
+				type ==null ? null : type.getSqlExpressableType()
+		);
 	}
 
 	@Override

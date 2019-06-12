@@ -36,6 +36,8 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+
 /**
  * A SQL dialect for TimesTen 5.1.
  * <p/>
@@ -143,37 +145,17 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("timestampadd(sql_tsi_");
-		if (unit == TemporalUnit.NANOSECOND) {
-			sqlAppender.append("frac_second");
-		}
-		else {
-			sqlAppender.append(unit.toString());
-		}
-		//TODO: millisecond, microsecond
-		sqlAppender.append(", ");
-		magnitude.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		return unit == NANOSECOND
+				? "timestampadd(sql_tsi_frac_second, ?2, ?3)"
+				: "timestampadd(sql_tsi_?1, ?2, ?3)";
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("timestampdiff(sql_tsi_");
-		if (unit == TemporalUnit.NANOSECOND) {
-			sqlAppender.append("frac_second");
-
-		}
-		else {
-			sqlAppender.append(unit.toString());
-		}
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		return unit == NANOSECOND
+				? "timestampdiff(sql_tsi_frac_second, ?2, ?3)"
+				: "timestampdiff(sql_tsi_?1, ?2, ?3)";
 	}
 
 	@Override

@@ -117,84 +117,52 @@ public class TeradataDialect extends Dialect {
 		return getVersion() < 14 ? 18 : 38;
 	}
 
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		StringBuilder pattern = new StringBuilder();
 		//TODO: TOTALLY UNTESTED CODE!
-		sqlAppender.append("cast((");
-		to.render();
-		sqlAppender.append(" - ");
-		from.render();
-		sqlAppender.append(") ");
+		pattern.append("cast((?3 - ?2) ");
 		switch (unit) {
 			case NANOSECOND:
 				//default fractional precision is 6, the maximum
-				sqlAppender.append("second");
+				pattern.append("second");
 				break;
 			case WEEK:
-				sqlAppender.append("day");
+				pattern.append("day");
 				break;
 			case QUARTER:
-				sqlAppender.append("month");
+				pattern.append("month");
 				break;
 			default:
-				sqlAppender.append( unit.toString() );
+				pattern.append( unit );
 		}
-		sqlAppender.append("(4)");
-		sqlAppender.append(" as bigint)");
+		pattern.append("(4) as bigint)");
 		switch (unit) {
 			case WEEK:
-				sqlAppender.append("/7");
+				pattern.append("/7");
 				break;
 			case QUARTER:
-				sqlAppender.append("/3");
+				pattern.append("/3");
 				break;
 			case NANOSECOND:
-				sqlAppender.append("*1e9");
+				pattern.append("*1e9");
 				break;
 		}
+		return pattern.toString();
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
 		//TODO: TOTALLY UNTESTED CODE!
-		sqlAppender.append("(");
-		to.render();
-		boolean subtract = false;
-//		if ( magnitude.startsWith("-") ) {
-//			subtract = true;
-//			magnitude = magnitude.substring(1);
-//		}
-		sqlAppender.append(subtract ? " - " : " + ");
 		switch ( unit ) {
 			case NANOSECOND:
-				sqlAppender.append("(");
-				magnitude.render();
-				sqlAppender.append(")/1e9 * interval '1' second");
-				break;
+				return "(?3 + (?2)/1e9 * interval '1' second)";
 			case QUARTER:
-				sqlAppender.append("(");
-				magnitude.render();
-				sqlAppender.append(") * interval '3' month");
-				break;
+				return "(?3 + (?2) * interval '3' month)";
 			case WEEK:
-				sqlAppender.append("(");
-				magnitude.render();
-				sqlAppender.append(") * interval '7' day");
-				break;
+				return "(?3 + (?2) * interval '7' day)";
 			default:
-//				if ( magnitude.matches("\\d+") ) {
-//					sqlAppender.append("interval '");
-//					sqlAppender.append( magnitude );
-//					sqlAppender.append("'");
-//				}
-//				else {
-					sqlAppender.append("(");
-					magnitude.render();
-					sqlAppender.append(") * interval '1'");
-//				}
-				sqlAppender.append(" ");
-				sqlAppender.append( unit.toString() );
+				return "(?3 + (?2) * interval '1' ?1)";
 		}
-		sqlAppender.append(")");
 	}
 
 	@Override

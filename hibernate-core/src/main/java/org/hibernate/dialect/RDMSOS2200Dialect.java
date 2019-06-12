@@ -168,74 +168,33 @@ public class RDMSOS2200Dialect extends Dialect {
 	 * redefined to include microseconds.
 	 */
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+	public String extract(TemporalUnit unit) {
 		switch (unit) {
 			case SECOND:
-				appender.append("(second(");
-				from.render();
-				appender.append(")+microsecond(");
-				from.render();
-				appender.append(")/1e6)");
-				return; //EXIT EARLY
+				return "(second(?2)+microsecond(?2)/1e6)";
 			case DAY_OF_WEEK:
-				appender.append("dayofweek");
-				break;
+				return "dayofweek(?2)";
 			case DAY_OF_MONTH:
-				appender.append("dayofmonth");
-				break;
+				return "dayofmonth(?2)";
 			case DAY_OF_YEAR:
-				appender.append("dayofyear");
-				break;
+				return "dayofyear(?2)";
 			default:
-				appender.append( unit.toString() );
-				break;
+				return "?1(?2)";
 		}
-		appender.append("(");
-		from.render();
-		appender.append(")");
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("timestampadd('SQL_TSI_FRAC_SECOND'"); //micros
-		}
-		else {
-			sqlAppender.append("dateadd('");
-			sqlAppender.append( unit.toString() );
-			sqlAppender.append("'");
-		}
-		sqlAppender.append(", ");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("(");
-		}
-		magnitude.render();
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append(")/1e3");
-		}
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		return unit == NANOSECOND
+				? "timestampadd('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)" //micros
+				: "dateadd('?1', ?2, ?3)";
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("timestampdiff('SQL_TSI_FRAC_SECOND'"); //micros
-		}
-		else {
-			sqlAppender.append("datediff('");
-			sqlAppender.append( unit.toString() );
-			sqlAppender.append("'");
-		}
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("*1e3");
-		}
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		return unit == NANOSECOND
+				? "timestampdiff('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)*1e3" //micros
+				: "dateadd('?1', ?2, ?3)";
 	}
 
 	// Dialect method overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

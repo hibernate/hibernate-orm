@@ -15,7 +15,6 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.DerbyCastEmulation;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -169,7 +168,6 @@ public class DerbyDialect extends Dialect {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
-		queryEngine.getSqmFunctionRegistry().register( "cast", new DerbyCastEmulation() );
 
 		//no way I can see to pad with anything other than spaces
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "lpad", "case when length(?1)<?2 then substr(char('',?2)||?1,length(?1)) else ?1 end" )
@@ -203,51 +201,42 @@ public class DerbyDialect extends Dialect {
 	 * by the parser).
 	 */
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
-		appender.append( translateExtractField(unit) );
-		appender.append("(");
-		from.render();
-		appender.append(")");
+	public String extract(TemporalUnit unit) {
+		return "?1(?2)";
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		if (unit == NANOSECOND) {
-			sqlAppender.append("{fn timestampadd(sql_tsi_frac_second, mod(bigint(");
-			magnitude.render();
-			sqlAppender.append("),1000000000), ");
-			sqlAppender.append("{fn timestampadd(sql_tsi_second, bigint((");
-			magnitude.render();
-			sqlAppender.append(")/1000000000), ");
-			to.render();
-			sqlAppender.append(")}");
-			sqlAppender.append(")}");
-		}
-		else {
-			sqlAppender.append("{fn timestampadd(sql_tsi_");
-			sqlAppender.append( unit.toString() );
-			sqlAppender.append(", bigint(");
-			magnitude.render();
-			sqlAppender.append("), ");
-			to.render();
-			sqlAppender.append(")}");
-		}
+	public String castStringToBoolean() {
+		return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false else null end";
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("{fn timestampdiff(sql_tsi_");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("frac_second");
-		}
-		else {
-			sqlAppender.append( unit.toString() );
-		}
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")}");
+	public String castNumberToBoolean() {
+		return "(?1<>0)";
+	}
+
+	@Override
+	public String castStringToDouble() {
+		return "double(?1)";
+	}
+
+	@Override
+	public String castStringToFloat() {
+		return "cast(double(?1) as real)";
+	}
+
+	@Override
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		return unit == NANOSECOND
+				? "{fn timestampadd(sql_tsi_frac_second, mod(bigint(?2),1000000000), {fn timestampadd(sql_tsi_second, bigint((?2)/1000000000), ?3)})}"
+				: "{fn timestampadd(sql_tsi_?1, bigint(?2), ?3)}";
+	}
+
+	@Override
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		return unit == NANOSECOND
+				? "{fn timestampdiff(sql_tsi_frac_second, ?2, ?3)}"
+				: "{fn timestampdiff(sql_tsi_?1, ?2, ?3)}";
 	}
 
 	@Override

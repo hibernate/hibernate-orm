@@ -19,7 +19,6 @@ import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;

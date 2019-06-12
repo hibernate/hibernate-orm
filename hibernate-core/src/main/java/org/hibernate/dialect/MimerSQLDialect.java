@@ -12,7 +12,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.MySQLCastEmulation;
 import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -21,8 +20,6 @@ import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-
-import static org.hibernate.query.TemporalUnit.DAY;
 
 /**
  * A dialect for Mimer SQL 11.
@@ -96,17 +93,16 @@ public class MimerSQLDialect extends Dialect {
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+	}
 
-		queryEngine.getSqmFunctionRegistry().register( "cast", new MySQLCastEmulation() {
-			@Override
-			protected String stringToBooleanPattern() {
-				return "case when regexp_match(lower(?1), '^(t|f|true|false)$') then lower(?1) like 't%' else null end";
-			}
-			@Override
-			protected String booleanToStringPattern() {
-				return defaultPattern();
-			}
-		} );
+	@Override
+	public String castStringToBoolean() {
+		return "case when regexp_match(lower(?1), '^(t|f|true|false)$') then lower(?1) like 't%' else null end";
+	}
+
+	@Override
+	public String castNumberToBoolean() {
+		return "(?1<>0)";
 	}
 
 	@Override
@@ -132,116 +128,76 @@ public class MimerSQLDialect extends Dialect {
 	 * {@link TemporalUnit#DAY_OF_YEAR}.
 	 */
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+	public String extract(TemporalUnit unit) {
 		switch (unit) {
 			case WEEK:
-				appender.append("week(");
-				from.render();
-				appender.append(")");
-				break;
+				return "week(?2)";
 			case DAY_OF_WEEK:
-				appender.append("dayofweek(");
-				from.render();
-				appender.append(")");
-				break;
+				return "dayofweek(?2)";
 			case DAY_OF_YEAR:
-				appender.append("dayofyear(");
-				from.render();
-				appender.append(")");
-				break;
+				return "dayofyear(?2)";
 			case DAY_OF_MONTH:
-				unit = DAY;
+				return "day(?2)";
 			default:
-				super.extract(unit, from, appender);
+				return super.extract(unit);
 		}
 	}
 
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("cast((");
-		to.render();
-		sqlAppender.append(" - ");
-		from.render();
-		sqlAppender.append(") ");
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		StringBuilder pattern = new StringBuilder();
+		pattern.append("cast((?3 - ?2) ");
 		switch (unit) {
 			case NANOSECOND:
 			case SECOND:
-				sqlAppender.append("second(12,9)");
+				pattern.append("second(12,9)");
 				break;
 			case MINUTE:
-				sqlAppender.append("minute(10)");
+				pattern.append("minute(10)");
 				break;
 			case HOUR:
-				sqlAppender.append("hour(8)");
+				pattern.append("hour(8)");
 				break;
 			case DAY:
 			case WEEK:
-				sqlAppender.append("day(7)");
+				pattern.append("day(7)");
 				break;
 			case MONTH:
 			case QUARTER:
-				sqlAppender.append("month(7)");
+				pattern.append("month(7)");
 				break;
 			case YEAR:
-				sqlAppender.append("year(7)");
+				pattern.append("year(7)");
 				break;
 			default:
 				throw new SemanticException("unsupported duration unit: " + unit);
 		}
-		sqlAppender.append(" as bigint)");
+		pattern.append(" as bigint)");
 		switch (unit) {
 			case WEEK:
-				sqlAppender.append("/7");
+				pattern.append("/7");
 				break;
 			case QUARTER:
-				sqlAppender.append("/3");
+				pattern.append("/3");
 				break;
 			case NANOSECOND:
-				sqlAppender.append("*1e9");
+				pattern.append("*1e9");
 				break;
 		}
+		return pattern.toString();
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("(");
-		to.render();
-		boolean subtract = false;
-//		if ( magnitude.startsWith("-") ) {
-//			subtract = true;
-//			magnitude = magnitude.substring(1);
-//		}
-		sqlAppender.append(subtract ? " - " : " + ");
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
 		switch ( unit ) {
 			case NANOSECOND:
-				sqlAppender.append("(");
-				magnitude.render();
-				sqlAppender.append(")/1e9 * interval '1' second");
-				break;
+				return "(?3 + (?2)/1e9 * interval '1' second)";
 			case QUARTER:
-				sqlAppender.append("(");
-				magnitude.render();
-				sqlAppender.append(") * interval '3' month");
-				break;
+				return "(?3 + (?2) * interval '3' month)";
 			case WEEK:
-				sqlAppender.append("(");
-				magnitude.render();
-				sqlAppender.append(") * interval '7' day");
-				break;
+				return "(?3 + (?2) * interval '7' day)";
 			default:
-//				if ( magnitude.matches("\\d+") ) {
-//					sqlAppender.append("interval '");
-//					sqlAppender.append( magnitude );
-//					sqlAppender.append("'");
-//				}
-//				else {
-				sqlAppender.append("(");
-				magnitude.render();
-				sqlAppender.append(") * interval '1'");
-//				}
-				sqlAppender.append(" ");
-				sqlAppender.append( unit.toString() );
+				return "(?3 + (?2) * interval '1' ?1)";
 		}
-		sqlAppender.append(")");
 	}
 
 	@Override

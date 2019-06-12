@@ -155,42 +155,22 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
-		appender.append("datepart(");
-		appender.append( translateExtractField(unit) );
-		appender.append(",");
-		from.render();
-		appender.append(")");
+	public String extract(TemporalUnit unit) {
+		return "datepart(?1, ?2)";
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("dateadd(");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("millisecond");
-		}
-		else {
-			sqlAppender.append( unit.toString() );
-		}
-		sqlAppender.append(", ");
-		magnitude.render();
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("/1e6");
-		}
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		return unit == NANOSECOND
+				? "dateadd(millisecond, (?2)/1e6, ?3)"
+				: "dateadd(?1, ?2, ?3)";
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("datediff(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		return unit == NANOSECOND
+				? "datediff(millisecond, ?2, ?3)*1e6"
+				: "datediff(?1, ?2, ?3)";
 	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -320,28 +320,18 @@ public abstract class AbstractHANADialect extends Dialect {
 	 * {@link TemporalUnit#DAY_OF_YEAR}.
 	 */
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+	public String extract(TemporalUnit unit) {
 		switch (unit) {
 			case DAY_OF_WEEK:
-				appender.append("(mod(weekday"); //TODO change from monday=0
-				break;
+				return "(mod(weekday(?2)+1,7)+1)";
 			case DAY:
 			case DAY_OF_MONTH:
-				appender.append("dayofmonth(?2)");
-				break;
+				return "dayofmonth(?2)";
 			case DAY_OF_YEAR:
-				appender.append("dayofyear(?2)");
-				break;
+				return "dayofyear(?2)";
 			default:
 				//I think week() returns the ISO week number
-				appender.append( unit.toString() );
-				break;
-		}
-		appender.append("(");
-		from.render();
-		appender.append(")");
-		if (unit== DAY_OF_WEEK) {
-			appender.append("+1,7)+1)");
+				return "?1(?2)";
 		}
 	}
 

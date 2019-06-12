@@ -170,39 +170,21 @@ public class H2Dialect extends Dialect {
 	 * this here with two calls to extract().
 	 */
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
-		if (unit == SECOND) {
-			appender.append("(");
-			super.extract(unit, from, appender);
-			appender.append("+extract(nanosecond from ");
-			from.render();
-			appender.append(")/1e9)");
-		}
-		else {
-			super.extract(unit, from, appender);
-		}
+	public String extract(TemporalUnit unit) {
+		return unit == SECOND
+				? "(" + super.extract(unit) + "+extract(nanosecond from ?2)/1e9)"
+				: super.extract(unit);
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("dateadd(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		magnitude.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		return "dateadd(?1, ?2, ?3)";
+
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("datediff(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		return "datediff(?1, ?2, ?3)";
 	}
 
 	@Override

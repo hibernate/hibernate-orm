@@ -210,56 +210,53 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		StringBuilder pattern = new StringBuilder();
 		boolean castTo = !timestamp && !unit.isDateUnit();
 		if ( unit == NANOSECOND ) {
-			sqlAppender.append("timestampadd(sql_tsi_frac_second"); //nanos
+			pattern.append("timestampadd(sql_tsi_frac_second"); //nanos
 		}
 		else {
-			sqlAppender.append("dateadd(");
-			sqlAppender.append( unit.toString() );
+			pattern.append("dateadd(").append( unit );
 		}
-		sqlAppender.append(", ");
-		magnitude.render();
-		sqlAppender.append(", ");
+		pattern.append(", ?2, ");
 		if (castTo) {
-			sqlAppender.append("cast(");
+			pattern.append("cast(?3 as timestamp)");
 		}
-		to.render();
-		if (castTo) {
-			sqlAppender.append(" as timestamp)");
+		else {
+			pattern.append("?3");
 		}
-		sqlAppender.append(")");
+		pattern.append(")");
+		return pattern.toString();
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		StringBuilder pattern = new StringBuilder();
 		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
 		boolean castTo = !toTimestamp && !unit.isDateUnit();
 		if ( unit == NANOSECOND ) {
-			sqlAppender.append("timestampdiff(sql_tsi_frac_second"); //nanos
+			pattern.append("timestampdiff(sql_tsi_frac_second"); //nanos
 		}
 		else {
-			sqlAppender.append("datediff(");
-			sqlAppender.append( unit.toString() );
+			pattern.append("datediff(").append( unit );
 		}
-		sqlAppender.append(", ");
+		pattern.append(", ");
 		if (castFrom) {
-			sqlAppender.append("cast(");
+			pattern.append("cast(?2 as timestamp)");
 		}
-		from.render();
-		if (castFrom) {
-			sqlAppender.append(" as timestamp)");
+		else {
+			pattern.append("?2");
 		}
-		sqlAppender.append(", ");
+		pattern.append(", ");
 		if (castTo) {
-			sqlAppender.append("cast(");
+			pattern.append("cast(?3 as timestamp)");
 		}
-		to.render();
-		if (castTo) {
-			sqlAppender.append(" as timestamp)");
+		else {
+			pattern.append("?3");
 		}
-		sqlAppender.append(")");
+		pattern.append(")");
+		return pattern.toString();
 	}
 
 	@Override

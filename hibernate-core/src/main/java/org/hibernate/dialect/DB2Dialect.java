@@ -183,104 +183,94 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		StringBuilder pattern = new StringBuilder();
 		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
 		boolean castTo = !toTimestamp && !unit.isDateUnit();
 		switch (unit) {
 			case NANOSECOND:
-				sqlAppender.append("(second");
+				pattern.append("(seconds_between(");
 				break;
 			//note: DB2 does have weeks_between()
 			case MONTH:
 			case QUARTER:
 				// the months_between() function results
 				// in a non-integral value, so trunc() it
-				sqlAppender.append("trunc(month");
+				pattern.append("trunc(months_between(");
 				break;
 			default:
-				sqlAppender.append( unit.toString() );
+				pattern.append( unit ).append("s_between(");
 		}
-		sqlAppender.append("s_between(");
 		if (castTo) {
-			sqlAppender.append("cast(");
+			pattern.append("cast(?3 as timestamp)");
 		}
-		to.render();
-		if (castTo) {
-			sqlAppender.append(" as timestamp)");
+		else {
+			pattern.append("?3");
 		}
-		sqlAppender.append(",");
+		pattern.append(",");
 		if (castFrom) {
-			sqlAppender.append("cast(");
+			pattern.append("cast(?2 as timestamp)");
 		}
-		from.render();
-		if (castFrom) {
-			sqlAppender.append(" as timestamp)");
+		else {
+			pattern.append("?2");
 		}
-		sqlAppender.append(")");
+		pattern.append(")");
 		switch (unit) {
 			case NANOSECOND:
-				sqlAppender.append("*1e9+(microsecond(");
-				to.render();
-				sqlAppender.append(")-microsecond(");
-				from.render();
-				sqlAppender.append("))*1e3)");
+				pattern.append("*1e9+(microsecond(?3)-microsecond(?2))*1e3)");
 				break;
 			case MONTH:
-				sqlAppender.append(")");
+				pattern.append(")");
 				break;
 			case QUARTER:
-				sqlAppender.append("/3)");
+				pattern.append("/3)");
 				break;
 		}
+		return pattern.toString();
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		StringBuilder pattern = new StringBuilder();
 		boolean castTo = !timestamp && !unit.isDateUnit();
-		sqlAppender.append("add_");
+		pattern.append("add_");
 		switch (unit) {
 			case NANOSECOND:
-				sqlAppender.append("second");
+				pattern.append("second");
 				break;
 			case WEEK:
 				//note: DB2 does not have add_weeks()
-				sqlAppender.append("day");
+				pattern.append("day");
 				break;
 			case QUARTER:
-				sqlAppender.append("month");
+				pattern.append("month");
 				break;
 			default:
-				sqlAppender.append( unit.toString() );
+				pattern.append( unit );
 		}
-		sqlAppender.append("s(");
+		pattern.append("s(");
 		if (castTo) {
-			sqlAppender.append("cast(");
+			pattern.append("cast(?3 as timestamp)");
 		}
-		to.render();
-		if (castTo) {
-			sqlAppender.append(" as timestamp)");
+		else {
+			pattern.append("?3");
 		}
-		sqlAppender.append(",");
+		pattern.append(",");
 		switch (unit) {
 			case NANOSECOND:
-			case WEEK:
-			case QUARTER:
-				sqlAppender.append("(");
-				break;
-		}
-		magnitude.render();
-		switch (unit) {
-			case NANOSECOND:
-				sqlAppender.append(")/1e9");
+				pattern.append("(?2)/1e9");
 				break;
 			case WEEK:
-				sqlAppender.append(")*7");
+				pattern.append("(?2)*7");
 				break;
 			case QUARTER:
-				sqlAppender.append(")*3");
+				pattern.append("(?2)*3");
 				break;
+			default:
+				pattern.append("?2");
 		}
-		sqlAppender.append(")");
+		pattern.append(")");
+		return pattern.toString();
 	}
 
 	@Override

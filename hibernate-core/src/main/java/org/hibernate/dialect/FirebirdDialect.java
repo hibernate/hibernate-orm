@@ -9,7 +9,6 @@ package org.hibernate.dialect;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.MySQLCastEmulation;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.RowsLimitHandler;
 import org.hibernate.query.TemporalUnit;
@@ -98,19 +97,23 @@ public class FirebirdDialect extends Dialect {
 				"position(?1 in ?2)",
 				"(position(?1 in substring(?2 from ?3)) + (?3) - 1)"
 		).setArgumentListSignature("(pattern, string[, start])");
-
-		queryEngine.getSqmFunctionRegistry().register( "cast", new MySQLCastEmulation() {
-			@Override
-			protected String stringToBooleanPattern() {
-				return "iif(lower(?1) similar to 't|f|true|false', lower(?1) like 't%', null)";
-//				return "decode(lower(?1),'t',true,'f',false,'true',true,'false',false,null)";
-			}
-			@Override
-			protected String booleanToStringPattern() {
-				return "trim(decode(?1,0,'false','true'))";
-			}
-		} );
 	}
+
+	@Override
+	public String castStringToBoolean() {
+		return "iif(lower(?1) similar to 't|f|true|false', lower(?1) like 't%', null)";
+	}
+
+	@Override
+	public String castNumberToBoolean() {
+		return "(?1<>0)";
+	}
+
+	@Override
+	public String castBooleanToString() {
+		return "trim(decode(?1,0,'false','true'))";
+	}
+
 
 	/**
 	 * Firebird extract() function returns {@link TemporalUnit#DAY_OF_WEEK}
@@ -119,76 +122,41 @@ public class FirebirdDialect extends Dialect {
 	 * here we adjust the result by generating {@code (extract(unit,arg)+1)).
 	 */
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+	public String extract(TemporalUnit unit) {
 		switch ( unit ) {
 			case DAY_OF_WEEK:
 			case DAY_OF_YEAR:
-				appender.append("(");
-				super.extract(unit, from, appender);
-				appender.append("+1)");
-				break;
+				return "(" + super.extract(unit) + "+1)";
 			default:
-				super.extract(unit, from, appender);
+				return super.extract(unit);
 		}
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("dateadd(");
-		magnitude.render();
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
 			case NANOSECOND:
-				sqlAppender.append("/1e6 millisecond");
-				break;
+				return "dateadd((?2)/1e6 millisecond to ?3)";
 			case WEEK:
-				sqlAppender.append("*7 day");
-				break;
+				return "dateadd((?2)*7 day to ?3)";
 			case QUARTER:
-				sqlAppender.append("*4 month");
-				break;
+				return "dateadd((?2)*4 month to ?3)";
 			default:
-				sqlAppender.append(" ");
-				sqlAppender.append(unit.toString());
-				break;
+				return "dateadd(?2 ?1 to ?3)";
 		}
-		sqlAppender.append(" to ");
-		to.render();
-		sqlAppender.append(")");
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("datediff(");
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NANOSECOND:
-				sqlAppender.append("millisecond");
-				break;
+				return "datediff(millisecond from ?2 to ?3)*1e6";
 			case WEEK:
-				sqlAppender.append("day");
-				break;
+				return "datediff(day from ?2 to ?3)/7";
 			case QUARTER:
-				sqlAppender.append("month");
-				break;
+				return "datediff(month from ?2 to ?3)/4";
 			default:
-				sqlAppender.append(" ");
-				sqlAppender.append(unit.toString());
-				break;
-		}
-		sqlAppender.append(" from ");
-		from.render();
-		sqlAppender.append(" to ");
-		to.render();
-		sqlAppender.append(")");
-		switch (unit) {
-			case NANOSECOND:
-				sqlAppender.append("*1e6");
-				break;
-			case WEEK:
-				sqlAppender.append("/7");
-				break;
-			case QUARTER:
-				sqlAppender.append("/4");
-				break;
+				return "datediff(?1 from ?2 to ?3)";
 		}
 	}
 

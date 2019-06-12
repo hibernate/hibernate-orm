@@ -337,75 +337,57 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("adddate(");
-		to.render();
-		sqlAppender.append(",interval ");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("(");
-		}
-		magnitude.render();
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append(")/1e6");
-		}
-		sqlAppender.append(" ");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("microsecond");
-		}
-		else {
-			sqlAppender.append( unit.toString() );
-		}
-		sqlAppender.append(")");
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		return unit == NANOSECOND
+				? "adddate(?3, interval (?2)/1e3 microsecond)"
+				: "adddate(?3, interval ?2 ?1)";
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
 			case DAY:
-				sqlAppender.append("datediff(");
-				to.render();
-				sqlAppender.append(",");
-				from.render();
-				sqlAppender.append(")");
-				break;
+				//note: datediff() is backwards on CUBRID
+				return "datediff(?3,?2)";
 			case HOUR:
-				timediff(from, to, sqlAppender, HOUR, unit);
+				timediff(pattern, HOUR, unit);
 				break;
 			case MINUTE:
-				sqlAppender.append("(");
-				timediff(from, to, sqlAppender, MINUTE, unit);
-				sqlAppender.append("+");
-				timediff(from, to, sqlAppender, HOUR, unit);
-				sqlAppender.append(")");
+				pattern.append("(");
+				timediff(pattern, MINUTE, unit);
+				pattern.append("+");
+				timediff(pattern, HOUR, unit);
+				pattern.append(")");
 				break;
 			case SECOND:
-				sqlAppender.append("(");
-				timediff(from, to, sqlAppender, SECOND, unit);
-				sqlAppender.append("+");
-				timediff(from, to, sqlAppender, MINUTE, unit);
-				sqlAppender.append("+");
-				timediff(from, to, sqlAppender, HOUR, unit);
-				sqlAppender.append(")");
+				pattern.append("(");
+				timediff(pattern, SECOND, unit);
+				pattern.append("+");
+				timediff(pattern, MINUTE, unit);
+				pattern.append("+");
+				timediff(pattern, HOUR, unit);
+				pattern.append(")");
 				break;
 			case NANOSECOND:
-				sqlAppender.append("(");
-				timediff(from, to, sqlAppender, NANOSECOND, unit);
-				sqlAppender.append("+");
-				timediff(from, to, sqlAppender, SECOND, unit);
-				sqlAppender.append("+");
-				timediff(from, to, sqlAppender, MINUTE, unit);
-				sqlAppender.append("+");
-				timediff(from, to, sqlAppender, HOUR, unit);
-				sqlAppender.append(")");
+				pattern.append("(");
+				timediff(pattern, NANOSECOND, unit);
+				pattern.append("+");
+				timediff(pattern, SECOND, unit);
+				pattern.append("+");
+				timediff(pattern, MINUTE, unit);
+				pattern.append("+");
+				timediff(pattern, HOUR, unit);
+				pattern.append(")");
 				break;
 			default:
 				throw new SemanticException("unsupported temporal unit for CUBRID: " + unit);
 		}
+		return pattern.toString();
 	}
 
 	private void timediff(
-			Renderer from, Renderer to,
-			Appender sqlAppender,
+			StringBuilder sqlAppender,
 			TemporalUnit diffUnit,
 			TemporalUnit toUnit) {
 		if ( diffUnit == NANOSECOND ) {
@@ -418,11 +400,8 @@ public class CUBRIDDialect extends Dialect {
 		else {
 			sqlAppender.append( diffUnit.toString() );
 		}
-		sqlAppender.append(",timediff(");
-		to.render();
-		sqlAppender.append(",");
-		from.render();
-		sqlAppender.append("))");
+		//note: timediff() is backwards on CUBRID
+		sqlAppender.append(",timediff(?3,?2))");
 		sqlAppender.append( diffUnit.conversionFactor(toUnit) );
 	}
 }

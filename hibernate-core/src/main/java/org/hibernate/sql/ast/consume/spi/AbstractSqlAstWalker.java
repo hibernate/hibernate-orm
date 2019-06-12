@@ -72,9 +72,6 @@ import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.query.BinaryArithmeticOperator.ADD;
-import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
-import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.TemporalUnit.conversionFactor;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.CLOSE_PARENTHESIS;
@@ -85,8 +82,6 @@ import static org.hibernate.sql.ast.consume.spi.SqlAppender.FROM_KEYWORD;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.NO_SEPARATOR;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.OPEN_PARENTHESIS;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.SELECT_KEYWORD;
-import static org.hibernate.type.spi.TypeConfiguration.isTemporalType;
-import static org.hibernate.type.spi.TypeConfiguration.isTimestampType;
 
 /**
  * @author Steve Ebersole
@@ -496,40 +491,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitConversion(Conversion conversion) {
-
-		Expression magnitude = conversion.getDuration().getMagnitude();
-
-		if (magnitude instanceof BinaryArithmeticExpression) {
-			BinaryArithmeticExpression arithmeticExpression =
-					(BinaryArithmeticExpression) magnitude;
-			Expression leftOperand = arithmeticExpression.getLeftHandOperand();
-			Expression rightOperand = arithmeticExpression.getRightHandOperand();
-
-			if (arithmeticExpression.getOperator() == SUBTRACT
-					&& isTemporalType( leftOperand.getType() )
-					&& isTemporalType( rightOperand.getType() ) ) {
-
-				// we have 'by unit' operator applied directly
-				// to a subtraction expressing the difference
-				// between two dates or two times
-
-				getJdbcServices().getDialect().timestampdiff(
-						conversion.getUnit(),
-						() -> rightOperand.accept(this),
-						() -> leftOperand.accept(this),
-						sqlAppender::appendSql,
-						isTimestampType( rightOperand.getType() ) ,
-						isTimestampType( leftOperand.getType() )
-				);
-
-				return;
-			}
-		}
-
-		// we have a 'by unit' operator applied to something
-		// else of type Duration, so just convert the units
-
-		magnitude.accept( this );
+		conversion.getDuration().getMagnitude().accept( this );
 		sqlAppender.appendSql(
 				conversionFactor(
 						conversion.getDuration().getUnit(),
@@ -543,37 +505,6 @@ public abstract class AbstractSqlAstWalker
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		Expression leftOperand = arithmeticExpression.getLeftHandOperand();
 		Expression rightOperand = arithmeticExpression.getRightHandOperand();
-
-		if (arithmeticExpression.getOperator() == SUBTRACT
-				&& isTemporalType( leftOperand.getType() )
-				&& isTemporalType( rightOperand.getType() ) ) {
-			boolean leftTimestamp = isTimestampType( leftOperand.getType() );
-			boolean rightTimestamp = isTimestampType( rightOperand.getType() );
-			getJdbcServices().getDialect().timestampdiff(
-					rightTimestamp || leftTimestamp ? NANOSECOND : DAY,
-					() -> rightOperand.accept( this ),
-					() -> leftOperand.accept( this ),
-					sqlAppender::appendSql,
-					rightTimestamp,
-					leftTimestamp
-			);
-			return;
-		}
-
-		if (arithmeticExpression.getOperator() == ADD
-				&& isTemporalType( leftOperand.getType() )
-				&& rightOperand instanceof Duration ) {
-			Duration duration = (Duration) rightOperand;
-			getJdbcServices().getDialect().timestampadd(
-					duration.getUnit(),
-					() -> duration.getMagnitude().accept( this ),
-					() -> leftOperand.accept( this ),
-					sqlAppender::appendSql,
-					isTimestampType( leftOperand.getType() )
-			);
-			return;
-		}
-
 		if ( leftOperand instanceof BinaryArithmeticExpression
 				&& !isMultiplicative( leftOperand ) && isMultiplicative( arithmeticExpression ) ) {
 			sqlAppender.appendSql("(");
@@ -662,8 +593,6 @@ public abstract class AbstractSqlAstWalker
 			jdbcParameters.addParameter( (JdbcParameter) parameter );
 		}
 	}
-
-
 
 	protected void visitJdbcParameterBinder(JdbcParameterBinder jdbcParameterBinder) {
 		parameterBinders.add( jdbcParameterBinder );

@@ -1283,14 +1283,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void cast(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("cast", "cast(?1 as ?2)")
-				.setExactArgumentCount(2)
-				.setReturnTypeResolver( useArgType(2) )
-				.setArgumentListSignature("(arg as type)")
-				.register();
-	}
-
 	public static void trim(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("trim", "trim(?1 ?2 from ?3)")
 				.setInvariantType( StandardSpiBasicTypes.STRING )

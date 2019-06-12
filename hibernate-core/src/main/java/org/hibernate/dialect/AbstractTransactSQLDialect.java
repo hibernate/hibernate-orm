@@ -112,36 +112,20 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
-		appender.append("datepart(");
-		appender.append( translateExtractField(unit) );
-		appender.append(",");
-		from.render();
-		appender.append(")");
+	public String extract(TemporalUnit unit) {
+		return "datepart(?1, ?2)";
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("dateadd(");
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
 		//TODO: SQL Server supports nanosecond, but what about Sybase?
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		magnitude.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+		return "dateadd(?1, ?2, ?3)";
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("datediff(");
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		//TODO: SQL Server supports nanosecond, but what about Sybase?
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+		return "datediff(?1, ?2, ?3)";
 	}
 
 	@Override

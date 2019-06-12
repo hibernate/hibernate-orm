@@ -17,7 +17,6 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.MySQLCastEmulation;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
@@ -208,8 +207,6 @@ public class MySQLDialect extends Dialect {
 			// we want the standard default precision of 6 (microseconds)
 			CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
 		}
-
-		queryEngine.getSqmFunctionRegistry().register( "cast", new MySQLCastEmulation() );
 	}
 
 	@Override
@@ -243,76 +240,51 @@ public class MySQLDialect extends Dialect {
 	 * redefined to include microseconds.
 	 */
 	@Override
-	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+	public String extract(TemporalUnit unit) {
 		switch (unit) {
 			case SECOND:
-				appender.append("(second(");
-				from.render();
-				appender.append(")+microsecond(");
-				from.render();
-				appender.append(")/1e6)");
-				return; //EXIT EARLY
+				return "(second(?2)+microsecond(?2)/1e6)";
 			case WEEK:
-				appender.append("weekofyear"); //same as week(?2,3), the ISO week
-				break;
+				return "weekofyear(?2)"; //same as week(?2,3), the ISO week
 			case DAY_OF_WEEK:
-				appender.append("dayofweek");
-				break;
+				return "dayofweek(?2)";
 			case DAY_OF_MONTH:
-				appender.append("dayofmonth");
-				break;
+				return "dayofmonth(?2)";
 			case DAY_OF_YEAR:
-				appender.append("dayofyear");
-				break;
+				return "dayofyear(?2)";
 			//TODO: case WEEK_YEAR: yearweek(?2, 3)/100
 			default:
-				appender.append( unit.toString() );
-				break;
+				return "?1(?2)";
 		}
-		appender.append("(");
-		from.render();
-		appender.append(")");
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("timestampadd(");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("microsecond");
-		}
-		else {
-			sqlAppender.append( unit.toString() );
-		}
-		sqlAppender.append(", ");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("(");
-		}
-		magnitude.render();
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append(")/1e3");
-		}
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String castStringToBoolean() {
+		return "if(?1 rlike '^(t|f|true|false)$', ?1 like 't%', null)";
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("timestampdiff(");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("microsecond");
-		}
-		else {
-			sqlAppender.append( unit.toString() );
-		}
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("*1e3");
-		}
+	public String castNumberToBoolean() {
+		return "(?1<>0)";
+	}
+
+	@Override
+	public String castBooleanToString() {
+		return "if(?1,'true','false')";
+	}
+
+	@Override
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		return unit == NANOSECOND
+				? "timestampadd(microsecond, (?2)/1e3, ?3)"
+				: "timestampadd(?1, ?2, ?3)";
+	}
+
+	@Override
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		return unit == NANOSECOND
+				? "timestampdiff(microsecond, ?2, ?3)*1e3"
+				: "timestampdiff(?1, ?2, ?3)";
 	}
 
 	/**

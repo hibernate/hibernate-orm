@@ -43,7 +43,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.HANAExtractEmulation;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -75,6 +74,7 @@ import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.naming.Identifier;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
@@ -110,6 +110,8 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.TemporalUnit.DAY_OF_WEEK;
 
 /**
  * An abstract base class for SAP HANA dialects.
@@ -298,8 +300,49 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.secondsBetween( queryEngine );
 		CommonFunctionFactory.format_toVarchar( queryEngine );
 		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
+	}
 
-		queryEngine.getSqmFunctionRegistry().register( "extract", new HANAExtractEmulation() );
+	/**
+	 * HANA has no extract() function, but we can emulate
+	 * it using the appropriate named functions instead of
+	 * extract().
+	 *
+	 * The supported fields are
+	 * {@link TemporalUnit#YEAR},
+	 * {@link TemporalUnit#MONTH}
+	 * {@link TemporalUnit#DAY},
+	 * {@link TemporalUnit#HOUR},
+	 * {@link TemporalUnit#MINUTE},
+	 * {@link TemporalUnit#SECOND}
+	 * {@link TemporalUnit#WEEK},
+	 * {@link TemporalUnit#DAY_OF_WEEK},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR}.
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		switch (unit) {
+			case DAY_OF_WEEK:
+				appender.append("(mod(weekday"); //TODO change from monday=0
+				break;
+			case DAY:
+			case DAY_OF_MONTH:
+				appender.append("dayofmonth(?2)");
+				break;
+			case DAY_OF_YEAR:
+				appender.append("dayofyear(?2)");
+				break;
+			default:
+				//I think week() returns the ISO week number
+				appender.append( unit.toString() );
+				break;
+		}
+		appender.append("(");
+		from.render();
+		appender.append(")");
+		if (unit== DAY_OF_WEEK) {
+			appender.append("+1,7)+1)");
+		}
 	}
 
 	@Override

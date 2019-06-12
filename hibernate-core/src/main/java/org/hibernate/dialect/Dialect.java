@@ -41,6 +41,7 @@ import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CurrentFunction;
+import org.hibernate.dialect.function.ExtractFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.function.LpadRpadPadEmulation;
@@ -456,9 +457,9 @@ public abstract class Dialect implements ConversionContext {
 		//ANSI SQL extract() function is supported on the databases we care most
 		//about (though it is called datepart() in some of them) but HQL defines
 		//additional non-standard temporal field types, which must be emulated in
-		//a dialect-specific way
+		//a very dialect-specific way
 
-		CommonFunctionFactory.extract(queryEngine);
+		queryEngine.getSqmFunctionRegistry().register("extract", new ExtractFunction(this));
 
 		//comparison functions supported on every known database
 
@@ -547,13 +548,31 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Write SQL equivalent to an extract() function to
+	 * the given {@link Appender}.
+	 *
+	 * @param unit the first argument of extract()
+	 * @param from the second argument of extract()
+	 * @param appender an {@link Appender} to write to
+	 */
+	public void extract(
+			TemporalUnit unit,
+			Renderer from,
+			Appender appender) {
+		appender.append("extract(");
+		appender.append( translateExtractField(unit) );
+		appender.append(" from ");
+		from.render();
+		appender.append(")");
+	}
+	/**
 	 * Write SQL equivalent to a timestampdiff() function
 	 * to the given {@link Appender}.
 	 *
 	 * @param unit the first argument of timestampdiff()
 	 * @param from the second argument of timestampdiff()
 	 * @param to the third argument of timestampdiff()
-	 * @param sqlAppender an {@link Appender} to write to
+	 * @param appender an {@link Appender} to write to
 	 * @param fromTimestamp true if the first argument is
 	 *                      a timestamp, false if a date
 	 * @param toTimestamp true if the second argument is
@@ -562,7 +581,7 @@ public abstract class Dialect implements ConversionContext {
 	public void timestampdiff(
 			TemporalUnit unit,
 			Renderer from, Renderer to,
-			Appender sqlAppender,
+			Appender appender,
 			boolean fromTimestamp, boolean toTimestamp) {
 		throw new NotYetImplementedFor6Exception();
 	}

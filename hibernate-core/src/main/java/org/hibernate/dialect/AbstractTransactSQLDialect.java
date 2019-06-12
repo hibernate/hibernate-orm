@@ -82,7 +82,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		}
 	}
 
-
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
@@ -108,8 +107,17 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.characterLength_len( queryEngine );
-		CommonFunctionFactory.extract_datepart( queryEngine );
+		CommonFunctionFactory.datepartDatename( queryEngine );
 		CommonFunctionFactory.lastDay_eomonth( queryEngine );
+	}
+
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		appender.append("datepart(");
+		appender.append( translateExtractField(unit) );
+		appender.append(",");
+		from.render();
+		appender.append(")");
 	}
 
 	@Override

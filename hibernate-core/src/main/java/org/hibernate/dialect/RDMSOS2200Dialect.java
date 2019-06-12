@@ -11,9 +11,7 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
-import org.hibernate.dialect.function.RDMSExtractEmulation;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -153,9 +151,48 @@ public class RDMSOS2200Dialect extends Dialect {
 
 		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
 		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation() );
+	}
 
-		queryEngine.getSqmFunctionRegistry().register( "extract", new RDMSExtractEmulation() );
-
+	/**
+	 * RDMS supports a limited list of temporal fields in the
+	 * extract() function, but we can emulate some of them by
+	 * using the appropriate named functions instead of
+	 * extract().
+	 *
+	 * Thus, the additional supported fields are
+	 * {@link TemporalUnit#DAY_OF_YEAR},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR}.
+	 *
+	 * In addition, the field {@link TemporalUnit#SECOND} is
+	 * redefined to include microseconds.
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		switch (unit) {
+			case SECOND:
+				appender.append("(second(");
+				from.render();
+				appender.append(")+microsecond(");
+				from.render();
+				appender.append(")/1e6)");
+				return; //EXIT EARLY
+			case DAY_OF_WEEK:
+				appender.append("dayofweek");
+				break;
+			case DAY_OF_MONTH:
+				appender.append("dayofmonth");
+				break;
+			case DAY_OF_YEAR:
+				appender.append("dayofyear");
+				break;
+			default:
+				appender.append( unit.toString() );
+				break;
+		}
+		appender.append("(");
+		from.render();
+		appender.append(")");
 	}
 
 	@Override

@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.InformixExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -22,6 +21,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -161,7 +161,61 @@ public class InformixDialect extends Dialect {
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		//coalesce() and nullif() both supported since Informix 12
-		queryEngine.getSqmFunctionRegistry().register( "extract", new InformixExtractEmulation() );
+	}
+
+	/**
+	 * Informix has no extract() function, but we can
+	 * partially emulate it by using the appropriate
+	 * named functions, and by using to_char() with
+	 * a format string.
+	 *
+	 * The supported fields are
+	 * {@link TemporalUnit#HOUR},
+	 * {@link TemporalUnit#MINUTE},
+	 * {@link TemporalUnit#SECOND},
+	 * {@link TemporalUnit#DAY},
+	 * {@link TemporalUnit#MONTH},
+	 * {@link TemporalUnit#YEAR},
+	 * {@link TemporalUnit#QUARTER},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_WEEK}.
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		switch (unit) {
+			case SECOND:
+				appender.append("to_number(to_char(");
+				from.render();
+				appender.append(",'%S'))");
+				break;
+			case MINUTE:
+				appender.append("to_number(to_char(");
+				from.render();
+				appender.append(",'%M'))");
+				break;
+			case HOUR:
+				appender.append("to_number(to_char(");
+				from.render();
+				appender.append(",'%H'))");
+				break;
+			case DAY_OF_WEEK:
+				appender.append("(weekday(");
+				from.render();
+				appender.append(")+1)");
+				break;
+			case DAY_OF_MONTH:
+				appender.append("day(");
+				from.render();
+				appender.append(")");
+				break;
+			default:
+				//I think week() returns the ISO week number
+				appender.append( unit.toString() );
+				appender.append("(");
+				from.render();
+				appender.append(")");
+				break;
+		}
 	}
 
 	@Override

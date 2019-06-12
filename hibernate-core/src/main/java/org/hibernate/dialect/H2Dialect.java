@@ -13,7 +13,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.H2ExtractEmulation;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -42,6 +41,8 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.TemporalUnit.SECOND;
 
 /**
  * A dialect compatible with the H2 database.
@@ -160,8 +161,26 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.varPopSamp( queryEngine );
 		CommonFunctionFactory.format_formatdatetime( queryEngine );
 		CommonFunctionFactory.rownum( queryEngine );
+	}
 
-		queryEngine.getSqmFunctionRegistry().register( "extract", new H2ExtractEmulation() );
+	/**
+	 * In H2, the extract() function does not return
+	 * fractional seconds for the the field
+	 * {@link TemporalUnit#SECOND}. We work around
+	 * this here with two calls to extract().
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		if (unit == SECOND) {
+			appender.append("(");
+			super.extract(unit, from, appender);
+			appender.append("+extract(nanosecond from ");
+			from.render();
+			appender.append(")/1e9)");
+		}
+		else {
+			super.extract(unit, from, appender);
+		}
 	}
 
 	@Override

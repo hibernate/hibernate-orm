@@ -17,7 +17,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyCastEmulation;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
-import org.hibernate.dialect.function.DerbyExtractEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.DerbyLimitHandler;
@@ -170,7 +169,6 @@ public class DerbyDialect extends Dialect {
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
-		queryEngine.getSqmFunctionRegistry().register( "extract", new DerbyExtractEmulation() );
 		queryEngine.getSqmFunctionRegistry().register( "cast", new DerbyCastEmulation() );
 
 		//no way I can see to pad with anything other than spaces
@@ -184,6 +182,32 @@ public class DerbyDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(string, length)")
 				.register();
+	}
+
+	/**
+	 * Derby doesn't have an extract() function, and has
+	 * no functions at all for calendaring, but we can
+	 * emulate the most basic functionality of extract()
+	 * using the functions it does have.
+	 *
+	 * The only supported {@link TemporalUnit}s are:
+	 * {@link TemporalUnit#YEAR},
+	 * {@link TemporalUnit#MONTH}
+	 * {@link TemporalUnit#DAY},
+	 * {@link TemporalUnit#HOUR},
+	 * {@link TemporalUnit#MINUTE},
+	 * {@link TemporalUnit#SECOND} (along with
+	 * {@link TemporalUnit#NANOSECOND},
+	 * {@link TemporalUnit#DATE}, and
+	 * {@link TemporalUnit#TIME}, which are desugared
+	 * by the parser).
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		appender.append( translateExtractField(unit) );
+		appender.append("(");
+		from.render();
+		appender.append(")");
 	}
 
 	@Override

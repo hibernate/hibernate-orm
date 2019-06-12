@@ -9,7 +9,6 @@ package org.hibernate.dialect;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.FirebirdExtractEmulation;
 import org.hibernate.dialect.function.MySQLCastEmulation;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.RowsLimitHandler;
@@ -100,7 +99,6 @@ public class FirebirdDialect extends Dialect {
 				"(position(?1 in substring(?2 from ?3)) + (?3) - 1)"
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		queryEngine.getSqmFunctionRegistry().register( "extract", new FirebirdExtractEmulation() );
 		queryEngine.getSqmFunctionRegistry().register( "cast", new MySQLCastEmulation() {
 			@Override
 			protected String stringToBooleanPattern() {
@@ -112,6 +110,26 @@ public class FirebirdDialect extends Dialect {
 				return "trim(decode(?1,0,'false','true'))";
 			}
 		} );
+	}
+
+	/**
+	 * Firebird extract() function returns {@link TemporalUnit#DAY_OF_WEEK}
+	 * numbered from 0 to 6, and {@link TemporalUnit#DAY_OF_YEAR} numbered
+	 * for 0. This isn't consistent with what most other databases do, so
+	 * here we adjust the result by generating {@code (extract(unit,arg)+1)).
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		switch ( unit ) {
+			case DAY_OF_WEEK:
+			case DAY_OF_YEAR:
+				appender.append("(");
+				super.extract(unit, from, appender);
+				appender.append("+1)");
+				break;
+			default:
+				super.extract(unit, from, appender);
+		}
 	}
 
 	@Override

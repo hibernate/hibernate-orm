@@ -18,7 +18,6 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.MySQLCastEmulation;
-import org.hibernate.dialect.function.MySQLExtractEmulation;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
@@ -210,7 +209,6 @@ public class MySQLDialect extends Dialect {
 			CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
 		}
 
-		queryEngine.getSqmFunctionRegistry().register( "extract", new MySQLExtractEmulation() );
 		queryEngine.getSqmFunctionRegistry().register( "cast", new MySQLCastEmulation() );
 	}
 
@@ -227,6 +225,53 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String currentTimestamp() {
 		return getVersion() < 570 ? super.currentTimestamp() : "current_timestamp(6)";
+	}
+
+
+	/**
+	 * MySQL supports a limited list of temporal fields in the
+	 * extract() function, but we can emulate some of them by
+	 * using the appropriate named functions instead of
+	 * extract().
+	 *
+	 * Thus, the additional supported fields are
+	 * {@link TemporalUnit#DAY_OF_YEAR},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR}.
+	 *
+	 * In addition, the field {@link TemporalUnit#SECOND} is
+	 * redefined to include microseconds.
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		switch (unit) {
+			case SECOND:
+				appender.append("(second(");
+				from.render();
+				appender.append(")+microsecond(");
+				from.render();
+				appender.append(")/1e6)");
+				return; //EXIT EARLY
+			case WEEK:
+				appender.append("weekofyear"); //same as week(?2,3), the ISO week
+				break;
+			case DAY_OF_WEEK:
+				appender.append("dayofweek");
+				break;
+			case DAY_OF_MONTH:
+				appender.append("dayofmonth");
+				break;
+			case DAY_OF_YEAR:
+				appender.append("dayofyear");
+				break;
+			//TODO: case WEEK_YEAR: yearweek(?2, 3)/100
+			default:
+				appender.append( unit.toString() );
+				break;
+		}
+		appender.append("(");
+		from.render();
+		appender.append(")");
 	}
 
 	@Override

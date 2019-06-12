@@ -1266,32 +1266,16 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "chr", "char" );
 	}
 
-	public static void extract(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("extract", "extract(?1 from ?2)")
-//				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount(2)
-				.setReturnTypeResolver( useArgType(1) )
-				.setArgumentListSignature("(field from arg)")
-				.register();
-	}
-
 	/**
 	 * Transact SQL-style
 	 */
-	public static void extract_datepart(QueryEngine queryEngine) {
+	public static void datepartDatename(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datepart" )
 //				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(field, arg)")
 				.register();
-
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "extract", "datepart" )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.setExactArgumentCount( 2 )
-				.setArgumentListSignature("(field from arg)")
-				.register();
-
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "datename" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.setExactArgumentCount( 2 )

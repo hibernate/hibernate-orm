@@ -13,7 +13,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
-import org.hibernate.dialect.function.OracleExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -189,8 +188,6 @@ public class OracleDialect extends Dialect {
 				"instr(?2, ?1)",
 				"instr(?2, ?1, ?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
-
-		queryEngine.getSqmFunctionRegistry().register( "extract", new OracleExtractEmulation() );
 	}
 
 	@Override
@@ -221,6 +218,45 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String currentTimestampWithTimeZone() {
 		return getVersion() < 9 ? currentTimestamp() : "current_timestamp";
+	}
+
+	/**
+	 * Oracle supports a limited list of temporal fields in the
+	 * extract() function, but we can emulate some of them by
+	 * using to_char() with a format string instead of extract().
+	 *
+	 * Thus, the additional supported fields are
+	 * {@link TemporalUnit#DAY_OF_YEAR},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR},
+	 * and {@link TemporalUnit#WEEK}.
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		switch (unit) {
+			case DAY_OF_WEEK:
+				appender.append("to_number(to_char(");
+				from.render();
+				appender.append(",'D'))");
+				break;
+			case DAY_OF_MONTH:
+				appender.append("to_number(to_char(");
+				from.render();
+				appender.append(",'DD'))");
+				break;
+			case DAY_OF_YEAR:
+				appender.append("to_number(to_char(");
+				from.render();
+				appender.append(",'DDD'))");
+				break;
+			case WEEK:
+				appender.append("to_number(to_char(");
+				from.render();
+				appender.append(",'IW'))"); //the ISO week number
+				break;
+			default:
+				super.extract(unit, from, appender);
+		}
 	}
 
 	@Override

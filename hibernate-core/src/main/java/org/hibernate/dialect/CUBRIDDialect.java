@@ -10,7 +10,6 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CUBRIDExtractEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.TemporalUnit;
@@ -159,9 +158,6 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
 		CommonFunctionFactory.rownumInstOrderbyGroupbyNum( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().register( "extract", new CUBRIDExtractEmulation() );
-
 	}
 
 	@Override
@@ -306,6 +302,38 @@ public class CUBRIDDialect extends Dialect {
 				.replace("SS", "FF")
 				.replace("S", "FF")
 				.result();
+	}
+
+	/**
+	 * CUBRID supports a limited list of temporal fields in the
+	 * extract() function, but we can emulate some of them by
+	 * using the appropriate named functions instead of
+	 * extract().
+	 *
+	 * Thus, the additional supported fields are
+	 * {@link TemporalUnit#DAY_OF_YEAR},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR}.
+	 *
+	 * In addition, the field {@link TemporalUnit#SECOND} is
+	 * redefined to include milliseconds.
+	 */
+	@Override
+	public String extract(TemporalUnit unit) {
+		switch (unit) {
+			case SECOND:
+				return "(second(?2)+extract(millisecond from ?2)/1e3)";
+			case DAY_OF_WEEK:
+				return "dayofweek(?2)";
+			case DAY_OF_MONTH:
+				return "dayofmonth(?2)";
+			case DAY_OF_YEAR:
+				return "dayofyear(?2)";
+			case WEEK:
+				return "week(?2,3)"; //mode 3 is the ISO week
+			default:
+				return "?1(?2)";
+		}
 	}
 
 	@Override

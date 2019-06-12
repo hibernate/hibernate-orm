@@ -13,7 +13,6 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.PostgresExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -120,6 +119,25 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BOOLEAN;
+	}
+
+	/**
+	 * Postgres extract() function returns {@link TemporalUnit#DAY_OF_WEEK}
+	 * numbered from 0 to 6. This isn't consistent with what most other
+	 * databases do, so here we adjust the result by generating
+	 * {@code (extract(dow,arg)+1)).
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		switch ( unit ) {
+			case DAY_OF_WEEK:
+				appender.append("(");
+				super.extract(unit, from, appender);
+				appender.append("+1)");
+				break;
+			default:
+				super.extract(unit, from, appender);
+		}
 	}
 
 	public void timestampadd(
@@ -302,8 +320,6 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.insert_overlay( queryEngine );
 		CommonFunctionFactory.overlay( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine ); //was introduced in Postgres 9 apparently
-
-		queryEngine.getSqmFunctionRegistry().register( "extract", new PostgresExtractEmulation() );
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",

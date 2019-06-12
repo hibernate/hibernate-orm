@@ -12,7 +12,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.MimerExtractEmulation;
 import org.hibernate.dialect.function.MySQLCastEmulation;
 import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.TemporalUnit;
@@ -22,6 +21,8 @@ import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+
+import static org.hibernate.query.TemporalUnit.DAY;
 
 /**
  * A dialect for Mimer SQL 11.
@@ -96,7 +97,6 @@ public class MimerSQLDialect extends Dialect {
 		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().register( "extract", new MimerExtractEmulation() );
 		queryEngine.getSqmFunctionRegistry().register( "cast", new MySQLCastEmulation() {
 			@Override
 			protected String stringToBooleanPattern() {
@@ -117,6 +117,43 @@ public class MimerSQLDialect extends Dialect {
 	@Override
 	public String currentTime() {
 		return "localtime";
+	}
+
+	/**
+	 * Mimer supports a limited list of temporal fields in the
+	 * extract() function, but we can emulate some of them by
+	 * using the appropriate named functions instead of
+	 * extract().
+	 *
+	 * Thus, the additional supported fields are
+	 * {@link TemporalUnit#WEEK},
+	 * {@link TemporalUnit#DAY_OF_YEAR},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR}.
+	 */
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		switch (unit) {
+			case WEEK:
+				appender.append("week(");
+				from.render();
+				appender.append(")");
+				break;
+			case DAY_OF_WEEK:
+				appender.append("dayofweek(");
+				from.render();
+				appender.append(")");
+				break;
+			case DAY_OF_YEAR:
+				appender.append("dayofyear(");
+				from.render();
+				appender.append(")");
+				break;
+			case DAY_OF_MONTH:
+				unit = DAY;
+			default:
+				super.extract(unit, from, appender);
+		}
 	}
 
 	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {

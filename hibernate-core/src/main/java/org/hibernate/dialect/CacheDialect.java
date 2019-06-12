@@ -107,7 +107,7 @@ public class CacheDialect extends Dialect {
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
-		CommonFunctionFactory.extract_datepart( queryEngine );
+		CommonFunctionFactory.datepartDatename( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
@@ -154,8 +154,14 @@ public class CacheDialect extends Dialect {
 
 	}
 
-	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Override
+	public void extract(TemporalUnit unit, Renderer from, Appender appender) {
+		appender.append("datepart(");
+		appender.append( translateExtractField(unit) );
+		appender.append(",");
+		from.render();
+		appender.append(")");
+	}
 
 	@Override
 	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
@@ -187,11 +193,7 @@ public class CacheDialect extends Dialect {
 		sqlAppender.append(")");
 	}
 
-	@Override
-	public boolean hasAlterTable() {
-		// Does this dialect support the ALTER TABLE syntax?
-		return true;
-	}
+	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public boolean qualifyIndexName() {
@@ -221,16 +223,6 @@ public class CacheDialect extends Dialect {
 				.append( String.join( ", ", primaryKey ) )
 				.append( ") " )
 				.toString();
-	}
-
-	/**
-	 * Does this dialect support check constraints?
-	 *
-	 * @return {@code false} (Cache does not support check constraints)
-	 */
-	@SuppressWarnings("UnusedDeclaration")
-	public boolean supportsCheck() {
-		return false;
 	}
 
 	@Override

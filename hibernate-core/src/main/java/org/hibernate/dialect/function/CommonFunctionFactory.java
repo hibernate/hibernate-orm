@@ -1283,14 +1283,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void trim(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("trim", "trim(?1 ?2 from ?3)")
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setExactArgumentCount(3)
-				.setArgumentListSignature("([[{leading|trailing|both} ][character ]from] string)")
-				.register();
-	}
-
 	// No real consistency in the semantics of these functions:
 	// H2, HSQL: now()/curtime()/curdate() mean localtimestamp/localtime/current_date
 	// MySQL, Cache: now()/curtime()/curdate() mean current_timestamp/current_time/current_date

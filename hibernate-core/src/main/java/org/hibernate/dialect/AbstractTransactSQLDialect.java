@@ -25,6 +25,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
+import org.hibernate.sql.TrimSpec;
 import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -126,6 +127,32 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		//TODO: SQL Server supports nanosecond, but what about Sybase?
 		return "datediff(?1, ?2, ?3)";
+	}
+
+	@Override
+	public String trimPattern(TrimSpec specification, char character) {
+		return replaceLtrimRtrim(specification, character);
+	}
+
+	static String replaceLtrimRtrim(TrimSpec specification, char character) {
+		boolean blank = character == ' ';
+		switch ( specification ) {
+			case LEADING:
+				return blank
+						? "ltrim(?1)"
+						: "replace(replace(ltrim(replace(replace(?1,' ','#%#%'),'@',' ')),' ','@'),'#%#%',' ')"
+								.replace('@', character);
+			case TRAILING:
+				return blank
+						? "rtrim(?1)"
+						: "replace(replace(rtrim(replace(replace(?1,' ','#%#%'),'@',' ')),' ','@'),'#%#%',' ')"
+								.replace('@', character);
+			default:
+				return blank
+						? "ltrim(rtrim(?1))"
+						: "replace(replace(ltrim(rtrim(replace(replace(?1,' ','#%#%'),'@',' '))),' ','@'),'#%#%',' ')"
+								.replace('@', character);
+		}
 	}
 
 	@Override

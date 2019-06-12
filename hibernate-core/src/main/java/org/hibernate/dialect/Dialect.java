@@ -48,6 +48,7 @@ import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.function.LpadRpadPadEmulation;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
+import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -109,6 +110,7 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.SqlExpressableType;
+import org.hibernate.sql.TrimSpec;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -453,7 +455,7 @@ public abstract class Dialect implements ConversionContext {
 		//we care about, but on some it must be emulated using ltrim(), rtrim(),
 		//and replace()
 
-		CommonFunctionFactory.trim(queryEngine);
+		queryEngine.getSqmFunctionRegistry().register("trim", new TrimFunction(this));
 
 		//ANSI SQL cast() function is supported on the databases we care most
 		//about but in certain cases it doesn't allow some useful typecasts,
@@ -639,6 +641,12 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String castStringToFloat() {
 		return cast();
+	}
+
+	public String trimPattern(TrimSpec specification, char character) {
+		return character == ' '
+				? "trim(" + specification + " from ?1)"
+				: "trim(" + specification + " '" + character + "' from ?1)";
 	}
 
 	/**

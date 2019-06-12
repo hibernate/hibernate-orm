@@ -18,6 +18,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Sybase11JoinFragment;
+import org.hibernate.sql.TrimSpec;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -450,5 +451,11 @@ public class SybaseASEDialect extends SybaseDialect {
 				return false;
 			}
 		};
+	}
+
+	@Override
+	public String trimPattern(TrimSpec specification, char character) {
+		return super.trimPattern(specification, character)
+				.replace("replace", "str_replace");
 	}
 }

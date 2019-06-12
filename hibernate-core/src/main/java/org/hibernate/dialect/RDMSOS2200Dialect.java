@@ -10,7 +10,6 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.query.TemporalUnit;
@@ -28,6 +27,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 
+import org.hibernate.sql.TrimSpec;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
@@ -148,9 +148,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.insert( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
-
-		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
-		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation() );
 	}
 
 	/**
@@ -352,5 +349,10 @@ public class RDMSOS2200Dialect extends Dialect {
 				.replace("SS", "MLS")
 				.replace("S", "MLS")
 				.result();
+	}
+
+	@Override
+	public String trimPattern(TrimSpec specification, char character) {
+		return AbstractTransactSQLDialect.replaceLtrimRtrim(specification, character);
 	}
 }

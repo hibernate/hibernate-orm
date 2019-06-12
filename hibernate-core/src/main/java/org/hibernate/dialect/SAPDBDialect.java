@@ -11,7 +11,6 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -22,6 +21,7 @@ import org.hibernate.query.sqm.mutation.spi.idtable.LocalTempTableExporter;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
+import org.hibernate.sql.TrimSpec;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorSAPDBDatabaseImpl;
@@ -114,9 +114,11 @@ public class SAPDBDialect extends Dialect {
 				"locate",
 				StandardSpiBasicTypes.INTEGER, "index(?2, ?1)", "index(?2, ?1, ?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
+	}
 
-		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation() );
-
+	@Override
+	public String trimPattern(TrimSpec specification, char character) {
+		return AbstractTransactSQLDialect.replaceLtrimRtrim(specification, character);
 	}
 
 	@Override

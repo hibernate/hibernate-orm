@@ -14,7 +14,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NullPrecedence;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.dialect.function.LtrimRtrimReplaceTrimEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
@@ -98,8 +97,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
-
-		queryEngine.getSqmFunctionRegistry().register( "trim", new LtrimRtrimReplaceTrimEmulation() );
 
 		CommonFunctionFactory.truncate_round( queryEngine );
 
@@ -467,4 +464,5 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				.replace("xxx", "zzz")
 				.replace("x", "zz");
 	}
+
 }

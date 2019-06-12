@@ -16,7 +16,7 @@ public enum TrimSpec {
 	TRAILING,
 	BOTH;
 
-	public String toSqlText() {
+	public String toString() {
 		return name().toLowerCase( Locale.ROOT );
 	}
 }

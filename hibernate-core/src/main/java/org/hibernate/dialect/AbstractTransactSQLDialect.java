@@ -37,8 +37,10 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 abstract class AbstractTransactSQLDialect extends Dialect {
 	public AbstractTransactSQLDialect() {
 		super();
+
 		registerColumnType( Types.BOOLEAN, "bit" );
-		registerColumnType( Types.BIT, 1, "bit" );
+
+		//SQL Server/Sybase 'bit' type is always exactly one bit
 		registerColumnType( Types.BIT, "smallint" );
 
 		//'tinyint' is an unsigned type in Sybase and
@@ -71,6 +73,8 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		switch (sqlCode) {
 			case Types.BOOLEAN:
 				return BitSqlDescriptor.INSTANCE;
+			case Types.BIT:
+				return SmallIntSqlDescriptor.INSTANCE;
 			case Types.TINYINT:
 				return SmallIntSqlDescriptor.INSTANCE;
 			default:

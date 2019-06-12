@@ -18,6 +18,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Sybase11JoinFragment;
+import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -47,6 +49,10 @@ public class SybaseASEDialect extends SybaseDialect {
 		super();
 		this.version = version;
 
+		//On Sybase ASE, the 'bit' type cannot be null,
+		//and cannot have indexes
+		registerColumnType( Types.BOOLEAN, "smallint" );
+
 		if ( getVersion() >= 1500 ) {
 			//bigint was added in version 15
 			registerColumnType( Types.BIGINT, "bigint" );
@@ -59,6 +65,13 @@ public class SybaseASEDialect extends SybaseDialect {
 		}
 
 		registerSybaseKeywords();
+	}
+
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		return sqlCode == Types.BOOLEAN
+				? SmallIntSqlDescriptor.INSTANCE
+				: super.getSqlTypeDescriptorOverride(sqlCode);
 	}
 
 	@Override

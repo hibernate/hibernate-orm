@@ -80,7 +80,10 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select 'foo' || e.theString || 'bar' from EntityOfBasics e")
 							.list();
 					assertThat( session.createQuery("select concat('hello',' ','world')").getSingleResult(), is("hello world") );
-					assertThat( session.createQuery("select 'hello'||' '||'world')").getSingleResult(), is("hello world") );
+					assertThat( session.createQuery("select 'hello'||' '||'world'").getSingleResult(), is("hello world") );
+					assertThat( session.createQuery("select :hello||:world").setParameter("hello","hello").setParameter("world","world").getSingleResult(), is("helloworld") );
+					assertThat( session.createQuery("select ?1||?2").setParameter(1,"hello").setParameter(2,"world").getSingleResult(), is("helloworld") );
+					assertThat( session.createQuery("select ?1||?1").setParameter(1,"hello").getSingleResult(), is("hellohello") );
 				}
 		);
 	}
@@ -365,6 +368,9 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					assertThat( session.createQuery("select cast('123.12' as Float)").getSingleResult(), is(123.12f) );
 //					assertThat( session.createQuery("select cast('123.12' as Double)").getSingleResult(), is(123.12d) );
 
+					assertThat( session.createQuery("select cast('hello' as String)").getSingleResult(), is("hello") );
+					assertThat( ((String) session.createQuery("select cast(true as String)").getSingleResult()).toLowerCase(), is("true") );
+					assertThat( ((String) session.createQuery("select cast(false as String)").getSingleResult()).toLowerCase(), is("false") );
 					assertThat( session.createQuery("select cast(123 as String)").getSingleResult(), is("123") );
 //					assertThat( session.createQuery("select cast(123.12 as String)").getSingleResult(), is("123.12") );
 

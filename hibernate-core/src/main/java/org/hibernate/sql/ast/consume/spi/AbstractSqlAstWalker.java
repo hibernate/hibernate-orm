@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SortOrder;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -137,8 +137,8 @@ public abstract class AbstractSqlAstWalker
 		sqlBuffer.append( fragment );
 	}
 
-	protected JdbcServices getJdbcServices() {
-		return getSessionFactory().getJdbcServices();
+	protected Dialect getDialect() {
+		return getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	protected boolean isCurrentlyInPredicate() {
@@ -168,7 +168,7 @@ public abstract class AbstractSqlAstWalker
 
 		FromClause fromClause = querySpec.getFromClause();
 		if ( fromClause == null || fromClause.getRoots().isEmpty() ) {
-			String fromDual = getJdbcServices().getDialect().getFromDual();
+			String fromDual = getDialect().getFromDual();
 			if ( !fromDual.isEmpty() ) {
 				appendSql(" ");
 				appendSql( fromDual );
@@ -422,7 +422,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitExtractUnit(ExtractUnit unit) {
-		appendSql( sessionFactory.getJdbcServices().getDialect().translateExtractField( unit.getUnit() ) );
+		appendSql( getDialect().translateExtractField( unit.getUnit() ) );
 	}
 
 	@Override
@@ -444,7 +444,7 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitCastTarget(CastTarget target) {
 		appendSql(
-				sessionFactory.getJdbcServices().getDialect().getCastTypeName(
+				getDialect().getCastTypeName(
 						target.getExpressableType(),
 						target.getLength(),
 						target.getPrecision(),
@@ -455,7 +455,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitFormat(Format format) {
-		String dialectFormat = sessionFactory.getJdbcServices().getDialect().translateDatetimeFormat( format.getFormat() );
+		String dialectFormat = getDialect().translateDatetimeFormat( format.getFormat() );
 		appendSql("'");
 		appendSql(dialectFormat);
 		appendSql("'");
@@ -736,7 +736,7 @@ public abstract class AbstractSqlAstWalker
 			appendSql(
 					jdbcLiteralFormatter.toJdbcLiteral(
 							queryLiteral.getValue(),
-							sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect(),
+							getDialect(),
 							null
 					)
 			);

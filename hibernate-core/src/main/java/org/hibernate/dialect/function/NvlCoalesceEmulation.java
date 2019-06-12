@@ -22,9 +22,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static java.util.Arrays.asList;
 
 /**
- * Emulation `coalesce` using `nvl` on versions Oracle not supporting `coalesce`
- *
- * todo (6.0) : what was the first version of Oracle to support `coalesce`?
+ * Oracle 8i had no {@code coalesce()} function,
+ * so we emulate it using chained {@code nvl()}s.
  *
  * @author Steve Ebersole
  * @author Gavin King

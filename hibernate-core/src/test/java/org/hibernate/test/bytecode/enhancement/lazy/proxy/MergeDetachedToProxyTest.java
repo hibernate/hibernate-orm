@@ -23,6 +23,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -33,7 +34,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -45,8 +47,10 @@ public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCas
 
 	@Test
 	public void testMergeInitializedDetachedOntoProxy() {
-		AEntity aEntityDetached = doInHibernate(
-				this::sessionFactory, session -> {
+		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+
+		final AEntity aEntityDetached = fromTransaction(
+				session -> {
 					AEntity aEntity = session.get( AEntity.class, 1 );
 					assertIsEnhancedProxy( aEntity.bEntity );
 					Hibernate.initialize( aEntity.bEntity );
@@ -54,23 +58,33 @@ public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		statistics.clear();
+		assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+
+		inSession(
+				session -> {
 					BEntity bEntity = session.getReference( BEntity.class, 2 );
 					assertIsEnhancedProxy( bEntity );
+					assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+
 					AEntity aEntityMerged = (AEntity) session.merge( aEntityDetached );
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+
 					assertSame( bEntity, aEntityMerged.bEntity );
 					assertEquals( "a description", aEntityDetached.bEntity.description );
 					assertTrue( Hibernate.isInitialized( bEntity ) );
 				}
 		);
+
+		assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 	}
 
 	@Test
 	public void testMergeUpdatedDetachedOntoProxy() {
+		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 
-		AEntity aEntityDetached = doInHibernate(
-				this::sessionFactory, session -> {
+		final AEntity aEntityDetached = fromTransaction(
+				session -> {
 					AEntity aEntity = session.get( AEntity.class, 1 );
 					assertIsEnhancedProxy( aEntity.bEntity );
 					Hibernate.initialize( aEntity.bEntity );
@@ -80,16 +94,25 @@ public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCas
 
 		aEntityDetached.bEntity.description = "new description";
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		statistics.clear();
+		assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+
+		inSession(
+				session -> {
 					BEntity bEntity = session.getReference( BEntity.class, 2 );
 					assertIsEnhancedProxy( bEntity );
+					assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+
 					AEntity aEntityMerged = (AEntity) session.merge( aEntityDetached );
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+
 					assertSame( bEntity, aEntityMerged.bEntity );
 					assertEquals( "new description", aEntityDetached.bEntity.description );
 					assertTrue( Hibernate.isInitialized( bEntity ) );
 				}
 		);
+
+		assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 	}
 
 	@Override

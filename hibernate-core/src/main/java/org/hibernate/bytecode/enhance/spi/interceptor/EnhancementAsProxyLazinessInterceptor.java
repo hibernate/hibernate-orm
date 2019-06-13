@@ -180,24 +180,20 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 		if ( isTemporarySession ) {
 			// Add an entry for this entity in the PC of the temp Session
-			// NOTE : a few arguments that would be nice to pass along here...
-			//		1) loadedState if we know any - since this is an uninitialized "proxy",
-			//		all attributes are not yet fetched
-			final Object[] loadedState = ArrayHelper.filledArray(
-					LazyPropertyInitializer.UNFETCHED_PROPERTY,
-					Object.class,
-					persister.getPropertyTypes().length
-			);
-			//		2) does a row exist in the db for this entity?
-			final boolean existsInDb = true;
 			session.getPersistenceContext().addEntity(
 					target,
 					Status.READ_ONLY,
-					loadedState,
+					// loaded state
+					ArrayHelper.filledArray(
+							LazyPropertyInitializer.UNFETCHED_PROPERTY,
+							Object.class,
+							persister.getPropertyTypes().length
+					),
 					entityKey,
 					persister.getVersion( target ),
 					LockMode.NONE,
-					existsInDb,
+					// we assume an entry exists in the db
+					true,
 					persister,
 					true
 			);

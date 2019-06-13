@@ -160,12 +160,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			return new SQLServer2005LimitHandler();
 		}
 		else {
-			return new TopLimitHandler() {
-				@Override
-				public boolean supportsVariableLimit() {
-					return false;
-				}
-			};
+			return new TopLimitHandler(false);
 		}
 	}
 

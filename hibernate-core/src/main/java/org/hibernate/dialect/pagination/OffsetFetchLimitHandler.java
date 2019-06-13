@@ -18,6 +18,12 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 
+	private boolean variableLimit;
+
+	public OffsetFetchLimitHandler(boolean variableLimit) {
+		this.variableLimit = variableLimit;
+	}
+
 	@Override
 	public String processSql(String sql, RowSelection selection) {
 
@@ -31,7 +37,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 
 		if ( hasFirstRow ) {
 			offsetFetch.append( " offset " );
-			if ( supportsVariableLimit() ) {
+			if ( variableLimit ) {
 				offsetFetch.append( "?" );
 			}
 			else {
@@ -49,7 +55,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 			else {
 				offsetFetch.append( " fetch first " );
 			}
-			if ( supportsVariableLimit() ) {
+			if ( variableLimit ) {
 				offsetFetch.append( "?" );
 			}
 			else {
@@ -62,16 +68,16 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean supportsLimit() {
+	public final boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
-	public boolean supportsVariableLimit() {
-		return false;
+	public final boolean supportsVariableLimit() {
+		return variableLimit;
 	}
 
-	protected boolean isIngres() {
+	boolean isIngres() {
 		return false;
 	}
 }

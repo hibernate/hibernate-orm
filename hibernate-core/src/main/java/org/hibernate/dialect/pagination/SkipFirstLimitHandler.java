@@ -12,12 +12,18 @@ import org.hibernate.engine.spi.RowSelection;
  * A {@link LimitHandler} for Informix which supports the syntax
  * {@code SKIP m FIRST n}.
  */
-public abstract class SkipFirstLimitHandler extends AbstractLimitHandler {
+public class SkipFirstLimitHandler extends AbstractLimitHandler {
+
+	private boolean variableLimit;
+
+	public SkipFirstLimitHandler(boolean variableLimit) {
+		this.variableLimit = variableLimit;
+	}
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
 		StringBuilder skipFirst = new StringBuilder();
-		if ( supportsVariableLimit() ) {
+		if ( variableLimit ) {
 			if ( hasFirstRow( selection ) ) {
 				skipFirst.append( " skip ?" );
 			}
@@ -45,5 +51,7 @@ public abstract class SkipFirstLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public abstract boolean supportsVariableLimit();
+	public final boolean supportsVariableLimit() {
+		return variableLimit;
+	}
 }

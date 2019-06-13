@@ -8,6 +8,8 @@ package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
 
+import static java.lang.String.valueOf;
+
 /**
  * A {@link LimitHandler} for databases which support the ANSI
  * SQL standard syntax {@code FETCH FIRST m ROWS ONLY} but not
@@ -17,16 +19,23 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class FetchLimitHandler extends AbstractLimitHandler {
 
-	public static final FetchLimitHandler INSTANCE = new FetchLimitHandler();
+	public static final FetchLimitHandler INSTANCE = new FetchLimitHandler(false);
+
+	private boolean variableLimit;
+
+	public FetchLimitHandler(boolean variableLimit) {
+		this.variableLimit = variableLimit;
+	}
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
 		if ( !hasMaxRows( selection) ) {
 			return sql;
 		}
-		String fetch = supportsVariableLimit()
-				? " fetch first ? rows only"
-				: " fetch first " + getMaxOrLimit( selection ) + " rows only";
+		String fetch = " fetch first ? rows only";
+		if ( variableLimit ) {
+			fetch = fetch.replace( "?", valueOf( getMaxOrLimit( selection ) ) );
+		}
 		return insertBeforeForUpdate( fetch, sql );
 	}
 
@@ -41,8 +50,8 @@ public class FetchLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean supportsVariableLimit() {
-		return false;
+	public final boolean supportsVariableLimit() {
+		return variableLimit;
 	}
 
 }

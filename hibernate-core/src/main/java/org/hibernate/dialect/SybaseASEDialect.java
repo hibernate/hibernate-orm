@@ -445,12 +445,7 @@ public class SybaseASEDialect extends SybaseDialect {
 			//support for SELECT TOP was introduced in Sybase ASE 12.5.3
 			return super.getLimitHandler();
 		}
-		return new TopLimitHandler() {
-			@Override
-			public boolean supportsVariableLimit() {
-				return false;
-			}
-		};
+		return new TopLimitHandler(false);
 	}
 
 	@Override

@@ -124,19 +124,8 @@ public class OracleDialect extends Dialect {
 		registerDefaultProperties();
 
 		limitHandler = getVersion() < 12
-				? new OracleLimitHandler() {
-					@Override
-					protected int getVersion() {
-						return OracleDialect.this.getVersion();
-					}
-				}
-				: new OffsetFetchLimitHandler() {
-					@Override
-					public boolean supportsVariableLimit() {
-						//TODO: untested!
-						return true;
-					}
-				};
+				? new OracleLimitHandler( getVersion() )
+				: new OffsetFetchLimitHandler( true );
 	}
 
 	@Override

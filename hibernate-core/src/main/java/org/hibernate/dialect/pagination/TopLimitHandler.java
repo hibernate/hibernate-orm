@@ -8,6 +8,8 @@ package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
 
+import static java.lang.String.valueOf;
+
 
 /**
  * A {@link LimitHandler} for Transact SQL and similar
@@ -17,16 +19,23 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class TopLimitHandler extends AbstractLimitHandler {
 
-	public static TopLimitHandler INSTANCE = new TopLimitHandler();
+	public static TopLimitHandler INSTANCE = new TopLimitHandler(true);
+
+	private boolean variableLimit;
+
+	public TopLimitHandler(boolean variableLimit) {
+		this.variableLimit = variableLimit;
+	}
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
 		if ( !hasMaxRows( selection) ) {
 			return sql;
 		}
-		String top = supportsVariableLimit()
-				? " top ? "
-				: " top " + getMaxOrLimit(selection) + " ";
+		String top = " top ? ";
+		if ( variableLimit ) {
+			top = top.replace( "?", valueOf( getMaxOrLimit( selection ) ) );
+		}
 		return insertAfterDistinct( top, sql );
 	}
 
@@ -41,8 +50,8 @@ public class TopLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean supportsVariableLimit() {
-		return true;
+	public final boolean supportsVariableLimit() {
+		return variableLimit;
 	}
 
 	@Override

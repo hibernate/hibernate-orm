@@ -21,9 +21,9 @@ public class DB2LimitHandler extends AbstractLimitHandler {
 	public String processSql(String sql, RowSelection selection) {
 		if ( hasFirstRow( selection ) ) {
 			//nest the main query in an outer select
-			return "select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
+			return "select * from ( select row_.*, rownumber() over(order by order of row_) as rownumber_ from ( "
 					+ sql + fetchFirstRows( selection )
-					+ " ) as inner2_ ) as inner1_ where rownumber_ > "
+					+ " ) as row_ ) as query_ where rownumber_ > "
 					+ selection.getFirstRow()
 					+ " order by rownumber_";
 		}
@@ -37,17 +37,17 @@ public class DB2LimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean supportsLimit() {
+	public final boolean supportsLimit() {
 		return true;
 	}
 
 	@Override
-	public boolean useMaxForLimit() {
+	public final boolean useMaxForLimit() {
 		return true;
 	}
 
 	@Override
-	public boolean supportsVariableLimit() {
+	public final boolean supportsVariableLimit() {
 		return false;
 	}
 }

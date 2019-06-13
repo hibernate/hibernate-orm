@@ -14,9 +14,8 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
 
 /**
- * A {@link LimitHandler} that works in Interbase, Firebird,
- * and TimesTen using the syntax {@code ROWS n} and
- * {@code ROWS m TO n}.
+ * A {@link LimitHandler} that works in Interbase and Firebird,
+ * using the syntax {@code ROWS n} and {@code ROWS m TO n}.
  *
  * @author Gavin King
  */
@@ -32,16 +31,11 @@ public class RowsLimitHandler extends AbstractLimitHandler {
 		String rows = hasFirstRow( selection )
 				? " rows ? to ?"
 				: " rows ?";
-		return atStart()
-				//for TimesTen
-				? insertAfterSelect( rows, sql )
-				//for others
-				: insertBeforeForUpdate( sql, rows );
+		return insert( sql, rows );
 	}
 
-	@Override
-	public final boolean bindLimitParametersFirst() {
-		return atStart();
+	String insert(String sql, String rows) {
+		return insertBeforeForUpdate( sql, rows );
 	}
 
 	@Override
@@ -62,10 +56,6 @@ public class RowsLimitHandler extends AbstractLimitHandler {
 	@Override
 	public final boolean supportsVariableLimit() {
 		return true;
-	}
-
-	protected boolean atStart() {
-		return false;
 	}
 
 	private static final Pattern FOR_UPDATE_PATTERN =

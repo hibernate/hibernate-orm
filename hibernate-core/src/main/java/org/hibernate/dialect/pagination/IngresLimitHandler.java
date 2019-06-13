@@ -27,8 +27,12 @@ public class IngresLimitHandler extends OffsetFetchLimitHandler {
 
 	public static final IngresLimitHandler INSTANCE = new IngresLimitHandler();
 
+	public IngresLimitHandler() {
+		super(false);
+	}
+
 	@Override
-	protected boolean isIngres() {
+	boolean isIngres() {
 		//Ingres doesn't like "rows" in the
 		//ANSI-standard syntax 'offset n rows'
 		return true;

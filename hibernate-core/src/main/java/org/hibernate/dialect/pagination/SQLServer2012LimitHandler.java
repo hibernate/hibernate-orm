@@ -25,16 +25,6 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 	// records whether the limit handler used offset/fetch or 2005 behavior
 	private boolean usedOffsetFetch;
 
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return true;
-	}
-
 	/**
 	 * SQLServer mandates the following rules to use
 	 * 'OFFSET'/'FETCH':

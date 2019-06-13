@@ -23,9 +23,11 @@ import static java.util.regex.Pattern.compile;
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
 
-	protected AbstractLimitHandler() {
-		// NOP
-	}
+	public static LimitHandler NO_LIMIT = new AbstractLimitHandler(){};
+
+	private static final Pattern SELECT_PATTERN = compile( "^\\s*select\\b", CASE_INSENSITIVE );
+	private static final Pattern SELECT_DISTINCT_PATTERN = compile( "^\\s*select(\\s+(distinct|all))?\\b", CASE_INSENSITIVE );
+	private static final Pattern END_PATTERN = compile("\\s*(;|$)", CASE_INSENSITIVE);
 
 	@Override
 	public boolean supportsLimit() {
@@ -218,9 +220,6 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		return selection == null || selection.getFirstRow() == null ? 0 : selection.getFirstRow();
 	}
 
-	private static final Pattern SELECT_PATTERN =
-			compile( "^\\s*select\\b", CASE_INSENSITIVE );
-
 	protected static String insertAfterSelect(String limitOffsetClause, String sqlStatement) {
 		Matcher selectMatcher = SELECT_PATTERN.matcher( sqlStatement );
 		if ( selectMatcher.find() ) {
@@ -232,9 +231,6 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 			return sqlStatement;
 		}
 	}
-
-	private static final Pattern SELECT_DISTINCT_PATTERN =
-			compile( "^\\s*select\\s+((distinct|all)\\b)?", CASE_INSENSITIVE );
 
 	protected static String insertAfterDistinct(String limitOffsetClause, String sqlStatement) {
 		Matcher selectDistinctMatcher = SELECT_DISTINCT_PATTERN.matcher( sqlStatement );
@@ -248,14 +244,11 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		}
 	}
 
-	private static final Pattern END_PATTERN =
-			compile("\\s*(;|$)", CASE_INSENSITIVE);
-
 	protected String insertAtEnd(String limitOffsetClause, String sqlStatement) {
-		Matcher forUpdateMatcher = END_PATTERN.matcher( sqlStatement );
-		if ( forUpdateMatcher.find() ) {
+		Matcher endMatcher = END_PATTERN.matcher( sqlStatement );
+		if ( endMatcher.find() ) {
 			return new StringBuilder( sqlStatement )
-					.insert( forUpdateMatcher.start(), limitOffsetClause )
+					.insert( endMatcher.start(), limitOffsetClause )
 					.toString();
 		}
 		else {

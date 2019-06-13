@@ -8,6 +8,8 @@ package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
 
+import static java.lang.String.valueOf;
+
 /**
  * A {@link LimitHandler} for older versions of Informix, Ingres,
  * and TimesTen, which supported the syntax {@code SELECT FIRST n}.
@@ -16,16 +18,23 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class FirstLimitHandler extends AbstractLimitHandler {
 
-	public static final FirstLimitHandler INSTANCE = new FirstLimitHandler();
+	public static final FirstLimitHandler INSTANCE = new FirstLimitHandler(false);
+
+	private boolean variableLimit;
+
+	public FirstLimitHandler(boolean variableLimit) {
+		this.variableLimit = variableLimit;
+	}
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
 		if ( !hasMaxRows( selection) ) {
 			return sql;
 		}
-		String first = supportsVariableLimit()
-				? " first ?"
-				: " first " + getMaxOrLimit(selection);
+		String first = " first ?";
+		if ( variableLimit ) {
+			first = first.replace( "?", valueOf( getMaxOrLimit( selection ) ) );
+		}
 		return insertAfterSelect( sql, first );
 	}
 
@@ -40,8 +49,8 @@ public class FirstLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean supportsVariableLimit() {
-		return false;
+	public final boolean supportsVariableLimit() {
+		return variableLimit;
 	}
 
 	@Override

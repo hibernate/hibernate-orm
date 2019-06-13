@@ -24,18 +24,10 @@ import java.util.regex.Pattern;
  *
  * @author Gavin King
  */
-public abstract class DerbyLimitHandler extends OffsetFetchLimitHandler {
+public class DerbyLimitHandler extends OffsetFetchLimitHandler {
 
-	protected abstract int getDerbyVersion();
-
-	@Override
-	public boolean supportsLimit() {
-		return getDerbyVersion() >= 1050;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return getDerbyVersion() >= 1060;
+	public DerbyLimitHandler(boolean variableLimit) {
+		super(variableLimit);
 	}
 
 	private static final Pattern FOR_UPDATE_WITH_LOCK_PATTERN =

@@ -95,15 +95,10 @@ public class InformixDialect extends Dialect {
 
 		limitHandler = getVersion() < 10
 				? FirstLimitHandler.INSTANCE
-				: new SkipFirstLimitHandler() {
-			@Override
-			public boolean supportsVariableLimit() {
 				//according to the Informix documentation for
 				//version 11 and above, parameters are supported
 				//but I have not tested this at all!
-				return getVersion() >= 11;
-			}
-		};
+				: new SkipFirstLimitHandler( getVersion() >= 11 );
 	}
 
 	@Override

@@ -18,6 +18,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -73,12 +74,7 @@ public class DerbyDialect extends Dialect {
 		return version;
 	}
 
-	private final LimitHandler limitHandler = new DerbyLimitHandler() {
-		@Override
-		protected int getDerbyVersion() {
-			return DerbyDialect.this.getVersion();
-		}
-	};
+	private final LimitHandler limitHandler;
 
 	public DerbyDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
@@ -116,6 +112,10 @@ public class DerbyDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.QUERY_LITERAL_RENDERING, "literal" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+
+		limitHandler = getVersion() < 1050
+				? AbstractLimitHandler.NO_LIMIT
+				: new DerbyLimitHandler( getVersion() >= 1060 );
 	}
 
 	@Override

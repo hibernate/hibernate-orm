@@ -20,7 +20,7 @@ import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.RowsLimitHandler;
+import org.hibernate.dialect.pagination.TimesTenLimitHandler;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.TemporalUnit;
@@ -55,22 +55,6 @@ import static org.hibernate.query.TemporalUnit.NANOSECOND;
  */
 @SuppressWarnings("deprecation")
 public class TimesTenDialect extends Dialect {
-
-	private static final LimitHandler LIMIT_HANDLER = new RowsLimitHandler() {
-		@Override
-		protected boolean atStart() {
-			return true;
-		}
-	};
-		//	private static final LimitHandler LIMIT_HANDLER = new FirstLimitHandler() {
-//		@Override
-//		public boolean supportsVariableLimit() {
-//			//according to TimesTen 11g docs,
-//			//parameters are supported in FIRST
-//			//I have not tested this!
-//			return true;
-//		}
-//	};
 
 	public TimesTenDialect() {
 		super();
@@ -230,7 +214,7 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
+		return TimesTenLimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -329,4 +313,5 @@ public class TimesTenDialect extends Dialect {
 				return "to_number(null)";
 		}
 	}
+
 }

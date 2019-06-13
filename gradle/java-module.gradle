@@ -214,10 +214,13 @@ test {
 	}
 }
 
-// Log a statement for each test, so that Travis doesn't end up panicking because when there's no output for a long time
 test {
-	testLogging {
-		events "passed", "skipped", "failed"
+	if ( project.findProperty( 'log-test-progress' )?.toString()?.toBoolean() ) {
+		// Log a statement for each test.
+		// Used in the Travis build so that Travis doesn't end up panicking because there's no output for a long time.
+		testLogging {
+			events "passed", "skipped", "failed"
+		}
 	}
 }
 

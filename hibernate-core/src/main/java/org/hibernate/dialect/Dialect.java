@@ -58,6 +58,7 @@ import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -1474,11 +1475,16 @@ public abstract class Dialect implements ConversionContext {
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Returns the delegate managing LIMIT clause.
-	 *
-	 * @return LIMIT clause delegate.
+	 * Returns a {@link LimitHandler} that implements support for
+	 * {@link org.hibernate.query.Query#setMaxResults(int)} and
+	 * {@link org.hibernate.query.Query#setFirstResult(int)} for
+	 * this dialect.
 	 */
+	@SuppressWarnings("deprecation")
 	public LimitHandler getLimitHandler() {
+		if ( supportsLimit() ) {
+			return new LegacyLimitHandler( this );
+		}
 		throw new UnsupportedOperationException("this dialect does not support query pagination");
 	}
 
@@ -3544,6 +3550,88 @@ public abstract class Dialect implements ConversionContext {
 			default:
 				throw new IllegalArgumentException();
 		}
+	}
+
+	// deprecated limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean supportsLimit() {
+		return false;
+	}
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean supportsLimitOffset() {
+		return supportsLimit();
+	}
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean supportsVariableLimit() {
+		return supportsLimit();
+	}
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean bindLimitParametersInReverseOrder() {
+		return false;
+	}
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean bindLimitParametersFirst() {
+		return false;
+	}
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean useMaxForLimit() {
+		return false;
+	}
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	public boolean forceLimitUsage() {
+		return false;
+	}
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	public String getLimitString(String query, int offset, int limit) {
+		return getLimitString( query, offset > 0 || forceLimitUsage() );
+	}
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	protected String getLimitString(String query, boolean hasOffset) {
+		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName());
+	}
+
+	/**
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
+	 */
+	@Deprecated
+	public int convertToFirstRowValue(int zeroBasedFirstResult) {
+		return zeroBasedFirstResult;
 	}
 
 }

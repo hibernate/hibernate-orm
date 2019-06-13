@@ -537,9 +537,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 			if ( inClauseParameterPaddingEnabled ) {
 				int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo( bindValueCount );
+				if ( inExprLimit > 0 ) {
+					bindValuePaddingCount = Math.min( inExprLimit, bindValuePaddingCount );
+				}
 
-				if ( bindValueCount < bindValuePaddingCount && (inExprLimit == 0 || bindValuePaddingCount < inExprLimit) ) {
-					bindValueMaxCount = bindValuePaddingCount;
+				if ( bindValueCount < bindValuePaddingCount ) {
+					if ( inExprLimit == 0 || bindValuePaddingCount < inExprLimit ) {
+						bindValueMaxCount = bindValuePaddingCount;
+					}
+					else {
+						bindValueMaxCount = inExprLimit;
+					}
 				}
 			}
 

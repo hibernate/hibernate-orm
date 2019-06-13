@@ -1152,7 +1152,8 @@ public final class SessionImpl
 		LoadEvent event = loadEvent;
 		loadEvent = null;
 		event = recycleEventInstance( event, id, entityName );
-		event.setShouldUnwrapProxy( unwrapProxy );fireLoad( event, type );
+		event.setShouldUnwrapProxy( unwrapProxy );
+		fireLoad( event, type );
 		Object result = event.getResult();
 		if ( !nullable ) {
 			UnresolvableObjectException.throwIfNull( result, id, entityName );}

@@ -21,7 +21,8 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Chris Cranford
  */
 public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
-	// determines whether the limit handler used offset/fetch or 2005 behavior.
+
+	// records whether the limit handler used offset/fetch or 2005 behavior
 	private boolean usedOffsetFetch;
 
 	@Override
@@ -46,7 +47,7 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 	 */
 	@Override
 	public String processSql(String sql, RowSelection selection) {
-		if ( hasOrderBy( sql ) ) {
+		if ( Keyword.ORDER_BY.rootOffset( sql ) > 0 ) {
 			//if it has an 'order by' clause, we can use offset/fetch
 			usedOffsetFetch = true;
 			String offsetFetch = hasFirstRow( selection )
@@ -64,7 +65,7 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 	public boolean useMaxForLimit() {
 		// when using the offset fetch clause, the max value is passed as-is.
 		// SQLServer2005LimitHandler uses start + max values.
-		return usedOffsetFetch ? false : super.useMaxForLimit();
+		return !usedOffsetFetch && super.useMaxForLimit();
 	}
 
 	@Override
@@ -89,23 +90,4 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 		}
 	}
 
-	private static boolean hasOrderBy(String sql) {
-		String lowerCaseSQL = sql.toLowerCase();
-		int depth = 0;
-		for ( int i = lowerCaseSQL.length() - 1; i >= 0; --i ) {
-			switch ( lowerCaseSQL.charAt( i ) ) {
-				case '(':
-					depth++;
-					break;
-				case ')':
-					depth--;
-					break;
-			}
-			if ( depth == 0
-					&& lowerCaseSQL.startsWith( "order by ", i ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
 }

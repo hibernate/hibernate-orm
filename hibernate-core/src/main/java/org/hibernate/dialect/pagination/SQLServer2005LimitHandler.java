@@ -8,57 +8,32 @@ package org.hibernate.dialect.pagination;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.util.StringHelper;
 
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.compile;
+
 /**
  * A {@link LimitHandler} compatible with SQL Server 2005 and later
- * that uses {@code ROWNUMBER()}.
+ * that uses {@code top()} and {@code rownumber()}.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Chris Cranford
+ * @author Gavin King
  */
 public class SQLServer2005LimitHandler extends AbstractLimitHandler {
-	private static final String SELECT = "select";
-	private static final String FROM = "from";
-	private static final String DISTINCT = "distinct";
-	private static final String ORDER_BY = "order by";
-	private static final String SELECT_DISTINCT = SELECT + " " + DISTINCT;
-	private static final String SELECT_DISTINCT_SPACE = SELECT_DISTINCT + " ";
 
-	private final String SELECT_SPACE = "select ";
-
-	private static final Pattern SELECT_DISTINCT_PATTERN = buildShallowIndexPattern( SELECT_DISTINCT_SPACE, true );
-	private static final Pattern SELECT_PATTERN = buildShallowIndexPattern( SELECT + "(.*)", true );
-	private static final Pattern FROM_PATTERN = buildShallowIndexPattern( FROM, true );
-	private static final Pattern DISTINCT_PATTERN = buildShallowIndexPattern( DISTINCT, true );
-	private static final Pattern ORDER_BY_PATTERN = buildShallowIndexPattern( ORDER_BY, true );
-	private static final Pattern COMMA_PATTERN = buildShallowIndexPattern( ",", false );
-	private static final Pattern ALIAS_PATTERN =
-			Pattern.compile( "(?![^\\[]*(\\]))\\S+\\s*(\\s(?i)as\\s)\\s*(\\S+)*\\s*$|(?![^\\[]*(\\]))\\s+(\\S+)$" );
-
-	// CTE pattern support
-	private static final String SPACE_NEWLINE_LINEFEED = "[\\s\\t\\n\\r]*";
-	private static final Pattern WITH_CTE = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + "WITH" + SPACE_NEWLINE_LINEFEED +")", Pattern.CASE_INSENSITIVE );
-	private static final Pattern WITH_EXPRESSION_NAME = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + "[a-zA-Z0-9]*" + SPACE_NEWLINE_LINEFEED +")", Pattern.CASE_INSENSITIVE  );
-	private static final Pattern WITH_COLUMN_NAMES_START = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + "\\()", Pattern.CASE_INSENSITIVE );
-	private static final Pattern WITH_COLUMN_NAMES_END = Pattern.compile( "(\\))", Pattern.CASE_INSENSITIVE );
-	private static final Pattern WITH_AS = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + "AS" + SPACE_NEWLINE_LINEFEED +")", Pattern.CASE_INSENSITIVE );
-	private static final Pattern WITH_COMMA = Pattern.compile( "(^" + SPACE_NEWLINE_LINEFEED + ",)", Pattern.CASE_INSENSITIVE );
-
-	// Flag indicating whether TOP(?) expression has been added to the original query.
+	// records whether top() was added to the query
 	private boolean topAdded;
-	private boolean isCTE;
 
 	@Override
-	public boolean supportsLimit() {
+	public final boolean supportsLimit() {
 		return true;
 	}
 
@@ -68,7 +43,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean supportsVariableLimit() {
+	public final boolean supportsVariableLimit() {
 		return true;
 	}
 
@@ -80,59 +55,70 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	/**
-	 * Add a LIMIT clause to the given SQL SELECT (HHH-2655: ROW_NUMBER for Paging)
-	 *
-	 * The LIMIT SQL will look like:
+	 * When the offset of the given {@link RowSelection} is {@literal 0},
+	 * add a {@code top(?)} clause to the given SQL query. When the offset
+     * is non-zero, wrap the given query in an outer query that limits the
+	 * results using the {@code row_number()} window function.
 	 *
 	 * <pre>
-	 * WITH query AS (
-	 *   SELECT inner_query.*
-	 *        , ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) AS __hibernate_row_nr__
-	 *     FROM ( original_query_with_top_if_order_by_present_and_all_aliased_columns ) inner_query
+	 * with query_ as (
+	 *     select row_.*, row_number()
+	 *         over (order by current_timestamp) AS rownumber_
+	 *     from ( [original-query] ) row_
 	 * )
-	 * SELECT alias_list FROM query WHERE __hibernate_row_nr__ >= offset AND __hibernate_row_nr__ < offset + last
+	 * select [alias-list] from query_
+	 * where rownumber_ >= ? and rownumber_ < ?
 	 * </pre>
 	 *
-	 * When offset equals {@literal 0}, only <code>TOP(?)</code> expression is added to the original query.
+	 * Where {@code [original-query]} is the original SQL query, with a
+	 * {@code top()} clause added iff the query has an {@code order by}
+	 * clause, and with generated aliases added to any elements of the
+	 * projection list that don't already have aliases, and
+	 * {@code [alias-list]} is a list of aliases in the projection list.
 	 *
-	 * @return A new SQL statement with the LIMIT clause applied.
+	 * @return A new SQL statement
 	 */
 	@Override
 	public String processSql(String sql, RowSelection selection) {
-		final StringBuilder sb = new StringBuilder( sql );
-		if ( sb.charAt( sb.length() - 1 ) == ';' ) {
-			sb.setLength( sb.length() - 1 );
+		sql = sql.trim();
+		if ( sql.endsWith(";") ) {
+			sql = sql.substring( 0, sql.length()-1 );
 		}
 
-		// checks the query buffer for CTE queries or simple SELECT statements
-		// returns the index where the injection should start.
-		final int offset = getStatementIndex( sb );
+		final int selectOffset = Keyword.SELECT.rootOffset( sql );
+		final int afterSelectOffset = Keyword.SELECT.endOffset( sql, selectOffset );
+		final int fromOffset = Keyword.FROM.rootOffset( sql ); //TODO: what if there is no 'from' clause?!
 
-		if ( !hasFirstRow( selection ) ) {
-			addTopExpression( sb, offset );
-		}
-		else {
-			final String selectClause = fillAliasInSelectClause( sb, offset );
+		boolean hasCommonTables = Keyword.WITH.occursAt( sql, 0 );
+		boolean hasOrderBy = Keyword.ORDER_BY.rootOffset( sql ) > 0;
+		boolean hasFirstRow = hasFirstRow( selection );
 
-			if ( shallowIndexOfPattern( sb, ORDER_BY_PATTERN, offset ) > 0 ) {
-				// ORDER BY requires using TOP
-				addTopExpression( sb, offset );
-			}
+		final StringBuilder result = new StringBuilder( sql );
 
-			encloseWithOuterQuery( sb, offset );
-
-			sb.insert( offset, !isCTE ? "with query as (" : ", query as (" );
-			sb.append( ") select " ).append( selectClause ).append( " from query " );
-			sb.append( "where __hibernate_row_nr__ >= ? and __hibernate_row_nr__ < ?" );
+		if ( !hasFirstRow || hasOrderBy ) {
+			result.insert( afterSelectOffset, " top(?)" );
+			topAdded = true;
 		}
 
-		return sb.toString();
+		if ( hasFirstRow ) {
+
+			// enclose original SQL statement with outer query
+			// that provides the rownumber_ column
+
+			String aliases = selectAliases( sql, afterSelectOffset, fromOffset, result ); //warning: changes result by side-effect
+			result.insert( selectOffset, ( hasCommonTables ? "," : "with" )
+					+ " query_ as (select row_.*, row_number() over (order by current_timestamp) as rownumber_ from (" )
+				.append( ") row_) select " ).append( aliases )
+				.append( " from query_ where rownumber_ >= ? and rownumber_ < ?" );
+		}
+
+		return result.toString();
 	}
 
 	@Override
 	public int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index) throws SQLException {
 		if ( topAdded ) {
-			// Binding TOP(?)
+			// bind parameter to top(?)
 			statement.setInt( index, getMaxOrLimit( selection ) - 1 );
 			return 1;
 		}
@@ -141,463 +127,202 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index) throws SQLException {
-		return hasFirstRow( selection ) ? super.bindLimitParametersAtEndOfQuery( selection, statement, index ) : 0;
+		return hasFirstRow( selection )
+				? super.bindLimitParametersAtEndOfQuery( selection, statement, index )
+				: 0;
 	}
 
 	/**
-	 * Adds missing aliases in provided SELECT clause and returns coma-separated list of them.
-	 * If query takes advantage of expressions like {@literal *} or {@literal {table}.*} inside SELECT clause,
-	 * method returns {@literal *}.
+	 * Add any missing aliases to the given {@code select} list, and return
+	 * comma-separated list of all aliases in the list, unless the given list
+	 * contains {@literal *} or {@literal {table.*}, in which case {@literal *}
+	 * is returned.
 	 *
-	 * @param sb SQL query.
-	 * @param offset the starting offset.
+	 * @param sql the whole query
+	 * @param afterSelectOffset the starting offset of the select list
+	 * @param fromOffset the ending offset of the select list
+	 * @param result a string builder for inserting missing aliases
 	 *
-	 * @return List of aliases separated with comas or {@literal *}.
+	 * @return a comma-separated list of aliases, or {@literal *}
 	 */
-	protected String fillAliasInSelectClause(StringBuilder sb, int offset) {
-		final String separator = System.lineSeparator();
-		final List<String> aliases = new LinkedList<String>();
-		final int startPos = getSelectColumnsStartPosition( sb, offset );
-		int endPos = shallowIndexOfPattern( sb, FROM_PATTERN, startPos );
-
-		int nextComa = startPos;
-		int prevComa = startPos;
+	private String selectAliases(String sql, int afterSelectOffset, int fromOffset, StringBuilder result) {
+		final List<String> aliases = new LinkedList<>();
 		int unique = 0;
-		boolean selectsMultipleColumns = false;
 
-		while ( nextComa != -1 ) {
-			prevComa = nextComa;
-			nextComa = shallowIndexOfPattern( sb, COMMA_PATTERN, nextComa );
-			if ( nextComa > endPos ) {
-				break;
-			}
-			if ( nextComa != -1 ) {
-				final String expression = sb.substring( prevComa, nextComa );
-				if ( selectsMultipleColumns( expression ) ) {
-					selectsMultipleColumns = true;
+		int offset = afterSelectOffset;
+		do {
+			int nextOffset = nextElement( sql, offset, fromOffset );
+			String selectElement = sql.substring( offset, nextOffset );
+			int asIndex = Keyword.AS.rootOffset( selectElement );
+			String expression;
+			String alias;
+			if ( asIndex == 0 ) {
+				expression = selectElement.trim();
+				//no alias found, need to generate and insert it!
+				alias = StringHelper.generateAlias( "col", unique++ );
+				int diff = result.length() - sql.length();
+				if ( result.charAt( nextOffset + diff - 1 ) == ' ' ) {
+					diff--;
 				}
-				else {
-					String alias = getAlias( expression );
-					if ( alias == null ) {
-						// Inserting alias. It is unlikely that we would have to add alias, but just in case.
-						alias = StringHelper.generateAlias( "page", unique );
-						sb.insert( nextComa, " as " + alias );
-						final int aliasExprLength = ( " as " + alias ).length();
-						++unique;
-						nextComa += aliasExprLength;
-						endPos += aliasExprLength;
-					}
-					aliases.add( alias );
-				}
-				++nextComa;
-			}
-		}
-		// Processing last column.
-		// Refreshing end position, because we might have inserted new alias.
-		endPos = shallowIndexOfPattern( sb, FROM_PATTERN, startPos );
-		final String expression = sb.substring( prevComa, endPos );
-		if ( selectsMultipleColumns( expression ) ) {
-			selectsMultipleColumns = true;
-		}
-		else {
-			String alias = getAlias( expression );
-			if ( alias == null ) {
-				// Inserting alias. It is unlikely that we would have to add alias, but just in case.
-				alias = StringHelper.generateAlias( "page", unique );
-				final boolean endWithSeparator = sb.substring( endPos - separator.length() ).startsWith( separator );
-				sb.insert( endPos - ( endWithSeparator ? 2 : 1 ), " as " + alias );
-			}
-			aliases.add( alias );
-		}
-
-		// In case of '*' or '{table}.*' expressions adding an alias breaks SQL syntax, returning '*'.
-		return selectsMultipleColumns ? "*" : String.join( ", ", aliases );
-	}
-
-	/**
-	 * Get the start position for where the column list begins.
-	 *
-	 * @param sb the string builder sql.
-	 * @param offset the starting offset.
-	 * @return the start position where the column list begins.
-	 */
-	private int getSelectColumnsStartPosition(StringBuilder sb, int offset) {
-		final int startPos = getSelectStartPosition( sb, offset );
-		// adjustment for 'select distinct ' and 'select '.
-		final String sql = sb.toString().substring( startPos ).toLowerCase();
-		if ( sql.startsWith( SELECT_DISTINCT_SPACE ) ) {
-			return startPos + SELECT_DISTINCT_SPACE.length();
-		}
-		else if ( sql.startsWith( SELECT_SPACE ) ) {
-			return startPos + SELECT_SPACE.length();
-		}
-		return startPos;
-	}
-
-	/**
-	 * Get the select start position.
-	 *
-	 * @param sb the string builder sql.
-	 * @param offset the starting offset in buffer.
-	 * @return the position where {@code select} is found.
-	 */
-	private int getSelectStartPosition(StringBuilder sb, int offset) {
-		return shallowIndexOfPattern( sb, SELECT_PATTERN, offset );
-	}
-
-	/**
-	 * @param expression Select expression.
-	 *
-	 * @return {@code true} when expression selects multiple columns, {@code false} otherwise.
-	 */
-	private boolean selectsMultipleColumns(String expression) {
-		final String lastExpr = expression.trim().replaceFirst( "(?i)(.)*\\s", "" ).trim();
-		return "*".equals( lastExpr ) || lastExpr.endsWith( ".*" );
-	}
-
-	/**
-	 * Returns alias of provided single column selection or {@code null} if not found.
-	 * Alias should be preceded with {@code AS} keyword.
-	 *
-	 * @param expression Single column select expression.
-	 *
-	 * @return Column alias.
-	 */
-	private String getAlias(String expression) {
-		// remove any function arguments, if any exist.
-		// 'cast(tab1.col1 as varchar(255)) as col1' -> 'cast as col1'
-		// 'cast(tab1.col1 as varchar(255)) col1 -> 'cast col1'
-		// 'cast(tab1.col1 as varchar(255))' -> 'cast'
-		expression = expression.replaceFirst( "(\\((.)*\\))", "" ).trim();
-
-		// This will match any text provided with:
-		// 		columnName [[as] alias]
-		final Matcher matcher = ALIAS_PATTERN.matcher( expression );
-
-		String alias = null;
-		if ( matcher.find() && matcher.groupCount() > 1 ) {
-			// default to the alias after 'as' if detected
-			alias = matcher.group( 3 );
-			if ( alias == null ) {
-				// use the clause which has on proceeding 'as' fragment.
-				alias = matcher.group( 0 );
-			}
-		}
-
-		return ( alias != null ? alias.trim() : null );
-	}
-
-	/**
-	 * Encloses original SQL statement with outer query that provides {@literal __hibernate_row_nr__} column.
-	 *
-	 * @param sql SQL query.
-	 * @param offset SQL query offset.
-	 */
-	protected void encloseWithOuterQuery(StringBuilder sql, int offset) {
-		sql.insert( offset, "select inner_query.*, row_number() over (order by current_timestamp) as __hibernate_row_nr__ from ( " );
-		sql.append( " ) inner_query " );
-	}
-
-	/**
-	 * Adds {@code TOP} expression. Parameter value is bind in
-	 * {@link #bindLimitParametersAtStartOfQuery(RowSelection, PreparedStatement, int)} method.
-	 *
-	 * @param sql SQL query.
-	 * @param offset the offset where top expression pattern matching should begin.
-	 */
-	protected void addTopExpression(StringBuilder sql, int offset) {
-		// We should use either of these which come first (SELECT or SELECT DISTINCT).
-		final int selectPos = shallowIndexOfPattern( sql, SELECT_PATTERN, offset );
-		final int selectDistinctPos = shallowIndexOfPattern( sql, SELECT_DISTINCT_PATTERN, offset );
-		if ( selectPos == selectDistinctPos ) {
-			// Place TOP after SELECT DISTINCT
-			sql.insert( selectDistinctPos + SELECT_DISTINCT.length(), " top(?)" );
-		}
-		else {
-			// Place TOP after SELECT
-			sql.insert( selectPos + SELECT.length(), " top(?)" );
-		}
-		topAdded = true;
-	}
-
-	/**
-	 * Returns index of the first case-insensitive match of search pattern that is not
-	 * enclosed in parenthesis.
-	 *
-	 * @param sb String to search.
-	 * @param pattern Compiled search pattern.
-	 * @param fromIndex The index from which to start the search.
-	 *
-	 * @return Position of the first match, or {@literal -1} if not found.
-	 */
-	private static int shallowIndexOfPattern(final StringBuilder sb, final Pattern pattern, int fromIndex) {
-		int index = -1;
-		final String matchString = sb.toString();
-
-		// quick exit, save performance and avoid exceptions
-		if ( matchString.length() < fromIndex || fromIndex < 0 ) {
-			return -1;
-		}
-
-		List<IgnoreRange> ignoreRangeList = generateIgnoreRanges( matchString );
-
-		Matcher matcher = pattern.matcher( matchString );
-		matcher.region( fromIndex, matchString.length() );
-
-		if ( ignoreRangeList.isEmpty() ) {
-			// old behavior where the first match is used if no ignorable ranges
-			// were deduced from the matchString.
-			if ( matcher.find() && matcher.groupCount() > 0 ) {
-				index = matcher.start();
-			}
-		}
-		else {
-			// rather than taking the first match, we now iterate all matches
-			// until we determine a match that isn't considered "ignorable'.
-			while ( matcher.find() && matcher.groupCount() > 0 ) {
-				final int position = matcher.start();
-				if ( !isPositionIgnorable( ignoreRangeList, position ) ) {
-					index = position;
-					break;
-				}
-			}
-		}
-		return index;
-	}
-
-	/**
-	 * Builds a pattern that can be used to find matches of case-insensitive matches
-	 * based on the search pattern that is not enclosed in parenthesis.
-	 *
-	 * @param pattern String search pattern.
-	 * @param wordBoundary whether to apply a word boundary restriction.
-	 * @return Compiled {@link Pattern}.
-	 */
-	private static Pattern buildShallowIndexPattern(String pattern, boolean wordBoundary) {
-		return Pattern.compile(
-				"(" +
-				( wordBoundary ? "\\b" : "" ) +
-				pattern +
-				( wordBoundary ? "\\b" : "" ) +
-				")(?![^\\(|\\[]*(\\)|\\]))",
-				Pattern.CASE_INSENSITIVE
-		);
-	}
-
-	/**
-	 * Geneartes a list of {@code IgnoreRange} objects that represent nested sections of the
-	 * provided SQL buffer that should be ignored when performing regular expression matches.
-	 *
-	 * @param sql The SQL buffer.
-	 * @return list of {@code IgnoreRange} objects, never {@code null}.
-	 */
-	private static List<IgnoreRange> generateIgnoreRanges(String sql) {
-		List<IgnoreRange> ignoreRangeList = new ArrayList<IgnoreRange>();
-
-		int depth = 0;
-		int start = -1;
-		boolean insideAStringValue = false;
-		for ( int i = 0; i < sql.length(); ++i ) {
-			final char ch = sql.charAt( i );
-			if ( ch == '\'' ) {
-				insideAStringValue = !insideAStringValue;
-			}
-			else if ( ch == '(' && !insideAStringValue ) {
-				depth++;
-				if ( depth == 1 ) {
-					start = i;
-				}
-			}
-			else if ( ch == ')' && !insideAStringValue ) {
-				if ( depth > 0 ) {
-					if ( depth == 1 ) {
-						ignoreRangeList.add( new IgnoreRange( start, i ) );
-						start = -1;
-					}
-					depth--;
-				}
-				else {
-					throw new IllegalStateException( "Found an unmatched ')' at position " + i + ": " + sql );
-				}
-			}
-		}
-
-		if ( depth != 0 ) {
-			throw new IllegalStateException( "Unmatched parenthesis in rendered SQL (" + depth + " depth): " + sql );
-		}
-
-		return ignoreRangeList;
-	}
-
-	/**
-	 * Returns whether the specified {@code position} is within the ranges of the {@code ignoreRangeList}.
-	 *
-	 * @param ignoreRangeList list of {@code IgnoreRange} objects deduced from the SQL buffer.
-	 * @param position the position to determine whether is ignorable.
-	 * @return {@code true} if the position is to ignored/skipped, {@code false} otherwise.
-	 */
-	private static boolean isPositionIgnorable(List<IgnoreRange> ignoreRangeList, int position) {
-		for ( IgnoreRange ignoreRange : ignoreRangeList ) {
-			if ( ignoreRange.isWithinRange( position ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	static class IgnoreRange {
-		private int start;
-		private int end;
-
-		IgnoreRange(int start, int end) {
-			this.start = start;
-			this.end = end;
-		}
-
-		boolean isWithinRange(int position) {
-			return position >= start && position <= end;
-		}
-	}
-
-	/**
-	 * Get the starting point for the limit handler to begin injecting and transforming the SQL.
-	 * For non-CTE queries, this is offset 0.  For CTE queries, this will be where the CTE's
-	 * SELECT clause begins (skipping all query definitions, column definitions and expressions).
-	 *
-	 * This method also sets {@code isCTE} if the query is parsed as a CTE query.
-	 *
-	 * @param sql The sql buffer.
-	 * @return the index where to begin parsing.
-	 */
-	private int getStatementIndex(StringBuilder sql) {
-		final Matcher matcher = WITH_CTE.matcher( sql.toString() );
-		if ( matcher.find() && matcher.groupCount() > 0 ) {
-			isCTE = true;
-			return locateQueryInCTEStatement( sql, matcher.end() );
-		}
-		return 0;
-	}
-
-	/**
-	 * Steps through the SQL buffer from the specified offset and performs a series of pattern matches.
-	 * The method locates where the CTE SELECT clause begins and returns that offset from the SQL buffer.
-	 *
-	 * @param sql The sql buffer.
-	 * @param offset The offset to begin pattern matching.
-	 *
-	 * @return the offset where the CTE SELECT clause begins.
-	 * @throws IllegalArgumentException if the parse of the CTE query fails.
-	 */
-	private int locateQueryInCTEStatement(StringBuilder sql, int offset) {
-		while ( true ) {
-			Matcher matcher = WITH_EXPRESSION_NAME.matcher( sql.substring( offset ) );
-			if ( matcher.find() && matcher.groupCount() > 0 ) {
-				offset += matcher.end();
-				matcher = WITH_COLUMN_NAMES_START.matcher( sql.substring( offset ) );
-				if ( matcher.find() && matcher.groupCount() > 0 ) {
-					offset += matcher.end();
-					matcher = WITH_COLUMN_NAMES_END.matcher( sql.substring( offset ) );
-					if ( matcher.find() && matcher.groupCount() > 0 ) {
-						offset += matcher.end();
-						offset += advanceOverCTEInnerQuery( sql, offset );
-						matcher = WITH_COMMA.matcher( sql.substring( offset ) );
-						if ( matcher.find() && matcher.groupCount() > 0 ) {
-							// another CTE fragment exists, re-start parse of CTE
-							offset += matcher.end();
-						}
-						else {
-							// last CTE fragment, we're at the start of the SQL.
-							return offset;
-						}
-					}
-					else {
-						throw new IllegalArgumentException(
-								String.format(
-										Locale.ROOT,
-										"Failed to parse CTE expression columns at offset %d, SQL [%s]",
-										offset,
-										sql.toString()
-								)
-						);
-					}
-				}
-				else {
-					matcher = WITH_AS.matcher( sql.substring( offset ) );
-					if ( matcher.find() && matcher.groupCount() > 0 ) {
-						offset += matcher.end();
-						offset += advanceOverCTEInnerQuery( sql, offset );
-						matcher = WITH_COMMA.matcher( sql.substring( offset ) );
-						if ( matcher.find() && matcher.groupCount() > 0 ) {
-							// another CTE fragment exists, re-start parse of CTE
-							offset += matcher.end();
-						}
-						else {
-							// last CTE fragment, we're at the start of the SQL.
-							return offset;
-						}
-					}
-					else {
-						throw new IllegalArgumentException(
-								String.format(
-										Locale.ROOT,
-										"Failed to locate AS keyword in CTE query at offset %d, SQL [%s]",
-										offset,
-										sql.toString()
-								)
-						);
-					}
-				}
+				result.insert( nextOffset + diff, " as " + alias);
 			}
 			else {
-				throw new IllegalArgumentException(
-						String.format(
-								Locale.ROOT,
-								"Failed to locate CTE expression name at offset %d, SQL [%s]",
-								offset,
-								sql.toString()
-						)
-				);
+				expression = selectElement.substring( 0, asIndex ).trim();
+				alias = selectElement.substring( asIndex+2 ).trim();
 			}
+			aliases.add( alias );
+			if ( expression.endsWith("*") ) {
+				// in case of '*' or 'table.*' expressions adding
+				// an alias breaks SQL syntax, so just return '*'
+				return "*";
+			}
+			offset = nextOffset + 1;
 		}
+		while ( offset < fromOffset );
+
+		return String.join( ", ", aliases );
+	}
+
+	enum Keyword {
+
+		SELECT ("select(\\s+(distinct|all))?"),
+		FROM ("from"),
+		ORDER_BY ("order\\s+by"),
+		AS ("as"),
+		WITH ("with");
+
+		Pattern pattern;
+		Keyword(String keyword) {
+			pattern = compile( "^\\b" + keyword + "\\b", CASE_INSENSITIVE );
+		}
+
+		/**
+		 * Look for a "root" occurrence of this keyword in
+		 * the given SQL fragment, that is, an offset where
+		 * the keyword occurs unquoted and not parenthesized.
+		 *
+		 * @param sql a fragment of SQL
+		 * @return the offset at which the keyword occurs, or
+		 *         0 if it never occurs outside of quotes or
+		 *         parentheses.
+		 */
+		int rootOffset(String sql) {
+
+			//TODO: does not handle comments
+
+			//use a regex here for its magical ability
+			//to match word boundaries and whitespace
+			Matcher matcher = pattern.matcher( sql ).useTransparentBounds( true );
+
+			int depth = 0;
+			boolean quoted = false;
+			boolean doubleQuoted = false;
+			for ( int offset = 0, end = sql.length(); offset < end; ) {
+				int nextQuote = sql.indexOf('\'', offset);
+				if ( nextQuote<0 ) {
+					nextQuote = end;
+				}
+				if ( !quoted ) {
+					for ( int index=offset; index<nextQuote; index++ ) {
+						switch ( sql.charAt( index ) ) {
+							case '(':
+								depth++;
+								break;
+							case ')':
+								depth--;
+								break;
+							case '"':
+								doubleQuoted = !doubleQuoted;
+								break;
+							case '[':
+								doubleQuoted = true;
+								break;
+							case ']':
+								doubleQuoted = false;
+								break;
+							default:
+								if ( depth == 0 && !doubleQuoted ) {
+									matcher.region( index, nextQuote );
+									if ( matcher.find() ) {
+										//we found the keyword!
+										return index;
+									}
+								}
+						}
+					}
+				}
+				quoted = !quoted;
+				offset = nextQuote + 1;
+			}
+			return 0; //none found
+		}
+
+		int endOffset(String sql, int startOffset) {
+			Matcher matcher = pattern.matcher( sql ).useTransparentBounds( true );
+			matcher.region( startOffset, sql.length() );
+			matcher.find();
+			return matcher.end();
+		}
+
+		boolean occursAt(String sql, int offset) {
+			Matcher matcher = pattern.matcher( sql ).useTransparentBounds( true );
+			matcher.region( offset, sql.length() );
+			return matcher.find();
+		}
+
 	}
 
 	/**
-	 * Advances over the CTE inner query that is contained inside matching '(' and ')'.
+	 * Return the position just before the start of the next element
+	 * of a comma-separated list, that is, the position of the next
+	 * comma, or the position of the end of the list.
 	 *
-	 * @param sql The sql buffer.
-	 * @param offset The offset where to begin advancing the position from.
-	 * @return the position immediately after the CTE inner query plus 1.
-	 *
-	 * @throws IllegalArgumentException if the matching parenthesis aren't detected at the end of the parse.
+	 * @param sql A SQL fragment containing a comma-separated list
+	 * @param startOffset the starting offset of the current element
+	 * @param endOffset the end of the list
+	 * @return the ending offset of the current element
 	 */
-	private int advanceOverCTEInnerQuery(StringBuilder sql, int offset) {
-		int brackets = 0;
-		int index = offset;
-		boolean inString = false;
-		for ( ; index < sql.length(); ++index ) {
-			if ( sql.charAt( index ) == '\'' ) {
-				inString = true;
+	private int nextElement(String sql, int startOffset, int endOffset) {
+
+		//TODO: does not handle comments
+
+		int depth = 0;
+		boolean quoted = false;
+		boolean doubleQuoted = false;
+		for ( int offset = startOffset; offset < endOffset; ) {
+			int nextQuote = sql.indexOf('\'', offset);
+			if ( nextQuote<0 || nextQuote>endOffset ) {
+				nextQuote = endOffset;
 			}
-			else if ( sql.charAt( index ) == '\'' && inString ) {
-				inString = false;
-			}
-			else if ( sql.charAt( index ) == '(' && !inString ) {
-				brackets++;
-			}
-			else if ( sql.charAt( index ) == ')' && !inString ) {
-				brackets--;
-				if ( brackets == 0 ) {
-					break;
+			if ( !quoted ) {
+				for ( int index=offset; index<nextQuote; index++ ) {
+					switch ( sql.charAt( index ) ) {
+						case '(':
+							depth++;
+							break;
+						case ')':
+							depth--;
+							break;
+						case '"':
+							doubleQuoted = !doubleQuoted;
+							break;
+						case '[':
+							doubleQuoted = true;
+							break;
+						case ']':
+							doubleQuoted = false;
+							break;
+						case ',':
+							if ( depth == 0 && !doubleQuoted ) {
+								return index;
+							}
+					}
 				}
 			}
+			quoted = !quoted;
+			offset = nextQuote + 1;
 		}
-
-		if ( brackets > 0 ) {
-			throw new IllegalArgumentException(
-					"Failed to parse the CTE query inner query because closing ')' was not found."
-			);
-		}
-
-		return index - offset + 1;
+		return endOffset;
 	}
+
 }

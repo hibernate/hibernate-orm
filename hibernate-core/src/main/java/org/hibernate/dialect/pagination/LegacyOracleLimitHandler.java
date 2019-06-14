@@ -8,7 +8,7 @@ package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
 
-import java.util.Locale;
+import java.util.regex.Matcher;
 
 /**
  * A {@link LimitHandler} for Oracle prior to 12c, which uses {@code ROWNUM}.
@@ -27,31 +27,29 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 		sql = sql.trim();
 
 		String forUpdateClause = null;
-		boolean isForUpdate = false;
-		final int forUpdateIndex = sql.toLowerCase(Locale.ROOT).lastIndexOf( "for update" );
-		if ( forUpdateIndex > -1 ) {
+		Matcher forUpdateMatcher = getForUpdatePattern().matcher( sql );
+		if ( forUpdateMatcher.find() ) {
+			int forUpdateIndex = forUpdateMatcher.start();
 			// save 'for update ...' and then remove it
 			forUpdateClause = sql.substring( forUpdateIndex );
-			sql = sql.substring( 0, forUpdateIndex - 1 );
-			isForUpdate = true;
+			sql = sql.substring( 0, forUpdateIndex );
 		}
 
 		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
 		if ( hasOffset ) {
-			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " ).append( sql );
+			pagingSelect.append( "select * from (select row_.*, rownum rownum_ from (" ).append( sql );
 			if ( version < 9 ) {
-				pagingSelect.append( " ) row_ ) where rownum_ <= ? and rownum_ > ?" );
+				pagingSelect.append( ") row_) where rownum_ <= ? and rownum_ > ?" );
 			}
 			else {
-				pagingSelect.append( " ) row_ where rownum <= ?) where rownum_ > ?" );
+				pagingSelect.append( ") row_ where rownum <= ?) where rownum_ > ?" );
 			}
 		}
 		else {
-			pagingSelect.append( "select * from ( " ).append( sql ).append( " ) where rownum <= ?" );
+			pagingSelect.append( "select * from (" ).append( sql ).append( ") where rownum <= ?" );
 		}
 
-		if ( isForUpdate ) {
-			pagingSelect.append( " " );
+		if ( forUpdateClause != null ) {
 			pagingSelect.append( forUpdateClause );
 		}
 

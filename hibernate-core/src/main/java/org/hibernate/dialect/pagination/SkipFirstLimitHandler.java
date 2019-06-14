@@ -22,21 +22,35 @@ public class SkipFirstLimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
+
+		boolean hasFirstRow = hasFirstRow( selection );
+		boolean hasMaxRows = hasMaxRows( selection );
+
+		if ( !hasFirstRow && !hasMaxRows ) {
+			return sql;
+		}
+
 		StringBuilder skipFirst = new StringBuilder();
-		if ( variableLimit ) {
-			if ( hasFirstRow( selection ) ) {
+
+		if ( supportsVariableLimit() ) {
+			if ( hasFirstRow ) {
 				skipFirst.append( " skip ?" );
 			}
-			skipFirst.append( " first ?" );
+			if ( hasMaxRows ) {
+				skipFirst.append( " first ?" );
+			}
 		}
 		else {
-			if ( hasFirstRow( selection ) ) {
+			if ( hasFirstRow ) {
 				skipFirst.append( " skip " )
 						.append( selection.getFirstRow() );
 			}
-			skipFirst.append( " first " )
-					.append( getMaxOrLimit( selection ) );
+			if ( hasMaxRows ) {
+				skipFirst.append( " first " )
+						.append( getMaxOrLimit( selection ) );
+			}
 		}
+
 		return insertAfterSelect( sql, skipFirst.toString() );
 	}
 

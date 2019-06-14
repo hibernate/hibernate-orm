@@ -31,7 +31,9 @@ import java.util.List;
  * {@code concat(?1, ?2)} for MySQL, {@code (?1 + ?2)} for SQL
  * Server. Each dialect defines a template as a string exactly as
  * shown above, marking each function parameter with '?' followed
- * by the parameter index. Parameters are indexed from 1.
+ * by the parameter index. Parameters are indexed from 1. The
+ * last parameter may be a vararg, indicated with the syntax
+ * {@code (?1 || ?2...)}.
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
@@ -59,6 +61,8 @@ public class PatternBasedSqmFunctionTemplate
 						// validate against the parameter count as given
 						// by the pattern than accepting every input
 						// blindly and producing wrong output
+						: renderer.hasVarargs()
+						? StandardArgumentsValidators.min( renderer.getParamCount() )
 						: StandardArgumentsValidators.exactly( renderer.getParamCount() )
 		);
 		this.renderer = renderer;

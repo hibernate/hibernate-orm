@@ -830,10 +830,10 @@ public class CommonFunctionFactory {
 	 * Almost every database
 	 */
 	public static void concat_pipeOperator(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "concat", "(", "||", ")" )
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "concat", "(?1||?2...)" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setMinArgumentCount( 1 )
-//				.setArgumentListSignature("(string0[, string1[, ...]])")
+//				.setMinArgumentCount( 1 )
+				.setArgumentListSignature("(string0[, string1[, ...]])")
 				.register();
 	}
 
@@ -841,10 +841,10 @@ public class CommonFunctionFactory {
 	 * Transact SQL-style
 	 */
 	public static void concat_plusOperator(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().varArgsBuilder( "concat", "(", "+", ")" )
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "concat", "(?1+?2...)" )
 				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.setMinArgumentCount( 1 )
-//				.setArgumentListSignature("(string0[, string1[, ...]])")
+//				.setMinArgumentCount( 1 )
+				.setArgumentListSignature("(string0[, string1[, ...]])")
 				.register();
 	}
 

@@ -164,10 +164,6 @@ public class SqmFunctionRegistry {
 				.setExactArgumentCount( 0 );
 	}
 
-	public VarArgsFunctionTemplateBuilder varArgsBuilder(String registrationKey, String begin, String sep, String end) {
-		return new VarArgsFunctionTemplateBuilder( this, registrationKey, begin, sep, end );
-	}
-
 	/**
 	 * Specialized registration method for registering a named template for functions
 	 * expecting zero arguments.  Short-cut for building a named template via
@@ -190,12 +186,6 @@ public class SqmFunctionRegistry {
 
 	public SqmFunctionTemplate registerNoArgs(String registrationKey, String name, StandardBasicTypes.StandardBasicType<?> returnType) {
 		return noArgsBuilder( registrationKey, name )
-				.setInvariantType( returnType )
-				.register();
-	}
-
-	public SqmFunctionTemplate registerVarArgs(String registrationKey, StandardBasicTypes.StandardBasicType<?> returnType, String begin, String sep, String end) {
-		return varArgsBuilder( registrationKey, begin, sep, end )
 				.setInvariantType( returnType )
 				.register();
 	}

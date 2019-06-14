@@ -28,6 +28,7 @@ public class PatternRenderer {
 	private final String[] chunks;
 	private final int[] paramIndexes;
 	private final int paramCount;
+	private final int varargParam;
 
 	/**
 	 * Constructs a template renderer
@@ -40,6 +41,8 @@ public class PatternRenderer {
 		final List<Integer> paramList = new ArrayList<>();
 		final StringBuilder chunk = new StringBuilder( 10 );
 		final StringBuilder index = new StringBuilder( 2 );
+
+		int vararg = -1;
 
 		int i = 0;
 		final int len = pattern.length();
@@ -54,6 +57,9 @@ public class PatternRenderer {
 					if ( Character.isDigit( c ) ) {
 						index.append( c );
 					}
+					else if ( c == '.' ) {
+						index.append( c );
+					}
 					else if ( c  == '?' ) {
 						i--;
 						break;
@@ -64,10 +70,15 @@ public class PatternRenderer {
 					}
 				}
 
-				Integer paramNumber = Integer.valueOf( index.toString() );
-				paramNumbers.add( paramNumber );
-				paramList.add( paramNumber );
-				index.setLength(0);
+				if ( index.toString().endsWith("...") ) {
+					vararg = paramList.size();
+				}
+				else {
+					Integer paramNumber = Integer.valueOf( index.toString() );
+					paramNumbers.add( paramNumber );
+					paramList.add( paramNumber );
+					index.setLength(0);
+				}
 			}
 			else {
 				chunk.append( c );
@@ -79,6 +90,8 @@ public class PatternRenderer {
 			chunkList.add( chunk.toString() );
 		}
 
+		varargParam = vararg;
+
 		chunks = chunkList.toArray( new String[chunkList.size()] );
 		paramIndexes = new int[paramList.size()];
 		paramCount = paramNumbers.size();
@@ -87,9 +100,9 @@ public class PatternRenderer {
 		}
 	}
 
-//	public String getPattern() {
-//		return pattern;
-//	}
+	public boolean hasVarargs() {
+		return varargParam >= 0;
+	}
 
 	public int getParamCount() {
 		return paramCount;
@@ -100,7 +113,6 @@ public class PatternRenderer {
 	 *
 	 * @param args The arguments to inject into the template
 	 */
-	@SuppressWarnings({ "UnusedDeclaration" })
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> args,
@@ -110,12 +122,23 @@ public class PatternRenderer {
 			LOG.missingArguments( paramCount, numberOfArguments );
 		}
 
-		for ( int i = 0; i < chunks.length; ++i ) {
-			if ( i < paramIndexes.length ) {
+		for ( int i = 0; i < chunks.length; i++ ) {
+			if ( i==varargParam ) {
+				for ( int j = i; j < numberOfArguments; j++ ) {
+					final SqlAstNode arg = args.get( j );
+					if ( arg != null ) {
+						sqlAppender.appendSql( chunks[i] );
+						arg.accept( walker );
+					}
+				}
+			}
+			else if ( i < paramIndexes.length ) {
 				final int index = paramIndexes[i] - 1;
 				final SqlAstNode arg = index < numberOfArguments ? args.get( index ) : null;
-				if ( arg != null ) {
+				if ( arg != null || i == 0 ) {
 					sqlAppender.appendSql( chunks[i] );
+				}
+				if ( arg != null ) {
 					arg.accept( walker );
 				}
 			}

@@ -6,14 +6,20 @@
  */
 package org.hibernate.dialect.function;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.AbstractSelfRenderingFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import java.util.List;
 
 /**
  * Casts query parameters using the Derby varchar() function
@@ -22,29 +28,51 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class DerbyConcatEmulation extends FunctionAsExpressionTemplate {
+public class DerbyConcatEmulation
+		extends AbstractSelfRenderingFunctionTemplate
+		implements SelfRenderingFunctionSupport {
 
 	public DerbyConcatEmulation() {
 		super(
-				"(", "||", ")",
+				"concat",
 				StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING ),
-				StandardArgumentsValidators.min( 2 ),
-				"concat"
+				StandardArgumentsValidators.min( 1 )
 		);
 	}
 
 	@Override
-	protected void renderArgument(
+	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<?> resolvedReturnType,
+			QueryEngine queryEngine) {
+		return this;
+	}
+
+	@Override
+	public void render(
 			SqlAppender sqlAppender,
-			SqlAstNode sqlAstArgument,
+			List<SqlAstNode> arguments,
 			SqlAstWalker walker) {
-		boolean param = GenericParameter.class.isInstance( sqlAstArgument );
-		if ( param ) {
-			sqlAppender.appendSql( "cast(" );
+		int numberOfArguments = arguments.size();
+		if ( numberOfArguments > 1 ) {
+			sqlAppender.appendSql("(");
 		}
-		sqlAstArgument.accept(walker);
-		if ( param ) {
-			sqlAppender.appendSql( " as long varchar)" );
+		for ( int i = 0; i < numberOfArguments; i++ ) {
+			SqlAstNode argument = arguments.get( i );
+			if ( i > 0 ) {
+				sqlAppender.appendSql("||");
+			}
+			boolean param = argument instanceof GenericParameter;
+			if ( param ) {
+				sqlAppender.appendSql("cast(");
+			}
+			argument.accept(walker);
+			if ( param ) {
+				sqlAppender.appendSql(" as long varchar)");
+			}
+		}
+		if ( numberOfArguments > 1 ) {
+			sqlAppender.appendSql(")");
 		}
 	}
 

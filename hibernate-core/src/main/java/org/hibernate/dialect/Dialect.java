@@ -96,6 +96,7 @@ import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
@@ -567,81 +568,8 @@ public abstract class Dialect implements ConversionContext {
 	 * pattern must contain ?1 and ?2 placeholders
 	 * for the arguments.
 	 */
-	public String cast() {
+	public String cast(CastType from, CastType to) {
 		return "cast(?1 as ?2)";
-	}
-
-	/**
-	 * Obtain a pattern for the SQL equivalent to a
-	 * {@code cast()} function call casting a boolean
-	 * to the string type. The resulting pattern
-	 * must contain ?1 and ?2 placeholders for the
-	 * arguments.
-	 *
-	 * This is necessary because many databases don't
-	 * have a real boolean type, and so we're using
-	 * a numeric or bit type to hold boolean values.
-	 */
-	public String castBooleanToString() {
-		return cast();
-	}
-
-	/**
-	 * Obtain a pattern for the SQL equivalent to a
-	 * {@code cast()} function call casting a string
-	 * to the boolean type. The resulting pattern
-	 * must contain ?1 and ?2 placeholders for the
-	 * arguments.
-	 *
-	 * This is necessary because many databases don't
-	 * have a real boolean type, and so we're using
-	 * a numeric or bit type to hold boolean values.
-	 */
-	public String castStringToBoolean() {
-		return cast();
-	}
-
-	/**
-	 * Obtain a pattern for the SQL equivalent to a
-	 * {@code cast()} function call casting a number
-	 * to the boolean type. The resulting pattern
-	 * must contain ?1 and ?2 placeholders for the
-	 * arguments.
-	 *
-	 * This is necessary because many databases don't
-	 * have a real boolean type, and so we're using
-	 * a numeric or bit type to hold boolean values.
-	 */
-	public String castNumberToBoolean() {
-		return cast();
-	}
-
-	/**
-	 * Obtain a pattern for the SQL equivalent to a
-	 * {@code cast()} function call casting a string
-	 * to the double type. The resulting pattern
-	 * must contain ?1 and ?2 placeholders for the
-	 * arguments.
-	 *
-	 * This is necessary because one database (Derby)
-	 * doesn't support this.
-	 */
-	public String castStringToDouble() {
-		return cast();
-	}
-
-	/**
-	 * Obtain a pattern for the SQL equivalent to a
-	 * {@code cast()} function call casting a string
-	 * to the float type. The resulting pattern
-	 * must contain ?1 and ?2 placeholders for the
-	 * arguments.
-	 *
-	 * This is necessary because one database (Derby)
-	 * doesn't support this.
-	 */
-	public String castStringToFloat() {
-		return cast();
 	}
 
 	public String trimPattern(TrimSpec specification, char character) {

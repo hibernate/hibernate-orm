@@ -11,6 +11,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.RowsLimitHandler;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
@@ -24,6 +25,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 
+import static org.hibernate.query.CastType.BOOLEAN;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestampWithMillis;
 
 /**
@@ -99,21 +101,28 @@ public class FirebirdDialect extends Dialect {
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 
+	/**
+	 * Firebird doesn't have a real {@link java.sql.Types#BOOLEAN}
+	 * type, so...
+	 */
 	@Override
-	public String castStringToBoolean() {
-		return "iif(lower(?1) similar to 't|f|true|false', lower(?1) like 't%', null)";
+	public String cast(CastType from, CastType to) {
+		switch (to) {
+			case BOOLEAN:
+				switch (from) {
+					case STRING:
+						return "iif(lower(?1) similar to 't|f|true|false', lower(?1) like 't%', null)";
+					case INTEGER:
+						return "(?1<>0)";
+				}
+			case STRING:
+				if (from == BOOLEAN) {
+					return "trim(decode(?1,0,'false','true'))";
+				}
+			default:
+				return super.cast(from, to);
+		}
 	}
-
-	@Override
-	public String castNumberToBoolean() {
-		return "(?1<>0)";
-	}
-
-	@Override
-	public String castBooleanToString() {
-		return "trim(decode(?1,0,'false','true'))";
-	}
-
 
 	/**
 	 * Firebird extract() function returns {@link TemporalUnit#DAY_OF_WEEK}

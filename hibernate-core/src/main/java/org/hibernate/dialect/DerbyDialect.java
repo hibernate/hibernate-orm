@@ -28,6 +28,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
@@ -205,24 +206,29 @@ public class DerbyDialect extends Dialect {
 		return "?1(?2)";
 	}
 
+	/**
+	 * Derby does have a real {@link java.sql.Types#BOOLEAN}
+	 * type, but it doesn't know how to cast to it. Worse,
+	 * Derby makes us use the {@code double()} function to
+	 * cast things to its floating point types.
+	 */
 	@Override
-	public String castStringToBoolean() {
-		return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false else null end";
-	}
-
-	@Override
-	public String castNumberToBoolean() {
-		return "(?1<>0)";
-	}
-
-	@Override
-	public String castStringToDouble() {
-		return "double(?1)";
-	}
-
-	@Override
-	public String castStringToFloat() {
-		return "cast(double(?1) as real)";
+	public String cast(CastType from, CastType to) {
+		switch (to) {
+			case FLOAT:
+				return "cast(double(?1) as real)";
+			case DOUBLE:
+				return "double(?1)";
+			case BOOLEAN:
+				switch (from) {
+					case STRING:
+						return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false else null end";
+					case INTEGER:
+						return "(?1<>0)";
+				}
+			default:
+				return super.cast(from, to);
+		}
 	}
 
 	@Override

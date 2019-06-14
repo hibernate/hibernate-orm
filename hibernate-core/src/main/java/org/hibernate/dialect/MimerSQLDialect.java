@@ -13,6 +13,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.metamodel.model.relational.spi.Size;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -20,6 +21,8 @@ import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+
+import static org.hibernate.query.CastType.BOOLEAN;
 
 /**
  * A dialect for Mimer SQL 11.
@@ -95,14 +98,23 @@ public class MimerSQLDialect extends Dialect {
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 	}
 
+	/**
+	 * Mimer does have a real {@link java.sql.Types#BOOLEAN}
+	 * type, but it doesn't know how to cast to it.
+	 */
 	@Override
-	public String castStringToBoolean() {
-		return "case when regexp_match(lower(?1), '^(t|f|true|false)$') then lower(?1) like 't%' else null end";
-	}
-
-	@Override
-	public String castNumberToBoolean() {
-		return "(?1<>0)";
+	public String cast(CastType from, CastType to) {
+		switch (to) {
+			case BOOLEAN:
+				switch (from) {
+					case STRING:
+						return "case when regexp_match(lower(?1), '^(t|f|true|false)$') then lower(?1) like 't%' else null end";
+					case INTEGER:
+						return "(?1<>0)";
+				}
+			default:
+				return super.cast(from, to);
+		}
 	}
 
 	@Override

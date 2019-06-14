@@ -28,6 +28,8 @@ import org.hibernate.query.sqm.SemanticException;
  * second argument (date, time, or timestamp), and
  * according to capabilities of the database platform.
  *
+ * @see org.hibernate.dialect.Dialect#extract(TemporalUnit)
+ *
  * @author Gavin King
  */
 public enum TemporalUnit {

@@ -31,6 +31,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -42,6 +43,7 @@ import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.tool.schema.spi.Exporter;
 
+import static org.hibernate.query.CastType.BOOLEAN;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
@@ -258,19 +260,27 @@ public class MySQLDialect extends Dialect {
 		}
 	}
 
+	/**
+	 * MySQL doesn't have a real {@link java.sql.Types#BOOLEAN}
+	 * type, so...
+	 */
 	@Override
-	public String castStringToBoolean() {
-		return "if(?1 rlike '^(t|f|true|false)$', ?1 like 't%', null)";
-	}
-
-	@Override
-	public String castNumberToBoolean() {
-		return "(?1<>0)";
-	}
-
-	@Override
-	public String castBooleanToString() {
-		return "if(?1,'true','false')";
+	public String cast(CastType from, CastType to) {
+		switch (to) {
+			case BOOLEAN:
+				switch (from) {
+					case STRING:
+						return "if(?1 rlike '^(t|f|true|false)$', ?1 like 't%', null)";
+					case INTEGER:
+						return "(?1<>0)";
+				}
+			case STRING:
+				if (from == BOOLEAN) {
+					return "if(?1,'true','false')";
+				}
+			default:
+				return super.cast(from, to);
+		}
 	}
 
 	@Override

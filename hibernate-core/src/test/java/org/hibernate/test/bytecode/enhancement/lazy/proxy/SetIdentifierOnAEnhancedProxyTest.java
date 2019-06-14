@@ -13,6 +13,7 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
@@ -21,6 +22,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.PersistenceException;
@@ -97,7 +99,6 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 					assertEquals( 0, stats.getPrepareStatementCount() );
 
-					// check that the `#setName` "persisted"
 					assertThat( loadedChild.getId(), is( lastChildID ) );
 					assertEquals( 0, stats.getPrepareStatementCount() );
 				}
@@ -112,12 +113,81 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 	}
 
+	@Test
+	public void setIdClassTest(){
+		final Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		inTransaction(
+				session -> {
+					stats.clear();
+					ModelId id = new ModelId();
+					id.setId1( 1L );
+					id.setId2( 2L );
+					Parent parent = session.load( Parent.class, id );
+
+					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) parent;
+					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
+
+					assertEquals( 0, stats.getPrepareStatementCount() );
+
+					parent.getId1();
+					parent.setId1( 1L );
+
+					assertEquals( 0, stats.getPrepareStatementCount() );
+
+					assertThat( parent.getId1(), is( 1L ) );
+					assertThat( parent.getId2(), is( 2L ) );
+
+					assertEquals( 0, stats.getPrepareStatementCount() );
+				}
+		);
+
+		inTransaction(
+				session -> {
+					Child loadedChild = session.load( Child.class, lastChildID );
+					assertThat( loadedChild, is( notNullValue() ) );
+				}
+		);
+	}
+
+	@Test(expected = PersistenceException.class)
+	public void updateIdClassTest(){
+		final Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		inTransaction(
+				session -> {
+					stats.clear();
+					ModelId id = new ModelId();
+					id.setId1( 1L );
+					id.setId2( 2L );
+					Parent parent = session.load( Parent.class, id );
+
+					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) parent;
+					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
+
+					// should trigger an exception
+					parent.setId1( 3L );
+				}
+		);
+
+		inTransaction(
+				session -> {
+					Child loadedChild = session.load( Child.class, lastChildID );
+					assertThat( loadedChild, is( notNullValue() ) );
+				}
+		);
+	}
+
 	@Test(expected = PersistenceException.class)
 	public void updateIdTest() {
 		final Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		Long updatedId = new Long( lastChildID + 1 );
+		Long updatedId = lastChildID + 1;
 
 		inTransaction(
 				session -> {
@@ -128,13 +198,8 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
 
+					// should trigger an exception
 					loadedChild.setId( updatedId );
-
-					assertEquals( 0, stats.getPrepareStatementCount() );
-
-					// check that the `#setName` "persisted"
-					assertThat( loadedChild.getId(), is( updatedId ) );
-					assertEquals( 0, stats.getPrepareStatementCount() );
 				}
 		);
 
@@ -144,6 +209,9 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 	public void prepare() {
 		doInHibernate( this::sessionFactory, s -> {
 			Parent parent = new Parent();
+			parent.setId1( 1L );
+			parent.setId2( 2L );
+
 			for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
 				Child child = new Child();
 				child.setId( new Long( i ) );
@@ -171,8 +239,31 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 		} );
 	}
 
+	private static class ModelId implements Serializable {
+		Long id1;
+
+		Long id2;
+
+		public Long getId1() {
+			return id1;
+		}
+
+		public void setId1(Long id1) {
+			this.id1 = id1;
+		}
+
+		public Long getId2() {
+			return id2;
+		}
+
+		public void setId2(Long id2) {
+			this.id2 = id2;
+		}
+	}
+
 	@Entity(name = "Parent")
 	@Table(name = "PARENT")
+	@IdClass( ModelId.class )
 	private static class Parent {
 
 		String name;
@@ -181,8 +272,10 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 		}
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO)
-		Long id;
+		Long id1;
+
+		@Id
+		Long id2;
 
 		@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 		List<Child> children;
@@ -197,6 +290,22 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		public Long getId1() {
+			return id1;
+		}
+
+		public void setId1(Long id1) {
+			this.id1 = id1;
+		}
+
+		public Long getId2() {
+			return id2;
+		}
+
+		public void setId2(Long id2) {
+			this.id2 = id2;
 		}
 	}
 

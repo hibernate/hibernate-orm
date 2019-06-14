@@ -17,7 +17,7 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.pagination.OracleLimitHandler;
+import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -124,8 +124,8 @@ public class OracleDialect extends Dialect {
 		registerDefaultProperties();
 
 		limitHandler = getVersion() < 12
-				? new OracleLimitHandler( getVersion() )
-				: new OffsetFetchLimitHandler( true );
+				? new LegacyOracleLimitHandler( getVersion() )
+				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	@Override

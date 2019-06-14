@@ -20,6 +20,7 @@ import org.hibernate.dialect.function.DB2FormatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
+import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.DB2UniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -60,6 +61,8 @@ public class DB2Dialect extends Dialect {
 	//   in a cast or function call
 
 	private final int version;
+
+	private LimitHandler limitHandler;
 
 	int getVersion() {
 		return version;
@@ -114,6 +117,10 @@ public class DB2Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 
 		uniqueDelegate = new DB2UniqueDelegate( this );
+
+		limitHandler = getVersion() < 1110
+				? LegacyDB2LimitHandler.INSTANCE
+				: DB2LimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -581,7 +588,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return DB2LimitHandler.INSTANCE;
+		return limitHandler;
 	}
 
 	/**

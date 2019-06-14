@@ -29,6 +29,7 @@ import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.pagination.LegacyHSQLLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -78,8 +79,6 @@ public class HSQLDialect extends Dialect {
 	 */
 	private final int version;
 
-	private final LimitHandler limitHandler;
-
 	int getVersion() {
 		return version;
 	}
@@ -127,7 +126,6 @@ public class HSQLDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.QUERY_LITERAL_RENDERING, "literal" );
 
-		limitHandler = version < 200 ? LegacyHSQLLimitHandler.INSTANCE : LimitOffsetLimitHandler.INSTANCE;
 	}
 
 	private static int reflectedVersion(int version) {
@@ -281,7 +279,9 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return limitHandler;
+		return version < 200 ? LegacyHSQLLimitHandler.INSTANCE
+			: version < 250 ? LimitOffsetLimitHandler.INSTANCE
+			: OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	// Note : HSQLDB actually supports [IF EXISTS] before AND after the <tablename>

@@ -10,6 +10,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.pagination.RowsLimitHandler;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
@@ -237,7 +238,8 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return RowsLimitHandler.INSTANCE;
+//		return RowsLimitHandler.INSTANCE;
+		return OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	@Override

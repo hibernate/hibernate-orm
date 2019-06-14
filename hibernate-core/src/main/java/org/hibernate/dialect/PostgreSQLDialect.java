@@ -17,6 +17,7 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -379,7 +380,9 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LimitOffsetLimitHandler.INSTANCE;
+		return getVersion() < 840
+				? LimitOffsetLimitHandler.INSTANCE
+				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	@Override

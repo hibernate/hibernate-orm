@@ -9,14 +9,15 @@ package org.hibernate.dialect.pagination;
 import org.hibernate.engine.spi.RowSelection;
 
 /**
- * A {@link LimitHandler} for databases like Oracle, Ingres,
- * and Apache Derby that support the ANSI SQL standard syntax
- * {@code FETCH FIRST m ROWS ONLY} and
- * {@code OFFSET n ROWS FETCH NEXT m ROWS ONLY}.
+ * A {@link LimitHandler} for databases support the
+ * ANSI SQL standard syntax {@code FETCH FIRST m ROWS ONLY}
+ * and {@code OFFSET n ROWS FETCH NEXT m ROWS ONLY}.
  *
  * @author Gavin King
  */
 public class OffsetFetchLimitHandler extends AbstractLimitHandler {
+
+	public static final OffsetFetchLimitHandler INSTANCE = new OffsetFetchLimitHandler(true);
 
 	private boolean variableLimit;
 
@@ -64,7 +65,11 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 			offsetFetch.append( " rows only" );
 		}
 
-		return insertBeforeForUpdate( offsetFetch.toString(), sql );
+		return insert( sql, offsetFetch.toString() );
+	}
+
+	String insert(String sql, String offsetFetch) {
+		return insertBeforeForUpdate( offsetFetch, sql );
 	}
 
 	@Override

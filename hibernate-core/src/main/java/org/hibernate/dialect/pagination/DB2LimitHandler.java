@@ -6,48 +6,27 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.engine.spi.RowSelection;
-
 /**
- * A {@link LimitHandler} for DB2. Uses {@code FETCH FIRST n ROWS ONLY},
- * together with {@code ROWNUMBER()} when there is an offset. (DB2 does
- * not support the ANSI syntax {@code OFFSET n ROWS}.)
+ * A {@link LimitHandler} for DB2 11.1 which supports the
+ * ANSI SQL standard syntax {@code FETCH FIRST m ROWS ONLY}
+ * and {@code OFFSET n ROWS FETCH NEXT m ROWS ONLY},
+ * with the only wrinkle being that this clause comes
+ * after the {@code FOR UPDATE} and other similar clauses.
+ *
+ * @author Gavin King
  */
-public class DB2LimitHandler extends AbstractLimitHandler {
+public class DB2LimitHandler extends OffsetFetchLimitHandler {
 
 	public static final DB2LimitHandler INSTANCE = new DB2LimitHandler();
 
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-		if ( hasFirstRow( selection ) ) {
-			//nest the main query in an outer select
-			return "select * from ( select row_.*, rownumber() over(order by order of row_) as rownumber_ from ( "
-					+ sql + fetchFirstRows( selection )
-					+ " ) as row_ ) as query_ where rownumber_ > "
-					+ selection.getFirstRow()
-					+ " order by rownumber_";
-		}
-		else {
-			return insertAtEnd( fetchFirstRows(selection), sql );
-		}
-	}
-
-	private String fetchFirstRows(RowSelection selection) {
-		return " fetch first " + getMaxOrLimit( selection ) + " rows only";
+	public DB2LimitHandler() {
+		super(true);
 	}
 
 	@Override
-	public final boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public final boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public final boolean supportsVariableLimit() {
-		return false;
+	String insert(String sql, String offsetFetch) {
+		//on DB2, offset/fetch comes after all the
+		//various "for update"ish clauses
+		return super.insertAtEnd( sql, offsetFetch );
 	}
 }

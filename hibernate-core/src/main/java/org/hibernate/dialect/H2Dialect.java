@@ -18,6 +18,7 @@ import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -55,19 +56,25 @@ public class H2Dialect extends Dialect {
 			H2Dialect.class.getName()
 	);
 
+	private final LimitHandler limitHandler;
+
 //	private final String querySequenceString;
 //	private final SequenceInformationExtractor sequenceInformationExtractor;
 
 	public H2Dialect() {
-		this(0);
+		this(0, 0);
 	}
 
-	public H2Dialect(int version) {
+	public H2Dialect(int version, int buildId) {
 		super();
 
 		if ( version <= 120 ) {
 			warnIfNecessary();
 		}
+
+		limitHandler = version < 140 || version == 140 && buildId < 199
+				? LimitOffsetLimitHandler.INSTANCE
+				: OffsetFetchLimitHandler.INSTANCE;
 
 //		if ( buildId >= 32 ) {
 //			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
@@ -86,8 +93,17 @@ public class H2Dialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 	}
 
+	private static int parseBuildId(DialectResolutionInfo info) {
+		String[] bits = info.getDatabaseVersion().split("[. ]");
+		return bits.length > 2 ? Integer.parseInt(bits[2]) : 0;
+	}
+
 	public H2Dialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion()*100 + info.getDatabaseMinorVersion()*10 );
+		this(
+				info.getDatabaseMajorVersion()*100
+						+ info.getDatabaseMinorVersion()*10,
+				parseBuildId( info )
+		);
 	}
 
 	private static void warnIfNecessary() {
@@ -199,7 +215,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LimitOffsetLimitHandler.INSTANCE;
+		return limitHandler;
 	}
 
 	@Override

@@ -13,11 +13,11 @@ import java.util.Locale;
 /**
  * A {@link LimitHandler} for Oracle prior to 12c, which uses {@code ROWNUM}.
  */
-public class OracleLimitHandler extends AbstractLimitHandler {
+public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 
 	private int version;
 
-	public OracleLimitHandler(int version) {
+	public LegacyOracleLimitHandler(int version) {
 		this.version = version;
 	}
 

@@ -218,7 +218,9 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 						@Override
 						public String getDatabaseVersion() {
-							return explicitDbVersion;
+							return explicitDbVersion == null
+									? String.valueOf( NO_VERSION ) :
+									explicitDbVersion;
 						}
 
 						@Override

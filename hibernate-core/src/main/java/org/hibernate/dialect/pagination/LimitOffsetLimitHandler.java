@@ -21,7 +21,8 @@ public class LimitOffsetLimitHandler extends AbstractLimitHandler {
 		String limitOffset = hasFirstRow( selection )
 				? " limit ? offset ?"
 				: " limit ?";
-		return insertAtEnd( limitOffset, sql );
+		//limit/offset comes before 'for update' on Postgres and H2
+		return insertBeforeForUpdate( limitOffset, sql );
 	}
 
 	@Override

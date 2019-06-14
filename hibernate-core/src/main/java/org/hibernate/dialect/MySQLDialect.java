@@ -376,6 +376,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
+		//also supports LIMIT n OFFSET m
 		return LimitLimitHandler.INSTANCE;
 	}
 

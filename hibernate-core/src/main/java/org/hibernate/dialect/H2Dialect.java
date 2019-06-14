@@ -27,7 +27,6 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -68,11 +67,7 @@ public class H2Dialect extends Dialect {
 	public H2Dialect(int version, int buildId) {
 		super();
 
-		if ( version <= 120 ) {
-			warnIfNecessary();
-		}
-
-		limitHandler = version < 140 || version == 140 && buildId < 199
+		limitHandler = !( version > 140 || buildId >= 199 )
 				? LimitOffsetLimitHandler.INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 
@@ -88,6 +83,10 @@ public class H2Dialect extends Dialect {
 		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
 //		registerColumnType( Types.BIT, "bit" );
 
+		if ( !( version > 120 || buildId >= 139 ) ) {
+			LOG.unsupportedMultiTableBulkHqlJpaql( version / 100, version % 100 / 10, buildId );
+		}
+
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
@@ -95,7 +94,7 @@ public class H2Dialect extends Dialect {
 
 	private static int parseBuildId(DialectResolutionInfo info) {
 		String[] bits = info.getDatabaseVersion().split("[. ]");
-		return bits.length > 2 ? Integer.parseInt(bits[2]) : 0;
+		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
 	}
 
 	public H2Dialect(DialectResolutionInfo info) {
@@ -104,26 +103,6 @@ public class H2Dialect extends Dialect {
 						+ info.getDatabaseMinorVersion()*10,
 				parseBuildId( info )
 		);
-	}
-
-	private static void warnIfNecessary() {
-		try {
-			// HHH-2300
-			final Class h2ConstantsClass = ReflectHelper.classForName("org.h2.engine.Constants");
-			final int majorVersion = (Integer) h2ConstantsClass.getDeclaredField("VERSION_MAJOR").get( null );
-			final int minorVersion = (Integer) h2ConstantsClass.getDeclaredField("VERSION_MINOR").get( null );
-			int buildId = (Integer) h2ConstantsClass.getDeclaredField("BUILD_ID").get( null );
-
-			if ( !( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
-				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
-			}
-		}
-		catch (Exception e) {
-			// probably H2 not in the classpath, though in certain app server
-			// environments it might just mean we are not using the correct
-			// classloader
-			LOG.undeterminedH2Version();
-		}
 	}
 
 	@Override

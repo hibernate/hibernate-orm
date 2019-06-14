@@ -38,7 +38,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean useMaxForLimit() {
+	public final boolean useMaxForLimit() {
 		return true;
 	}
 

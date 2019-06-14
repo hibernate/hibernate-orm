@@ -6,29 +6,21 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.engine.spi.RowSelection;
-
 /**
  * A {@link LimitHandler} for HSQL prior to 2.0.
  */
-public class LegacyHSQLLimitHandler extends AbstractLimitHandler {
+public class LegacyHSQLLimitHandler extends AbstractSimpleLimitHandler {
 
 	public static LegacyHSQLLimitHandler INSTANCE = new LegacyHSQLLimitHandler();
 
 	@Override
-	public String processSql(String sql, RowSelection selection) {
-		if ( !hasMaxRows( selection) ) {
-			return sql;
-		}
-		String limitOrTop = hasFirstRow( selection )
-				? " limit ? ?"
-				: " top ?";
-		return insertAfterSelect( limitOrTop, sql );
+	protected String limitClause(boolean hasFirstRow) {
+		return hasFirstRow ? " limit ? ?" : " top ?";
 	}
 
 	@Override
-	public final boolean supportsLimit() {
-		return true;
+	protected String insert(String limitOrTop, String sql) {
+		return insertAfterSelect( limitOrTop, sql );
 	}
 
 	@Override

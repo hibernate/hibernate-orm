@@ -6,56 +6,34 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.engine.spi.RowSelection;
-
-import static java.lang.String.valueOf;
-
-
 /**
  * A {@link LimitHandler} for Transact SQL and similar
  * databases which support the syntax {@code SELECT TOP n}.
+ * Note that this syntax does not allow specification of
+ * an offset.
  *
  * @author Brett Meyer
  */
-public class TopLimitHandler extends AbstractLimitHandler {
+public class TopLimitHandler extends AbstractNoOffsetLimitHandler {
 
 	public static TopLimitHandler INSTANCE = new TopLimitHandler(true);
 
-	private boolean variableLimit;
-
 	public TopLimitHandler(boolean variableLimit) {
-		this.variableLimit = variableLimit;
+		super(variableLimit);
 	}
 
 	@Override
-	public String processSql(String sql, RowSelection selection) {
-		if ( !hasMaxRows( selection) ) {
-			return sql;
-		}
-		String top = " top ? ";
-		if ( variableLimit ) {
-			top = top.replace( "?", valueOf( getMaxOrLimit( selection ) ) );
-		}
-		return insertAfterDistinct( top, sql );
+	protected String limitClause() {
+		return " top ? ";
 	}
 
 	@Override
-	public final boolean supportsLimit() {
-		return true;
+	protected String insert(String limitClause, String sql) {
+		return insertAfterDistinct( limitClause, sql );
 	}
 
 	@Override
-	public final boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public final boolean supportsVariableLimit() {
-		return variableLimit;
-	}
-
-	@Override
-	public final boolean bindLimitParametersFirst() {
+	public boolean bindLimitParametersFirst() {
 		return true;
 	}
 

@@ -15,33 +15,19 @@ import static java.util.regex.Pattern.compile;
 
 /**
  * Limit handler for MySQL and CUBRID which support the syntax
- * {@code LIMIT n} and {@code LIMIT m, n}.
+ * {@code LIMIT n} and {@code LIMIT m, n}. Note that this
+ * syntax does not allow specification of an offset without
+ * a limit.
  *
  * @author Esen Sagynov (kadishmal at gmail dot com)
  */
-public class LimitLimitHandler extends AbstractLimitHandler {
+public class LimitLimitHandler extends AbstractSimpleLimitHandler {
 
 	public static final LimitLimitHandler INSTANCE = new LimitLimitHandler();
 
 	@Override
-	public final boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public final boolean supportsVariableLimit() {
-		return true;
-	}
-
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-		if ( !hasMaxRows( selection) ) {
-			return sql;
-		}
-		String limitClause = hasFirstRow( selection )
-				? " limit ?, ?"
-				: " limit ?";
-		return insertBeforeForUpdate( sql, limitClause );
+	protected String limitClause(boolean hasFirstRow) {
+		return hasFirstRow ? " limit ?, ?" : " limit ?";
 	}
 
 	private static final Pattern FOR_UPDATE_PATTERN =

@@ -12,7 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
- * A {@link LimitHandler} for databases support the
+ * A {@link LimitHandler} for databases which support the
  * ANSI SQL standard syntax {@code FETCH FIRST m ROWS ONLY}
  * and {@code OFFSET n ROWS FETCH NEXT m ROWS ONLY}.
  *

@@ -16,26 +16,18 @@ import static java.util.regex.Pattern.compile;
 /**
  * A {@link LimitHandler} that works in Interbase and Firebird,
  * using the syntax {@code ROWS n} and {@code ROWS m TO n}.
+ * Note that this syntax does not allow specification of an
+ * offset without a limit.
  *
  * @author Gavin King
  */
-public class RowsLimitHandler extends AbstractLimitHandler {
+public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 
 	public static final RowsLimitHandler INSTANCE = new RowsLimitHandler();
 
 	@Override
-	public String processSql(String sql, RowSelection selection) {
-		if ( !hasMaxRows( selection ) ) {
-			return sql;
-		}
-		String rows = hasFirstRow( selection )
-				? " rows ? to ?"
-				: " rows ?";
-		return insert( sql, rows );
-	}
-
-	String insert(String sql, String rows) {
-		return insertBeforeForUpdate( sql, rows );
+	protected String limitClause(boolean hasFirstRow) {
+		return hasFirstRow ? " rows ? to ?" : " rows ?";
 	}
 
 	@Override
@@ -46,16 +38,6 @@ public class RowsLimitHandler extends AbstractLimitHandler {
 	@Override
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		return zeroBasedFirstResult + 1;
-	}
-
-	@Override
-	public final boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public final boolean supportsVariableLimit() {
-		return true;
 	}
 
 	private static final Pattern FOR_UPDATE_PATTERN =

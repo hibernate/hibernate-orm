@@ -15,7 +15,7 @@ public class TimesTenLimitHandler extends RowsLimitHandler {
 	public static final TimesTenLimitHandler INSTANCE = new TimesTenLimitHandler();
 
 	@Override
-	String insert(String sql, String rows) {
+	protected String insert(String rows, String sql) {
 		return insertAfterSelect( rows, sql );
 	}
 

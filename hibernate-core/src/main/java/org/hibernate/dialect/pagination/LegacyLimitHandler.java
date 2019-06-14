@@ -68,10 +68,13 @@ public class LegacyLimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
-		final boolean useLimitOffset = supportsLimit()
-				&& supportsLimitOffset()
-				&& hasFirstRow( selection )
-				&& hasMaxRows( selection );
+		final boolean useLimitOffset
+				= supportsOffset()
+						&& hasFirstRow( selection )
+				|| supportsLimit()
+						&& supportsLimitOffset()
+						&& hasFirstRow( selection )
+						&& hasMaxRows( selection );
 		return dialect.getLimitString(
 				sql,
 				useLimitOffset ? getFirstRow( selection ) : 0,

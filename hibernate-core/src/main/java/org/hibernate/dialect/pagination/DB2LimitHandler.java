@@ -24,9 +24,10 @@ public class DB2LimitHandler extends OffsetFetchLimitHandler {
 	}
 
 	@Override
-	String insert(String sql, String offsetFetch) {
+	String insert(String offsetFetch, String sql) {
 		//on DB2, offset/fetch comes after all the
 		//various "for update"ish clauses
-		return super.insertAtEnd( sql, offsetFetch );
+		//see https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000879.html
+		return super.insertAtEnd( offsetFetch, sql );
 	}
 }

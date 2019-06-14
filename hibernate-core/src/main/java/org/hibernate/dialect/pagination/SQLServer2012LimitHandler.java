@@ -6,32 +6,31 @@
  */
 package org.hibernate.dialect.pagination;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler.Keyword;
-import org.hibernate.engine.spi.RowSelection;
 
 /**
- * A {@link LimitHandler} compatible with SQL Server 2012 and later.
- * <p>
- * SQL Server 2012 introduced support for ANSI SQL-style
+ * A {@link LimitHandler} compatible with SQL Server 2012 which
+ * introduced support for the ANSI SQL standard syntax
  * {@code OFFSET m ROWS FETCH NEXT n ROWS ONLY}, though this syntax
- * is considered part of the {@code ORDER BY} clause.
+ * is considered part of the {@code ORDER BY} clause, and with the
+ * wrinkle that both {@code ORDER BY} and the {@code OFFSET} clause
+ * are required.
  *
  * @author Chris Cranford
  * @author Gavin King
  */
-public class SQLServer2012LimitHandler extends AbstractLimitHandler {
+public class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
 
-	@Override
-	public final boolean supportsLimit() {
-		return true;
-	}
+	// ORDER BY ...
+	// [
+	//   OFFSET m {ROW|ROWS}
+    //   [FETCH {FIRST|NEXT} n {ROW|ROWS} ONLY]
+	// ]
 
-	@Override
-	public final boolean supportsVariableLimit() {
-		return true;
+	public static final SQLServer2012LimitHandler INSTANCE = new SQLServer2012LimitHandler();
+
+	public SQLServer2012LimitHandler() {
+		super(true);
 	}
 
 	/**
@@ -41,28 +40,19 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	 * <pre>order by ... offset m rows [fetch next n rows only]</pre>
 	 */
 	@Override
-	public String processSql(String sql, RowSelection selection) {
-		//see https://docs.microsoft.com/en-us/sql/t-sql/queries/select-order-by-clause-transact-sql?view=sql-server-ver15
-		String offsetFetch = hasFirstRow( selection )
-				? " offset ? rows fetch next ? rows only"
-				: " offset 0 rows fetch next ? rows only";
+	void begin(String sql, StringBuilder offsetFetch, boolean hasFirstRow, boolean hasMaxRows) {
+
+		//see https://docs.microsoft.com/en-us/sql/t-sql/queries/select-order-by-clause-transact-sql?view=sql-server-2017
+
 		if ( Keyword.ORDER_BY.rootOffset( sql ) <= 0 ) {
 			//we need to add a whole 'order by' clause
-			offsetFetch = " order by 1" + offsetFetch;
+			offsetFetch.append(" order by 1");
 		}
-		return insertAtEnd( offsetFetch, sql );
-	}
 
-	@Override
-	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
-	throws SQLException {
-		if ( !hasFirstRow( selection ) ) {
-			// apply just the max value when offset fetch applied
-			statement.setInt( index, getMaxOrLimit( selection ) );
-			return 1;
-		}
-		else {
-			return super.bindLimitParametersAtEndOfQuery( selection, statement, index );
+		if ( !hasFirstRow ) {
+			//the offset clause is required, but
+			//the superclass doesn't add it
+			offsetFetch.append(" offset 0 rows");
 		}
 	}
 

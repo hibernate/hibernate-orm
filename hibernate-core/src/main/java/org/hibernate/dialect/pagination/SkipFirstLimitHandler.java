@@ -46,6 +46,11 @@ public class SkipFirstLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
+	public boolean supportsOffset() {
+		return true;
+	}
+
+	@Override
 	public final boolean bindLimitParametersFirst() {
 		return true;
 	}

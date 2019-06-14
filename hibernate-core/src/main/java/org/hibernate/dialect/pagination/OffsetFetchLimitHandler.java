@@ -8,6 +8,9 @@ package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 /**
  * A {@link LimitHandler} for databases support the
  * ANSI SQL standard syntax {@code FETCH FIRST m ROWS ONLY}
@@ -28,7 +31,6 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 	@Override
 	public String processSql(String sql, RowSelection selection) {
 
-		StringBuilder offsetFetch = new StringBuilder();
 		boolean hasFirstRow = hasFirstRow(selection);
 		boolean hasMaxRows = hasMaxRows(selection);
 
@@ -36,9 +38,13 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 			return sql;
 		}
 
+		StringBuilder offsetFetch = new StringBuilder();
+
+		begin(sql, offsetFetch, hasFirstRow, hasMaxRows);
+
 		if ( hasFirstRow ) {
 			offsetFetch.append( " offset " );
-			if ( variableLimit ) {
+			if ( supportsVariableLimit() ) {
 				offsetFetch.append( "?" );
 			}
 			else {
@@ -56,7 +62,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 			else {
 				offsetFetch.append( " fetch first " );
 			}
-			if ( variableLimit ) {
+			if ( supportsVariableLimit() ) {
 				offsetFetch.append( "?" );
 			}
 			else {
@@ -65,15 +71,22 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 			offsetFetch.append( " rows only" );
 		}
 
-		return insert( sql, offsetFetch.toString() );
+		return insert( offsetFetch.toString(), sql );
 	}
 
-	String insert(String sql, String offsetFetch) {
+	void begin(String sql, StringBuilder offsetFetch, boolean hasFirstRow, boolean hasMaxRows) {}
+
+	String insert(String offsetFetch, String sql) {
 		return insertBeforeForUpdate( offsetFetch, sql );
 	}
 
 	@Override
 	public final boolean supportsLimit() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsOffset() {
 		return true;
 	}
 

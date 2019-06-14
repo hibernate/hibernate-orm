@@ -9,21 +9,21 @@ package org.hibernate.dialect.pagination;
 import java.util.regex.Pattern;
 
 /**
- * A {@link LimitHandler} for Ingres.
- *
- * <p/>
- * From Ingres 10.2 Docs:
- * <pre>
- * Query
- * [ORDER BY clause]
- * [OFFSET n]
- * [FETCH {FIRST|NEXT} m ROWS ONLY]
- * [WITH clause]
- * </pre>
+ * A {@link LimitHandler} for Ingres. According to the
+ * documentation for Ingres 10.2, Ingres supports the
+ * syntax {@code FETCH FIRST m ROWS ONLY}
+ * and {@code OFFSET n FETCH NEXT m ROWS ONLY}, which
+ * is oh-so-close to the ANSI SQL standard, except for
+ * the missing {@code ROWS} after {@code OFFSET}.
  *
  *  @author Gavin King
  */
 public class IngresLimitHandler extends OffsetFetchLimitHandler {
+
+	// [ORDER BY ...]
+	// [OFFSET n]
+	// [FETCH {FIRST|NEXT} m {ROW|ROWS} ONLY]
+	// [WITH options]
 
 	public static final IngresLimitHandler INSTANCE = new IngresLimitHandler();
 
@@ -65,8 +65,13 @@ public class IngresLimitHandler extends OffsetFetchLimitHandler {
 	private static final Pattern WITH_OPTION_PATTERN =
 			Pattern.compile("\\s+with\\s+(" + String.join("|", WITH_OPTIONS) + ")\\b|\\s*(;|$)");
 
+	/**
+	 * The offset/fetch clauses must come before
+	 * the {@code WITH} clause.
+	 */
 	@Override
 	protected Pattern getForUpdatePattern() {
+		//see https://docs.actian.com/ingres/10.2/index.html#page/SQLRef%2FSelect_(interactive)_Syntax.htm%23
 		return WITH_OPTION_PATTERN;
 	}
 }

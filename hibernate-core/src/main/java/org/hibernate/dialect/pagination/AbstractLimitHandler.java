@@ -25,12 +25,26 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 
 	public static LimitHandler NO_LIMIT = new AbstractLimitHandler(){};
 
-	private static final Pattern SELECT_PATTERN = compile( "^\\s*select\\b", CASE_INSENSITIVE );
-	private static final Pattern SELECT_DISTINCT_PATTERN = compile( "^\\s*select(\\s+(distinct|all))?\\b", CASE_INSENSITIVE );
-	private static final Pattern END_PATTERN = compile("\\s*(;|$)", CASE_INSENSITIVE);
+	private static final Pattern SELECT_PATTERN =
+			compile( "^\\s*select\\b", CASE_INSENSITIVE );
+
+	private static final Pattern SELECT_DISTINCT_PATTERN =
+			compile( "^\\s*select(\\s+(distinct|all))?\\b", CASE_INSENSITIVE );
+
+	private static final Pattern END_PATTERN =
+			compile("\\s*(;|$)", CASE_INSENSITIVE);
+
+	private static final Pattern FOR_UPDATE_PATTERN =
+			compile("\\s+for\\s+update\\b|\\s*(;|$)", CASE_INSENSITIVE);
+
 
 	@Override
 	public boolean supportsLimit() {
+		return false;
+	}
+
+//	@Override
+	public boolean supportsOffset() {
 		return false;
 	}
 
@@ -127,13 +141,17 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	@Override
 	public int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException {
-		return bindLimitParametersFirst() ? bindLimitParameters( selection, statement, index ) : 0;
+		return bindLimitParametersFirst()
+				? bindLimitParameters( selection, statement, index )
+				: 0;
 	}
 
 	@Override
 	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException {
-		return !bindLimitParametersFirst() ? bindLimitParameters( selection, statement, index ) : 0;
+		return !bindLimitParametersFirst()
+				? bindLimitParameters( selection, statement, index )
+				: 0;
 	}
 
 	@Override
@@ -151,18 +169,69 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 */
 	protected final int bindLimitParameters(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException {
-		if ( !supportsVariableLimit() || !hasMaxRows( selection ) ) {
+
+		if ( !supportsVariableLimit() ) {
+			//never any parameters to bind
 			return 0;
 		}
-		final int firstRow = convertToFirstRowValue( getFirstRow( selection ) );
-		final int lastRow = getMaxOrLimit( selection );
-		final boolean hasFirstRow = supportsLimitOffset() && ( firstRow > 0 || forceLimitUsage() );
-		final boolean reverse = bindLimitParametersInReverseOrder();
-		if ( hasFirstRow ) {
-			statement.setInt( index + ( reverse ? 1 : 0 ), firstRow );
+
+		final boolean hasMaxRows = hasMaxRows( selection );
+		final boolean hasFirstRow = hasFirstRow( selection );
+
+		final boolean bindLimit
+				= hasMaxRows && supportsLimit()
+				|| forceLimitUsage();
+		final boolean bindOffset
+				= hasFirstRow && supportsOffset()
+				|| hasFirstRow && hasMaxRows && supportsLimitOffset();
+
+		if ( !bindLimit && !bindOffset ) {
+			//no parameters to bind this time
+			return 0;
 		}
-		statement.setInt( index + ( reverse || !hasFirstRow ? 0 : 1 ), lastRow );
-		return hasFirstRow ? 2 : 1;
+
+		final boolean reverse = bindLimitParametersInReverseOrder();
+
+		if ( bindOffset ) {
+			statement.setInt(
+					index + ( reverse || !bindLimit ? 1 : 0 ),
+					getFirstRow( selection )
+			);
+		}
+		if ( bindLimit ) {
+			statement.setInt(
+					index + ( reverse || !bindOffset ? 0 : 1 ),
+					getMaxOrLimit( selection )
+			);
+		}
+
+		return bindOffset && bindLimit ? 2 : 1;
+	}
+
+	/**
+	 * Is a max row limit indicated?
+	 *
+	 * @param selection The row selection options
+	 *
+	 * @return Whether a max row limit was indicated
+	 */
+	public static boolean hasMaxRows(RowSelection selection) {
+		return selection != null
+				&& selection.getMaxRows() != null
+				&& selection.getMaxRows() > 0;
+	}
+
+	/**
+	 * Is a first row limit indicated?
+	 *
+	 * @param selection The row selection options
+	 *
+	 * @return Whether a first row limit in indicated
+	 */
+	public static boolean hasFirstRow(RowSelection selection) {
+		return selection != null
+				&& selection.getFirstRow() == null
+				&& selection.getFirstRow() > 0;
 	}
 
 	/**
@@ -175,38 +244,16 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * @return The appropriate value to bind into the limit clause.
 	 */
 	protected final int getMaxOrLimit(RowSelection selection) {
-		final int firstRow = convertToFirstRowValue( getFirstRow( selection ) );
-		final int maxRows = selection.getMaxRows();
-		final int maxOrLimit = useMaxForLimit() ? maxRows + firstRow : maxRows;
-		// Use Integer.MAX_VALUE on overflow
-		if ( maxOrLimit < 0 ) {
+		if ( selection==null || selection.getMaxRows()==null ) {
 			return Integer.MAX_VALUE;
 		}
-		else {
-			return maxOrLimit;
-		}
-	}
-
-	/**
-	 * Is a max row limit indicated?
-	 *
-	 * @param selection The row selection options
-	 *
-	 * @return Whether a max row limit was indicated
-	 */
-	public static boolean hasMaxRows(RowSelection selection) {
-		return selection != null && selection.getMaxRows() != null && selection.getMaxRows() > 0;
-	}
-
-	/**
-	 * Is a first row limit indicated?
-	 *
-	 * @param selection The row selection options
-	 *
-	 * @return Whether a first row limit in indicated
-	 */
-	public static boolean hasFirstRow(RowSelection selection) {
-		return getFirstRow( selection ) > 0;
+		final int firstRow = getFirstRow( selection );
+		final int maxRows = selection.getMaxRows();
+		final int maxOrLimit = useMaxForLimit()
+				? maxRows + firstRow //TODO: maxRows + firstRow - 1, surely?
+				: maxRows;
+		// Use Integer.MAX_VALUE on overflow
+		return maxOrLimit < 0 ? Integer.MAX_VALUE : maxOrLimit;
 	}
 
 	/**
@@ -216,10 +263,18 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 *
 	 * @return The first row
 	 */
-	public static int getFirstRow(RowSelection selection) {
-		return selection == null || selection.getFirstRow() == null ? 0 : selection.getFirstRow();
+	protected final int getFirstRow(RowSelection selection) {
+		if ( selection == null || selection.getFirstRow() == null ) {
+			return 0;
+		}
+		return convertToFirstRowValue( selection.getFirstRow() );
 	}
 
+	/**
+	 * Insert a fragment of SQL right after
+	 * {@code SELECT}, but before {@code DISTINCT}
+	 * or {@code ALL}.
+	 */
 	protected static String insertAfterSelect(String limitOffsetClause, String sqlStatement) {
 		Matcher selectMatcher = SELECT_PATTERN.matcher( sqlStatement );
 		if ( selectMatcher.find() ) {
@@ -232,6 +287,11 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		}
 	}
 
+	/**
+	 * Insert a fragment of SQL right after
+	 * {@code SELECT}, {@code SELECT DISTINCT},
+	 * or {@code SELECT ALL}.
+	 */
 	protected static String insertAfterDistinct(String limitOffsetClause, String sqlStatement) {
 		Matcher selectDistinctMatcher = SELECT_DISTINCT_PATTERN.matcher( sqlStatement );
 		if ( selectDistinctMatcher.find() ) {
@@ -244,6 +304,10 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		}
 	}
 
+	/**
+	 * Insert a fragment of SQL right at the very
+	 * end of the query.
+	 */
 	protected String insertAtEnd(String limitOffsetClause, String sqlStatement) {
 		Matcher endMatcher = END_PATTERN.matcher( sqlStatement );
 		if ( endMatcher.find() ) {
@@ -256,13 +320,21 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		}
 	}
 
-	private static final Pattern FOR_UPDATE_PATTERN =
-			compile("\\s+for\\s+update\\b|\\s*(;|$)", CASE_INSENSITIVE);
-
+	/**
+	 * The offset/limit clauses typically must come
+	 * before the {@code FOR UPDATE}ish clauses, so
+	 * we need a way to identify these clauses in
+	 * the text of the whole query.
+	 */
 	protected Pattern getForUpdatePattern() {
 		return FOR_UPDATE_PATTERN;
 	}
 
+	/**
+	 * Insert a fragment of SQL right before the
+	 * {@code FOR UPDATE}ish clauses at the end
+	 * of the query.
+	 */
 	protected String insertBeforeForUpdate(String limitOffsetClause, String sqlStatement) {
 		Matcher forUpdateMatcher = getForUpdatePattern().matcher( sqlStatement );
 		if ( forUpdateMatcher.find() ) {

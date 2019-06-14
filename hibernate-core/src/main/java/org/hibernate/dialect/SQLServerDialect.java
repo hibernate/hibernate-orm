@@ -150,9 +150,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		if ( getVersion() >= 11 ) {
-			//this is a stateful class, don't cache
-			//it in the Dialect!
-			return new SQLServer2012LimitHandler();
+			return SQLServer2012LimitHandler.INSTANCE;
 		}
 		else if ( getVersion() >= 9 ) {
 			//this is a stateful class, don't cache

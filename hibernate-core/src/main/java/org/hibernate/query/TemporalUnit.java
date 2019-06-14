@@ -9,17 +9,149 @@ package org.hibernate.query;
 import org.hibernate.query.sqm.SemanticException;
 
 /**
+ * A temporal field type which can occur as an argument
+ * to {@code extract()} or as the unit of a duration
+ * expression. A temporal field type may also occur as
+ * an argument to {@code timestampadd()} or
+ * {@code timestampdiff()}, in which case it is
+ * interpreted as a unit of duration.
+ * <p>
+ * Note that not every {@code TemporalUnit} is legal
+ * duration unit. The units of a duration are:
+ * {@link #YEAR}, {@link #MONTH}, {@link #DAY},
+ * {@link #HOUR}, {@link #MINUTE}, {@link #SECOND},
+ * {@link #WEEK}, {@link #QUARTER}, and
+ * {@link #NANOSECOND}.
+ * <p>
+ * Further note that accepted unit types in
+ * {@code extract()} vary according to the type of the
+ * second argument (date, time, or timestamp), and
+ * according to capabilities of the database platform.
+ *
  * @author Gavin King
  */
 public enum TemporalUnit {
-	YEAR(true), QUARTER(true), MONTH(true), WEEK(true), DAY(true),
-	HOUR(false), MINUTE(false), SECOND(false),
+	/**
+	 * Calendar year.
+	 **/
+	YEAR(true),
+	/**
+	 * Quarter, defined to mean three months.
+	 **/
+	QUARTER(true),
+	/**
+	 * Calendar month.
+	 **/
+	MONTH(true),
+	/**
+	 * Week, defined to mean 7 days when it occurs as a
+	 * unit of duration, or to mean the ISO ISO-8601
+	 * week number when passed to {@code extract()}. This
+	 * is different to {@link #WEEK_OF_YEAR}.
+	 **/
+	WEEK(true),
+	/**
+	 * Day, defined to mean 24 hours when it occurs as a
+	 * unit of duration, or to mean the calendar day of
+	 * the month when passed to {@code extract()}.
+	 **/
+	DAY(true),
+	/**
+	 * Hour, defined to mean 60 minutes when it occurs as
+	 * a unit of duration, or to mean the hour field in
+	 * the range 0-23 (regular 24-hour time) when passed
+	 * to {@code extract()}.
+	 */
+	HOUR(false),
+	/**
+	 * Minute, defined to mean 60 seconds when it occurs
+	 * as a unit of duration, or to mean the minute field
+	 * in the range 0-59 when passed to {@code extract()}.
+	 */
+	MINUTE(false),
+	/**
+	 * Second, defined to mean 1000 nanoseconds when it
+	 * occurs as a unit of duration, or to mean the second
+	 * field in the range 0-59 when passed to
+	 * {@code extract()}. The second field includes
+	 * fractional seconds (it is a floating point value).
+	 */
+	SECOND(false),
+	/**
+	 * Nanosecond, the basic most granular unit of duration.
+	 * Few databases support billions-of-seconds, but Java's
+	 * {@code Duration} type does. When it occurs as an
+	 * argument to {@code extract()}, the nanosecond field
+	 * is interpreted to include full seconds.
+	 * <p>
+	 * Note that the actual minimum granularity of a datetime
+	 * varies by database platform (usually milliseconds or
+	 * microseconds) so support for nanoseconds is emulated.
+	 */
 	NANOSECOND(false),
-	DAY_OF_WEEK(true), DAY_OF_YEAR(true), DAY_OF_MONTH(true),
-	WEEK_OF_MONTH(true), WEEK_OF_YEAR(true),
+	/**
+	 * The day of the week, from 1 (Sunday) to 7 (Saturday).
+	 * <p>
+	 * Not supported by every database platform.
+	 */
+	DAY_OF_WEEK(true),
+	/**
+	 * The day of the year, counting from 1.
+	 * <p>
+	 * Not supported by every database platform.
+	 */
+	DAY_OF_YEAR(true),
+	/**
+	 * The calendar day of the month, a synonym for {@link #DAY}.
+	 */
+	DAY_OF_MONTH(true),
+	/**
+	 * The week of the month, where the first day of the month
+	 * is in week 1, and a new week starts each Sunday.
+	 * <p>
+	 * Supported on all platforms which natively support
+	 * {@link #DAY_OF_WEEK}.
+	 */
+	WEEK_OF_MONTH(true),
+	/**
+	 * The week of the year, where the first day of the year
+	 * is in week 1, and a new week starts each Sunday. This
+	 * is different to {@link #WEEK}.
+	 * <p>
+	 * Supported on all platforms which natively support
+	 * {@link #DAY_OF_WEEK} and {@link #DAY_OF_YEAR}.
+	 */
+	WEEK_OF_YEAR(true),
+	/**
+	 * The timezone offset of an offset datetime, as a
+	 * {@link java.time.ZoneOffset}.
+	 */
 	OFFSET(false),
-	TIMEZONE_HOUR(false), TIMEZONE_MINUTE(false),
-	DATE(false), TIME(false),
+	/**
+	 * The hour field of the {@link #OFFSET} in an offset
+	 * datetime.
+	 */
+	TIMEZONE_HOUR(false),
+	/**
+	 * The minute field of the {@link #OFFSET} in an offset
+	 * datetime.
+	 */
+	TIMEZONE_MINUTE(false),
+	/**
+	 * The date part of a timestamp, datetime, or offset datetime,
+	 * as a {@link java.time.LocalDate}.
+	 */
+	DATE(false),
+	/**
+	 * The time part of a timestamp, datetime, or offset datetime,
+	 * as a {@link java.time.LocalTime}.
+	 */
+	TIME(false),
+	/**
+	 * An internal value representing the Unix epoch, the elapsed
+	 * seconds since January 1, 1970. Currently not supported in
+	 * HQL.
+	 */
 	EPOCH(false);
 
 	private boolean dateUnit;

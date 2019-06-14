@@ -536,6 +536,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					session.createQuery("select e.theTime + 30 second from EntityOfBasics e")
 							.list();
+					session.createQuery("select e.theTime + 300000000 nanosecond from EntityOfBasics e")
+							.list();
 
 					session.createQuery("select e.theTimestamp + 1 year from EntityOfBasics e")
 							.list();
@@ -728,6 +730,8 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 					session.createQuery("select extract(minute from e.theTime) from EntityOfBasics e")
 							.list();
 					session.createQuery("select extract(second from e.theTime) from EntityOfBasics e")
+							.list();
+					session.createQuery("select extract(nanosecond from e.theTime) from EntityOfBasics e")
 							.list();
 
 					session.createQuery("select extract(year from e.theTimestamp) from EntityOfBasics e")

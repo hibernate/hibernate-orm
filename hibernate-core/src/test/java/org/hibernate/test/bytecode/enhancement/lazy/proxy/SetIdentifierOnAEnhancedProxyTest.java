@@ -23,6 +23,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PersistenceException;
 import javax.persistence.Table;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -38,6 +39,7 @@ import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -78,11 +80,9 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 	}
 
 	@Test
-	public void updateId() {
+	public void setIdTest() {
 		final Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
-
-		Long updatedId = new Long( CHILDREN_SIZE + 1 );
 
 		inTransaction(
 				session -> {
@@ -92,7 +92,44 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
-					final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
+
+					loadedChild.setId( lastChildID );
+
+					// ^ should have triggered "base fetch group" initialization which would mean a SQL select
+					assertEquals( 1, stats.getPrepareStatementCount() );
+
+					// check that the `#setName` "persisted"
+					assertThat( loadedChild.getId(), is( lastChildID ) );
+					assertEquals( 1, stats.getPrepareStatementCount() );
+
+				}
+		);
+
+		inTransaction(
+				session -> {
+					Child loadedChild = session.load( Child.class, lastChildID );
+					assertThat( loadedChild, is( notNullValue() ) );
+				}
+		);
+
+	}
+
+	@Ignore
+	@Test(expected = PersistenceException.class)
+	public void updateIdTest() {
+		final Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		Long updatedId = new Long( lastChildID + 1 );
+
+		inTransaction(
+				session -> {
+					stats.clear();
+					Child loadedChild = session.load( Child.class, lastChildID );
+
+					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
+					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
 
 					loadedChild.setId( updatedId );
 
@@ -103,13 +140,6 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 					assertThat( loadedChild.getId(), is( updatedId ) );
 					assertEquals( 1, stats.getPrepareStatementCount() );
 
-				}
-		);
-
-		inTransaction(
-				session -> {
-					Child loadedChild = session.load( Child.class, updatedId );
-					assertThat( loadedChild, is(notNullValue()) );
 				}
 		);
 

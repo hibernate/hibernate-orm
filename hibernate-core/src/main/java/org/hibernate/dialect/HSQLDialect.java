@@ -372,32 +372,32 @@ public class HSQLDialect extends Dialect {
 	private static final ViolatedConstraintNameExtracter EXTRACTER_18 = new TemplatedViolatedConstraintNameExtracter() {
 		@Override
 		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			String constraintName = null;
 
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 
-			if ( errorCode == -8 ) {
-				constraintName = extractUsingTemplate(
-						"Integrity constraint violation ", " table:", sqle.getMessage()
-				);
+			switch (errorCode) {
+				case -8:
+					return extractUsingTemplate(
+							"Integrity constraint violation ", " table:",
+							sqle.getMessage()
+					);
+				case -9:
+					return extractUsingTemplate(
+							"Violation of unique index: ", " in statement [",
+							sqle.getMessage()
+					);
+				case -104:
+					return extractUsingTemplate(
+							"Unique constraint violation: ", " in statement [",
+							sqle.getMessage()
+					);
+				case -177:
+					return extractUsingTemplate(
+							"Integrity constraint violation - no parent ", " table:",
+							sqle.getMessage()
+					);
 			}
-			else if ( errorCode == -9 ) {
-				constraintName = extractUsingTemplate(
-						"Violation of unique index: ", " in statement [", sqle.getMessage()
-				);
-			}
-			else if ( errorCode == -104 ) {
-				constraintName = extractUsingTemplate(
-						"Unique constraint violation: ", " in statement [", sqle.getMessage()
-				);
-			}
-			else if ( errorCode == -177 ) {
-				constraintName = extractUsingTemplate(
-						"Integrity constraint violation - no parent ", " table:",
-						sqle.getMessage()
-				);
-			}
-			return constraintName;
+			return null;
 		}
 
 	};
@@ -409,31 +409,32 @@ public class HSQLDialect extends Dialect {
 	private static final ViolatedConstraintNameExtracter EXTRACTER_20 = new TemplatedViolatedConstraintNameExtracter() {
 		@Override
 		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			String constraintName = null;
 
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 
-			if ( errorCode == -8 ) {
-				constraintName = extractUsingTemplate(
-						"; ", " table: ", sqle.getMessage()
-				);
+			switch (errorCode) {
+				case -8:
+					return extractUsingTemplate(
+							"; ", " table: ",
+							sqle.getMessage()
+					);
+				case -9:
+					return extractUsingTemplate(
+							"; ", " table: ",
+							sqle.getMessage()
+					);
+				case -104:
+					return extractUsingTemplate(
+							"; ", " table: ",
+							sqle.getMessage()
+					);
+				case -177:
+					return extractUsingTemplate(
+							"; ", " table: ",
+							sqle.getMessage()
+					);
 			}
-			else if ( errorCode == -9 ) {
-				constraintName = extractUsingTemplate(
-						"; ", " table: ", sqle.getMessage()
-				);
-			}
-			else if ( errorCode == -104 ) {
-				constraintName = extractUsingTemplate(
-						"; ", " table: ", sqle.getMessage()
-				);
-			}
-			else if ( errorCode == -177 ) {
-				constraintName = extractUsingTemplate(
-						"; ", " table: ", sqle.getMessage()
-				);
-			}
-			return constraintName;
+			return null;
 		}
 	};
 

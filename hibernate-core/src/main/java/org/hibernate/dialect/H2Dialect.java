@@ -289,20 +289,17 @@ public class H2Dialect extends Dialect {
 				public JDBCException convert(SQLException sqlException, String message, String sql) {
 					final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 
-					if (40001 == errorCode) {
-						// DEADLOCK DETECTED
-						return new LockAcquisitionException(message, sqlException, sql);
-					}
-
-					if (50200 == errorCode) {
-						// LOCK NOT AVAILABLE
-						return new PessimisticLockException(message, sqlException, sql);
-					}
-
-					if ( 90006 == errorCode ) {
-						// NULL not allowed for column [90006-145]
-						final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
-						return new ConstraintViolationException( message, sqlException, sql, constraintName );
+					switch (errorCode) {
+						case 40001:
+							// DEADLOCK DETECTED
+							return new LockAcquisitionException(message, sqlException, sql);
+						case 50200:
+							// LOCK NOT AVAILABLE
+							return new PessimisticLockException(message, sqlException, sql);
+						case 90006:
+							// NULL not allowed for column [90006-145]
+							final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(sqlException);
+							return new ConstraintViolationException(message, sqlException, sql, constraintName);
 					}
 
 					return null;

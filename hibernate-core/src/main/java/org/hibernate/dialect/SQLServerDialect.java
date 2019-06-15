@@ -8,9 +8,6 @@ package org.hibernate.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -34,7 +31,6 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
-import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestampWithMillis;
 
 /**
  * A dialect for Microsoft SQL Server 2000 and above

@@ -1159,7 +1159,7 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * Transact SQL-style (not the same as ANSI-style substring!)
+	 * Not the same as ANSI-style substring!
 	 */
 	public static void substring(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder("substring")
@@ -1167,6 +1167,20 @@ public class CommonFunctionFactory {
 				.setArgumentCountBetween(2, 3)
 				.setArgumentListSignature("(string{ from|,} start[{ for|,} length])")
 				.register();
+	}
+
+	/**
+	 * Transact SQL-style (3 required args)
+	 */
+	public static void substring_substringLen(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry()
+				.registerBinaryTernaryPattern(
+						"substring",
+						StandardSpiBasicTypes.STRING,
+						"substring(?1,?2,len(?1)-?2)",
+						"substring(?1,?2,?3)"
+				)
+				.setArgumentListSignature("(string{ from|,} start[{ for|,} length])");
 	}
 
 	/**

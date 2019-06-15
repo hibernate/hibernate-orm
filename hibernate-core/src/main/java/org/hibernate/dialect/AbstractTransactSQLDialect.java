@@ -107,6 +107,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
 		CommonFunctionFactory.characterLength_len( queryEngine );
+		CommonFunctionFactory.substring_substringLen( queryEngine );
 		CommonFunctionFactory.datepartDatename( queryEngine );
 		CommonFunctionFactory.lastDay_eomonth( queryEngine );
 	}

@@ -11,13 +11,11 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.pagination.RowsLimitHandler;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.descriptor.internal.DateTimeUtils;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import javax.persistence.TemporalType;
@@ -267,24 +265,27 @@ public class FirebirdDialect extends Dialect {
 		}
 	}
 
+	@Override
 	public String formatDateTimeLiteral(TemporalAccessor temporalAccessor, TemporalType precision) {
 		switch ( precision ) {
 			case TIMESTAMP:
-				return wrapTimestampLiteral( DateTimeUtils.formatAsTimestampWithMillis(temporalAccessor) );
+				return wrapTimestampLiteral( formatAsTimestampWithMillis(temporalAccessor) );
 			default:
 				return super.formatDateTimeLiteral( temporalAccessor, precision );
 		}
 	}
 
+	@Override
 	public String formatDateTimeLiteral(Date date, TemporalType precision) {
 		switch ( precision ) {
 			case TIMESTAMP:
-				return wrapTimestampLiteral( DateTimeUtils.formatAsTimestampWithMillis(date) );
+				return wrapTimestampLiteral( formatAsTimestampWithMillis(date) );
 			default:
 				return super.formatDateTimeLiteral( date, precision );
 		}
 	}
 
+	@Override
 	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision) {
 		switch ( precision ) {
 			case TIMESTAMP:

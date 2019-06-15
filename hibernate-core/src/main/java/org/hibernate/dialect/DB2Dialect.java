@@ -195,6 +195,7 @@ public class DB2Dialect extends Dialect {
 		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
 		boolean castTo = !toTimestamp && !unit.isDateUnit();
 		switch (unit) {
+			case NATIVE:
 			case NANOSECOND:
 				pattern.append("(seconds_between(");
 				break;
@@ -206,7 +207,7 @@ public class DB2Dialect extends Dialect {
 				pattern.append("trunc(months_between(");
 				break;
 			default:
-				pattern.append( unit ).append("s_between(");
+				pattern.append("?1s_between(");
 		}
 		if (castTo) {
 			pattern.append("cast(?3 as timestamp)");
@@ -223,6 +224,7 @@ public class DB2Dialect extends Dialect {
 		}
 		pattern.append(")");
 		switch (unit) {
+			case NATIVE:
 			case NANOSECOND:
 				pattern.append("*1e9+(microsecond(?3)-microsecond(?2))*1e3)");
 				break;
@@ -242,6 +244,7 @@ public class DB2Dialect extends Dialect {
 		boolean castTo = !timestamp && !unit.isDateUnit();
 		pattern.append("add_");
 		switch (unit) {
+			case NATIVE:
 			case NANOSECOND:
 				pattern.append("second");
 				break;
@@ -253,7 +256,7 @@ public class DB2Dialect extends Dialect {
 				pattern.append("month");
 				break;
 			default:
-				pattern.append( unit );
+				pattern.append("?1");
 		}
 		pattern.append("s(");
 		if (castTo) {
@@ -264,6 +267,7 @@ public class DB2Dialect extends Dialect {
 		}
 		pattern.append(",");
 		switch (unit) {
+			case NATIVE:
 			case NANOSECOND:
 				pattern.append("(?2)/1e9");
 				break;
@@ -661,7 +665,7 @@ public class DB2Dialect extends Dialect {
 			case DAY_OF_MONTH: return "day";
 			case DAY_OF_YEAR: return "doy";
 			case DAY_OF_WEEK: return "dow";
-			default: return unit.toString();
+			default: return super.translateExtractField( unit );
 		}
 	}
 

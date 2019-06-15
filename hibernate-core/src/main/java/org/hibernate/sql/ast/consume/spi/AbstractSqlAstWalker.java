@@ -26,6 +26,7 @@ import org.hibernate.sql.ast.produce.spi.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.Conversion;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
@@ -73,7 +74,6 @@ import org.hibernate.type.descriptor.sql.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
-import static org.hibernate.query.TemporalUnit.conversionFactor;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.CLOSE_PARENTHESIS;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.COMA_SEPARATOR;
 import static org.hibernate.sql.ast.consume.spi.SqlAppender.DISTINCT_KEYWORD;
@@ -421,6 +421,11 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
+	public void visitDurationUnit(DurationUnit unit) {
+		appendSql( getDialect().translateDurationField( unit.getUnit() ) );
+	}
+
+	@Override
 	public void visitTrimSpecification(TrimSpecification trimSpecification) {
 		appendSql( trimSpecification.getSpecification().name() );
 	}
@@ -485,7 +490,7 @@ public abstract class AbstractSqlAstWalker
 	public void visitDuration(Duration duration) {
 		duration.getMagnitude().accept( this );
 		sqlAppender.appendSql(
-			conversionFactor( duration.getUnit(), NANOSECOND )
+				duration.getUnit().conversionFactor( NANOSECOND, getDialect() )
 		);
 	}
 
@@ -493,9 +498,8 @@ public abstract class AbstractSqlAstWalker
 	public void visitConversion(Conversion conversion) {
 		conversion.getDuration().getMagnitude().accept( this );
 		sqlAppender.appendSql(
-				conversionFactor(
-						conversion.getDuration().getUnit(),
-						conversion.getUnit()
+				conversion.getDuration().getUnit().conversionFactor(
+						conversion.getUnit(), getDialect()
 				)
 		);
 	}

@@ -16,11 +16,11 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
  * @author Gavin King
  */
 public class SqmByUnit extends AbstractSqmExpression<Long> {
-	private final SqmExtractUnit<?> unit;
+	private final SqmDurationUnit<?> unit;
 	private final SqmExpression<?> duration;
 
 	public SqmByUnit(
-			SqmExtractUnit<?> unit,
+			SqmDurationUnit<?> unit,
 			SqmExpression<?> duration,
 			BasicValuedExpressableType<Long> longType,
 			NodeBuilder nodeBuilder) {
@@ -29,7 +29,7 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 		this.duration = duration;
 	}
 
-	public SqmExtractUnit<?> getUnit() {
+	public SqmDurationUnit<?> getUnit() {
 		return unit;
 	}
 

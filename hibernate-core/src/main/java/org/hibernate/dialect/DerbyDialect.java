@@ -49,6 +49,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.NATIVE;
 
 /**
  * Hibernate Dialect for Apache Derby / Cloudscape 10
@@ -233,16 +234,24 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
-		return unit == NANOSECOND
-				? "{fn timestampadd(sql_tsi_frac_second, mod(bigint(?2),1000000000), {fn timestampadd(sql_tsi_second, bigint((?2)/1000000000), ?3)})}"
-				: "{fn timestampadd(sql_tsi_?1, bigint(?2), ?3)}";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "{fn timestampadd(sql_tsi_frac_second, mod(bigint(?2),1000000000), {fn timestampadd(sql_tsi_second, bigint((?2)/1000000000), ?3)})}";
+			default:
+				return "{fn timestampadd(sql_tsi_?1, bigint(?2), ?3)}";
+		}
 	}
 
 	@Override
 	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
-		return unit == NANOSECOND
-				? "{fn timestampdiff(sql_tsi_frac_second, ?2, ?3)}"
-				: "{fn timestampdiff(sql_tsi_?1, ?2, ?3)}";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "{fn timestampdiff(sql_tsi_frac_second, ?2, ?3)}";
+			default:
+				return "{fn timestampdiff(sql_tsi_?1, ?2, ?3)}";
+		}
 	}
 
 	@Override

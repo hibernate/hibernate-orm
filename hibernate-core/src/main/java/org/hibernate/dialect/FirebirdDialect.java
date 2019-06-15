@@ -143,6 +143,7 @@ public class FirebirdDialect extends Dialect {
 	@Override
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
+			case NATIVE:
 			case NANOSECOND:
 				return "dateadd((?2)/1e6 millisecond to ?3)";
 			case WEEK:
@@ -157,6 +158,7 @@ public class FirebirdDialect extends Dialect {
 	@Override
 	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
+			case NATIVE:
 			case NANOSECOND:
 				return "datediff(millisecond from ?2 to ?3)*1e6";
 			case WEEK:
@@ -261,38 +263,23 @@ public class FirebirdDialect extends Dialect {
 			case DAY_OF_MONTH: return "day";
 			case DAY_OF_YEAR: return "yearday";
 			case DAY_OF_WEEK: return "weekday";
-			default: return unit.toString();
+			default: return super.translateExtractField( unit );
 		}
 	}
 
 	@Override
-	public String formatDateTimeLiteral(TemporalAccessor temporalAccessor, TemporalType precision) {
-		switch ( precision ) {
-			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestampWithMillis(temporalAccessor) );
-			default:
-				return super.formatDateTimeLiteral( temporalAccessor, precision );
-		}
+	protected String formatAsTimestamp(Date date) {
+		return formatAsTimestampWithMillis(date);
 	}
 
 	@Override
-	public String formatDateTimeLiteral(Date date, TemporalType precision) {
-		switch ( precision ) {
-			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestampWithMillis(date) );
-			default:
-				return super.formatDateTimeLiteral( date, precision );
-		}
+	protected String formatAsTimestamp(Calendar calendar) {
+		return formatAsTimestampWithMillis(calendar);
 	}
 
 	@Override
-	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision) {
-		switch ( precision ) {
-			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestampWithMillis(calendar) );
-			default:
-				return super.formatDateTimeLiteral( calendar, precision );
-		}
+	protected String formatAsTimestamp(TemporalAccessor temporalAccessor) {
+		return formatAsTimestampWithMillis(temporalAccessor);
 	}
 
 	@Override

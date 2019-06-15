@@ -27,11 +27,11 @@ import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
  */
 public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	private final SqmExpression<?> magnitude;
-	private final SqmExtractUnit<?> unit;
+	private final SqmDurationUnit<?> unit;
 
 	public SqmToDuration(
 			SqmExpression<?> magnitude,
-			SqmExtractUnit<?> unit,
+			SqmDurationUnit<?> unit,
 			AllowableFunctionReturnType<T> type,
 			NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
@@ -43,7 +43,7 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 		return magnitude;
 	}
 
-	public SqmExtractUnit<?> getUnit() {
+	public SqmDurationUnit<?> getUnit() {
 		return unit;
 	}
 

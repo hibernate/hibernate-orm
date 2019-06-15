@@ -31,6 +31,7 @@ import org.hibernate.sql.TrimSpec;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.NATIVE;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -182,16 +183,24 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
-		return unit == NANOSECOND
-				? "timestampadd('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)" //micros
-				: "dateadd('?1', ?2, ?3)";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "timestampadd('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)";
+			default:
+				return "dateadd('?1', ?2, ?3)";
+		}
 	}
 
 	@Override
 	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
-		return unit == NANOSECOND
-				? "timestampdiff('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)*1e3" //micros
-				: "dateadd('?1', ?2, ?3)";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "timestampdiff('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)*1e3";
+			default:
+				return "dateadd('?1', ?2, ?3)";
+		}
 	}
 
 	// Dialect method overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

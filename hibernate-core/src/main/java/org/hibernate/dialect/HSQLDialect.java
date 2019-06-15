@@ -54,8 +54,6 @@ import org.hibernate.tool.schema.spi.Exporter;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
-
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
  * <p/>
@@ -211,11 +209,13 @@ public class HSQLDialect extends Dialect {
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
 		StringBuilder pattern = new StringBuilder();
 		boolean castTo = !timestamp && !unit.isDateUnit();
-		if ( unit == NANOSECOND ) {
-			pattern.append("timestampadd(sql_tsi_frac_second"); //nanos
-		}
-		else {
-			pattern.append("dateadd(").append( unit );
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				pattern.append("timestampadd(sql_tsi_frac_second"); //nanos
+				break;
+			default:
+				pattern.append("dateadd(?1");
 		}
 		pattern.append(", ?2, ");
 		if (castTo) {
@@ -233,11 +233,13 @@ public class HSQLDialect extends Dialect {
 		StringBuilder pattern = new StringBuilder();
 		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
 		boolean castTo = !toTimestamp && !unit.isDateUnit();
-		if ( unit == NANOSECOND ) {
-			pattern.append("timestampdiff(sql_tsi_frac_second"); //nanos
-		}
-		else {
-			pattern.append("datediff(").append( unit );
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				pattern.append("timestampdiff(sql_tsi_frac_second"); //nanos
+				break;
+			default:
+				pattern.append("datediff(?1");
 		}
 		pattern.append(", ");
 		if (castFrom) {

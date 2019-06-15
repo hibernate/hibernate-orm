@@ -65,7 +65,6 @@ import static org.hibernate.query.TemporalUnit.EPOCH;
 import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.QUARTER;
 import static org.hibernate.query.TemporalUnit.YEAR;
-import static org.hibernate.query.TemporalUnit.conversionFactor;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiDateLiteral;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTimeLiteral;
 
@@ -142,6 +141,7 @@ public class PostgreSQLDialect extends Dialect {
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
 		switch ( unit ) {
 			case NANOSECOND:
+			case NATIVE:
 				return "(?3 + (?2)/1e3 * interval '1 microsecond')";
 			case QUARTER: //quarter is not supported in interval literals
 				return "(?3 + (?2) * interval '3 month')";
@@ -186,6 +186,7 @@ public class PostgreSQLDialect extends Dialect {
 				case MINUTE:
 				case SECOND:
 				case NANOSECOND:
+				case NATIVE:
 					extractField(pattern, EPOCH, fromTimestamp, toTimestamp, unit);
 					break;
 				default:
@@ -227,7 +228,7 @@ public class PostgreSQLDialect extends Dialect {
 					throw new SemanticException(unit + " is not a legal field");
 			}
 		}
-		pattern.append(")").append( conversionFactor(unit, toUnit) );
+		pattern.append(")").append( unit.conversionFactor( toUnit, this ) );
 	}
 
 	@Override
@@ -730,7 +731,7 @@ public class PostgreSQLDialect extends Dialect {
 			case DAY_OF_MONTH: return "day";
 			case DAY_OF_YEAR: return "doy";
 			case DAY_OF_WEEK: return "dow";
-			default: return unit.toString();
+			default: return super.translateExtractField( unit );
 		}
 	}
 

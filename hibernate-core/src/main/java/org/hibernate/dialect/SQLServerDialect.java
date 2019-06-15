@@ -33,8 +33,6 @@ import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
-import javax.persistence.TemporalType;
-
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestampWithMillis;
 
@@ -438,10 +436,101 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		};
 	}
 
+	/**
+	 * SQL server supports up to 7 decimal digits of
+	 * fractional second precision in a datetime2,
+	 * but since its duration arithmetic functions
+	 * try to fit durations into an int,
+	 * which is impossible with such high precision,
+	 * so default to generating {@code datetime2(3)}
+	 * columns.
+	 */
+	@Override
+	public int getDefaultTimestampPrecision() {
+		return 6; //microseconds!
+	}
+
+	/**
+	 * SQL server supports up to 7 decimal digits of
+	 * fractional second precision in a datetime2,
+	 * but unfortunately its duration arithmetic
+	 * functions have a nasty habit of overflowing.
+	 * So to give ourselves a little extra headroom,
+	 * we will use {@code microsecond} as the native
+	 * unit of precision (but even then we have to
+	 * use tricks when calling {@code dateadd()}).
+	 */
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1_000; //microseconds!
+	}
+
+	@Override
+	public String extract(TemporalUnit unit) {
+		switch (unit) {
+			//currently Dialect.extract() doesn't need
+			//to handle NANOSECOND (might change that?)
+//			case NANOSECOND:
+//				//this should evaluate to a bigint type
+//				return "(datepart(second,?2,?3)*1000000000+datepart(nanosecond,?2,?3))";
+			case SECOND:
+				//this should evaluate to a floating point type
+				return "(datepart(second,?2,?3)+datepart(nanosecond,?2,?3)/1e9)";
+			default:
+				return "datepart(?1,?2,?3)";
+		}
+	}
+
+	@Override
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		// dateadd() supports only especially small magnitudes
+		// since it casts its argument to int (and unfortunately
+		// there's no dateadd_big()) so here we need to use two
+		// calls to dateadd() to add a whole duration
+		switch (unit) {
+			case NANOSECOND:
+				//Java Durations are usually the only thing
+				//we find expressed in nanosecond precision,
+				//and they can easily be very large
+				return "dateadd(nanosecond, ?2%1000000000, dateadd(second, ?2/1000000000, ?3))";
+			case NATIVE:
+				//microsecond is the "native" precision
+				return "dateadd(microsecond, ?2%1000000, dateadd(second, ?2/1000000, ?3))";
+			default:
+				return "dateadd(?1, ?2, ?3)";
+		}
+	}
+
+	@Override
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		switch (unit) {
+			case NATIVE:
+				//use microsecond as the "native" precision
+				return "datediff_big(microsecond, ?2, ?3)";
+			default:
+				//datediff() returns an int, and can easily
+				//overflow when dealing with "physical"
+				//durations, so use datediff_big()
+				return unit.normalized() == NANOSECOND
+						? "datediff_big(?1, ?2, ?3)"
+						: "datediff(?1, ?2, ?3)";
+		}
+	}
+
+	@Override
+	public String translateDurationField(TemporalUnit unit) {
+		switch (unit) {
+			//use microsecond as the "native" precision
+			case NATIVE: return "microsecond";
+			default: return super.translateDurationField(unit);
+		}
+	}
+
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
 		switch ( unit ) {
-			case WEEK: return "isowk"; //the ISO week number (behavior of "week" depends on a system property)
+			//the ISO week number (behavior of "week" depends on a system property)
+			case WEEK: return "isowk";
 			default: return super.translateExtractField(unit);
 		}
 	}
@@ -492,16 +581,20 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	protected String wrapTimestampLiteral(String timestamp) {
+		//needed because the {ts ... } JDBC escape chokes on microseconds
 		return "cast('" + timestamp + "' as datetime2)";
 	}
 
 	@Override
 	protected String wrapTimeLiteral(String time) {
+		//needed because the {t ... } JDBC is just buggy
 		return "cast('" + time + "' as time)";
 	}
 
 	@Override
 	protected String wrapDateLiteral(String date) {
+		//possibly not needed
 		return "cast('" + date + "' as date)";
 	}
+
 }

@@ -20,7 +20,6 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.naming.Identifier;
-import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
@@ -110,23 +109,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.characterLength_len( queryEngine );
 		CommonFunctionFactory.datepartDatename( queryEngine );
 		CommonFunctionFactory.lastDay_eomonth( queryEngine );
-	}
-
-	@Override
-	public String extract(TemporalUnit unit) {
-		return "datepart(?1, ?2)";
-	}
-
-	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
-		//TODO: SQL Server supports nanosecond, but what about Sybase?
-		return "dateadd(?1, ?2, ?3)";
-	}
-
-	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
-		//TODO: SQL Server supports nanosecond, but what about Sybase?
-		return "datediff(?1, ?2, ?3)";
 	}
 
 	@Override

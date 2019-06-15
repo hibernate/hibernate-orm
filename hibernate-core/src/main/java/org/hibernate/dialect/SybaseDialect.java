@@ -11,7 +11,6 @@ import java.sql.Types;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.sql.TrimSpec;
 import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -81,4 +80,23 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			default: return super.translateExtractField(unit);
 		}
 	}
+
+	@Override
+	public String extract(TemporalUnit unit) {
+		//TODO!!
+		return "datepart(?1, ?2)";
+	}
+
+	@Override
+	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+		//TODO!!
+		return "dateadd(?1, ?2, ?3)";
+	}
+
+	@Override
+	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		//TODO!!
+		return "datediff(?1, ?2, ?3)";
+	}
+
 }

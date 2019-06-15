@@ -69,9 +69,9 @@ import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.HOUR;
 import static org.hibernate.query.TemporalUnit.MINUTE;
 import static org.hibernate.query.TemporalUnit.MONTH;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.TemporalUnit.SECOND;
 import static org.hibernate.query.TemporalUnit.YEAR;
-import static org.hibernate.query.TemporalUnit.conversionFactor;
 
 /**
  * A dialect for Oracle 8i and above.
@@ -252,6 +252,7 @@ public class OracleDialect extends Dialect {
 			case MINUTE:
 			case SECOND:
 			case NANOSECOND:
+			case NATIVE:
 				pattern.append("numtodsinterval");
 				break;
 			default:
@@ -266,11 +267,13 @@ public class OracleDialect extends Dialect {
 				pattern.append("7*(");
 				break;
 			case NANOSECOND:
+			case NATIVE:
 				pattern.append("1e-9*(");
 				break;
 		}
 		pattern.append("?2");
 		switch ( unit ) {
+			case NATIVE:
 			case NANOSECOND:
 			case QUARTER:
 			case WEEK:
@@ -286,6 +289,7 @@ public class OracleDialect extends Dialect {
 				pattern.append("day");
 				break;
 			case NANOSECOND:
+			case NATIVE:
 				pattern.append("second");
 				break;
 			default:
@@ -338,6 +342,7 @@ public class OracleDialect extends Dialect {
 				}
 				pattern.append(")");
 				break;
+			case NATIVE:
 			case NANOSECOND:
 			case SECOND:
 				pattern.append("(");
@@ -379,7 +384,7 @@ public class OracleDialect extends Dialect {
 				throw new SemanticException(unit + " is not a legal field");
 		}
 		pattern.append(")");
-		pattern.append( conversionFactor(unit, toUnit) );
+		pattern.append( unit.conversionFactor( toUnit, this ) );
 	}
 
 	protected void registerCharacterTypeMappings() {

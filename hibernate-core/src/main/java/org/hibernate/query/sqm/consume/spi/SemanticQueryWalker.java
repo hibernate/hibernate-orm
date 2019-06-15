@@ -40,6 +40,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.function.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
 import org.hibernate.query.sqm.tree.expression.function.SqmToDuration;
@@ -254,6 +255,8 @@ public interface SemanticQueryWalker<T> {
 	T visitFullyQualifiedEnum(Enum<?> value);
 
 	T visitFullyQualifiedField(Field field);
+
+	T visitDurationUnit(SqmDurationUnit unit);
 
 	T visitExtractUnit(SqmExtractUnit extractUnit);
 

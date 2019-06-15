@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Conversion;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.Star;
@@ -156,4 +157,6 @@ public interface SqlAstWalker {
 	void visitConversion(Conversion conversion);
 
 	void visitDuration(Duration duration);
+
+	void visitDurationUnit(DurationUnit durationUnit);
 }

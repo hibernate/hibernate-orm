@@ -58,6 +58,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.function.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
 import org.hibernate.query.sqm.tree.expression.function.SqmToDuration;
@@ -114,6 +115,7 @@ import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Conversion;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
@@ -158,6 +160,7 @@ import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.NATIVE;
 import static org.hibernate.query.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
@@ -601,6 +604,11 @@ public abstract class BaseSqmToSqlAstConverter
 			//first let's apply the propagated scale
 			Expression scaledExpression = applyScale( toSqlExpression( navigableReference ) );
 
+			// we use NANOSECOND, not NATIVE, as the unit
+			// because that's how a Duration is persisted
+			// in a database table column, and how it's
+			// returned to a Java client
+
 			if ( adjustedTimestamp != null ) {
 				if ( appliedByUnit != null ) {
 					throw new IllegalStateException();
@@ -609,7 +617,7 @@ public abstract class BaseSqmToSqlAstConverter
 				// given date or timestamp, producing an
 				// adjusted date or timestamp
 				return timestampadd().expression(
-						new ExtractUnit( NANOSECOND, basicType( Long.class ) ),
+						new DurationUnit( NANOSECOND, basicType( Long.class ) ),
 						scaledExpression,
 						adjustedTimestamp
 				);
@@ -829,7 +837,7 @@ public abstract class BaseSqmToSqlAstConverter
 		//      to null before we recurse down the tree?
 		//      and what about scale?
 		Expression magnitude = toSqlExpression( toDuration.getMagnitude().accept(this) );
-		ExtractUnit unit = (ExtractUnit) toDuration.getUnit().accept(this);
+		DurationUnit unit = (DurationUnit) toDuration.getUnit().accept(this);
 
 		// let's start by applying the propagated scale
 		// so we don't forget to do it in what follows
@@ -942,6 +950,20 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
+	public Object visitDurationUnit(SqmDurationUnit unit) {
+		shallownessStack.push( Shallowness.FUNCTION );
+		try {
+			return new DurationUnit(
+					unit.getUnit(),
+					unit.getType().getSqlExpressableType()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
 	public Object visitDistinct(SqmDistinct distinct) {
 		return new Distinct( toSqlExpression( distinct.getExpression().accept(this) ) );
 	}
@@ -1028,7 +1050,7 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 	}
 
-	Object transformDurationArithmetic(SqmBinaryArithmetic<?> expression) {
+	private Object transformDurationArithmetic(SqmBinaryArithmetic<?> expression) {
 		BinaryArithmeticOperator operator = expression.getOperator();
 
 		// we have a date or timestamp somewhere to
@@ -1103,7 +1125,7 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 	}
 
-	Object transformDatetimeArithmetic(SqmBinaryArithmetic expression) {
+	private Object transformDatetimeArithmetic(SqmBinaryArithmetic expression) {
 		BinaryArithmeticOperator operator = expression.getOperator();
 
 		// the only kind of algebra we know how to
@@ -1127,13 +1149,11 @@ public abstract class BaseSqmToSqlAstConverter
 		boolean leftTimestamp = typeConfiguration.isTimestampType( expression.getLeftHandOperand().getExpressableType() ) ;
 		boolean rightTimestamp = typeConfiguration.isTimestampType( expression.getRightHandOperand().getExpressableType() );
 
-		// even though no database really supports
-		// nanosecond precision for timestamps, the
-		// "native" precision of the Java Duration
-		// type is nanoseconds, so we use it here,
-		// unless we're dealing with Dates
+		// when we're dealing with Dates, we use
+		// DAY as the smallest unit, otherwise we
+		// use a platform-specific granularity
 
-		TemporalUnit baseUnit = rightTimestamp || leftTimestamp ? NANOSECOND : DAY;
+		TemporalUnit baseUnit = rightTimestamp || leftTimestamp ? NATIVE : DAY;
 
 		if (adjustedTimestamp != null) {
 			if ( appliedByUnit != null ) {
@@ -1146,7 +1166,7 @@ public abstract class BaseSqmToSqlAstConverter
 			// temporal type, so we must use it for both
 			// the diff, and then the subsequent add
 
-			ExtractUnit unit = new ExtractUnit( baseUnit, basicType(Integer.class) );
+			DurationUnit unit = new DurationUnit( baseUnit, basicType(Integer.class) );
 			Expression scaledMagnitude = applyScale( timestampdiff().expression( unit, right, left ) );
 			return timestampadd().expression( unit, scaledMagnitude, adjustedTimestamp );
 		}
@@ -1154,12 +1174,12 @@ public abstract class BaseSqmToSqlAstConverter
 			// we're immediately converting the resulting
 			// duration to a scalar in the given unit
 
-			ExtractUnit unit = (ExtractUnit) appliedByUnit.getUnit().accept(this);
+			DurationUnit unit = (DurationUnit) appliedByUnit.getUnit().accept(this);
 			return applyScale( timestampdiff().expression( unit, right, left ) );
 		}
 		else {
 			// a plain "bare" Duration
-			ExtractUnit unit = new ExtractUnit( baseUnit, basicType(Integer.class) );
+			DurationUnit unit = new DurationUnit( baseUnit, basicType(Integer.class) );
 			SqlExpressableType durationType = expression.getExpressableType().getSqlExpressableType();
 			Expression scaledMagnitude = applyScale( timestampdiff().expression( unit, right, left)  );
 			return new Duration( scaledMagnitude, baseUnit, durationType );

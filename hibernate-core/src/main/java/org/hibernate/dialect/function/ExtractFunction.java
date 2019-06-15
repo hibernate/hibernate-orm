@@ -11,6 +11,7 @@ import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
@@ -68,7 +69,11 @@ public class ExtractFunction
 		TemporalUnit unit = field.getUnit();
 		switch ( unit ) {
 			case NANOSECOND:
-				return extractNanoseconds( expression, queryEngine, typeConfiguration );
+				return extractNanoseconds( expression, 1_000_000_000, queryEngine, typeConfiguration );
+			case NATIVE:
+//				long factor = 1_000_000_000 / dialect.getFractionalSecondPrecisionInNanos();
+//				return extractNanoseconds( expression, factor, queryEngine, typeConfiguration );
+				throw new SemanticException("can't extract() the field TemporalUnit.NATIVE");
 			case OFFSET:
 				// use format(arg, 'xxx') to get the offset
 				return extractOffsetUsingFormat( expression, queryEngine, typeConfiguration );
@@ -193,6 +198,7 @@ public class ExtractFunction
 
 	private SelfRenderingSqmFunction<Long> extractNanoseconds(
 			SqmExpression<?> expressionToExtract,
+			long factor,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		NodeBuilder builder = expressionToExtract.nodeBuilder();
@@ -200,18 +206,16 @@ public class ExtractFunction
 		BasicValuedExpressableType<Float> floatType = typeConfiguration.standardExpressableTypeForJavaType(Float.class);
 
 		SqmExtractUnit<Float> extractSeconds = new SqmExtractUnit<>( SECOND, floatType, builder );
-		SqmLiteral<Float> billion = new SqmLiteral<>( 1e9f, floatType, builder );
+		SqmLiteral<Float> billion = new SqmLiteral<>( (float) factor, floatType, builder );
 		return toLong(
 				new SqmBinaryArithmetic<>(
 						MULTIPLY,
-						queryEngine.getSqmFunctionRegistry()
-								.findFunctionTemplate("extract")
-								.makeSqmFunctionExpression(
-										asList( extractSeconds, expressionToExtract ),
-										floatType,
-										queryEngine,
-										typeConfiguration
-								),
+						makeSqmFunctionExpression(
+								asList( extractSeconds, expressionToExtract ),
+								floatType,
+								queryEngine,
+								typeConfiguration
+						),
 						billion,
 						floatType,
 						builder

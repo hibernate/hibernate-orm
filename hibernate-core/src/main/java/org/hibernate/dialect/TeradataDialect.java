@@ -123,6 +123,7 @@ public class TeradataDialect extends Dialect {
 		pattern.append("cast((?3 - ?2) ");
 		switch (unit) {
 			case NANOSECOND:
+			case NATIVE:
 				//default fractional precision is 6, the maximum
 				pattern.append("second");
 				break;
@@ -133,7 +134,7 @@ public class TeradataDialect extends Dialect {
 				pattern.append("month");
 				break;
 			default:
-				pattern.append( unit );
+				pattern.append( "?1" );
 		}
 		pattern.append("(4) as bigint)");
 		switch (unit) {
@@ -144,6 +145,7 @@ public class TeradataDialect extends Dialect {
 				pattern.append("/3");
 				break;
 			case NANOSECOND:
+			case NATIVE:
 				pattern.append("*1e9");
 				break;
 		}
@@ -155,6 +157,7 @@ public class TeradataDialect extends Dialect {
 		//TODO: TOTALLY UNTESTED CODE!
 		switch ( unit ) {
 			case NANOSECOND:
+			case NATIVE:
 				return "(?3 + (?2)/1e9 * interval '1' second)";
 			case QUARTER:
 				return "(?3 + (?2) * interval '3' month)";

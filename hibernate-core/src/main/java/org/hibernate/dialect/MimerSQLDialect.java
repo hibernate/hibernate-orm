@@ -161,6 +161,7 @@ public class MimerSQLDialect extends Dialect {
 		StringBuilder pattern = new StringBuilder();
 		pattern.append("cast((?3 - ?2) ");
 		switch (unit) {
+			case NATIVE:
 			case NANOSECOND:
 			case SECOND:
 				pattern.append("second(12,9)");
@@ -193,6 +194,7 @@ public class MimerSQLDialect extends Dialect {
 			case QUARTER:
 				pattern.append("/3");
 				break;
+			case NATIVE:
 			case NANOSECOND:
 				pattern.append("*1e9");
 				break;
@@ -203,6 +205,7 @@ public class MimerSQLDialect extends Dialect {
 	@Override
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
 		switch ( unit ) {
+			case NATIVE:
 			case NANOSECOND:
 				return "(?3 + (?2)/1e9 * interval '1' second)";
 			case QUARTER:

@@ -555,6 +555,17 @@ public abstract class Dialect implements ConversionContext {
 	 * {@code extract()} function call. The resulting
 	 * pattern must contain ?1 and ?2 placeholders
 	 * for the arguments.
+	 * <p>
+	 * This method does not need to handle
+	 * {@link TemporalUnit#NANOSECOND},
+	 * {@link TemporalUnit#NATIVE},
+	 * {@link TemporalUnit#OFFSET},
+	 * {@link TemporalUnit#DATE},
+	 * {@link TemporalUnit#TIME},
+	 * {@link TemporalUnit#WEEK_OF_YEAR}, or
+	 * {@link TemporalUnit#WEEK_OF_MONTH},
+	 * which are already desugared by
+	 * {@link ExtractFunction}.
 	 *
 	 * @param unit the first argument
 	 */
@@ -3362,10 +3373,11 @@ public abstract class Dialect implements ConversionContext {
 	 * precision, or the maximum precision is very high.
 	 */
 	public int getDefaultTimestampPrecision() {
-		//milliseconds is the maximum for most
-		//that support explicit precision, though
-		//DB2 goes as high as 12!
-		return 6;
+		//milliseconds or microseconds is the maximum
+		//for most dialects that support explicit
+		//precision, with the exception of DB2 which
+		//accepts up to 12 digits!
+		return 6; //microseconds!
 	}
 
 	public int getFloatPrecision() {
@@ -3374,6 +3386,10 @@ public abstract class Dialect implements ConversionContext {
 
 	public int getDoublePrecision() {
 		return 53;
+	}
+
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1; //default to nanoseconds for now
 	}
 
 	public class DefaultSizeStrategyImpl implements DefaultSizeStrategy {
@@ -3420,11 +3436,82 @@ public abstract class Dialect implements ConversionContext {
 		return OracleDialect.datetimeFormat( format, true ).result();
 	}
 
+	/**
+	 * Return the name used to identify the given field
+	 * as an argument to the {@code extract()} function,
+	 * or of this dialect's {@link #extract equivalent}
+	 * function.
+	 * <p>
+	 * This method does not need to handle
+	 * {@link TemporalUnit#NANOSECOND},
+	 * {@link TemporalUnit#NATIVE},
+	 * {@link TemporalUnit#OFFSET},
+	 * {@link TemporalUnit#DATE},
+	 * {@link TemporalUnit#TIME},
+	 * {@link TemporalUnit#WEEK_OF_YEAR}, nor
+	 * {@link TemporalUnit#WEEK_OF_MONTH},
+	 * which are already desugared by
+	 * {@link ExtractFunction}.
+	 */
 	public String translateExtractField(TemporalUnit unit) {
 		switch ( unit ) {
 			case DAY_OF_MONTH: return "dd";
 			case DAY_OF_YEAR: return "dy";
 			case DAY_OF_WEEK: return "dw";
+
+			//all the following fields are desugared
+			//by ExtractFunction, so we should never
+			//see them here!
+			case OFFSET:
+			case NATIVE:
+			case NANOSECOND:
+			case DATE:
+			case TIME:
+			case WEEK_OF_MONTH:
+			case WEEK_OF_YEAR:
+				throw new IllegalArgumentException("illegal field: " + unit);
+
+			default: return unit.toString();
+		}
+	}
+
+	/**
+	 * Return the name used to identify the given unit of
+	 * duration as an argument to {@code #timestampadd()}
+	 * or {@code #timestampdiff()}, or of this dialect's
+	 * {@link #timestampadd equivalent}
+	 * {@link #timestampdiff functions}.
+	 * <p>
+	 * This method does not need to handle
+	 * {@link TemporalUnit#NANOSECOND},
+	 * {@link TemporalUnit#NATIVE},
+	 * {@link TemporalUnit#OFFSET},
+	 * {@link TemporalUnit#DAY_OF_WEEK},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR},
+	 * {@link TemporalUnit#DATE},
+	 * {@link TemporalUnit#TIME},
+	 * {@link TemporalUnit#TIMEZONE_HOUR},
+	 * {@link TemporalUnit#TIMEZONE_MINUTE},
+	 * {@link TemporalUnit#WEEK_OF_YEAR}, nor
+	 * {@link TemporalUnit#WEEK_OF_MONTH},
+	 * which are not units of duration.
+	 */
+	public String translateDurationField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH:
+			case DAY_OF_YEAR:
+			case DAY_OF_WEEK:
+			case OFFSET:
+			case TIMEZONE_HOUR:
+			case TIMEZONE_MINUTE:
+			case DATE:
+			case TIME:
+			case WEEK_OF_MONTH:
+			case WEEK_OF_YEAR:
+				throw new IllegalArgumentException("illegal unit: " + unit);
+
+			case NATIVE: return "nanosecond"; //default to nanosecond for now
 			default: return unit.toString();
 		}
 	}
@@ -3448,10 +3535,14 @@ public abstract class Dialect implements ConversionContext {
 			case TIME:
 				return wrapTimeLiteral( formatAsTime(temporalAccessor) );
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestampWithMicros(temporalAccessor) );
+				return wrapTimestampLiteral( formatAsTimestamp(temporalAccessor) );
 			default:
 				throw new IllegalArgumentException();
 		}
+	}
+
+	protected String formatAsTimestamp(TemporalAccessor temporalAccessor) {
+		return formatAsTimestampWithMicros(temporalAccessor);
 	}
 
 	public String formatDateTimeLiteral(Date date, TemporalType precision) {
@@ -3461,10 +3552,14 @@ public abstract class Dialect implements ConversionContext {
 			case TIME:
 				return wrapTimeLiteral( formatAsTime(date) );
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestampWithMicros(date) );
+				return wrapTimestampLiteral( formatAsTimestamp(date) );
 			default:
 				throw new IllegalArgumentException();
 		}
+	}
+
+	protected String formatAsTimestamp(Date date) {
+		return formatAsTimestampWithMicros(date);
 	}
 
 	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision) {
@@ -3474,10 +3569,14 @@ public abstract class Dialect implements ConversionContext {
 			case TIME:
 				return wrapTimeLiteral( formatAsTime(calendar) );
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestampWithMicros(calendar) );
+				return wrapTimestampLiteral( formatAsTimestamp(calendar) );
 			default:
 				throw new IllegalArgumentException();
 		}
+	}
+
+	protected String formatAsTimestamp(Calendar calendar) {
+		return formatAsTimestampWithMicros(calendar);
 	}
 
 	// deprecated limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

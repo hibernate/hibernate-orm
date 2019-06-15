@@ -25,6 +25,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import static org.hibernate.query.TemporalUnit.HOUR;
 import static org.hibernate.query.TemporalUnit.MINUTE;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.NATIVE;
 import static org.hibernate.query.TemporalUnit.SECOND;
 
 /**
@@ -338,7 +339,7 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
-		return unit == NANOSECOND
+		return unit == NANOSECOND || unit == NATIVE
 				? "adddate(?3, interval (?2)/1e3 microsecond)"
 				: "adddate(?3, interval ?2 ?1)";
 	}
@@ -369,6 +370,7 @@ public class CUBRIDDialect extends Dialect {
 				timediff(pattern, HOUR, unit);
 				pattern.append(")");
 				break;
+			case NATIVE:
 			case NANOSECOND:
 				pattern.append("(");
 				timediff(pattern, NANOSECOND, unit);
@@ -390,11 +392,11 @@ public class CUBRIDDialect extends Dialect {
 			StringBuilder sqlAppender,
 			TemporalUnit diffUnit,
 			TemporalUnit toUnit) {
-		if ( diffUnit == NANOSECOND ) {
+		if ( diffUnit == NANOSECOND || diffUnit == NATIVE ) {
 			sqlAppender.append("1e6*");
 		}
 		sqlAppender.append("extract(");
-		if ( diffUnit == NANOSECOND ) {
+		if ( diffUnit == NANOSECOND || diffUnit == NATIVE ) {
 			sqlAppender.append("millisecond");
 		}
 		else {
@@ -402,6 +404,6 @@ public class CUBRIDDialect extends Dialect {
 		}
 		//note: timediff() is backwards on CUBRID
 		sqlAppender.append(",timediff(?3,?2))");
-		sqlAppender.append( diffUnit.conversionFactor(toUnit) );
+		sqlAppender.append( diffUnit.conversionFactor( toUnit, this ) );
 	}
 }

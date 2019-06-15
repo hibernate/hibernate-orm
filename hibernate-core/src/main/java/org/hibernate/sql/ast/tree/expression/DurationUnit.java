@@ -14,18 +14,19 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
  * A {@link TemporalUnit} passed as an argument to the
- * {@link org.hibernate.dialect.function.ExtractFunction}.
- * These are different to {@link DurationUnit}s because of
+ * {@link org.hibernate.dialect.function.TimestampaddFunction}
+ * or {@link org.hibernate.dialect.function.TimestampdiffFunction}.
+ * These are different to {@link ExtractUnit}s because of
  * how the {@link TemporalUnit#WEEK} field is handled on
  * some platforms.
  *
  * @author Gavin King
  */
-public class ExtractUnit implements SqlExpressable, SqlAstNode {
+public class DurationUnit implements SqlExpressable, SqlAstNode {
 	private TemporalUnit unit;
 	private SqlExpressableType type;
 
-	public ExtractUnit(TemporalUnit unit, SqlExpressableType type) {
+	public DurationUnit(TemporalUnit unit, SqlExpressableType type) {
 		this.unit = unit;
 		this.type = type;
 	}
@@ -41,7 +42,7 @@ public class ExtractUnit implements SqlExpressable, SqlAstNode {
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
-		sqlTreeWalker.visitExtractUnit(this);
+		sqlTreeWalker.visitDurationUnit(this);
 	}
 }
 

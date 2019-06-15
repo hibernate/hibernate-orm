@@ -37,6 +37,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.NATIVE;
 
 /**
  * A SQL dialect for TimesTen 5.1.
@@ -130,16 +131,24 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
-		return unit == NANOSECOND
-				? "timestampadd(sql_tsi_frac_second, ?2, ?3)"
-				: "timestampadd(sql_tsi_?1, ?2, ?3)";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "timestampadd(sql_tsi_frac_second, ?2, ?3)";
+			default:
+				return "timestampadd(sql_tsi_?1, ?2, ?3)";
+		}
 	}
 
 	@Override
 	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
-		return unit == NANOSECOND
-				? "timestampdiff(sql_tsi_frac_second, ?2, ?3)"
-				: "timestampdiff(sql_tsi_?1, ?2, ?3)";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "timestampdiff(sql_tsi_frac_second, ?2, ?3)";
+			default:
+				return "timestampdiff(sql_tsi_?1, ?2, ?3)";
+		}
 	}
 
 	@Override

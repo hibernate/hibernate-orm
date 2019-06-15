@@ -45,6 +45,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 
 import static org.hibernate.query.CastType.BOOLEAN;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.NATIVE;
 
 /**
  * An SQL dialect for MySQL (prior to 5.x).
@@ -285,16 +286,24 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
-		return unit == NANOSECOND
-				? "timestampadd(microsecond, (?2)/1e3, ?3)"
-				: "timestampadd(?1, ?2, ?3)";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "timestampadd(microsecond, (?2)/1e3, ?3)";
+			default:
+				return "timestampadd(?1, ?2, ?3)";
+		}
 	}
 
 	@Override
 	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
-		return unit == NANOSECOND
-				? "timestampdiff(microsecond, ?2, ?3)*1e3"
-				: "timestampdiff(?1, ?2, ?3)";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "timestampdiff(microsecond, ?2, ?3)*1e3";
+			default:
+				return "timestampdiff(?1, ?2, ?3)";
+		}
 	}
 
 	/**

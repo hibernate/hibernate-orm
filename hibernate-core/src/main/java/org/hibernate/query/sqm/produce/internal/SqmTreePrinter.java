@@ -43,6 +43,7 @@ import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.function.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
 import org.hibernate.query.sqm.tree.expression.function.SqmToDuration;
@@ -577,6 +578,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitExtractUnit(SqmExtractUnit extractUnit) {
+		return null;
+	}
+
+	@Override
+	public Object visitDurationUnit(SqmDurationUnit durationUnit) {
 		return null;
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.query.sqm.SemanticException;
 
 /**
@@ -36,41 +37,41 @@ public enum TemporalUnit {
 	/**
 	 * Calendar year.
 	 **/
-	YEAR(true),
+	YEAR,
 	/**
 	 * Quarter, defined to mean three months.
 	 **/
-	QUARTER(true),
+	QUARTER,
 	/**
 	 * Calendar month.
 	 **/
-	MONTH(true),
+	MONTH,
 	/**
 	 * Week, defined to mean 7 days when it occurs as a
 	 * unit of duration, or to mean the ISO ISO-8601
 	 * week number when passed to {@code extract()}. This
 	 * is different to {@link #WEEK_OF_YEAR}.
 	 **/
-	WEEK(true),
+	WEEK,
 	/**
 	 * Day, defined to mean 24 hours when it occurs as a
 	 * unit of duration, or to mean the calendar day of
 	 * the month when passed to {@code extract()}.
 	 **/
-	DAY(true),
+	DAY,
 	/**
 	 * Hour, defined to mean 60 minutes when it occurs as
 	 * a unit of duration, or to mean the hour field in
 	 * the range 0-23 (regular 24-hour time) when passed
 	 * to {@code extract()}.
 	 */
-	HOUR(false),
+	HOUR,
 	/**
 	 * Minute, defined to mean 60 seconds when it occurs
 	 * as a unit of duration, or to mean the minute field
 	 * in the range 0-59 when passed to {@code extract()}.
 	 */
-	MINUTE(false),
+	MINUTE,
 	/**
 	 * Second, defined to mean 1000 nanoseconds when it
 	 * occurs as a unit of duration, or to mean the second
@@ -78,7 +79,7 @@ public enum TemporalUnit {
 	 * {@code extract()}. The second field includes
 	 * fractional seconds (it is a floating point value).
 	 */
-	SECOND(false),
+	SECOND,
 	/**
 	 * Nanosecond, the basic most granular unit of duration.
 	 * Few databases support billions-of-seconds, but Java's
@@ -89,24 +90,26 @@ public enum TemporalUnit {
 	 * Note that the actual minimum granularity of a datetime
 	 * varies by database platform (usually milliseconds or
 	 * microseconds) so support for nanoseconds is emulated.
+	 *
+	 * @see #NATIVE
 	 */
-	NANOSECOND(false),
+	NANOSECOND,
 	/**
 	 * The day of the week, from 1 (Sunday) to 7 (Saturday).
 	 * <p>
 	 * Not supported by every database platform.
 	 */
-	DAY_OF_WEEK(true),
+	DAY_OF_WEEK,
 	/**
 	 * The day of the year, counting from 1.
 	 * <p>
 	 * Not supported by every database platform.
 	 */
-	DAY_OF_YEAR(true),
+	DAY_OF_YEAR,
 	/**
 	 * The calendar day of the month, a synonym for {@link #DAY}.
 	 */
-	DAY_OF_MONTH(true),
+	DAY_OF_MONTH,
 	/**
 	 * The week of the month, where the first day of the month
 	 * is in week 1, and a new week starts each Sunday.
@@ -114,7 +117,7 @@ public enum TemporalUnit {
 	 * Supported on all platforms which natively support
 	 * {@link #DAY_OF_WEEK}.
 	 */
-	WEEK_OF_MONTH(true),
+	WEEK_OF_MONTH,
 	/**
 	 * The week of the year, where the first day of the year
 	 * is in week 1, and a new week starts each Sunday. This
@@ -123,231 +126,200 @@ public enum TemporalUnit {
 	 * Supported on all platforms which natively support
 	 * {@link #DAY_OF_WEEK} and {@link #DAY_OF_YEAR}.
 	 */
-	WEEK_OF_YEAR(true),
+	WEEK_OF_YEAR,
 	/**
 	 * The timezone offset of an offset datetime, as a
 	 * {@link java.time.ZoneOffset}.
 	 */
-	OFFSET(false),
+	OFFSET,
 	/**
 	 * The hour field of the {@link #OFFSET} in an offset
 	 * datetime.
 	 */
-	TIMEZONE_HOUR(false),
+	TIMEZONE_HOUR,
 	/**
 	 * The minute field of the {@link #OFFSET} in an offset
 	 * datetime.
 	 */
-	TIMEZONE_MINUTE(false),
+	TIMEZONE_MINUTE,
 	/**
 	 * The date part of a timestamp, datetime, or offset datetime,
 	 * as a {@link java.time.LocalDate}.
 	 */
-	DATE(false),
+	DATE,
 	/**
 	 * The time part of a timestamp, datetime, or offset datetime,
 	 * as a {@link java.time.LocalTime}.
 	 */
-	TIME(false),
+	TIME,
 	/**
 	 * An internal value representing the Unix epoch, the elapsed
 	 * seconds since January 1, 1970. Currently not supported in
 	 * HQL.
 	 */
-	EPOCH(false);
+	EPOCH,
+	/**
+	 * An internal value representing the "native" resolution for
+	 * date/time arithmetic of the underlying platform. Usually
+	 * the smallest unit of fractional seconds, either milliseconds
+	 * or microseconds. We define this value in order to avoid
+	 * repeatedly converting between {@link #NANOSECOND}s and a
+	 * unit that the database understands. On some platforms this
+	 * is also used to avoid numeric overflow.
+	 */
+	NATIVE;
 
-	private boolean dateUnit;
+	public String conversionFactor(TemporalUnit unit, Dialect dialect) {
 
-	TemporalUnit(boolean dateUnit) {
-		this.dateUnit = dateUnit;
-	}
-
-	private static void illegalConversion(TemporalUnit from, TemporalUnit to) {
-		throw new SemanticException("illegal unit conversion " + from + " to " + to);
-	}
-
-	public String conversionFactor(TemporalUnit toUnit) {
-		return conversionFactor(this, toUnit);
-	}
-
-	public static String conversionFactor(TemporalUnit fromUnit, TemporalUnit toUnit) {
-		if (fromUnit == EPOCH) {
-			fromUnit = SECOND;
+		if ( unit == this ) {
+			//same unit, nothing to do
+			return "";
 		}
-		if (toUnit == EPOCH) {
-			toUnit = SECOND;
+
+		if ( unit.normalized() != normalized() ) {
+			throw new SemanticException("illegal unit conversion " + this + " to " + unit);
 		}
-		long factor = 1;
-		boolean reciprocal = false;
-		if (toUnit == fromUnit) {
+
+		long from = normalizationFactor( dialect );
+		long to = unit.normalizationFactor( dialect );
+		if ( from == to ) {
+			// the units represent the same amount of time
 			return "";
 		}
 		else {
-			switch (toUnit) {
-				case NANOSECOND:
-					switch (fromUnit) {
-						case WEEK:
-							factor *= 7;
-						case DAY:
-							factor *= 24;
-						case HOUR:
-							factor *= 60;
-						case MINUTE:
-							factor *= 60;
-						case SECOND:
-							factor *= 1e9;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case SECOND:
-					switch (fromUnit) {
-						case NANOSECOND:
-							factor *= 1e9;
-							reciprocal = true;
-							break;
-						case WEEK:
-							factor *= 7;
-						case DAY:
-							factor *= 24;
-						case HOUR:
-							factor *= 60;
-						case MINUTE:
-							factor *= 60;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case MINUTE:
-					switch (fromUnit) {
-						case NANOSECOND:
-							factor *= 1e9;
-						case SECOND:
-							factor *= 60;
-							reciprocal = true;
-							break;
-						case WEEK:
-							factor *= 7;
-						case DAY:
-							factor *= 24;
-						case HOUR:
-							factor *= 60;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case HOUR:
-					switch (fromUnit) {
-						case NANOSECOND:
-							factor *= 1e9;
-						case SECOND:
-							factor *= 60;
-						case MINUTE:
-							factor *= 60;
-							reciprocal = true;
-							break;
-						case WEEK:
-							factor *= 7;
-						case DAY:
-							factor *= 24;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case DAY:
-					switch (fromUnit) {
-						case NANOSECOND:
-							factor *= 1e9;
-						case SECOND:
-							factor *= 60;
-						case MINUTE:
-							factor *= 60;
-						case HOUR:
-							factor *= 24;
-							reciprocal = true;
-							break;
-						case WEEK:
-							factor *= 7;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case WEEK:
-					switch (fromUnit) {
-						case NANOSECOND:
-							factor *= 1e9;
-						case SECOND:
-							factor *= 60;
-						case MINUTE:
-							factor *= 60;
-						case HOUR:
-							factor *= 24;
-						case DAY:
-							factor *= 7;
-							reciprocal = true;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case MONTH:
-					switch (fromUnit) {
-						case YEAR:
-							factor *= 4;
-						case QUARTER:
-							factor *= 3;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case QUARTER:
-					switch (fromUnit) {
-						case MONTH:
-							factor *= 3;
-							break;
-						case YEAR:
-							factor *= 4;
-							reciprocal = true;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				case YEAR:
-					switch (fromUnit) {
-						case MONTH:
-							factor *= 3;
-						case QUARTER:
-							factor *= 4;
-							reciprocal = true;
-							break;
-						default:
-							illegalConversion(fromUnit, toUnit);
-					}
-					break;
-				default:
-					illegalConversion(fromUnit, toUnit);
-			}
-			String string = String.valueOf(factor);
-			int len = string.length();
-			int chop;
-			for (chop = len; chop>0 && string.charAt(chop-1)=='0'; chop--) {}
-			int e = len-chop;
-			if (chop>0 && e>2) {
-				string = string.substring(0, chop) + "e" + e;
-			}
-			return (reciprocal ? "/" : "*") + string;
+			// if from < to, then this unit represents a
+			// smaller amount of time than the given unit
+			// we are converting to (so we're going to
+			// need to use division)
+			return (from < to ? "/" : "*")
+				+ factorAsString(from < to ? to / from : from / to);
 		}
 	}
 
+	/**
+	 * The conversion factor required to convert this
+	 * unit to its {@link #normalized()} unit.
+	 */
+	private long normalizationFactor(Dialect dialect) {
+		long factor = 1;
+		switch (this) {
+			//conversion to days:
+			case YEAR:
+				factor *= 4;
+			case QUARTER:
+				factor *= 3;
+			case MONTH:
+				break;
+			case WEEK:
+				factor *= 7;
+			//conversion to nanos:
+			case DAY:
+				factor *= 24;
+			case HOUR:
+				factor *= 60;
+			case MINUTE:
+				factor *= 60;
+			case EPOCH:
+			case SECOND:
+				factor *= 1_000_000_000;
+			case NANOSECOND:
+				break;
+			case NATIVE:
+				factor *= dialect.getFractionalSecondPrecisionInNanos();
+				break;
+			default:
+				throw new SemanticException("inconvertible unit " + this);
+		}
+		return factor;
+	}
+
+	/**
+	 * Obtain a fragment of SQL that can be used to perform
+	 * a unit conversion. If the normalization factor is
+	 * very large, represent it using exponential form so
+	 * as to minimize the noise the the generated SQL.
+	 *
+	 * @param factor the conversion factor
+	 * @return a string to inject into the SQL expression
+	 */
+	private static String factorAsString(long factor) {
+		String string = String.valueOf(factor);
+		int len = string.length();
+		int chop;
+		for (chop = len; chop>0 && string.charAt(chop-1)=='0'; chop--) {}
+		int e = len-chop;
+		if (chop>0 && e>2) {
+			string = string.substring(0, chop) + "e" + e;
+		}
+		return string;
+	}
+
+	/**
+	 * Is this unit extractable from a date?
+	 */
 	public boolean isDateUnit() {
-		return dateUnit;
+		switch (this) {
+			case DAY:
+			case WEEK:
+			case MONTH:
+			case QUARTER:
+			case YEAR:
+			case DAY_OF_WEEK:
+			case DAY_OF_MONTH:
+			case DAY_OF_YEAR:
+			case WEEK_OF_MONTH:
+			case WEEK_OF_YEAR:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Is this unit extractable from a time?
+	 */
+	public boolean isTimeUnit() {
+		switch (this) {
+			case HOUR:
+			case MINUTE:
+			case SECOND:
+			case NATIVE:
+			case NANOSECOND:
+//			case EPOCH: //TODO!
+			case TIMEZONE_HOUR:
+			case TIMEZONE_MINUTE:
+			case OFFSET:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * The unit that this unit "normalizes to",
+	 * either {@link #NANOSECOND} or {@link #MONTH},
+	 * which represent the two basic types of
+	 * duration: "physical" durations, and "calendar"
+	 * durations.
+	 */
+	public TemporalUnit normalized() {
+		switch (this) {
+			case NANOSECOND:
+			case NATIVE:
+			case HOUR:
+			case MINUTE:
+			case SECOND:
+			case EPOCH:
+			case DAY:
+			case WEEK:
+				return NANOSECOND;
+			case YEAR:
+			case QUARTER:
+			case MONTH:
+				return MONTH;
+			default:
+				throw new SemanticException("illegal unit " + this);
+		}
 	}
 
 	@Override

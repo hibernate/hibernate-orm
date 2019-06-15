@@ -19,8 +19,8 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -75,7 +75,7 @@ public class TimestampdiffFunction
 	}
 
 	public SelfRenderingFunctionSqlAstExpression expression(SqlAstNode... sqlAstArguments) {
-		ExtractUnit field = (ExtractUnit) sqlAstArguments[0];
+		DurationUnit field = (DurationUnit) sqlAstArguments[0];
 		Expression from = (Expression) sqlAstArguments[1];
 		Expression to = (Expression) sqlAstArguments[2];
 		return new SelfRenderingFunctionSqlAstExpression(

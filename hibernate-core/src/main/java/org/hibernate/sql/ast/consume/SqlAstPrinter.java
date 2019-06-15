@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Conversion;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.GenericParameter;
@@ -572,6 +573,11 @@ public class SqlAstPrinter implements SqlAstWalker {
 
 	@Override
 	public void visitExtractUnit(ExtractUnit unit) {
+
+	}
+
+	@Override
+	public void visitDurationUnit(DurationUnit unit) {
 
 	}
 

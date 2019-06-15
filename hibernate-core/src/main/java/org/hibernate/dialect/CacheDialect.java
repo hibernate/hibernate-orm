@@ -44,6 +44,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.NATIVE;
 
 /**
  * Dialect for Intersystems Cach&eacute; SQL 2007.1 and above.
@@ -72,7 +73,7 @@ public class CacheDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
 	}
 
-	static void useJdbcEscape(QueryEngine queryEngine, String name) {
+	private static void useJdbcEscape(QueryEngine queryEngine, String name) {
 		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape(
 				name,
 				queryEngine.getSqmFunctionRegistry().findFunctionTemplate(name)
@@ -161,16 +162,24 @@ public class CacheDialect extends Dialect {
 
 	@Override
 	public String timestampadd(TemporalUnit unit, boolean timestamp) {
-		return unit == NANOSECOND
-				? "dateadd(millisecond, (?2)/1e6, ?3)"
-				: "dateadd(?1, ?2, ?3)";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "dateadd(millisecond, (?2)/1e6, ?3)";
+			default:
+				return "dateadd(?1, ?2, ?3)";
+		}
 	}
 
 	@Override
 	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
-		return unit == NANOSECOND
-				? "datediff(millisecond, ?2, ?3)*1e6"
-				: "datediff(?1, ?2, ?3)";
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "datediff(millisecond, ?2, ?3)*1e6";
+			default:
+				return "datediff(?1, ?2, ?3)";
+		}
 	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

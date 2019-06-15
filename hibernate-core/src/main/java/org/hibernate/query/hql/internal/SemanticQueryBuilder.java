@@ -81,6 +81,7 @@ import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.function.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.function.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.function.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
@@ -2447,8 +2448,16 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public Object visitToDurationExpression(HqlParser.ToDurationExpressionContext ctx) {
 		return new SqmToDuration<>(
 				(SqmExpression<?>) ctx.expression().accept(this),
-				(SqmExtractUnit<?>) ctx.datetimeField().accept(this),
+				toDurationUnit( (SqmExtractUnit<?>) ctx.datetimeField().accept(this) ),
 				basicType( Duration.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmDurationUnit<Long> toDurationUnit(SqmExtractUnit<?> extractUnit) {
+		return new SqmDurationUnit<>(
+				extractUnit.getUnit(),
+				basicType( Long.class ),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -2456,7 +2465,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public Object visitFromDurationExpression(HqlParser.FromDurationExpressionContext ctx) {
 		return new SqmByUnit(
-				(SqmExtractUnit<?>) ctx.datetimeField().accept(this),
+				toDurationUnit( (SqmExtractUnit<?>) ctx.datetimeField().accept(this) ),
 				(SqmExpression<?>) ctx.expression().accept(this),
 				basicType( Long.class ),
 				creationContext.getNodeBuilder()

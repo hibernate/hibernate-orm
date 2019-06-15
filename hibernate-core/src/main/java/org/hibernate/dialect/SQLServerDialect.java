@@ -155,6 +155,26 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public String currentTimestamp() {
+		return "sysdatetime()";
+	}
+
+	@Override
+	public String currentTime() {
+		return currentTimestamp();
+	}
+
+	@Override
+	public String currentDate() {
+		return currentTimestamp();
+	}
+
+	@Override
+	public String currentTimestampWithTimeZone() {
+		return "sysdatetimeoffset()";
+	}
+
+	@Override
 	public String getNoColumnsInsertString() {
 		return "default values";
 	}

@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.regex.Pattern;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -30,6 +31,7 @@ import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
+import static java.util.regex.Pattern.compile;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
@@ -575,10 +577,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				.replace("x", "zz");
 	}
 
+	private static final Pattern OFFSET_PATTERN = compile(".*[-+]\\d{2}(:\\d{2})?$");
+
 	@Override
 	protected String wrapTimestampLiteral(String timestamp) {
 		//needed because the {ts ... } JDBC escape chokes on microseconds
-		return "cast('" + timestamp + "' as datetime2)";
+		return OFFSET_PATTERN.matcher( timestamp ).matches()
+				? "cast('" + timestamp + "' as datetimeoffset)"
+				: "cast('" + timestamp + "' as datetime2)";
 	}
 
 	@Override

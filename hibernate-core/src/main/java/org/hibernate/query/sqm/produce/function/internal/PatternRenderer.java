@@ -29,6 +29,7 @@ public class PatternRenderer {
 	private final int[] paramIndexes;
 	private final int paramCount;
 	private final int varargParam;
+	private final int maxParamIndex;
 
 	/**
 	 * Constructs a template renderer
@@ -43,6 +44,7 @@ public class PatternRenderer {
 		final StringBuilder index = new StringBuilder( 2 );
 
 		int vararg = -1;
+		int max = 0;
 
 		int i = 0;
 		final int len = pattern.length();
@@ -74,10 +76,13 @@ public class PatternRenderer {
 					vararg = paramList.size();
 				}
 				else {
-					Integer paramNumber = Integer.valueOf( index.toString() );
+					int paramNumber = Integer.valueOf( index.toString() );
 					paramNumbers.add( paramNumber );
 					paramList.add( paramNumber );
 					index.setLength(0);
+					if ( paramNumber > max ) {
+						max = paramNumber;
+					}
 				}
 			}
 			else {
@@ -91,6 +96,7 @@ public class PatternRenderer {
 		}
 
 		varargParam = vararg;
+		maxParamIndex = max;
 
 		chunks = chunkList.toArray( new String[chunkList.size()] );
 		paramIndexes = new int[paramList.size()];
@@ -118,7 +124,7 @@ public class PatternRenderer {
 			List<SqlAstNode> args,
 			SqlAstWalker walker) {
 		final int numberOfArguments = args.size();
-		if ( numberOfArguments != paramCount ) {
+		if ( numberOfArguments < maxParamIndex ) {
 			LOG.missingArguments( paramCount, numberOfArguments );
 		}
 

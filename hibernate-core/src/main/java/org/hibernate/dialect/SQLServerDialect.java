@@ -8,12 +8,16 @@ package org.hibernate.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NullPrecedence;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
@@ -28,6 +32,11 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import javax.persistence.TemporalType;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestampWithMillis;
 
 /**
  * A dialect for Microsoft SQL Server 2000 and above
@@ -92,6 +101,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		registerKeyword( "top" );
 		registerKeyword( "key" );
+
+		getDefaultProperties().setProperty( Environment.QUERY_LITERAL_RENDERING, "literal" );
 	}
 
 	@Override
@@ -459,4 +470,18 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				.replace("x", "zz");
 	}
 
+	@Override
+	protected String wrapTimestampLiteral(String timestamp) {
+		return "cast('" + timestamp + "' as datetime2)";
+	}
+
+	@Override
+	protected String wrapTimeLiteral(String time) {
+		return "cast('" + time + "' as time)";
+	}
+
+	@Override
+	protected String wrapDateLiteral(String date) {
+		return "cast('" + date + "' as date)";
+	}
 }

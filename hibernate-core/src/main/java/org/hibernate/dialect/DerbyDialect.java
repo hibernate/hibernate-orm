@@ -48,9 +48,6 @@ import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
-import static org.hibernate.query.TemporalUnit.NATIVE;
-
 /**
  * Hibernate Dialect for Apache Derby / Cloudscape 10
  *
@@ -204,7 +201,30 @@ public class DerbyDialect extends Dialect {
 	 */
 	@Override
 	public String extract(TemporalUnit unit) {
-		return "?1(?2)";
+		switch (unit) {
+			case DAY_OF_MONTH:
+				return "day(?2)";
+			case DAY_OF_YEAR:
+				return "({fn timestampdiff(sql_tsi_day, date(char(year(?2),4)||'-01-01'),?2)}+1)";
+			case DAY_OF_WEEK:
+				return "(mod({fn timestampdiff(sql_tsi_day, {d '2000-01-01'}, ?2)},7)+1)";
+			default:
+				return "?1(?2)";
+		}
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch (unit) {
+			case WEEK:
+			case DAY_OF_YEAR:
+			case DAY_OF_WEEK:
+				throw new NotYetImplementedFor6Exception("field type not supported on Derby: " + unit);
+			case DAY_OF_MONTH:
+				return "day";
+			default:
+				return super.translateExtractField(unit);
+		}
 	}
 
 	/**

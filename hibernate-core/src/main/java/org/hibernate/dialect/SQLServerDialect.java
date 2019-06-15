@@ -99,6 +99,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		super.initializeFunctionRegistry(queryEngine);
 
 		CommonFunctionFactory.truncate_round( queryEngine );
+		CommonFunctionFactory.everyAny_sumIif( queryEngine );
 
 		if ( getVersion() >= 10 ) {
 			CommonFunctionFactory.locate_charindex( queryEngine );

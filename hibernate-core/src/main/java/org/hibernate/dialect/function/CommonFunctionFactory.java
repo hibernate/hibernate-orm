@@ -638,6 +638,26 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * These are aggregate functions taking one argument,
+	 * for SQL Server.
+	 */
+	public static void everyAny_sumIif(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "every",
+				"iif(sum(iif(?1,0,1))=0,1,0)" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "any",
+				"iif(sum(iif(?1,1,0))=0,0,1)" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
+				.register();
+	}
+
 	public static void yearMonthDay(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "day" )
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )

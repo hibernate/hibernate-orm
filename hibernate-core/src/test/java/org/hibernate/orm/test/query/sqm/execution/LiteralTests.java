@@ -102,4 +102,18 @@ public class LiteralTests extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 	}
+
+	@Test
+	public void testBooleanLiteral() {
+		inTransaction(
+				session -> {
+					session.createQuery( "select true, false" )
+							.list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theBoolean = true" )
+							.list();
+					session.createQuery( "from EntityOfBasics e1 where e1.theBoolean = false or e1.theBoolean = true" )
+							.list();
+				}
+		);
+	}
 }

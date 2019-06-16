@@ -38,7 +38,7 @@ public class EntityOfBasics {
 	}
 
 	private Integer id;
-	private boolean theBoolean;
+	private Boolean theBoolean;
 	private String theString;
 	private Integer theInteger;
 	private int theInt;
@@ -227,6 +227,14 @@ public class EntityOfBasics {
 
 	public void setTheDuration(Duration theDuration) {
 		this.theDuration = theDuration;
+	}
+
+	public Boolean isTheBoolean() {
+		return theBoolean;
+	}
+
+	public void setTheBoolean(Boolean theBoolean) {
+		this.theBoolean = theBoolean;
 	}
 
 	public static class GenderConverter implements AttributeConverter<Gender,Character> {

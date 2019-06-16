@@ -237,6 +237,16 @@ public class OracleDialect extends Dialect {
 	}
 
 	/**
+	 * We minimize multiplicative factors by using seconds
+	 * (with fractional part) as the "native" precision for
+	 * duration arithmetic.
+	 */
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1_000_000_000; //seconds
+	}
+
+	/**
 	 * Oracle supports a limited list of temporal fields in the
 	 * extract() function, but we can emulate some of them by
 	 * using to_char() with a format string instead of extract().
@@ -287,24 +297,22 @@ public class OracleDialect extends Dialect {
 		}
 		pattern.append("(");
 		switch ( unit ) {
-			case QUARTER:
-				pattern.append("3*(");
-				break;
-			case WEEK:
-				pattern.append("7*(");
-				break;
 			case NANOSECOND:
-			case NATIVE:
-				pattern.append("1e-9*(");
+			case QUARTER:
+			case WEEK:
+				pattern.append("(");
 				break;
 		}
 		pattern.append("?2");
 		switch ( unit ) {
-			case NATIVE:
-			case NANOSECOND:
 			case QUARTER:
+				pattern.append(")*3");
+				break;
 			case WEEK:
-				pattern.append(")");
+				pattern.append(")*7");
+				break;
+			case NANOSECOND:
+				pattern.append(")/1e9");
 				break;
 		}
 		pattern.append(",'");

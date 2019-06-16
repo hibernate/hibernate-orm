@@ -189,6 +189,19 @@ public class DB2Dialect extends Dialect {
 				.register();
 	}
 
+	/**
+	 * Since we're using {@code seconds_between()} and
+	 * {@code add_seconds()}, it makes sense to use
+	 * seconds as the "native" precision.
+	 */
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		//Note that DB2 actually supports all the way up to
+		//thousands-of-nanoseconds precision for timestamps!
+		//i.e. timestamp(12)
+		return 1_000_000_000; //seconds
+	}
+
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		StringBuilder pattern = new StringBuilder();
@@ -225,6 +238,8 @@ public class DB2Dialect extends Dialect {
 		pattern.append(")");
 		switch (unit) {
 			case NATIVE:
+				pattern.append("+(microsecond(?3)-microsecond(?2))/1e6)");
+				break;
 			case NANOSECOND:
 				pattern.append("*1e9+(microsecond(?3)-microsecond(?2))*1e3)");
 				break;
@@ -267,7 +282,6 @@ public class DB2Dialect extends Dialect {
 		}
 		pattern.append(",");
 		switch (unit) {
-			case NATIVE:
 			case NANOSECOND:
 				pattern.append("(?2)/1e9");
 				break;

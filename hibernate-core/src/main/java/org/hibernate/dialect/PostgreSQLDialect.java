@@ -63,6 +63,7 @@ import java.util.UUID;
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.EPOCH;
 import static org.hibernate.query.TemporalUnit.MONTH;
+import static org.hibernate.query.TemporalUnit.NATIVE;
 import static org.hibernate.query.TemporalUnit.QUARTER;
 import static org.hibernate.query.TemporalUnit.YEAR;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiDateLiteral;
@@ -137,12 +138,26 @@ public class PostgreSQLDialect extends Dialect {
 		}
 	}
 
+	/**
+	 * {@code microsecond} is the smallest unit for an {@code interval},
+	 * and the highest precision for a {@code timestamp}, so we could
+	 * use it as the "native" precision, but it's more convenient to use
+	 * whole seconds (with the fractional part), since we want to use
+	 * {@code extract(epoch from ...)} in our emulation of
+	 * {@code timestampdiff()}.
+	 */
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1_000_000_000; //seconds
+	}
+
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch ( unit ) {
 			case NANOSECOND:
-			case NATIVE:
 				return "(?3 + (?2)/1e3 * interval '1 microsecond')";
+			case NATIVE:
+				return "(?3 + (?2) * interval '1 second')";
 			case QUARTER: //quarter is not supported in interval literals
 				return "(?3 + (?2) * interval '3 month')";
 			default:
@@ -182,6 +197,9 @@ public class PostgreSQLDialect extends Dialect {
 				case DAY:
 					extractField(pattern, DAY, fromTimestamp, toTimestamp, unit);
 					break;
+				//in order to avoid multiple calls to extract(),
+				//we use extract(epoch from x - y) * factor for
+				//all the following units:
 				case HOUR:
 				case MINUTE:
 				case SECOND:
@@ -202,7 +220,7 @@ public class PostgreSQLDialect extends Dialect {
 			boolean fromTimestamp, boolean toTimestamp,
 			TemporalUnit toUnit) {
 		pattern.append("extract(");
-		pattern.append( translateExtractField(unit) );
+		pattern.append( translateDurationField(unit) );
 		pattern.append(" from ");
 		if ( !toTimestamp && !fromTimestamp ) {
 			// special case subtraction of two

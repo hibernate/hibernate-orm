@@ -117,6 +117,13 @@ public class TeradataDialect extends Dialect {
 		return getVersion() < 14 ? 18 : 38;
 	}
 
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+	 	// Do duration arithmetic in a seconds, but
+		// with the fractional part
+		return 1_000_000_000; //seconds!!
+	}
+
 	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		StringBuilder pattern = new StringBuilder();
 		//TODO: TOTALLY UNTESTED CODE!
@@ -145,7 +152,6 @@ public class TeradataDialect extends Dialect {
 				pattern.append("/3");
 				break;
 			case NANOSECOND:
-			case NATIVE:
 				pattern.append("*1e9");
 				break;
 		}
@@ -157,8 +163,9 @@ public class TeradataDialect extends Dialect {
 		//TODO: TOTALLY UNTESTED CODE!
 		switch ( unit ) {
 			case NANOSECOND:
-			case NATIVE:
 				return "(?3 + (?2)/1e9 * interval '1' second)";
+			case NATIVE:
+				return "(?3 + (?2) * interval '1' second)";
 			case QUARTER:
 				return "(?3 + (?2) * interval '3' month)";
 			case WEEK:

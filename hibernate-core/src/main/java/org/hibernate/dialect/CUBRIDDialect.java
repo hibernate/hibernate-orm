@@ -305,6 +305,11 @@ public class CUBRIDDialect extends Dialect {
 				.result();
 	}
 
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1_000_000; //milliseconds
+	}
+
 	/**
 	 * CUBRID supports a limited list of temporal fields in the
 	 * extract() function, but we can emulate some of them by
@@ -339,9 +344,14 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
-		return unit == NANOSECOND || unit == NATIVE
-				? "adddate(?3, interval (?2)/1e3 microsecond)"
-				: "adddate(?3, interval ?2 ?1)";
+		switch (unit) {
+			case NANOSECOND:
+				return "adddate(?3, interval (?2)/1e6 millisecond)";
+			case NATIVE:
+				return "adddate(?3, interval ?2 millisecond)";
+			default:
+				return "adddate(?3, interval ?2 ?1)";
+		}
 	}
 
 	@Override
@@ -373,7 +383,7 @@ public class CUBRIDDialect extends Dialect {
 			case NATIVE:
 			case NANOSECOND:
 				pattern.append("(");
-				timediff(pattern, NANOSECOND, unit);
+				timediff(pattern, unit, unit);
 				pattern.append("+");
 				timediff(pattern, SECOND, unit);
 				pattern.append("+");
@@ -392,7 +402,7 @@ public class CUBRIDDialect extends Dialect {
 			StringBuilder sqlAppender,
 			TemporalUnit diffUnit,
 			TemporalUnit toUnit) {
-		if ( diffUnit == NANOSECOND || diffUnit == NATIVE ) {
+		if ( diffUnit == NANOSECOND ) {
 			sqlAppender.append("1e6*");
 		}
 		sqlAppender.append("extract(");
@@ -400,7 +410,7 @@ public class CUBRIDDialect extends Dialect {
 			sqlAppender.append("millisecond");
 		}
 		else {
-			sqlAppender.append( diffUnit.toString() );
+			sqlAppender.append("?1");
 		}
 		//note: timediff() is backwards on CUBRID
 		sqlAppender.append(",timediff(?3,?2))");

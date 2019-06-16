@@ -151,6 +151,11 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.monthsBetween( queryEngine );
 	}
 
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1_000; //microseconds
+	}
+
 	/**
 	 * RDMS supports a limited list of temporal fields in the
 	 * extract() function, but we can emulate some of them by
@@ -185,8 +190,9 @@ public class RDMSOS2200Dialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
 			case NANOSECOND:
-			case NATIVE:
 				return "timestampadd('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)";
+			case NATIVE:
+				return "timestampadd('SQL_TSI_FRAC_SECOND', ?2, ?3)";
 			default:
 				return "dateadd('?1', ?2, ?3)";
 		}
@@ -196,8 +202,9 @@ public class RDMSOS2200Dialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NANOSECOND:
+				return "timestampdiff('SQL_TSI_FRAC_SECOND', ?2, ?3)*1e3";
 			case NATIVE:
-				return "timestampdiff('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)*1e3";
+				return "timestampdiff('SQL_TSI_FRAC_SECOND', ?2, ?3)";
 			default:
 				return "dateadd('?1', ?2, ?3)";
 		}

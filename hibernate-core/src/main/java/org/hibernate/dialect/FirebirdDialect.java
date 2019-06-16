@@ -125,6 +125,11 @@ public class FirebirdDialect extends Dialect {
 		}
 	}
 
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1_000_000; //milliseconds
+	}
+
 	/**
 	 * Firebird extract() function returns {@link TemporalUnit#DAY_OF_WEEK}
 	 * numbered from 0 to 6, and {@link TemporalUnit#DAY_OF_YEAR} numbered
@@ -146,6 +151,7 @@ public class FirebirdDialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
 			case NATIVE:
+				return "dateadd((?2) millisecond to ?3)";
 			case NANOSECOND:
 				return "dateadd((?2)/1e6 millisecond to ?3)";
 			case WEEK:
@@ -161,6 +167,7 @@ public class FirebirdDialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NATIVE:
+				return "datediff(millisecond from ?2 to ?3)";
 			case NANOSECOND:
 				return "datediff(millisecond from ?2 to ?3)*1e6";
 			case WEEK:

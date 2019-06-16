@@ -225,6 +225,15 @@ public class MySQLDialect extends Dialect {
 		return getVersion() < 570 ? super.currentTimestamp() : "current_timestamp(6)";
 	}
 
+	/**
+	 * {@code microsecond} is the smallest unit for
+	 * {@code timestampadd()} and {@code timestampdiff()},
+	 * and the highest precision for a {@code timestamp}.
+	 */
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1_000; //microseconds
+	}
 
 	/**
 	 * MySQL supports a limited list of temporal fields in the
@@ -288,8 +297,9 @@ public class MySQLDialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
 			case NANOSECOND:
-			case NATIVE:
 				return "timestampadd(microsecond, (?2)/1e3, ?3)";
+			case NATIVE:
+				return "timestampadd(microsecond, ?2, ?3)";
 			default:
 				return "timestampadd(?1, ?2, ?3)";
 		}
@@ -299,8 +309,9 @@ public class MySQLDialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NANOSECOND:
-			case NATIVE:
 				return "timestampdiff(microsecond, ?2, ?3)*1e3";
+			case NATIVE:
+				return "timestampdiff(microsecond, ?2, ?3)";
 			default:
 				return "timestampdiff(?1, ?2, ?3)";
 		}

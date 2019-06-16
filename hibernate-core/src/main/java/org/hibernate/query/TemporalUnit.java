@@ -166,6 +166,8 @@ public enum TemporalUnit {
 	 * repeatedly converting between {@link #NANOSECOND}s and a
 	 * unit that the database understands. On some platforms this
 	 * is also used to avoid numeric overflow.
+	 *
+	 * @see Dialect#getFractionalSecondPrecisionInNanos()
 	 */
 	NATIVE;
 

@@ -3379,11 +3379,14 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * This is the default precision for a generated
-	 * column mapped to a BigInteger or BigDecimal.
-	 *
+	 * column mapped to a {@link java.math.BigInteger}
+	 * or {@link java.math.BigDecimal}.
+	 * <p>
 	 * Usually returns the maximum precision of the
 	 * database, except when there is no such maximum
 	 * precision, or the maximum precision is very high.
+	 *
+	 * @return the default precision, in decimal digits
 	 */
 	public int getDefaultDecimalPrecision() {
 		//this is the maximum for Oracle, SQL Server,
@@ -3394,11 +3397,13 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * This is the default precision for a generated
-	 * column mapped to a BigInteger or BigDecimal.
+	 * column mapped to a {@link java.sql.Timestamp} or
+	 * {@link java.time.LocalDateTime}.
+	 * <p>
+	 * Usually 6 (microseconds) or 3 (milliseconds).
 	 *
-	 * Usually returns the maximum precision of the
-	 * database, except when there is no such maximum
-	 * precision, or the maximum precision is very high.
+	 * @return the default precision, in decimal digits,
+	 *         of the fractional seconds field
 	 */
 	public int getDefaultTimestampPrecision() {
 		//milliseconds or microseconds is the maximum
@@ -3408,14 +3413,56 @@ public abstract class Dialect implements ConversionContext {
 		return 6; //microseconds!
 	}
 
+	/**
+	 * This is the default precision for a generated
+	 * column mapped to a Java {@link Float} or
+	 * {@code float}. That is, a value representing
+	 * "single precision".
+	 * <p>
+	 * Usually 24 binary digits, at least for
+	 * databases with a conventional interpretation
+	 * of the ANSI SQL specification.
+	 *
+	 * @return a value representing "single precision",
+	 *         usually in binary digits, but sometimes
+	 *         in decimal digits
+	 */
 	public int getFloatPrecision() {
 		return 24;
 	}
 
+	/**
+	 * This is the default precision for a generated
+	 * column mapped to a Java {@link Double} or
+	 * {@code double}. That is, a value representing
+	 * "double precision".
+	 * <p>
+	 * Usually 53 binary digits, at least for
+	 * databases with a conventional interpretation
+	 * of the ANSI SQL specification.
+	 *
+	 * @return a value representing "double precision",
+	 *         usually in binary digits, but sometimes
+	 *         in decimal digits
+	 */
 	public int getDoublePrecision() {
 		return 53;
 	}
 
+	/**
+	 * The "native" precision for arithmetic with datetimes
+	 * and day-to-second durations. Datetime differences
+	 * will be calculated with this precision except when a
+	 * precision is explicitly specified as a
+	 * {@link TemporalUnit}.
+	 * <p>
+	 * Usually 1 (nanoseconds), 1_000 (microseconds), or
+	 * 1_000_000 (milliseconds).
+	 *
+	 * @return the precision, specified as a quantity of
+	 *         nanoseconds
+	 * @see TemporalUnit#NATIVE
+	 */
 	public long getFractionalSecondPrecisionInNanos() {
 		return 1; //default to nanoseconds for now
 	}
@@ -3457,6 +3504,43 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
+	/**
+	 * Translate the given datetime format string from
+	 * the pattern language defined by Java's
+	 * {@link java.time.format.DateTimeFormatter} to
+	 * whatever pattern language is understood by the
+	 * native datetime formatting function for this
+	 * database (often the {@code to_char()} function).
+	 * <p>
+	 * Since it's never possible to translate all of
+	 * the pattern letter sequences understood by
+	 * {@code DateTimeFormatter}, only the following
+	 * subset of pattern letters is accepted by
+	 * Hibernate:
+	 * <ul>
+	 *     <li>G: era</li>
+	 *     <li>y: year of era</li>
+	 *     <li>Y: year of week-based year</li>
+	 *     <li>M: month of year</li>
+	 *     <li>w: week of week-based year (ISO week number)</li>
+	 *     <li>W: week of month</li>
+	 *     <li>E: day of week (name)</li>
+	 *     <li>e: day of week (number)</li>
+	 *     <li>d: day of month</li>
+	 *     <li>D: day of year</li>
+	 *     <li>a: AM/PM</li>
+	 *     <li>H: hour of day (24 hour time)</li>
+	 *     <li>h: hour of AM/PM (12 hour time)</li>
+	 *     <li>m: minutes</li>
+	 *     <li>s: seconds</li>
+	 *     <li>z,Z,x: timezone offset</li>
+	 * </ul>
+	 * In addition, punctuation characters and
+	 * single-quoted literal strings are accepted.
+	 *
+	 * @return a pattern accepted by the function that
+	 *         formats dates and times in this dialect
+	 */
 	public String translateDatetimeFormat(String format) {
 		//most databases support a datetime format
 		//copied from Oracle's to_char() function,

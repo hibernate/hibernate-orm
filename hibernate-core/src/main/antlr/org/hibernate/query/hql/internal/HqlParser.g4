@@ -103,7 +103,7 @@ entityName
 	;
 
 identificationVariableDef
-	: (AS identifier)
+	: AS identifier
 	| IDENTIFIER
 	;
 

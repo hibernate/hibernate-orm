@@ -14,7 +14,6 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.AbstractColumnReferenceQualifier;
@@ -104,11 +103,12 @@ public abstract class AbstractTableGroup
 		final String identificationVariable = tableBinding.getIdentificationVariable();
 		String aliasString = "";
 		if ( identificationVariable != null ) {
-			aliasString = " as " + identificationVariable;
+			aliasString = walker.getSessionFactory().getJdbcServices().getDialect().getTableAliasSeparator()
+					+ identificationVariable;
 		}
 		sqlAppender.appendSql(
 				tableBinding.getTable().render(
-						walker.getSessionFactory().getDialect(),
+						walker.getSessionFactory().getJdbcServices().getDialect(),
 						walker.getSessionFactory().getJdbcServices().getJdbcEnvironment()
 				) + aliasString
 		);

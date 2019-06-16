@@ -2685,6 +2685,8 @@ public abstract class Dialect implements ConversionContext {
 		return " cross join ";
 	}
 
+	public String getTableAliasSeparator() { return " as "; }
+
 	public ColumnAliasExtractor getColumnAliasExtractor() {
 		return ColumnAliasExtractor.COLUMN_LABEL_EXTRACTOR;
 	}

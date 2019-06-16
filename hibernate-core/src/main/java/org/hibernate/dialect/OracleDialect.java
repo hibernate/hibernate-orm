@@ -493,6 +493,11 @@ public class OracleDialect extends Dialect {
 		return "sequence";
 	}
 
+	@Override
+	public String getTableAliasSeparator() {
+		return " ";
+	}
+
 	// features which change between 8i, 9i, and 10g ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override

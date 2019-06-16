@@ -156,6 +156,7 @@ public class OracleDialect extends Dialect {
 		CommonFunctionFactory.characterLength_length( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );
 
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );

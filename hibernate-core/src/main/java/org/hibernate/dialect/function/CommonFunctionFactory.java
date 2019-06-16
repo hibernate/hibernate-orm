@@ -644,14 +644,34 @@ public class CommonFunctionFactory {
 	 */
 	public static void everyAny_sumIif(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "every",
-				"iif(sum(iif(?1,0,1))=0,1,0)" )
+				"min(iif(?1,1,0))" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setArgumentListSignature("(predicate)")
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "any",
-				"iif(sum(iif(?1,1,0))=0,0,1)" )
+				"max(iif(?1,1,0))" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
+				.register();
+	}
+
+	/**
+	 * These are aggregate functions taking one argument,
+	 * for Oracle.
+	 */
+	public static void everyAny_sumCaseCase(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "every",
+				"min(case when ?1 then 1 else 0 end)" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
+				.setArgumentListSignature("(predicate)")
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "any",
+				"max(case when ?1 then 1 else 0 end)" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BOOLEAN )
 				.setArgumentListSignature("(predicate)")

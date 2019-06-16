@@ -32,6 +32,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.naming.Identifier;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
@@ -65,6 +66,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.hibernate.query.CastType.BOOLEAN;
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.HOUR;
 import static org.hibernate.query.TemporalUnit.MINUTE;
@@ -208,6 +210,31 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String currentTimestampWithTimeZone() {
 		return getVersion() < 9 ? currentTimestamp() : "current_timestamp";
+	}
+
+
+	/**
+	 * Oracle doesn't have any sort of {@link java.sql.Types#BOOLEAN}
+	 * type, so...
+	 */
+	@Override
+	public String cast(CastType from, CastType to) {
+		switch (to) {
+			case BOOLEAN:
+				switch (from) {
+					case STRING:
+						return "decode(lower(?1),'t',1,'f',0,'true',1,'false',0)";
+					case LONG:
+					case INTEGER:
+						return "abs(sign(?1))";
+				}
+			case STRING:
+				if (from == BOOLEAN) {
+					return "decode(?1,0,'false','true')";
+				}
+			default:
+				return super.cast(from, to);
+		}
 	}
 
 	/**

@@ -29,7 +29,7 @@ import java.time.LocalTime;
  * type, and so type conversions to and from
  * {@link Boolean} must be emulated.
  *
- * @see org.hibernate.dialect.Dialect#cast(CastType, CastType)
+ * @see org.hibernate.dialect.Dialect#castPattern(CastType, CastType)
  *
  * @author Gavin King
  */

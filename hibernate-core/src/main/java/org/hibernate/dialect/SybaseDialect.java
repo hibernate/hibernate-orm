@@ -82,19 +82,19 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		//TODO!!
 		return "datepart(?1, ?2)";
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		//TODO!!
 		return "dateadd(?1, ?2, ?3)";
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		//TODO!!
 		return "datediff(?1, ?2, ?3)";
 	}

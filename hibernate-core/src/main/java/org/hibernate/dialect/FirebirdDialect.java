@@ -105,7 +105,7 @@ public class FirebirdDialect extends Dialect {
 	 * type, so...
 	 */
 	@Override
-	public String cast(CastType from, CastType to) {
+	public String castPattern(CastType from, CastType to) {
 		switch (to) {
 			case BOOLEAN:
 				switch (from) {
@@ -121,7 +121,7 @@ public class FirebirdDialect extends Dialect {
 					return "trim(decode(?1,0,'false','true'))";
 				}
 			default:
-				return super.cast(from, to);
+				return super.castPattern(from, to);
 		}
 	}
 
@@ -132,18 +132,18 @@ public class FirebirdDialect extends Dialect {
 	 * here we adjust the result by generating {@code (extract(unit,arg)+1)).
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch ( unit ) {
 			case DAY_OF_WEEK:
 			case DAY_OF_YEAR:
-				return "(" + super.extract(unit) + "+1)";
+				return "(" + super.extractPattern(unit) + "+1)";
 			default:
-				return super.extract(unit);
+				return super.extractPattern(unit);
 		}
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
 			case NATIVE:
 			case NANOSECOND:
@@ -158,7 +158,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NATIVE:
 			case NANOSECOND:

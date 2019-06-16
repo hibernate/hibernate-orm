@@ -130,7 +130,7 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -141,7 +141,7 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:

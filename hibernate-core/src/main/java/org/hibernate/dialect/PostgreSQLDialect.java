@@ -128,17 +128,17 @@ public class PostgreSQLDialect extends Dialect {
 	 * {@code (extract(dow,arg)+1))}.
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch ( unit ) {
 			case DAY_OF_WEEK:
-				return "(" + super.extract(unit) + "+1)";
+				return "(" + super.extractPattern(unit) + "+1)";
 			default:
-				return super.extract(unit);
+				return super.extractPattern(unit);
 		}
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch ( unit ) {
 			case NANOSECOND:
 			case NATIVE:
@@ -151,7 +151,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		if ( !toTimestamp && !fromTimestamp && unit==DAY ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days

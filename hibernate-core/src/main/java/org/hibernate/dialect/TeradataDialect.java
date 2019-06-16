@@ -117,7 +117,7 @@ public class TeradataDialect extends Dialect {
 		return getVersion() < 14 ? 18 : 38;
 	}
 
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		StringBuilder pattern = new StringBuilder();
 		//TODO: TOTALLY UNTESTED CODE!
 		pattern.append("cast((?3 - ?2) ");
@@ -153,7 +153,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		//TODO: TOTALLY UNTESTED CODE!
 		switch ( unit ) {
 			case NANOSECOND:

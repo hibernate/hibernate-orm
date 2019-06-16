@@ -200,7 +200,7 @@ public class DerbyDialect extends Dialect {
 	 * by the parser).
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case DAY_OF_MONTH:
 				return "day(?2)";
@@ -234,7 +234,7 @@ public class DerbyDialect extends Dialect {
 	 * cast things to its floating point types.
 	 */
 	@Override
-	public String cast(CastType from, CastType to) {
+	public String castPattern(CastType from, CastType to) {
 		switch (to) {
 			case FLOAT:
 				return "cast(double(?1) as real)";
@@ -250,12 +250,12 @@ public class DerbyDialect extends Dialect {
 						return "(?1<>0)";
 				}
 			default:
-				return super.cast(from, to);
+				return super.castPattern(from, to);
 		}
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -266,7 +266,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:

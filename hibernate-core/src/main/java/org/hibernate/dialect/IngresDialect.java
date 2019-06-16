@@ -213,13 +213,13 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		return "timestampadd(?1, ?2, ?3)";
 
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		return "timestampdiff(?1, ?2, ?3)";
 	}
 

@@ -241,7 +241,7 @@ public class MySQLDialect extends Dialect {
 	 * redefined to include microseconds.
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case SECOND:
 				return "(second(?2)+microsecond(?2)/1e6)";
@@ -264,7 +264,7 @@ public class MySQLDialect extends Dialect {
 	 * type, so...
 	 */
 	@Override
-	public String cast(CastType from, CastType to) {
+	public String castPattern(CastType from, CastType to) {
 		switch (to) {
 			case BOOLEAN:
 				switch (from) {
@@ -280,12 +280,12 @@ public class MySQLDialect extends Dialect {
 					return "if(?1,'true','false')";
 				}
 			default:
-				return super.cast(from, to);
+				return super.castPattern(from, to);
 		}
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -296,7 +296,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:

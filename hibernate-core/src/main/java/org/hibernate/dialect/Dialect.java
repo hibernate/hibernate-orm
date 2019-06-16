@@ -569,7 +569,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @param unit the first argument
 	 */
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		return "extract(?1 from ?2)";
 	}
 
@@ -578,11 +578,25 @@ public abstract class Dialect implements ConversionContext {
 	 * {@code cast()} function call. The resulting
 	 * pattern must contain ?1 and ?2 placeholders
 	 * for the arguments.
+	 *
+	 * @param from a {@link CastType} indicating the
+	 *             type of the value argument
+	 * @param to a {@link CastType} indicating the
+	 *           type the value argument is cast to
 	 */
-	public String cast(CastType from, CastType to) {
+	public String castPattern(CastType from, CastType to) {
 		return "cast(?1 as ?2)";
 	}
 
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code trim()} function call. The resulting
+	 * pattern must contain a ?1 placeholder for the
+	 * argument of type {@link String}.
+	 *
+	 * @param specification {@code leading} or {@code trailing}
+	 * @param character the character to trim
+	 */
 	public String trimPattern(TrimSpec specification, char character) {
 		return character == ' '
 				? "trim(" + specification + " from ?1)"
@@ -601,7 +615,8 @@ public abstract class Dialect implements ConversionContext {
 	 * @param toTimestamp true if the second argument is
 	 *                    a timestamp, false if a date
 	 */
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit,
+				boolean fromTimestamp, boolean toTimestamp) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
@@ -615,7 +630,8 @@ public abstract class Dialect implements ConversionContext {
 	 * @param timestamp true if the third argument is a
 	 *                  timestamp, false if a date
 	 */
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit,
+				boolean timestamp) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
@@ -3451,7 +3467,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Return the name used to identify the given field
 	 * as an argument to the {@code extract()} function,
-	 * or of this dialect's {@link #extract equivalent}
+	 * or of this dialect's {@link #extractPattern equivalent}
 	 * function.
 	 * <p>
 	 * This method does not need to handle
@@ -3491,8 +3507,8 @@ public abstract class Dialect implements ConversionContext {
 	 * Return the name used to identify the given unit of
 	 * duration as an argument to {@code #timestampadd()}
 	 * or {@code #timestampdiff()}, or of this dialect's
-	 * {@link #timestampadd equivalent}
-	 * {@link #timestampdiff functions}.
+	 * {@link #timestampaddPattern equivalent}
+	 * {@link #timestampdiffPattern functions}.
 	 * <p>
 	 * This method does not need to handle
 	 * {@link TemporalUnit#NANOSECOND},

@@ -217,7 +217,7 @@ public class OracleDialect extends Dialect {
 	 * type, so...
 	 */
 	@Override
-	public String cast(CastType from, CastType to) {
+	public String castPattern(CastType from, CastType to) {
 		switch (to) {
 			case BOOLEAN:
 				switch (from) {
@@ -232,7 +232,7 @@ public class OracleDialect extends Dialect {
 					return "decode(?1,0,'false','true')";
 				}
 			default:
-				return super.cast(from, to);
+				return super.castPattern(from, to);
 		}
 	}
 
@@ -248,7 +248,7 @@ public class OracleDialect extends Dialect {
 	 * and {@link TemporalUnit#WEEK}.
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case DAY_OF_WEEK:
 				return "to_number(to_char(?2,'D'))";
@@ -259,12 +259,12 @@ public class OracleDialect extends Dialect {
 			case WEEK:
 				return "to_number(to_char(?2,'IW'))"; //the ISO week number
 			default:
-				return super.extract(unit);
+				return super.extractPattern(unit);
 		}
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		StringBuilder pattern = new StringBuilder();
 		pattern.append("(?3 + ");
 		switch ( unit ) {
@@ -328,7 +328,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiff(
+	public String timestampdiffPattern(
 			TemporalUnit unit,
 			boolean fromTimestamp, boolean toTimestamp) {
 		StringBuilder pattern = new StringBuilder();

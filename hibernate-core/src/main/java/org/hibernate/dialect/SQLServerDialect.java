@@ -464,7 +464,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			//currently Dialect.extract() doesn't need
 			//to handle NANOSECOND (might change that?)
@@ -480,7 +480,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		// dateadd() supports only especially small magnitudes
 		// since it casts its argument to int (and unfortunately
 		// there's no dateadd_big()) so here we need to use two
@@ -500,7 +500,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NATIVE:
 				//use microsecond as the "native" precision

@@ -206,7 +206,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		StringBuilder pattern = new StringBuilder();
 		boolean castTo = !timestamp && !unit.isDateUnit();
 		switch (unit) {
@@ -229,7 +229,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		StringBuilder pattern = new StringBuilder();
 		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
 		boolean castTo = !toTimestamp && !unit.isDateUnit();

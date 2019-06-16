@@ -166,7 +166,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	 * redefined to include microseconds.
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case SECOND:
 				return "(second(?2)+microsecond(?2)/1e6)";
@@ -182,7 +182,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -193,7 +193,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:

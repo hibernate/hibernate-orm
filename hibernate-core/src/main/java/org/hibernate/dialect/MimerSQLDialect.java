@@ -103,7 +103,7 @@ public class MimerSQLDialect extends Dialect {
 	 * type, but it doesn't know how to cast to it.
 	 */
 	@Override
-	public String cast(CastType from, CastType to) {
+	public String castPattern(CastType from, CastType to) {
 		switch (to) {
 			case BOOLEAN:
 				switch (from) {
@@ -116,7 +116,7 @@ public class MimerSQLDialect extends Dialect {
 						return "(?1<>0)";
 				}
 			default:
-				return super.cast(from, to);
+				return super.castPattern(from, to);
 		}
 	}
 
@@ -143,7 +143,7 @@ public class MimerSQLDialect extends Dialect {
 	 * {@link TemporalUnit#DAY_OF_YEAR}.
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case WEEK:
 				return "week(?2)";
@@ -154,11 +154,11 @@ public class MimerSQLDialect extends Dialect {
 			case DAY_OF_MONTH:
 				return "day(?2)";
 			default:
-				return super.extract(unit);
+				return super.extractPattern(unit);
 		}
 	}
 
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		StringBuilder pattern = new StringBuilder();
 		pattern.append("cast((?3 - ?2) ");
 		switch (unit) {
@@ -204,7 +204,7 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:

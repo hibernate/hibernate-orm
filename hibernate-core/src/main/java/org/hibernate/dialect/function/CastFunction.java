@@ -52,7 +52,7 @@ public class CastFunction
 		CastType from = CastType.from( arg.getExpressableType() );
 
 		return queryEngine.getSqmFunctionRegistry()
-				.patternTemplateBuilder( "cast", dialect.cast( from, to ) )
+				.patternTemplateBuilder( "cast", dialect.castPattern( from, to ) )
 				.setExactArgumentCount( 2 )
 				.setReturnTypeResolver( useArgType( 2 ) )
 				.template()

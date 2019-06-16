@@ -176,7 +176,7 @@ public class InformixDialect extends Dialect {
 	 * {@link TemporalUnit#DAY_OF_WEEK}.
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case SECOND:
 				return "to_number(to_char(?2,'%S'))";

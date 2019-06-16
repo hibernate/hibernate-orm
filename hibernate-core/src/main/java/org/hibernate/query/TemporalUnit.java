@@ -29,7 +29,7 @@ import org.hibernate.query.sqm.SemanticException;
  * second argument (date, time, or timestamp), and
  * according to capabilities of the database platform.
  *
- * @see org.hibernate.dialect.Dialect#extract(TemporalUnit)
+ * @see org.hibernate.dialect.Dialect#extractPattern(TemporalUnit)
  *
  * @author Gavin King
  */

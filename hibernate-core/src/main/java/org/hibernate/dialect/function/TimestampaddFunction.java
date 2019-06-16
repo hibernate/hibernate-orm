@@ -56,7 +56,7 @@ public class TimestampaddFunction
 		return queryEngine.getSqmFunctionRegistry()
 				.patternTemplateBuilder(
 						"timestampadd",
-						dialect.timestampadd(
+						dialect.timestampaddPattern(
 								field.getUnit(),
 								typeConfiguration.isTimestampType( to.getExpressableType() )
 						)
@@ -77,7 +77,7 @@ public class TimestampaddFunction
 		Expression to = (Expression) sqlAstArguments[2];
 		return new SelfRenderingFunctionSqlAstExpression(
 				new PatternRenderer(
-						dialect.timestampadd(
+						dialect.timestampaddPattern(
 								field.getUnit(),
 								isTimestampType( to.getType() )
 						)

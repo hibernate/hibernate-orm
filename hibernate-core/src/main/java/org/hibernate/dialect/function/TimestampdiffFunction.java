@@ -57,7 +57,7 @@ public class TimestampdiffFunction
 		return queryEngine.getSqmFunctionRegistry()
 				.patternTemplateBuilder(
 						"timestampdiff",
-						dialect.timestampdiff(
+						dialect.timestampdiffPattern(
 								field.getUnit(),
 								typeConfiguration.isTimestampType( from.getExpressableType() ),
 								typeConfiguration.isTimestampType( to.getExpressableType() )
@@ -80,7 +80,7 @@ public class TimestampdiffFunction
 		Expression to = (Expression) sqlAstArguments[2];
 		return new SelfRenderingFunctionSqlAstExpression(
 				new PatternRenderer(
-						dialect.timestampdiff(
+						dialect.timestampdiffPattern(
 								field.getUnit(),
 								isTimestampType( from.getType() ),
 								isTimestampType( to.getType() )

@@ -165,20 +165,20 @@ public class H2Dialect extends Dialect {
 	 * this here with two calls to extract().
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		return unit == SECOND
-				? "(" + super.extract(unit) + "+extract(nanosecond from ?2)/1e9)"
-				: super.extract(unit);
+				? "(" + super.extractPattern(unit) + "+extract(nanosecond from ?2)/1e9)"
+				: super.extractPattern(unit);
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		return "dateadd(?1, ?2, ?3)";
 
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		return "datediff(?1, ?2, ?3)";
 	}
 

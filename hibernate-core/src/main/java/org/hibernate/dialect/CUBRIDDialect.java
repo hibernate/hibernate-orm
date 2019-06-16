@@ -320,7 +320,7 @@ public class CUBRIDDialect extends Dialect {
 	 * redefined to include milliseconds.
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case SECOND:
 				return "(second(?2)+extract(millisecond from ?2)/1e3)";
@@ -338,14 +338,14 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampadd(TemporalUnit unit, boolean timestamp) {
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
 		return unit == NANOSECOND || unit == NATIVE
 				? "adddate(?3, interval (?2)/1e3 microsecond)"
 				: "adddate(?3, interval ?2 ?1)";
 	}
 
 	@Override
-	public String timestampdiff(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
 		StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
 			case DAY:

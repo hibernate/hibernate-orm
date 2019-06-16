@@ -94,7 +94,7 @@ public class ExtractFunction
 				// otherwise it's something we expect the SQL dialect
 				// itself to understand, either natively, or via the
 				// method Dialect.extract()
-				String pattern = dialect.extract( unit );
+				String pattern = dialect.extractPattern( unit );
 				return queryEngine.getSqmFunctionRegistry()
 						.patternTemplateBuilder( "extract", pattern )
 						.setExactArgumentCount( 2 )

@@ -320,7 +320,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	 * {@link TemporalUnit#DAY_OF_YEAR}.
 	 */
 	@Override
-	public String extract(TemporalUnit unit) {
+	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case DAY_OF_WEEK:
 				return "(mod(weekday(?2)+1,7)+1)";

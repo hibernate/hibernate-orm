@@ -2664,28 +2664,38 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Completely optional cascading drop clause
+	 * The keyword that specifies that a {@code drop table} operation
+	 * should be cascaded to its constraints, typically
+	 * {@code " cascade"} where the leading space is required, or
+	 * the empty string if there is no such keyword in this dialect.
 	 *
-	 * @return String
+	 * @return The cascade drop keyword, if any, with a leading space
 	 */
 	public String getCascadeConstraintsString() {
 		return "";
 	}
 
 	/**
-	 * Returns the separator to use for defining cross joins when translating HQL queries.
-	 * <p/>
-	 * Typically this will be either [<tt> cross join </tt>] or [<tt>, </tt>]
-	 * <p/>
-	 * Note that the spaces are important!
+	 * The separator to use for declaring cross joins in a SQL query,
+	 * typically either {@code " cross join "} or a comma {@code ", "},
+	 * where the spaces are required.
 	 *
-	 * @return The cross join separator
+	 * @return The cross join separator, with spaces
 	 */
 	public String getCrossJoinSeparator() {
 		return " cross join ";
 	}
 
-	public String getTableAliasSeparator() { return " as "; }
+	/**
+	 * The separator to use between a table name and its alias in a SQL
+	 * query, typically either {@code " as "} where the spaces are
+	 * required, or a space character {@code " "}.
+	 *
+	 * @return The separator keyword, if any, with spaces
+	 */
+	public String getTableAliasSeparator() {
+		return " as ";
+	}
 
 	public ColumnAliasExtractor getColumnAliasExtractor() {
 		return ColumnAliasExtractor.COLUMN_LABEL_EXTRACTOR;

@@ -83,6 +83,7 @@ public class FirebirdDialect extends Dialect {
 		CommonFunctionFactory.cosh( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
+		CommonFunctionFactory.substringFromFor( queryEngine );
 		CommonFunctionFactory.overlay( queryEngine );
 		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );

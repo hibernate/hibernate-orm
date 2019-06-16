@@ -1179,6 +1179,16 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * ANSI-style substring
+	 */
+	public static void substringFromFor(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("substring",
+					StandardSpiBasicTypes.STRING,
+					"substring(?1 from ?2)", "substring(?1 from ?2 for ?3)")
+				.setArgumentListSignature("(string{ from|,} start[{ for|,} length])");
+	}
+
+	/**
 	 * Not the same as ANSI-style substring!
 	 */
 	public static void substring(QueryEngine queryEngine) {

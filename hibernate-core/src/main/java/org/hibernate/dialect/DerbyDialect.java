@@ -243,7 +243,9 @@ public class DerbyDialect extends Dialect {
 			case BOOLEAN:
 				switch (from) {
 					case STRING:
-						return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false else null end";
+//						return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false end";
+						return "case when ?1 in('t','true','T','TRUE') then true when ?1 in('f','false','F','FALSE') then false end";
+					case LONG:
 					case INTEGER:
 						return "(?1<>0)";
 				}

@@ -18,7 +18,6 @@ import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
-import javax.persistence.TemporalType;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
@@ -110,7 +109,9 @@ public class FirebirdDialect extends Dialect {
 			case BOOLEAN:
 				switch (from) {
 					case STRING:
-						return "iif(lower(?1) similar to 't|f|true|false', lower(?1) like 't%', null)";
+//						return "iif(lower(?1) similar to 't|f|true|false', lower(?1) like 't%', null)";
+						return "decode(lower(?1),'t',1,'f',0,'true',1,'false',0)";
+					case LONG:
 					case INTEGER:
 						return "(?1<>0)";
 				}

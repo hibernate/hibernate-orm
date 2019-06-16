@@ -24,8 +24,6 @@ import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
-import static org.hibernate.query.CastType.BOOLEAN;
-
 /**
  * A dialect for Mimer SQL 11.
  *
@@ -110,7 +108,10 @@ public class MimerSQLDialect extends Dialect {
 			case BOOLEAN:
 				switch (from) {
 					case STRING:
-						return "case when regexp_match(lower(?1), '^(t|f|true|false)$') then lower(?1) like 't%' else null end";
+//						return "case when regexp_match(lower(?1), '^(t|f|true|false)$') then lower(?1) like 't%' end";
+//						return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false end";
+						return "case when ?1 in('t','true','T','TRUE') then true when ?1 in('f','false','F','FALSE') then false end";
+					case LONG:
 					case INTEGER:
 						return "(?1<>0)";
 				}

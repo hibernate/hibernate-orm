@@ -44,8 +44,6 @@ import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.tool.schema.spi.Exporter;
 
 import static org.hibernate.query.CastType.BOOLEAN;
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
-import static org.hibernate.query.TemporalUnit.NATIVE;
 
 /**
  * An SQL dialect for MySQL (prior to 5.x).
@@ -271,7 +269,9 @@ public class MySQLDialect extends Dialect {
 			case BOOLEAN:
 				switch (from) {
 					case STRING:
-						return "if(?1 rlike '^(t|f|true|false)$', ?1 like 't%', null)";
+//						return "if(?1 rlike '^(t|f|true|false)$', ?1 like 't%', null)";
+						return "if(lower(?1) in('t','f','true','false'), ?1 like 't%', null)";
+					case LONG:
 					case INTEGER:
 						return "(?1<>0)";
 				}

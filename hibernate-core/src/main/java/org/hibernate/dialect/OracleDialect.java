@@ -71,7 +71,6 @@ import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.HOUR;
 import static org.hibernate.query.TemporalUnit.MINUTE;
 import static org.hibernate.query.TemporalUnit.MONTH;
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.TemporalUnit.SECOND;
 import static org.hibernate.query.TemporalUnit.YEAR;
 

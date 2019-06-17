@@ -15,6 +15,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
@@ -314,6 +315,7 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 	// Entity fetch scrolling
 
 	@Entity( name = "Resource" )
+	@Table(name = "resources")
 	public static class Resource {
 		@Id
 		@GeneratedValue( generator = "increment" )
@@ -356,6 +358,7 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Entity( name = "User" )
+	@Table(name = "users")
 	public static class User {
 		@Id
 		@GeneratedValue( generator = "increment" )

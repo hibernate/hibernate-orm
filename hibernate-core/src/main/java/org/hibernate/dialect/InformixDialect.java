@@ -67,7 +67,6 @@ public class InformixDialect extends Dialect {
 		// Informix doesn't have a bit type
 		registerColumnType( Types.BIT, 1, "boolean" );
 		registerColumnType( Types.BIT, "smallint" );
-		registerColumnType( Types.BOOLEAN, "smallint" );
 
 		registerColumnType( Types.TINYINT, "smallint" );
 		registerColumnType( Types.BIGINT, "int8" );

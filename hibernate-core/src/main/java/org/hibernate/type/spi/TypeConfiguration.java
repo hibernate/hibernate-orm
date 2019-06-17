@@ -18,6 +18,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -663,6 +665,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "localtime": return standardExpressableTypeForJavaType( LocalTime.class );
 			case "localdate": return standardExpressableTypeForJavaType( LocalDate.class );
 			case "localdatetime": return standardExpressableTypeForJavaType( LocalDateTime.class );
+			case "offsetdatetime": return standardExpressableTypeForJavaType( OffsetDateTime.class );
+			case "zoneddatetime": return standardExpressableTypeForJavaType( ZonedDateTime.class );
 			case "biginteger": return standardExpressableTypeForJavaType( BigInteger.class );
 			case "bigdecimal": return standardExpressableTypeForJavaType( BigDecimal.class );
 			case "binary":

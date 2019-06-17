@@ -66,7 +66,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.hibernate.query.CastType.BOOLEAN;
+import static org.hibernate.query.CastType.STRING;
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.HOUR;
 import static org.hibernate.query.TemporalUnit.MINUTE;
@@ -106,7 +106,6 @@ public class OracleDialect extends Dialect {
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
-	//TODO: 12c supports much simpler OFFSET 2 ROWS FETCH NEXT 1 ROWS ONLY
 	private final LimitHandler limitHandler;
 
 	public OracleDialect() {
@@ -214,7 +213,8 @@ public class OracleDialect extends Dialect {
 
 	/**
 	 * Oracle doesn't have any sort of {@link java.sql.Types#BOOLEAN}
-	 * type, so...
+	 * type or {@link java.sql.Types#TIME} type, and its default behavior
+	 * for casting dates and timestamps to and from strings is just awful.
 	 */
 	@Override
 	public String castPattern(CastType from, CastType to) {
@@ -228,8 +228,39 @@ public class OracleDialect extends Dialect {
 						return "abs(sign(?1))";
 				}
 			case STRING:
-				if (from == BOOLEAN) {
-					return "decode(?1,0,'false','true')";
+				switch (from) {
+					case BOOLEAN:
+						return "decode(?1,0,'false','true')";
+					case DATE:
+						return "to_char(?1,'YYYY-MM-DD')";
+					case TIME:
+						return "to_char(?1,'HH24:MI:SS')";
+					case TIMESTAMP:
+						return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9')";
+					case OFFSET_TIMESTAMP:
+						return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9TZH:TZM')";
+					case ZONE_TIMESTAMP:
+						return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9 TZR')";
+				}
+			case DATE:
+				if (from == STRING) {
+					return "to_date(?1,'YYYY-MM-DD')";
+				}
+			case TIME:
+				if (from == STRING) {
+					return "to_date(?1,'HH24:MI:SS')";
+				}
+			case TIMESTAMP:
+				if (from == STRING) {
+					return "to_timestamp(?1,'YYYY-MM-DD HH24:MI:SS.FF9')";
+				}
+			case OFFSET_TIMESTAMP:
+				if (from == STRING) {
+					return "to_timestamp_tz(?1,'YYYY-MM-DD HH24:MI:SS.FF9TZH:TZM')";
+				}
+			case ZONE_TIMESTAMP:
+				if (from == STRING) {
+					return "to_timestamp_tz(?1,'YYYY-MM-DD HH24:MI:SS.FF9 TZR')";
 				}
 			default:
 				return super.castPattern(from, to);
@@ -398,7 +429,7 @@ public class OracleDialect extends Dialect {
 		return pattern.toString();
 	}
 
-	void extractField(
+	private void extractField(
 			StringBuilder pattern,
 			TemporalUnit unit, TemporalUnit toUnit) {
 		pattern.append("extract(");
@@ -458,6 +489,8 @@ public class OracleDialect extends Dialect {
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "date" );
 		}
 		else {
+			//the only difference between date and timestamp
+			//on Oracle is that date has no fractional seconds
 			registerColumnType( Types.DATE, "date" );
 			registerColumnType( Types.TIME, "date" );
 			registerColumnType( Types.TIMESTAMP, "timestamp($p)" );

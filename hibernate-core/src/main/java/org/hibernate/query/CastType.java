@@ -13,6 +13,8 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 
 /**
  * Defines the set of basic types which should be
@@ -38,6 +40,7 @@ public enum CastType {
 	BOOLEAN,
 	INTEGER, LONG, FLOAT, DOUBLE, FIXED,
 	DATE, TIME, TIMESTAMP,
+	OFFSET_TIMESTAMP, ZONE_TIMESTAMP,
 	NULL,
 	OTHER;
 
@@ -79,6 +82,12 @@ public enum CastType {
 		}
 		if (LocalDateTime.class.equals(javaClass)) {
 			return TIMESTAMP;
+		}
+		if (OffsetDateTime.class.equals(javaClass)) {
+			return OFFSET_TIMESTAMP;
+		}
+		if (ZonedDateTime.class.equals(javaClass)) {
+			return ZONE_TIMESTAMP;
 		}
 		return OTHER;
 	}

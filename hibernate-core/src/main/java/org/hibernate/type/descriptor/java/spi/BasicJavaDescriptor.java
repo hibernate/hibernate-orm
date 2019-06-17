@@ -6,7 +6,9 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -19,6 +21,10 @@ public interface BasicJavaDescriptor<T> extends JavaTypeDescriptor<T> {
 	 * @return The {@link VersionSupport} or null if this Java type does not support version
 	 */
 	default VersionSupport<T> getVersionSupport() {
+		return null;
+	}
+
+	default String getCheckCondition(Dialect dialect, int jdbcTypeCode) {
 		return null;
 	}
 }

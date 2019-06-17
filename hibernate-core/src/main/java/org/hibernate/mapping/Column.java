@@ -316,7 +316,19 @@ public class Column implements Selectable, Serializable, Cloneable {
 				isUpdatable
 		);
 		column.setSize(	size );
-		column.setCheckConstraint( getCheckConstraint() );
+
+		String checkConstraint = getCheckConstraint();
+		if ( checkConstraint == null ) {
+			String checkCondition = getJavaTypeDescriptor().getCheckCondition(
+					jdbcEnvironment.getDialect(),
+					sqlTypeDescriptor.getJdbcTypeCode()
+			);
+			if ( checkCondition != null ) {
+				checkConstraint = getQuotedName() + checkCondition;
+			}
+		}
+		column.setCheckConstraint( checkConstraint );
+
 		return column;
 	}
 

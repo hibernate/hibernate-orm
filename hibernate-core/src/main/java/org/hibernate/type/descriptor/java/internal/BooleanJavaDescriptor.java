@@ -154,4 +154,9 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 	public int getDefaultSqlScale() {
 		return 0;
 	}
+
+	@Override
+	public String getCheckCondition(Dialect dialect, int jdbcTypeCode) {
+		return dialect.getBooleanCheckCondition( jdbcTypeCode );
+	}
 }

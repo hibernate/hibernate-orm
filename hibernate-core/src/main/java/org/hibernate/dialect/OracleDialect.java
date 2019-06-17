@@ -532,7 +532,20 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.BOOLEAN ? BitSqlDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
+		return sqlCode == Types.BOOLEAN
+				? BitSqlDescriptor.INSTANCE
+				: super.getSqlTypeDescriptorOverride( sqlCode );
+	}
+
+	@Override
+	public String getBooleanCheckCondition(int sqlCode) {
+		switch (sqlCode) {
+			case Types.BOOLEAN:
+			case Types.BIT:
+				return " in (0,1)";
+			default:
+				return super.getBooleanCheckCondition(sqlCode);
+		}
 	}
 
 	@Override

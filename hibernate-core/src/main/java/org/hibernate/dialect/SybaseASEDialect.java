@@ -76,6 +76,18 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public String getBooleanCheckCondition(int sqlCode) {
+		switch (sqlCode) {
+			case Types.BOOLEAN:
+			case Types.BIT:
+			case Types.TINYINT:
+				return " in (0,1)";
+			default:
+				return super.getBooleanCheckCondition(sqlCode);
+		}
+	}
+
+	@Override
 	public String currentDate() {
 		return "current_date()";
 	}

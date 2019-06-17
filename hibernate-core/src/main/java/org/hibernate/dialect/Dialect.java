@@ -3280,6 +3280,24 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * A condition that should be used as the check constraint for a
+	 * generated column mapped to a boolean field or property, or
+	 * null if no constraint is required.
+	 * <p>
+	 * Usually {@code " in (0,1)"} for a boolean mapped to a numeric
+	 * column, where the leading space is required. For dialects with
+	 * a built-in {@link Types#BOOLEAN} or {@link Types#BIT} type,
+	 * it's not necessary to override this.
+	 *
+	 * @param jdbcTypeCode the JDBC {@link Types type code} representing the
+	 *                     type of the mapped column
+	 * @return the condition, as a string, with a leading space, or null
+	 */
+	public String getBooleanCheckCondition(int jdbcTypeCode) {
+		return null;
+	}
+
+	/**
 	 * Does this dialect/database support non-query statements (e.g. INSERT, UPDATE, DELETE) with CTE (Common Table Expressions)?
 	 *
 	 * @return {@code true} if non-query statements are supported with CTE

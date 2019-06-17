@@ -19,8 +19,8 @@ import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Sybase11JoinFragment;
 import org.hibernate.sql.TrimSpec;
-import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -51,8 +51,11 @@ public class SybaseASEDialect extends SybaseDialect {
 		this.version = version;
 
 		//On Sybase ASE, the 'bit' type cannot be null,
-		//and cannot have indexes
-		registerColumnType( Types.BOOLEAN, "smallint" );
+		//and cannot have indexes (while we don't use
+		//tinyint to store signed bytes, we can use it
+		//to store boolean values)
+		registerColumnType( Types.BOOLEAN, "tinyint" );
+		registerColumnType( Types.BIT, 1, "tinyint" );
 
 		if ( getVersion() >= 1500 ) {
 			//bigint was added in version 15
@@ -71,7 +74,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		return sqlCode == Types.BOOLEAN
-				? SmallIntSqlDescriptor.INSTANCE
+				? TinyIntSqlDescriptor.INSTANCE
 				: super.getSqlTypeDescriptorOverride(sqlCode);
 	}
 

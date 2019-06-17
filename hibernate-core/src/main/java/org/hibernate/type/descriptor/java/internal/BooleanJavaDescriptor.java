@@ -13,9 +13,6 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-
 /**
  * Descriptor for {@link Boolean} handling.
  *
@@ -71,7 +68,7 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 
 	@Override
 	public Boolean getDefaultValue() {
-		return Boolean.FALSE;
+		return false;
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -102,8 +99,7 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 //			return (X) (value ? stringValueTrue : stringValueFalse);
 //		}
 		if ( Character.class.isAssignableFrom( type ) ) {
-			final char charValue = value ? 'T' : 'F';
-			return (X) Character.valueOf( charValue );
+			return (X) Character.valueOf( value ? 'T' : 'F' );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) value.toString();
@@ -120,11 +116,10 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 			return (Boolean) value;
 		}
 		if ( Number.class.isInstance( value ) ) {
-			final int intValue = ( (Number) value ).intValue();
-			return intValue == 0 ? FALSE : TRUE;
+			return ( (Number) value ).intValue() == 0;
 		}
 		if ( Character.class.isInstance( value ) ) {
-			return isTrue( (Character) value ) ? TRUE : FALSE;
+			return isTrue( (Character) value );
 		}
 //		if ( String.class.isInstance( value ) ) {
 //			return isTrue( ( (String) value ).charAt( 0 ) ) ? TRUE : FALSE;
@@ -157,6 +152,10 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 
 	@Override
 	public String getCheckCondition(Dialect dialect, int jdbcTypeCode) {
+		//this implementation is not really entirely correct,
+		//since we don't know about any type converters that
+		//might be using some other mapping than f=0, t=1 to
+		//transform the boolean to a numeric value
 		return dialect.getBooleanCheckCondition( jdbcTypeCode );
 	}
 }

@@ -93,8 +93,7 @@ public class CollectionLoadContext {
 	 * @return The loading collection (see discussion above).
 	 */
 	public PersistentCollection getLoadingCollection(final CollectionPersister persister, final Serializable key) {
-		final EntityMode em = persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode();
-		final CollectionKey collectionKey = new CollectionKey( persister, key, em );
+		final CollectionKey collectionKey = new CollectionKey( persister, key );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Starting attempt to find loading collection [{0}]",
 					MessageHelper.collectionInfoString( persister.getRole(), key ) );
@@ -179,8 +178,7 @@ public class CollectionLoadContext {
 					session.getPersistenceContext().addUnownedCollection(
 							new CollectionKey(
 									persister,
-									lce.getKey(),
-									persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode()
+									lce.getKey()
 							),
 							lce.getCollection()
 					);

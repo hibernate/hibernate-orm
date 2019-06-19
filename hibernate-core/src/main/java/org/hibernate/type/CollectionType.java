@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -46,7 +45,6 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -771,7 +769,6 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		final CollectionPersister persister = getPersister( session );
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final EntityMode entityMode = persister.getOwnerEntityPersister().getEntityMode();
 
 		final CollectionKey collectionKey = new CollectionKey( persister, key );
 		// check if collection is currently being loaded
@@ -805,7 +802,7 @@ public abstract class CollectionType extends AbstractType implements Association
 					}
 
 					if ( hasHolder() ) {
-						session.getPersistenceContext().addCollectionHolder( collection );
+						persistenceContext.addCollectionHolder( collection );
 					}
 
 					if ( LOG.isTraceEnabled() ) {

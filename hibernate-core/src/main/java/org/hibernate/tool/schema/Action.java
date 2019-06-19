@@ -150,7 +150,7 @@ public enum Action {
 			return hbm2ddlSetting( (Action) value );
 		}
 
-		final String name = value.toString();
+		final String name = value.toString().trim();
 		if ( StringHelper.isEmpty( name ) || NONE.externalJpaName.equals( name ) ) {
 			// default is NONE
 			return NONE;
@@ -178,7 +178,7 @@ public enum Action {
 			}
 		}
 
-		throw new IllegalArgumentException( "Unrecognized legacy `hibernate.hbm2ddl.auto` value : " + value );
+		throw new IllegalArgumentException( "Unrecognized legacy `hibernate.hbm2ddl.auto` value : `" + value + "`");
 	}
 
 	private static Action hbm2ddlSetting(Action action) {

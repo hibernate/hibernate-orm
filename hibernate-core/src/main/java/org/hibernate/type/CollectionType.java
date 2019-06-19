@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -771,14 +770,13 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		final CollectionPersister persister = getPersister( session );
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final EntityMode entityMode = persister.getOwnerEntityPersister().getEntityMode();
 
 		// check if collection is currently being loaded
 		PersistentCollection collection = persistenceContext.getLoadContexts().locateLoadingCollection( persister, key );
 
 		if ( collection == null ) {
 
-			final CollectionKey collectionKey = new CollectionKey( persister, key, entityMode );
+			final CollectionKey collectionKey = new CollectionKey( persister, key );
 			// check if it is already completely loaded, but unowned
 			collection = persistenceContext.useUnownedCollection( collectionKey );
 
@@ -804,7 +802,7 @@ public abstract class CollectionType extends AbstractType implements Association
 					}
 
 					if ( hasHolder() ) {
-						session.getPersistenceContext().addCollectionHolder( collection );
+						persistenceContext.addCollectionHolder( collection );
 					}
 
 					if ( LOG.isTraceEnabled() ) {

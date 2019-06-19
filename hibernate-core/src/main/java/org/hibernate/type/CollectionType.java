@@ -769,7 +769,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 */
 	public Object getCollection(Serializable key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
 
-		CollectionPersister persister = getPersister( session );
+		final CollectionPersister persister = getPersister( session );
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityMode entityMode = persister.getOwnerEntityPersister().getEntityMode();
 
@@ -778,12 +778,13 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		if ( collection == null ) {
 
+			final CollectionKey collectionKey = new CollectionKey( persister, key, entityMode );
 			// check if it is already completely loaded, but unowned
-			collection = persistenceContext.useUnownedCollection( new CollectionKey(persister, key, entityMode) );
+			collection = persistenceContext.useUnownedCollection( collectionKey );
 
 			if ( collection == null ) {
 
-				collection = persistenceContext.getCollection( new CollectionKey(persister, key, entityMode) );
+				collection = persistenceContext.getCollection( collectionKey );
 
 				if ( collection == null ) {
 					// create a new collection wrapper, to be initialized later
@@ -805,19 +806,19 @@ public abstract class CollectionType extends AbstractType implements Association
 					if ( hasHolder() ) {
 						session.getPersistenceContext().addCollectionHolder( collection );
 					}
+
+					if ( LOG.isTraceEnabled() ) {
+						LOG.tracef( "Created collection wrapper: %s",
+									MessageHelper.collectionInfoString( persister, collection,
+																		key, session ) );
+					}
+					// we have already set the owner so we can just return the value
+					return collection.getValue();
 				}
-
 			}
-
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Created collection wrapper: %s",
-						MessageHelper.collectionInfoString( persister, collection,
-								key, session ) );
-			}
-
 		}
 
-		collection.setOwner(owner);
+		collection.setOwner( owner );
 
 		return collection.getValue();
 	}

@@ -214,7 +214,7 @@ include::{sourcedir}/IdManyToOneTest.java[tag=identifiers-composite-id-fetching-
 
 When using composite identifiers, the underlying identifier properties must be manually assigned by the user.
 
-Automatically generated properties are not supported can be used to generate the value of an underlying property that makes the composite identifier.
+Automatically generated properties are not supported to be used to generate the value of an underlying property that makes the composite identifier.
 
 Therefore, you cannot use any of the automatic property generator described by the <<chapters/domain/basic_types.adoc#mapping-generated, generated properties section>> like `@Generated`, `@CreationTimestamp` or `@ValueGenerationType` or database-generated values.
 
@@ -623,7 +623,7 @@ If you annotate a given entity with the `@RowId` annotation and the underlying d
 then Hibernate can use the `ROWID` pseudo-column for CRUD operations.
 
 [[identifiers-rowid-mapping]]
-.`@RowId` entity maapping
+.`@RowId` entity mapping
 ====
 [source, JAVA, indent=0]
 ----

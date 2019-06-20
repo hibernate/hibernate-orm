@@ -38,6 +38,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -140,7 +141,9 @@ public final class TwoPhaseLoad {
 		final Serializable id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
 
-		if ( LOG.isDebugEnabled() ) {
+		final boolean debugEnabled = LOG.isDebugEnabled();
+
+		if ( debugEnabled ) {
 			LOG.debugf(
 					"Resolving attributes for %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )
@@ -152,15 +155,19 @@ public final class TwoPhaseLoad {
 		final Type[] types = persister.getPropertyTypes();
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
-			LOG.debugf(
+			if ( debugEnabled ) {
+				LOG.debugf(
 					"Processing attribute `%s` : value = %s",
 					propertyNames[i],
 					value == LazyPropertyInitializer.UNFETCHED_PROPERTY ? "<un-fetched>" : value == PropertyAccessStrategyBackRefImpl.UNKNOWN ? "<unknown>" : value
-			);
+				);
+			}
 
-			Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
 			if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				LOG.debugf( "Resolving <un-fetched> attribute : `%s`", propertyNames[i] );
+				if ( debugEnabled ) {
+					LOG.debugf( "Resolving <un-fetched> attribute : `%s`", propertyNames[i] );
+				}
+
 				// IMPLEMENTATION NOTE: This is a lazy property on a bytecode-enhanced entity.
 				// hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY so that
 				// setPropertyValues() below (ultimately AbstractEntityTuplizer#setPropertyValues) works properly
@@ -170,22 +177,27 @@ public final class TwoPhaseLoad {
 					// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
 					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
 					// so do not assign the resolved, unitialized PersistentCollection back to hydratedState[i].
+					Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
 					types[i].resolve( value, session, entity, overridingEager );
 				}
 			}
 			else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				final boolean isLazyEnhanced = persister.getBytecodeEnhancementMetadata()
+				if ( debugEnabled ) {
+					final boolean isLazyEnhanced = persister.getBytecodeEnhancementMetadata()
 						.getLazyAttributesMetadata()
 						.getLazyAttributeNames()
 						.contains( propertyNames[i] );
-
-				LOG.debugf( "Attribute (`%s`)  - enhanced for lazy-loading? - %s", propertyNames[i], isLazyEnhanced );
+					LOG.debugf( "Attribute (`%s`)  - enhanced for lazy-loading? - %s", propertyNames[i], isLazyEnhanced );
+				}
 
 				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
+				Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
 				hydratedState[i] = types[i].resolve( value, session, entity, overridingEager );
 			}
 			else {
-				LOG.debugf( "Skipping <unknown> attribute : `%s`", propertyNames[i] );
+				if ( debugEnabled ) {
+					LOG.debugf( "Skipping <unknown> attribute : `%s`", propertyNames[i] );
+				}
 			}
 		}
 
@@ -193,11 +205,7 @@ public final class TwoPhaseLoad {
 		if ( session.isEventSource() ) {
 			preLoadEvent.setEntity( entity ).setState( hydratedState ).setId( id ).setPersister( persister );
 
-			final EventListenerGroup<PreLoadEventListener> listenerGroup = session
-					.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.PRE_LOAD );
+			final EventListenerGroup<PreLoadEventListener> listenerGroup = getPreLoadEventListenerEventListenerGroup(session);
 			for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
 				listener.onPreLoad( preLoadEvent );
 			}
@@ -206,9 +214,10 @@ public final class TwoPhaseLoad {
 		persister.setPropertyValues( entity, hydratedState );
 
 		final SessionFactoryImplementor factory = session.getFactory();
+		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( persister.canWriteToCache() && session.getCacheMode().isPutEnabled() ) {
 
-			if ( LOG.isDebugEnabled() ) {
+			if ( debugEnabled ) {
 				LOG.debugf(
 						"Adding entity to second-level cache: %s",
 						MessageHelper.infoString( persister, id, session.getFactory() )
@@ -247,8 +256,8 @@ public final class TwoPhaseLoad {
 							useMinimalPuts( session, entityEntry )
 					);
 
-					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().entityCachePut(
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.entityCachePut(
 								StatsHelper.INSTANCE.getRootEntityRole( persister ),
 								cache.getRegion().getName()
 						);
@@ -300,16 +309,24 @@ public final class TwoPhaseLoad {
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}
 
-		if ( LOG.isDebugEnabled() ) {
+		if ( debugEnabled ) {
 			LOG.debugf(
 					"Done materializing entity %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )
 			);
 		}
 
-		if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatistics().loadEntity( persister.getEntityName() );
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.loadEntity( persister.getEntityName() );
 		}
+	}
+
+	private static EventListenerGroup<PreLoadEventListener> getPreLoadEventListenerEventListenerGroup(final SharedSessionContractImplementor session) {
+		return session
+					  .getFactory()
+					  .getServiceRegistry()
+					  .getService( EventListenerRegistry.class )
+					  .getEventListenerGroup( EventType.PRE_LOAD );
 	}
 
 	/**

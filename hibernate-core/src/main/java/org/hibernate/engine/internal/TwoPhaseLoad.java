@@ -38,6 +38,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -184,7 +185,6 @@ public final class TwoPhaseLoad {
 		final Type[] types = persister.getPropertyTypes();
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
-			Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
 			if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 				// IMPLEMENTATION NOTE: This is a lazy property on a bytecode-enhanced entity.
 				// hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY so that
@@ -195,11 +195,13 @@ public final class TwoPhaseLoad {
 					// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
 					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
 					// so do not assign the resolved, unitialized PersistentCollection back to hydratedState[i].
+					Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
 					types[i].resolve( value, session, entity, overridingEager );
 				}
 			}
 			else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
+				Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
 				hydratedState[i] = types[i].resolve( value, session, entity, overridingEager );
 			}
 		}
@@ -215,6 +217,7 @@ public final class TwoPhaseLoad {
 		persister.setPropertyValues( entity, hydratedState );
 
 		final SessionFactoryImplementor factory = session.getFactory();
+		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( persister.canWriteToCache() && session.getCacheMode().isPutEnabled() ) {
 
 			if ( debugEnabled ) {
@@ -256,8 +259,8 @@ public final class TwoPhaseLoad {
 							useMinimalPuts( session, entityEntry )
 					);
 
-					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().entityCachePut(
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.entityCachePut(
 								StatsHelper.INSTANCE.getRootEntityRole( persister ),
 								cache.getRegion().getName()
 						);
@@ -318,8 +321,8 @@ public final class TwoPhaseLoad {
 			);
 		}
 
-		if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatistics().loadEntity( persister.getEntityName() );
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.loadEntity( persister.getEntityName() );
 		}
 	}
 

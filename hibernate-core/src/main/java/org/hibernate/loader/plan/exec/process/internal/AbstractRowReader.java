@@ -15,9 +15,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.internal.TwoPhaseLoad;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.plan.exec.process.spi.CollectionReferenceInitializer;
@@ -233,15 +239,23 @@ public abstract class AbstractRowReader implements RowReader {
 				: hydratedEntityRegistrations.size();
 		log.tracev( "Total objects hydrated: {0}", numberOfHydratedObjects );
 
-		if ( hydratedEntityRegistrations == null ) {
+		if ( numberOfHydratedObjects == 0 ) {
 			return;
 		}
+
+		final SharedSessionContractImplementor session = context.getSession();
+		final Iterable<PreLoadEventListener> listeners = session
+			.getFactory()
+			.getServiceRegistry()
+			.getService( EventListenerRegistry.class )
+			.getEventListenerGroup( EventType.PRE_LOAD )
+			.listeners();
 
 		for ( HydratedEntityRegistration registration : hydratedEntityRegistrations ) {
 			TwoPhaseLoad.initializeEntity(
 					registration.getInstance(),
 					context.isReadOnly(),
-					context.getSession(),
+					session,
 					preLoadEvent
 			);
 		}
@@ -277,12 +291,25 @@ public abstract class AbstractRowReader implements RowReader {
 			return;
 		}
 
+		final SharedSessionContractImplementor session = context.getSession();
+		final Iterable<PostLoadEventListener> postLoadEventListeners;
+		if ( session.isEventSource() ) {
+			final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( EventType.POST_LOAD );
+			postLoadEventListeners = listenerGroup.listeners();
+		}
+		else {
+			postLoadEventListeners = Collections.emptyList();
+		}
+
 		for ( HydratedEntityRegistration registration : hydratedEntityRegistrations ) {
-			TwoPhaseLoad.postLoad( registration.getInstance(), context.getSession(), postLoadEvent );
+			TwoPhaseLoad.postLoad( registration.getInstance(), session, postLoadEvent, postLoadEventListeners );
 			if ( afterLoadActionList != null ) {
 				for ( AfterLoadAction afterLoadAction : afterLoadActionList ) {
 					afterLoadAction.afterLoad(
-							context.getSession(),
+							session,
 							registration.getInstance(),
 							(Loadable) registration.getEntityReference().getEntityPersister()
 					);

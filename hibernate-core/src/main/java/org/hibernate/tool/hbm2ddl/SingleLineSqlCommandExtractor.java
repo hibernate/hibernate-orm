@@ -28,7 +28,7 @@ public class SingleLineSqlCommandExtractor implements ImportSqlCommandExtractor 
 		try {
 			for ( String sql = bufferedReader.readLine(); sql != null; sql = bufferedReader.readLine() ) {
 				String trimmedSql = sql.trim();
-				if ( StringHelper.isEmpty( trimmedSql ) || isComment( trimmedSql ) ) {
+				if ( trimmedSql.isEmpty() || isComment( trimmedSql ) ) {
 					continue;
 				}
 				if ( trimmedSql.endsWith( ";" ) ) {

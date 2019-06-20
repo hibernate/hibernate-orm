@@ -2817,7 +2817,7 @@ public abstract class Dialect implements ConversionContext {
 	public String getQueryHintString(String query, List<String> hintList) {
 		final String hints = String.join( ", ", hintList );
 
-		if ( StringHelper.isEmpty( hints ) ) {
+		if ( hints.isEmpty() ) {
 			return query;
 		}
 

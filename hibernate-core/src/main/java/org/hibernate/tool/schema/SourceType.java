@@ -74,8 +74,8 @@ public enum SourceType {
 			return (SourceType) value;
 		}
 
-		final String name = value.toString();
-		if ( StringHelper.isEmpty( name ) ) {
+		final String name = value.toString().trim();
+		if ( name.isEmpty() ) {
 			// empty is in fact valid as means to interpret default value based on other settings
 			return defaultValue;
 		}
@@ -93,6 +93,6 @@ public enum SourceType {
 			return SCRIPT_THEN_METADATA;
 		}
 
-		throw new IllegalArgumentException( "Unrecognized schema generation source-type value : " + value );
+		throw new IllegalArgumentException( "Unrecognized schema generation source-type value : '" + value + '\'');
 	}
 }

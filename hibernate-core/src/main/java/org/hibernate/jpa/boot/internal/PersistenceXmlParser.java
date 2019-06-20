@@ -369,7 +369,7 @@ public class PersistenceXmlParser {
 							}
 							String propName = propElement.getAttribute( "name" ).trim();
 							String propValue = propElement.getAttribute( "value" ).trim();
-							if ( StringHelper.isEmpty( propValue ) ) {
+							if ( propValue.isEmpty() ) {
 								//fall back to the natural (Hibernate) way of description
 								propValue = extractContent( propElement, "" );
 							}

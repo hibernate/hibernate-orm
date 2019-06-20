@@ -102,7 +102,7 @@ public enum Action {
 		}
 
 		final String name = value.toString();
-		if ( StringHelper.isEmpty( name ) || NONE.externalJpaName.equals( name ) ) {
+		if ( name.isEmpty() || NONE.externalJpaName.equals( name ) ) {
 			// default is NONE
 			return NONE;
 		}
@@ -151,7 +151,7 @@ public enum Action {
 		}
 
 		final String name = value.toString().trim();
-		if ( StringHelper.isEmpty( name ) || NONE.externalJpaName.equals( name ) ) {
+		if ( name.isEmpty() || NONE.externalJpaName.equals( name ) ) {
 			// default is NONE
 			return NONE;
 		}

@@ -62,15 +62,15 @@ public enum JdbcMetadaAccessStrategy {
 			return GROUPED;
 		}
 		else {
-			final String name = value.toString();
-			if ( StringHelper.isEmpty( name ) || GROUPED.strategy.equals( name ) ) {
+			final String name = value.toString().trim();
+			if ( name.isEmpty() || GROUPED.strategy.equals( name ) ) {
 				return GROUPED;
 			}
 			else if ( INDIVIDUALLY.strategy.equals( name ) ) {
 				return INDIVIDUALLY;
 			}
 			else {
-				throw new IllegalArgumentException( "Unrecognized `" + AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY + "` value : " + name );
+				throw new IllegalArgumentException( "Unrecognized `" + AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY + "` value : `" + name + '`');
 			}
 		}
 	}

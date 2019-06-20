@@ -60,7 +60,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 		}
 
 		whereFragment = whereFragment.trim();
-		if ( StringHelper.isEmpty( whereFragment ) ) {
+		if ( whereFragment.isEmpty() ) {
 			return;
 		}
 

@@ -249,6 +249,7 @@ public final class SessionImpl
 	private transient boolean discardOnClose;
 
 	private transient TransactionObserver transactionObserver;
+	private transient EventListenerRegistry eventListenerRegistry;
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
@@ -685,7 +686,10 @@ public final class SessionImpl
 	}
 
 	private <T> EventListenerGroup<T> eventListenerGroup(EventType<T> type) {
-		return getFactory().getServiceRegistry().getService( EventListenerRegistry.class ).getEventListenerGroup( type );
+		if ( this.eventListenerRegistry == null ) {
+			this.eventListenerRegistry = getFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+		}
+		return eventListenerRegistry.getEventListenerGroup( type );
 	}
 
 

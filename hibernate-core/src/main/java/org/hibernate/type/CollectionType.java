@@ -771,12 +771,13 @@ public abstract class CollectionType extends AbstractType implements Association
 		final CollectionPersister persister = getPersister( session );
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
+		final CollectionKey collectionKey = new CollectionKey( persister, key );
 		// check if collection is currently being loaded
-		PersistentCollection collection = persistenceContext.getLoadContexts().locateLoadingCollection( persister, key );
+		PersistentCollection collection = persistenceContext.getLoadContexts()
+				.locateLoadingCollection( persister, collectionKey );
 
 		if ( collection == null ) {
 
-			final CollectionKey collectionKey = new CollectionKey( persister, key );
 			// check if it is already completely loaded, but unowned
 			collection = persistenceContext.useUnownedCollection( collectionKey );
 

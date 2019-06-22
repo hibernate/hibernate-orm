@@ -294,7 +294,7 @@ public class CascadingActions {
 				Object anything,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			LOG.tracev( "Cascading to persist: {0}" + entityName );
+			LOG.tracev( "Cascading to persist: {0}", entityName );
 			session.persist( entityName, child, (Map) anything );
 		}
 

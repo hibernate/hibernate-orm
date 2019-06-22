@@ -381,7 +381,7 @@ public final class TwoPhaseLoad {
 			String associationName,
 			Type type) {
 		if ( type.isAssociationType() || type.isCollectionType() ) {
-			Boolean overridingEager = isEagerFetchProfile( session, entityName + "." + associationName );
+			Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );
 
 			if ( LOG.isDebugEnabled() ) {
 				if ( overridingEager != null ) {
@@ -399,14 +399,19 @@ public final class TwoPhaseLoad {
 		return null;
 	}
 
-	private static Boolean isEagerFetchProfile(SharedSessionContractImplementor session, String role) {
+	private static Boolean isEagerFetchProfile(SharedSessionContractImplementor session, String entityName, String associationName) {
 		LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
-		for ( String fetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
-			FetchProfile fp = session.getFactory().getFetchProfile( fetchProfileName );
-			Fetch fetch = fp.getFetchByRole( role );
-			if ( fetch != null && Fetch.Style.JOIN == fetch.getStyle() ) {
-				return true;
+		// Performance: avoid concatenating entityName + "." + associationName when there is no need,
+		// as otherwise this section becomes an hot allocation point.
+		if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
+			final String role =  entityName + '.' + associationName;
+			for ( String fetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
+				FetchProfile fp = session.getFactory().getFetchProfile( fetchProfileName );
+				Fetch fetch = fp.getFetchByRole( role );
+				if ( fetch != null && Fetch.Style.JOIN == fetch.getStyle() ) {
+					return true;
+				}
 			}
 		}
 

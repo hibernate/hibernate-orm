@@ -151,7 +151,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 		String relativePropertyPath = pos >= 0
 				? fullPath.substring( pos )
 				: rootPropertyName;
-		String fetchRole = persister.getEntityName() + "." + relativePropertyPath;
+		String fetchRole = persister.getEntityName() + '.' + relativePropertyPath;
 
 		for ( String profileName : getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
 			final FetchProfile profile = getFactory().getFetchProfile( profileName );

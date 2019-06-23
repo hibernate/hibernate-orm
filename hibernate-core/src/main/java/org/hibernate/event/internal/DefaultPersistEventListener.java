@@ -200,14 +200,16 @@ public class DefaultPersistEventListener
 		final Object entity = source.getPersistenceContext().unproxy( event.getObject() );
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
-		LOG.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 				"un-scheduling entity deletion [%s]",
 				MessageHelper.infoString(
-						persister,
-						persister.getIdentifier( entity, source ),
-						source.getFactory()
+					persister,
+					persister.getIdentifier( entity, source ),
+					source.getFactory()
 				)
-		);
+			);
+		}
 
 		if ( createCache.put( entity, entity ) == null ) {
 			justCascade( createCache, source, entity, persister );

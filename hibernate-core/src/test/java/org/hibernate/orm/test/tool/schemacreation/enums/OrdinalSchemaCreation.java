@@ -32,7 +32,7 @@ public class OrdinalSchemaCreation extends BaseSchemaCreationTestCase {
 	public void testTableIsCreated(SchemaScope scope) {
 
 		assertThatTablesAreCreated(
-				"person (gender integer, id bigint not null, name varchar(255), primary key (id))"
+				"person (gender tinyint check (gender between 0 and 1), id bigint not null, name varchar(255), primary key (id))"
 		);
 	}
 

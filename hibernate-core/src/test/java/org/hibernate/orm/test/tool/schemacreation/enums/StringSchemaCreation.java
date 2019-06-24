@@ -34,7 +34,7 @@ public class StringSchemaCreation extends BaseSchemaCreationTestCase {
 	public void testTableIsCreated(SchemaScope scope) {
 
 		assertThatTablesAreCreated(
-				"person (gender varchar(255), id bigint not null, name varchar(255), primary key (id))"
+				"person (gender varchar(255) check (gender in ('male', 'female')), id bigint not null, name varchar(255), primary key (id))"
 		);
 	}
 

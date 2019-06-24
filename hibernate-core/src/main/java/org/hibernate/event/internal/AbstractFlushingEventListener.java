@@ -193,7 +193,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.debug( "Dirty checking collections" );
 
 		for ( Map.Entry<PersistentCollection,CollectionEntry> entry :
-				IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+				IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() ) ) {
 			entry.getValue().preFlush( entry.getKey() );
 		}
 	}
@@ -269,7 +269,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		ActionQueue actionQueue = session.getActionQueue();
 		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
-			IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+			IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() ) ) {
 			PersistentCollection coll = me.getKey();
 			CollectionEntry ce = me.getValue();
 

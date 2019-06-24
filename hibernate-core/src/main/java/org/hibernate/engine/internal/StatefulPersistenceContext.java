@@ -232,7 +232,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		for ( Entry<Object, EntityEntry> objectEntityEntryEntry : entityEntryContext.reentrantSafeEntityEntries() ) {
-			// todo : I dont think this need be reentrant safe
 			if ( objectEntityEntryEntry.getKey() instanceof PersistentAttributeInterceptable ) {
 				final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) objectEntityEntryEntry.getKey() ).$$_hibernate_getInterceptor();
 				if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
@@ -241,9 +240,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 		}
 
-		for ( Map.Entry<PersistentCollection, CollectionEntry> aCollectionEntryArray : IdentityMap.concurrentEntries( collectionEntries ) ) {
-			aCollectionEntryArray.getKey().unsetSession( getSession() );
-		}
+		final SharedSessionContractImplementor session = getSession();
+		IdentityMap.onEachKey( collectionEntries, k -> k.unsetSession( session ) );
 
 		arrayHolders.clear();
 		entitiesByKey.clear();

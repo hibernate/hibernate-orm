@@ -253,7 +253,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
-		if ( getPersistenceContext().isLoadFinished() ) {
+		if ( getPersistenceContextInternal().isLoadFinished() ) {
 			throw new SessionException( "proxies cannot be fetched by a stateless session" );
 		}
 		// unless we are still in the process of handling a top-level load
@@ -461,14 +461,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
 		checkOpen();
 
-		final Object result = getPersistenceContext().getEntity( key );
+		final PersistenceContext persistenceContext = getPersistenceContext();
+		final Object result = persistenceContext.getEntity( key );
 		if ( result != null ) {
 			return result;
 		}
 
 		final Object newObject = getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() );
 		if ( newObject != null ) {
-			getPersistenceContext().addEntity( key, newObject );
+			persistenceContext.addEntity( key, newObject );
 			return newObject;
 		}
 
@@ -667,6 +668,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return NO_INFLUENCERS;
+	}
+
+	@Override
+	public PersistenceContext getPersistenceContextInternal() {
+		//In this case implemented the same as #getPersistenceContext
+		return temporaryPersistenceContext;
 	}
 
 	@Override

@@ -204,7 +204,7 @@ public final class CollectionEntry implements Serializable {
 		collection.setSnapshot(loadedKey, role, snapshot);
 		if ( loadedPersister.getBatchSize() > 1 ) {
 			( (AbstractPersistentCollection) collection ).getSession()
-					.getPersistenceContext()
+					.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.removeBatchLoadableCollection( this );
 		}

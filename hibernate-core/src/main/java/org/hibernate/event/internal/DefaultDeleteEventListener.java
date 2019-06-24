@@ -84,7 +84,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		final EventSource source = event.getSession();
 
-		final PersistenceContext persistenceContext = source.getPersistenceContext();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
 
 		EntityEntry entityEntry = persistenceContext.getEntry( entity );
@@ -255,7 +255,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			);
 		}
 
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final Type[] propTypes = persister.getPropertyTypes();
 		final Object version = entityEntry.getVersion();
 
@@ -359,7 +359,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		CacheMode cacheMode = session.getCacheMode();
 		session.setCacheMode( CacheMode.GET );
-		session.getPersistenceContext().incrementCascadeLevel();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			// cascade-delete to collections BEFORE the collection owner is deleted
 			Cascade.cascade(
@@ -372,7 +373,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			);
 		}
 		finally {
-			session.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 			session.setCacheMode( cacheMode );
 		}
 	}
@@ -385,7 +386,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		CacheMode cacheMode = session.getCacheMode();
 		session.setCacheMode( CacheMode.GET );
-		session.getPersistenceContext().incrementCascadeLevel();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			// cascade-delete to many-to-one AFTER the parent was deleted
 			Cascade.cascade(
@@ -398,7 +400,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			);
 		}
 		finally {
-			session.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 			session.setCacheMode( cacheMode );
 		}
 	}

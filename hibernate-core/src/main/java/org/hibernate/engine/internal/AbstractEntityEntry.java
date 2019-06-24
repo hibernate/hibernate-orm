@@ -309,7 +309,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return !isExistsInDatabase();
 		}
 		else {
-			return session.getPersistenceContext().getNullifiableEntityKeys().contains( getEntityKey() );
+			return session.getPersistenceContextInternal().getNullifiableEntityKeys().contains( getEntityKey() );
 		}
 	}
 

@@ -158,14 +158,15 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			performOrderedBatchLoad( idsInBatch, lockOptions, persister, session );
 		}
 
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		for ( Integer position : elementPositionsLoadedByBatch ) {
 			// the element value at this position in the result List should be
 			// the EntityKey for that entity; reuse it!
 			final EntityKey entityKey = (EntityKey) result.get( position );
-			Object entity = session.getPersistenceContext().getEntity( entityKey );
+			Object entity = persistenceContext.getEntity( entityKey );
 			if ( entity != null && !loadOptions.isReturnOfDeletedEntitiesEnabled() ) {
 				// make sure it is not DELETED
-				final EntityEntry entry = session.getPersistenceContext().getEntry( entity );
+				final EntityEntry entry = persistenceContext.getEntry( entity );
 				if ( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE ) {
 					// the entity is locally deleted, and the options ask that we not return such entities...
 					entity = null;
@@ -339,7 +340,6 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		return qp;
 	}
 
-
 	@Override
 	protected UniqueEntityLoader buildBatchingLoader(
 			OuterJoinLoadable persister,
@@ -395,7 +395,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				Object optionalObject,
 				SharedSessionContractImplementor session,
 				LockOptions lockOptions) {
-			final Serializable[] batch = session.getPersistenceContext()
+			final Serializable[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.getEntityBatch( persister(), id, maxBatchSize, persister().getEntityMode() );
 
@@ -508,7 +508,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			);
 
 			try {
-				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 				boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
 				if ( queryParameters.isReadOnlyInitialized() ) {
 					// The read-only/modifiable mode for the query was explicitly set.

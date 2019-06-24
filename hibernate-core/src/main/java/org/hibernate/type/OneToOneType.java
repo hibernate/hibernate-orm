@@ -103,7 +103,7 @@ public class OneToOneType extends EntityType {
 			final EntityPersister ownerPersister = session.getFactory().getMetamodel().entityPersister( entityName );
 			final Serializable id = session.getContextEntityIdentifier( owner );
 			final EntityKey entityKey = session.generateEntityKey( id, ownerPersister );
-			return session.getPersistenceContext().isPropertyNull( entityKey, getPropertyName() );
+			return session.getPersistenceContextInternal().isPropertyNull( entityKey, getPropertyName() );
 		}
 		else {
 			return false;

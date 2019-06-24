@@ -54,7 +54,7 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 		// The other CollectionAction types call CollectionEntry#afterAction, which
 		// clears the dirty flag. We don't want to call CollectionEntry#afterAction unless
 		// there is no other CollectionAction that will be executed on the same collection.
-		final CollectionEntry ce = getSession().getPersistenceContext().getCollectionEntry( getCollection() );
+		final CollectionEntry ce = getSession().getPersistenceContextInternal().getCollectionEntry( getCollection() );
 		if ( !ce.isDoremove() && !ce.isDoupdate() && !ce.isDorecreate() ) {
 			ce.afterAction( getCollection() );
 		}

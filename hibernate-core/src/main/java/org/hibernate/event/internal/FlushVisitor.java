@@ -36,17 +36,18 @@ public class FlushVisitor extends AbstractVisitor {
 
 		if ( collection != null ) {
 			final PersistentCollection coll;
+			final EventSource session = getSession();
 			if ( type.hasHolder() ) {
-				coll = getSession().getPersistenceContext().getCollectionHolder(collection);
+				coll = session.getPersistenceContextInternal().getCollectionHolder(collection);
 			}
 			else if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				coll = (PersistentCollection) type.resolve( collection, getSession(), owner );
+				coll = (PersistentCollection) type.resolve( collection, session, owner );
 			}
 			else {
 				coll = (PersistentCollection) collection;
 			}
 
-			Collections.processReachableCollection( coll, type, owner, getSession() );
+			Collections.processReachableCollection( coll, type, owner, session);
 		}
 
 		return null;

@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
@@ -234,7 +235,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			throw new IllegalStateException( "Could not locate fetch owner EntityKey" );
 		}
 
-		session.getPersistenceContext().addNullProperty(
+		session.getPersistenceContextInternal().addNullProperty(
 				ownerEntityKey,
 				fetchedType.getPropertyName()
 		);
@@ -351,8 +352,9 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 					namedParameterLocMap
 			);
 
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			for ( EntityKey key : entry.getValue() ) {
-				session.getPersistenceContext().getBatchFetchQueue().addSubselect( key, subselectFetch );
+				persistenceContext.getBatchFetchQueue().addSubselect( key, subselectFetch );
 			}
 		}
 	}

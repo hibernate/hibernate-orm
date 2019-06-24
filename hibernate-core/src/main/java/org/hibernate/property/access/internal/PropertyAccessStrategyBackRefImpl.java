@@ -97,7 +97,7 @@ public class PropertyAccessStrategyBackRefImpl implements PropertyAccessStrategy
 				return UNKNOWN;
 			}
 			else {
-				return session.getPersistenceContext().getOwnerId( entityName, propertyName, owner, mergeMap );
+				return session.getPersistenceContextInternal().getOwnerId( entityName, propertyName, owner, mergeMap );
 			}
 		}
 

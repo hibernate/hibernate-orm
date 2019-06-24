@@ -247,7 +247,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	public boolean isReadOnly() {
 		return ( readOnly == null ?
-				producer.getPersistenceContext().isDefaultReadOnly() :
+				producer.getPersistenceContextInternal().isDefaultReadOnly() :
 				readOnly
 		);
 	}

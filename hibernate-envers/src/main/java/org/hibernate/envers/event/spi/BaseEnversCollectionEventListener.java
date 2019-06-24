@@ -44,7 +44,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 	}
 
 	protected final CollectionEntry getCollectionEntry(AbstractCollectionEvent event) {
-		return event.getSession().getPersistenceContext().getCollectionEntry( event.getCollection() );
+		return event.getSession().getPersistenceContextInternal().getCollectionEntry( event.getCollection() );
 	}
 
 	protected final void onCollectionAction(

@@ -2404,6 +2404,11 @@ public final class SessionImpl
 	}
 
 	@Override
+	public PersistenceContext getPersistenceContextInternal() {
+		return persistenceContext;
+	}
+
+	@Override
 	public SessionStatistics getStatistics() {
 		pulseTransactionCoordinator();
 		return new SessionStatisticsImpl( this );
@@ -3165,14 +3170,16 @@ public final class SessionImpl
 				return;
 			}
 
-			for ( Serializable pk : getPersistenceContext().getNaturalIdHelper()
+			final PersistenceContext persistenceContext = getPersistenceContextInternal();
+			final boolean debugEnabled = log.isDebugEnabled();
+			for ( Serializable pk : persistenceContext.getNaturalIdHelper()
 					.getCachedPkResolutions( entityPersister ) ) {
 				final EntityKey entityKey = generateEntityKey( pk, entityPersister );
-				final Object entity = getPersistenceContext().getEntity( entityKey );
-				final EntityEntry entry = getPersistenceContext().getEntry( entity );
+				final Object entity = persistenceContext.getEntity( entityKey );
+				final EntityEntry entry = persistenceContext.getEntry( entity );
 
 				if ( entry == null ) {
-					if ( log.isDebugEnabled() ) {
+					if ( debugEnabled ) {
 						log.debug(
 								"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : "
 										+ MessageHelper.infoString( entityPersister, pk, getFactory() )
@@ -3190,7 +3197,7 @@ public final class SessionImpl
 					continue;
 				}
 
-				getPersistenceContext().getNaturalIdHelper().handleSynchronization(
+				persistenceContext.getNaturalIdHelper().handleSynchronization(
 						entityPersister,
 						pk,
 						entity

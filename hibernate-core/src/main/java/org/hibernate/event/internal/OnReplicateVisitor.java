@@ -51,7 +51,7 @@ public class OnReplicateVisitor extends ReattachVisitor {
 			final PersistentCollection wrapper = (PersistentCollection) collection;
 			wrapper.setCurrentSession( (SessionImplementor) session );
 			if ( wrapper.wasInitialized() ) {
-				session.getPersistenceContext().addNewCollection( persister, wrapper );
+				session.getPersistenceContextInternal().addNewCollection( persister, wrapper );
 			}
 			else {
 				reattachCollection( wrapper, type );

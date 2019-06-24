@@ -385,7 +385,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session) {
 			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, entityMode );
 			final Object[] injectionValues = new Object[extractedValues.length];
-			final PersistenceContext persistenceContext = session.getPersistenceContext();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			for ( int i = 0; i < virtualIdComponent.getSubtypes().length; i++ ) {
 				final Type virtualPropertyType = virtualIdComponent.getSubtypes()[i];
 				final Type idClassPropertyType = mappedIdentifierType.getSubtypes()[i];
@@ -438,7 +438,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		if ( session != null ) {
-			final EntityEntry pcEntry = session.getPersistenceContext().getEntry( entity );
+			final EntityEntry pcEntry = session.getPersistenceContextInternal().getEntry( entity );
 			if ( pcEntry != null ) {
 				// entity managed; return ID.
 				return pcEntry.getId();

@@ -35,7 +35,7 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 	}
 
 	private void handlePostUpdate(Object entity, EventSource source) {
-		EntityEntry entry = source.getPersistenceContext().getEntry( entity );
+		EntityEntry entry = source.getPersistenceContextInternal().getEntry( entity );
 		// mimic the preUpdate filter
 		if ( Status.DELETED != entry.getStatus()) {
 			callbackRegistry.postUpdate(entity);

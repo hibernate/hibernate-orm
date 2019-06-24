@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -174,10 +175,11 @@ public abstract class AbstractSaveEventListener
 		final EntityKey key;
 		if ( !useIdentityColumn ) {
 			key = source.generateEntityKey( id, persister );
-			Object old = source.getPersistenceContext().getEntity( key );
+			final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+			Object old = persistenceContext.getEntity( key );
 			if ( old != null ) {
-				if ( source.getPersistenceContext().getEntry( old ).getStatus() == Status.DELETED ) {
-					source.forceFlush( source.getPersistenceContext().getEntry( old ) );
+				if ( persistenceContext.getEntry( old ).getStatus() == Status.DELETED ) {
+					source.forceFlush( persistenceContext.getEntry( old ) );
 				}
 				else {
 					throw new NonUniqueObjectException( id, persister.getEntityName() );
@@ -246,11 +248,12 @@ public abstract class AbstractSaveEventListener
 
 		boolean inTrx = source.isTransactionInProgress();
 		boolean shouldDelayIdentityInserts = !inTrx && !requiresImmediateIdAccess;
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
 		// likewise, should it be done before onUpdate()?
-		EntityEntry original = source.getPersistenceContext().addEntry(
+		EntityEntry original = persistenceContext.addEntry(
 				entity,
 				Status.SAVING,
 				null,
@@ -305,7 +308,7 @@ public abstract class AbstractSaveEventListener
 			insert.handleNaturalIdPostSaveNotifications( id );
 		}
 
-		EntityEntry newEntry = source.getPersistenceContext().getEntry( entity );
+		EntityEntry newEntry = persistenceContext.getEntry( entity );
 
 		if ( newEntry != original ) {
 			EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
@@ -423,7 +426,8 @@ public abstract class AbstractSaveEventListener
 			Object anything) {
 
 		// cascade-save to many-to-one BEFORE the parent is saved
-		source.getPersistenceContext().incrementCascadeLevel();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(
 					getCascadeAction(),
@@ -435,7 +439,7 @@ public abstract class AbstractSaveEventListener
 			);
 		}
 		finally {
-			source.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
@@ -453,8 +457,9 @@ public abstract class AbstractSaveEventListener
 			Object entity,
 			Object anything) {
 
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		// cascade-save to collections AFTER the collection owner was saved
-		source.getPersistenceContext().incrementCascadeLevel();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(
 					getCascadeAction(),
@@ -466,7 +471,7 @@ public abstract class AbstractSaveEventListener
 			);
 		}
 		finally {
-			source.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 		}
 	}
 

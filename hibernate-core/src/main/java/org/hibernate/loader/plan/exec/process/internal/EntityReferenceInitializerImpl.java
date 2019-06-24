@@ -21,6 +21,7 @@ import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.EntityAliases;
@@ -33,6 +34,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
@@ -283,7 +285,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 
 			final EntityKey ownerEntityKey = fetchOwnerState.getEntityKey();
 			if ( ownerEntityKey != null ) {
-				context.getSession().getPersistenceContext().addNullProperty(
+				context.getSession().getPersistenceContextInternal().addNullProperty(
 						ownerEntityKey,
 						fetchedType.getPropertyName()
 				);
@@ -301,7 +303,8 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 		final Serializable id = entityKey.getIdentifier();
 
 		// Get the persister for the _subclass_
-		final Loadable concreteEntityPersister = (Loadable) context.getSession().getFactory().getMetamodel().entityPersister( concreteEntityTypeName );
+		final SharedSessionContractImplementor session = context.getSession();
+		final Loadable concreteEntityPersister = (Loadable) session.getFactory().getMetamodel().entityPersister( concreteEntityTypeName );
 
 		if ( log.isTraceEnabled() ) {
 			log.tracev(
@@ -309,7 +312,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 					MessageHelper.infoString(
 							concreteEntityPersister,
 							id,
-							context.getSession().getFactory()
+							session.getFactory()
 					)
 			);
 		}
@@ -322,10 +325,10 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 				entityInstance,
 				concreteEntityPersister,
 				lockModeToAcquire,
-				context.getSession()
+				session
 		);
 
-		final EntityPersister rootEntityPersister = context.getSession().getFactory().getMetamodel().entityPersister(
+		final EntityPersister rootEntityPersister = session.getFactory().getMetamodel().entityPersister(
 				concreteEntityPersister.getRootEntityName()
 		);
 		final Object[] values;
@@ -339,13 +342,13 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 							? entityReferenceAliases.getColumnAliases().getSuffixedPropertyAliases()
 							: entityReferenceAliases.getColumnAliases().getSuffixedPropertyAliases( concreteEntityPersister ),
 					context.getLoadPlan().areLazyAttributesForceFetched(),
-					context.getSession()
+					session
 			);
 
 			context.getProcessingState( entityReference ).registerHydratedState( values );
 		}
 		catch (SQLException e) {
-			throw context.getSession().getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(
+			throw session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(
 					e,
 					"Could not read entity state from ResultSet : " + entityKey
 			);
@@ -365,7 +368,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			}
 		}
 		catch (SQLException e) {
-			throw context.getSession().getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(
+			throw session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(
 					e,
 					"Could not read entity row-id from ResultSet : " + entityKey
 			);
@@ -389,12 +392,12 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 				EntityUniqueKey euk = new EntityUniqueKey(
 						entityReference.getEntityPersister().getEntityName(),
 						ukName,
-						type.semiResolve( values[index], context.getSession(), entityInstance ),
+						type.semiResolve( values[index], session, entityInstance ),
 						type,
 						concreteEntityPersister.getEntityMode(),
-						context.getSession().getFactory()
+						session.getFactory()
 				);
-				context.getSession().getPersistenceContext().addEntity( euk, entityInstance );
+				session.getPersistenceContextInternal().addEntity( euk, entityInstance );
 			}
 		}
 
@@ -405,7 +408,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 				rowId,
 				entityInstance,
 				lockModeToAcquire,
-				context.getSession()
+				session
 		);
 
 		context.registerHydratedEntity( entityReference, entityKey, entityInstance );
@@ -457,7 +460,9 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			Object existing) {
 		final LockMode requestedLockMode = context.resolveLockMode( entityReference );
 		if ( requestedLockMode != LockMode.NONE ) {
-			final LockMode currentLockMode = context.getSession().getPersistenceContext().getEntry( existing ).getLockMode();
+			final SharedSessionContractImplementor session = context.getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final LockMode currentLockMode = persistenceContext.getEntry( existing ).getLockMode();
 			final boolean isVersionCheckNeeded = entityReference.getEntityPersister().isVersioned()
 					&& currentLockMode.lessThan( requestedLockMode );
 
@@ -466,7 +471,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			if ( isVersionCheckNeeded ) {
 				//we only check the version when *upgrading* lock modes
 				checkVersion(
-						context.getSession(),
+						session,
 						resultSet,
 						entityReference.getEntityPersister(),
 						entityReferenceAliases.getColumnAliases(),
@@ -474,7 +479,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 						existing
 				);
 				//we need to upgrade the lock mode to the mode requested
-				context.getSession().getPersistenceContext().getEntry( existing ).setLockMode( requestedLockMode );
+				persistenceContext.getEntry( existing ).setLockMode( requestedLockMode );
 			}
 		}
 	}
@@ -486,7 +491,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			EntityAliases entityAliases,
 			EntityKey entityKey,
 			Object entityInstance) {
-		final Object version = session.getPersistenceContext().getEntry( entityInstance ).getVersion();
+		final Object version = session.getPersistenceContextInternal().getEntry( entityInstance ).getVersion();
 
 		if ( version != null ) {
 			//null version means the object is in the process of being loaded somewhere else in the ResultSet
@@ -508,8 +513,9 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			}
 
 			if ( !versionType.isEqual( version, currentVersion ) ) {
-				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatistics().optimisticFailure( persister.getEntityName() );
+				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.optimisticFailure( persister.getEntityName() );
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), entityKey.getIdentifier() );
 			}

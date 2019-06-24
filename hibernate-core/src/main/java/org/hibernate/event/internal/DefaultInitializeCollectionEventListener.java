@@ -23,6 +23,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * @author Gavin King
@@ -37,7 +38,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		PersistentCollection collection = event.getCollection();
 		SessionImplementor source = event.getSession();
 
-		CollectionEntry ce = source.getPersistenceContext().getCollectionEntry( collection );
+		CollectionEntry ce = source.getPersistenceContextInternal().getCollectionEntry( collection );
 		if ( ce == null ) {
 			throw new HibernateException( "collection was evicted" );
 		}
@@ -76,8 +77,9 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					LOG.trace( "Collection initialized" );
 				}
 
-				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-					source.getFactory().getStatistics().fetchCollection(
+				final StatisticsImplementor statistics = source.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.fetchCollection(
 							ce.getLoadedPersister().getRole()
 					);
 				}
@@ -119,15 +121,16 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		final Object ck = cacheAccessStrategy.generateCacheKey( id, persister, factory, source.getTenantIdentifier() );
 		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
 
-		if ( factory.getStatistics().isStatisticsEnabled() ) {
+		final StatisticsImplementor statistics = factory.getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
 			if ( ce == null ) {
-				factory.getStatistics().collectionCacheMiss(
+				statistics.collectionCacheMiss(
 						persister.getNavigableRole(),
 						cacheAccessStrategy.getRegion().getName()
 				);
 			}
 			else {
-				factory.getStatistics().collectionCacheHit(
+				statistics.collectionCacheHit(
 						persister.getNavigableRole(),
 						cacheAccessStrategy.getRegion().getName()
 				);
@@ -143,7 +146,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				factory
 		);
 
-		final PersistenceContext persistenceContext = source.getPersistenceContext();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( id, persister ) );
 		persistenceContext.getCollectionEntry( collection ).postInitialize( collection );
 		// addInitializedCollection(collection, persister, id);

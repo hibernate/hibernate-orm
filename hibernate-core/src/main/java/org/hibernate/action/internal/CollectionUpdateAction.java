@@ -20,6 +20,7 @@ import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for updating a collection
@@ -88,12 +89,13 @@ public final class CollectionUpdateAction extends CollectionAction {
 			persister.insertRows( collection, id, session );
 		}
 
-		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
+		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postUpdate();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().updateCollection( getPersister().getRole() );
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.updateCollection( getPersister().getRole() );
 		}
 	}
 	

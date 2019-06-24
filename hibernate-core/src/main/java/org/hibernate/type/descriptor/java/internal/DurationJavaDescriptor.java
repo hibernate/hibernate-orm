@@ -104,7 +104,7 @@ public class DurationJavaDescriptor extends AbstractBasicJavaDescriptor<Duration
 
 		if ( BigDecimal.class.isInstance( value ) ) {
 			BigDecimal[] secondsAndNanos = ((BigDecimal) value).divideAndRemainder( BigDecimal.ONE.movePointRight(9) );
-			return Duration.ofSeconds( secondsAndNanos[0].longValueExact(), secondsAndNanos[1].intValueExact() );
+			return Duration.ofSeconds( secondsAndNanos[0].longValueExact(), secondsAndNanos[1].intValue() );
 		}
 
 		if ( String.class.isInstance( value ) ) {

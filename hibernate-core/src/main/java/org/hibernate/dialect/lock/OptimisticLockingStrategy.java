@@ -49,7 +49,7 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 		if ( !lockable.isVersioned() ) {
 			throw new OptimisticLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
-		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
+		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
 		// Register the EntityVerifyVersionProcess action to run just prior to transaction commit.
 		( (EventSource) session ).getActionQueue().registerProcess( new EntityVerifyVersionProcess( object, entry ) );
 	}

@@ -210,7 +210,7 @@ public class EnhancementHelper {
 		final SessionFactoryImplementor sf = (SessionFactoryImplementor)
 				SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );
 		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
-		session.getPersistenceContext().setDefaultReadOnly( true );
+		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setHibernateFlushMode( FlushMode.MANUAL );
 		return session;
 	}

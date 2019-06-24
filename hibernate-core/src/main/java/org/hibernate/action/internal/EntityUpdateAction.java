@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -30,6 +31,7 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.TypeHelper;
 
 /**
@@ -84,7 +86,7 @@ public final class EntityUpdateAction extends EntityAction {
 		this.rowId = rowId;
 
 		this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, previousState, session, id );
-		session.getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+		session.getPersistenceContextInternal().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 				persister,
 				id,
 				state,
@@ -102,11 +104,12 @@ public final class EntityUpdateAction extends EntityAction {
 			return null;
 		}
 
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( previousState != null ) {
-			return session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( previousState, persister );
+			return persistenceContext.getNaturalIdHelper().extractNaturalIdValues( previousState, persister );
 		}
 
-		return session.getPersistenceContext().getNaturalIdSnapshot( id, persister );
+		return persistenceContext.getNaturalIdSnapshot( id, persister );
 	}
 
 	@Override
@@ -156,7 +159,7 @@ public final class EntityUpdateAction extends EntityAction {
 			);
 		}
 
-		final EntityEntry entry = session.getPersistenceContext().getEntry( instance );
+		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible nonthreadsafe access to session" );
 		}
@@ -185,6 +188,7 @@ public final class EntityUpdateAction extends EntityAction {
 			entry.postUpdate( instance, state, nextVersion );
 		}
 
+		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( persister.canWriteToCache() ) {
 			if ( persister.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
 				persister.getCacheAccessStrategy().remove( session, ck);
@@ -195,8 +199,8 @@ public final class EntityUpdateAction extends EntityAction {
 				cacheEntry = persister.getCacheEntryStructure().structure( ce );
 
 				final boolean put = cacheUpdate( persister, previousVersion, ck );
-				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatistics().entityCachePut(
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
 							StatsHelper.INSTANCE.getRootEntityRole( persister ),
 							getPersister().getCacheAccessStrategy().getRegion().getName()
 					);
@@ -204,7 +208,7 @@ public final class EntityUpdateAction extends EntityAction {
 			}
 		}
 
-		session.getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
+		session.getPersistenceContextInternal().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
 				persister,
 				id,
 				state,
@@ -214,8 +218,8 @@ public final class EntityUpdateAction extends EntityAction {
 
 		postUpdate();
 
-		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
-			factory.getStatistics().updateEntity( getPersister().getEntityName() );
+		if ( statistics.isStatisticsEnabled() && !veto ) {
+			statistics.updateEntity( getPersister().getEntityName() );
 		}
 	}
 

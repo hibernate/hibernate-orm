@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.CoreLogging;
@@ -30,6 +31,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -180,18 +182,19 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
+		final EventSource session = event.getSession();
 		if ( event.getInstanceToLoad() != null ) {
-			if ( event.getSession().getPersistenceContext().getEntry( event.getInstanceToLoad() ) != null ) {
+			if ( session.getPersistenceContextInternal().getEntry( event.getInstanceToLoad() ) != null ) {
 				throw new PersistentObjectException(
 						"attempted to load into an instance that was already associated with the session: " +
 								MessageHelper.infoString(
 										persister,
 										event.getEntityId(),
-										event.getSession().getFactory()
+										session.getFactory()
 								)
 				);
 			}
-			persister.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), event.getSession() );
+			persister.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), session);
 		}
 
 		final Object entity = doLoad( event, persister, keyToLoad, options );
@@ -199,7 +202,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		boolean isOptionalInstance = event.getInstanceToLoad() != null;
 
 		if ( entity == null && ( !options.isAllowNulls() || isOptionalInstance ) ) {
-			event.getSession()
+			session
 					.getFactory()
 					.getEntityNotFoundDelegate()
 					.handleEntityNotFound( event.getEntityClassName(), event.getEntityId() );
@@ -235,21 +238,22 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			);
 		}
 
-		final PersistenceContext persistenceContext = event.getSession().getPersistenceContext();
+		final PersistenceContext persistenceContext = event.getSession().getPersistenceContextInternal();
 
 		final boolean allowBytecodeProxy = event.getSession()
 				.getFactory()
 				.getSessionFactoryOptions()
 				.isEnhancementAsProxyEnabled();
 
-		final boolean entityHasHibernateProxyFactory = persister.getEntityMetamodel()
+		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+		final boolean entityHasHibernateProxyFactory = entityMetamodel
 				.getTuplizer()
 				.getProxyFactory() != null;
 
 		// Check for the case where we can use the entity itself as a proxy
 		if ( options.isAllowProxyCreation()
 				&& allowBytecodeProxy
-				&& persister.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+				&& entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 			// if there is already a managed entity instance associated with the PC, return it
 			final Object managed = persistenceContext.getEntity( keyToLoad );
 			if ( managed != null ) {
@@ -282,7 +286,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				}
 
 				// specialized handling for entities with subclasses with a HibernateProxy factory
-				if ( persister.getEntityMetamodel().hasSubclasses() ) {
+				if ( entityMetamodel.hasSubclasses() ) {
 					// entities with subclasses that define a ProxyFactory can create
 					// a HibernateProxy so long as NO_PROXY was not specified.
 					if ( event.getShouldUnwrapProxy() != null && event.getShouldUnwrapProxy() ) {
@@ -312,7 +316,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 					true
 			);
 
-			persister.getEntityMetamodel()
+			entityMetamodel
 					.getBytecodeEnhancementMetadata()
 					.injectEnhancedEntityAsProxyInterceptor( entity, keyToLoad, event.getSession() );
 
@@ -477,7 +481,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			}
 		}
 
-		return event.getSession().getPersistenceContext().proxyFor( persister, keyToLoad, entity );
+		return event.getSession().getPersistenceContextInternal().proxyFor( persister, keyToLoad, entity );
 	}
 
 
@@ -500,10 +504,11 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
+		final EventSource session = event.getSession();
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Attempting to resolve: {0}",
-					MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+					MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
 			);
 		}
 
@@ -523,7 +528,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Resolved object in second-level cache: {0}",
-						MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+						MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
 				);
 			}
 		}
@@ -531,17 +536,18 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Object not resolved in any cache: {0}",
-						MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+						MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
 				);
 			}
 			entity = loadFromDatasource( event, persister );
 		}
 
 		if ( entity != null && persister.hasNaturalIdentifier() ) {
-			event.getSession().getPersistenceContext().getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
 					persister,
 					event.getEntityId(),
-					event.getSession().getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues(
+					persistenceContext.getNaturalIdHelper().extractNaturalIdValues(
 							entity,
 							persister
 					)

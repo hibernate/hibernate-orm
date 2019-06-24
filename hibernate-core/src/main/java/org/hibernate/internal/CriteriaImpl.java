@@ -305,7 +305,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		}
 		return ( isReadOnlyInitialized() ?
 				readOnly :
-				getSession().getPersistenceContext().isDefaultReadOnly()
+				getSession().getPersistenceContextInternal().isDefaultReadOnly()
 		);
 	}
 

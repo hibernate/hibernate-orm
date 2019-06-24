@@ -64,6 +64,7 @@ import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -75,6 +76,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -1054,7 +1056,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {
-		final EntityEntry entry = session.getPersistenceContext().getEntry( entity );
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final EntityEntry entry = persistenceContext.getEntry( entity );
 		final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
 		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
 
@@ -1075,11 +1078,11 @@ public abstract class AbstractEntityPersister
 				// see if there is already a collection instance associated with the session
 				// 		NOTE : can this ever happen?
 				final Serializable key = getCollectionKey( persister, entity, entry, session );
-				PersistentCollection collection = session.getPersistenceContext().getCollection( new CollectionKey( persister, key ) );
+				PersistentCollection collection = persistenceContext.getCollection( new CollectionKey( persister, key ) );
 				if ( collection == null ) {
 					collection = collectionType.instantiate( session, persister, key );
 					collection.setOwner( entity );
-					session.getPersistenceContext().addUninitializedCollection( persister, collection, key );
+					persistenceContext.addUninitializedCollection( persister, collection, key );
 				}
 
 //				// HHH-11161 Initialize, if the collection is not extra lazy
@@ -1089,12 +1092,12 @@ public abstract class AbstractEntityPersister
 				interceptor.attributeInitialized( fieldName );
 
 				if ( collectionType.isArrayType() ) {
-					session.getPersistenceContext().addCollectionHolder( collection );
+					persistenceContext.addCollectionHolder( collection );
 				}
 
 				// update the "state" of the entity's EntityEntry to over-write UNFETCHED_PROPERTY reference
 				// for the collection to the just loaded collection
-				final EntityEntry ownerEntry = session.getPersistenceContext().getEntry( entity );
+				final EntityEntry ownerEntry = persistenceContext.getEntry( entity );
 				if ( ownerEntry == null ) {
 					// not good
 					throw new AssertionFailure(
@@ -3614,7 +3617,7 @@ public abstract class AbstractEntityPersister
 
 		final boolean[] propsToUpdate;
 		final String[] updateStrings;
-		EntityEntry entry = session.getPersistenceContext().getEntry( object );
+		EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
 
 		// Ensure that an immutable or non-modifiable entity is not being updated unless it is
 		// in the process of being deleted.
@@ -3751,9 +3754,10 @@ public abstract class AbstractEntityPersister
 			//
 			// Note, it potentially could be a proxy, so doAfterTransactionCompletion the location the safe way...
 			final EntityKey key = session.generateEntityKey( id, this );
-			Object entity = session.getPersistenceContext().getEntity( key );
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			Object entity = persistenceContext.getEntity( key );
 			if ( entity != null ) {
-				EntityEntry entry = session.getPersistenceContext().getEntry( entity );
+				EntityEntry entry = persistenceContext.getEntry( entity );
 				loadedState = entry.getLoadedState();
 			}
 		}
@@ -4686,13 +4690,14 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-		final NaturalIdHelper naturalIdHelper = session.getPersistenceContext().getNaturalIdHelper();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final NaturalIdHelper naturalIdHelper = persistenceContext.getNaturalIdHelper();
 		final Serializable id = getIdentifier( entity, session );
 
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 		// database, because we have no other way to know if the state changed while detached.
 		final Object[] naturalIdSnapshot;
-		final Object[] entitySnapshot = session.getPersistenceContext().getDatabaseSnapshot( id, this );
+		final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
 		if ( entitySnapshot == StatefulPersistenceContext.NO_ROW ) {
 			naturalIdSnapshot = null;
 		}
@@ -5289,20 +5294,20 @@ public abstract class AbstractEntityPersister
 
 		Object[] snapshot = new Object[naturalIdPropertyCount];
 		try {
-			PreparedStatement ps = session
-					.getJdbcCoordinator()
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			PreparedStatement ps = jdbcCoordinator
 					.getStatementPreparer()
 					.prepareStatement( sql );
 			try {
 				getIdentifierType().nullSafeSet( ps, id, 1, session );
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
+				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( ps );
 				try {
 					//if there is no resulting row, return null
 					if ( !rs.next() ) {
 						return null;
 					}
 					final EntityKey key = session.generateEntityKey( id, this );
-					Object owner = session.getPersistenceContext().getEntity( key );
+					Object owner = session.getPersistenceContextInternal().getEntity( key );
 					for ( int i = 0; i < naturalIdPropertyCount; i++ ) {
 						snapshot[i] = extractionTypes[i].hydrate(
 								rs, getPropertyAliases(
@@ -5317,12 +5322,12 @@ public abstract class AbstractEntityPersister
 					return snapshot;
 				}
 				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, ps );
+					jdbcCoordinator.getResourceRegistry().release( rs, ps );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( ps );
-				session.getJdbcCoordinator().afterStatementExecution();
+				jdbcCoordinator.getResourceRegistry().release( ps );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch (SQLException e) {

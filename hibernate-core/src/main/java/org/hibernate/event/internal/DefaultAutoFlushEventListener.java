@@ -8,6 +8,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
@@ -78,9 +79,10 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	}
 
 	private boolean flushMightBeNeeded(final EventSource source) {
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		return !source.getHibernateFlushMode().lessThan( FlushMode.AUTO )
 				&& source.getDontFlushFromFind() == 0
-				&& ( source.getPersistenceContext().getNumberOfManagedEntities() > 0 ||
-						source.getPersistenceContext().getCollectionEntries().size() > 0 );
+				&& ( persistenceContext.getNumberOfManagedEntities() > 0 ||
+						persistenceContext.getCollectionEntries().size() > 0 );
 	}
 }

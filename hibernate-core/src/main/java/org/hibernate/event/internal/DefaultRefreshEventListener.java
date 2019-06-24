@@ -23,6 +23,7 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
@@ -63,21 +64,22 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		else {
 			isTransient = !source.contains( event.getObject() );
 		}
-		if ( source.getPersistenceContext().reassociateIfUninitializedProxy( event.getObject() ) ) {
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		if ( persistenceContext.reassociateIfUninitializedProxy( event.getObject() ) ) {
 			if ( isTransient ) {
 				source.setReadOnly( event.getObject(), source.isDefaultReadOnly() );
 			}
 			return;
 		}
 
-		final Object object = source.getPersistenceContext().unproxyAndReassociate( event.getObject() );
+		final Object object = persistenceContext.unproxyAndReassociate( event.getObject() );
 
 		if ( refreshedAlready.containsKey( object ) ) {
 			LOG.trace( "Already refreshed" );
 			return;
 		}
 
-		final EntityEntry e = source.getPersistenceContext().getEntry( object );
+		final EntityEntry e = persistenceContext.getEntry( object );
 		final EntityPersister persister;
 		final Serializable id;
 
@@ -97,7 +99,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				);
 			}
 			final EntityKey key = source.generateEntityKey( id, persister );
-			if ( source.getPersistenceContext().getEntry( key ) != null ) {
+			if ( persistenceContext.getEntry( key ) != null ) {
 				throw new PersistentObjectException(
 						"attempted to refresh transient instance when persistent instance was already associated with the Session: " +
 								MessageHelper.infoString( persister, id, source.getFactory() )
@@ -138,7 +140,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		if ( e != null ) {
 			final EntityKey key = source.generateEntityKey( id, persister );
-			source.getPersistenceContext().removeEntity( key );
+			persistenceContext.removeEntity( key );
 			if ( persister.hasCollections() ) {
 				new EvictVisitor( source, object ).process( object, persister );
 			}
@@ -212,7 +214,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( postRefreshLockMode != null ) {
 				// if we get here, there was a previous entry and we need to re-set its lock-mode
 				//		- however, the refresh operation actually creates a new entry, so get it
-				source.getPersistenceContext().getEntry( result ).setLockMode( postRefreshLockMode );
+				persistenceContext.getEntry( result ).setLockMode( postRefreshLockMode );
 			}
 
 			// Keep the same read-only/modifiable setting for the entity that it had before refreshing;

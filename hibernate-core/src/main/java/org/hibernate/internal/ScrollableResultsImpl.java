@@ -190,7 +190,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return;
 		}
 
-		final PersistenceContext persistenceContext = getSession().getPersistenceContext();
+		final PersistenceContext persistenceContext = getSession().getPersistenceContextInternal();
 		persistenceContext.beforeLoad();
 		try {
 			final Object result = getLoader().loadSingleRow(

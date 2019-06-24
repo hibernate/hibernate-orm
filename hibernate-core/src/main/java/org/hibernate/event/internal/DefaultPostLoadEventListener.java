@@ -12,6 +12,7 @@ import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
@@ -41,7 +42,8 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 
 		callbackRegistry.postLoad( entity );
 
-		final EntityEntry entry = event.getSession().getPersistenceContext().getEntry( entity );
+		final EventSource session = event.getSession();
+		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( entity );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
@@ -52,22 +54,22 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 			final Object nextVersion = persister.forceVersionIncrement(
 					entry.getId(),
 					entry.getVersion(),
-					event.getSession()
+				session
 			);
 			entry.forceLocked( entity, nextVersion );
 		}
 		else if ( LockMode.OPTIMISTIC_FORCE_INCREMENT.equals( lockMode ) ) {
 			final EntityIncrementVersionProcess incrementVersion = new EntityIncrementVersionProcess( entity, entry );
-			event.getSession().getActionQueue().registerProcess( incrementVersion );
+			session.getActionQueue().registerProcess( incrementVersion );
 		}
 		else if ( LockMode.OPTIMISTIC.equals( lockMode ) ) {
 			final EntityVerifyVersionProcess verifyVersion = new EntityVerifyVersionProcess( entity, entry );
-			event.getSession().getActionQueue().registerProcess( verifyVersion );
+			session.getActionQueue().registerProcess( verifyVersion );
 		}
 
 		if ( event.getPersister().implementsLifecycle() ) {
 			//log.debug( "calling onLoad()" );
-			( (Lifecycle) event.getEntity() ).onLoad( event.getSession(), event.getId() );
+			( (Lifecycle) event.getEntity() ).onLoad( session, event.getId() );
 		}
 
 	}

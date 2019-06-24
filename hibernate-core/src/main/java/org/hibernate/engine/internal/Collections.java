@@ -53,7 +53,7 @@ public final class Collections {
 	}
 
 	private static void processDereferencedCollection(PersistentCollection coll, SessionImplementor session) {
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
 
@@ -111,7 +111,7 @@ public final class Collections {
 
 	private static void processNeverReferencedCollection(PersistentCollection coll, SessionImplementor session)
 			throws HibernateException {
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
 
 		if ( LOG.isDebugEnabled() ) {
@@ -147,7 +147,8 @@ public final class Collections {
 			Object entity,
 			SessionImplementor session) {
 		collection.setOwner( entity );
-		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( collection );
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
 
 		if ( ce == null ) {
 			// refer to comment in StatefulPersistenceContext.addCollection()

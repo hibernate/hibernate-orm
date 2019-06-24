@@ -204,8 +204,9 @@ public class ManyToOneType extends EntityType {
 			final EntityPersister persister = getAssociatedEntityPersister( session.getFactory() );
 			if ( persister.isBatchLoadable() ) {
 				final EntityKey entityKey = session.generateEntityKey( id, persister );
-				if ( !session.getPersistenceContext().containsEntity( entityKey ) ) {
-					session.getPersistenceContext().getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+				if ( !persistenceContext.containsEntity( entityKey ) ) {
+					persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 				}
 			}
 		}
@@ -238,7 +239,8 @@ public class ManyToOneType extends EntityType {
 	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
 		Object resolvedValue = super.resolve(value, session, owner, overridingEager);
 		if ( isLogicalOneToOne && value != null && getPropertyName() != null ) {
-			EntityEntry entry = session.getPersistenceContext().getEntry( owner );
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			EntityEntry entry = persistenceContext.getEntry( owner );
 			if ( entry != null ) {
 				final Loadable ownerPersister = (Loadable) session.getFactory().getMetamodel().entityPersister( entry.getEntityName() );
 				EntityUniqueKey entityKey = new EntityUniqueKey(
@@ -249,7 +251,7 @@ public class ManyToOneType extends EntityType {
 						ownerPersister.getEntityMode(),
 						session.getFactory()
 				);
-				session.getPersistenceContext().addEntity( entityKey, owner );
+				persistenceContext.addEntity( entityKey, owner );
 			}
 		}
 		return resolvedValue;

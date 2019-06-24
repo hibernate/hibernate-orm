@@ -588,7 +588,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( componentTuplizer.hasParentProperty() && parent != null ) {
 			componentTuplizer.setParent(
 					result,
-					session.getPersistenceContext().proxyFor( parent ),
+					session.getPersistenceContextInternal().proxyFor( parent ),
 					session.getFactory()
 			);
 		}

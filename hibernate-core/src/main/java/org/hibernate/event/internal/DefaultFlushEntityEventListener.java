@@ -21,6 +21,7 @@ import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -35,6 +36,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -97,9 +99,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			final Type[] propertyTypes = persister.getPropertyTypes();
 			final boolean[] propertyUpdateability = persister.getPropertyUpdateability();
 
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final Object[] snapshot = loaded == null
-					? session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), persister )
-					: session.getPersistenceContext().getNaturalIdHelper().extractNaturalIdValues( loaded, persister );
+					? persistenceContext.getNaturalIdSnapshot( entry.getId(), persister )
+					: persistenceContext.getNaturalIdHelper().extractNaturalIdValues( loaded, persister );
 
 			for ( int i = 0; i < naturalIdentifierPropertiesIndexes.length; i++ ) {
 				final int naturalIdentifierPropertyIndex = naturalIdentifierPropertiesIndexes[i];
@@ -693,13 +696,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private Object[] getDatabaseSnapshot(SessionImplementor session, EntityPersister persister, Serializable id) {
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.isSelectBeforeUpdateRequired() ) {
-			Object[] snapshot = session.getPersistenceContext()
+			Object[] snapshot = persistenceContext
 					.getDatabaseSnapshot( id, persister );
 			if ( snapshot == null ) {
 				//do we even really need this? the update will fail anyway....
-				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatistics()
+				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics
 							.optimisticFailure( persister.getEntityName() );
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), id );
@@ -708,6 +713,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 		// TODO: optimize away this lookup for entities w/o unsaved-value="undefined"
 		final EntityKey entityKey = session.generateEntityKey( id, persister );
-		return session.getPersistenceContext().getCachedDatabaseSnapshot( entityKey );
+		return persistenceContext.getCachedDatabaseSnapshot( entityKey );
 	}
 }

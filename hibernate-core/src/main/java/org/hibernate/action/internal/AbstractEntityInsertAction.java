@@ -16,6 +16,7 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
@@ -123,7 +124,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	public final void makeEntityManaged() {
 		nullifyTransientReferencesIfNotAlready();
 		final Object version = Versioning.getVersion( getState(), getPersister() );
-		getSession().getPersistenceContext().addEntity(
+		getSession().getPersistenceContextInternal().addEntity(
 				getInstance(),
 				( getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				getState(),
@@ -155,7 +156,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException
 		if ( session != null ) {
-			final EntityEntry entityEntry = session.getPersistenceContext().getEntry( getInstance() );
+			final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( getInstance() );
 			this.state = entityEntry.getLoadedState();
 		}
 	}
@@ -165,7 +166,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	protected void handleNaturalIdPreSaveNotifications() {
 		// before save, we need to add a local (transactional) natural id cross-reference
-		getSession().getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+		getSession().getPersistenceContextInternal().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 				getPersister(),
 				getId(),
 				state,
@@ -180,9 +181,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * @param generatedId The generated entity identifier
 	 */
 	public void handleNaturalIdPostSaveNotifications(Serializable generatedId) {
+		final PersistenceContext.NaturalIdHelper naturalIdHelper = getSession().getPersistenceContextInternal().getNaturalIdHelper();
 		if ( isEarlyInsert() ) {
 			// with early insert, we still need to add a local (transactional) natural id cross-reference
-			getSession().getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
+			naturalIdHelper.manageLocalNaturalIdCrossReference(
 					getPersister(),
 					generatedId,
 					state,
@@ -191,7 +193,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			);
 		}
 		// after save, we need to manage the shared cache entries
-		getSession().getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
+		naturalIdHelper.manageSharedNaturalIdCrossReference(
 				getPersister(),
 				generatedId,
 				state,

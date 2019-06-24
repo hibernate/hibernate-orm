@@ -1109,7 +1109,7 @@ public final class SessionImpl
 		LoadEvent event = loadEvent;
 		loadEvent = null;
 		event = recycleEventInstance( event, id, entityName );
-		fireLoad( event, LoadEventListener.IMMEDIATE_LOAD );
+		fireLoadNoChecks( event, LoadEventListener.IMMEDIATE_LOAD );
 		Object result = event.getResult();
 		if ( loadEvent == null ) {
 			event.setEntityClassName( null );
@@ -1167,7 +1167,7 @@ public final class SessionImpl
 			event = recycleEventInstance( event, id, entityName );
 			event.setShouldUnwrapProxy( unwrapProxy );
 
-			fireLoad( event, type );
+			fireLoadNoChecks( event, type );
 
 			Object result = event.getResult();
 
@@ -1292,11 +1292,20 @@ public final class SessionImpl
 
 	private void fireLoad(LoadEvent event, LoadType loadType) {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		fireLoadNoChecks( event, loadType );
+		delayedAfterCompletion();
+	}
+
+	//Performance note:
+	// This version of #fireLoad is meant to be invoked by internal methods only,
+	// so to skip the session open, transaction synch, etc.. checks,
+	// which have been proven to be not particularly cheap:
+	// it seems they prevent these hot methods from being inlined.
+	private void fireLoadNoChecks(LoadEvent event, LoadType loadType) {
+		pulseTransactionCoordinator();
 		for ( LoadEventListener listener : listeners( EventType.LOAD ) ) {
 			listener.onLoad( event, loadType );
 		}
-		delayedAfterCompletion();
 	}
 
 	private void fireResolveNaturalId(ResolveNaturalIdEvent event) {

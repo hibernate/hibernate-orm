@@ -194,7 +194,7 @@ public class Ejb3Column {
 	}
 
 	public boolean isNullable() {
-		return isFormula() ? true : mappingColumn.isNullable();
+		return isFormula() || mappingColumn.isNullable();
 	}
 
 	public String getDefaultValue() {
@@ -682,8 +682,8 @@ public class Ejb3Column {
 			return;
 		}
 
-		Identifier nonNullLogicalColumnName =
-				logicalColumnName != null ? logicalColumnName : Identifier.toIdentifier( "" );
+		String nonNullLogicalColumnName =
+				logicalColumnName != null ? logicalColumnName.getText() : "";
 
 		if ( StringHelper.isEmpty( annotation.forColumn() )
 				|| annotation.forColumn().equals( nonNullLogicalColumnName ) ) {

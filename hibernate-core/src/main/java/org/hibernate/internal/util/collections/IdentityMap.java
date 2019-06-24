@@ -13,16 +13,17 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * A <tt>Map</tt> where keys are compared by object identity,
  * rather than <tt>equals()</tt>.
  */
 public final class IdentityMap<K,V> implements Map<K,V> {
-	private final Map<IdentityKey<K>,V> map;
+
+	private final LinkedHashMap<IdentityKey<K>,V> map;
 	@SuppressWarnings( {"unchecked"})
-	private transient Entry<IdentityKey<K>,V>[] entryArray = new Entry[0];
-	private transient boolean dirty;
+	private transient Map.Entry<IdentityKey<K>,V>[] entryArray = null;
 
 	/**
 	 * Return a new instance of this class, with iteration
@@ -32,7 +33,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	 * @return The map
 	 */
 	public static <K,V> IdentityMap<K,V> instantiateSequenced(int size) {
-		return new IdentityMap<K,V>( new LinkedHashMap<IdentityKey<K>,V>( size ) );
+		return new IdentityMap<K,V>( new LinkedHashMap<IdentityKey<K>,V>( size << 1, 0.6f ) );
 	}
 
 	/**
@@ -40,9 +41,8 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	 *
 	 * @param underlyingMap The delegate map.
 	 */
-	private IdentityMap(Map<IdentityKey<K>,V> underlyingMap) {
+	private IdentityMap(LinkedHashMap<IdentityKey<K>,V> underlyingMap) {
 		map = underlyingMap;
-		dirty = true;
 	}
 
 	/**
@@ -55,6 +55,11 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	 */
 	public static <K,V> Map.Entry<K,V>[] concurrentEntries(Map<K,V> map) {
 		return ( (IdentityMap<K,V>) map ).entryArray();
+	}
+
+	public static <K,V> void onEachKey(Map<K,V> map, Consumer<K> consumer) {
+		final IdentityMap<K, V> identityMap = (IdentityMap<K, V>) map;
+		identityMap.map.forEach( (kIdentityKey, v) -> consumer.accept( kIdentityKey.key ) );
 	}
 
 	public Iterator<K> keyIterator() {
@@ -79,26 +84,27 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	@Override
 	public boolean containsValue(Object val) {
-		return map.containsValue(val);
+		throw new UnsupportedOperationException( "Avoid this operation: does not perform well" );
+		//return map.containsValue( val );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public V get(Object key) {
-		return map.get( new IdentityKey(key) );
+		return map.get( new IdentityKey( key ) );
 	}
 
 	@Override
 	public V put(K key, V value) {
-		dirty = true;
-		return map.put( new IdentityKey<K>(key), value );
+		this.entryArray = null;
+		return map.put( new IdentityKey<K>( key ), value );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public V remove(Object key) {
-		dirty = true;
-		return map.remove( new IdentityKey(key) );
+		this.entryArray = null;
+		return map.remove( new IdentityKey( key ) );
 	}
 
 	@Override
@@ -110,7 +116,6 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	@Override
 	public void clear() {
-		dirty = true;
 		entryArray = null;
 		map.clear();
 	}
@@ -118,6 +123,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	@Override
 	public Set<K> keySet() {
 		// would need an IdentitySet for this!
+		// (and we just don't use this method so it's ok)
 		throw new UnsupportedOperationException();
 	}
 
@@ -130,22 +136,21 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	public Set<Entry<K,V>> entrySet() {
 		Set<Entry<K,V>> set = new HashSet<Entry<K,V>>( map.size() );
 		for ( Entry<IdentityKey<K>, V> entry : map.entrySet() ) {
-			set.add( new IdentityMapEntry<K,V>( entry.getKey().getRealKey(), entry.getValue() ) );
+			set.add( new IdentityMapEntry<K,V>( entry.getKey().key, entry.getValue() ) );
 		}
 		return set;
 	}
 
 	@SuppressWarnings( {"unchecked"})
 	public Map.Entry[] entryArray() {
-		if (dirty) {
+		if ( entryArray == null ) {
 			entryArray = new Map.Entry[ map.size() ];
-			Iterator itr = map.entrySet().iterator();
-			int i=0;
+			final Iterator<Entry<IdentityKey<K>, V>> itr = map.entrySet().iterator();
+			int i = 0;
 			while ( itr.hasNext() ) {
-				Map.Entry me = (Map.Entry) itr.next();
-				entryArray[i++] = new IdentityMapEntry( ( (IdentityKey) me.getKey() ).key, me.getValue() );
+				final Entry<IdentityKey<K>, V> me = itr.next();
+				entryArray[i++] = new IdentityMapEntry( me.getKey().key, me.getValue() );
 			}
-			dirty = false;
 		}
 		return entryArray;
 	}
@@ -155,7 +160,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		return map.toString();
 	}
 
-	static final class KeyIterator<K> implements Iterator<K> {
+	private static final class KeyIterator<K> implements Iterator<K> {
 		private final Iterator<IdentityKey<K>> identityKeyIterator;
 
 		private KeyIterator(Iterator<IdentityKey<K>> iterator) {
@@ -167,7 +172,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		}
 
 		public K next() {
-			return identityKeyIterator.next().getRealKey();
+			return identityKeyIterator.next().key;
 		}
 
 		public void remove() {
@@ -175,9 +180,11 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		}
 
 	}
-		public static final class IdentityMapEntry<K,V> implements java.util.Map.Entry<K,V> {
+
+	private static final class IdentityMapEntry<K,V> implements java.util.Map.Entry<K,V> {
+
 		private final K key;
-		private V value;
+		private final V value;
 
 		IdentityMapEntry(final K key, final V value) {
 			this.key=key;
@@ -193,21 +200,16 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		}
 
 		public V setValue(final V value) {
-			V result = this.value;
-			this.value = value;
-			return result;
+			throw new UnsupportedOperationException();
 		}
 	}
 
 	/**
-	 * We need to base the identity on {@link System#identityHashCode(Object)} but
-	 * attempt to lazily initialize and cache this value: being a native invocation
-	 * it is an expensive value to retrieve.
+	 * We need to base the identity on {@link System#identityHashCode(Object)}
 	 */
-	public static final class IdentityKey<K> implements Serializable {
+	private static final class IdentityKey<K> implements Serializable {
 
 		private final K key;
-		private int hash;
 
 		IdentityKey(K key) {
 			this.key = key;
@@ -221,21 +223,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 		@Override
 		public int hashCode() {
-			if ( this.hash == 0 ) {
-				//We consider "zero" as non-initialized value
-				final int newHash = System.identityHashCode( key );
-				if ( newHash == 0 ) {
-					//So make sure we don't store zeros as it would trigger initialization again:
-					//any value is fine as long as we're deterministic.
-					this.hash = -1;
-					return -1;
-				}
-				else {
-					this.hash = newHash;
-					return newHash;
-				}
-			}
-			return hash;
+			return System.identityHashCode( key );
 		}
 
 		@Override
@@ -243,9 +231,6 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 			return key.toString();
 		}
 
-		public K getRealKey() {
-			return key;
-		}
 	}
 
 }

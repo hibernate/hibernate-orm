@@ -81,19 +81,19 @@ public class ValidityAuditStrategyRevEndTsTest extends EnversEntityManagerFactor
 					final Session session = entityManager.unwrap( Session.class );
 					session.createNativeQuery( "DROP TABLE children" ).executeUpdate();
 					session.createNativeQuery(
-							"CREATE TABLE children ( parent_id " + getDialect().getRawTypeName( Types.INTEGER ) +
-									", child1_id " + getDialect().getRawTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
-									", child2_id " + getDialect().getRawTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
+							"CREATE TABLE children ( parent_id " + getDialect().getTypeName( Types.INTEGER ) +
+									", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
+									", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 							).executeUpdate();
 					session.createNativeQuery( "DROP TABLE children_AUD" ).executeUpdate();
 					session.createNativeQuery(
-							"CREATE TABLE children_AUD ( REV " + getDialect().getRawTypeName( Types.INTEGER ) + " NOT NULL" +
-									", REVEND " + getDialect().getRawTypeName( Types.INTEGER ) +
-									", " + revendTimestampColumName + " " + getDialect().getRawTypeName( Types.TIMESTAMP ) +
-									", REVTYPE " + getDialect().getRawTypeName( Types.TINYINT ) +
-									", parent_id " + getDialect().getRawTypeName( Types.INTEGER ) +
-									", child1_id " + getDialect().getRawTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
-									", child2_id " + getDialect().getRawTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
+							"CREATE TABLE children_AUD ( REV " + getDialect().getTypeName( Types.INTEGER ) + " NOT NULL" +
+									", REVEND " + getDialect().getTypeName( Types.INTEGER ) +
+									", " + revendTimestampColumName + " " + getDialect().getTypeName( Types.TIMESTAMP ) +
+									", REVTYPE " + getDialect().getTypeName( Types.TINYINT ) +
+									", parent_id " + getDialect().getTypeName( Types.INTEGER ) +
+									", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
+									", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 							).executeUpdate();
 				}
 		);

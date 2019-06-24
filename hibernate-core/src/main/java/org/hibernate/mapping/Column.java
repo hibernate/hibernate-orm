@@ -62,6 +62,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private boolean isInsertable = true;
 	private boolean isUpdatable = true;
 
+	private BasicJavaDescriptor javaDescriptor;
+
 	public Column(Identifier tableName, String columnName, boolean isUnique) {
 		this( Identifier.toIdentifier( columnName ), isUnique );
 		this.tableName = tableName;
@@ -148,6 +150,15 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public boolean isUnique() {
 		return unique;
+	}
+
+	public BasicJavaDescriptor getJavaDescriptor() {
+		return javaDescriptor;
+	}
+
+	@Override
+	public void setJavaDescriptor(BasicJavaDescriptor javaDescriptor) {
+		this.javaDescriptor = javaDescriptor;
 	}
 
 	@Override
@@ -318,14 +329,14 @@ public class Column implements Selectable, Serializable, Cloneable {
 		column.setSize(	size );
 
 		String checkConstraint = getCheckConstraint();
-		if ( checkConstraint == null ) {
-			String checkCondition = getJavaTypeDescriptor().getCheckCondition(
-					jdbcEnvironment.getDialect(),
-					sqlTypeDescriptor.getJdbcTypeCode()
+		if ( checkConstraint == null
+				&& javaDescriptor != null
+				&& dialect.supportsColumnCheck() ) {
+			checkConstraint = javaDescriptor.getCheckCondition(
+					getQuotedName( dialect ),
+					getSqlTypeDescriptor(),
+					dialect
 			);
-			if ( checkCondition != null ) {
-				checkConstraint = getQuotedName() + checkCondition;
-			}
 		}
 		column.setCheckConstraint( checkConstraint );
 

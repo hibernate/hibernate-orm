@@ -24,7 +24,17 @@ public interface BasicJavaDescriptor<T> extends JavaTypeDescriptor<T> {
 		return null;
 	}
 
-	default String getCheckCondition(Dialect dialect, int jdbcTypeCode) {
+	/**
+	 * The check constraint that should be added to the column
+	 * definition in generated DDL.
+	 *
+	 * @param columnName the name of the column
+	 * @param sqlTypeDescriptor the {@link SqlTypeDescriptor}
+	 *                          for the mapped column
+	 * @param dialect the SQL {@link Dialect}
+	 * @return a check constraint condition or null
+	 */
+	default String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
 		return null;
 	}
 }

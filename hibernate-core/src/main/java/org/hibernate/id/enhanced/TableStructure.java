@@ -223,7 +223,7 @@ public class TableStructure implements DatabaseStructure {
 	@Override
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
-				dialect.getCreateTableString() + " " + tableNameText + " ( " + valueColumnNameText + " " + dialect.getRawTypeName( Types.BIGINT ) + " )",
+				dialect.getCreateTableString() + " " + tableNameText + " ( " + valueColumnNameText + " " + dialect.getTypeName( Types.BIGINT ) + " )",
 				"insert into " + tableNameText + " values ( " + initialValue + " )"
 		};
 	}

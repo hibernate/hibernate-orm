@@ -127,6 +127,7 @@ import org.hibernate.tool.schema.spi.Alterable;
 import org.hibernate.tool.schema.spi.DefaultSizeStrategy;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.internal.AnyTypeJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -774,6 +775,14 @@ public abstract class Dialect implements ConversionContext {
 		return getRawTypeName( sqlTypeDescriptor.getJdbcTypeCode() );
 	}
 
+	public String getTypeName(SqlTypeDescriptor sqlTypeDescriptor) throws HibernateException {
+		return getTypeName( sqlTypeDescriptor.getJdbcTypeCode() );
+	}
+
+	public String getTypeName(int code) throws HibernateException {
+		return getTypeName( code, null );
+	}
+
 	/**
 	 * Get the name of the database type associated with the given
 	 * <tt>java.sql.Types</tt> typecode.
@@ -786,21 +795,20 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getTypeName(int code, Size size) throws HibernateException {
 		if ( size == null ) {
-			return getRawTypeName( code );
+			size = Size.Builder.nil();
 		}
-		else {
-			String result = typeNames.get( code, size.getLength(), size.getPrecision(), size.getScale() );
-			if ( result == null ) {
-				throw new HibernateException(
-						String.format(
-								"No type mapping for java.sql.Types code: %s, length: %s",
-								code,
-								size.getLength()
-						)
-				);
-			}
-			return result;
+
+		String result = typeNames.get( code, size.getLength(), size.getPrecision(), size.getScale() );
+		if ( result == null ) {
+			throw new HibernateException(
+					String.format(
+							"No type mapping for java.sql.Types code: %s, length: %s",
+							code,
+							size.getLength()
+					)
+			);
 		}
+		return result;
 	}
 
 	/**
@@ -3280,24 +3288,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * A condition that should be used as the check constraint for a
-	 * generated column mapped to a boolean field or property, or
-	 * null if no constraint is required.
-	 * <p>
-	 * Usually {@code " in (0,1)"} for a boolean mapped to a numeric
-	 * column, where the leading space is required. For dialects with
-	 * a built-in {@link Types#BOOLEAN} or {@link Types#BIT} type,
-	 * it's not necessary to override this.
-	 *
-	 * @param jdbcTypeCode the JDBC {@link Types type code} representing the
-	 *                     type of the mapped column
-	 * @return the condition, as a string, with a leading space, or null
-	 */
-	public String getBooleanCheckCondition(int jdbcTypeCode) {
-		return null;
-	}
-
-	/**
 	 * Does this dialect/database support non-query statements (e.g. INSERT, UPDATE, DELETE) with CTE (Common Table Expressions)?
 	 *
 	 * @return {@code true} if non-query statements are supported with CTE
@@ -3483,6 +3473,18 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public long getFractionalSecondPrecisionInNanos() {
 		return 1; //default to nanoseconds for now
+	}
+
+	/**
+	 * Does this dialect have a true SQL {@link Types#BIT BIT} type
+	 * with just two values (0 and 1) or, even better, a proper SQL
+	 * {@link Types#BOOLEAN BOOLEAN} type, or does {@link Types#BIT}
+	 * get mapped to a numeric type with more than two values?
+	 *
+	 * @return true if there is a {@code BIT} or {@code BOOLEAN} type
+	 */
+	public boolean supportsBitType() {
+		return true;
 	}
 
 	public class DefaultSizeStrategyImpl implements DefaultSizeStrategy {

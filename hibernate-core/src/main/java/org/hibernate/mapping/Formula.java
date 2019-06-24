@@ -127,6 +127,9 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
+	public void setJavaDescriptor(BasicJavaDescriptor javaDescriptor) {}
+
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;

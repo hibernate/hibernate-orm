@@ -27,11 +27,11 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConverter<E,Integer>, Serializable {
+public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConverter<E,Byte>, Serializable {
 	private static final Logger log = Logger.getLogger( OrdinalEnumValueConverter.class );
 
 	private final EnumJavaDescriptor<E> enumJavaDescriptor;
-	private final BasicJavaDescriptor<Integer> relationalJavaDescriptor;
+	private final BasicJavaDescriptor<Byte> relationalJavaDescriptor;
 
 	public OrdinalEnumValueConverter(
 			EnumJavaDescriptor<E> enumJavaDescriptor,
@@ -40,7 +40,7 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 				enumJavaDescriptor,
 				creationContext.getTypeConfiguration()
 						.getSqlTypeDescriptorRegistry()
-						.getDescriptor( Types.INTEGER )
+						.getDescriptor( Types.TINYINT )
 						.getJdbcRecommendedJavaTypeMapping( creationContext.getTypeConfiguration() )
 		);
 	}
@@ -49,31 +49,31 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 		this(
 				enumJavaDescriptor,
 				typeConfiguration.getSqlTypeDescriptorRegistry()
-						.getDescriptor( Types.INTEGER )
+						.getDescriptor( Types.TINYINT )
 						.getJdbcRecommendedJavaTypeMapping( typeConfiguration )
 		);
 	}
 
 	public OrdinalEnumValueConverter(
 			EnumJavaDescriptor<E> enumJavaDescriptor,
-			BasicJavaDescriptor<Integer> relationalJavaDescriptor) {
+			BasicJavaDescriptor<Byte> relationalJavaDescriptor) {
 		this.enumJavaDescriptor = enumJavaDescriptor;
 		this.relationalJavaDescriptor = relationalJavaDescriptor;
 	}
 
 	@Override
-	public E toDomainValue(Integer relationalForm, SharedSessionContractImplementor session) {
+	public E toDomainValue(Byte relationalForm, SharedSessionContractImplementor session) {
 		return enumJavaDescriptor.fromOrdinal( relationalForm );
 	}
 
 	@Override
-	public Integer toRelationalValue(E domainForm, SharedSessionContractImplementor session) {
+	public Byte toRelationalValue(E domainForm, SharedSessionContractImplementor session) {
 		return enumJavaDescriptor.toOrdinal( domainForm );
 	}
 
 	@Override
 	public int getJdbcTypeCode() {
-		return Types.INTEGER;
+		return Types.TINYINT;
 	}
 
 	@Override
@@ -82,7 +82,7 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 	}
 
 	@Override
-	public BasicJavaDescriptor<Integer> getRelationalJavaDescriptor() {
+	public BasicJavaDescriptor<Byte> getRelationalJavaDescriptor() {
 		return relationalJavaDescriptor;
 	}
 
@@ -91,7 +91,7 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 			ResultSet resultSet,
 			String name,
 			SharedSessionContractImplementor session) throws SQLException {
-		final int ordinal = resultSet.getInt( name );
+		final byte ordinal = resultSet.getByte( name );
 		final boolean traceEnabled = log.isTraceEnabled();
 		if ( resultSet.wasNull() ) {
 			if ( traceEnabled ) {
@@ -114,7 +114,7 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 			E value,
 			int position,
 			SharedSessionContractImplementor session) throws SQLException {
-		final Integer jdbcValue = value == null ? null : toRelationalValue( value, session );
+		final Byte jdbcValue = value == null ? null : toRelationalValue( value, session );
 
 		final boolean traceEnabled = log.isTraceEnabled();
 		if ( jdbcValue == null ) {
@@ -129,7 +129,7 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 			log.tracef( "Binding [%s] to parameter: [%s]", jdbcValue.intValue(), position );
 		}
 
-		statement.setInt( position, jdbcValue );
+		statement.setByte( position, jdbcValue );
 	}
 
 	@Override

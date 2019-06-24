@@ -10,11 +10,11 @@ package org.hibernate.type.descriptor.java.spi;
  * @author Steve Ebersole
  */
 public interface EnumJavaDescriptor<E extends Enum> extends BasicJavaDescriptor<E> {
-	Integer toOrdinal(E domainForm);
+	Byte toOrdinal(E domainForm);
 
 	String toName(E domainForm);
 
-	E fromOrdinal(Integer relationalForm);
+	E fromOrdinal(Byte relationalForm);
 
 	E fromName(String relationalForm);
 }

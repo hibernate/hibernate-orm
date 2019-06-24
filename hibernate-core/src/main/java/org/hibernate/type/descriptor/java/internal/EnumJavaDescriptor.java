@@ -9,11 +9,14 @@ package org.hibernate.type.descriptor.java.internal;
 import java.sql.Types;
 import javax.persistence.EnumType;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 
 /**
  * Describes a Java Enum type.
@@ -36,7 +39,7 @@ public class EnumJavaDescriptor<E extends Enum> extends AbstractBasicJavaDescrip
 					: context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
 		}
 		else {
-			return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER );
+			return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TINYINT );
 		}
 	}
 
@@ -54,7 +57,7 @@ public class EnumJavaDescriptor<E extends Enum> extends AbstractBasicJavaDescrip
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X> X unwrap(E value, Class<X> type, SharedSessionContractImplementor session) {
-		if ( Integer.class.isAssignableFrom(type) ) {
+		if ( Byte.class.isAssignableFrom(type) ) {
 			return (X) toOrdinal( value );
 		}
 		return (X) value;
@@ -63,27 +66,27 @@ public class EnumJavaDescriptor<E extends Enum> extends AbstractBasicJavaDescrip
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X> E wrap(X value, SharedSessionContractImplementor session) {
-		if ( Integer.class.isInstance( value ) ) {
-			return (E) fromOrdinal( (Integer) value );
+		if ( Byte.class.isInstance( value ) ) {
+			return fromOrdinal( (Byte) value );
 		}
 		return (E) value;
 	}
 
 	@Override
-	public Integer toOrdinal(E domainForm) {
+	public Byte toOrdinal(E domainForm) {
 		if ( domainForm == null ) {
 			return null;
 		}
-		return domainForm.ordinal();
+		return (byte) domainForm.ordinal();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public E fromOrdinal(Integer relationalForm) {
+	public E fromOrdinal(Byte relationalForm) {
 		if ( relationalForm == null ) {
 			return null;
 		}
-		return (E) getJavaType().getEnumConstants()[ relationalForm ];
+		return getJavaType().getEnumConstants()[ relationalForm ];
 	}
 
 	@Override
@@ -101,6 +104,25 @@ public class EnumJavaDescriptor<E extends Enum> extends AbstractBasicJavaDescrip
 			return null;
 		}
 		return domainForm.name();
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
+		if (sqlTypeDescriptor instanceof TinyIntSqlDescriptor) {
+			int last = getJavaType().getEnumConstants().length - 1;
+			return columnName + " between 0 and " + last;
+		}
+		else if (sqlTypeDescriptor instanceof VarcharSqlDescriptor) {
+			StringBuilder types = new StringBuilder();
+			for ( Enum value : getJavaType().getEnumConstants() ) {
+				if (types.length() != 0) {
+					types.append(", ");
+				}
+				types.append("'").append( value.name() ).append("'");
+			}
+			return columnName + " in (" + types + ")";
+		}
+		return null;
 	}
 
 	@Override

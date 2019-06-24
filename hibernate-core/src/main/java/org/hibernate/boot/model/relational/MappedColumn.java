@@ -15,6 +15,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -52,4 +53,6 @@ public interface MappedColumn {
 	boolean isInsertable();
 
 	boolean isUpdatable();
+
+	void setJavaDescriptor(BasicJavaDescriptor javaDescriptor);
 }

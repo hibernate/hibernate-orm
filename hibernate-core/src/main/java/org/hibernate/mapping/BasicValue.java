@@ -245,9 +245,16 @@ public class BasicValue
 
 		column.setSqlTypeDescriptorAccess( resolution::getRelationalSqlTypeDescriptor );
 
+		if ( javaTypeDescriptor != null
+				//TODO: pass in resolution.getValueConverter()
+				//and use it to determine the range of values!
+				&& attributeConverterDescriptor == null ) {
+
+			column.setJavaDescriptor( javaTypeDescriptor );
+		}
+
 		return true;
 	}
-
 
 	@SuppressWarnings("unchecked")
 	private static Resolution interpretExplicitlyNamedType(
@@ -472,7 +479,7 @@ public class BasicValue
 					case ORDINAL: {
 						resolution.setRelationalJtd(
 								(BasicJavaDescriptor<?>) typeConfiguration.getJavaTypeDescriptorRegistry()
-										.getDescriptor( Integer.class )
+										.getDescriptor( Byte.class )
 						);
 						resolution.setValueConverter(
 								new OrdinalEnumValueConverter( enumJavaDescriptor, typeConfiguration )

@@ -380,7 +380,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 				dialect.getCreateTableString()
 						+ ' ' + tableName + " ( "
 						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, Size.Builder.length(keySize) ) + ",  "
-						+ valueColumnName + ' ' + dialect.getRawTypeName( Types.INTEGER )
+						+ valueColumnName + ' ' + dialect.getTypeName( Types.INTEGER )
 						+ " )" + dialect.getTableTypeString()
 		};
 	}

@@ -274,20 +274,20 @@ public class BasicSametableTest extends EnversEntityManagerFactoryBasedFunctiona
 					session.createNativeQuery( "DROP TABLE children" ).executeUpdate();
 
 					session.createNativeQuery(
-							"CREATE TABLE children ( parent_id " + getDialect().getRawTypeName( Types.INTEGER ) +
-									", child1_id " + getDialect().getRawTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
-									", child2_id " + getDialect().getRawTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
+							"CREATE TABLE children ( parent_id " + getDialect().getTypeName( Types.INTEGER ) +
+									", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
+									", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 					).executeUpdate();
 
 					session.createNativeQuery( "DROP TABLE children_AUD" ).executeUpdate();
 
 					session.createNativeQuery(
-							"CREATE TABLE children_AUD ( REV " + getDialect().getRawTypeName( Types.INTEGER ) + " NOT NULL" +
-									", REVEND " + getDialect().getRawTypeName( Types.INTEGER ) +
-									", REVTYPE " + getDialect().getRawTypeName( Types.TINYINT ) +
-									", parent_id " + getDialect().getRawTypeName( Types.INTEGER ) +
-									", child1_id " + getDialect().getRawTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
-									", child2_id " + getDialect().getRawTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
+							"CREATE TABLE children_AUD ( REV " + getDialect().getTypeName( Types.INTEGER ) + " NOT NULL" +
+									", REVEND " + getDialect().getTypeName( Types.INTEGER ) +
+									", REVTYPE " + getDialect().getTypeName( Types.TINYINT ) +
+									", parent_id " + getDialect().getTypeName( Types.INTEGER ) +
+									", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
+									", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 					).executeUpdate();
 				}
 		);

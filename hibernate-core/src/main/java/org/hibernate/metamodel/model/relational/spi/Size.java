@@ -88,6 +88,14 @@ public class Size implements Serializable {
 		public static final int DEFAULT_PRECISION = 19;
 		public static final int DEFAULT_SCALE = 2;
 
+		public static Size nil() {
+			return new Size(
+					DEFAULT_PRECISION,
+					DEFAULT_SCALE,
+					DEFAULT_LENGTH,
+					LobMultiplier.NONE
+			);
+		}
 
 		public static Size length(long length) {
 			return new Size( null, null, length, null );

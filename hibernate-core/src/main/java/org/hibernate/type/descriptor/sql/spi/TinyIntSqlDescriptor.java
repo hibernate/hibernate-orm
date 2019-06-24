@@ -48,13 +48,13 @@ public class TinyIntSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 
 	@Override
 	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Short.class );
+		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Byte.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Short.class );
+		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Byte.class );
 	}
 
 	@Override

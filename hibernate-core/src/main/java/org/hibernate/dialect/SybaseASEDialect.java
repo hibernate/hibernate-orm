@@ -71,23 +71,22 @@ public class SybaseASEDialect extends SybaseDialect {
 		registerSybaseKeywords();
 	}
 
+	/**
+	 * The Sybase ASE {@code BIT} type does not allow
+	 * null values, so we don't use it.
+	 *
+	 * @return false
+	 */
+	@Override
+	public boolean supportsBitType() {
+		return false;
+	}
+
 	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		return sqlCode == Types.BOOLEAN
 				? TinyIntSqlDescriptor.INSTANCE
 				: super.getSqlTypeDescriptorOverride(sqlCode);
-	}
-
-	@Override
-	public String getBooleanCheckCondition(int sqlCode) {
-		switch (sqlCode) {
-			case Types.BOOLEAN:
-			case Types.BIT:
-			case Types.TINYINT:
-				return " in (0,1)";
-			default:
-				return super.getBooleanCheckCondition(sqlCode);
-		}
 	}
 
 	@Override

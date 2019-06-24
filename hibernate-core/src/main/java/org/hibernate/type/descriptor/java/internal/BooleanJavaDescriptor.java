@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -41,23 +42,23 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 		return Boolean.valueOf( string );
 	}
 
-	public int toInt(Boolean value) {
+	private int toInt(Boolean value) {
 		return value ? 1 : 0;
 	}
 
-	public Byte toByte(Boolean value) {
+	private Byte toByte(Boolean value) {
 		return (byte) toInt( value );
 	}
 
-	public Short toShort(Boolean value) {
+	private Short toShort(Boolean value) {
 		return (short) toInt( value );
 	}
 
-	public Integer toInteger(Boolean value) {
+	private Integer toInteger(Boolean value) {
 		return toInt( value );
 	}
 
-	public Long toLong(Boolean value) {
+	private Long toLong(Boolean value) {
 		return (long) toInt( value );
 	}
 
@@ -151,11 +152,9 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 	}
 
 	@Override
-	public String getCheckCondition(Dialect dialect, int jdbcTypeCode) {
-		//this implementation is not really entirely correct,
-		//since we don't know about any type converters that
-		//might be using some other mapping than f=0, t=1 to
-		//transform the boolean to a numeric value
-		return dialect.getBooleanCheckCondition( jdbcTypeCode );
+	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
+		return sqlTypeDescriptor instanceof BitSqlDescriptor && !dialect.supportsBitType()
+				? columnName + " in (0,1)"
+				: null;
 	}
 }

@@ -813,6 +813,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Lob
 		@Basic(fetch = FetchType.LAZY)
 		@LazyGroup("blob")
+		@Column(name = "blob_field")
 		private Blob blob;
 
 		public String getD() {

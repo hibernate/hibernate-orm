@@ -65,8 +65,7 @@ public final class TypeNames {
 	 * @throws MappingException Indicates that no registrations were made for that typeCode
 	 */
 	public String get(final int typeCode) throws MappingException {
-		final Integer integer = Integer.valueOf( typeCode );
-		final String result = defaults.get( integer );
+		final String result = defaults.get( typeCode );
 		if ( result == null ) {
 			throw new MappingException( "No Dialect mapping for JDBC type: " + typeCode );
 		}
@@ -86,8 +85,7 @@ public final class TypeNames {
 	 * @throws MappingException Indicates that no registrations were made for that typeCode
 	 */
 	public String get(int typeCode, Long size, Integer precision, Integer scale) throws MappingException {
-		final Integer integer = Integer.valueOf( typeCode );
-		final Map<Long, String> map = weighted.get( integer );
+		final Map<Long, String> map = weighted.get( typeCode );
 		if ( map != null && map.size() > 0 ) {
 			// iterate entries ordered by capacity to find first fit
 			for ( Map.Entry<Long, String> entry: map.entrySet() ) {
@@ -124,14 +122,8 @@ public final class TypeNames {
 	 * @param value The mapping (type name)
 	 */
 	public void put(int typeCode, long capacity, String value) {
-		final Integer integer = Integer.valueOf( typeCode );
-		Map<Long, String> map = weighted.get( integer );
-		if ( map == null ) {
-			// add new ordered map
-			map = new TreeMap<Long, String>();
-			weighted.put( integer, map );
-		}
-		map.put( capacity, value );
+		weighted.computeIfAbsent( typeCode, k -> new TreeMap<>() )
+				.put( capacity, value );
 	}
 
 	/**
@@ -141,8 +133,7 @@ public final class TypeNames {
 	 * @param value The mapping (type name)
 	 */
 	public void put(int typeCode, String value) {
-		final Integer integer = Integer.valueOf( typeCode );
-		defaults.put( integer, value );
+		defaults.put( typeCode, value );
 	}
 
 	/**

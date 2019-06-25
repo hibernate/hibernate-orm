@@ -39,46 +39,60 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@RunWith(BytecodeEnhancerRunner.class)
 public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testDynamicFetchScroll() {
+		ScrollableResults scrollableResults = null;
 		final StatelessSession statelessSession = sessionFactory().openStatelessSession();
-
-		final Query query = statelessSession.createQuery( "from Task t join fetch t.resource join fetch t.user");
-		final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY);
-		while ( scrollableResults.next() ) {
-			Task taskRef = (Task) scrollableResults.get( 0 );
-			assertTrue( Hibernate.isInitialized( taskRef ) );
-			assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
-			assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
-			assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+		try {
+			final Query query = statelessSession.createQuery( "from Task t join fetch t.resource join fetch t.user" );
+			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
+			while ( scrollableResults.next() ) {
+				Task taskRef = (Task) scrollableResults.get( 0 );
+				assertTrue( Hibernate.isInitialized( taskRef ) );
+				assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
+				assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
+				assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+			}
+		}
+		finally {
+			if ( scrollableResults != null ) {
+				scrollableResults.close();
+			}
+			statelessSession.close();
 		}
 	}
 
 	@Test
 	public void testDynamicFetchCollectionScroll() {
+		ScrollableResults scrollableResults = null;
 		StatelessSession statelessSession = sessionFactory().openStatelessSession();
 		statelessSession.beginTransaction();
 
-		final Query query = statelessSession.createQuery( "select p from Producer p join fetch p.products" );
-		final ScrollableResults scrollableResults = query.scroll(ScrollMode.FORWARD_ONLY);
-		while ( scrollableResults.next() ) {
-			Producer producer = (Producer) scrollableResults.get( 0 );
-			assertTrue( Hibernate.isInitialized( producer ) );
-			assertTrue( Hibernate.isPropertyInitialized( producer, "products" ) );
-			assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
+		try {
+			final Query query = statelessSession.createQuery( "select p from Producer p join fetch p.products" );
+			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
+			while ( scrollableResults.next() ) {
+				Producer producer = (Producer) scrollableResults.get( 0 );
+				assertTrue( Hibernate.isInitialized( producer ) );
+				assertTrue( Hibernate.isPropertyInitialized( producer, "products" ) );
+				assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
 
-			for (Product product : producer.getProducts()) {
-				assertTrue( Hibernate.isInitialized( product ) );
-				assertFalse( Hibernate.isInitialized( product.getVendor() ) );
+				for ( Product product : producer.getProducts() ) {
+					assertTrue( Hibernate.isInitialized( product ) );
+					assertFalse( Hibernate.isInitialized( product.getVendor() ) );
+				}
 			}
 		}
-
-		statelessSession.getTransaction().commit();
-		statelessSession.close();
-
+		finally {
+			if ( scrollableResults != null ) {
+				scrollableResults.close();
+			}
+			statelessSession.getTransaction().commit();
+			statelessSession.close();
+		}
 	}
 
 
@@ -123,9 +137,9 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 					session.save( v1 );
 					session.save( v2 );
 
-					final Product product1 = new Product(1, "123", v1, p1);
-					final Product product2 = new Product(2, "456", v1, p1);
-					final Product product3 = new Product(3, "789", v1, p2);
+					final Product product1 = new Product( 1, "123", v1, p1 );
+					final Product product2 = new Product( 2, "456", v1, p1 );
+					final Product product3 = new Product( 3, "789", v1, p2 );
 
 					session.save( product1 );
 					session.save( product2 );
@@ -170,14 +184,14 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Collection fetch scrolling
 
-	@Entity( name = "Producer" )
+	@Entity(name = "Producer")
 	public static class Producer {
 		@Id
 		private Integer id;
 
 		private String name;
 
-		@OneToMany( mappedBy = "producer", fetch = FetchType.LAZY )
+		@OneToMany(mappedBy = "producer", fetch = FetchType.LAZY)
 		private Set<Product> products = new HashSet<>();
 
 		public Producer() {
@@ -213,16 +227,16 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 		}
 	}
 
-	@Entity( name = "Product" )
+	@Entity(name = "Product")
 	public static class Product {
 		@Id
 		private Integer id;
 		private String sku;
 
-		@ManyToOne( fetch = FetchType.LAZY )
+		@ManyToOne(fetch = FetchType.LAZY)
 		private Vendor vendor;
 
-		@ManyToOne( fetch = FetchType.LAZY )
+		@ManyToOne(fetch = FetchType.LAZY)
 		private Producer producer;
 
 		public Product() {
@@ -268,13 +282,13 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 		}
 	}
 
-	@Entity( name = "Vendor" )
+	@Entity(name = "Vendor")
 	public static class Vendor {
 		@Id
 		private Integer id;
 		private String name;
 
-		@OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY )
+		@OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY)
 		private Set<Product> products = new HashSet<>();
 
 		public Vendor() {
@@ -314,14 +328,14 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity fetch scrolling
 
-	@Entity( name = "Resource" )
+	@Entity(name = "Resource")
 	@Table(name = "resources")
 	public static class Resource {
 		@Id
-		@GeneratedValue( generator = "increment" )
+		@GeneratedValue(generator = "increment")
 		private Long id;
 		private String name;
-		@ManyToOne( fetch = FetchType.LAZY )
+		@ManyToOne(fetch = FetchType.LAZY)
 		private User owner;
 
 		public Resource() {
@@ -357,11 +371,11 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 		}
 	}
 
-	@Entity( name = "User" )
+	@Entity(name = "User")
 	@Table(name = "users")
 	public static class User {
 		@Id
-		@GeneratedValue( generator = "increment" )
+		@GeneratedValue(generator = "increment")
 		private Long id;
 		private String name;
 
@@ -389,15 +403,15 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 		}
 	}
 
-	@Entity( name = "Task" )
+	@Entity(name = "Task")
 	public static class Task {
 		@Id
-		@GeneratedValue( generator = "increment" )
+		@GeneratedValue(generator = "increment")
 		private Long id;
 		private String description;
-		@ManyToOne( fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY)
 		private User user;
-		@ManyToOne( fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY)
 		private Resource resource;
 		private Date dueDate;
 		private Date startDate;
@@ -410,7 +424,13 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 			this( user, description, resource, dueDate, null, null );
 		}
 
-		public Task(User user, String description, Resource resource, Date dueDate, Date startDate, Date completionDate) {
+		public Task(
+				User user,
+				String description,
+				Resource resource,
+				Date dueDate,
+				Date startDate,
+				Date completionDate) {
 			this.user = user;
 			this.resource = resource;
 			this.description = description;

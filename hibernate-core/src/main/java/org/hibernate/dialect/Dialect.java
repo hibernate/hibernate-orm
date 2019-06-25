@@ -779,7 +779,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public String getTypeName(int code) throws HibernateException {
-		return getTypeName( code, null );
+		return getTypeName( code, Size.Builder.nil() );
 	}
 
 	/**
@@ -793,10 +793,6 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 */
 	public String getTypeName(int code, Size size) throws HibernateException {
-		if ( size == null ) {
-			size = Size.Builder.nil();
-		}
-
 		String result = typeNames.get( code, size.getLength(), size.getPrecision(), size.getScale() );
 		if ( result == null ) {
 			throw new HibernateException(
@@ -3389,6 +3385,10 @@ public abstract class Dialect implements ConversionContext {
 		this.defaultSizeStrategy = defaultSizeStrategy;
 	}
 
+	public long getDefaultLobLength() {
+		return Size.Builder.DEFAULT_LOB_LENGTH;
+	}
+
 	/**
 	 * This is the default precision for a generated
 	 * column mapped to a {@link java.math.BigInteger}
@@ -3497,34 +3497,38 @@ public abstract class Dialect implements ConversionContext {
 			final Size.Builder builder = new Size.Builder();
 			int jdbcTypeCode = sqlType.getJdbcTypeCode();
 
-			if ( jdbcTypeCode == Types.BIT
-					|| jdbcTypeCode == Types.CHAR
-					|| jdbcTypeCode == Types.NCHAR
-					|| jdbcTypeCode == Types.BINARY
-					|| jdbcTypeCode == Types.VARCHAR
-					|| jdbcTypeCode == Types.NVARCHAR
-					|| jdbcTypeCode == Types.VARBINARY
-					|| jdbcTypeCode == Types.LONGVARCHAR
-					|| jdbcTypeCode == Types.LONGNVARCHAR
-					|| jdbcTypeCode == Types.LONGVARBINARY ) {
-				builder.setLength( javaType.getDefaultSqlLength(Dialect.this) );
-				return builder.build();
+			switch (jdbcTypeCode) {
+				case Types.BIT:
+				case Types.CHAR:
+				case Types.NCHAR:
+				case Types.BINARY:
+				case Types.VARCHAR:
+				case Types.NVARCHAR:
+				case Types.VARBINARY:
+				case Types.LONGVARCHAR:
+				case Types.LONGNVARCHAR:
+				case Types.LONGVARBINARY:
+					builder.setLength( javaType.getDefaultSqlLength(Dialect.this) );
+					break;
+				case Types.FLOAT:
+				case Types.DOUBLE:
+				case Types.REAL:
+				case Types.TIMESTAMP:
+				case Types.TIMESTAMP_WITH_TIMEZONE:
+					builder.setPrecision( javaType.getDefaultSqlPrecision(Dialect.this) );
+					break;
+				case Types.NUMERIC:
+				case Types.DECIMAL:
+					builder.setPrecision( javaType.getDefaultSqlPrecision(Dialect.this) );
+					builder.setScale( javaType.getDefaultSqlScale() );
+					break;
+				case Types.CLOB:
+				case Types.BLOB:
+					builder.setLength( javaType.getDefaultSqlLength(Dialect.this) );
+					break;
+
 			}
-			else if ( jdbcTypeCode == Types.FLOAT
-					|| jdbcTypeCode == Types.DOUBLE
-					|| jdbcTypeCode == Types.REAL
-					|| jdbcTypeCode == Types.TIMESTAMP
-					|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE ) {
-				builder.setPrecision( javaType.getDefaultSqlPrecision(Dialect.this) );
-				return builder.build();
-			}
-			else if ( jdbcTypeCode == Types.NUMERIC
-					|| jdbcTypeCode == Types.DECIMAL ) {
-				builder.setPrecision( javaType.getDefaultSqlPrecision(Dialect.this) );
-				builder.setScale( javaType.getDefaultSqlScale() );
-				return builder.build();
-			}
-			return null;
+			return builder.build();
 		}
 	}
 

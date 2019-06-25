@@ -85,16 +85,12 @@ public class Size implements Serializable {
 		//		if they wish - probably a named `DefaultSizeStrategy` instance
 
 		public static final long DEFAULT_LENGTH = 255;
+		public static final long DEFAULT_LOB_LENGTH = 1048576;
 		public static final int DEFAULT_PRECISION = 19;
 		public static final int DEFAULT_SCALE = 2;
 
 		public static Size nil() {
-			return new Size(
-					DEFAULT_PRECISION,
-					DEFAULT_SCALE,
-					DEFAULT_LENGTH,
-					LobMultiplier.NONE
-			);
+			return new Size( null, null, null, null );
 		}
 
 		public static Size length(long length) {

@@ -21,13 +21,10 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  */
 public interface DefaultSizeStrategy {
 	/**
-	 * Resolve the default Size to use for columns of type `sqlType`.
+	 * Resolve the default {@link Size} to use for columns of the given
+	 * {@link SqlTypeDescriptor SQL type} and {@link JavaTypeDescriptor Java type}.
 	 *
-	 * The corresponding `javaType` is passed to allow customization
-	 * when mapping to attributes of that `javaType`.
-	 *
-	 * `null` is a valid return value indicating that no Size should
-	 * be applied.
+	 * @return a non-null {@link Size}
 	 */
 	Size resolveDefaultSize(SqlTypeDescriptor sqlType, JavaTypeDescriptor javaType);
 }

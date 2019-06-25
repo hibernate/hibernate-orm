@@ -69,10 +69,8 @@ public class ExtractFunction
 		TemporalUnit unit = field.getUnit();
 		switch ( unit ) {
 			case NANOSECOND:
-				return extractNanoseconds( expression, 1_000_000_000, queryEngine, typeConfiguration );
+				return extractNanoseconds( expression, queryEngine, typeConfiguration );
 			case NATIVE:
-//				long factor = 1_000_000_000 / dialect.getFractionalSecondPrecisionInNanos();
-//				return extractNanoseconds( expression, factor, queryEngine, typeConfiguration );
 				throw new SemanticException("can't extract() the field TemporalUnit.NATIVE");
 			case OFFSET:
 				// use format(arg, 'xxx') to get the offset
@@ -198,7 +196,6 @@ public class ExtractFunction
 
 	private SelfRenderingSqmFunction<Long> extractNanoseconds(
 			SqmExpression<?> expressionToExtract,
-			long factor,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		NodeBuilder builder = expressionToExtract.nodeBuilder();
@@ -206,7 +203,7 @@ public class ExtractFunction
 		BasicValuedExpressableType<Float> floatType = typeConfiguration.standardExpressableTypeForJavaType(Float.class);
 
 		SqmExtractUnit<Float> extractSeconds = new SqmExtractUnit<>( SECOND, floatType, builder );
-		SqmLiteral<Float> billion = new SqmLiteral<>( (float) factor, floatType, builder );
+		SqmLiteral<Float> billion = new SqmLiteral<>( 1e9f, floatType, builder );
 		return toLong(
 				new SqmBinaryArithmetic<>(
 						MULTIPLY,

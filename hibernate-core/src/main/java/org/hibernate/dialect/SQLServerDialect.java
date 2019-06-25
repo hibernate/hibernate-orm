@@ -29,6 +29,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static java.util.regex.Pattern.compile;
@@ -99,6 +101,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerKeyword( "key" );
 
 		getDefaultProperties().setProperty( Environment.QUERY_LITERAL_RENDERING, "literal" );
+	}
+
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		return sqlCode == Types.TINYINT
+				? SmallIntSqlDescriptor.INSTANCE
+				: super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 
 	@Override

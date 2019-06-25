@@ -74,20 +74,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		switch (sqlCode) {
-			case Types.BOOLEAN:
-				return BitSqlDescriptor.INSTANCE;
-			case Types.BIT:
-				return SmallIntSqlDescriptor.INSTANCE;
-			case Types.TINYINT:
-				return SmallIntSqlDescriptor.INSTANCE;
-			default:
-				return super.getSqlTypeDescriptorOverride( sqlCode );
-		}
-	}
-
-	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

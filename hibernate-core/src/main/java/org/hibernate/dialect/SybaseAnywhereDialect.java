@@ -13,6 +13,8 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * SQL Dialect for Sybase Anywhere
@@ -28,6 +30,13 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
+	}
+
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		return sqlCode == Types.BOOLEAN
+				? BitSqlDescriptor.INSTANCE
+				: super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 
 	@Override

@@ -86,7 +86,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		return sqlCode == Types.BOOLEAN
 				? TinyIntSqlDescriptor.INSTANCE
-				: super.getSqlTypeDescriptorOverride(sqlCode);
+				: super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 
 	@Override

@@ -71,12 +71,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			registerColumnType( Types.TIME, "time" );
 			registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetimeoffset($p)" );
-
-			registerColumnType( Types.NVARCHAR, 4000, "nvarchar($l)" );
-			registerColumnType( Types.NVARCHAR, "nvarchar(MAX)" );
 		}
 
 		registerColumnType( Types.VARCHAR, 8000, "varchar($l)" );
+		registerColumnType( Types.NVARCHAR, 4000, "nvarchar($l)" );
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
 
 		if ( getVersion() < 9 ) {
@@ -84,23 +82,40 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			registerColumnType( Types.VARCHAR, "text" );
 		}
 		else {
-			// HHH-3965 fix
-			// As per http://www.sql-server-helper.com/faq/sql-server-2005-varchar-max-p01.aspx
-			// use varchar(max) and varbinary(max) instead of TEXT and IMAGE types
-			registerColumnType( Types.BLOB, "varbinary(MAX)" );
-			registerColumnType( Types.VARBINARY, "varbinary(MAX)" );
-			registerColumnType( Types.LONGVARBINARY, "varbinary(MAX)" );
 
-			registerColumnType( Types.CLOB, "varchar(MAX)" );
-			registerColumnType( Types.NCLOB, "nvarchar(MAX)" ); // HHH-8435 fix
-			registerColumnType( Types.VARCHAR, "varchar(MAX)" );
-			registerColumnType( Types.LONGVARCHAR, "varchar(MAX)" );
+			// Use 'varchar(max)' and 'varbinary(max)' instead
+			// the deprecated TEXT and IMAGE types. Note that
+			// the length of a VARCHAR or VARBINARY column must
+			// be either between 1 and 8000 or exactly MAX, and
+			// the length of an NVARCHAR column must be either
+			// between 1 and 4000 or exactly MAX.
+
+			// See http://www.sql-server-helper.com/faq/sql-server-2005-varchar-max-p01.aspx
+			// See HHH-3965
+
+			registerColumnType( Types.BLOB, "varbinary(max)" );
+			registerColumnType( Types.VARBINARY, "varbinary(max)" );
+			registerColumnType( Types.LONGVARBINARY, "varbinary(max)" );
+
+			registerColumnType( Types.CLOB, "varchar(max)" );
+			registerColumnType( Types.NCLOB, "nvarchar(max)" ); // HHH-8435 fix
+			registerColumnType( Types.VARCHAR, "varchar(max)" );
+			registerColumnType( Types.NVARCHAR, "nvarchar(max)" );
+			registerColumnType( Types.LONGVARCHAR, "varchar(max)" );
 		}
 
 		registerKeyword( "top" );
 		registerKeyword( "key" );
 
 		getDefaultProperties().setProperty( Environment.QUERY_LITERAL_RENDERING, "literal" );
+	}
+
+	@Override
+	public long getDefaultLobLength() {
+		// this is essentially the only legal length for
+		// a "lob" in SQL Server, i.e. the value of MAX
+		// (caveat: for NVARCHAR it is half this value)
+		return 2_147_483_647;
 	}
 
 	@Override

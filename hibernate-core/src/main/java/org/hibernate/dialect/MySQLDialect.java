@@ -93,20 +93,6 @@ public class MySQLDialect extends Dialect {
 
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" ); //it's just a synonym
 
-		int maxVarcharLen = getVersion() < 500 ? 255 : 65535;
-
-		registerColumnType( Types.VARCHAR, "longtext" );
-//		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
-//		registerColumnType( Types.VARCHAR, maxVarcharLen, "text" );
-		registerColumnType( Types.VARCHAR, maxVarcharLen, "varchar($l)" );
-		registerColumnType( Types.LONGVARCHAR, "longtext" );
-
-		registerColumnType( Types.VARBINARY, "longblob" );
-//		registerColumnType( Types.VARBINARY, 16777215, "mediumblob" );
-//		registerColumnType( Types.VARBINARY, maxVarcharLen, "blob" );
-		registerColumnType( Types.VARBINARY, maxVarcharLen, "varbinary($l)" );
-		registerColumnType( Types.LONGVARBINARY, "longblob" );
-
 		if ( getVersion() < 570) {
 			registerColumnType( Types.TIMESTAMP, "datetime" );
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
@@ -118,13 +104,45 @@ public class MySQLDialect extends Dialect {
 			registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
 		}
 
-		registerColumnType( Types.BLOB, "longblob" );
-//		registerColumnType( Types.BLOB, 16777215, "mediumblob" );
-//		registerColumnType( Types.BLOB, maxVarcharLen, "blob" );
-		registerColumnType( Types.CLOB, "longtext" );
-//		registerColumnType( Types.CLOB, 16777215, "mediumtext" );
-//		registerColumnType( Types.CLOB, maxVarcharLen, "text" );
-		registerColumnType( Types.NCLOB, "longtext" );
+		// max length for VARCHAR changed in 5.0.3
+		final int maxVarcharLen = getVersion() < 500 ? 255 : 65_535;
+
+		registerColumnType( Types.VARCHAR, maxVarcharLen, "varchar($l)" );
+		registerColumnType( Types.VARBINARY, maxVarcharLen, "varbinary($l)" );
+
+		final int maxTinyLobLen = 255;
+		final int maxLobLen = 65_535;
+		final int maxMediumLobLen = 16_777_215;
+		final long maxLongLobLen = 4_294_967_295L;
+
+		registerColumnType( Types.LONGVARCHAR, "longtext" );
+		registerColumnType( Types.VARCHAR, maxLongLobLen, "longtext" );
+		registerColumnType( Types.VARCHAR, maxMediumLobLen, "mediumtext" );
+		if ( maxVarcharLen < maxLobLen ) {
+			registerColumnType( Types.VARCHAR, maxLobLen, "text" );
+		}
+
+		registerColumnType( Types.LONGVARBINARY, "longblob" );
+		registerColumnType( Types.VARBINARY, maxLongLobLen, "longblob" );
+		registerColumnType( Types.VARBINARY, maxMediumLobLen, "mediumblob" );
+		if ( maxVarcharLen < maxLobLen ) {
+			registerColumnType( Types.VARBINARY, maxLobLen, "blob" );
+		}
+
+		registerColumnType( Types.BLOB, maxLongLobLen, "longblob" );
+		registerColumnType( Types.BLOB, maxMediumLobLen, "mediumblob" );
+		registerColumnType( Types.BLOB, maxLobLen, "blob" );
+		registerColumnType( Types.BLOB, maxTinyLobLen, "tinyblob" );
+
+		registerColumnType( Types.CLOB, maxLongLobLen, "longtext" );
+		registerColumnType( Types.CLOB, maxMediumLobLen, "mediumtext" );
+		registerColumnType( Types.CLOB, maxLobLen, "text" );
+		registerColumnType( Types.CLOB, maxTinyLobLen, "tinytext" );
+
+		registerColumnType( Types.NCLOB, maxLongLobLen, "longtext" );
+		registerColumnType( Types.NCLOB, maxMediumLobLen, "mediumtext" );
+		registerColumnType( Types.NCLOB, maxLobLen, "text" );
+		registerColumnType( Types.NCLOB, maxTinyLobLen, "tinytext" );
 
 		if ( getVersion() >= 570) {
 			// MySQL 5.7 brings JSON native support with a dedicated datatype
@@ -138,6 +156,12 @@ public class MySQLDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		uniqueDelegate = new MySQLUniqueDelegate( this );
+	}
+
+	@Override
+	public long getDefaultLobLength() {
+		//max length for mediumblob or mediumtext
+		return 16_777_215;
 	}
 
 	@Override

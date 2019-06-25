@@ -85,7 +85,7 @@ public class Size implements Serializable {
 		//		if they wish - probably a named `DefaultSizeStrategy` instance
 
 		public static final long DEFAULT_LENGTH = 255;
-		public static final long DEFAULT_LOB_LENGTH = 1048576;
+		public static final long DEFAULT_LOB_LENGTH = 1_048_576;
 		public static final int DEFAULT_PRECISION = 19;
 		public static final int DEFAULT_SCALE = 2;
 

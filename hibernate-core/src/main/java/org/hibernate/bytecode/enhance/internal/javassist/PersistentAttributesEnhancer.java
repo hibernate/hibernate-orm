@@ -105,7 +105,10 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		try {
 			CtClass managedCtSuperclass = managedCtClass.getSuperclass();
 
-			if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass ) ) {
+			if ( enhancementContext.isEntityClass( managedCtSuperclass ) ) {
+				return Collections.emptyList();
+			}
+			else if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass ) ) {
 				return collectInheritPersistentFields( managedCtSuperclass );
 			}
 			log.debugf( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass.getName() );

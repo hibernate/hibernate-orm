@@ -18,24 +18,29 @@ import org.hibernate.dialect.identity.JDataStoreIdentityColumnSupport;
  * @author Vishy Kasar
  */
 public class JDataStoreDialect extends Dialect {
-	/**
-	 * Creates new JDataStoreDialect
-	 */
+
 	public JDataStoreDialect() {
 		super();
+		//only surviving documentation known to Google:
+		//https://web.mit.edu/jbuilder_v2005/distrib/share/doc/jds_devgd.pdf
 
-		registerColumnType( Types.BIT, 1, "tinyint" );
+		//'bit' is a synonym for 'boolean'
 		registerColumnType( Types.BIT, "tinyint" );
-		registerColumnType( Types.BOOLEAN, "tinyint" );
 
+		//no 'blob' nor 'clob', at least not in 7
 		registerColumnType( Types.BLOB, "varbinary" );
 		registerColumnType( Types.CLOB, "varchar" );
 
-		//no precision, probably, documentation impossible to find!
+		//no precision, at least not in 7
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BOOLEAN;
 	}
 
 	@Override

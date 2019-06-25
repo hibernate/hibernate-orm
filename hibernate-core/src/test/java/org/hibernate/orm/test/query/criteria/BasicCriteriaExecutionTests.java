@@ -129,7 +129,7 @@ public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTest
 		);
 	}
 
-	@Entity
+	@Entity(name = "BasicEntity")
 	public static class BasicEntity {
 
 		@Id

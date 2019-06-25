@@ -113,6 +113,11 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
 	public int getDefaultDecimalPrecision() {
 		return getVersion() < 14 ? 18 : 38;
 	}

@@ -73,7 +73,7 @@ public class TimesTenDialect extends Dialect {
 		registerColumnType(Types.BIGINT, "tt_bigint");
 
 		//note that 'binary_float'/'binary_double' might
-		//be better mappings or Java Float/Double
+		//be better mappings for Java Float/Double
 
 		//'numeric'/'decimal' are synonyms for 'number'
 		registerColumnType(Types.NUMERIC, "number($p,$s)");
@@ -94,6 +94,11 @@ public class TimesTenDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
 	}
 
 	@Override

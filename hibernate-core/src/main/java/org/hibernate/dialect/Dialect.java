@@ -127,7 +127,6 @@ import org.hibernate.tool.schema.spi.Alterable;
 import org.hibernate.tool.schema.spi.DefaultSizeStrategy;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.internal.AnyTypeJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -3280,11 +3279,16 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	/**
+	 * The JDBC {@link Types type code} to use for mapping
+	 * properties of Java type {@code boolean}.
+	 * <p>
+	 * Usually {@link Types#BOOLEAN} or {@link Types#BIT}.
+	 *
+	 * @return one of the type codes defined by {@link Types}.
+	 */
 	public int getPreferredSqlTypeCodeForBoolean() {
-		// BIT is the safest option as most databases do not support a
-		// boolean data-type.  And BIT happens to be the JDBC recommended
-		// mapping
-		return Types.BIT;
+		return Types.BOOLEAN;
 	}
 
 	/**

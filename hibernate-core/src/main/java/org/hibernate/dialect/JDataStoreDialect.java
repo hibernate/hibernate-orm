@@ -39,11 +39,6 @@ public class JDataStoreDialect extends Dialect {
 	}
 
 	@Override
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BOOLEAN;
-	}
-
-	@Override
 	public String getAddColumnString() {
 		return "add";
 	}

@@ -117,11 +117,6 @@ public class DerbyDialect extends Dialect {
 				: new DerbyLimitHandler( getVersion() >= 1060 );
 	}
 
-	@Override
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BOOLEAN;
-	}
-
 	public int getDefaultDecimalPrecision() {
 		//this is the maximum allowed in Derby
 		return 31;

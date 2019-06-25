@@ -108,6 +108,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
 	public int getDefaultDecimalPrecision() {
 		//the (really low) maximum
 		return 21;

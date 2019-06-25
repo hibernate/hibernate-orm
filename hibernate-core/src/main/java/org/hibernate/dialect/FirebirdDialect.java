@@ -69,6 +69,11 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

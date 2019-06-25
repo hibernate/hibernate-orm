@@ -123,11 +123,6 @@ public class DB2Dialect extends Dialect {
 				: DB2LimitHandler.INSTANCE;
 	}
 
-	@Override
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BOOLEAN;
-	}
-
 	public int getDefaultDecimalPrecision() {
 		//this is the maximum allowed in DB2
 		return 31;

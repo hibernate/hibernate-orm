@@ -51,11 +51,6 @@ public class MckoiDialect extends Dialect {
 	}
 
 	@Override
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BOOLEAN;
-	}
-
-	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 

@@ -69,6 +69,11 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		switch (sqlCode) {
 			case Types.BOOLEAN:

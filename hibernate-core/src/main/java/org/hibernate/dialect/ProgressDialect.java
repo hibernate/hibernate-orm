@@ -49,6 +49,11 @@ public class ProgressDialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
 	public boolean hasAlterTable(){
 		return false;
 	}

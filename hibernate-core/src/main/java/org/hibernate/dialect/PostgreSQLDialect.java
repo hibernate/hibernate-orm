@@ -116,11 +116,6 @@ public class PostgreSQLDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
 	}
 
-	@Override
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BOOLEAN;
-	}
-
 	/**
 	 * Postgres extract() function returns {@link TemporalUnit#DAY_OF_WEEK}
 	 * numbered from 0 to 6. This isn't consistent with what most other

@@ -90,6 +90,11 @@ public class CUBRIDDialect extends Dialect {
 		registerKeyword( "SEARCH" );
 	}
 
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
 	//not used for anything right now, but it
 	//could be used for timestamp literal format
 	@Override

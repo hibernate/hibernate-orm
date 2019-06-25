@@ -47,11 +47,6 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	@Override
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BOOLEAN;
-	}
-
-	@Override
 	public int getDefaultDecimalPrecision() {
 		//the extremely low maximum
 		return 18;

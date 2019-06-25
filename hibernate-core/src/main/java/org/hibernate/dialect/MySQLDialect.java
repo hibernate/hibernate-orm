@@ -140,6 +140,11 @@ public class MySQLDialect extends Dialect {
 		uniqueDelegate = new MySQLUniqueDelegate( this );
 	}
 
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
 //	@Override
 //	public int getDefaultDecimalPrecision() {
 //		//this is the maximum, but I guess it's too high

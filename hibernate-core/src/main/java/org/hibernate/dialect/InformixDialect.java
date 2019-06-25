@@ -100,11 +100,6 @@ public class InformixDialect extends Dialect {
 				: new SkipFirstLimitHandler( getVersion() >= 11 );
 	}
 
-	@Override
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BOOLEAN;
-	}
-
 	public int getDefaultDecimalPrecision() {
 		//the maximum
 		return 32;

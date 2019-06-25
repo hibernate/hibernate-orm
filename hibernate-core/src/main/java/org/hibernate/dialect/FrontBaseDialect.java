@@ -57,6 +57,11 @@ public class FrontBaseDialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
 	public String getAddColumnString() {
 		return "add column";
 	}

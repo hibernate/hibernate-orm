@@ -81,6 +81,11 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
 	public int getDefaultDecimalPrecision() {
 		//the largest *meaningful* value
 		return 19;

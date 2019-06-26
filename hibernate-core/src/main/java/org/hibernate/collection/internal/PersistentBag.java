@@ -34,7 +34,11 @@ import org.hibernate.type.Type;
  */
 public class PersistentBag extends AbstractPersistentCollection implements List {
 
+	// TODO: Why is this.bag protected? Can it be changed to private?
 	protected List bag;
+
+	// The Collection provided to a PersistentBag constructor,
+	private Collection providedCollection;
 
 	/**
 	 * Constructs a PersistentBag.  Needed for SOAP libraries, etc
@@ -72,6 +76,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@SuppressWarnings("unchecked")
 	public PersistentBag(SharedSessionContractImplementor session, Collection coll) {
 		super( session );
+		providedCollection = coll;
 		if ( coll instanceof List ) {
 			bag = (List) coll;
 		}
@@ -98,7 +103,12 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	public boolean isWrapper(Object collection) {
-		return bag==collection;
+		if ( providedCollection == null || providedCollection == bag ) {
+			return bag == collection;
+		}
+		else {
+			return providedCollection == collection;
+		}
 	}
 
 	@Override

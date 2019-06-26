@@ -401,6 +401,21 @@ public interface PersistentCollection {
 	}
 
 	/**
+	 * Was {@code collection} provided directly to this PersistentCollection
+	 * (i.e., provided as an argument to a constructor)?
+	 * <p/>
+	 * Implementors that can copy elements out of a directly provided
+	 * collection into the wrapped collection should override this method.
+	 * <p/>
+	 * @param collection The collection
+	 * @return true, if {@code collection} was provided directly to this
+	 * PersistentCollection; false, otherwise.
+	 */
+	default boolean isDirectlyProvidedCollection(Object collection) {
+		return isDirectlyAccessible() && isWrapper( collection );
+	}
+
+	/**
 	 * Clear the dirty flag, after flushing changes
 	 * to the database.
 	 */

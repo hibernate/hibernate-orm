@@ -36,6 +36,9 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	protected List bag;
 
+	// The Collection provided to a PersistentBag constructor,
+	private Collection providedCollection;
+
 	/**
 	 * Constructs a PersistentBag.  Needed for SOAP libraries, etc
 	 */
@@ -72,6 +75,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@SuppressWarnings("unchecked")
 	public PersistentBag(SharedSessionContractImplementor session, Collection coll) {
 		super( session );
+		providedCollection = coll;
 		if ( coll instanceof List ) {
 			bag = (List) coll;
 		}
@@ -98,7 +102,12 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	public boolean isWrapper(Object collection) {
-		return bag==collection;
+		return bag == collection;
+	}
+
+	@Override
+	public boolean isDirectlyProvidedCollection(Object collection) {
+		return isDirectlyAccessible() && providedCollection == collection;
 	}
 
 	@Override

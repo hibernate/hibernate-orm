@@ -40,6 +40,9 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	protected List<Object> values;
 	protected Map<Integer, Object> identifiers;
 
+	// The Collection provided to a PersistentIdentifierBag constructor,
+	private Collection providedValues;
+
 	/**
 	 * Constructs a PersistentIdentifierBag.  This form needed for SOAP libraries, etc
 	 */
@@ -76,6 +79,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	@SuppressWarnings("unchecked")
 	public PersistentIdentifierBag(SharedSessionContractImplementor session, Collection coll) {
 		super( session );
+		providedValues = coll;
 		if (coll instanceof List) {
 			values = (List<Object>) coll;
 		}
@@ -121,7 +125,12 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	public boolean isWrapper(Object collection) {
-		return values==collection;
+		return values == collection;
+	}
+
+	@Override
+	public boolean isDirectlyProvidedCollection(Object collection) {
+		return isDirectlyAccessible() && providedValues == collection;
 	}
 
 	@Override

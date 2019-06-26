@@ -37,8 +37,12 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class PersistentIdentifierBag extends AbstractPersistentCollection implements List {
+	// TODO: why are values and identifiers protected? Can they be changed to private?
 	protected List<Object> values;
 	protected Map<Integer, Object> identifiers;
+
+	// The Collection provided to a PersistentIdentifierBag constructor,
+	private Collection providedValues;
 
 	/**
 	 * Constructs a PersistentIdentifierBag.  This form needed for SOAP libraries, etc
@@ -76,6 +80,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	@SuppressWarnings("unchecked")
 	public PersistentIdentifierBag(SharedSessionContractImplementor session, Collection coll) {
 		super( session );
+		providedValues = coll;
 		if (coll instanceof List) {
 			values = (List<Object>) coll;
 		}
@@ -124,7 +129,12 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	public boolean isWrapper(Object collection) {
-		return values==collection;
+		if ( providedValues == null || providedValues == values ) {
+			return values == collection;
+		}
+		else {
+			return providedValues == collection;
+		}
 	}
 
 	@Override

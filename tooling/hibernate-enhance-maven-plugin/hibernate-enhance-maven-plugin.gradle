@@ -39,7 +39,7 @@ dependencies {
     runtime( libraries.jta )
     runtime( libraries.javassist )
     runtime( libraries.byteBuddy )
-    runtime 'org.codehaus.plexus:plexus-utils:3.0.1'
+    runtime 'org.codehaus.plexus:plexus-utils:3.0.24'
 }
 
 // Inject dependencies into plugin.xml

@@ -106,8 +106,12 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public final boolean isEqual(Object x, Object y) {
 		return x == y
-			|| ( x instanceof PersistentCollection && ( (PersistentCollection) x ).wasInitialized() && ( (PersistentCollection) x ).isWrapper( y ) )
-			|| ( y instanceof PersistentCollection && ( (PersistentCollection) y ).wasInitialized() && ( (PersistentCollection) y ).isWrapper( x ) );
+			|| ( x instanceof PersistentCollection && isEqual( (PersistentCollection) x, y ) )
+			|| ( y instanceof PersistentCollection && isEqual( (PersistentCollection) y, x ) );
+	}
+
+	private boolean isEqual(PersistentCollection x, Object y) {
+		return x.wasInitialized() && ( x.isWrapper( y ) || x.isDirectlyProvidedCollection( y ) );
 	}
 
 	@Override

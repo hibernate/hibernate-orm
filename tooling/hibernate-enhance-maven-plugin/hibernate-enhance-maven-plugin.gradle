@@ -28,7 +28,7 @@ dependencies {
     compile( libraries.jpa ) { transitive = false }
     compile( libraries.javassist ) { transitive = false }
     compile( libraries.byteBuddy ) { transitive = false }
-    compile 'org.codehaus.plexus:plexus-utils:3.0.1'
+    compile 'org.codehaus.plexus:plexus-utils:3.0.24'
     compile 'org.sonatype.plexus:plexus-build-api:0.0.7'
     runtime( libraries.maven_core )
     runtime( libraries.maven_artifact )

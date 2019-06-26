@@ -7,7 +7,8 @@
 module org.hibernate.orm.integrationtest.java.module {
 	exports org.hibernate.orm.integrationtest.java.module.service;
 	opens org.hibernate.orm.integrationtest.java.module.entity to
-			org.hibernate.orm.core;
+			org.hibernate.orm.core,
+			javassist; // Necessary for javassist, but not for bytebuddy (the default)
 
 	requires java.persistence;
 	/*

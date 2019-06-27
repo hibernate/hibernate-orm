@@ -61,9 +61,16 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertEquals( 1, statistics.getPrepareStatementCount() );
 					assertEquals( NUMBER_OF_ENTITIES, employees.size() );
 
-					// trigger loading all of the Employee#employer references which should trigger the batch fetching
-					for ( Employee employee : employees ) {
-						Hibernate.initialize( employee.employer );
+					for ( int i = 0; i < employees.size(); i++ ) {
+						final Employer employer = employees.get( i ).employer;
+						if ( i % 10 == 0 ) {
+							assertFalse( Hibernate.isInitialized( employer ) );
+							Hibernate.initialize( employer );
+						}
+						else {
+							assertTrue( Hibernate.isInitialized( employer ) );
+						}
+						assertEquals( "Employer #" + employer.id, employer.name );
 					}
 
 					// assert that all 20 Employee and all 20 Employers have been loaded
@@ -135,6 +142,48 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11147")
+	public void testBatchEntityLoadThenModify() {
+		inTransaction(
+				session -> {
+					final Statistics statistics = sessionFactory().getStatistics();
+					statistics.clear();
+
+					List<Employer> employers = new ArrayList<>();
+					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
+						employers.add( session.load( Employer.class, i + 1) );
+					}
+
+					assertEquals( 0, statistics.getPrepareStatementCount() );
+
+					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
+						final Employer employer = employers.get( i );
+						if ( i % 10 == 0 ) {
+							assertFalse( Hibernate.isInitialized( employer ) );
+							Hibernate.initialize( employer );
+						}
+						else {
+							assertTrue( Hibernate.isInitialized( employer ) );
+						}
+						assertEquals( "Employer #" + employer.id, employer.name );
+						employer.name = employer.name + " new";
+					}
+
+					assertEquals( 2, statistics.getPrepareStatementCount() );
+				}
+		);
+
+		inTransaction(
+				session -> {
+					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
+						final Employer employer = session.get( Employer.class, i + 1 );
+						assertEquals( "Employer #" + employer.id + " new", employer.name );
+					}
+				}
+		);
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

@@ -15,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.Hibernate;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.LazyToOne;
@@ -37,6 +38,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gail Badner
@@ -110,6 +112,23 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-11147")
+	public void testNonExistingEntity() {
+		doInHibernate(
+				this::sessionFactory, session -> {
+					Employer nonExisting = session.load( Employer.class, -1 );
+					assertFalse( Hibernate.isInitialized( nonExisting ) );
+					try {
+						Hibernate.initialize( nonExisting );
+						fail( "should have thrown ObjectNotFoundException" );
+					}
+					catch (ObjectNotFoundException ex) {
+						// expected
+					}
+				}
+		);
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

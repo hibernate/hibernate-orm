@@ -303,14 +303,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 				// we cannot use bytecode proxy for entities with subclasses
 				if ( !persister.getEntityMetamodel().hasSubclasses() ) {
-					final Object entity = persister.getEntityTuplizer().instantiate( id, this );
-
-					persister.getEntityMetamodel()
-							.getBytecodeEnhancementMetadata()
-							.injectEnhancedEntityAsProxyInterceptor( entity, entityKey, this );
-
-					getPersistenceContext().addEntity( entityKey, entity );
-					return entity;
+					return persister.getBytecodeEnhancementMetadata().createEnhancedProxy( entityKey, false, this );
 				}
 			}
 

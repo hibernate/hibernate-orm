@@ -299,6 +299,21 @@ public class DefaultLoadEventListener implements LoadEventListener {
 					event.getSession()
 			);
 
+			// IMPLEMENTATION NOTE:
+			// The entity's EntityKey may already have been added to the BatchFetchQueue
+			// by ManyToOneType#scheduleBatchLoadIfNeeded.
+			// In the case that the entity is loaded by Session#load or Session#getReference,
+			// it will not be in the BatchFetchQueue, so go ahead and add it.
+			persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
+
+			// IMPLEMENTATION NOTE:
+			// The interceptor needs to be injected before adding the entity to the PersistenceContext
+			// to avoid removing the entity's EntityKey from the BatchFetchQueue, then having to re-add
+			// it to the BatchFetchQueue after adding it to the PersistenceContext.
+			persister.getEntityMetamodel()
+					.getBytecodeEnhancementMetadata()
+					.injectEnhancedEntityAsProxyInterceptor( entity, keyToLoad, event.getSession() );
+
 			// add the entity instance to the persistence context
 			persistenceContext.addEntity(
 					entity,
@@ -311,10 +326,6 @@ public class DefaultLoadEventListener implements LoadEventListener {
 					persister,
 					true
 			);
-
-			persister.getEntityMetamodel()
-					.getBytecodeEnhancementMetadata()
-					.injectEnhancedEntityAsProxyInterceptor( entity, keyToLoad, event.getSession() );
 
 			return entity;
 		}

@@ -394,7 +394,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void addEntity(EntityKey key, Object entity) {
 		entitiesByKey.put( key, entity );
 		if( batchFetchQueue != null ) {
-			getBatchFetchQueue().removeBatchLoadableEntityKey(key);
+			final boolean removeBatchLoadableEntityKey;
+			if ( entity instanceof PersistentAttributeInterceptable ) {
+				// Remove only if entity is not a bytecode enhanced proxy.
+				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) entity;
+				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+				removeBatchLoadableEntityKey = !( interceptor instanceof EnhancementAsProxyLazinessInterceptor );
+			}
+			else {
+				removeBatchLoadableEntityKey = true;
+			}
+			if ( removeBatchLoadableEntityKey ) {
+				getBatchFetchQueue().removeBatchLoadableEntityKey( key );
+			}
 		}
 	}
 

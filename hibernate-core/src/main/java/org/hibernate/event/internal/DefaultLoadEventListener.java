@@ -313,31 +313,12 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				}
 			}
 
+			// Potentially add a batch-fetch entry into the queue for this entity
+			persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
+
 			// This is the crux of HHH-11147
 			// create the (uninitialized) entity instance - has only id set
-			final Object entity = persister.getEntityTuplizer().instantiate(
-					keyToLoad.getIdentifier(),
-					event.getSession()
-			);
-
-			// add the entity instance to the persistence context
-			persistenceContext.addEntity(
-					entity,
-					Status.MANAGED,
-					null,
-					keyToLoad,
-					null,
-					LockMode.NONE,
-					true,
-					persister,
-					true
-			);
-
-			persister.getEntityMetamodel()
-					.getBytecodeEnhancementMetadata()
-					.injectEnhancedEntityAsProxyInterceptor( entity, keyToLoad, event.getSession() );
-
-			return entity;
+			return persister.getBytecodeEnhancementMetadata().createEnhancedProxy( keyToLoad, true, event.getSession() );
 		}
 		else {
 			if ( persister.hasProxy() ) {

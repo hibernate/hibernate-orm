@@ -106,7 +106,7 @@ public class PostgreSQLDialect extends Dialect {
 		//there are no nchar/nvarchar types in Postgres
 		registerColumnType( Types.NCHAR, "char($l)" );
 		registerColumnType( Types.NVARCHAR, "varchar($l)" );
-		registerColumnType( Types.LONGNVARCHAR, "varchar($l)" );
+		registerColumnType( Types.LONGNVARCHAR, "text" );
 
 		if ( getVersion() >= 920 ) {
 			registerColumnType( Types.JAVA_OBJECT, "json" );

@@ -1179,6 +1179,15 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * locate() in terms of ANSI position() and substring()
+	 */
+	public static void locate_positionSubstring(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate",
+				StandardSpiBasicTypes.INTEGER,
+				"position(?1 in ?2)", "(position(?1 in substring(?2 from ?3))+?3)")
+				.setArgumentListSignature("(pattern, string[, start])");
+	}
+	/**
 	 * ANSI-style substring
 	 */
 	public static void substringFromFor(QueryEngine queryEngine) {

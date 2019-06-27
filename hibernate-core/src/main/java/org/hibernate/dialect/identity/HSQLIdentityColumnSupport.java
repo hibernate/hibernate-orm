@@ -14,7 +14,6 @@ public class HSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
 	final private int hsqldbVersion;
 
 	public HSQLIdentityColumnSupport(int hsqldbVersion) {
-
 		this.hsqldbVersion = hsqldbVersion;
 	}
 

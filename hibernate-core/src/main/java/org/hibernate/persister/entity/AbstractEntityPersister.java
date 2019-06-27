@@ -4320,16 +4320,28 @@ public abstract class AbstractEntityPersister
 		if ( currentInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 			final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) currentInterceptor;
 
-			readLockLoader.load(
-					proxyInterceptor.getEntityKey().getIdentifier(),
+			final EntityKey entityKey = proxyInterceptor.getEntityKey();
+			final Serializable identifier = entityKey.getIdentifier();
+			final Object loaded = readLockLoader.load(
+					identifier,
 					entity,
 					session,
 					LockOptions.READ
 			);
 
+			if ( loaded == null ) {
+				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				persistenceContext.removeEntry( entity );
+				persistenceContext.removeEntity( entityKey );
+				session.getFactory().getEntityNotFoundDelegate().handleEntityNotFound(
+						entityKey.getEntityName(),
+						identifier
+				);
+			}
+
 			final LazyAttributeLoadingInterceptor interceptor = enhancementMetadata.injectInterceptor(
 					entity,
-					proxyInterceptor.getEntityKey().getIdentifier(),
+					identifier,
 					session
 			);
 

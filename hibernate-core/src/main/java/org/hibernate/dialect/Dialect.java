@@ -1913,7 +1913,9 @@ public abstract class Dialect implements ConversionContext {
 	 * timestamp value?
 	 *
 	 * @return True if the current timestamp can be retrieved; false otherwise.
+	 * @deprecated no longer called
 	 */
+	@Deprecated
 	public boolean supportsCurrentTimestampSelection() {
 		return false;
 	}
@@ -1925,7 +1927,9 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return True if the {@link #getCurrentTimestampSelectString} return
 	 * is callable; false otherwise.
+	 * @deprecated no longer called
 	 */
+	@Deprecated
 	public boolean isCurrentTimestampSelectStringCallable() {
 		throw new UnsupportedOperationException( "Database not known to define a current timestamp function" );
 	}
@@ -1935,7 +1939,9 @@ public abstract class Dialect implements ConversionContext {
 	 * database.
 	 *
 	 * @return The command.
+	 * @deprecated no longer called, use {@link #currentTimestamp()}
 	 */
+	@Deprecated
 	public String getCurrentTimestampSelectString() {
 		throw new UnsupportedOperationException( "Database not known to define a current timestamp function" );
 	}

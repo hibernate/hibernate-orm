@@ -342,6 +342,4 @@ public class CockroachDialect extends Dialect {
 		return OffsetFetchLimitHandler.INSTANCE;
 	}
 
-	//TODO: copy PostgreSQLDialect.PostgresUUIDType ?
-
 }

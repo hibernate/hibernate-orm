@@ -11,7 +11,7 @@ import org.hibernate.MappingException;
 /**
  * @author Andrea Boriero
  */
-public class Chache71IdentityColumnSupport extends IdentityColumnSupportImpl {
+public class CacheIdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

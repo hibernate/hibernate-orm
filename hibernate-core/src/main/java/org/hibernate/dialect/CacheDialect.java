@@ -9,7 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.Chache71IdentityColumnSupport;
+import org.hibernate.dialect.identity.CacheIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
@@ -42,9 +42,6 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
-import static org.hibernate.query.TemporalUnit.NATIVE;
 
 /**
  * Dialect for Intersystems Cach&eacute; SQL 2007.1 and above.
@@ -256,7 +253,7 @@ public class CacheDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new Chache71IdentityColumnSupport();
+		return new CacheIdentityColumnSupport();
 	}
 
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

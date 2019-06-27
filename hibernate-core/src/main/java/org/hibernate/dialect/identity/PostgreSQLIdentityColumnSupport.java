@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect.identity;
 
+import org.hibernate.MappingException;
+
 import java.sql.Types;
 
 /**
@@ -24,9 +26,14 @@ public class PostgreSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public String getIdentityColumnString(int type) {
-		return type == Types.BIGINT ?
-				"bigserial not null" :
-				"serial not null";
+		switch (type) {
+			case Types.BIGINT:
+				return "bigserial not null";
+			case Types.INTEGER:
+				return "serial not null";
+			default:
+				throw new MappingException("illegal identity column type");
+		}
 	}
 
 	@Override

@@ -18,6 +18,8 @@ import java.sql.Types;
 
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.NATIVE;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiDateLiteral;
+import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTimeLiteral;
 
 /**
  * A dialect for CockroachDB.
@@ -101,8 +103,68 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeConstraintName() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsPartitionBy() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNonQueryWithCTE() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsUnionAll() {
+		return true;
+	}
+
+	@Override
+	public String getNoColumnsInsertString() {
+		return "default values";
+	}
+
+	@Override
+	public String getCaseInsensitiveLike(){
+		return "ilike";
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike() {
+		return true;
+	}
+
+	@Override
+	public boolean requiresParensForTupleDistinctCounts() {
+		return true;
+	}
+
+	@Override
+	public String getNativeIdentifierGeneratorStrategy() {
+		return "sequence";
 	}
 
 	@Override
@@ -138,6 +200,21 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public boolean supportsNationalizedTypes() {
 		return false;
+	}
+
+	@Override
+	protected String wrapDateLiteral(String date) {
+		return wrapAsAnsiDateLiteral(date);
+	}
+
+	@Override
+	protected String wrapTimeLiteral(String time) {
+		return wrapAsAnsiTimeLiteral(time);
+	}
+
+	@Override
+	protected String wrapTimestampLiteral(String timestamp) {
+		return "timestamp with time zone '" + timestamp + "'";
 	}
 
 	/**

@@ -117,7 +117,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	/**
-	 * Postgres extract() function returns {@link TemporalUnit#DAY_OF_WEEK}
+	 * The {@code extract()} function returns {@link TemporalUnit#DAY_OF_WEEK}
 	 * numbered from 0 to 6. This isn't consistent with what most other
 	 * databases do, so here we adjust the result by generating
 	 * {@code (extract(dow,arg)+1))}.
@@ -154,6 +154,8 @@ public class PostgreSQLDialect extends Dialect {
 				return "(?3 + (?2) * interval '1 second')";
 			case QUARTER: //quarter is not supported in interval literals
 				return "(?3 + (?2) * interval '3 month')";
+			case WEEK: //week is not supported in interval literals
+				return "(?3 + (?2) * interval '7 day')";
 			default:
 				return "(?3 + (?2) * interval '1 ?1')";
 		}

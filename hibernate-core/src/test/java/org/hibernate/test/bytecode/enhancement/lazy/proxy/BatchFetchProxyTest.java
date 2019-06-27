@@ -15,7 +15,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
@@ -33,9 +32,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -51,9 +51,34 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11147")
+	public void testBatchAssociationFetch() {
+		inTransaction(
+				session -> {
+					final Statistics statistics = sessionFactory().getStatistics();
+					statistics.clear();
+					List<Employee> employees = session.createQuery( "from Employee", Employee.class ).getResultList();
+
+					assertEquals( 1, statistics.getPrepareStatementCount() );
+					assertEquals( NUMBER_OF_ENTITIES, employees.size() );
+
+					// trigger loading all of the Employee#employer references which should trigger the batch fetching
+					for ( Employee employee : employees ) {
+						Hibernate.initialize( employee.employer );
+					}
+
+					// assert that all 20 Employee and all 20 Employers have been loaded
+					assertThat( statistics.getEntityLoadCount(), is( 40L ) );
+					// but assert that it only took 3 queries (the initial plus the 2 batch fetches)
+					assertThat( statistics.getPrepareStatementCount(), is( 3L ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11147")
 	public void testBatchAssociation() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					final Statistics statistics = sessionFactory().getStatistics();
 					statistics.clear();
 					List<Employee> employees = session.createQuery( "from Employee", Employee.class ).getResultList();
@@ -81,8 +106,8 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11147")
 	public void testBatchEntityLoad() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					final Statistics statistics = sessionFactory().getStatistics();
 					statistics.clear();
 
@@ -121,8 +146,8 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Before
 	public void setUpData() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
 						final Employee employee = new Employee();
 						employee.id = i + 1;
@@ -139,8 +164,8 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@After
 	public void cleanupDate() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				session -> {
 					session.createQuery( "delete from Employee" ).executeUpdate();
 					session.createQuery( "delete from Employer" ).executeUpdate();
 				}
@@ -153,6 +178,7 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
+		ssrb.applySetting( AvailableSettings.SHOW_SQL, true );
 	}
 
 	@Override

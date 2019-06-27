@@ -292,8 +292,10 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				}
 			}
 
-			// Potentially add a batch-fetch entry into the queue for this entity
-			persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
+			if ( keyToLoad.isBatchLoadable() ) {
+				// Add a batch-fetch entry into the queue for this entity
+				persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
+			}
 
 			// This is the crux of HHH-11147
 			// create the (uninitialized) entity instance - has only id set

@@ -18,8 +18,6 @@ import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -269,18 +267,8 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean forUpdateOfColumns() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsOuterJoinForUpdate() {
 		return false;
-	}
-
-	@Override
-	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new MimerSQLIdentityColumnSupport();
 	}
 
 	@Override

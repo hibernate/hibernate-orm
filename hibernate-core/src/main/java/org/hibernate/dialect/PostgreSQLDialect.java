@@ -379,11 +379,6 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsSequences() {
 		return true;
 	}
@@ -639,11 +634,6 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsExpectedLobUsagePattern() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
@@ -651,11 +641,6 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
-	}
-
-	@Override
-	public String getForUpdateString() {
-		return " for update";
 	}
 
 	@Override

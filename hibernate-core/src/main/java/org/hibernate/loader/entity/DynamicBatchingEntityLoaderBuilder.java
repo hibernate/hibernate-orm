@@ -19,6 +19,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -499,12 +501,13 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				SharedSessionContractImplementor session,
 				QueryParameters queryParameters,
 				Serializable[] ids) {
+			final JdbcServices jdbcServices = session.getJdbcServices();
 			final String sql = StringHelper.expandBatchIdPlaceholder(
 					sqlTemplate,
 					ids,
 					alias,
 					persister.getKeyColumnNames(),
-					session.getJdbcServices().getJdbcEnvironment().getDialect()
+					jdbcServices.getJdbcEnvironment().getDialect()
 			);
 
 			try {
@@ -539,7 +542,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				}
 			}
 			catch ( SQLException sqle ) {
-				throw session.getJdbcServices().getSqlExceptionHelper().convert(
+				throw jdbcServices.getSqlExceptionHelper().convert(
 						sqle,
 						"could not load an entity batch: " + MessageHelper.infoString(
 								getEntityPersisters()[0],
@@ -565,8 +568,9 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				return processResultSet( rs, queryParameters, session, false, null, maxRows, afterLoadActions );
 			}
 			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
+				final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 	}

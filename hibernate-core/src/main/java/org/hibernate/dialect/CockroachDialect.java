@@ -108,6 +108,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean qualifyIndexName() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsValuesList() {
 		return true;
 	}

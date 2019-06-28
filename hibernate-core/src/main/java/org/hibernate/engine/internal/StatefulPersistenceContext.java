@@ -174,10 +174,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		nullifiableEntityKeys = new HashSet<>();
 
-		initTransientState();
-	}
-
-	private void initTransientState() {
 		nullAssociations = new HashSet<>( INIT_COLL_SIZE );
 		nonlazyCollections = new ArrayList<>( INIT_COLL_SIZE );
 	}

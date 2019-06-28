@@ -760,7 +760,7 @@ public final class SessionImpl
 
 	private void fireLock(LockEvent event) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		for ( LockEventListener listener : listeners( EventType.LOCK ) ) {
 			listener.onLock( event );
 		}
@@ -814,7 +814,7 @@ public final class SessionImpl
 	}
 
 	private void firePersist(Map copiedAlready, PersistEvent event) {
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 
 		try {
 			for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
@@ -852,7 +852,7 @@ public final class SessionImpl
 
 	private void firePersistOnFlush(Map copiedAlready, PersistEvent event) {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
 			listener.onPersist( event, copiedAlready );
 		}
@@ -915,7 +915,7 @@ public final class SessionImpl
 
 	private void fireMerge(Map copiedAlready, MergeEvent event) {
 		try {
-			checkTransactionSynchStatus();
+			pulseTransactionCoordinator();
 			for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
 				listener.onMerge( event, copiedAlready );
 			}
@@ -1003,7 +1003,7 @@ public final class SessionImpl
 
 	private void fireDelete(DeleteEvent event) {
 		try{
-		checkTransactionSynchStatus();
+			pulseTransactionCoordinator();
 		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
 			listener.onDelete( event );
 		}
@@ -1025,10 +1025,10 @@ public final class SessionImpl
 
 	private void fireDelete(DeleteEvent event, Set transientEntities) {
 		try{
-		checkTransactionSynchStatus();
-		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
-			listener.onDelete( event, transientEntities );
-		}
+			pulseTransactionCoordinator();
+			for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
+				listener.onDelete( event, transientEntities );
+			}
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw exceptionConverter.convert( new IllegalArgumentException( sse ) );
@@ -1310,7 +1310,7 @@ public final class SessionImpl
 
 	private void fireResolveNaturalId(ResolveNaturalIdEvent event) {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		for ( ResolveNaturalIdEventListener listener : listeners( EventType.RESOLVE_NATURAL_ID ) ) {
 			listener.onResolveNaturalId( event );
 		}
@@ -1370,7 +1370,7 @@ public final class SessionImpl
 					}
 				}
 			}
-			checkTransactionSynchStatus();
+			pulseTransactionCoordinator();
 			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
 				listener.onRefresh( event );
 			}
@@ -1391,11 +1391,10 @@ public final class SessionImpl
 
 	private void fireRefresh(Map refreshedAlready, RefreshEvent event) {
 		try {
-			checkTransactionSynchStatus();
+			pulseTransactionCoordinator();
 			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
 				listener.onRefresh( event, refreshedAlready );
 			}
-			delayedAfterCompletion();
 		}
 		catch (RuntimeException e) {
 			throw exceptionConverter.convert( e );
@@ -1421,7 +1420,7 @@ public final class SessionImpl
 
 	private void fireReplicate(ReplicateEvent event) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		for ( ReplicateEventListener listener : listeners( EventType.REPLICATE ) ) {
 			listener.onReplicate( event );
 		}
@@ -1442,7 +1441,7 @@ public final class SessionImpl
 
 	private void fireEvict(EvictEvent event) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		for ( EvictEventListener listener : listeners( EventType.EVICT ) ) {
 			listener.onEvict( event );
 		}
@@ -1469,7 +1468,7 @@ public final class SessionImpl
 	@Override
 	public boolean isDirty() throws HibernateException {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		log.debug( "Checking session dirtiness" );
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
 			log.debug( "Session dirty (scheduled updates and insertions)" );
@@ -1491,7 +1490,7 @@ public final class SessionImpl
 
 	private void doFlush() {
 		checkTransactionNeededForUpdateOperation();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 
 		try {
 			if ( persistenceContext.getCascadeLevel() > 0 ) {
@@ -1539,7 +1538,7 @@ public final class SessionImpl
 	@Override
 	public List list(String query, QueryParameters queryParameters) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		queryParameters.validateParameters();
 
 		HQLQueryPlan plan = queryParameters.getQueryPlan();
@@ -1549,7 +1548,7 @@ public final class SessionImpl
 
 		autoFlushIfRequired( plan.getQuerySpaces() );
 
-		List results = Collections.EMPTY_LIST;
+		final List results;
 		boolean success = false;
 
 		dontFlushFromFind++;   //stops flush being called multiple times if this method is recursively called
@@ -1568,7 +1567,7 @@ public final class SessionImpl
 	@Override
 	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		queryParameters.validateParameters();
 		HQLQueryPlan plan = getQueryPlan( query, false );
 		autoFlushIfRequired( plan.getQuerySpaces() );
@@ -1639,7 +1638,7 @@ public final class SessionImpl
 			NativeSQLQuerySpecification nativeQuerySpecification,
 			QueryParameters queryParameters) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		queryParameters.validateParameters();
 		NativeSQLQueryPlan plan = getNativeQueryPlan( nativeQuerySpecification );
 
@@ -1662,7 +1661,7 @@ public final class SessionImpl
 	@Override
 	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		queryParameters.validateParameters();
 
 		HQLQueryPlan plan = queryParameters.getQueryPlan();
@@ -1685,7 +1684,7 @@ public final class SessionImpl
 	@Override
 	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 
 		HQLQueryPlan plan = queryParameters.getQueryPlan();
 		if ( plan == null ) {
@@ -1707,7 +1706,7 @@ public final class SessionImpl
 	@Override
 	public org.hibernate.query.Query createFilter(Object collection, String queryString) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		CollectionFilterImpl filter = new CollectionFilterImpl(
 				queryString,
 				collection,
@@ -1731,7 +1730,7 @@ public final class SessionImpl
 	@Override
 	public Object instantiate(EntityPersister persister, Serializable id) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		Object result = getInterceptor().instantiate(
 				persister.getEntityName(),
 				persister.getEntityMetamodel().getEntityMode(),
@@ -1884,7 +1883,7 @@ public final class SessionImpl
 	@Override
 	public List listFilter(Object collection, String filter, QueryParameters queryParameters) {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, false );
 		List results = Collections.EMPTY_LIST;
 
@@ -1905,7 +1904,7 @@ public final class SessionImpl
 	@Override
 	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, true );
 		Iterator itr = plan.performIterate( queryParameters, this );
 		delayedAfterCompletion();
@@ -1950,7 +1949,7 @@ public final class SessionImpl
 		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
 
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 
 		String entityName = criteriaImpl.getEntityOrClassName();
 		CriteriaLoader loader = new CriteriaLoader(
@@ -2103,7 +2102,7 @@ public final class SessionImpl
 	@Override
 	public boolean contains(Object object) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 
 		if ( object == null ) {
 			return false;
@@ -2167,7 +2166,7 @@ public final class SessionImpl
 	@Override
 	public boolean contains(String entityName, Object object) {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 
 		if ( object == null ) {
 			return false;
@@ -2299,7 +2298,7 @@ public final class SessionImpl
 	@Override
 	public void initializeCollection(PersistentCollection collection, boolean writing) {
 		checkOpenOrWaitingForAutoClose();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );
 		for ( InitializeCollectionEventListener listener : listeners( EventType.INIT_COLLECTION ) ) {
 			listener.onInitializeCollection( event );
@@ -2406,13 +2405,13 @@ public final class SessionImpl
 
 	@Override
 	public SessionStatistics getStatistics() {
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		return new SessionStatisticsImpl( this );
 	}
 
 	@Override
 	public boolean isEventSource() {
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		return true;
 	}
 
@@ -2481,21 +2480,21 @@ public final class SessionImpl
 
 	@Override
 	public Filter getEnabledFilter(String filterName) {
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		return loadQueryInfluencers.getEnabledFilter( filterName );
 	}
 
 	@Override
 	public Filter enableFilter(String filterName) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		return loadQueryInfluencers.enableFilter( filterName );
 	}
 
 	@Override
 	public void disableFilter(String filterName) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		loadQueryInfluencers.disableFilter( filterName );
 	}
 

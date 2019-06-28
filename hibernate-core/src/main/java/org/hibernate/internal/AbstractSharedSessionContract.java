@@ -505,7 +505,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean isConnected() {
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		return jdbcCoordinator.getLogicalConnection().isOpen();
 	}
 
@@ -629,7 +629,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public QueryImplementor getNamedQuery(String name) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		// look as HQL/JPQL first
@@ -722,7 +722,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public QueryImplementor createQuery(String queryString) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -823,7 +823,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings("unchecked")
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultClass) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -896,7 +896,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected  <T> QueryImplementor<T> buildQueryFromName(String name, Class<T> resultType) {
 		checkOpen();
 		try {
-			checkTransactionSynchStatus();
+			pulseTransactionCoordinator();
 			delayedAfterCompletion();
 
 			// todo : apply stored setting at the JPA Query level too
@@ -1020,7 +1020,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -1045,7 +1045,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -1061,7 +1061,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor getNamedNativeQuery(String name) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
@@ -1081,7 +1081,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			String queryString,
 			boolean isOrdinalParameterZeroBased) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {

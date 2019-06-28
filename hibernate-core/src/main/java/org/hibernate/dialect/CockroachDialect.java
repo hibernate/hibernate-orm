@@ -309,32 +309,7 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
-		return MySQLDialect.datetimeFormat( format )
-
-				//day of week
-				.replace("EEEE", "%A")
-				.replace("EEE", "%a")
-
-				//minute
-				.replace("mm", "%M")
-				.replace("m", "%M")
-
-				//month of year
-				.replace("MMMM", "%B")
-				.replace("MMM", "%b")
-				.replace("MM", "%m")
-				.replace("M", "%m")
-
-				//week of year
-				.replace("ww", "%V")
-				.replace("w", "%V")
-				//year for week
-				.replace("YYYY", "%G")
-				.replace("YYY", "%G")
-				.replace("YY", "%g")
-				.replace("Y", "%g")
-
-				.result();
+		return SpannerDialect.datetimeFormat( format ).result();
 	}
 
 	@Override

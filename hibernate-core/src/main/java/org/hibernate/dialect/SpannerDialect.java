@@ -29,7 +29,9 @@ import org.hibernate.metamodel.model.relational.spi.ExportableTable;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Sequence;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
 import org.hibernate.sql.SqlExpressableType;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -58,9 +60,6 @@ public class SpannerDialect extends Dialect {
 
 	private static final UniqueDelegate NOOP_UNIQUE_DELEGATE = new DoNothingUniqueDelegate();
 
-	/**
-	 * Default constructor for SpannerDialect.
-	 */
 	public SpannerDialect() {
 		registerColumnType( Types.BOOLEAN, "bool" );
 		registerColumnType( Types.BIT, 1, "bool" );
@@ -369,6 +368,12 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("format", "format_timestamp(?2,?1)")
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(datetime as pattern)")
+				.register();
 	}
 
 	@Override
@@ -401,6 +406,116 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public boolean supportsUnionAll() {
 		return true;
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch (unit) {
+			case WEEK:
+				return "isoweek";
+			case DAY_OF_MONTH:
+				return "day";
+			case DAY_OF_WEEK:
+				return "dayofweek";
+			case DAY_OF_YEAR:
+				return "dayofyear";
+			default:
+				return super.translateExtractField(unit);
+		}
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+		if ( timestamp ) {
+			switch (unit) {
+				case YEAR:
+				case QUARTER:
+				case MONTH:
+					throw new SemanticException("illegal unit for timestamp_add(): " + unit);
+				default:
+					return "timestamp_add(?3, interval ?2 ?1)";
+			}
+		}
+		else {
+			switch (unit) {
+				case NANOSECOND:
+				case SECOND:
+				case MINUTE:
+				case HOUR:
+				case NATIVE:
+					throw new SemanticException("illegal unit for date_add(): " + unit);
+				default:
+					return "date_add(?3, interval ?2 ?1)";
+			}
+		}
+	}
+
+	@Override
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		if ( toTimestamp || fromTimestamp ) {
+			switch (unit) {
+				case YEAR:
+				case QUARTER:
+				case MONTH:
+					throw new SemanticException("illegal unit for timestamp_diff(): " + unit);
+				default:
+					return "timestamp_diff(?3, ?2, ?1)";
+			}
+		}
+		else {
+			switch (unit) {
+				case NANOSECOND:
+				case SECOND:
+				case MINUTE:
+				case HOUR:
+				case NATIVE:
+					throw new SemanticException("illegal unit for date_diff(): " + unit);
+				default:
+					return "date_diff(?3, ?2, ?1)";
+			}
+		}
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return datetimeFormat( format ).result();
+	}
+
+	public static Replacer datetimeFormat(String format) {
+		return MySQLDialect.datetimeFormat(format)
+
+				//day of week
+				.replace("EEEE", "%A")
+				.replace("EEE", "%a")
+
+				//minute
+				.replace("mm", "%M")
+				.replace("m", "%M")
+
+				//month of year
+				.replace("MMMM", "%B")
+				.replace("MMM", "%b")
+				.replace("MM", "%m")
+				.replace("M", "%m")
+
+				//week of year
+				.replace("ww", "%V")
+				.replace("w", "%V")
+				//year for week
+				.replace("YYYY", "%G")
+				.replace("YYY", "%G")
+				.replace("YY", "%g")
+				.replace("Y", "%g")
+
+				//timezones
+				.replace("zzz", "%Z")
+				.replace("zz", "%Z")
+				.replace("z", "%Z")
+				.replace("ZZZ", "%z")
+				.replace("ZZ", "%z")
+				.replace("Z", "%z")
+				.replace("xxx", "%Ez")
+				.replace("xx", "%z"); //note special case
 	}
 
 	/* DDL-related functions */

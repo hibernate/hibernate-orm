@@ -7,7 +7,6 @@
 package org.hibernate.dialect;
 
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;

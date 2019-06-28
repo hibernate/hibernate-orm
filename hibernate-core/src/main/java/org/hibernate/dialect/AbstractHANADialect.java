@@ -111,8 +111,6 @@ import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.query.TemporalUnit.DAY_OF_WEEK;
-
 /**
  * An abstract base class for SAP HANA dialects.
  * <p>

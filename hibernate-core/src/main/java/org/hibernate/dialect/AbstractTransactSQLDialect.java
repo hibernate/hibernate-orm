@@ -25,9 +25,6 @@ import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.sql.TrimSpec;
-import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * An abstract base class for Sybase and MS SQL Server dialects.

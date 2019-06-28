@@ -30,9 +30,6 @@ import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.TrimSpec;
 import org.jboss.logging.Logger;
 
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
-import static org.hibernate.query.TemporalUnit.NATIVE;
-
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
  * This dialect was developed for use with Hibernate 3.0.5. Other versions may

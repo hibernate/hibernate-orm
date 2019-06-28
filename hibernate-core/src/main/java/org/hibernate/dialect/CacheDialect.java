@@ -217,12 +217,6 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		// The syntax used to add a column to a table
-		return " add column";
-	}
-
-	@Override
 	public boolean hasSelfReferentialForeignKeyBug() {
 		return true;
 	}

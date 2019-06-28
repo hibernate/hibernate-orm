@@ -63,11 +63,6 @@ public class MckoiDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "select " + getSelectSequenceNextValString( sequenceName );
 	}

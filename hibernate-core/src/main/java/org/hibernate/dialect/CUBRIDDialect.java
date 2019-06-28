@@ -177,11 +177,6 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add";
-	}
-
-	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "select " + sequenceName + ".next_value from table({1}) as T(X)";
 	}

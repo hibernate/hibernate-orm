@@ -391,11 +391,6 @@ public class MySQLDialect extends Dialect {
 	};
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public boolean qualifyIndexName() {
 		return false;
 	}

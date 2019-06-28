@@ -445,11 +445,6 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public String getDropForeignKeyString() {
 		throw new UnsupportedOperationException(
 				"Cannot drop foreign-key constraint because Cloud Spanner does not support foreign keys." );

@@ -2462,7 +2462,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The "add column" fragment.
 	 */
 	public String getAddColumnString() {
-		throw new UnsupportedOperationException( "No add column syntax supported by " + getClass().getName() );
+		return "add column";
 	}
 
 	/**

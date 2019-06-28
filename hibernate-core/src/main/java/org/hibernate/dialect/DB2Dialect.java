@@ -299,11 +299,6 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public boolean dropConstraints() {
 		return false;
 	}

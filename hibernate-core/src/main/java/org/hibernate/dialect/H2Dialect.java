@@ -178,11 +178,6 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
 		return limitHandler;
 	}

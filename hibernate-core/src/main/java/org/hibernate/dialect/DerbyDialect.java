@@ -272,11 +272,6 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public String toBooleanValueString(boolean bool) {
 		return getVersion() < 1070
 				? super.toBooleanValueString( bool )

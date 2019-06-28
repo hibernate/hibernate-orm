@@ -234,11 +234,6 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public String getNullColumnString() {
 		return " with null";
 	}

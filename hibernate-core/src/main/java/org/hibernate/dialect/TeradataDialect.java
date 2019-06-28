@@ -234,7 +234,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public String getAddColumnString() {
-		return getVersion() < 14 ? "Add Column" : "Add";
+		return getVersion() < 14 ? super.getAddColumnString() : "add";
 	}
 
 	@Override

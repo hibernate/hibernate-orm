@@ -255,11 +255,6 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public boolean supportsLockTimeouts() {
 		return false;
 	}

@@ -212,11 +212,6 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public boolean dropConstraints() {
 		return false;
 	}

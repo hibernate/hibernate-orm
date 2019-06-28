@@ -243,7 +243,7 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString() {
-		return " ";
+		return "";
 	}
 
 	@Override

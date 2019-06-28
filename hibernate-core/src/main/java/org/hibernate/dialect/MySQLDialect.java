@@ -621,13 +621,6 @@ public class MySQLDialect extends Dialect {
 		return orderByElement.toString();
 	}
 
-	// locking support
-
-	@Override
-	public String getForUpdateString() {
-		return " for update";
-	}
-
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override

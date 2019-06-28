@@ -183,11 +183,6 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return " for update";
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
 		return limitHandler;
 	}

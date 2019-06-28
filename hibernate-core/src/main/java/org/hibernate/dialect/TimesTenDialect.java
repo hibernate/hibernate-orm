@@ -207,11 +207,6 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return " for update";
-	}
-
-	@Override
 	public String getForUpdateNowaitString() {
 		return " for update nowait";
 	}

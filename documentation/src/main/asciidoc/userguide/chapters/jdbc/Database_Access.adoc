@@ -268,7 +268,9 @@ If for some reason it is not able to determine the proper one or you want to use
 |DerbyTenFive |Support for the Derby database, version 10.5
 |DerbyTenSix |Support for the Derby database, version 10.6
 |DerbyTenSeven |Support for the Derby database, version 10.7
-|Firebird |Support for the Firebird database
+|Firebird |Support for the Firebird database, version 2.1 and earlier
+|Firebird25 |Support for the Firebird database, version 2.5
+|Firebird30 |Support for the Firebird database, version 3.0
 |FrontBase |Support for the Frontbase database
 |H2 |Support for the H2 database
 |HANAColumnStore |Support for the SAP HANA database column store. This is the recommended dialect for the SAP HANA database.

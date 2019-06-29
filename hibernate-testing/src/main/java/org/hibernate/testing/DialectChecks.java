@@ -8,6 +8,7 @@ package org.hibernate.testing;
 
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.Firebird25Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -93,13 +94,14 @@ abstract public class DialectChecks {
 
 	public static class SupportLimitCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLimit();
+			return dialect.supportsLimit() || dialect.getLimitHandler().supportsLimit();
 		}
 	}
 
 	public static class SupportLimitAndOffsetCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLimit() && dialect.supportsLimitOffset();
+			return ( dialect.supportsLimit() || dialect.getLimitHandler().supportsLimit() ) &&
+					( dialect.supportsLimitOffset() || dialect.getLimitHandler().supportsLimitOffset() );
 		}
 	}
 
@@ -255,7 +257,8 @@ abstract public class DialectChecks {
 	public static class SupportsJdbcDriverProxying implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return !(
-				dialect instanceof DB2Dialect
+				dialect instanceof DB2Dialect ||
+				dialect instanceof Firebird25Dialect
 			);
 		}
 	}

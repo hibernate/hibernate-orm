@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 import java.util.Locale;
 
+import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
@@ -63,7 +64,7 @@ public class InterbaseDialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "blob sub_type 1" );
 		registerColumnType( Types.BOOLEAN, "smallint" );
-		
+
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(","||",")" ) );
 		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
 
@@ -88,6 +89,28 @@ public class InterbaseDialect extends Dialect {
 	@Override
 	public String getCreateSequenceString(String sequenceName) {
 		return "create generator " + sequenceName;
+	}
+
+	@Override
+	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize)
+			throws MappingException {
+		if ( initialValue == 1 ) {
+			super.getCreateSequenceStrings( sequenceName, initialValue, incrementSize );
+		}
+		return new String[] {
+				getCreateSequenceString( sequenceName, initialValue, incrementSize ),
+				"set generator " + sequenceName + " to " + ( initialValue - 1 )
+		};
+	}
+
+	@Override
+	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize)
+			throws MappingException {
+		if ( incrementSize != 1 ) {
+			throw new MappingException( getClass().getName() + " does not support pooled sequences" );
+		}
+		// Ignore initialValue and incrementSize
+		return getCreateSequenceString( sequenceName );
 	}
 
 	@Override

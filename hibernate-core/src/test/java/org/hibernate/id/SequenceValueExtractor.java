@@ -17,7 +17,9 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.Firebird25Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MariaDB103Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
@@ -58,6 +60,9 @@ public class SequenceValueExtractor {
 		else if ( dialect instanceof MariaDB103Dialect ) {
 
 			queryString = "select LASTVAL(" + sequenceName + ")";
+		}
+		else if ( dialect instanceof InterbaseDialect || dialect instanceof Firebird25Dialect ) {
+			queryString = "select gen_id(" + sequenceName + ", 0) from RDB$DATABASE";
 		}
 		else {
 			queryString = "select currval('" + sequenceName + "');";

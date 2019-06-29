@@ -15,6 +15,9 @@ import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for Firebird.
+ * <p>
+ * For Firebird 2.5 and higher, use {@link Firebird25Dialect} or {@link Firebird30Dialect}.
+ * </p>
  *
  * @author Reha CENANI
  */

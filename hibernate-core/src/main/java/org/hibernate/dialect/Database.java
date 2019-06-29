@@ -116,7 +116,7 @@ public enum Database {
 	FIREBIRD {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return FirebirdDialect.class;
+			return Firebird30Dialect.class;
 		}
 
 		@Override
@@ -124,6 +124,24 @@ public enum Database {
 			final String databaseName = info.getDatabaseName();
 
 			if ( databaseName.startsWith( "Firebird" ) ) {
+				final int majorVersion = info.getDatabaseMajorVersion();
+
+				if ( majorVersion < 2 ) {
+					return new FirebirdDialect();
+				}
+				else if ( majorVersion == 2 ) {
+					final int minorVersion = info.getDatabaseMinorVersion();
+					if ( minorVersion < 5 ) {
+						return new FirebirdDialect();
+					}
+					else {
+						return new Firebird25Dialect();
+					}
+				}
+				else if ( majorVersion == 3 ) {
+					return new Firebird30Dialect();
+				}
+
 				return latestDialectInstance( this );
 			}
 

@@ -113,6 +113,22 @@ ext {
                         'jdbc.user'  : 'VLAD',
                         'jdbc.pass'  : 'V1ad_test',
                         'jdbc.url'   : 'jdbc:sap://localhost:39015/'
+                ],
+                firebird25 : [
+                        'db.dialect' : 'org.hibernate.dialect.Firebird25Dialect',
+                        'jdbc.driver': 'org.firebirdsql.jdbc.FBDriver',
+                        'jdbc.user'  : 'sysdba',
+                        'jdbc.pass'  : 'masterkey',
+                        // Overriding default transaction definition (5 seconds instead of infinite wait) to prevent problems in test cleanup
+                        'jdbc.url'   : 'jdbc:firebirdsql://localhost/hibernate_orm_test?charSet=utf-8;TRANSACTION_READ_COMMITTED=read_committed,rec_version,wait,lock_timeout=5'
+                ],
+                firebird30 : [
+                        'db.dialect' : 'org.hibernate.dialect.Firebird30Dialect',
+                        'jdbc.driver': 'org.firebirdsql.jdbc.FBDriver',
+                        'jdbc.user'  : 'sysdba',
+                        'jdbc.pass'  : 'masterkey',
+                        // Overriding default transaction definition (5 seconds instead of infinite wait) to prevent problems in test cleanup
+                        'jdbc.url'   : 'jdbc:firebirdsql://localhost/hibernate_orm_test?charSet=utf-8;TRANSACTION_READ_COMMITTED=read_committed,rec_version,wait,lock_timeout=5'
                 ]
         ]
 }

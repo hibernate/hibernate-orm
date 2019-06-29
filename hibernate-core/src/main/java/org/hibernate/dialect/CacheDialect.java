@@ -254,31 +254,28 @@ public class CacheDialect extends Dialect {
 
 	@Override
 	public boolean supportsSequences() {
-		return false;
+		return true;
 	}
 
-// It really does support sequences, but InterSystems elects to suggest usage of IDENTITY instead :/
-// Anyway, below are the actual support overrides for users wanting to use this combo...
-//
-//	public String getSequenceNextValString(String sequenceName) {
-//		return "select InterSystems.Sequences_GetNext('" + sequenceName + "') from InterSystems.Sequences where ucase(name)=ucase('" + sequenceName + "')";
-//	}
-//
-//	public String getSelectSequenceNextValString(String sequenceName) {
-//		return "(select InterSystems.Sequences_GetNext('" + sequenceName + "') from InterSystems.Sequences where ucase(name)=ucase('" + sequenceName + "'))";
-//	}
-//
-//	public String getCreateSequenceString(String sequenceName) {
-//		return "insert into InterSystems.Sequences(Name) values (ucase('" + sequenceName + "'))";
-//	}
-//
-//	public String getDropSequenceString(String sequenceName) {
-//		return "delete from InterSystems.Sequences where ucase(name)=ucase('" + sequenceName + "')";
-//	}
-//
-//	public String getQuerySequencesString() {
-//		return "select name from InterSystems.Sequences";
-//	}
+	public String getSequenceNextValString(String sequenceName) {
+		return "select InterSystems.Sequences_GetNext('" + sequenceName + "') from InterSystems.Sequences where ucase(name)=ucase('" + sequenceName + "')";
+	}
+
+	public String getSelectSequenceNextValString(String sequenceName) {
+		return "(select InterSystems.Sequences_GetNext('" + sequenceName + "') from InterSystems.Sequences where ucase(name)=ucase('" + sequenceName + "'))";
+	}
+
+	public String getCreateSequenceString(String sequenceName) {
+		return "insert into InterSystems.Sequences(Name) values (ucase('" + sequenceName + "'))";
+	}
+
+	public String getDropSequenceString(String sequenceName) {
+		return "delete from InterSystems.Sequences where ucase(name)=ucase('" + sequenceName + "')";
+	}
+
+	public String getQuerySequencesString() {
+		return "select name from InterSystems.Sequences";
+	}
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

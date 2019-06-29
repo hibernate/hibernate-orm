@@ -12,6 +12,8 @@ import java.util.Locale;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.RowsLimitHandler;
+import org.hibernate.dialect.sequence.InterbaseSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
@@ -58,33 +60,13 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " " + getFromDual();
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "gen_id(" + sequenceName + ",1)";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create generator " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "delete from RDB$GENERATORS where RDB$GENERATOR_NAME = '" + sequenceName.toUpperCase(Locale.ROOT) + "'";
+	public SequenceSupport getSequenceSupport() {
+		return InterbaseSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select RDB$GENERATOR_NAME from RDB$GENERATORS";
+		return "select rdb$generator_name from rdb$generators";
 	}
 
 	@Override
@@ -119,7 +101,7 @@ public class InterbaseDialect extends Dialect {
 
 	@Override
 	public String getFromDual() {
-		return "from RDB$DATABASE";
+		return "from rdb$database";
 	}
 
 }

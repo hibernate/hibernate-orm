@@ -10,6 +10,9 @@ import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.sequence.DB2390SequenceSupport;
+import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 
@@ -41,21 +44,15 @@ public class DB2390Dialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return get390Version() >= 8;
+	public SequenceSupport getSequenceSupport() {
+		return get390Version() < 8
+				? NoSequenceSupport.INSTANCE
+				: DB2390SequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
 		return get390Version() < 8 ? null : "select * from sysibm.syssequences";
-	}
-
-	public String getSequenceNextValString(String sequenceName) {
-		return "select nextval for " + sequenceName + " from sysibm.sysdummy1";
-	}
-
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName + " as integer start with 1 increment by 1 minvalue 1 nomaxvalue nocycle nocache"; //simple default settings..
 	}
 
 	@Override

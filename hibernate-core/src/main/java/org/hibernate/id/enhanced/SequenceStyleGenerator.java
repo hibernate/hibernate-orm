@@ -14,6 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -227,12 +228,12 @@ public class SequenceStyleGenerator
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 
-		final Dialect dialect = jdbcEnvironment.getDialect();
+		final SequenceSupport sequenceSupport = jdbcEnvironment.getDialect().getSequenceSupport();
 
 		this.identifierType = javaTypeDescriptor;
 		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, params, false );
 
-		final QualifiedName sequenceName = determineSequenceName( params, dialect, jdbcEnvironment, serviceRegistry );
+		final QualifiedName sequenceName = determineSequenceName( params, sequenceSupport, jdbcEnvironment, serviceRegistry );
 
 		final int initialValue = determineInitialValue( params );
 		int incrementSize = determineIncrementSize( params );
@@ -271,8 +272,8 @@ public class SequenceStyleGenerator
 		final String optimizationStrategy = determineOptimizationStrategy( params, incrementSize );
 		incrementSize = determineAdjustedIncrementSize( optimizationStrategy, incrementSize );
 
-		if ( dialect.supportsSequences() && !forceTableUse ) {
-			if ( !dialect.supportsPooledSequences() && OptimizerFactory.isPooledOptimizer( optimizationStrategy ) ) {
+		if ( sequenceSupport.supportsSequences() && !forceTableUse ) {
+			if ( !sequenceSupport.supportsPooledSequences() && OptimizerFactory.isPooledOptimizer( optimizationStrategy ) ) {
 				forceTableUse = true;
 				LOG.forcingTableUse();
 			}
@@ -303,14 +304,14 @@ public class SequenceStyleGenerator
 	 * Called during {@link #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
-	 * @param dialect The dialect in effect
+	 * @param sequenceSupport The dialect in effect
 	 * @param jdbcEnv The JdbcEnvironment
 	 * @return The sequence name
 	 */
 	@SuppressWarnings({"UnusedParameters", "WeakerAccess"})
 	protected QualifiedName determineSequenceName(
 			Properties params,
-			Dialect dialect,
+			SequenceSupport sequenceSupport,
 			JdbcEnvironment jdbcEnv,
 			ServiceRegistry serviceRegistry) {
 		final String sequencePerEntitySuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
@@ -486,7 +487,7 @@ public class SequenceStyleGenerator
 	}
 
 	protected boolean isPhysicalSequence(JdbcEnvironment jdbcEnvironment, boolean forceTableUse) {
-		return jdbcEnvironment.getDialect().supportsSequences() && !forceTableUse;
+		return jdbcEnvironment.getDialect().getSequenceSupport().supportsSequences() && !forceTableUse;
 	}
 
 	protected DatabaseStructure buildSequenceStructure(
@@ -564,7 +565,7 @@ public class SequenceStyleGenerator
 
 	@Override
 	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
-		return dialect.getSelectSequenceNextValString( getDatabaseStructure().getName() );
+		return dialect.getSequenceSupport().getSelectSequenceNextValString( getDatabaseStructure().getName() );
 	}
 
 	@Override

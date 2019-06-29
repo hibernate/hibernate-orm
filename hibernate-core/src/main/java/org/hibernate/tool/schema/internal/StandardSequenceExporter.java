@@ -25,7 +25,7 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 	@Override
 	public String[] getSqlCreateStrings(Sequence sequence, JdbcServices jdbcServices) {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		return dialect.getCreateSequenceStrings(
+		return dialect.getSequenceSupport().getCreateSequenceStrings(
 				jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 						sequence.getQualifiedName(),
 						jdbcEnvironment.getDialect()
@@ -38,7 +38,7 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 	@Override
 	public String[] getSqlDropStrings(Sequence sequence, JdbcServices jdbcServices) {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		return dialect.getDropSequenceStrings(
+		return dialect.getSequenceSupport().getDropSequenceStrings(
 				jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 						sequence.getQualifiedName(),
 						jdbcEnvironment.getDialect()

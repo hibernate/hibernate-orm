@@ -67,7 +67,7 @@ public class OrderSequenceGenerationTest extends EnversEntityManagerFactoryBased
 		// This is wrapped in a lambda to force the EntityManager to be created.
 		inJPA(
 				entityManager -> {
-					final String[] createStrings = getDialect().getCreateSequenceStrings( "REVISION_GENERATOR", 1, 1 );
+					final String[] createStrings = getDialect().getSequenceSupport().getCreateSequenceStrings( "REVISION_GENERATOR", 1, 1 );
 
 					final String content;
 					try {

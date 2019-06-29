@@ -77,7 +77,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 
 		@Override
 		public String[] sqlCreateStrings(Dialect dialect) {
-			final String[] createStrings = dialect.getCreateSequenceStrings(
+			final String[] createStrings = dialect.getSequenceSupport().getCreateSequenceStrings(
 					getName(),
 					getInitialValue(),
 					getSourceIncrementSize()
@@ -94,7 +94,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 
 		@Override
 		public String[] sqlDropStrings(Dialect dialect) {
-			return dialect.getDropSequenceStrings( getName() );
+			return dialect.getSequenceSupport().getDropSequenceStrings( getName() );
 		}
 	}
 }

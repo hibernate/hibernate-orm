@@ -22,6 +22,8 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
+import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.MySQLUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -372,6 +374,13 @@ public class MySQLDialect extends Dialect {
 				: IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
 	}
 
+	/**
+	 * No support for sequences.
+	 */
+	@Override
+	public SequenceSupport getSequenceSupport() {
+		return NoSequenceSupport.INSTANCE;
+	}
 
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return getVersion() < 500 ? super.getViolatedConstraintNameExtracter() : EXTRACTER;

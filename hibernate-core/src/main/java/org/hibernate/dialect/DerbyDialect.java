@@ -21,6 +21,8 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.sequence.DB2SequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -292,53 +294,24 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return getVersion() >= 1060;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return supportsSequences();
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		if ( supportsSequences() ) {
-			return "values " + getSelectSequenceNextValString( sequenceName );
-		}
-		else {
-			throw new MappingException( "Derby does not support sequence prior to release 10.6.1.0" );
-		}
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return super.getDropSequenceString( sequenceName ) + " restrict";
+	public SequenceSupport getSequenceSupport() {
+		return getVersion() < 1060
+				? super.getSequenceSupport()
+				: DB2SequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		if ( supportsSequences() ) {
-			return "select sys.sysschemas.schemaname as sequence_schema, sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid = sys.sysschemas.schemaid";
-		}
-		else {
-			return null;
-		}
+		return getVersion() < 1060
+				? "select sys.sysschemas.schemaname as sequence_schema, sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid = sys.sysschemas.schemaid"
+				: null;
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		if ( getQuerySequencesString() == null ) {
-			return SequenceInformationExtractorNoOpImpl.INSTANCE;
-		}
-		else {
-			return SequenceInformationExtractorDerbyDatabaseImpl.INSTANCE;
-		}
+		return getVersion() < 1060
+				? SequenceInformationExtractorNoOpImpl.INSTANCE
+				: SequenceInformationExtractorDerbyDatabaseImpl.INSTANCE;
 	}
 
 	@Override

@@ -18,6 +18,8 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.H2SequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -192,28 +194,8 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence if exists " + sequenceName;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "call next value for " + sequenceName;
+	public SequenceSupport getSequenceSupport() {
+		return H2SequenceSupport.INSTANCE;
 	}
 
 	@Override

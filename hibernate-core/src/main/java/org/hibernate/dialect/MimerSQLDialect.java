@@ -14,6 +14,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.MimerSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
@@ -217,28 +219,13 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select next value for " + sequenceName + " from system.onerow";
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return super.getDropSequenceString( sequenceName ) + " restrict";
-	}
-
-	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade";
+	}
+
+	@Override
+	public SequenceSupport getSequenceSupport() {
+		return MimerSequenceSupport.INSTANCE;
 	}
 
 	@Override

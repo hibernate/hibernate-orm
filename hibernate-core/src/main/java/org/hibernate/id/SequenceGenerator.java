@@ -148,12 +148,12 @@ public class SequenceGenerator
 	@Override
 	@SuppressWarnings( {"deprecation"})
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return dialect.getCreateSequenceStrings( sequenceName, 1, 1 );
+		return dialect.getSequenceSupport().getCreateSequenceStrings( sequenceName, 1, 1 );
 	}
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return dialect.getDropSequenceStrings( sequenceName );
+		return dialect.getSequenceSupport().getDropSequenceStrings( sequenceName );
 	}
 
 	@Override
@@ -163,7 +163,7 @@ public class SequenceGenerator
 
 	@Override
 	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
-		return dialect.getSelectSequenceNextValString( getSequenceName() );
+		return dialect.getSequenceSupport().getSelectSequenceNextValString( getSequenceName() );
 	}
 
 	@Override
@@ -191,6 +191,6 @@ public class SequenceGenerator
 				sequence.getLogicalName(),
 				dialect
 		);
-		this.sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );
+		this.sql = dialect.getSequenceSupport().getSequenceNextValString( sequenceName );
 	}
 }

@@ -23,6 +23,9 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.dialect.sequence.ANSISequenceSupport;
+import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -358,23 +361,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return getVersion() >= 11;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return supportsSequences();
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
+	public SequenceSupport getSequenceSupport() {
+		return getVersion() < 11
+				? NoSequenceSupport.INSTANCE
+				: ANSISequenceSupport.INSTANCE;
 	}
 
 	@Override

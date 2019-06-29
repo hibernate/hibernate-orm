@@ -11,6 +11,8 @@ import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.sequence.CUBRIDSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -172,23 +174,8 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + sequenceName + ".next_value from table({1}) as T(X)";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create serial " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop serial " + sequenceName;
+	public SequenceSupport getSequenceSupport() {
+		return CUBRIDSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -199,11 +186,6 @@ public class CUBRIDDialect extends Dialect {
 	@Override
 	public boolean qualifyIndexName() {
 		return false;
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
 	}
 
 	@Override
@@ -223,6 +205,8 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public String getFromDual() {
+		//TODO: is this really needed?
+		//TODO: would "from table({0})" be better?
 		return "from db_root";
 	}
 

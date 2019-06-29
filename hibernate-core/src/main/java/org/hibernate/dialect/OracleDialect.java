@@ -18,6 +18,8 @@ import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
+import org.hibernate.dialect.sequence.OracleSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -669,34 +671,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from dual";
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
-		String minOrMaxValue;
-		if ( initialValue < 0 && incrementSize > 0 ) {
-			minOrMaxValue = " minvalue " + initialValue;
-		}
-		else if ( initialValue > 0 && incrementSize < 0 ) {
-			minOrMaxValue = " maxvalue " + initialValue;
-		}
-		else {
-			minOrMaxValue = "";
-		}
-		return getCreateSequenceString( sequenceName )
-				+ minOrMaxValue
-				+ " start with " + initialValue
-				+ " increment by " + incrementSize;
-	}
-
-	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade constraints";
 	}
@@ -709,16 +683,6 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String getForUpdateNowaitString() {
 		return " for update nowait";
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
 	}
 
 	@Override
@@ -739,6 +703,11 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String getFromDual() {
 		return "from dual";
+	}
+
+	@Override
+	public SequenceSupport getSequenceSupport() {
+		return OracleSequenceSupport.INSTANCE;
 	}
 
 	@Override

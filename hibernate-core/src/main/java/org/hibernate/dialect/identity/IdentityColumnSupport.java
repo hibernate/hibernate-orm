@@ -11,7 +11,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.id.PostInsertIdentityPersister;
 
 /**
- * Represents a support for the Dialect identity key generation
+ * A set of operations providing support for identity columns
+ * in a certain {@link org.hibernate.dialect.Dialect SQL dialect}.
  * 
  * @author Andrea Boriero
  *

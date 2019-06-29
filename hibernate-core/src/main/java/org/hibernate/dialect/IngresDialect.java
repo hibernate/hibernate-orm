@@ -14,6 +14,8 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Ingres10IdentityColumnSupport;
 import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
 import org.hibernate.dialect.pagination.IngresLimitHandler;
+import org.hibernate.dialect.sequence.ANSISequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -60,6 +62,8 @@ public class IngresDialect extends Dialect {
 	private final LimitHandler limitHandler;
 
 	private final int version;
+
+	private final SequenceSupport sequenceSupport;
 
 	int getVersion() {
 		return version;
@@ -140,6 +144,13 @@ public class IngresDialect extends Dialect {
 		}
 
 		limitHandler = getVersion() < 930 ? FirstLimitHandler.INSTANCE : IngresLimitHandler.INSTANCE;
+
+		sequenceSupport = new ANSISequenceSupport() {
+			@Override
+			public boolean supportsPooledSequences() {
+				return getVersion() >= 930;
+			}
+		};
 	}
 
 	@Override
@@ -240,9 +251,10 @@ public class IngresDialect extends Dialect {
 
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 	@Override
-	public boolean supportsSequences() {
-		return true;
+	public SequenceSupport getSequenceSupport() {
+		return sequenceSupport;
 	}
 
 	@Override
@@ -250,26 +262,6 @@ public class IngresDialect extends Dialect {
 		return getVersion() < 930
 				? "select seq_name from iisequence"
 				: "select seq_name from iisequences";
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return getVersion() >= 930;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select nextval for " + sequenceName;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return super.getDropSequenceString( sequenceName ) + " restrict";
 	}
 
 	@Override

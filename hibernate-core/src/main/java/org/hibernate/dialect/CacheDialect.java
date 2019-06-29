@@ -21,6 +21,8 @@ import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.dialect.sequence.CacheSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
@@ -253,24 +255,8 @@ public class CacheDialect extends Dialect {
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	public String getSequenceNextValString(String sequenceName) {
-		return "select InterSystems.Sequences_GetNext('" + sequenceName + "') from InterSystems.Sequences where ucase(name)=ucase('" + sequenceName + "')";
-	}
-
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "(select InterSystems.Sequences_GetNext('" + sequenceName + "') from InterSystems.Sequences where ucase(name)=ucase('" + sequenceName + "'))";
-	}
-
-	public String getCreateSequenceString(String sequenceName) {
-		return "insert into InterSystems.Sequences(Name) values (ucase('" + sequenceName + "'))";
-	}
-
-	public String getDropSequenceString(String sequenceName) {
-		return "delete from InterSystems.Sequences where ucase(name)=ucase('" + sequenceName + "')";
+	public SequenceSupport getSequenceSupport() {
+		return CacheSequenceSupport.INSTANCE;
 	}
 
 	public String getQuerySequencesString() {

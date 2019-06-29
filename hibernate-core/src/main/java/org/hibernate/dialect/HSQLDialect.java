@@ -13,7 +13,6 @@ import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -30,6 +29,8 @@ import org.hibernate.dialect.pagination.LegacyHSQLLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.HSQLSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -295,49 +296,8 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	/**
-	 * HSQL will start with 0, by default.  In order for Hibernate to know that this not transient,
-	 * manually start with 1.
-	 */
-	@Override
-	protected String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName + " start with 1";
-	}
-	
-	/**
-	 * Because of the overridden {@link #getCreateSequenceString(String)}, we must also override
-	 * {@link Dialect#getCreateSequenceString(String, int, int)} to prevent 2 instances of "start with".
-	 */
-	@Override
-	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
-		if ( supportsPooledSequences() ) {
-			return "create sequence " + sequenceName + " start with " + initialValue + " increment by " + incrementSize;
-		}
-		throw new MappingException( getClass().getName() + " does not support pooled sequences" );
-	}
-
-	@Override
-	protected String getDropSequenceString(String sequenceName) {
-		return super.getDropSequenceString( sequenceName ) + " if exists";
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "call next value for " + sequenceName;
+	public SequenceSupport getSequenceSupport() {
+		return HSQLSequenceSupport.INSTANCE;
 	}
 
 	@Override

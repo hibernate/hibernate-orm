@@ -18,6 +18,8 @@ import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -352,30 +354,15 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "nextval ('" + sequenceName + "')";
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
+	public SequenceSupport getSequenceSupport() {
 		return getVersion() < 820
-				? super.getDropSequenceString( sequenceName )
-				: "drop sequence if exists " + sequenceName;
+				? PostgreSQLSequenceSupport.LEGACY_INSTANCE
+				: PostgreSQLSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade";
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
 	}
 
 	@Override
@@ -594,31 +581,6 @@ public class PostgreSQLDialect extends Dialect {
 	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
 		ps.execute();
 		return (ResultSet) ps.getObject( 1 );
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
-		// Only necessary for postgres < 7.4
-		// See http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/doc/src/sgml/ref/create_sequence.sgml
-		String minOrMaxValue;
-		if ( initialValue < 0 && incrementSize > 0 ) {
-			minOrMaxValue = " minvalue " + initialValue;
-		}
-		else if ( initialValue > 0 && incrementSize < 0 ) {
-			minOrMaxValue = " maxvalue " + initialValue;
-		}
-		else {
-			minOrMaxValue = "";
-		}
-		return getCreateSequenceString( sequenceName )
-				+ minOrMaxValue
-				+ " start with " + initialValue
-				+ " increment by " + incrementSize;
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

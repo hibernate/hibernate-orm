@@ -15,6 +15,8 @@ import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.SkipFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.sequence.InformixSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -241,23 +243,8 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from informix.systables where tabid=1";
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
+	public SequenceSupport getSequenceSupport() {
+		return InformixSequenceSupport.INSTANCE;
 	}
 
 	@Override

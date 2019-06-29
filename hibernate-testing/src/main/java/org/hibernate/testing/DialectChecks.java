@@ -18,7 +18,7 @@ import org.hibernate.dialect.Dialect;
 abstract public class DialectChecks {
 	public static class SupportsSequences implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsSequences();
+			return dialect.getSequenceSupport().supportsSequences();
 		}
 	}
 

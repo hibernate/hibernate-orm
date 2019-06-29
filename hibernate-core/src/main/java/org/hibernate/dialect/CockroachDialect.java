@@ -10,6 +10,8 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -168,28 +170,8 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	protected String getDropSequenceString(String sequenceName) throws MappingException {
-		return "drop sequence if exists " + sequenceName;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "nextval ('" + sequenceName + "')";
+	public SequenceSupport getSequenceSupport() {
+		return PostgreSQLSequenceSupport.INSTANCE;
 	}
 
 	@Override

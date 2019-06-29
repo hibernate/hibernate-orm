@@ -7,6 +7,8 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.sequence.ANSISequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
@@ -69,23 +71,10 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return getMariaVersion() >= 1030;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return supportsSequences();
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "nextval(" + sequenceName + ")";
+	public SequenceSupport getSequenceSupport() {
+		return getMariaVersion() < 1030
+				? super.getSequenceSupport()
+				: ANSISequenceSupport.INSTANCE;
 	}
 
 	@Override

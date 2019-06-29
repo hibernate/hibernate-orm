@@ -10,6 +10,8 @@ import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 
 /**
  * An SQL dialect for DB2/400.  This class provides support for
@@ -19,9 +21,12 @@ import org.hibernate.dialect.pagination.LimitHandler;
  */
 public class DB2400Dialect extends DB2Dialect {
 
+	/**
+	 * No support for sequences.
+	 */
 	@Override
-	public boolean supportsSequences() {
-		return false;
+	public SequenceSupport getSequenceSupport() {
+		return NoSequenceSupport.INSTANCE;
 	}
 
 	@Override

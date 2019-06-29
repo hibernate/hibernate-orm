@@ -71,7 +71,7 @@ public class SequenceIdentityGenerator
 		public Delegate(PostInsertIdentityPersister persister, Dialect dialect, String sequenceName) {
 			super( persister );
 			this.dialect = dialect;
-			this.sequenceNextValFragment = dialect.getSelectSequenceNextValString( sequenceName );
+			this.sequenceNextValFragment = dialect.getSequenceSupport().getSelectSequenceNextValString( sequenceName );
 			this.keyColumns = getPersister().getRootTableKeyColumnNames();
 			if ( keyColumns.length > 1 ) {
 				throw new HibernateException( "sequence-identity generator cannot be used with with multi-column keys" );

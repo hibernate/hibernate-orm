@@ -11,6 +11,8 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
+import org.hibernate.dialect.sequence.RDMSSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -287,28 +289,8 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		// The where clause was added to eliminate this statement from Brute Force Searches.
-		return "select permuted_id('NEXT',31) from rdms.rdms_dummy where key_col = 1 ";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		// We must return a valid RDMS/RSA command from this method to
-		// prevent RDMS/RSA from issuing *ERROR 400
-		return "";
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		// We must return a valid RDMS/RSA command from this method to
-		// prevent RDMS/RSA from issuing *ERROR 400
-		return "";
+	public SequenceSupport getSequenceSupport() {
+		return RDMSSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -332,6 +314,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	public boolean supportsUnionAll() {
 		// RDMS supports the UNION ALL clause.
 		return true;
+	}
+
+	@Override
+	public String getFromDual() {
+		return "from rdms.rdms_dummy where key_col = 1";
 	}
 
 	@Override

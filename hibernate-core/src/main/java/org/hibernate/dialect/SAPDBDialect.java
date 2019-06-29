@@ -11,6 +11,8 @@ import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.sequence.SAPDBSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -167,13 +169,8 @@ public class SAPDBDialect extends Dialect {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from dual";
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
+	public SequenceSupport getSequenceSupport() {
+		return SAPDBSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -184,11 +181,6 @@ public class SAPDBDialect extends Dialect {
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceInformationExtractorSAPDBDatabaseImpl.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
 	}
 
 	@Override

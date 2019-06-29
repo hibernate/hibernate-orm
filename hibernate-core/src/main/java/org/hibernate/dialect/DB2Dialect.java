@@ -22,6 +22,9 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.sequence.DB2SequenceSupport;
+import org.hibernate.dialect.sequence.LegacyDB2SequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.DB2UniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -304,33 +307,10 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "values " + getSelectSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		if ( getVersion() < 970 ) {
-			return "nextval for " + sequenceName;
-		}
-		else {
-			return "next value for " + sequenceName;
-		}
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return super.getDropSequenceString( sequenceName ) + " restrict";
+	public SequenceSupport getSequenceSupport() {
+		return getVersion() < 970
+				? LegacyDB2SequenceSupport.INSTANCE
+				: DB2SequenceSupport.INSTANCE;
 	}
 
 	@Override

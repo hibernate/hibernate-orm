@@ -38,7 +38,6 @@ import java.util.regex.Pattern;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
@@ -47,6 +46,8 @@ import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.sequence.HANASequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.BinaryStream;
@@ -402,28 +403,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
-		if ( incrementSize == 0 ) {
-			throw new MappingException( "Unable to create the sequence [" + sequenceName + "]: the increment size must not be 0" );
-		}
-
-		String createSequenceString = getCreateSequenceString( sequenceName ) + " start with " + initialValue + " increment by " + incrementSize;
-		if ( incrementSize > 0 ) {
-			if ( initialValue < 1 ) {
-				// default minvalue for an ascending sequence is 1
-				createSequenceString += " minvalue " + initialValue;
-			}
-		}
-		else if ( incrementSize < 0 ) {
-			if ( initialValue > -1 ) {
-				// default maxvalue for a descending sequence is -1
-				createSequenceString += " maxvalue " + initialValue;
-			}
-		}
-		return createSequenceString;
-	}
-
-	@Override
 	public SqmMutationStrategy getDefaultIdTableStrategy() {
 		return new GlobalTemporaryTableStrategy( getIdTableExporter() );
 	}
@@ -494,16 +473,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceInformationExtractorHANADatabaseImpl.INSTANCE;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(final String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	public String getSequenceNextValString(final String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from sys.dummy";
 	}
 
 	@Override
@@ -672,13 +641,8 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
+	public SequenceSupport getSequenceSupport() {
+		return HANASequenceSupport.INSTANCE;
 	}
 
 	@Override

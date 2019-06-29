@@ -21,6 +21,8 @@ import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TimesTenLimitHandler;
+import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sequence.TimesTenSequenceSupport;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.TemporalUnit;
@@ -164,23 +166,8 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + sequenceName + ".nextval from sys.dual";
+	public SequenceSupport getSequenceSupport() {
+		return TimesTenSequenceSupport.INSTANCE;
 	}
 
 	@Override

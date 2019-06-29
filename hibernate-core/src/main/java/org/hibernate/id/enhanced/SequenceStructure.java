@@ -141,17 +141,17 @@ public class SequenceStructure implements DatabaseStructure {
 	@Override
 	public void registerExportables(Database database) {
 		buildSequence( database );
-		this.sql = database.getJdbcEnvironment().getDialect().getSequenceNextValString( sequenceName, incrementSize );
+		this.sql = database.getJdbcEnvironment().getDialect().getSequenceSupport().getSequenceNextValString( sequenceName, incrementSize );
 	}
 
 	@Override
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return dialect.getCreateSequenceStrings( sequenceName, initialValue, getSourceIncrementSize() );
+		return dialect.getSequenceSupport().getCreateSequenceStrings( sequenceName, initialValue, getSourceIncrementSize() );
 	}
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return dialect.getDropSequenceStrings( sequenceName );
+		return dialect.getSequenceSupport().getDropSequenceStrings( sequenceName );
 	}
 
 	@Override

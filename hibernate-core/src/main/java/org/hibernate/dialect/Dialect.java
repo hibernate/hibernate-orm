@@ -60,6 +60,7 @@ import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -1168,12 +1169,9 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	@Deprecated
 	public Class getNativeIdentifierGeneratorClass() {
-		if ( getIdentityColumnSupport().supportsIdentityColumns() ) {
-			return IdentityGenerator.class;
-		}
-		else {
-			return SequenceStyleGenerator.class;
-		}
+		return getIdentityColumnSupport().supportsIdentityColumns()
+				? IdentityGenerator.class
+				: SequenceStyleGenerator.class;
 	}
 
 	/**
@@ -1184,12 +1182,9 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The native generator strategy.
 	 */
 	public String getNativeIdentifierGeneratorStrategy() {
-		if ( getIdentityColumnSupport().supportsIdentityColumns() ) {
-			return "identity";
-		}
-		else {
-			return "sequence";
-		}
+		return getIdentityColumnSupport().supportsIdentityColumns()
+				? "identity"
+				: "sequence";
 	}
 
 	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1206,183 +1201,8 @@ public abstract class Dialect implements ConversionContext {
 
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * Does this dialect support sequences?
-	 *
-	 * @return True if sequences supported; false otherwise.
-	 */
-	public boolean supportsSequences() {
-		return false;
-	}
-
-	/**
-	 * Does this dialect support "pooled" sequences.  Not aware of a better
-	 * name for this.  Essentially can we specify the initial and increment values?
-	 *
-	 * @return True if such "pooled" sequences are supported; false otherwise.
-	 * @see #getCreateSequenceStrings(String, int, int)
-	 * @see #getCreateSequenceString(String, int, int)
-	 */
-	public boolean supportsPooledSequences() {
-		return false;
-	}
-
-	/**
-	 * Generate the appropriate select statement to to retrieve the next value
-	 * of a sequence.
-	 * <p/>
-	 * This should be a "stand alone" select statement.
-	 *
-	 * @param sequenceName the name of the sequence
-	 * @return String The "nextval" select string.
-	 * @throws MappingException If sequences are not supported.
-	 */
-	public String getSequenceNextValString(String sequenceName) throws MappingException {
-		throw new MappingException( getClass().getName() + " does not support sequences" );
-	}
-
-	/**
-	 * Generate the appropriate select statement to to retrieve the next value
-	 * of a sequence.
-	 * <p/>
-	 * This should be a "stand alone" select statement.
-	 *
-	 * @param sequenceName the name of the sequence
-	 * @param increment the increment, in case it needs to be passed explicitly
-	 * @return String The "nextval" select string.
-	 * @throws MappingException If sequences are not supported.
-	 */
-	public String getSequenceNextValString(String sequenceName, int increment) throws MappingException {
-		return getSequenceNextValString( sequenceName );
-	}
-
-	/**
-	 * Generate the select expression fragment that will retrieve the next
-	 * value of a sequence as part of another (typically DML) statement.
-	 * <p/>
-	 * This differs from {@link #getSequenceNextValString(String)} in that this
-	 * should return an expression usable within another statement.
-	 *
-	 * @param sequenceName the name of the sequence
-	 * @return The "nextval" fragment.
-	 * @throws MappingException If sequences are not supported.
-	 */
-	public String getSelectSequenceNextValString(String sequenceName) throws MappingException {
-		throw new MappingException( getClass().getName() + " does not support sequences" );
-	}
-
-	/**
-	 * The multiline script used to create a sequence.
-	 *
-	 * @param sequenceName The name of the sequence
-	 * @return The sequence creation commands
-	 * @throws MappingException If sequences are not supported.
-	 * @deprecated Use {@link #getCreateSequenceString(String, int, int)} instead
-	 */
-	@Deprecated
-	public String[] getCreateSequenceStrings(String sequenceName) throws MappingException {
-		return new String[] { getCreateSequenceString( sequenceName ) };
-	}
-
-	/**
-	 * An optional multi-line form for databases which {@link #supportsPooledSequences()}.
-	 *
-	 * @param sequenceName The name of the sequence
-	 * @param initialValue The initial value to apply to 'create sequence' statement
-	 * @param incrementSize The increment value to apply to 'create sequence' statement
-	 * @return The sequence creation commands
-	 * @throws MappingException If sequences are not supported.
-	 */
-	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) throws MappingException {
-		return new String[] { getCreateSequenceString( sequenceName, initialValue, incrementSize ) };
-	}
-
-	/**
-	 * Typically dialects which support sequences can create a sequence with
-	 * a single command. This method is a convenience making it easier to
-	 * implement {@link #getCreateSequenceStrings(String,int,int)} for these
-	 * dialects.
-	 * <p/>
-	 * The default definition is to return {@code create sequence sequenceName}
-	 * for the argument {@code sequenceName}. Dialects need to override this
-	 * method if a sequence created in this manner does not start at 1, or if
-	 * the syntax is nonstandard.
-	 * <p/>
-	 * Dialects which support sequences and can create a sequence in a single
-	 * command need *only* override this method. Dialects which support
-	 * sequences but require multiple commands to create a sequence should
-	 * override {@link #getCreateSequenceStrings(String,int,int)} instead.
-	 *
-	 * @param sequenceName The name of the sequence
-	 * @return The sequence creation command
-	 * @throws MappingException If sequences are not supported.
-	 */
-	protected String getCreateSequenceString(String sequenceName) throws MappingException {
-		if ( supportsSequences() ) {
-			return "create sequence " + sequenceName;
-		}
-		throw new MappingException( getClass().getName() + " does not support sequences" );
-	}
-
-	/**
-	 * Typically dialects which support sequences can create a sequence with
-	 * a single command. This method is a convenience making it easier to
-	 * implement {@link #getCreateSequenceStrings(String,int,int)} for these
-	 * dialects.
-	 * <p/>
-	 * Overloaded form of {@link #getCreateSequenceString(String)}, additionally
-	 * taking the initial value and increment size to be applied to the sequence
-	 * definition.
-	 * </p>
-	 * The default definition is to suffix {@link #getCreateSequenceString(String)}
-	 * with the string: {@code start with initialValue increment by incrementSize}
-	 * for the arguments {@code initialValue} and {@code incrementSize}. Dialects
-	 * need to override this method if different key phrases are used to apply the
-	 * allocation information.
-	 *
-	 * @param sequenceName The name of the sequence
-	 * @param initialValue The initial value to apply to 'create sequence' statement
-	 * @param incrementSize The increment value to apply to 'create sequence' statement
-	 * @return The sequence creation command
-	 * @throws MappingException If sequences are not supported.
-	 */
-	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
-		if ( supportsPooledSequences() ) {
-			return getCreateSequenceString( sequenceName ) + " start with " + initialValue + " increment by " + incrementSize;
-		}
-		throw new MappingException( getClass().getName() + " does not support pooled sequences" );
-	}
-
-	/**
-	 * The multiline script used to drop a sequence.
-	 *
-	 * @param sequenceName The name of the sequence
-	 * @return The sequence drop commands
-	 * @throws MappingException If sequences are not supported.
-	 */
-	public String[] getDropSequenceStrings(String sequenceName) throws MappingException {
-		return new String[]{getDropSequenceString( sequenceName )};
-	}
-
-	/**
-	 * Typically dialects which support sequences can drop a sequence
-	 * with a single command.  This is convenience form of
-	 * {@link #getDropSequenceStrings} to help facilitate that.
-	 * <p/>
-	 * Dialects which support sequences and can drop a sequence in a
-	 * single command need *only* override this method.  Dialects
-	 * which support sequences but require multiple commands to drop
-	 * a sequence should instead override {@link #getDropSequenceStrings}.
-	 *
-	 * @param sequenceName The name of the sequence
-	 * @return The sequence drop commands
-	 * @throws MappingException If sequences are not supported.
-	 */
-	protected String getDropSequenceString(String sequenceName) throws MappingException {
-		if ( supportsSequences() ) {
-			return "drop sequence " + sequenceName;
-		}
-		throw new MappingException( getClass().getName() + " does not support sequences" );
+	public SequenceSupport getSequenceSupport() {
+		return new LegacySequenceSupport(this);
 	}
 
 	/**
@@ -1395,15 +1215,14 @@ public abstract class Dialect implements ConversionContext {
 		return null;
 	}
 
+	/**
+	 * A source of {@link org.hibernate.tool.schema.extract.spi.SequenceInformation}.
+	 */
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		if ( getQuerySequencesString() == null ) {
-			return SequenceInformationExtractorNoOpImpl.INSTANCE;
-		}
-		else {
-			return SequenceInformationExtractorLegacyImpl.INSTANCE;
-		}
+		return getQuerySequencesString() == null
+				? SequenceInformationExtractorNoOpImpl.INSTANCE
+				: SequenceInformationExtractorLegacyImpl.INSTANCE;
 	}
-
 
 	// GUID support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1508,8 +1327,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The appropriate for update fragment.
 	 */
 	public String getForUpdateString(LockOptions lockOptions) {
-		final LockMode lockMode = lockOptions.getLockMode();
-		return getForUpdateString( lockMode, lockOptions.getTimeOut() );
+		return getForUpdateString( lockOptions.getLockMode(), lockOptions.getTimeOut() );
 	}
 
 	@SuppressWarnings( {"deprecation"})
@@ -3807,4 +3625,83 @@ public abstract class Dialect implements ConversionContext {
 		return zeroBasedFirstResult;
 	}
 
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	public boolean supportsSequences() {
+		return false;
+	}
+
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	public boolean supportsPooledSequences() {
+		return false;
+	}
+
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	public String getSequenceNextValString(String sequenceName) throws MappingException {
+		throw new MappingException("dialect does not support sequences");
+	}
+
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	public String getSelectSequenceNextValString(String sequenceName) throws MappingException {
+		throw new MappingException("dialect does not support sequences");
+	}
+
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	public String getSequenceNextValString(String sequenceName, int increment) throws MappingException {
+		return getSequenceNextValString( sequenceName );
+	}
+
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) throws MappingException {
+		return new String[] { getCreateSequenceString( sequenceName, initialValue, incrementSize ) };
+	}
+
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	protected String getCreateSequenceString(String sequenceName) throws MappingException {
+		return "create sequence " + sequenceName;
+	}
+
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
+		return getCreateSequenceString( sequenceName ) + " start with " + initialValue + " increment by " + incrementSize;
+	}
+
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	public String[] getDropSequenceStrings(String sequenceName) throws MappingException {
+		return new String[]{ getDropSequenceString( sequenceName ) };
+	}
+
+	/**
+	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
+	 */
+	@Deprecated
+	protected String getDropSequenceString(String sequenceName) throws MappingException {
+		return "drop sequence " + sequenceName;
+	}
 }

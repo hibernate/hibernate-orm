@@ -11,6 +11,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.FirebirdSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -196,38 +198,8 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) {
-		return new String[] {
-				getCreateSequenceString( sequenceName ),
-				"alter sequence " + sequenceName + " restart with " + initialValue
-		};
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " " + getFromDual();
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName, int increment) {
-		return increment == 1
-				? getSequenceNextValString( sequenceName )
-				: "select gen_id(" + sequenceName + "," + increment + ") " + getFromDual();
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
+	public SequenceSupport getSequenceSupport() {
+		return FirebirdSequenceSupport.INSTANCE;
 	}
 
 	@Override

@@ -228,11 +228,6 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return false;
-	}
-
-	@Override
 	public String getAddColumnString() {
 		return getVersion() < 14 ? super.getAddColumnString() : "add";
 	}

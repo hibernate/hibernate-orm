@@ -11,6 +11,8 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.sequence.MckoiSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -63,23 +65,13 @@ public class MckoiDialect extends Dialect {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "nextval('" + sequenceName + "')";
+	public SequenceSupport getSequenceSupport() {
+		return MckoiSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getForUpdateString() {
 		return "";
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
 	}
 
 	@Override

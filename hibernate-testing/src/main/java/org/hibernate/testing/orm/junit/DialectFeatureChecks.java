@@ -18,7 +18,7 @@ import org.hibernate.dialect.Dialect;
 abstract public class DialectFeatureChecks {
 	public static class SupportsSequences implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsSequences();
+			return dialect.getSequenceSupport().supportsSequences();
 		}
 	}
 

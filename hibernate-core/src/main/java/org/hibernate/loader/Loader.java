@@ -59,9 +59,14 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -1154,8 +1159,19 @@ public abstract class Loader {
 		if ( hydratedObjects != null ) {
 			int hydratedObjectsSize = hydratedObjects.size();
 			LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
-			for ( Object hydratedObject : hydratedObjects ) {
-				TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre );
+
+			if ( hydratedObjectsSize != 0 ) {
+				final Iterable<PreLoadEventListener> listeners = session
+					.getFactory()
+					.getServiceRegistry()
+					.getService( EventListenerRegistry.class )
+					.getEventListenerGroup( EventType.PRE_LOAD )
+					.listeners();
+
+				for ( Object hydratedObject : hydratedObjects ) {
+					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners );
+				}
+
 			}
 		}
 
@@ -1175,9 +1191,22 @@ public abstract class Loader {
 		// split off from initializeEntity.  It *must* occur after
 		// endCollectionLoad to ensure the collection is in the
 		// persistence context.
-		if ( hydratedObjects != null ) {
+		if ( hydratedObjects != null && hydratedObjects.size() > 0 ) {
+
+			final Iterable<PostLoadEventListener> postLoadEventListeners;
+			if ( session.isEventSource() ) {
+				final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
+					.getServiceRegistry()
+					.getService( EventListenerRegistry.class )
+					.getEventListenerGroup( EventType.POST_LOAD );
+				postLoadEventListeners = listenerGroup.listeners();
+			}
+			else {
+				postLoadEventListeners = Collections.emptyList();
+			}
+
 			for ( Object hydratedObject : hydratedObjects ) {
-				TwoPhaseLoad.postLoad( hydratedObject, session, post );
+				TwoPhaseLoad.postLoad( hydratedObject, session, post, postLoadEventListeners );
 				if ( afterLoadActions != null ) {
 					for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
 						final EntityEntry entityEntry = session.getPersistenceContext().getEntry( hydratedObject );

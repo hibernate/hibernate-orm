@@ -104,6 +104,34 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
+	 * @deprecated This method will be removed. Use {@link #initializeEntity(Object, boolean, SharedSessionContractImplementor, PreLoadEvent, Iterable)} instead.
+	 *
+	 * @param entity The entity being loaded
+	 * @param readOnly Is the entity being loaded as read-only
+	 * @param session The Session
+	 * @param preLoadEvent The (re-used) pre-load event
+	 */
+	@Deprecated
+	public static void initializeEntity(
+			final Object entity,
+			final boolean readOnly,
+			final SharedSessionContractImplementor session,
+			final PreLoadEvent preLoadEvent) {
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
+		if ( entityEntry == null ) {
+			throw new AssertionFailure( "possible non-threadsafe access to the session" );
+		}
+		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
+			.getFactory()
+			.getServiceRegistry()
+			.getService( EventListenerRegistry.class )
+			.getEventListenerGroup( EventType.PRE_LOAD );
+		final Iterable<PreLoadEventListener> listeners = listenerGroup.listeners();
+		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, listeners );
+	}
+
+	/**
 	 * Perform the second step of 2-phase load. Fully initialize the entity
 	 * instance.
 	 * <p/>
@@ -115,18 +143,20 @@ public final class TwoPhaseLoad {
 	 * @param readOnly Is the entity being loaded as read-only
 	 * @param session The Session
 	 * @param preLoadEvent The (re-used) pre-load event
+	 * @param preLoadEventListeners the pre-load event listeners
 	 */
 	public static void initializeEntity(
 			final Object entity,
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent) {
+			final PreLoadEvent preLoadEvent,
+			final Iterable<PreLoadEventListener> preLoadEventListeners) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		if ( entityEntry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
-		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent );
+		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, preLoadEventListeners );
 	}
 
 	private static void doInitializeEntity(
@@ -134,7 +164,8 @@ public final class TwoPhaseLoad {
 			final EntityEntry entityEntry,
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent) throws HibernateException {
+			final PreLoadEvent preLoadEvent,
+			final Iterable<PreLoadEventListener> preLoadEventListeners) throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityPersister persister = entityEntry.getPersister();
 		final Serializable id = entityEntry.getId();
@@ -176,13 +207,7 @@ public final class TwoPhaseLoad {
 		//Must occur after resolving identifiers!
 		if ( session.isEventSource() ) {
 			preLoadEvent.setEntity( entity ).setState( hydratedState ).setId( id ).setPersister( persister );
-
-			final EventListenerGroup<PreLoadEventListener> listenerGroup = session
-					.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.PRE_LOAD );
-			for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
+			for ( PreLoadEventListener listener : preLoadEventListeners ) {
 				listener.onPreLoad( preLoadEvent );
 			}
 		}
@@ -361,11 +386,13 @@ public final class TwoPhaseLoad {
 	 * @param entity The entity
 	 * @param session The Session
 	 * @param postLoadEvent The (re-used) post-load event
+	 * @param postLoadEventListeners thet post-load eventListeners
 	 */
 	public static void postLoad(
 			final Object entity,
 			final SharedSessionContractImplementor session,
-			final PostLoadEvent postLoadEvent) {
+			final PostLoadEvent postLoadEvent,
+			final Iterable<PostLoadEventListener> postLoadEventListeners) {
 
 		if ( session.isEventSource() ) {
 			final PersistenceContext persistenceContext
@@ -374,14 +401,29 @@ public final class TwoPhaseLoad {
 
 			postLoadEvent.setEntity( entity ).setId( entityEntry.getId() ).setPersister( entityEntry.getPersister() );
 
-			final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
-							.getServiceRegistry()
-							.getService( EventListenerRegistry.class )
-							.getEventListenerGroup( EventType.POST_LOAD );
-			for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
+			for ( PostLoadEventListener listener : postLoadEventListeners ) {
 				listener.onPostLoad( postLoadEvent );
 			}
 		}
+	}
+
+	/**
+	 * This method will be removed.
+	 * @deprecated Use {@link #postLoad(Object, SharedSessionContractImplementor, PostLoadEvent, Iterable)}
+	 * instead.
+	 */
+	@Deprecated
+	public static void postLoad(
+		final Object entity,
+		final SharedSessionContractImplementor session,
+		final PostLoadEvent postLoadEvent) {
+
+		final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
+			.getServiceRegistry()
+			.getService( EventListenerRegistry.class )
+			.getEventListenerGroup( EventType.POST_LOAD );
+
+		postLoad( entity, session, postLoadEvent, listenerGroup.listeners() );
 	}
 
 	private static boolean useMinimalPuts(SharedSessionContractImplementor session, EntityEntry entityEntry) {

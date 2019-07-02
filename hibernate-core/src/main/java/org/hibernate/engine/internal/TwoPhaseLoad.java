@@ -195,13 +195,13 @@ public final class TwoPhaseLoad {
 					// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
 					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
 					// so do not assign the resolved, unitialized PersistentCollection back to hydratedState[i].
-					Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
+					Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
 					types[i].resolve( value, session, entity, overridingEager );
 				}
 			}
 			else if ( value != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i] );
+				Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
 				hydratedState[i] = types[i].resolve( value, session, entity, overridingEager );
 			}
 		}
@@ -336,14 +336,17 @@ public final class TwoPhaseLoad {
 	 * @return null if there is no overriding, true if it is overridden to eager and false if it is overridden to lazy
 	 */
 	private static Boolean getOverridingEager(
-			SharedSessionContractImplementor session,
-			String entityName,
-			String associationName,
-			Type type) {
-		if ( type.isAssociationType() || type.isCollectionType() ) {
-			Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );
+			final SharedSessionContractImplementor session,
+			final String entityName,
+			final String associationName,
+			final Type type,
+			final boolean isDebugEnabled) {
+		// Performance: check type.isCollectionType() first, as type.isAssociationType() is megamorphic
+		if ( type.isCollectionType() || type.isAssociationType()  ) {
+			final Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );
 
-			if ( LOG.isDebugEnabled() ) {
+			//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
+			if ( isDebugEnabled ) {
 				if ( overridingEager != null ) {
 					LOG.debugf(
 							"Overriding eager fetching using active fetch profile. EntityName: %s, associationName: %s, eager fetching: %s",
@@ -366,8 +369,9 @@ public final class TwoPhaseLoad {
 		// as otherwise this section becomes an hot allocation point.
 		if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 			final String role =  entityName + '.' + associationName;
+			final SessionFactoryImplementor factory = session.getFactory();
 			for ( String fetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
-				FetchProfile fp = session.getFactory().getFetchProfile( fetchProfileName );
+				FetchProfile fp = factory.getFetchProfile( fetchProfileName );
 				Fetch fetch = fp.getFetchByRole( role );
 				if ( fetch != null && Fetch.Style.JOIN == fetch.getStyle() ) {
 					return true;

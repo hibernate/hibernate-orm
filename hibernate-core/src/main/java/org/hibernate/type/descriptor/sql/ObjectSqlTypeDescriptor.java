@@ -74,8 +74,8 @@ public class ObjectSqlTypeDescriptor implements SqlTypeDescriptor {
 
 		return new BasicExtractor( javaTypeDescriptor, this ) {
 			@Override
-			protected Object doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return rs.getObject( name );
+			protected Object doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return rs.getObject( paramIndex );
 			}
 
 			@Override

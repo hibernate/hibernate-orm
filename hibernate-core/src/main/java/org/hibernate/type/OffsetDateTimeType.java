@@ -26,7 +26,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class OffsetDateTimeType
 		extends AbstractSingleColumnStandardBasicType<OffsetDateTime>
-		implements VersionType<OffsetDateTime>, LiteralType<OffsetDateTime>, AllowableTemporalParameterType {
+		implements VersionType<OffsetDateTime>, LiteralType<OffsetDateTime>, AllowableTemporalParameterType<OffsetDateTime> {
 
 	/**
 	 * Singleton access
@@ -55,7 +55,6 @@ public class OffsetDateTimeType
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Comparator<OffsetDateTime> getComparator() {
 		return OffsetDateTime.timeLineOrder();
 	}
@@ -83,6 +82,10 @@ public class OffsetDateTimeType
 			}
 			case DATE: {
 				return DateType.INSTANCE;
+			}
+			default: {
+				// should never happen, but switch requires this branch so...
+				throw new QueryException( "OffsetDateTime type cannot be treated using `" + temporalPrecision.name() + "` precision" );
 			}
 		}
 	}

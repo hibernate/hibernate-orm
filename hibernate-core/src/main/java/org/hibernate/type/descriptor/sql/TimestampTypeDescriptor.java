@@ -78,10 +78,10 @@ public class TimestampTypeDescriptor implements SqlTypeDescriptor {
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return options.getJdbcTimeZone() != null ?
-					javaTypeDescriptor.wrap( rs.getTimestamp( name, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-					javaTypeDescriptor.wrap( rs.getTimestamp( name ), options );
+					javaTypeDescriptor.wrap( rs.getTimestamp( paramIndex, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
+					javaTypeDescriptor.wrap( rs.getTimestamp( paramIndex ), options );
 			}
 
 			@Override

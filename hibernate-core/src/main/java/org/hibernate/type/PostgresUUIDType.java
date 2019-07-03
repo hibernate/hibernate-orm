@@ -85,7 +85,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+				protected X doExtract(ResultSet rs, int name, WrapperOptions options) throws SQLException {
 					return javaTypeDescriptor.wrap( rs.getObject( name ), options );
 				}
 

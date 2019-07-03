@@ -77,6 +77,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
@@ -560,11 +561,6 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public Object visitTuple(SqmTuple sqmTuple) {
 		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public GraphImplementor getCurrentResultGraphNode() {
-		return null;
 	}
 
 	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam = new IdentityHashMap<>();

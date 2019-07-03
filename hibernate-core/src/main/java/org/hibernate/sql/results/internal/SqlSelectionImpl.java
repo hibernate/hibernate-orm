@@ -12,7 +12,7 @@ import org.hibernate.persister.SqlExpressableType;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.exec.spi.JdbcValueExtractor;
+import org.hibernate.type.descriptor.ValueExtractor;
 
 /**
  * @author Steve Ebersole
@@ -21,13 +21,13 @@ public class SqlSelectionImpl implements SqlSelection {
 	private final int jdbcPosition;
 	private final int valuesArrayPosition;
 	private final Expression sqlExpression;
-	private final JdbcValueExtractor jdbcValueExtractor;
+	private final ValueExtractor jdbcValueExtractor;
 
 	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, SqlExpressableType sqlExpressableType) {
 		this( jdbcPosition, valuesArrayPosition, sqlExpression, sqlExpressableType.getJdbcValueExtractor() );
 	}
 
-	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, JdbcValueExtractor jdbcValueExtractor) {
+	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, ValueExtractor jdbcValueExtractor) {
 		this.jdbcPosition = jdbcPosition;
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.sqlExpression = sqlExpression;
@@ -35,7 +35,7 @@ public class SqlSelectionImpl implements SqlSelection {
 	}
 
 	@Override
-	public JdbcValueExtractor getJdbcValueExtractor() {
+	public ValueExtractor getJdbcValueExtractor() {
 		return jdbcValueExtractor;
 	}
 

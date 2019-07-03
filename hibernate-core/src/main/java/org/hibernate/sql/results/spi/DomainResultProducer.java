@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+
 /**
  * Represents something that can produce a {@link DomainResult}
  * instances which can be used as selection items and
@@ -29,6 +31,7 @@ public interface DomainResultProducer<T> {
 	 * This default impl assumes this producer is a true (Sql)Expression
 	 */
 	default void applySqlSelections(DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 //		// this form works for basic-valued nodes
 //		creationState.getSqlExpressionResolver().resolveSqlSelection(
 //				(Expression) this,

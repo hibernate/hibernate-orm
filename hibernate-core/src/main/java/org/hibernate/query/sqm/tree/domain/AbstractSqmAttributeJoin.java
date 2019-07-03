@@ -106,14 +106,6 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		return walker.visitQualifiedAttributeJoin( this );
 	}
 
-	@Override
-	public void prepareForSubNavigableReference(
-			SqmPathSource subNavigable,
-			boolean isSubReferenceTerminal,
-			SqmCreationState creationState) {
-		// nothing to prepare
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

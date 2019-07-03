@@ -1064,8 +1064,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitValueMappings(Consumer<ValueMapping> consumer) {
-		attributeDefinitions.forEach( consumer );
+	public void visitValueMappings(Consumer consumer) {
+
 	}
 
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {

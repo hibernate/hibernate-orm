@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;

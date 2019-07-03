@@ -6,13 +6,17 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.Incubating;
+import org.hibernate.metamodel.model.mapping.spi.Writeable;
+import org.hibernate.query.Query;
 
 /**
- * Specialization of DomainType for types that can be used as query parameter bind values
+ * Specialization of DomainType for types that can be used as {@link Query} parameter bind values
+ *
+ * todo (6.0) : extend Writeable (and therefore Readable too)?  or composition?
  *
  * @author Steve Ebersole
  */
-public interface AllowableParameterType<J> extends SimpleDomainType<J> {
-	ValueExtractor<J> getValueExtractor();
+@Incubating
+public interface AllowableParameterType<J> extends Writeable<J> {
 }

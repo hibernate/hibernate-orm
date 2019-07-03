@@ -22,19 +22,19 @@ public interface ValueExtractor<X> {
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	X extract(ResultSet rs, String name, WrapperOptions options) throws SQLException;
+	X extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException;
 
 	/**
 	 * Extract value from a callable output parameter by index
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	X extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException;
+	X extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException;
 
 	/**
 	 * Extract value from a callable output parameter by name
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	X extract(CallableStatement statement, String[] paramNames, WrapperOptions options) throws SQLException;
+	X extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException;
 }

@@ -10,7 +10,8 @@ import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * The "context" in which creation of SQL AST occurs.
+ * The "context" in which creation of SQL AST occurs.  Exposes access to
+ * services generally needed in creating SQL AST nodes
  *
  * @author Steve Ebersole
  */

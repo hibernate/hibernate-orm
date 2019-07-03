@@ -43,8 +43,8 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	}
 
 	@Override
-	protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-		final Object geomObj = rs.getObject( name );
+	protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+		final Object geomObj = rs.getObject( paramIndex );
 		return getJavaDescriptor().wrap( convert( geomObj ), options );
 	}
 

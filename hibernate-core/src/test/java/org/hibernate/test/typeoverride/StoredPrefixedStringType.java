@@ -57,8 +57,8 @@ public class StoredPrefixedStringType
 				public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 						@Override
-						protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-							String stringValue = rs.getString( name );
+						protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+							String stringValue = rs.getString( paramIndex );
 							if ( ! stringValue.startsWith( PREFIX ) ) {
 								throw new AssertionFailure( "Value read from resultset does not have prefix." );
 							}

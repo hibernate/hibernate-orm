@@ -16,7 +16,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public interface AllowableTemporalParameterType extends AllowableParameterType {
+public interface AllowableTemporalParameterType<T> extends AllowableParameterType<T> {
 	/**
 	 * Convert the value and/or type to the specified temporal precision
 	 */

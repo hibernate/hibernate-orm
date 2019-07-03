@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.engine.spi;
 
@@ -19,12 +19,11 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.hql.internal.classic.ParserHelper;
+
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.ComponentType;
@@ -38,14 +37,9 @@ import org.jboss.logging.Logger;
 public final class QueryParameters {
 	private static final Logger LOG = CoreLogging.logger( QueryParameters.class );
 
-	/**
-	 * Symbols used to split SQL string into tokens in {@link #processFilters(String, Map, SessionFactoryImplementor)}.
-	 */
-	private static final String SYMBOLS = ParserHelper.HQL_SEPARATORS.replace( "'", "" );
-
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
-	private Map<String,TypedValue> namedParameters;
+	private Map<String, TypedValue> namedParameters;
 
 	private LockOptions lockOptions;
 	private RowSelection rowSelection;
@@ -109,7 +103,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map<String,TypedValue> namedParameters,
+			final Map<String, TypedValue> namedParameters,
 			final Serializable[] collectionKeys) {
 		this(
 				positionalParameterTypes,
@@ -163,7 +157,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map<String,TypedValue> namedParameters,
+			final Map<String, TypedValue> namedParameters,
 			final LockOptions lockOptions,
 			final RowSelection rowSelection,
 			final boolean isReadOnlyInitialized,
@@ -194,7 +188,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map<String,TypedValue> namedParameters,
+			final Map<String, TypedValue> namedParameters,
 			final LockOptions lockOptions,
 			final RowSelection rowSelection,
 			final boolean isReadOnlyInitialized,
@@ -245,9 +239,9 @@ public final class QueryParameters {
 			final Serializable optionalId,
 			ResultTransformer resultTransformer) {
 		this(
-				queryParameterBindings.collectPositionalBindTypes(),
-				queryParameterBindings.collectPositionalBindValues(),
-				queryParameterBindings.collectNamedParameterBindings(),
+				null,
+				null,
+				null,
 				lockOptions,
 				selection,
 				isReadOnlyInitialized,
@@ -270,7 +264,7 @@ public final class QueryParameters {
 		return rowSelection != null;
 	}
 
-	public Map<String,TypedValue> getNamedParameters() {
+	public Map<String, TypedValue> getNamedParameters() {
 		return namedParameters;
 	}
 
@@ -291,7 +285,7 @@ public final class QueryParameters {
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public void setNamedParameters(Map<String,TypedValue> map) {
+	public void setNamedParameters(Map<String, TypedValue> map) {
 		namedParameters = map;
 	}
 
@@ -526,71 +520,71 @@ public final class QueryParameters {
 
 	@SuppressWarnings( {"unchecked"})
 	public void processFilters(String sql, Map filters, SessionFactoryImplementor factory) {
-		if ( filters.size() == 0 || !sql.contains( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
-			// HELLA IMPORTANT OPTIMIZATION!!!
-			processedPositionalParameterValues = getPositionalParameterValues();
-			processedPositionalParameterTypes = getPositionalParameterTypes();
-			processedSQL = sql;
-		}
-		else {
-			final StringTokenizer tokens = new StringTokenizer( sql, SYMBOLS, true );
-			StringBuilder result = new StringBuilder();
-			List parameters = new ArrayList();
-			List parameterTypes = new ArrayList();
-			int positionalIndex = 0;
-			while ( tokens.hasMoreTokens() ) {
-				final String token = tokens.nextToken();
-				if ( token.startsWith( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
-					final String filterParameterName = token.substring( 1 );
-					final String[] parts = LoadQueryInfluencers.parseFilterParameterName( filterParameterName );
-					final FilterImpl filter = (FilterImpl) filters.get( parts[0] );
-					final Object value = filter.getParameter( parts[1] );
-					final Type type = filter.getFilterDefinition().getParameterType( parts[1] );
-					if ( value != null && Collection.class.isAssignableFrom( value.getClass() ) ) {
-						Iterator itr = ( (Collection) value ).iterator();
-						while ( itr.hasNext() ) {
-							final Object elementValue = itr.next();
-							result.append( '?' );
-							parameters.add( elementValue );
-							parameterTypes.add( type );
-							if ( itr.hasNext() ) {
-								result.append( ", " );
-							}
-						}
-					}
-					else {
-						result.append( '?' );
-						parameters.add( value );
-						parameterTypes.add( type );
-					}
-				}
-				else {
-					result.append( token );
-					if ( "?".equals( token ) && positionalIndex < getPositionalParameterValues().length ) {
-						final Type type = getPositionalParameterTypes()[positionalIndex];
-						if ( type.isComponentType() ) {
-							// should process tokens till reaching the number of "?" corresponding to the
-							// numberOfParametersCoveredBy of the compositeType
-							int paramIndex = 1;
-							final int numberOfParametersCoveredBy = getNumberOfParametersCoveredBy( ((ComponentType) type).getSubtypes() );
-							while ( paramIndex < numberOfParametersCoveredBy ) {
-								final String nextToken = tokens.nextToken();
-								if ( "?".equals( nextToken ) ) {
-									paramIndex++;
-								}
-								result.append( nextToken );
-							}
-						}
-						parameters.add( getPositionalParameterValues()[positionalIndex] );
-						parameterTypes.add( type );
-						positionalIndex++;
-					}
-				}
-			}
-			processedPositionalParameterValues = parameters.toArray();
-			processedPositionalParameterTypes = ( Type[] ) parameterTypes.toArray( new Type[parameterTypes.size()] );
-			processedSQL = result.toString();
-		}
+//		if ( filters.size() == 0 || !sql.contains( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
+//			// HELLA IMPORTANT OPTIMIZATION!!!
+//			processedPositionalParameterValues = getPositionalParameterValues();
+//			processedPositionalParameterTypes = getPositionalParameterTypes();
+//			processedSQL = sql;
+//		}
+//		else {
+//			final StringTokenizer tokens = new StringTokenizer( sql, SYMBOLS, true );
+//			StringBuilder result = new StringBuilder();
+//			List parameters = new ArrayList();
+//			List parameterTypes = new ArrayList();
+//			int positionalIndex = 0;
+//			while ( tokens.hasMoreTokens() ) {
+//				final String token = tokens.nextToken();
+//				if ( token.startsWith( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
+//					final String filterParameterName = token.substring( 1 );
+//					final String[] parts = LoadQueryInfluencers.parseFilterParameterName( filterParameterName );
+//					final FilterImpl filter = (FilterImpl) filters.get( parts[0] );
+//					final Object value = filter.getParameter( parts[1] );
+//					final Type type = filter.getFilterDefinition().getParameterType( parts[1] );
+//					if ( value != null && Collection.class.isAssignableFrom( value.getClass() ) ) {
+//						Iterator itr = ( (Collection) value ).iterator();
+//						while ( itr.hasNext() ) {
+//							final Object elementValue = itr.next();
+//							result.append( '?' );
+//							parameters.add( elementValue );
+//							parameterTypes.add( type );
+//							if ( itr.hasNext() ) {
+//								result.append( ", " );
+//							}
+//						}
+//					}
+//					else {
+//						result.append( '?' );
+//						parameters.add( value );
+//						parameterTypes.add( type );
+//					}
+//				}
+//				else {
+//					result.append( token );
+//					if ( "?".equals( token ) && positionalIndex < getPositionalParameterValues().length ) {
+//						final Type type = getPositionalParameterTypes()[positionalIndex];
+//						if ( type.isComponentType() ) {
+//							// should process tokens till reaching the number of "?" corresponding to the
+//							// numberOfParametersCoveredBy of the compositeType
+//							int paramIndex = 1;
+//							final int numberOfParametersCoveredBy = getNumberOfParametersCoveredBy( ((ComponentType) type).getSubtypes() );
+//							while ( paramIndex < numberOfParametersCoveredBy ) {
+//								final String nextToken = tokens.nextToken();
+//								if ( "?".equals( nextToken ) ) {
+//									paramIndex++;
+//								}
+//								result.append( nextToken );
+//							}
+//						}
+//						parameters.add( getPositionalParameterValues()[positionalIndex] );
+//						parameterTypes.add( type );
+//						positionalIndex++;
+//					}
+//				}
+//			}
+//			processedPositionalParameterValues = parameters.toArray();
+//			processedPositionalParameterTypes = ( Type[] ) parameterTypes.toArray( new Type[parameterTypes.size()] );
+//			processedSQL = result.toString();
+//		}
 	}
 
 	private int getNumberOfParametersCoveredBy(Type[] subtypes) {

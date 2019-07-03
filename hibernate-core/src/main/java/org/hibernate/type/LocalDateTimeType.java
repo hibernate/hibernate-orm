@@ -29,7 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class LocalDateTimeType
 		extends AbstractSingleColumnStandardBasicType<LocalDateTime>
-		implements VersionType<LocalDateTime>, LiteralType<LocalDateTime>, AllowableTemporalParameterType {
+		implements VersionType<LocalDateTime>, LiteralType<LocalDateTime>, AllowableTemporalParameterType<LocalDateTime> {
 	/**
 	 * Singleton access
 	 */

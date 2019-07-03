@@ -69,12 +69,12 @@ public class HANAGeometryTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				if ( HANAGeometryTypeDescriptor.this.determineCrsIdFromDatabase ) {
-					return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs, name ), options );
+					return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs, paramIndex ), options );
 				}
 				else {
-					return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs.getObject( name ) ), options );
+					return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs.getObject( paramIndex ) ), options );
 				}
 			}
 

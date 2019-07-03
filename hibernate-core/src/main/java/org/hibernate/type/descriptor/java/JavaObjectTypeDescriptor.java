@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * @author Steve Ebersole
@@ -22,12 +22,13 @@ public class JavaObjectTypeDescriptor extends AbstractTypeDescriptor<Object> {
 	}
 
 	@Override
-	public <X> X unwrap(Object value, Class<X> type, SharedSessionContractImplementor options) {
+	public <X> X unwrap(Object value, Class<X> type, WrapperOptions options) {
+		//noinspection unchecked
 		return (X) value;
 	}
 
 	@Override
-	public <X> Object wrap(X value, SharedSessionContractImplementor options) {
+	public <X> Object wrap(X value, WrapperOptions options) {
 		return value;
 	}
 }

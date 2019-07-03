@@ -26,7 +26,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class CalendarTimeType
 		extends AbstractSingleColumnStandardBasicType<Calendar>
-		implements AllowableTemporalParameterType {
+		implements AllowableTemporalParameterType<Calendar> {
 	public static final CalendarTimeType INSTANCE = new CalendarTimeType();
 
 	public CalendarTimeType() {

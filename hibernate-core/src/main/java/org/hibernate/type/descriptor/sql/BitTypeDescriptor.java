@@ -60,8 +60,8 @@ public class BitTypeDescriptor implements SqlTypeDescriptor {
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getBoolean( name ), options );
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( rs.getBoolean( paramIndex ), options );
 			}
 
 			@Override

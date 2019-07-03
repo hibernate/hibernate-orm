@@ -400,8 +400,8 @@ public abstract class AbstractHANADialect extends Dialect {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					Blob rsBlob = rs.getBlob( name );
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					Blob rsBlob = rs.getBlob( paramIndex );
 					if ( rsBlob == null || rsBlob.length() < HANAStreamBlobTypeDescriptor.this.maxLobPrefetchSize ) {
 						return javaTypeDescriptor.wrap( rsBlob, options );
 					}
@@ -490,13 +490,13 @@ public abstract class AbstractHANADialect extends Dialect {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					Clob rsClob;
 					if ( HANAClobTypeDescriptor.this.useUnicodeStringTypes ) {
-						rsClob = rs.getNClob( name );
+						rsClob = rs.getNClob( paramIndex );
 					}
 					else {
-						rsClob = rs.getClob( name );
+						rsClob = rs.getClob( paramIndex );
 					}
 
 					if ( rsClob == null || rsClob.length() < HANAClobTypeDescriptor.this.maxLobPrefetchSize ) {
@@ -584,8 +584,8 @@ public abstract class AbstractHANADialect extends Dialect {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					NClob rsNClob = rs.getNClob( name );
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					NClob rsNClob = rs.getNClob( paramIndex );
 					if ( rsNClob == null || rsNClob.length() < HANANClobTypeDescriptor.this.maxLobPrefetchSize ) {
 						return javaTypeDescriptor.wrap( rsNClob, options );
 					}
@@ -638,8 +638,8 @@ public abstract class AbstractHANADialect extends Dialect {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					Blob rsBlob = rs.getBlob( name );
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					Blob rsBlob = rs.getBlob( paramIndex );
 					if ( rsBlob == null || rsBlob.length() < HANABlobTypeDescriptor.this.maxLobPrefetchSize ) {
 						return javaTypeDescriptor.wrap( rsBlob, options );
 					}

@@ -33,6 +33,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JavadocReference")
 public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescriptor {
 	private static final Logger log = Logger.getLogger( AttributeConverterSqlTypeDescriptorAdapter.class );
 
@@ -117,21 +118,18 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 
 		return new ValueExtractor<X>() {
 			@Override
-			public X extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return doConversion( realExtractor.extract( rs, name, options ) );
+			public X extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return doConversion( realExtractor.extract( rs, paramIndex, options ) );
 			}
 
 			@Override
-			public X extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return doConversion( realExtractor.extract( statement, index, options ) );
+			public X extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
+				return doConversion( realExtractor.extract( statement, paramIndex, options ) );
 			}
 
 			@Override
-			public X extract(CallableStatement statement, String[] paramNames, WrapperOptions options) throws SQLException {
-				if ( paramNames.length > 1 ) {
-					throw new IllegalArgumentException( "Basic value extraction cannot handle multiple output parameters" );
-				}
-				return doConversion( realExtractor.extract( statement, paramNames, options ) );
+			public X extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
+				return doConversion( realExtractor.extract( statement, paramName, options ) );
 			}
 
 			@SuppressWarnings("unchecked")

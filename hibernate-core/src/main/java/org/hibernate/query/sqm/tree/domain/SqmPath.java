@@ -52,6 +52,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 */
 	void setExplicitAlias(String explicitAlias);
 
+
 	/**
 	 * Get the left-hand side of this path - may be null, indicating a
 	 * root, cross-join or entity-join

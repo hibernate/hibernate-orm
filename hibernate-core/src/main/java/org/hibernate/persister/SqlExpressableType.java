@@ -6,8 +6,8 @@
  */
 package org.hibernate.persister;
 
-import org.hibernate.sql.exec.spi.JdbcValueBinder;
-import org.hibernate.sql.exec.spi.JdbcValueExtractor;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -33,11 +33,11 @@ public interface SqlExpressableType {
 	 * The strategy for extracting values of this expressable
 	 * type from JDBC ResultSets, CallableStatements, etc
 	 */
-	JdbcValueExtractor getJdbcValueExtractor();
+	ValueExtractor getJdbcValueExtractor();
 
 	/**
 	 * The strategy for binding values of this expressable
 	 * type to JDBC PreparedStatements, CallableStatements, etc
 	 */
-	JdbcValueBinder getJdbcValueBinder();
+	ValueBinder getJdbcValueBinder();
 }

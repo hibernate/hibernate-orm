@@ -28,11 +28,11 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  * @author Steve Ebersole
  */
 public interface TableGroup extends SqlAstNode, DomainResultProducer, NavigableReference, ColumnReferenceQualifier {
-	LockMode getLockMode();
+	NavigablePath getNavigablePath();
 
 	ModelPart getModelPart();
 
-	NavigablePath getNavigablePath();
+	LockMode getLockMode();
 
 	Set<TableGroupJoin> getTableGroupJoins();
 

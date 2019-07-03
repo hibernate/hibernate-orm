@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.mapping.spi;
 
 import java.util.Locale;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.type.Type;
 
 /**
@@ -20,12 +21,14 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface ValueMapping {
+public interface ValueMapping<D> extends ModelPart<D> {
 
 	/**
 	 * Get the Type associated with this mapping
 	 */
-	Type getValueType();
+	default Type getValueType() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 
 	/**
 	 * Treat operation.  Asks the ValueMapping to treat itself as the

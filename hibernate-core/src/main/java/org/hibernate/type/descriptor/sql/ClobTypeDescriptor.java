@@ -40,8 +40,8 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getClob( name ), options );
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( rs.getClob( paramIndex ), options );
 			}
 
 			@Override
@@ -175,8 +175,8 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( rs.getCharacterStream( name ), options );
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					return javaTypeDescriptor.wrap( rs.getCharacterStream( paramIndex ), options );
 				}
 
 				@Override

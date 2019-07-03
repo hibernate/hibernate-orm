@@ -133,8 +133,8 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this) {
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap(rs.getArray(name), options);
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					return javaTypeDescriptor.wrap( rs.getArray( paramIndex ), options);
 				}
 
 				@Override

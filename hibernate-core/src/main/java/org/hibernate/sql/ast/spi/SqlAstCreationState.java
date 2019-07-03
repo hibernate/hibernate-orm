@@ -9,8 +9,6 @@ package org.hibernate.sql.ast.spi;
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 
@@ -27,10 +25,6 @@ public interface SqlAstCreationState {
 	FromClauseAccess getFromClauseAccess();
 
 	SqlAliasBaseManager getSqlAliasBaseManager();
-
-	default GraphImplementor getCurrentResultGraphNode() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 
 	LockMode determineLockMode(String identificationVariable);
 

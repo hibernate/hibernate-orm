@@ -9,11 +9,10 @@ package org.hibernate.sql.ast.spi;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-
-import org.hibernate.sql.exec.spi.JdbcValueExtractor;
 import org.hibernate.sql.results.spi.JdbcValuesMappingDescriptor;
 import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.SqlSelectionGroupNode;
+import org.hibernate.type.descriptor.ValueExtractor;
 
 /**
  * Represents a selection at the SQL/JDBC level.  Essentially made up of:
@@ -28,7 +27,7 @@ public interface SqlSelection extends SqlSelectionGroupNode {
 	/**
 	 * Get the extractor that can be used to extract JDBC values for this selection
 	 */
-	JdbcValueExtractor getJdbcValueExtractor();
+	ValueExtractor getJdbcValueExtractor();
 
 	// todo (6.0) : add proper support for "virtual" selections
 	//		- things like selecting a literal or a parameter

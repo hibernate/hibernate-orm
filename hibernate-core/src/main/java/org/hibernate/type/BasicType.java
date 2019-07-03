@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
  *
  * @author Steve Ebersole
  */
-public interface BasicType extends Type, BasicDomainType {
+public interface BasicType<T> extends Type, BasicDomainType<T> {
 	/**
 	 * Get the names under which this type should be registered in the type registry.
 	 *

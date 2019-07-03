@@ -24,7 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class DateType
 		extends AbstractSingleColumnStandardBasicType<Date>
-		implements IdentifierType<Date>, LiteralType<Date>, AllowableTemporalParameterType {
+		implements IdentifierType<Date>, LiteralType<Date>, AllowableTemporalParameterType<Date> {
 
 	public static final DateType INSTANCE = new DateType();
 

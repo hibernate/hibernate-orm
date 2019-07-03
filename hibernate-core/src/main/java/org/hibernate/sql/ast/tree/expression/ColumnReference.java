@@ -14,8 +14,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.persister.SqlExpressableType;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.exec.spi.JdbcValueExtractor;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -63,7 +63,7 @@ public class ColumnReference implements Expression {
 			int valuesArrayPosition,
 			JavaTypeDescriptor<?> javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
-		final JdbcValueExtractor jdbcValueExtractor = sqlExpressableType.getJdbcValueExtractor();
+		final ValueExtractor jdbcValueExtractor = sqlExpressableType.getJdbcValueExtractor();
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,

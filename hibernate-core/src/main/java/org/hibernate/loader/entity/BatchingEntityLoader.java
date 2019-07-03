@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.Loader;
 import org.hibernate.persister.entity.EntityPersister;

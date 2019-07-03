@@ -66,8 +66,8 @@ public class HANAPointTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs.getObject( name ) ), options );
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return getJavaDescriptor().wrap( HANASpatialUtils.toGeometry( rs.getObject( paramIndex ) ), options );
 			}
 
 			@Override

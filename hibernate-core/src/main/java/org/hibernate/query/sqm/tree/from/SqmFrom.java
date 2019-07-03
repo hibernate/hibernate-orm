@@ -21,7 +21,6 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.criteria.JpaFrom;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
@@ -62,18 +61,9 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 	 */
 	void visitSqmJoins(Consumer<SqmJoin<T, ?>> consumer);
 
-	@Override
-	default void prepareForSubNavigableReference(
-			SqmPathSource subNavigableSource,
-			boolean isSubReferenceTerminal,
-			SqmCreationState creationState) {
-		// nothing to do, already prepared
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
-
 
 	@Override
 	SqmFrom<O, T> getCorrelationParent();

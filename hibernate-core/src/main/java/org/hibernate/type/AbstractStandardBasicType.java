@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -34,7 +35,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Brett Meyer
  */
 public abstract class AbstractStandardBasicType<T>
-		implements BasicType, StringRepresentableType<T>, ProcedureParameterExtractionAware<T>, ProcedureParameterNamedBinder {
+		implements BasicType<T>, StringRepresentableType<T>, ProcedureParameterExtractionAware<T>, ProcedureParameterNamedBinder {
 
 	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 	private final Size dictatedSize = new Size();
@@ -374,6 +375,11 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public boolean canDoExtraction() {
 		return true;
+	}
+
+	@Override
+	public ValueExtractor<T> getValueExtractor() {
+		return getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() );
 	}
 
 	@Override

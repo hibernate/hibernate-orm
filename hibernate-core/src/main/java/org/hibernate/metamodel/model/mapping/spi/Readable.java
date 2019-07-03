@@ -6,26 +6,39 @@
  */
 package org.hibernate.metamodel.model.mapping.spi;
 
+import java.util.function.Consumer;
+
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.persister.SqlExpressableType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Describes a mapping of related to any part of the app's domain model - e.g.
- * an attribute, an entity identifier, collection elements, etc
+ * Contract for things at the domain/mapping level that can be extracted from a JDBC result
  *
- * @see DomainResultProducer
- * @see javax.persistence.metamodel.Bindable
+ * Really, reading/loading stuff is defined via {@link DomainResult} and
+ * {@link org.hibernate.sql.results.spi.Initializer}.  This contract simply works as a sort
+ * of extended `DomainResultProducer` specifically for mapped-parts of a domain model
  *
  * @author Steve Ebersole
  */
-public interface ModelPart<T> extends Readable, Writeable {
+public interface Readable {
+
+	/**
+	 * Visit all of the SqlExpressableTypes associated with this this Readable.
+	 *
+	 * Used during cacheable SQL AST creation.
+	 */
+	default void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
 	/**
 	 * Create a DomainResult for a specific reference to this ModelPart.
 	 */
-	default DomainResult<T> createDomainResult(
+	default DomainResult<?> createDomainResult(
 			NavigablePath navigablePath,
 			int valuesArrayPosition,
 			String resultVariable,

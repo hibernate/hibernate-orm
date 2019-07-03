@@ -95,7 +95,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
-			statistics.updateCollection( getPersister().getRole() );
+			statistics.updateCollection( persister.getRole() );
 		}
 	}
 	

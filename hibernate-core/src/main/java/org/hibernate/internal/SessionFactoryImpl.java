@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.persistence.EntityGraph;
@@ -79,6 +80,7 @@ import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -1110,30 +1112,33 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		// prefer the SF-scoped interceptor, prefer that to any Session-scoped interceptor prototype
-		if ( options.getInterceptor() != null && options.getInterceptor() != EmptyInterceptor.INSTANCE ) {
-			return options.getInterceptor();
+		final Interceptor optionsInterceptor = options.getInterceptor();
+		if ( optionsInterceptor != null && optionsInterceptor != EmptyInterceptor.INSTANCE ) {
+			return optionsInterceptor;
 		}
 
 		// then check the Session-scoped interceptor prototype
-		if ( options.getStatelessInterceptorImplementor() != null && options.getStatelessInterceptorImplementorSupplier() != null ) {
+		final Class<? extends Interceptor> statelessInterceptorImplementor = options.getStatelessInterceptorImplementor();
+		final Supplier<? extends Interceptor> statelessInterceptorImplementorSupplier = options.getStatelessInterceptorImplementorSupplier();
+		if ( statelessInterceptorImplementor != null && statelessInterceptorImplementorSupplier != null ) {
 			throw new HibernateException(
 					"A session scoped interceptor class or supplier are allowed, but not both!" );
 		}
-		else if ( options.getStatelessInterceptorImplementor() != null ) {
+		else if ( statelessInterceptorImplementor != null ) {
 			try {
 				/**
 				 * We could remove the getStatelessInterceptorImplementor method and use just the getStatelessInterceptorImplementorSupplier
 				 * since it can cover both cases when the user has given a Supplier<? extends Interceptor> or just the
 				 * Class<? extends Interceptor>, in which case, we simply instantiate the Interceptor when calling the Supplier.
 				 */
-				return options.getStatelessInterceptorImplementor().newInstance();
+				return statelessInterceptorImplementor.newInstance();
 			}
 			catch (InstantiationException | IllegalAccessException e) {
 				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
 			}
 		}
-		else if ( options.getStatelessInterceptorImplementorSupplier() != null ) {
-			return options.getStatelessInterceptorImplementorSupplier().get();
+		else if ( statelessInterceptorImplementorSupplier != null ) {
+			return statelessInterceptorImplementorSupplier.get();
 		}
 
 		return null;
@@ -1167,20 +1172,22 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.sessionOwner = null;
 
 			// set up default builder values...
-			this.statementInspector = sessionFactory.getSessionFactoryOptions().getStatementInspector();
-			this.connectionHandlingMode = sessionFactory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
-			this.autoClose = sessionFactory.getSessionFactoryOptions().isAutoCloseSessionEnabled();
-			this.flushMode = sessionFactory.getSessionFactoryOptions().isFlushBeforeCompletionEnabled()
+			final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+			this.statementInspector = sessionFactoryOptions.getStatementInspector();
+			this.connectionHandlingMode = sessionFactoryOptions.getPhysicalConnectionHandlingMode();
+			this.autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
+			this.flushMode = sessionFactoryOptions.isFlushBeforeCompletionEnabled()
 					? FlushMode.AUTO
 					: FlushMode.MANUAL;
 
-			if ( sessionFactory.getCurrentTenantIdentifierResolver() != null ) {
-				tenantIdentifier = sessionFactory.getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
+			final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
+			if ( currentTenantIdentifierResolver != null ) {
+				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
-			this.jdbcTimeZone = sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
+			this.jdbcTimeZone = sessionFactoryOptions.getJdbcTimeZone();
 
-			listeners = sessionFactory.getSessionFactoryOptions().getBaselineSessionEventsListenerBuilder().buildBaselineList();
-			queryParametersValidationEnabled = sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled();
+			listeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder().buildBaselineList();
+			queryParametersValidationEnabled = sessionFactoryOptions.isQueryParametersValidationEnabled();
 		}
 
 
@@ -1287,8 +1294,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			log.tracef( "Opening Hibernate Session.  tenant=%s, owner=%s", tenantIdentifier, sessionOwner );
 			final SessionImpl session = new SessionImpl( sessionFactory, this );
 
+			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 			for ( SessionEventListener listener : listeners ) {
-				session.getEventListenerManager().addListener( listener );
+				eventListenerManager.addListener( listener );
 			}
 
 			return session;

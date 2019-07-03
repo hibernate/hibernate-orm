@@ -64,6 +64,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.CollectionType;
 
 import org.jboss.logging.Logger;
@@ -1810,6 +1811,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session );
 
 			final SessionFactoryImplementor factory = session.getFactory();
+			final StatisticsImplementor statistics = factory.getStatistics();
 
 			switch ( source ) {
 				case LOAD: {
@@ -1824,8 +1826,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 							null
 					);
 
-					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().naturalIdCachePut(
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.naturalIdCachePut(
 								StatsHelper.INSTANCE.getRootEntityRole( persister ),
 								naturalIdCacheAccessStrategy.getRegion().getName()
 						);
@@ -1835,8 +1837,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				}
 				case INSERT: {
 					final boolean put = naturalIdCacheAccessStrategy.insert( session, naturalIdCacheKey, id );
-					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().naturalIdCachePut(
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.naturalIdCachePut(
 								StatsHelper.INSTANCE.getRootEntityRole( persister ),
 								naturalIdCacheAccessStrategy.getRegion().getName()
 						);
@@ -1848,8 +1850,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 								public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 									if (success) {
 										final boolean put = naturalIdCacheAccessStrategy.afterInsert( session, naturalIdCacheKey, id );
-										if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-											factory.getStatistics().naturalIdCachePut(
+										if ( put && statistics.isStatisticsEnabled() ) {
+											statistics.naturalIdCachePut(
 													StatsHelper.INSTANCE.getRootEntityRole( persister ),
 													naturalIdCacheAccessStrategy.getRegion().getName()
 											);
@@ -1875,8 +1877,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( session, naturalIdCacheKey, null );
 					final boolean put = naturalIdCacheAccessStrategy.update( session, naturalIdCacheKey, id );
-					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().naturalIdCachePut(
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.naturalIdCachePut(
 								StatsHelper.INSTANCE.getRootEntityRole( persister ),
 								naturalIdCacheAccessStrategy.getRegion().getName()
 						);
@@ -1895,8 +1897,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 												lock
 										);
 
-										if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-											factory.getStatistics().naturalIdCachePut(
+										if ( put && statistics.isStatisticsEnabled() ) {
+											statistics.naturalIdCachePut(
 													StatsHelper.INSTANCE.getRootEntityRole( persister ),
 													naturalIdCacheAccessStrategy.getRegion().getName()
 											);

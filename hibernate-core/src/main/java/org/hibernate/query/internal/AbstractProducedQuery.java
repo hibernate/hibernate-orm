@@ -946,21 +946,25 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	protected void collectHints(Map<String, Object> hints) {
-		if ( getQueryOptions().getTimeout() != null ) {
-			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
-			hints.put( SPEC_HINT_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
+		final RowSelection queryOptions = getQueryOptions();
+		final Integer queryTimeout = queryOptions.getTimeout();
+		if ( queryTimeout != null ) {
+			hints.put( HINT_TIMEOUT, queryTimeout );
+			hints.put( SPEC_HINT_TIMEOUT, queryTimeout * 1000 );
 		}
 
-		if ( getLockOptions().getTimeOut() != WAIT_FOREVER ) {
-			hints.put( JPA_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
+		final LockOptions lockOptions = getLockOptions();
+		final int lockOptionsTimeOut = lockOptions.getTimeOut();
+		if ( lockOptionsTimeOut != WAIT_FOREVER ) {
+			hints.put( JPA_LOCK_TIMEOUT, lockOptionsTimeOut );
 		}
 
-		if ( getLockOptions().getScope() ) {
-			hints.put( JPA_LOCK_SCOPE, getLockOptions().getScope() );
+		if ( lockOptions.getScope() ) {
+			hints.put( JPA_LOCK_SCOPE, lockOptions.getScope() );
 		}
 
-		if ( getLockOptions().hasAliasSpecificLockModes() && canApplyAliasSpecificLockModeHints() ) {
-			for ( Map.Entry<String, LockMode> entry : getLockOptions().getAliasSpecificLocks() ) {
+		if ( lockOptions.hasAliasSpecificLockModes() && canApplyAliasSpecificLockModeHints() ) {
+			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
 				hints.put(
 						ALIAS_SPECIFIC_LOCK_MODE + '.' + entry.getKey(),
 						entry.getValue().name()
@@ -969,7 +973,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
-		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
+		putIfNotNull( hints, HINT_FETCH_SIZE, queryOptions.getFetchSize() );
 		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
 
 		if ( cacheStoreMode != null || cacheRetrieveMode != null ) {

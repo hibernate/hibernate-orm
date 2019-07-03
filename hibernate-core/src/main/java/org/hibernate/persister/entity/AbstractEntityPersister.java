@@ -129,6 +129,7 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
@@ -2554,8 +2555,9 @@ public abstract class AbstractEntityPersister
 		}
 		catch (StaleStateException e) {
 			if ( !isNullableTable( tableNumber ) ) {
-				if ( getFactory().getStatistics().isStatisticsEnabled() ) {
-					getFactory().getStatistics().optimisticFailure( getEntityName() );
+				final StatisticsImplementor statistics = getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.optimisticFailure( getEntityName() );
 				}
 				throw new StaleObjectStateException( getEntityName(), id );
 			}

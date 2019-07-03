@@ -461,10 +461,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	@SuppressWarnings({"JavaDoc"})
 	protected boolean isInverseCollectionNoOrphanDelete() {
 		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
-		return ce != null
-				&&
-				ce.getLoadedPersister().isInverse() &&
-				!ce.getLoadedPersister().hasOrphanDelete();
+		if ( ce == null ) {
+			return false;
+		}
+		final CollectionPersister loadedPersister = ce.getLoadedPersister();
+		return loadedPersister.isInverse() && !loadedPersister.hasOrphanDelete();
 	}
 
 	/**
@@ -474,9 +475,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	@SuppressWarnings({"JavaDoc"})
 	protected boolean isInverseOneToManyOrNoOrphanDelete() {
 		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
-		return ce != null
-				&& ce.getLoadedPersister().isInverse()
-				&& ( ce.getLoadedPersister().isOneToMany() || !ce.getLoadedPersister().hasOrphanDelete() );
+		if ( ce == null ) {
+			return false;
+		}
+		final CollectionPersister loadedPersister = ce.getLoadedPersister();
+		return loadedPersister.isInverse() && ( loadedPersister.isOneToMany() || !loadedPersister.hasOrphanDelete() );
 	}
 
 	/**

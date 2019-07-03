@@ -477,8 +477,9 @@ public final class TwoPhaseLoad {
 			return session.getCacheMode() != CacheMode.REFRESH;
 		}
 		else {
-			return entityEntry.getPersister().hasLazyProperties()
-					&& entityEntry.getPersister().isLazyPropertiesCacheable();
+			final EntityPersister persister = entityEntry.getPersister();
+			return persister.hasLazyProperties()
+					&& persister.isLazyPropertiesCacheable();
 		}
 	}
 

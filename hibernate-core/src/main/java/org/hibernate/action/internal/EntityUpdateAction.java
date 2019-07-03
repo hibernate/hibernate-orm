@@ -320,10 +320,11 @@ public final class EntityUpdateAction extends EntityAction {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final SessionFactoryImplementor factory = session.getFactory();
 			final Object ck = cache.generateCacheKey(
 					getId(),
 					persister,
-					session.getFactory(),
+					factory,
 					session.getTenantIdentifier()
 					
 			);
@@ -334,15 +335,16 @@ public final class EntityUpdateAction extends EntityAction {
 					session.getCacheMode().isPutEnabled() ) {
 				final boolean put = cacheAfterUpdate( cache, ck );
 
-				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatistics().entityCachePut(
+				final StatisticsImplementor statistics = factory.getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
 							StatsHelper.INSTANCE.getRootEntityRole( persister ),
-							getPersister().getCacheAccessStrategy().getRegion().getName()
+							cache.getRegion().getName()
 					);
 				}
 			}
 			else {
-				cache.unlockItem(session, ck, lock );
+				cache.unlockItem( session, ck, lock );
 			}
 		}
 		postCommitUpdate( success );

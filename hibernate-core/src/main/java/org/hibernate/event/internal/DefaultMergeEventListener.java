@@ -38,6 +38,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.TypeHelper;
 
@@ -333,8 +334,9 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				);
 			}
 			else if ( isVersionChanged( entity, source, persister, target ) ) {
-				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-					source.getFactory().getStatistics().optimisticFailure( entityName );
+				final StatisticsImplementor statistics = source.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.optimisticFailure( entityName );
 				}
 				throw new StaleObjectStateException( entityName, id );
 			}

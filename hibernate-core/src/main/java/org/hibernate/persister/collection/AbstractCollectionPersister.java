@@ -33,6 +33,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
@@ -1301,6 +1302,7 @@ public abstract class AbstractCollectionPersister
 		try {
 			// create all the new entries
 			Iterator entries = collection.entries( this );
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			if ( entries.hasNext() ) {
 				Expectation expectation = Expectations.appropriateExpectation( getInsertCheckStyle() );
 				collection.preInsert( this );
@@ -1323,14 +1325,12 @@ public abstract class AbstractCollectionPersister
 										expectation
 								);
 							}
-							st = session
-									.getJdbcCoordinator()
+							st = jdbcCoordinator
 									.getBatch( recreateBatchKey )
 									.getBatchStatement( sql, callable );
 						}
 						else {
-							st = session
-									.getJdbcCoordinator()
+							st = jdbcCoordinator
 									.getStatementPreparer()
 									.prepareStatement( sql, callable );
 						}
@@ -1349,13 +1349,13 @@ public abstract class AbstractCollectionPersister
 							loc = writeElement( st, collection.getElement( entry ), loc, session );
 
 							if ( useBatch ) {
-								session
-										.getJdbcCoordinator()
+								jdbcCoordinator
 										.getBatch( recreateBatchKey )
 										.addToBatch();
 							}
 							else {
-								expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+								expectation.verifyOutcome( jdbcCoordinator
+																.getResultSetReturn().executeUpdate( st ), st, -1 );
 							}
 
 							collection.afterRowInsert( this, entry, i );
@@ -1363,14 +1363,14 @@ public abstract class AbstractCollectionPersister
 						}
 						catch ( SQLException sqle ) {
 							if ( useBatch ) {
-								session.getJdbcCoordinator().abortBatch();
+								jdbcCoordinator.abortBatch();
 							}
 							throw sqle;
 						}
 						finally {
 							if ( !useBatch ) {
-								session.getJdbcCoordinator().getResourceRegistry().release( st );
-								session.getJdbcCoordinator().afterStatementExecution();
+								jdbcCoordinator.getResourceRegistry().release( st );
+								jdbcCoordinator.afterStatementExecution();
 							}
 						}
 
@@ -1957,23 +1957,23 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public int getSize(Serializable key, SharedSessionContractImplementor session) {
 		try {
-			PreparedStatement st = session
-					.getJdbcCoordinator()
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			PreparedStatement st = jdbcCoordinator
 					.getStatementPreparer()
 					.prepareStatement( sqlSelectSizeString );
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
 				try {
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
 				}
 				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
+					jdbcCoordinator.getResourceRegistry().release( rs, st );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
+				jdbcCoordinator.getResourceRegistry().release( st );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -1998,27 +1998,27 @@ public abstract class AbstractCollectionPersister
 
 	private boolean exists(Serializable key, Object indexOrElement, Type indexOrElementType, String sql, SharedSessionContractImplementor session) {
 		try {
-			PreparedStatement st = session
-					.getJdbcCoordinator()
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			PreparedStatement st = jdbcCoordinator
 					.getStatementPreparer()
 					.prepareStatement( sql );
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
 				indexOrElementType.nullSafeSet( st, indexOrElement, keyColumnNames.length + 1, session );
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
 				try {
 					return rs.next();
 				}
 				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
+					jdbcCoordinator.getResourceRegistry().release( rs, st );
 				}
 			}
 			catch ( TransientObjectException e ) {
 				return false;
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
+				jdbcCoordinator.getResourceRegistry().release( st );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -2034,14 +2034,14 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner) {
 		try {
-			PreparedStatement st = session
-					.getJdbcCoordinator()
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			PreparedStatement st = jdbcCoordinator
 					.getStatementPreparer()
 					.prepareStatement( sqlSelectRowByIndexString );
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
 				getIndexType().nullSafeSet( st, incrementIndexByBase( index ), keyColumnNames.length + 1, session );
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
 				try {
 					if ( rs.next() ) {
 						return getElementType().nullSafeGet( rs, elementColumnAliases, session, owner );
@@ -2051,12 +2051,12 @@ public abstract class AbstractCollectionPersister
 					}
 				}
 				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
+					jdbcCoordinator.getResourceRegistry().release( rs, st );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
+				jdbcCoordinator.getResourceRegistry().release( st );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch ( SQLException sqle ) {

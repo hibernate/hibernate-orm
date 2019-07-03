@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,6 +23,7 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.param.ParameterSpecification;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Update;
 
 /**
@@ -57,8 +59,9 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 
 		if ( !values.getIds().isEmpty() ) {
 
-			String[] tableNames = getTargetedQueryable().getConstraintOrderedTableNameClosure();
-			String[][] columnNames = getTargetedQueryable().getContraintOrderedTableKeyColumnClosure();
+			final Queryable targetedQueryable = getTargetedQueryable();
+			String[] tableNames = targetedQueryable.getConstraintOrderedTableNameClosure();
+			String[][] columnNames = targetedQueryable.getContraintOrderedTableKeyColumnClosure();
 
 			String idSubselect = values.toStatement();
 
@@ -85,6 +88,8 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 				}
 			}
 
+			final JdbcCoordinator jdbcCoordinator = session
+					.getJdbcCoordinator();
 			// Start performing the updates
 			for ( Map.Entry<Integer, String> updateEntry: updates.entrySet()) {
 				int i = updateEntry.getKey();
@@ -94,8 +99,7 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 					continue;
 				}
 				try {
-					try (PreparedStatement ps = session
-							.getJdbcCoordinator().getStatementPreparer()
+					try (PreparedStatement ps = jdbcCoordinator.getStatementPreparer()
 							.prepareStatement( update, false )) {
 						int position = 1; // jdbc params are 1-based
 						if ( assignmentParameterSpecifications[i] != null ) {
@@ -104,8 +108,7 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 										.bind( ps, queryParameters, session, position );
 							}
 						}
-						session
-								.getJdbcCoordinator().getResultSetReturn()
+						jdbcCoordinator.getResultSetReturn()
 								.executeUpdate( ps );
 					}
 				}

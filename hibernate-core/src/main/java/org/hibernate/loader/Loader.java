@@ -46,6 +46,7 @@ import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.ColumnNameCache;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -83,6 +84,7 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
@@ -968,8 +970,9 @@ public abstract class Loader {
 			);
 		}
 		finally {
-			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-			session.getJdbcCoordinator().afterStatementExecution();
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+			jdbcCoordinator.afterStatementExecution();
 		}
 
 	}
@@ -1545,8 +1548,9 @@ public abstract class Loader {
 					null
 			);
 			if ( !versionType.isEqual( version, currentVersion ) ) {
-				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatistics().optimisticFailure( persister.getEntityName() );
+				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.optimisticFailure( persister.getEntityName() );
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), id );
 			}
@@ -2730,12 +2734,13 @@ public abstract class Loader {
 				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
 			}
 
-			if ( factory.getStatistics().isStatisticsEnabled() ) {
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
 				if ( result == null ) {
-					factory.getStatistics().queryCacheMiss( getQueryIdentifier(), queryCache.getRegion().getName() );
+					statistics.queryCacheMiss( getQueryIdentifier(), queryCache.getRegion().getName() );
 				}
 				else {
-					factory.getStatistics().queryCacheHit( getQueryIdentifier(), queryCache.getRegion().getName() );
+					statistics.queryCacheHit( getQueryIdentifier(), queryCache.getRegion().getName() );
 				}
 			}
 		}
@@ -2761,8 +2766,9 @@ public abstract class Loader {
 					key.getResultTransformer().getCachedResultTypes( resultTypes ),
 					session
 			);
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().queryCachePut( getQueryIdentifier(), queryCache.getRegion().getName() );
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( put && statistics.isStatisticsEnabled() ) {
+				statistics.queryCachePut( getQueryIdentifier(), queryCache.getRegion().getName() );
 			}
 		}
 	}
@@ -2782,7 +2788,8 @@ public abstract class Loader {
 			final ResultTransformer forcedResultTransformer)
 			throws HibernateException {
 
-		final boolean stats = getFactory().getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = getFactory().getStatistics();
+		final boolean stats = statistics.isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
 			startTime = System.nanoTime();
@@ -2803,7 +2810,7 @@ public abstract class Loader {
 		if ( stats ) {
 			final long endTime = System.nanoTime();
 			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-			getFactory().getStatistics().queryExecuted(
+			statistics.queryExecuted(
 					getQueryIdentifier(),
 					result.size(),
 					milliseconds
@@ -2856,8 +2863,9 @@ public abstract class Loader {
 			final SharedSessionContractImplementor session) throws HibernateException {
 		checkScrollability();
 
+		final StatisticsImplementor statistics = getFactory().getStatistics();
 		final boolean stats = getQueryIdentifier() != null &&
-				getFactory().getStatistics().isStatisticsEnabled();
+				statistics.isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
 			startTime = System.nanoTime();
@@ -2878,7 +2886,7 @@ public abstract class Loader {
 			if ( stats ) {
 				final long endTime = System.nanoTime();
 				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				getFactory().getStatistics().queryExecuted(
+				statistics.queryExecuted(
 						getQueryIdentifier(),
 						0,
 						milliseconds

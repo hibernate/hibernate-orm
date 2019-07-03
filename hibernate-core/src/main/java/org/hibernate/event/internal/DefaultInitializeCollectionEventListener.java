@@ -43,11 +43,12 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			throw new HibernateException( "collection was evicted" );
 		}
 		if ( !collection.wasInitialized() ) {
+			final CollectionPersister ceLoadedPersister = ce.getLoadedPersister();
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Initializing collection {0}",
 						MessageHelper.collectionInfoString(
-								ce.getLoadedPersister(),
+								ceLoadedPersister,
 								collection,
 								ce.getLoadedKey(),
 								source
@@ -58,7 +59,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 
 			final boolean foundInCache = initializeCollectionFromCache(
 					ce.getLoadedKey(),
-					ce.getLoadedPersister(),
+					ceLoadedPersister,
 					collection,
 					source
 			);
@@ -72,7 +73,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection not cached" );
 				}
-				ce.getLoadedPersister().initialize( ce.getLoadedKey(), source );
+				ceLoadedPersister.initialize( ce.getLoadedKey(), source );
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection initialized" );
 				}
@@ -80,7 +81,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				final StatisticsImplementor statistics = source.getFactory().getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.fetchCollection(
-							ce.getLoadedPersister().getRole()
+							ceLoadedPersister.getRole()
 					);
 				}
 			}
@@ -119,7 +120,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		final SessionFactoryImplementor factory = source.getFactory();
 		final CollectionDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
 		final Object ck = cacheAccessStrategy.generateCacheKey( id, persister, factory, source.getTenantIdentifier() );
-		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
+		final Object ce = CacheHelper.fromSharedCache( source, ck, cacheAccessStrategy );
 
 		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {

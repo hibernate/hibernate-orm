@@ -64,7 +64,9 @@ public interface SequenceSupport {
 		return "select " + getSelectSequenceNextValString( sequenceName ) + getFromDual();
 	}
 
-	default String getFromDual() { return ""; }
+	default String getFromDual() {
+		return "";
+	}
 
 	/**
 	 * Generate the appropriate select statement to to retrieve the next value

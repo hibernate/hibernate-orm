@@ -14,6 +14,8 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class SkipFirstLimitHandler extends AbstractLimitHandler {
 
+	public static final SkipFirstLimitHandler INSTANCE = new SkipFirstLimitHandler(true);
+
 	private boolean variableLimit;
 
 	public SkipFirstLimitHandler(boolean variableLimit) {

@@ -116,7 +116,7 @@ public enum Database {
 	FIREBIRD {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new FirebirdDialect();
+			return new FirebirdDialect(info);
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {

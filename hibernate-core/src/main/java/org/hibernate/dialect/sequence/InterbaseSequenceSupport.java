@@ -38,7 +38,7 @@ public final class InterbaseSequenceSupport implements SequenceSupport {
 	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) {
 		return new String[] {
 				getCreateSequenceString( sequenceName ),
-				"set generator " + sequenceName + " to " + initialValue
+				"set generator " + sequenceName + " to " + (initialValue-1)
 		};
 	}
 

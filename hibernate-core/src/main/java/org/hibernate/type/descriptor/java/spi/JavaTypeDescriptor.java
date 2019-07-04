@@ -36,14 +36,46 @@ public interface JavaTypeDescriptor<T> extends org.hibernate.type.descriptor.jav
 	 */
 	SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context);
 
+	/**
+	 * The default column length when this Java type is mapped
+	 * to a SQL data type which is parametrized by length, for
+	 * example {@link java.sql.Types#VARCHAR}.
+	 *
+	 * @return {@link Size.Builder#DEFAULT_LENGTH} unless overridden
+	 */
 	default long getDefaultSqlLength(Dialect dialect) {
 		return Size.Builder.DEFAULT_LENGTH;
 	}
 
+	/**
+	 * The default column length when this Java type is mapped
+	 * to a column of type {@link java.sql.Types#LONGVARCHAR}
+	 * or {@link java.sql.Types#LONGVARBINARY}.
+	 *
+	 * @return {@link Size.Builder#LONG_LENGTH} unless overridden
+	 */
+	default long getLongSqlLength() {
+		return Size.Builder.LONG_LENGTH;
+	}
+
+	/**
+	 * The default column precision when this Java type is mapped
+	 * to a SQL data type which is parametrized by precision, for
+	 * example {@link java.sql.Types#DECIMAL}.
+	 *
+	 * @return {@link Size.Builder#DEFAULT_PRECISION} unless overridden
+	 */
 	default int getDefaultSqlPrecision(Dialect dialect) {
 		return Size.Builder.DEFAULT_PRECISION;
 	}
 
+	/**
+	 * The default column scale when this Java type is mapped to a
+	 * SQL data type which is parametrized by scale, for example
+	 * {@link java.sql.Types#DECIMAL}.
+	 *
+	 * @return {@link Size.Builder#DEFAULT_SCALE} unless overridden
+	 */
 	default int getDefaultSqlScale() {
 		return Size.Builder.DEFAULT_SCALE;
 	}

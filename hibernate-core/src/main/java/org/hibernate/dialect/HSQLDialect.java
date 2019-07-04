@@ -56,12 +56,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.jboss.logging.Logger;
 
 /**
- * An SQL dialect compatible with HSQLDB (HyperSQL).
- * <p/>
- * Note this version supports HSQLDB version 1.8 and higher, only.
- * <p/>
- * Enhancements to version 3.5.0 GA to provide basic support for both HSQLDB 1.8.x and 2.x
- * Does not works with Hibernate 3.2 - 3.4 without alteration.
+ * An SQL dialect compatible with HyperSQL (HSQLDB) version 1.8 and above.
  *
  * @author Christoph Sturm
  * @author Phillip Baird
@@ -101,6 +96,9 @@ public class HSQLDialect extends Dialect {
 
 		//Note that all floating point types are synonyms for 'double'
 
+		//HSQL has actual types called 'longvarchar' and
+		//'longvarbinary', which one must suppose are meant
+		//to be used for this purpose
 		registerColumnType( Types.LONGVARCHAR, "longvarchar" ); //synonym for 'varchar(16M)'
 		registerColumnType( Types.LONGVARBINARY, "longvarbinary" ); //synonym for 'varbinary(16M)'
 

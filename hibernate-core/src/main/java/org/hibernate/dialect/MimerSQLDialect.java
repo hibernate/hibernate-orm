@@ -52,7 +52,6 @@ public class MimerSQLDialect extends Dialect {
 		//Mimer CHARs are ASCII!!
 		registerColumnType( Types.CHAR, "nchar($l)" );
 		registerColumnType( Types.VARCHAR, "nvarchar($l)" );
-		registerColumnType( Types.LONGVARCHAR, "nvarchar($l)" );
 
 		//default length is 1M, which is quite low
 		registerColumnType( Types.BLOB, "blob($l)" );

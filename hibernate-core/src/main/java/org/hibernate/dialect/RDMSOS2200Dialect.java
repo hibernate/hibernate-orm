@@ -93,7 +93,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		//no 'binary' nor 'varbinary' so use 'blob'
 		registerColumnType( Types.BINARY, "blob($l)");
 		registerColumnType( Types.VARBINARY, "blob($l)");
-		registerColumnType( Types.LONGVARBINARY, "blob($l)");
 
 		//'varchar' is not supported in RDMS for OS 2200
 		//(but it is for other flavors of RDMS)
@@ -101,7 +100,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		//means 'character(n) character set "UCS-2"'
 		registerColumnType( Types.CHAR, "unicode($l)");
 		registerColumnType( Types.VARCHAR, "unicode($l)");
-		registerColumnType( Types.LONGVARCHAR, "unicode($l)");
 
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
 	}

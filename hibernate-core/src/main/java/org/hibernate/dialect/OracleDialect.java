@@ -470,7 +470,6 @@ public class OracleDialect extends Dialect {
 			registerColumnType( Types.VARCHAR, 4000, "varchar2($l char)" );
 			registerColumnType( Types.VARCHAR, "long" );
 			registerColumnType( Types.NVARCHAR, "nvarchar2($l)" );
-			registerColumnType( Types.LONGNVARCHAR, "nvarchar2($l)" );
 		}
 	}
 
@@ -511,9 +510,6 @@ public class OracleDialect extends Dialect {
 
 		registerColumnType( Types.VARBINARY, 2000, "raw($l)" );
 		registerColumnType( Types.VARBINARY, "long raw" );
-
-		registerColumnType( Types.LONGVARCHAR, "long" );
-		registerColumnType( Types.LONGVARBINARY, "long raw" );
 	}
 
 	protected void registerReverseHibernateTypeMappings() {

@@ -96,27 +96,26 @@ public class IngresDialect extends Dialect {
 
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //Ingres has no 'numeric' type
 
-		registerColumnType( Types.BINARY, 32000, "byte($l)" );
-		registerColumnType( Types.VARBINARY, 32000, "varbyte($l)" );
-		//note: 'long byte' is really a blob type
-		registerColumnType( Types.VARBINARY, "long byte" );
-		registerColumnType( Types.LONGVARBINARY, "long byte" );
+		final int maxStringLength = 32_000;
+
+		registerColumnType( Types.BINARY, maxStringLength, "byte($l)" );
+		registerColumnType( Types.VARBINARY, maxStringLength, "varbyte($l)" );
+		//note: 'long byte' is a  synonym for 'blob'
+		registerColumnType( Types.VARBINARY, "long byte($l)" );
 
 		//TODO: should we be using nchar/nvarchar/long nvarchar
 		//      here? I think Ingres char/varchar types don't
 		//      support Unicode. Copy what AbstractHANADialect
 		//      does with a Hibernate property to config this.
-		registerColumnType( Types.CHAR, 32000, "char($l)" );
-		registerColumnType( Types.VARCHAR, 32000, "varchar($l)" );
-		//note: 'long varchar' is really a clob type
-		registerColumnType( Types.VARCHAR, "long varchar" );
-		registerColumnType( Types.LONGVARCHAR, "long varchar" );
+		registerColumnType( Types.CHAR, maxStringLength, "char($l)" );
+		registerColumnType( Types.VARCHAR, maxStringLength, "varchar($l)" );
+		//note: 'long varchar' is a synonym for 'clob'
+		registerColumnType( Types.VARCHAR, "long varchar($l)" );
 
-		registerColumnType( Types.NCHAR, 32000, "nchar($l)" );
-		registerColumnType( Types.NVARCHAR, 32000, "nvarchar($l)" );
-		//note: 'long nvarchar' is really a clob type
-		registerColumnType( Types.NVARCHAR, "long nvarchar" );
-		registerColumnType( Types.LONGNVARCHAR, "long nvarchar" );
+		registerColumnType( Types.NCHAR, maxStringLength, "nchar($l)" );
+		registerColumnType( Types.NVARCHAR, maxStringLength, "nvarchar($l)" );
+		//note: 'long nvarchar' is a synonym for 'nclob'
+		registerColumnType( Types.NVARCHAR, "long nvarchar($l)" );
 
 		if ( getVersion() >= 930 ) {
 			// Not completely necessary, given that Ingres

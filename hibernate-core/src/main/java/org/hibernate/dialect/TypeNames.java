@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -60,16 +59,11 @@ public final class TypeNames {
 	 *
 	 * @param typeCode the type key
 	 *
-	 * @return the default type name associated with specified key
-	 *
-	 * @throws MappingException Indicates that no registrations were made for that typeCode
+	 * @return the default type name associated with specified key, or
+	 *         null if there was no type name associated with the key
 	 */
-	public String get(final int typeCode) throws MappingException {
-		final String result = defaults.get( typeCode );
-		if ( result == null ) {
-			throw new MappingException( "No Dialect mapping for JDBC type: " + typeCode );
-		}
-		return result;
+	public String get(final int typeCode) {
+		return defaults.get( typeCode );
 	}
 
 	/**
@@ -81,10 +75,8 @@ public final class TypeNames {
 	 * @param precision the SQL precision
 	 *
 	 * @return the associated name with smallest capacity >= size, if available and the default type name otherwise
-	 *
-	 * @throws MappingException Indicates that no registrations were made for that typeCode
 	 */
-	public String get(int typeCode, Long size, Integer precision, Integer scale) throws MappingException {
+	public String get(int typeCode, Long size, Integer precision, Integer scale) {
 		final Map<Long, String> map = weighted.get( typeCode );
 		if ( map != null && map.size() > 0 ) {
 			// iterate entries ordered by capacity to find first fit

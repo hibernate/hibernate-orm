@@ -68,6 +68,13 @@ public class SybaseASEDialect extends SybaseDialect {
 			registerColumnType( Types.TIME, "time" );
 		}
 
+		// the maximum length of a VARCHAR or VARBINARY
+		// depends on the page size, and also on the
+		// version of Sybase ASE, and can be quite small,
+		// so use 'image' and 'text' as the "long" types
+		registerColumnType( Types.LONGVARBINARY, "image" );
+		registerColumnType( Types.LONGVARCHAR, "text" );
+
 		registerSybaseKeywords();
 	}
 

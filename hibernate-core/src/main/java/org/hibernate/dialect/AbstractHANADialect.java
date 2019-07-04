@@ -214,26 +214,20 @@ public abstract class AbstractHANADialect extends Dialect {
 		// varbinary max length 5000
 		registerColumnType( Types.BINARY, 5000, "varbinary($l)" );
 		registerColumnType( Types.VARBINARY, 5000, "varbinary($l)" );
-		registerColumnType( Types.LONGVARBINARY, 5000, "varbinary($l)" );
 
 		// for longer values, map to blob
 		registerColumnType( Types.BINARY, "blob" );
 		registerColumnType( Types.VARBINARY, "blob" );
-		registerColumnType( Types.LONGVARBINARY, "blob" );
 
 		//there is no 'char' or 'nchar' type in HANA
 		registerColumnType( Types.CHAR, "varchar($l)" );
 		registerColumnType( Types.NCHAR, "nvarchar($l)" );
 
 		registerColumnType( Types.VARCHAR, 5000, "varchar($l)" );
-		registerColumnType( Types.LONGVARCHAR, 5000, "varchar($l)" );
 		registerColumnType( Types.NVARCHAR, 5000, "nvarchar($l)" );
-		registerColumnType( Types.LONGNVARCHAR, 5000, "nvarchar($l)" );
 
 		// for longer values map to clob/nclob
-		registerColumnType( Types.LONGVARCHAR, "clob" );
 		registerColumnType( Types.VARCHAR, "clob" );
-		registerColumnType( Types.LONGNVARCHAR, "nclob" );
 		registerColumnType( Types.NVARCHAR, "nclob" );
 
 		registerColumnType( Types.BIT, 1, "boolean" );
@@ -912,10 +906,8 @@ public abstract class AbstractHANADialect extends Dialect {
 		if ( this.useUnicodeStringTypes ) {
 			registerColumnType( Types.CHAR, "nvarchar($l)" );
 			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
-			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
 
 			// for longer values map to clob/nclob
-			registerColumnType( Types.LONGVARCHAR, "nclob" );
 			registerColumnType( Types.VARCHAR, "nclob" );
 			registerColumnType( Types.CLOB, "nclob" );
 		}

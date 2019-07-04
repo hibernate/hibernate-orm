@@ -99,8 +99,6 @@ public class PostgreSQLDialect extends Dialect {
 
 		registerColumnType( Types.VARBINARY, "bytea" );
 		registerColumnType( Types.BINARY, "bytea" );
-		registerColumnType( Types.LONGVARBINARY, "bytea" );
-		registerColumnType( Types.LONGVARCHAR, "text" );
 
 		registerColumnType( Types.BLOB, "bytea" );
 		registerColumnType( Types.CLOB, "text" );
@@ -108,6 +106,11 @@ public class PostgreSQLDialect extends Dialect {
 		//there are no nchar/nvarchar types in Postgres
 		registerColumnType( Types.NCHAR, "char($l)" );
 		registerColumnType( Types.NVARCHAR, "varchar($l)" );
+
+		//since there's no real difference between
+		//TEXT and VARCHAR, except for the length limit,
+		//we can just use 'text' for the "long" types
+		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGNVARCHAR, "text" );
 
 		if ( getVersion() >= 920 ) {

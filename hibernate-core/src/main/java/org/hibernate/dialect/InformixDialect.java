@@ -85,12 +85,10 @@ public class InformixDialect extends Dialect {
 		//these types have no defined length
 		registerColumnType( Types.BINARY, "byte" );
 		registerColumnType( Types.VARBINARY, "byte" );
-		registerColumnType( Types.LONGVARBINARY, "blob" );
 
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
-		registerColumnType( Types.VARCHAR, 32739, "lvarchar($l)" );
-		registerColumnType( Types.LONGVARCHAR, "clob" );
+		registerColumnType( Types.VARCHAR, 32_739, "lvarchar($l)" );
+		registerColumnType( Types.VARCHAR, "text" );
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
 

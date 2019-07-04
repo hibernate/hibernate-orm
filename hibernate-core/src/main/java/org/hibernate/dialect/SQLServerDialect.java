@@ -98,13 +98,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 			registerColumnType( Types.BLOB, "varbinary(max)" );
 			registerColumnType( Types.VARBINARY, "varbinary(max)" );
-			registerColumnType( Types.LONGVARBINARY, "varbinary(max)" );
 
 			registerColumnType( Types.CLOB, "varchar(max)" );
 			registerColumnType( Types.NCLOB, "nvarchar(max)" ); // HHH-8435 fix
 			registerColumnType( Types.VARCHAR, "varchar(max)" );
 			registerColumnType( Types.NVARCHAR, "nvarchar(max)" );
-			registerColumnType( Types.LONGVARCHAR, "varchar(max)" );
 		}
 
 		registerKeyword( "top" );

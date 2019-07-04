@@ -49,7 +49,6 @@ public class FrontBaseDialect extends Dialect {
 		//FrontBase has no 'binary' nor 'varbinary'
 		registerColumnType( Types.BINARY, "bit($l)");
 		registerColumnType( Types.VARBINARY, "bit varying($l)");
-		registerColumnType( Types.LONGVARBINARY, "bit varying($l)");
 
 		//no precision
 		registerColumnType( Types.TIMESTAMP, "timestamp" );

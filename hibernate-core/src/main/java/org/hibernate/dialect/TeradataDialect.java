@@ -76,7 +76,6 @@ public class TeradataDialect extends Dialect {
 
 		registerColumnType( Types.BINARY, "byte($l)" );
 		registerColumnType( Types.VARBINARY, "varbyte($l)" );
-		registerColumnType( Types.LONGVARBINARY, "varbyte($l)" );
 
 		if ( getVersion() < 13 ) {
 			registerColumnType( Types.BIGINT, "numeric(19,0)" );

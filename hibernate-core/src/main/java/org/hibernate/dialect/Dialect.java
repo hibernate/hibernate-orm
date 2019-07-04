@@ -225,17 +225,14 @@ public abstract class Dialect implements ConversionContext {
 
 		registerColumnType( Types.BINARY, "binary($l)" );
 		registerColumnType( Types.VARBINARY, "varbinary($l)" );
-		registerColumnType( Types.LONGVARBINARY, "varbinary($l)" );
 		registerColumnType( Types.BLOB, "blob" );
 
 		registerColumnType( Types.CHAR, "char($l)" );
 		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.LONGVARCHAR, "varchar($l)" );
 		registerColumnType( Types.CLOB, "clob" );
 
 		registerColumnType( Types.NCHAR, "nchar($l)" );
 		registerColumnType( Types.NVARCHAR, "nvarchar($l)" );
-		registerColumnType( Types.LONGNVARCHAR, "nvarchar($l)" );
 		registerColumnType( Types.NCLOB, "nclob" );
 
 		// register hibernate types for default use in scalar sqlquery type auto detection
@@ -796,6 +793,14 @@ public abstract class Dialect implements ConversionContext {
 	public String getTypeName(int code, Size size) throws HibernateException {
 		String result = typeNames.get( code, size.getLength(), size.getPrecision(), size.getScale() );
 		if ( result == null ) {
+			switch ( code ) {
+				case Types.LONGVARCHAR:
+					return getTypeName( Types.VARCHAR, size );
+				case Types.LONGNVARCHAR:
+					return getTypeName( Types.NVARCHAR, size );
+				case Types.LONGVARBINARY:
+					return getTypeName( Types.VARBINARY, size );
+			}
 			throw new HibernateException(
 					String.format(
 							"No type mapping for java.sql.Types code: %s, length: %s",
@@ -3329,10 +3334,12 @@ public abstract class Dialect implements ConversionContext {
 				case Types.VARCHAR:
 				case Types.NVARCHAR:
 				case Types.VARBINARY:
+					builder.setLength( javaType.getDefaultSqlLength(Dialect.this) );
+					break;
 				case Types.LONGVARCHAR:
 				case Types.LONGNVARCHAR:
 				case Types.LONGVARBINARY:
-					builder.setLength( javaType.getDefaultSqlLength(Dialect.this) );
+					builder.setLength( javaType.getLongSqlLength() );
 					break;
 				case Types.FLOAT:
 				case Types.DOUBLE:

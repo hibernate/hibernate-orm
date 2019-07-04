@@ -38,7 +38,6 @@ public class CockroachDialect extends Dialect {
 		//no binary/varbinary
 		registerColumnType( Types.VARBINARY, "bytes" );
 		registerColumnType( Types.BINARY, "bytes" );
-		registerColumnType( Types.LONGVARBINARY, "bytes" );
 
 		//no clob
 		registerColumnType( Types.LONGVARCHAR, "string" );
@@ -47,7 +46,10 @@ public class CockroachDialect extends Dialect {
 		//no nchar/nvarchar
 		registerColumnType( Types.NCHAR, "string($l)" );
 		registerColumnType( Types.NVARCHAR, "string($l)" );
+
+		//no nclob
 		registerColumnType( Types.LONGNVARCHAR, "string" );
+		registerColumnType( Types.NCLOB, "string" );
 
 		registerColumnType( Types.JAVA_OBJECT, "json" );
 	}

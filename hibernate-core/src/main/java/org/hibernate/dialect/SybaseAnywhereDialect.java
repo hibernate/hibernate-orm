@@ -30,6 +30,21 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
+
+		final int maxStringLength = 32_767;
+
+		registerColumnType( Types.CHAR, maxStringLength, "char($l)" );
+		registerColumnType( Types.VARCHAR, maxStringLength, "varchar($l)" );
+		registerColumnType( Types.VARCHAR, "long varchar)" );
+
+		registerColumnType( Types.NCHAR, maxStringLength, "nchar($l)" );
+		registerColumnType( Types.NVARCHAR, maxStringLength, "nvarchar($l)" );
+		registerColumnType( Types.NVARCHAR, "long nvarchar)" );
+
+		//note: 'binary' is actually a synonym for 'varbinary'
+		registerColumnType( Types.BINARY, maxStringLength, "binary($l)" );
+		registerColumnType( Types.VARBINARY, maxStringLength, "varbinary($l)" );
+		registerColumnType( Types.VARBINARY, "long binary)" );
 	}
 
 	@Override

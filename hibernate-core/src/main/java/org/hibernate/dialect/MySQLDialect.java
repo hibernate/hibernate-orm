@@ -117,14 +117,12 @@ public class MySQLDialect extends Dialect {
 		final int maxMediumLobLen = 16_777_215;
 		final long maxLongLobLen = 4_294_967_295L;
 
-		registerColumnType( Types.LONGVARCHAR, "longtext" );
 		registerColumnType( Types.VARCHAR, maxLongLobLen, "longtext" );
 		registerColumnType( Types.VARCHAR, maxMediumLobLen, "mediumtext" );
 		if ( maxVarcharLen < maxLobLen ) {
 			registerColumnType( Types.VARCHAR, maxLobLen, "text" );
 		}
 
-		registerColumnType( Types.LONGVARBINARY, "longblob" );
 		registerColumnType( Types.VARBINARY, maxLongLobLen, "longblob" );
 		registerColumnType( Types.VARBINARY, maxMediumLobLen, "mediumblob" );
 		if ( maxVarcharLen < maxLobLen ) {

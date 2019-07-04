@@ -47,10 +47,6 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  */
 public class SpannerDialect extends Dialect {
 
-	private static final int STRING_MAX_LENGTH = 2621440;
-
-	private static final int BYTES_MAX_LENGTH = 10485760;
-
 	private final SpannerDialectTableExporter spannerTableExporter =
 			new SpannerDialectTableExporter( this );
 
@@ -82,17 +78,17 @@ public class SpannerDialect extends Dialect {
 		//there is no time type of any kind
 		registerColumnType( Types.TIME, "timestamp" );
 
-		registerColumnType( Types.CHAR, STRING_MAX_LENGTH, "string($l)" );
-		registerColumnType( Types.VARCHAR, STRING_MAX_LENGTH, "string($l)" );
-		registerColumnType( Types.LONGVARCHAR, STRING_MAX_LENGTH, "string($l)" );
+		final int stringMaxLength = 2_621_440;
+		final int bytesMaxLength = 10_485_760;
 
-		registerColumnType( Types.NCHAR, STRING_MAX_LENGTH, "string($l)" );
-		registerColumnType( Types.NVARCHAR, STRING_MAX_LENGTH, "string($l)" );
-		registerColumnType( Types.LONGNVARCHAR, STRING_MAX_LENGTH, "string($l)" );
+		registerColumnType( Types.CHAR, stringMaxLength, "string($l)" );
+		registerColumnType( Types.VARCHAR, stringMaxLength, "string($l)" );
 
-		registerColumnType( Types.BINARY, BYTES_MAX_LENGTH, "bytes($l)" );
-		registerColumnType( Types.VARBINARY, BYTES_MAX_LENGTH, "bytes($l)" );
-		registerColumnType( Types.LONGVARBINARY, BYTES_MAX_LENGTH, "bytes($l)" );
+		registerColumnType( Types.NCHAR, stringMaxLength, "string($l)" );
+		registerColumnType( Types.NVARCHAR, stringMaxLength, "string($l)" );
+
+		registerColumnType( Types.BINARY, bytesMaxLength, "bytes($l)" );
+		registerColumnType( Types.VARBINARY, bytesMaxLength, "bytes($l)" );
 
 		registerColumnType( Types.CLOB, "string(max)" );
 		registerColumnType( Types.NCLOB, "string(max)" );

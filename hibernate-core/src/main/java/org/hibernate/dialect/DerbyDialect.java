@@ -101,7 +101,6 @@ public class DerbyDialect extends Dialect {
 		registerColumnType( Types.BINARY, "varchar($l) for bit data" );
 		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
 		registerColumnType( Types.VARBINARY, "varchar($l) for bit data" );
-		registerColumnType( Types.LONGVARBINARY, "varchar($l) for bit data" );
 
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "clob($l)" );

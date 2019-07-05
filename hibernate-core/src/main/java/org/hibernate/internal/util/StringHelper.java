@@ -318,14 +318,15 @@ public final class StringHelper {
 	 */
 	public static String collapseQualifier(String qualifier, boolean includeDots) {
 		StringTokenizer tokenizer = new StringTokenizer( qualifier, "." );
-		String collapsed = Character.toString( tokenizer.nextToken().charAt( 0 ) );
+		StringBuilder sb = new StringBuilder();
+		sb.append( Character.toString( tokenizer.nextToken().charAt( 0 ) ) );
 		while ( tokenizer.hasMoreTokens() ) {
 			if ( includeDots ) {
-				collapsed += '.';
+				sb.append( '.' );
 			}
-			collapsed += tokenizer.nextToken().charAt( 0 );
+			sb.append( tokenizer.nextToken().charAt( 0 ) );
 		}
-		return collapsed;
+		return sb.toString();
 	}
 
 	/**

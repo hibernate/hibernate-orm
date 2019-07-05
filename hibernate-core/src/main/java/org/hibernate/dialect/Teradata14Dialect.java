@@ -254,7 +254,8 @@ public class Teradata14Dialect extends TeradataDialect {
 			final StringBuilder buf = new StringBuilder()
 					.append( "create index " )
 					.append( indexNameForCreation )
-					.append(  "(" + colBuf  )
+					.append(  '(' )
+					.append( colBuf )
 					.append( " on " )
 					.append( tableName );
 

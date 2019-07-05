@@ -26,12 +26,20 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.naming.Identifier;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTempTableExporter;
+import org.hibernate.query.sqm.mutation.spi.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.spi.idtable.IdTableSupport;
+import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorFirebirdDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import java.sql.DatabaseMetaData;
@@ -434,29 +442,31 @@ public class FirebirdDialect extends Dialect {
 		return false;
 	}
 
-//	@Override
-//	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-//		return new GlobalTemporaryTableBulkIdStrategy(
-//				new IdTableSupportStandardImpl() {
-//					@Override
-//					public String generateIdTableName(String baseName) {
-//						final String name = super.generateIdTableName( baseName );
-//						return name.length() > 31 ? name.substring( 0, 31 ) : name;
-//					}
-//
-//					@Override
-//					public String getCreateIdTableCommand() {
-//						return "create global temporary table";
-//					}
-//
-//					@Override
-//					public String getCreateIdTableStatementOptions() {
-//						return "on commit delete rows";
-//					}
-//				},
-//				AfterUseAction.CLEAN
-//		);
-//	}
+	@Override
+	public SqmMutationStrategy getDefaultIdTableStrategy() {
+		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
+	}
+
+	private IdTableSupport generateIdTableSupport() {
+		return new StandardIdTableSupport( generateIdTableExporter() ) {
+			@Override
+			protected Identifier determineIdTableName(Identifier baseName) {
+				final Identifier name = super.determineIdTableName( baseName );
+				return name.getText().length() > 31
+						? new Identifier( name.getText().substring( 0, 31 ), false )
+						: name;
+			}
+		};
+	}
+
+	private Exporter<IdTable> generateIdTableExporter() {
+		return new GlobalTempTableExporter() {
+			@Override
+			public String getCreateOptions() {
+				return "on commit delete rows";
+			}
+		};
+	}
 
 	@Override
 	public boolean supportsCurrentTimestampSelection() {

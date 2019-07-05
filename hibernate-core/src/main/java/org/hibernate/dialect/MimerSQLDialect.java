@@ -24,6 +24,8 @@ import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
+import static org.hibernate.query.CastType.BOOLEAN;
+
 /**
  * A dialect for Mimer SQL 11.
  *
@@ -108,6 +110,11 @@ public class MimerSQLDialect extends Dialect {
 					case LONG:
 					case INTEGER:
 						return "(?1<>0)";
+				}
+			case INTEGER:
+			case LONG:
+				if (from== BOOLEAN) {
+					return "case ?1 when false then 0 when true then 1 end";
 				}
 			default:
 				return super.castPattern(from, to);

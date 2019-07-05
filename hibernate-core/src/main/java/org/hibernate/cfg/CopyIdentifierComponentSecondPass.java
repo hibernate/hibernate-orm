@@ -79,8 +79,8 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		AtomicInteger index = new AtomicInteger( 0 );
 		if ( columnByReferencedName.isEmpty() ) {
 			isExplicitReference = false;
-			for (Ejb3JoinColumn joinColumn : joinColumns) {
-				columnByReferencedName.put( "" + index.get(), joinColumn );
+			for ( Ejb3JoinColumn joinColumn : joinColumns ) {
+				columnByReferencedName.put( String.valueOf( index.get() ), joinColumn );
 				index.getAndIncrement();
 			}
 			index.set( 0 );
@@ -184,7 +184,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 					joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase(Locale.ROOT ) );
 				}
 				else {
-					joinColumn = columnByReferencedName.get( "" + index.get() );
+					joinColumn = columnByReferencedName.get( String.valueOf( index.get() ) );
 					index.getAndIncrement();
 				}
 				if ( joinColumn == null && ! joinColumns[0].isNameDeferred() ) {

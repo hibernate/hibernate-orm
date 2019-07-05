@@ -105,9 +105,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) configValues.get( AvailableSettings.CLASSLOADERS );
 		if ( classLoaders != null ) {
-			for ( ClassLoader classLoader : classLoaders ) {
-				providedClassLoaders.add( classLoader );
-			}
+			providedClassLoaders.addAll( classLoaders );
 		}
 
 		addIfSet( providedClassLoaders, AvailableSettings.APP_CLASSLOADER, configValues );

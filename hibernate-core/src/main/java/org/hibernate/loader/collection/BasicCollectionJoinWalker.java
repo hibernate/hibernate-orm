@@ -51,11 +51,10 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 
 		walkCollectionTree(collectionPersister, alias);
 
-		List allAssociations = new ArrayList();
-		allAssociations.addAll(associations);
+		List allAssociations = new ArrayList( associations );
 		allAssociations.add( OuterJoinableAssociation.createRoot( collectionPersister.getCollectionType(), alias, getFactory() ) );
-		initPersisters(allAssociations, LockMode.NONE);
-		initStatementString(alias, batchSize, subquery);
+		initPersisters( allAssociations, LockMode.NONE );
+		initStatementString( alias, batchSize, subquery );
 	}
 
 	private void initStatementString(

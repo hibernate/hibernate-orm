@@ -416,8 +416,7 @@ public class QueryPlanCache implements Serializable {
 				this.filterNames = Collections.emptySet();
 			}
 			else {
-				final Set<String> tmp = new HashSet<String>();
-				tmp.addAll( enabledFilters.keySet() );
+				final Set<String> tmp = new HashSet<String>( enabledFilters.keySet() );
 				this.filterNames = Collections.unmodifiableSet( tmp );
 
 			}

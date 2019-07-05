@@ -1691,8 +1691,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		ArrayList<CopyIdentifierComponentSecondPass> sorted =
 				new ArrayList<>( copyIdentifierComponentSecondPasList.size() );
-		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<>();
-		toSort.addAll( copyIdentifierComponentSecondPasList );
+		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<>( copyIdentifierComponentSecondPasList );
 		topologicalSort( sorted, toSort );
 		copyIdentifierComponentSecondPasList = sorted;
 	}

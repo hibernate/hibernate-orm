@@ -440,11 +440,10 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public Set<HashEntry<K, V>> execute() {
-			Set<HashEntry<K, V>> evictedCopy = new HashSet<HashEntry<K, V>>();
+			Set<HashEntry<K, V>> evictedCopy = new HashSet<HashEntry<K, V>>( evicted );
 			for ( HashEntry<K, V> e : accessQueue ) {
 				put( e, e.value );
 			}
-			evictedCopy.addAll( evicted );
 			accessQueue.clear();
 			evicted.clear();
 			return evictedCopy;
@@ -454,8 +453,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		public Set<HashEntry<K, V>> onEntryMiss(HashEntry<K, V> e) {
 			put( e, e.value );
 			if ( !evicted.isEmpty() ) {
-				Set<HashEntry<K, V>> evictedCopy = new HashSet<HashEntry<K, V>>();
-				evictedCopy.addAll( evicted );
+				Set<HashEntry<K, V>> evictedCopy = new HashSet<HashEntry<K, V>>( evicted );
 				evicted.clear();
 				return evictedCopy;
 			}

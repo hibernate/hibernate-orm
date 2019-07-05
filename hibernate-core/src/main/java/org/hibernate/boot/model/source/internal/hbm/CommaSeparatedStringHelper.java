@@ -33,8 +33,7 @@ public class CommaSeparatedStringHelper {
 			return Collections.emptySet();
 		}
 
-		HashSet<String> set = new HashSet<String>();
-		set.addAll( x );
+		HashSet<String> set = new HashSet<String>( x );
 		if ( values != null && !values.isEmpty() ) {
 			Collections.addAll( set, values.split( "\\s*,\\s*" ) );
 		}

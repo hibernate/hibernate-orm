@@ -108,8 +108,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set tableSpaces) {
-		final LinkedHashSet<String> spacesList = new LinkedHashSet<>();
-		spacesList.addAll( tableSpaces );
+		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
 		final SessionFactoryImplementor factory = session.getFactory();
 		final MetamodelImplementor metamodel = factory.getMetamodel();

@@ -211,8 +211,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 				return Collections.emptySet();
 			}
 
-			final Set<String> keywordSet = new HashSet<String>();
-			keywordSet.addAll( Arrays.asList( extraKeywordsString.split( "\\s*,\\s*" ) ) );
+			final Set<String> keywordSet = new HashSet<String>( Arrays.asList( extraKeywordsString.split( "\\s*,\\s*" ) ) );
 			return keywordSet;
 		}
 

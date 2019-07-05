@@ -278,8 +278,7 @@ public class StandardServiceRegistryBuilder {
 		applyServiceContributingIntegrators();
 		applyServiceContributors();
 
-		final Map settingsCopy = new HashMap();
-		settingsCopy.putAll( settings );
+		final Map settingsCopy = new HashMap( settings );
 		settingsCopy.put( org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KEY, aggregatedCfgXml );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
 

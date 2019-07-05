@@ -207,7 +207,7 @@ public class Teradata14Dialect extends TeradataDialect {
 	}
 
 
-	private class TeradataIndexExporter extends StandardIndexExporter implements Exporter<Index> {
+	private static class TeradataIndexExporter extends StandardIndexExporter implements Exporter<Index> {
 
 		public TeradataIndexExporter(Dialect dialect) {
 			super(dialect);

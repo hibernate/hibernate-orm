@@ -1356,7 +1356,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		return xrefEntry == null ? null : xrefEntry.secondaryTableJoinMap;
 	}
 
-	private final class EntityTableXrefImpl implements EntityTableXref {
+	private static final class EntityTableXrefImpl implements EntityTableXref {
 		private final Identifier primaryTableLogicalName;
 		private final Table primaryTable;
 		private EntityTableXrefImpl superEntityTableXref;

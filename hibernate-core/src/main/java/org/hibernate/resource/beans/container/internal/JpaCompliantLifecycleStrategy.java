@@ -170,7 +170,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 	}
 
 
-	private class NamedBeanImpl<B> implements ContainedBeanImplementor<B> {
+	private static class NamedBeanImpl<B> implements ContainedBeanImplementor<B> {
 		private final Class<B> beanType;
 		private final String beanName;
 

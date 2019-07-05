@@ -4149,7 +4149,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class ManyToOneFkSecondPass extends FkSecondPass {
+	private static class ManyToOneFkSecondPass extends FkSecondPass {
 		private final MappingDocument mappingDocument;
 		private final ManyToOne manyToOneBinding;
 
@@ -4210,7 +4210,7 @@ public class ModelBinder {
 		}
 	}
 
-	private class NaturalIdUniqueKeyBinderImpl implements NaturalIdUniqueKeyBinder {
+	private static class NaturalIdUniqueKeyBinderImpl implements NaturalIdUniqueKeyBinder {
 		private final MappingDocument mappingDocument;
 		private final PersistentClass entityBinding;
 		private final List<Property> attributeBindings = new ArrayList<Property>();

@@ -541,7 +541,7 @@ public class EnhancerImpl implements Enhancer {
 		}
 	}
 
-	private class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
+	private static class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
 
 		// The name of the class to (possibly be) transformed.
 		private String className;

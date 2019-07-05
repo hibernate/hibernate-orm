@@ -32,8 +32,16 @@ public class ArrayType extends CollectionType {
 	private final Class elementClass;
 	private final Class arrayClass;
 
+	/**
+	 * @deprecated Use the other contructor
+	 */
+	@Deprecated
 	public ArrayType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Class elementClass) {
-		super( typeScope, role, propertyRef );
+		this( role, propertyRef, elementClass );
+	}
+
+	public ArrayType(String role, String propertyRef, Class elementClass) {
+		super( role, propertyRef );
 		this.elementClass = elementClass;
 		arrayClass = Array.newInstance(elementClass, 0).getClass();
 	}

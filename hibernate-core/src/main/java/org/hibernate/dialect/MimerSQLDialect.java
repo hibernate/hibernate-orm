@@ -53,11 +53,18 @@ public class MimerSQLDialect extends Dialect {
 
 		//Mimer CHARs are ASCII!!
 		registerColumnType( Types.CHAR, "nchar($l)" );
-		registerColumnType( Types.VARCHAR, "nvarchar($l)" );
+		registerColumnType( Types.VARCHAR, 5_000, "nvarchar($l)" );
+		registerColumnType( Types.VARCHAR, "nclob($l)" );
+		registerColumnType( Types.NVARCHAR, 5_000, "nvarchar($l)" );
+		registerColumnType( Types.NVARCHAR, "nclob($l)" );
+
+		registerColumnType( Types.VARBINARY, 15_000, "varbinary($l)" );
+		registerColumnType( Types.VARBINARY, "blob($l)" );
 
 		//default length is 1M, which is quite low
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "nclob($l)" );
+		registerColumnType( Types.NCLOB, "nclob($l)" );
 
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
 

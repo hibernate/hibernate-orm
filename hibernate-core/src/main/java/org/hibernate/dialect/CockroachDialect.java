@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.MappingException;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -29,6 +28,10 @@ import static org.hibernate.type.descriptor.internal.DateTimeUtils.wrapAsAnsiTim
  * @author Gavin King
  */
 public class CockroachDialect extends Dialect {
+
+	// KNOWN LIMITATIONS:
+
+	// * no support for java.sql.Clob
 
 	public CockroachDialect() {
 		super();

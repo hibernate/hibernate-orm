@@ -92,7 +92,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 		}
 
 		if ( DataSource.class.isInstance( namedObject ) ) {
-			final int loc = jndiName.lastIndexOf( "/" );
+			final int loc = jndiName.lastIndexOf( '/' );
 			this.baseJndiNamespace = jndiName.substring( 0, loc );
 			this.tenantIdentifierForAny = jndiName.substring( loc + 1 );
 			dataSourceMap().put( tenantIdentifierForAny, (DataSource) namedObject );

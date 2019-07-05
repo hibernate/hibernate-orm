@@ -87,7 +87,19 @@ public class VarcharSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 		return new AbstractJdbcValueExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int position, ExecutionContext executionContext) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getString( position ), executionContext.getSession() );
+				try {
+					return javaTypeDescriptor.wrap( rs.getString( position ), executionContext.getSession() );
+				}
+				catch (SQLException sqle) {
+					if ( "2200G".equals( sqle.getSQLState() ) ) {
+						try {
+							//Mimer JDBC driver throws when the column type is CLOB/NCLOB
+							return javaTypeDescriptor.wrap( rs.getCharacterStream(position), executionContext.getSession() );
+						}
+						catch (SQLException e) {}
+					}
+					throw sqle;
+				}
 			}
 
 			@Override

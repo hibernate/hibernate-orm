@@ -271,4 +271,9 @@ public class MimerSQLDialect extends Dialect {
 	public String translateDatetimeFormat(String format) {
 		throw new NotYetImplementedFor6Exception("format() function not supported on Mimer SQL");
 	}
+
+	@Override
+	public boolean useInputStreamToInsertBlob() {
+		return false;
+	}
 }

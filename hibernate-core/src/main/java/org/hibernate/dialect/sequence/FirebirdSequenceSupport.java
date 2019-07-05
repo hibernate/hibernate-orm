@@ -29,10 +29,12 @@ public class FirebirdSequenceSupport extends ANSISequenceSupport {
 	public static final SequenceSupport LEGACY_INSTANCE = new FirebirdSequenceSupport() {
 		@Override
 		public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) {
-			return new String[] {
-					getCreateSequenceString( sequenceName ),
-					"alter sequence " + sequenceName + " restart with " + (initialValue-1)
-			};
+			return initialValue == 1
+					? new String[] { getCreateSequenceString(sequenceName) }
+					: new String[] {
+							getCreateSequenceString( sequenceName ),
+							"alter sequence " + sequenceName + " restart with " + (initialValue-1)
+					};
 		}
 		@Override
 		public String getSequenceNextValString(String sequenceName, int increment) {

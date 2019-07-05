@@ -114,7 +114,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 		}
 		persistenceContext.beforeLoad();
 		try {
-			List results = null;
+			final List results;
 			final String sql = loadQueryDetails.getSqlStatement();
 			SqlStatementWrapper wrapper = null;
 			try {

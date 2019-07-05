@@ -18,7 +18,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class Caching {
 	// NOTE : TruthValue for now because I need to look at how JPA's SharedCacheMode concept is handled
-	private TruthValue requested = TruthValue.UNKNOWN;
+	private TruthValue requested;
 	private String region;
 	private AccessType accessType;
 	private boolean cacheLazyProperties;

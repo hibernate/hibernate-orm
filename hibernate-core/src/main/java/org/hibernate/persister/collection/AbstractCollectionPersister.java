@@ -1211,7 +1211,7 @@ public abstract class AbstractCollectionPersister
 
 			try {
 				int offset = 1;
-				PreparedStatement st = null;
+				final PreparedStatement st;
 				Expectation expectation = Expectations.appropriateExpectation( getDeleteAllCheckStyle() );
 				boolean callable = isDeleteAllCallable();
 				boolean useBatch = expectation.canBeBatched();
@@ -1313,7 +1313,7 @@ public abstract class AbstractCollectionPersister
 					final Object entry = entries.next();
 					if ( collection.entryExists( entry, i ) ) {
 						int offset = 1;
-						PreparedStatement st = null;
+						final PreparedStatement st;
 						boolean callable = isInsertCallable();
 						boolean useBatch = expectation.canBeBatched();
 						String sql = getSQLInsertRowString();
@@ -1429,7 +1429,7 @@ public abstract class AbstractCollectionPersister
 				int offset = 1;
 				int count = 0;
 				while ( deletes.hasNext() ) {
-					PreparedStatement st = null;
+					final PreparedStatement st;
 					boolean callable = isDeleteCallable();
 					boolean useBatch = expectation.canBeBatched();
 					String sql = getSQLDeleteRowString();

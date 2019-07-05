@@ -33,7 +33,8 @@ public class FirebirdSequenceSupport extends ANSISequenceSupport {
 					? new String[] { getCreateSequenceString(sequenceName) }
 					: new String[] {
 							getCreateSequenceString( sequenceName ),
-							"alter sequence " + sequenceName + " restart with " + (initialValue-1)
+							"alter sequence " + sequenceName
+									+ " restart with " + (initialValue-incrementSize)
 					};
 		}
 		@Override

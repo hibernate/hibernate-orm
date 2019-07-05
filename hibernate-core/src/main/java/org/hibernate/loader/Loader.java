@@ -2239,12 +2239,17 @@ public abstract class Loader {
 			return result;
 		}
 
-		for ( String name : namedParams.keySet() ) {
-			TypedValue typedValue = namedParams.get( name );
-			int columnSpan = typedValue.getType().getColumnSpan( getFactory() );
-			int[] locs = getNamedParameterLocs( name );
+		final boolean debugEnabled = LOG.isDebugEnabled();
+		final SessionFactoryImplementor factory = getFactory();
+
+		for ( Map.Entry<String, TypedValue> entry : namedParams.entrySet() ) {
+			final String name = entry.getKey();
+			final TypedValue typedValue = entry.getValue();
+			final Type type = typedValue.getType();
+			final int columnSpan = type.getColumnSpan( factory );
+			final int[] locs = getNamedParameterLocs( name );
 			for ( int loc : locs ) {
-				if ( LOG.isDebugEnabled() ) {
+				if ( debugEnabled ) {
 					LOG.debugf(
 							"bindNamedParameters() %s -> %s [%s]",
 							typedValue.getValue(),
@@ -2253,7 +2258,7 @@ public abstract class Loader {
 					);
 				}
 				int start = loc * columnSpan + startIndex;
-				typedValue.getType().nullSafeSet( statement, typedValue.getValue(), start, session );
+				type.nullSafeSet( statement, typedValue.getValue(), start, session );
 			}
 			result += locs.length;
 		}

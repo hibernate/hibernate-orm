@@ -2130,8 +2130,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return;
 		}
 
-		for ( Table table : jpaIndexHoldersByTable.keySet() ) {
-			final List<JPAIndexHolder> jpaIndexHolders = jpaIndexHoldersByTable.get( table );
+		for ( Map.Entry<Table, List<JPAIndexHolder>> entry : jpaIndexHoldersByTable.entrySet() ) {
+			final Table table = entry.getKey();
+			final List<JPAIndexHolder> jpaIndexHolders = entry.getValue();
 			for ( JPAIndexHolder holder : jpaIndexHolders ) {
 				buildUniqueKeyFromColumnNames(
 						table,

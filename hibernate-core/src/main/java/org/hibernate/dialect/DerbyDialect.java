@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.JDBCException;
-import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -29,7 +28,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.naming.Identifier;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -49,6 +47,8 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.descriptor.sql.spi.DecimalSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+
+import static org.hibernate.query.CastType.BOOLEAN;
 
 /**
  * Hibernate Dialect for Apache Derby / Cloudscape 10
@@ -245,9 +245,15 @@ public class DerbyDialect extends Dialect {
 					case INTEGER:
 						return "(?1<>0)";
 				}
-			default:
-				return super.castPattern(from, to);
+				break;
+			case INTEGER:
+			case LONG:
+				if ( from == BOOLEAN && getVersion() >= 1070 ) {
+					return "case ?1 when false then 0 when true then 1 end";
+				}
+				break;
 		}
+		return super.castPattern(from, to);
 	}
 
 	@Override

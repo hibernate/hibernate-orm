@@ -118,14 +118,15 @@ public class MimerSQLDialect extends Dialect {
 					case INTEGER:
 						return "(?1<>0)";
 				}
+				break;
 			case INTEGER:
 			case LONG:
-				if (from== BOOLEAN) {
+				if (from == BOOLEAN) {
 					return "case ?1 when false then 0 when true then 1 end";
 				}
-			default:
-				return super.castPattern(from, to);
+				break;
 		}
+		return super.castPattern(from, to);
 	}
 
 	@Override

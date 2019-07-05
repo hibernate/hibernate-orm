@@ -41,6 +41,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.model.domain.spi.Lockable;
 import org.hibernate.naming.Identifier;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.idtable.StandardIdTableSupport;
@@ -54,6 +55,10 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.spi.Exporter;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.CastType.BOOLEAN;
+import static org.hibernate.query.CastType.INTEGER;
+import static org.hibernate.query.CastType.LONG;
 
 /**
  * An SQL dialect compatible with HyperSQL (HSQLDB) version 1.8 and above.
@@ -197,6 +202,15 @@ public class HSQLDialect extends Dialect {
 		if ( version > 219 ) {
 			CommonFunctionFactory.rownum( queryEngine );
 		}
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from== BOOLEAN
+				&& (to== INTEGER || to== LONG)) {
+			return "decode(?1,false,0,true,1)";
+		}
+		return super.castPattern( from, to );
 	}
 
 	@Override

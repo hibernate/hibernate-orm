@@ -9,7 +9,6 @@ package org.hibernate.internal.util.xml;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import org.hibernate.boot.jaxb.internal.stax.*;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
 

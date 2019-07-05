@@ -239,18 +239,8 @@ public class TeradataDialect extends Dialect {
 	private Exporter<IdTable> generateIdTableExporter() {
 		return new GlobalTempTableExporter() {
 			@Override
-			public String getCreateCommand() {
-				return "create global temporary table";
-			}
-
-			@Override
 			public String getCreateOptions() {
 				return " on commit preserve rows";
-			}
-
-			@Override
-			protected String getTruncateIdTableCommand() {
-				return "delete from";
 			}
 		};
 	}

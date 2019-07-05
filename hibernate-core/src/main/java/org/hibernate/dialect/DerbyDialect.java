@@ -517,10 +517,6 @@ public class DerbyDialect extends Dialect {
 
 		return new StandardIdTableSupport( new GlobalTempTableExporter() ) {
 			@Override
-			protected Identifier determineIdTableName(Identifier baseName) {
-				return super.determineIdTableName(baseName);
-			}
-			@Override
 			public Exporter<IdTable> getIdTableExporter() {
 				return generateIdTableExporter();
 			}

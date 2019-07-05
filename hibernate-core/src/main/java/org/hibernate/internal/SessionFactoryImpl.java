@@ -609,10 +609,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public Session createEntityManager() {
 		validateNotClosed();
-		return buildEntityManager( SynchronizationType.SYNCHRONIZED, Collections.emptyMap() );
+		return buildEntityManager( SynchronizationType.SYNCHRONIZED, null );
 	}
 
-	private Session buildEntityManager(SynchronizationType synchronizationType, Map map) {
+	private <K,V> Session buildEntityManager(final SynchronizationType synchronizationType, final Map<K,V> map) {
 		assert !isClosed;
 
 		SessionBuilderImplementor builder = withOptions();
@@ -625,11 +625,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		final Session session = builder.openSession();
 		if ( map != null ) {
-			map.keySet().forEach( key -> {
+			for ( Map.Entry<K, V> o : map.entrySet() ) {
+				final K key = o.getKey();
 				if ( key instanceof String ) {
-					session.setProperty( (String) key, map.get( key ) );
+					final String sKey = (String) key;
+					session.setProperty( sKey, o.getValue() );
 				}
-			} );
+			}
 		}
 		return session;
 	}
@@ -644,7 +646,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	public Session createEntityManager(SynchronizationType synchronizationType) {
 		validateNotClosed();
 		errorIfResourceLocalDueToExplicitSynchronizationType();
-		return buildEntityManager( synchronizationType, Collections.emptyMap() );
+		return buildEntityManager( synchronizationType, null );
 	}
 
 	private void errorIfResourceLocalDueToExplicitSynchronizationType() {

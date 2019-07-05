@@ -650,10 +650,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		}
 		else {
 			rtsize = returnedTypes.size();
-			Iterator iter = entitiesToFetch.iterator();
-			while ( iter.hasNext() ) {
-				returnedTypes.add( iter.next() );
-			}
+			returnedTypes.addAll( entitiesToFetch );
 		}
 		int size = returnedTypes.size();
 		persisters = new Queryable[size];

@@ -572,7 +572,6 @@ public class EntityMetamodel implements Serializable {
 		private boolean hadInMemoryGeneration;
 		private boolean hadInDatabaseGeneration;
 
-		private List<InMemoryValueGenerationStrategy> inMemoryStrategies;
 		private List<InDatabaseValueGenerationStrategy> inDatabaseStrategies;
 
 		public CompositeGenerationStrategyPairBuilder(Property mappingProperty) {
@@ -585,11 +584,6 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		private void add(InMemoryValueGenerationStrategy inMemoryStrategy) {
-			if ( inMemoryStrategies == null ) {
-				inMemoryStrategies = new ArrayList<>();
-			}
-			inMemoryStrategies.add( inMemoryStrategy );
-
 			if ( inMemoryStrategy.getGenerationTiming() != GenerationTiming.NEVER ) {
 				hadInMemoryGeneration = true;
 			}

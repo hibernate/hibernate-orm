@@ -541,6 +541,31 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * Bitwise operators, not aggregate functions!
+	 */
+	public static void bitandorxornot_binAndOrXorNot(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bin_and" )
+				.setMinArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitand", "bin_and");
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bin_or" )
+				.setMinArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitor", "bin_or");
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bin_xor" )
+				.setMinArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitxor", "bin_xor");
+
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bin_not" )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitnot", "bin_not");
+	}
+
+	/**
 	 * Binary bitwise operators, not aggregate functions!
 	 */
 	public static void bitandorxornot_operator(QueryEngine queryEngine) {
@@ -1386,10 +1411,10 @@ public class CommonFunctionFactory {
 	}
 
 	public static void leastGreatest_minMaxValue(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "least", "minValue" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "least", "minvalue" )
 				.setMinArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "greatest", "mxValue" )
+		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "greatest", "maxvalue" )
 				.setMinArgumentCount( 1 )
 				.register();
 	}

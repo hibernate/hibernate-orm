@@ -140,14 +140,18 @@ public class FirebirdDialect extends Dialect {
 		CommonFunctionFactory.sinh( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
 		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.substringFromFor( queryEngine );
 		CommonFunctionFactory.overlay( queryEngine );
 		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );
-		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot( queryEngine );
+		CommonFunctionFactory.bitandorxornot_binAndOrXorNot( queryEngine );
 		CommonFunctionFactory.leastGreatest_minMaxValue( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
+		//TODO: lots more statistical functions
 
 		//TODO: gen_uid() and friends, gen_id()
 

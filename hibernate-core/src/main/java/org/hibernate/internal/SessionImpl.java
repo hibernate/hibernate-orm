@@ -234,9 +234,6 @@ public final class SessionImpl
 	private transient int dontFlushFromFind;
 
 	private transient ExceptionMapper exceptionMapper;
-	private transient ManagedFlushChecker managedFlushChecker;
-
-	private transient AfterCompletionAction afterCompletionAction;
 
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
@@ -343,6 +340,8 @@ public final class SessionImpl
 
 
 	private void initializeFromSessionOwner(SessionOwner sessionOwner) {
+		ManagedFlushChecker managedFlushChecker;
+		AfterCompletionAction afterCompletionAction;
 		if ( sessionOwner != null ) {
 			if ( sessionOwner.getExceptionMapper() != null ) {
 				exceptionMapper = sessionOwner.getExceptionMapper();

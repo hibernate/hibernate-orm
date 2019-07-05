@@ -208,7 +208,7 @@ public class HSQLDialect extends Dialect {
 	public String castPattern(CastType from, CastType to) {
 		if ( from== BOOLEAN
 				&& (to== INTEGER || to== LONG)) {
-			return "decode(?1,false,0,true,1)";
+			return "casewhen(?1,1,0)";
 		}
 		return super.castPattern( from, to );
 	}

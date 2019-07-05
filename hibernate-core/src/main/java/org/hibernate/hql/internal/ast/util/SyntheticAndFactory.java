@@ -158,7 +158,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 		// that this is only used from update and delete HQL statement parsing
 		whereFragment = StringHelper.replace(
 				whereFragment,
-				persister.generateFilterConditionAlias( alias ) + ".",
+				persister.generateFilterConditionAlias( alias ) + '.',
 				""
 		);
 

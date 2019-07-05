@@ -32,7 +32,7 @@ public class ImplicitNamingStrategyComponentPathImpl extends ImplicitNamingStrat
 		if ( attributePath.getParent() != null ) {
 			process( attributePath.getParent(), sb );
 			if ( !"".equals( attributePath.getParent().getProperty() ) ) {
-				sb.append( "_" );
+				sb.append( '_' );
 			}
 		}
 

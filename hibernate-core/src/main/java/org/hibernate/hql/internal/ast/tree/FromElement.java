@@ -23,6 +23,7 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -445,7 +446,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( origin == null ) {
 			return null;
 		}
-		if ( origin.getText() == null || "".equals( origin.getText() ) ) {
+		if ( StringHelper.isEmpty( origin.getText() ) ) {
 			return origin.getRealOrigin();
 		}
 		return origin;
@@ -458,7 +459,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( !origin.isFetch() ) {
 			return origin;
 		}
-		if ( origin.getText() == null || "".equals( origin.getText() ) ) {
+		if ( StringHelper.isEmpty( origin.getText() ) ) {
 			return origin.getFetchOrigin();
 		}
 		return origin;

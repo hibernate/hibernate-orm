@@ -67,7 +67,7 @@ public class GroupsPerOperation {
 		if ( property instanceof String ) {
 			String stringProperty = (String) property;
 			String[] groupNames = stringProperty.split( "," );
-			if ( groupNames.length == 1 && groupNames[0].equals( "" ) ) {
+			if ( groupNames.length == 1 && groupNames[0].isEmpty() ) {
 				return EMPTY_GROUPS;
 			}
 

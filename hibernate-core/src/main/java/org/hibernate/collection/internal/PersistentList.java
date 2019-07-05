@@ -104,7 +104,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
 		final List sn = (List) getSnapshot();
-		if ( sn.size()!=this.list.size() ) {
+		if ( sn.size() != this.list.size() ) {
 			return false;
 		}
 		final Iterator itr = list.iterator();
@@ -215,7 +215,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean addAll(Collection values) {
-		if ( values.size()==0 ) {
+		if ( values.size() == 0 ) {
 			return false;
 		}
 		if ( !isOperationQueueEnabled() ) {
@@ -226,14 +226,14 @@ public class PersistentList extends AbstractPersistentCollection implements List
 			for ( Object value : values ) {
 				queueOperation( new SimpleAdd( value ) );
 			}
-			return values.size()>0;
+			return values.size() > 0;
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean addAll(int index, Collection coll) {
-		if ( coll.size()>0 ) {
+		if ( coll.size() > 0 ) {
 			write();
 			return list.addAll( index,  coll );
 		}
@@ -245,7 +245,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean removeAll(Collection coll) {
-		if ( coll.size()>0 ) {
+		if ( coll.size() > 0 ) {
 			initialize( true );
 			if ( list.removeAll( coll ) ) {
 				elementRemoved = true;

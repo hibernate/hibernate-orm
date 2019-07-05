@@ -49,7 +49,7 @@ public class TimestampTypeDescriptor implements SqlTypeDescriptor {
 				if ( value instanceof Calendar ) {
 					st.setTimestamp( index, timestamp, (Calendar) value );
 				}
-				else if (options.getJdbcTimeZone() != null) {
+				else if ( options.getJdbcTimeZone() != null ) {
 					st.setTimestamp( index, timestamp, Calendar.getInstance( options.getJdbcTimeZone() ) );
 				}
 				else {
@@ -64,7 +64,7 @@ public class TimestampTypeDescriptor implements SqlTypeDescriptor {
 				if ( value instanceof Calendar ) {
 					st.setTimestamp( name, timestamp, (Calendar) value );
 				}
-				else if (options.getJdbcTimeZone() != null) {
+				else if ( options.getJdbcTimeZone() != null ) {
 					st.setTimestamp( name, timestamp, Calendar.getInstance( options.getJdbcTimeZone() ) );
 				}
 				else {

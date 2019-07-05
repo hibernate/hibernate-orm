@@ -172,7 +172,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	/**
-	 * Firebird doesn't have a real {@link java.sql.Types#BOOLEAN}
+	 * Firebird 2.5 doesn't have a real {@link java.sql.Types#BOOLEAN}
 	 * type, so...
 	 */
 	@Override
@@ -208,7 +208,7 @@ public class FirebirdDialect extends Dialect {
 	 * Firebird extract() function returns {@link TemporalUnit#DAY_OF_WEEK}
 	 * numbered from 0 to 6, and {@link TemporalUnit#DAY_OF_YEAR} numbered
 	 * for 0. This isn't consistent with what most other databases do, so
-	 * here we adjust the result by generating {@code (extract(unit,arg)+1)).
+	 * here we adjust the result by generating {@code (extract(unit,arg)+1))}.
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {

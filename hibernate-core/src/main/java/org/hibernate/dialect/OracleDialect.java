@@ -463,13 +463,14 @@ public class OracleDialect extends Dialect {
 	protected void registerCharacterTypeMappings() {
 		if ( getVersion() < 9) {
 			registerColumnType( Types.VARCHAR, 4000, "varchar2($l)" );
-			registerColumnType( Types.VARCHAR, "long" );
+			registerColumnType( Types.VARCHAR, "clob" );
 		}
 		else {
 			registerColumnType( Types.CHAR, "char($l char)" );
 			registerColumnType( Types.VARCHAR, 4000, "varchar2($l char)" );
-			registerColumnType( Types.VARCHAR, "long" );
-			registerColumnType( Types.NVARCHAR, "nvarchar2($l)" );
+			registerColumnType( Types.VARCHAR, "clob" );
+			registerColumnType( Types.NVARCHAR, 4000, "nvarchar2($l)" );
+			registerColumnType( Types.NVARCHAR, "nclob" );
 		}
 	}
 
@@ -506,10 +507,10 @@ public class OracleDialect extends Dialect {
 
 	protected void registerBinaryTypeMappings() {
 		registerColumnType( Types.BINARY, 2000, "raw($l)" );
-		registerColumnType( Types.BINARY, "long raw" );
+		registerColumnType( Types.BINARY, "blob" );
 
 		registerColumnType( Types.VARBINARY, 2000, "raw($l)" );
-		registerColumnType( Types.VARBINARY, "long raw" );
+		registerColumnType( Types.VARBINARY, "blob" );
 	}
 
 	protected void registerReverseHibernateTypeMappings() {

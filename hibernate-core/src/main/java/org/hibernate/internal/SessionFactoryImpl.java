@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.persistence.EntityGraph;
@@ -108,7 +109,9 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
+import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -155,6 +158,7 @@ import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.det
  */
 public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
+	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( " ," );
 
 	private final String name;
 	private final String uuid;
@@ -178,7 +182,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient CriteriaBuilderImpl criteriaBuilder;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
-	private final transient org.hibernate.query.spi.NamedQueryRepository namedQueryRepository;
+	private final transient NamedQueryRepository namedQueryRepository;
 	private final transient QueryPlanCache queryPlanCache;
 
 	private final transient CurrentSessionContext currentSessionContext;
@@ -410,7 +414,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			);
 			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
 			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-			for ( String listenerImpl : ( (String) entry.getValue() ).split( " ," ) ) {
+			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
 				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
 			}
 		}
@@ -712,7 +716,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public org.hibernate.query.spi.NamedQueryRepository getNamedQueryRepository() {
+	public NamedQueryRepository getNamedQueryRepository() {
 		return namedQueryRepository;
 	}
 
@@ -863,10 +867,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			org.hibernate.query.Query hibernateQuery = query.unwrap( org.hibernate.query.Query.class );
 			if ( hibernateQuery != null ) {
 				// create and register the proper NamedQueryDefinition...
-				if ( org.hibernate.query.NativeQuery.class.isInstance( hibernateQuery ) ) {
+				if ( NativeQuery.class.isInstance( hibernateQuery ) ) {
 					getNamedQueryRepository().registerNamedSQLQueryDefinition(
 							name,
-							extractSqlQueryDefinition( (org.hibernate.query.NativeQuery) hibernateQuery, name )
+							extractSqlQueryDefinition( (NativeQuery) hibernateQuery, name )
 					);
 				}
 				else {
@@ -898,7 +902,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		);
 	}
 
-	private NamedSQLQueryDefinition extractSqlQueryDefinition(org.hibernate.query.NativeQuery nativeSqlQuery, String name) {
+	private NamedSQLQueryDefinition extractSqlQueryDefinition(NativeQuery nativeSqlQuery, String name) {
 		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder( name );
 		fillInNamedQueryBuilder( builder, nativeSqlQuery );
 		builder.setCallable( nativeSqlQuery.isCallable() )

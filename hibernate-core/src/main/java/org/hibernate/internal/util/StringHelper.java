@@ -15,7 +15,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
+import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
@@ -700,8 +702,8 @@ public final class StringHelper {
 	 * Determine if the given name is quoted.  It is considered quoted if either:
 	 * <ol>
 	 * <li>starts AND ends with backticks (`)</li>
-	 * <li>starts with dialect-specified {@link org.hibernate.dialect.Dialect#openQuote() open-quote}
-	 * AND ends with dialect-specified {@link org.hibernate.dialect.Dialect#closeQuote() close-quote}</li>
+	 * <li>starts with dialect-specified {@link Dialect#openQuote() open-quote}
+	 * AND ends with dialect-specified {@link Dialect#closeQuote() close-quote}</li>
 	 * </ol>
 	 *
 	 * @param name The name to check
@@ -835,7 +837,7 @@ public final class StringHelper {
 	}
 
 	public static List<String> parseCommaSeparatedString(String incomingString) {
-		return Arrays.asList( incomingString.split( "\\s*,\\s*" ) );
+		return CommaSeparatedStringHelper.parseCommaSeparatedString( incomingString );
 	}
 
 	public static <T> String join(Collection<T> values, Renderer<T> renderer) {

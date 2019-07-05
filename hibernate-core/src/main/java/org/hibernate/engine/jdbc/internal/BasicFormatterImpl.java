@@ -40,7 +40,6 @@ public class BasicFormatterImpl implements Formatter {
 		END_CLAUSES.add( "where" );
 		END_CLAUSES.add( "set" );
 		END_CLAUSES.add( "having" );
-		END_CLAUSES.add( "join" );
 		END_CLAUSES.add( "from" );
 		END_CLAUSES.add( "by" );
 		END_CLAUSES.add( "join" );

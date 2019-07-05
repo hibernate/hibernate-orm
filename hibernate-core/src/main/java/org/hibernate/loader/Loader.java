@@ -2569,8 +2569,6 @@ public abstract class Loader {
 			final Type[] parameterTypes,
 			final Map<String, TypedValue> namedParameters,
 			final Type type) throws HibernateException {
-		final Type[] idTypes = new Type[ids.length];
-		Arrays.fill( idTypes, type );
 		try {
 			doQueryAndInitializeNonLazyCollections(
 					session,

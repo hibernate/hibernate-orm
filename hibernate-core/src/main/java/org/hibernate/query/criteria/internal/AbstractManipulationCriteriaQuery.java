@@ -39,7 +39,6 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 
 	private RootImpl<T> root;
 	private Predicate restriction;
-	private List<Subquery<?>> subQueries;
 
 	protected AbstractManipulationCriteriaQuery(CriteriaBuilderImpl criteriaBuilder) {
 		this.criteriaBuilder = criteriaBuilder;

@@ -849,42 +849,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	/**
-	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
-	 * depending upon the value of the <tt>lock</tt> parameter
-	 */
-	/*public Object load(Serializable id,	Object optionalObject, LockMode lockMode, SessionImplementor session)
-	throws HibernateException {
-
-		if ( log.isTraceEnabled() ) log.trace( "Materializing entity: " + MessageHelper.infoString(this, id) );
-
-		final UniqueEntityLoader loader = hasQueryLoader() ?
-				getQueryLoader() :
-				this.loader;
-		try {
-
-			final Object result = loader.load(id, optionalObject, session);
-
-			if (result!=null) lock(id, getVersion(result), result, lockMode, session);
-
-			return result;
-
-		}
-		catch (SQLException sqle) {
-			throw new JDBCException( "could not load by id: " +  MessageHelper.infoString(this, id), sqle );
-		}
-	}*/
-	private static final void reverse(Object[] objects, int len) {
-		Object[] temp = new Object[len];
-		for ( int i = 0; i < len; i++ ) {
-			temp[i] = objects[len - i - 1];
-		}
-		for ( int i = 0; i < len; i++ ) {
-			objects[i] = temp[i];
-		}
-	}
-
-
-	/**
 	 * Reverse the first n elements of the incoming array
 	 *
 	 * @param objects

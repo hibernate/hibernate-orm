@@ -215,7 +215,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		final Database database = metadata.getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 

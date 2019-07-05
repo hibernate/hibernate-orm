@@ -424,10 +424,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		);
 	}
 
-	private  <P> QueryParameterBinding<P> locateBinding(QueryParameter<P> parameter) {
-		return getQueryParameterBindings().getBinding( parameter );
-	}
-
 	private <P> QueryParameterBinding<P> locateBinding(String name) {
 		return getQueryParameterBindings().getBinding( name );
 	}
@@ -476,10 +472,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		else {
 			return getQueryParameterBindings().getQueryParameterListBinding( parameter.getName() );
 		}
-	}
-
-	private QueryParameterListBinding locateListBinding(String name) {
-		return getQueryParameterBindings().getQueryParameterListBinding( name );
 	}
 
 	@Override

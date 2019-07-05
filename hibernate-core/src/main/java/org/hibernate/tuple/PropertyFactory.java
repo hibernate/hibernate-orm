@@ -249,7 +249,6 @@ public final class PropertyFactory {
 
 	private static NonIdentifierAttributeNature decode(Type type) {
 		if ( type.isAssociationType() ) {
-			AssociationType associationType = (AssociationType) type;
 
 			if ( type.isComponentType() ) {
 				// an any type is both an association and a composite...

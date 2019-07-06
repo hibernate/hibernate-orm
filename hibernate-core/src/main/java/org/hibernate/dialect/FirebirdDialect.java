@@ -108,9 +108,14 @@ public class FirebirdDialect extends Dialect {
 		registerColumnType( Types.REAL, "float");
 		registerColumnType( Types.FLOAT, "double precision");
 
+		//no precision for 'timestamp' type
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
-
+		if ( getVersion() < 400 ) {
+			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
+		}
+		else {
+			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
+		}
 		registerColumnType( Types.VARCHAR, 8_191, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, "blob sub_type text" );
 
@@ -179,7 +184,7 @@ public class FirebirdDialect extends Dialect {
 	public String castPattern(CastType from, CastType to) {
 		if ( to==BOOLEAN
 				&& (from==LONG || from==INTEGER)) {
-			return "(?1<>0)";
+			return "(0<>?1)";
 		}
 		if ( getVersion() < 300 ) {
 			if ( to==BOOLEAN && from==STRING ) {
@@ -408,12 +413,8 @@ public class FirebirdDialect extends Dialect {
 	@Override
 	public String getForUpdateString() {
 		// locking only happens on fetch
+		// ('for update' would force Firebird to return a single row per fetch)
 		return " with lock";
-	}
-
-	@Override
-	public String getForUpdateString(String aliases) {
-		return " for update of " + aliases + " with lock";
 	}
 
 	@Override

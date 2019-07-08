@@ -125,12 +125,7 @@ public class QueryPlanCache implements Serializable {
 	 */
 	public ParameterMetadata getSQLParameterMetadata(final String query, boolean isOrdinalParameterZeroBased)  {
 		final ParameterMetadataKey key = new ParameterMetadataKey( query, isOrdinalParameterZeroBased );
-		ParameterMetadataImpl value = parameterMetadataCache.get( key );
-		if ( value == null ) {
-			value = nativeQueryInterpreter.getParameterMetadata( query );
-			parameterMetadataCache.putIfAbsent( key, value );
-		}
-		return value;
+		return parameterMetadataCache.computeIfAbsent( key, k -> nativeQueryInterpreter.getParameterMetadata( query ) );
 	}
 
 	/**

@@ -37,7 +37,7 @@ public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
 		if ( string == null ) {
 			return null;
 		}
-		return Duration.ofNanos( Long.valueOf( string ) );
+		return Duration.ofNanos( Long.parseLong( string ) );
 	}
 
 	@Override

@@ -111,7 +111,7 @@ public final class CollectionHelper {
 			return Collections.emptyMap();
 		}
 
-		final Map<K, V> map = new HashMap<>();
+		final Map<K, V> map = new HashMap<>( determineProperSizing( collection.size() ));
 
 		for ( E element : collection ) {
 			map.put(

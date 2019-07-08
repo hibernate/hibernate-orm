@@ -99,8 +99,8 @@ public abstract class AbstractEntityLoader
 			Object[] row,
 			ResultTransformer transformer,
 			ResultSet rs,
-			SharedSessionContractImplementor session) throws SQLException, HibernateException {
-		return row[row.length-1];
+			SharedSessionContractImplementor session) {
+		return row[ row.length - 1 ];
 	}
 
 	@Override

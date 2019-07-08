@@ -53,12 +53,12 @@ public class ShortType
 	}
 
 	@Override
-	public String objectToSQLString(Short value, Dialect dialect) throws Exception {
+	public String objectToSQLString(Short value, Dialect dialect) {
 		return value.toString();
 	}
 
 	@Override
-	public Short stringToObject(String xml) throws Exception {
+	public Short stringToObject(String xml) {
 		return Short.valueOf( xml );
 	}
 

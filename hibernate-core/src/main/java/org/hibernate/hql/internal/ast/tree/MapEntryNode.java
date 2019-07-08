@@ -210,7 +210,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 	}
 
 	@Override
-	public void setScalarColumn(int i) throws SemanticException {
+	public void setScalarColumn(int i) {
 		this.scalarColumnIndex = i;
 	}
 
@@ -220,7 +220,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 	}
 
 	@Override
-	public void setScalarColumnText(int i) throws SemanticException {
+	public void setScalarColumnText(int i) {
 	}
 
 	@Override

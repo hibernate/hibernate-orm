@@ -35,7 +35,7 @@ public abstract class AbstractMapComponentNode extends FromReferenceNode impleme
 	}
 
 	@Override
-	public void setScalarColumnText(int i) throws SemanticException {
+	public void setScalarColumnText(int i) {
 		ColumnHelper.generateScalarColumns( this, getColumns(), i );
 	}
 
@@ -105,7 +105,7 @@ public abstract class AbstractMapComponentNode extends FromReferenceNode impleme
 	}
 
 	@Override
-	public void resolveIndex(AST parent) throws SemanticException {
+	public void resolveIndex(AST parent) {
 		throw new UnsupportedOperationException( expressionDescription() + " expression cannot be the source for an index operation" );
 	}
 

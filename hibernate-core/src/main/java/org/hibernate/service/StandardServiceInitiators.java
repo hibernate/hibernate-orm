@@ -47,7 +47,7 @@ public final class StandardServiceInitiators {
 	private StandardServiceInitiators() {
 	}
 
-	public static List<StandardServiceInitiator> LIST = buildStandardServiceInitiatorList();
+	public static final List<StandardServiceInitiator> LIST = buildStandardServiceInitiatorList();
 
 	private static List<StandardServiceInitiator> buildStandardServiceInitiatorList() {
 		final ArrayList<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();

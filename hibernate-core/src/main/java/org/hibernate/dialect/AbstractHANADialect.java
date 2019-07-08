@@ -270,7 +270,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public void truncate(long len) throws SQLException {
-			this.data = new String();
+			this.data = "";
 		}
 
 		@Override
@@ -698,15 +698,14 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	// Set the LOB prefetch size. LOBs larger than this value will be read into memory as the HANA JDBC driver closes
 	// the LOB when the result set is closed.
-	private static final String MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME = new String( "hibernate.dialect.hana.max_lob_prefetch_size" );
+	private static final String MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME = "hibernate.dialect.hana.max_lob_prefetch_size";
 	// Use TINYINT instead of the native BOOLEAN type
-	private static final String USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME = new String( "hibernate.dialect.hana.use_legacy_boolean_type" );
+	private static final String USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME = "hibernate.dialect.hana.use_legacy_boolean_type";
 	// Use unicode (NVARCHAR, NCLOB, etc.) instead of non-unicode (VARCHAR, CLOB) string types
-	private static final String USE_UNICODE_STRING_TYPES_PARAMETER_NAME = new String( "hibernate.dialect.hana.use_unicode_string_types" );
+	private static final String USE_UNICODE_STRING_TYPES_PARAMETER_NAME = "hibernate.dialect.hana.use_unicode_string_types";
 	// Read and write double-typed fields as BigDecimal instead of Double to get around precision issues of the HANA
 	// JDBC driver (https://service.sap.com/sap/support/notes/2590160)
-	private static final String TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME = new String(
-			"hibernate.dialect.hana.treat_double_typed_fields_as_decimal" );
+	private static final String TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME = "hibernate.dialect.hana.treat_double_typed_fields_as_decimal";
 
 	private static final int MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE = 1024;
 	private static final Boolean USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE = Boolean.FALSE;

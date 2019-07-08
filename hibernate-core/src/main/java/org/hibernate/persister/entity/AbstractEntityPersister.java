@@ -5361,7 +5361,7 @@ public abstract class AbstractEntityPersister
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Resolving natural-id [%s] to id : %s ",
-					naturalIdValues,
+					Arrays.asList( naturalIdValues ),
 					MessageHelper.infoString( this )
 			);
 		}
@@ -5409,7 +5409,7 @@ public abstract class AbstractEntityPersister
 					e,
 					String.format(
 							"could not resolve natural-id [%s] to id : %s",
-							naturalIdValues,
+							Arrays.asList( naturalIdValues ),
 							MessageHelper.infoString( this )
 					),
 					sqlEntityIdByNaturalIdString

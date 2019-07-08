@@ -48,6 +48,8 @@ import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.ColumnNameCache;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.loading.internal.CollectionLoadContext;
+import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
@@ -998,8 +1000,9 @@ public abstract class Loader {
 		LOG.trace( "Processing result set" );
 		int count;
 
+		final boolean debugEnabled = LOG.isDebugEnabled();
 		for ( count = 0; count < maxRows && rs.next(); count++ ) {
-			if ( LOG.isDebugEnabled() ) {
+			if ( debugEnabled ) {
 				LOG.debugf( "Result set row: %s", count );
 			}
 			Object result = getRowFromResultSet(
@@ -1071,6 +1074,7 @@ public abstract class Loader {
 			final String[] aliases = getAliases();
 			final String subselectQueryString = SubselectFetch.createSubselectFetchQueryFragment( queryParameters );
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
 			for ( Object key : keys ) {
 				final EntityKey[] rowKeys = (EntityKey[]) key;
 				for ( int i = 0; i < rowKeys.length; i++ ) {
@@ -1086,8 +1090,7 @@ public abstract class Loader {
 								namedParameterLocMap
 						);
 
-						persistenceContext
-								.getBatchFetchQueue()
+						batchFetchQueue
 								.addSubselect( rowKeys[i], subselectFetch );
 					}
 
@@ -1458,19 +1461,21 @@ public abstract class Loader {
 			// that the collection is empty and has no rows in the result set
 			CollectionPersister[] collectionPersisters = getCollectionPersisters();
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final boolean debugEnabled = LOG.isDebugEnabled();
+			final CollectionLoadContext collectionLoadContext = persistenceContext
+					.getLoadContexts()
+					.getCollectionLoadContext( (ResultSet) resultSetId );
 			for ( CollectionPersister collectionPersister : collectionPersisters ) {
 				for ( Serializable key : keys ) {
 					//handle empty collections
-					if ( LOG.isDebugEnabled() ) {
+					if ( debugEnabled ) {
 						LOG.debugf(
 								"Result set contains (possibly empty) collection: %s",
 								MessageHelper.collectionInfoString( collectionPersister, key, getFactory() )
 						);
 					}
 
-					persistenceContext
-							.getLoadContexts()
-							.getCollectionLoadContext( (ResultSet) resultSetId )
+					collectionLoadContext
 							.getLoadingCollection( collectionPersister, key );
 				}
 			}

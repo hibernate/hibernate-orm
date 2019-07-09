@@ -104,11 +104,13 @@ public class FirebirdDialect extends Dialect {
 
 		registerColumnType( Types.TINYINT, "smallint" );
 
-		//Firebird has a fixed-single-precision 'float'
-		//type instead of a 'real' type together with
-		//a variable-precision 'float(p)' type
-		registerColumnType( Types.REAL, "float");
-		registerColumnType( Types.FLOAT, "double precision");
+		// Note: according to the documentation, Firebird has
+		// just two floating point types:
+		// - single precision 'float' (32 bit), and
+		// - 'double precision' (64 bit).
+		// However, it turns out that Firebird actually supports
+		// the ANSI types 'real', 'float(p)', 'double precision'.
+		// So we don't override anything here.
 
 		//no precision for 'timestamp' type
 		registerColumnType( Types.TIMESTAMP, "timestamp" );

@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
@@ -26,6 +27,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.metamodel.model.relational.spi.Size;
 import org.hibernate.naming.Identifier;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
@@ -138,6 +140,18 @@ public class FirebirdDialect extends Dialect {
 		return getVersion() < 300
 				? Types.BIT
 				: super.getPreferredSqlTypeCodeForBoolean();
+	}
+
+	@Override
+	public String getTypeName(int code, Size size) throws HibernateException {
+		//precision of a Firebird 'float(p)' represents
+		//decimal digits instead of binary digits
+		return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
+	}
+
+	@Override
+	public int getFloatPrecision() {
+		return 21; // -> 7 decimal digits
 	}
 
 	@Override

@@ -111,6 +111,11 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	public int getFloatPrecision() {
+		return 21; // -> 7 decimal digits
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

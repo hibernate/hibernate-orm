@@ -72,13 +72,7 @@ public class ClobJavaDescriptor extends AbstractBasicJavaDescriptor<Clob> {
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-		final int jdbcCode;
-		if ( context.isNationalized() ) {
-			jdbcCode = Types.NCLOB;
-		}
-		else {
-			jdbcCode = Types.CLOB;
-		}
+		final int jdbcCode = context.isNationalized() ? Types.NCLOB : Types.CLOB;
 
 		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( jdbcCode );
 	}
@@ -116,7 +110,17 @@ public class ClobJavaDescriptor extends AbstractBasicJavaDescriptor<Clob> {
 					return (X) new CharacterStreamImpl( LobStreamDataHelper.extractString( value.getCharacterStream() ) );
 				}
 			}
-			else if (Clob.class.isAssignableFrom( type )) {
+			else if ( String.class.isAssignableFrom( type ) ) {
+				if ( ClobImplementer.class.isInstance( value ) ) {
+					// if the incoming Clob is a wrapper, just grab the bytes from its BinaryStream
+					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
+				}
+				else {
+					// otherwise extract the bytes from the stream manually
+					return (X) LobStreamDataHelper.extractString( value.getCharacterStream() );
+				}
+			}
+			else if ( Clob.class.isAssignableFrom( type ) ) {
 				final Clob clob =  WrappedClob.class.isInstance( value )
 						? ( (WrappedClob) value ).getWrappedClob()
 						: value;
@@ -139,6 +143,9 @@ public class ClobJavaDescriptor extends AbstractBasicJavaDescriptor<Clob> {
 		// ClobTypeDescriptor
 		if ( Clob.class.isAssignableFrom( value.getClass() ) ) {
 			return session.getLobCreator().wrap( (Clob) value );
+		}
+		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
+			return session.getLobCreator().createClob( ( String ) value);
 		}
 		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
 			Reader reader = (Reader) value;

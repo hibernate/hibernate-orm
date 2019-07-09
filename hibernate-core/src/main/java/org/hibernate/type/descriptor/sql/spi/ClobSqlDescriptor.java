@@ -6,7 +6,6 @@
  */
 package org.hibernate.type.descriptor.sql.spi;
 
-import java.io.Reader;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.PreparedStatement;

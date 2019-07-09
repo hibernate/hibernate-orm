@@ -27,7 +27,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface TableGroup extends SqlAstNode, DomainResultProducer, NavigableReference, ColumnReferenceQualifier {
+public interface TableGroup extends SqlAstNode, DomainResultProducer {
 	NavigablePath getNavigablePath();
 
 	ModelPart getModelPart();

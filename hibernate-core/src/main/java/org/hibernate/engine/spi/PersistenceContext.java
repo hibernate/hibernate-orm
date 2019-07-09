@@ -399,14 +399,17 @@ public interface PersistenceContext {
 	 * add an (initialized) collection that was created by another session and passed
 	 * into update() (ie. one with a snapshot and existing state on the database)
 	 */
-	void addInitializedDetachedCollection(CollectionPersister collectionPersister,
-			PersistentCollection collection) throws HibernateException;
+	void addInitializedDetachedCollection(
+			CollectionPersister collectionPersister,
+			PersistentCollection collection);
 
 	/**
 	 * add a collection we just pulled out of the cache (does not need initializing)
 	 */
-	CollectionEntry addInitializedCollection(CollectionPersister persister,
-			PersistentCollection collection, Serializable id) throws HibernateException;
+	CollectionEntry addInitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection collection,
+			Object id);
 
 	/**
 	 * Get the collection instance associated with the <tt>CollectionKey</tt>
@@ -453,7 +456,11 @@ public interface PersistenceContext {
 	 * Get the collection entry for a collection passed to filter,
 	 * which might be a collection wrapper, an array, or an unwrapped
 	 * collection. Return null if there is no entry.
+	 *
+	 * @deprecated Intended use was in handling Hibernate's legacy
+	 * "collection filter via Query" feature which has been removed
 	 */
+	@Deprecated
 	CollectionEntry getCollectionEntryOrNull(Object collection);
 
 	/**

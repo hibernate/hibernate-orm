@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.criteria;
 
-import org.hibernate.Criteria;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

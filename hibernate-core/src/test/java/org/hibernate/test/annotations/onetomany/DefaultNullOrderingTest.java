@@ -13,7 +13,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;

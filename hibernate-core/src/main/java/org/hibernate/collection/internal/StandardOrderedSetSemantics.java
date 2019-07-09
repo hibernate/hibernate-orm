@@ -10,10 +10,10 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.mapping.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * @author Steve Ebersole
@@ -35,24 +35,24 @@ public class StandardOrderedSetSemantics extends AbstractSetSemantics<LinkedHash
 	@Override
 	public LinkedHashSet<?> instantiateRaw(
 			int anticipatedSize,
-			PersistentCollectionDescriptor collectionDescriptor) {
+			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? new LinkedHashSet() : new LinkedHashSet<>( anticipatedSize );
 	}
 
 	@Override
-	public <E> PersistentCollection<E> instantiateWrapper(
+	public PersistentCollection instantiateWrapper(
 			Object key,
-			PersistentCollectionDescriptor<?, LinkedHashSet<?>, E> collectionDescriptor,
+			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet( session, collectionDescriptor, key );
+		return new PersistentSet( session );
 	}
 
 	@Override
-	public <E> PersistentCollection<E> wrap(
+	public PersistentCollection wrap(
 			Object rawCollection,
-			PersistentCollectionDescriptor<?, LinkedHashSet<?>, E> collectionDescriptor,
+			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet( session, collectionDescriptor, (Set) rawCollection );
+		return new PersistentSet( session, (Set) rawCollection );
 	}
 
 	@Override

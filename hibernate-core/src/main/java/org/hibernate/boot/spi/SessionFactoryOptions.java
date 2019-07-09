@@ -156,8 +156,6 @@ public interface SessionFactoryOptions {
 
 	boolean isInitializeLazyStateOutsideTransactionsEnabled();
 
-	MultiTableBulkIdStrategy getMultiTableBulkIdStrategy();
-
 	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
 
 	BatchFetchStyle getBatchFetchStyle();

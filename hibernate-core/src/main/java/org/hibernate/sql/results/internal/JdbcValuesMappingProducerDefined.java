@@ -9,12 +9,13 @@ package org.hibernate.sql.results.internal;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.JdbcValuesMetadata;
-import org.hibernate.sql.ast.spi.SqlSelection;
 
 /**
  * ResultSetMapping for handling selections for a {@link org.hibernate.query.NativeQuery}
@@ -40,10 +41,12 @@ public class JdbcValuesMappingProducerDefined implements JdbcValuesMappingProduc
 			JdbcValuesMetadata jdbcResultsMetadata,
 			SessionFactoryImplementor sessionFactory) {
 
-		for ( SqlSelection sqlSelection : selections ) {
-			sqlSelection.prepare( jdbcResultsMetadata, sessionFactory );
-		}
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-		return new StandardResultSetMapping( selections, domainResults );
+//		for ( SqlSelection sqlSelection : selections ) {
+//			sqlSelection.prepare( jdbcResultsMetadata, sessionFactory );
+//		}
+//
+//		return new StandardResultSetMapping( selections, domainResults );
 	}
 }

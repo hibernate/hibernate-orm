@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.spi.QueryKey;
+import org.hibernate.query.QueryParameter;
 
 /**
  * Manages all the parameter bindings for a particular query.
@@ -38,7 +39,18 @@ public interface QueryParameterBindings {
 	 *
 	 * @return The binding, or {@code null} if not yet bound
 	 */
-	QueryParameterBinding<?> getBinding(QueryParameterImplementor<?> parameter);
+	default <P> QueryParameterBinding<P> getBinding(QueryParameter<P> parameter) {
+		return getBinding( (QueryParameterImplementor<P>) parameter );
+	}
+
+	/**
+	 * Access to the binding via QueryParameter reference
+	 *
+	 * @param parameter The QueryParameter reference
+	 *
+	 * @return The binding, or {@code null} if not yet bound
+	 */
+	<P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter);
 
 	/**
 	 * Access to the binding via name
@@ -47,7 +59,7 @@ public interface QueryParameterBindings {
 	 *
 	 * @return The binding, or {@code null} if not yet bound
 	 */
-	QueryParameterBinding<?> getBinding(String name);
+	<P> QueryParameterBinding<P> getBinding(String name);
 
 	/**
 	 * Access to the binding via position
@@ -56,7 +68,7 @@ public interface QueryParameterBindings {
 	 *
 	 * @return The binding, or {@code null} if not yet bound
 	 */
-	QueryParameterBinding<?> getBinding(int position);
+	<P> QueryParameterBinding<P> getBinding(int position);
 
 	/**
 	 * Validate the bindings.  Called just before execution

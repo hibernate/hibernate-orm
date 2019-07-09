@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;

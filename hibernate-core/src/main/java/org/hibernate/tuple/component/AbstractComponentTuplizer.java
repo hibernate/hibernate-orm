@@ -14,7 +14,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.metamodel.spi.Instantiator;
+import org.hibernate.tuple.Instantiator;
 
 /**
  * Support for tuplizers relating to components.

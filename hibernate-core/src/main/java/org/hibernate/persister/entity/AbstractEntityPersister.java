@@ -100,9 +100,17 @@ import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.custom.sql.SQLQueryParser;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
-import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.loader.internal.MultiIdEntityLoaderStandardImpl;
+import org.hibernate.loader.internal.NaturalIdLoaderStandardImpl;
+import org.hibernate.loader.internal.Preparable;
+import org.hibernate.loader.internal.SingleIdEntityLoaderProvidedQueryImpl;
+import org.hibernate.loader.internal.SingleIdEntityLoaderStandardImpl;
+import org.hibernate.loader.spi.Loader;
+import org.hibernate.loader.spi.MultiIdEntityLoader;
+import org.hibernate.loader.spi.NaturalIdLoader;
+import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -247,6 +255,10 @@ public abstract class AbstractEntityPersister
 
 	private final Set<String> affectingFetchProfileNames = new HashSet<>();
 
+	private final SingleIdEntityLoader singleIdEntityLoader;
+	private final MultiIdEntityLoader multiIdEntityLoader;
+	private final NaturalIdLoader naturalIdLoader;
+
 	private final Map uniqueKeyLoaders = new HashMap();
 	private final Map lockers = new HashMap();
 	private UniqueEntityLoader noneLockLoader;
@@ -284,10 +296,6 @@ public abstract class AbstractEntityPersister
 	private InsertGeneratedIdentifierDelegate identityDelegate;
 
 	private boolean[] tableHasColumns;
-
-	private final String loaderName;
-
-	private UniqueEntityLoader queryLoader;
 
 	private final Map subclassPropertyAliases = new HashMap();
 	private final Map subclassPropertyColumnNames = new HashMap();
@@ -603,7 +611,19 @@ public abstract class AbstractEntityPersister
 
 		rowIdName = persistentClass.getRootTable().getRowId();
 
-		loaderName = persistentClass.getLoaderName();
+		if ( persistentClass.getLoaderName() != null ) {
+			singleIdEntityLoader = new SingleIdEntityLoaderProvidedQueryImpl( this, persistentClass.getLoaderName() );
+		}
+		// todo (6.0) : account for batch-size and batch-load strategies
+		else {
+			singleIdEntityLoader = new SingleIdEntityLoaderStandardImpl( this );
+		}
+
+		multiIdEntityLoader = new MultiIdEntityLoaderStandardImpl( this );
+
+		naturalIdLoader = persistentClass.hasNaturalId()
+				? new NaturalIdLoaderStandardImpl( this )
+				: null;
 
 		Iterator iter = persistentClass.getIdentifier().getColumnIterator();
 		int i = 0;
@@ -4247,11 +4267,21 @@ public abstract class AbstractEntityPersister
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
 
+		prepareLoader( singleIdEntityLoader );
+		prepareLoader( multiIdEntityLoader );
+		prepareLoader( naturalIdLoader );
+
+		// todo (6.0) : the init done in most of these is delayed now
 		createLoaders();
 		createUniqueKeyLoaders();
-		createQueryLoader();
 
 		doPostInstantiate();
+	}
+
+	private void prepareLoader(Loader loader) {
+		if ( loader instanceof Preparable ) {
+			( (Preparable) loader ).prepare();
+		}
 	}
 
 	protected void doPostInstantiate() {
@@ -4339,12 +4369,6 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected void createQueryLoader() {
-		if ( loaderName != null ) {
-			queryLoader = new NamedQueryLoader( loaderName, this );
-		}
-	}
-
 	/**
 	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
 	 * depending upon the value of the <tt>lock</tt> parameter
@@ -4364,8 +4388,7 @@ public abstract class AbstractEntityPersister
 			LOG.tracev( "Fetching entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
 		}
 
-		final UniqueEntityLoader loader = getAppropriateLoader( lockOptions, session );
-		return loader.load( id, optionalObject, session, lockOptions );
+		return singleIdEntityLoader.load( id, lockOptions, session );
 	}
 
 	@Override
@@ -4426,24 +4449,21 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public List multiLoad(Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
-		return DynamicBatchingEntityLoaderBuilder.INSTANCE.multiLoad(
-				this,
-				ids,
-				session,
-				loadOptions
-		);
+		return multiIdEntityLoader.load( ids, loadOptions, session );
 	}
 
 	public void registerAffectingFetchProfile(String fetchProfileName) {
 		affectingFetchProfileNames.add( fetchProfileName );
 	}
 
-	private boolean isAffectedByEntityGraph(SharedSessionContractImplementor session) {
-		return session.getLoadQueryInfluencers().getEffectiveEntityGraph().getGraph() != null;
+	@Override
+	public boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
+		return loadQueryInfluencers.getEffectiveEntityGraph().getGraph() != null;
 	}
 
-	private boolean isAffectedByEnabledFetchProfiles(SharedSessionContractImplementor session) {
-		for ( String s : session.getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
+	@Override
+	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers loadQueryInfluencers) {
+		for ( String s : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
 			if ( affectingFetchProfileNames.contains( s ) ) {
 				return true;
 			}
@@ -4451,44 +4471,10 @@ public abstract class AbstractEntityPersister
 		return false;
 	}
 
-	private boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
-		return session.getLoadQueryInfluencers().hasEnabledFilters()
-				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() );
-	}
-
-	protected UniqueEntityLoader getAppropriateLoader(LockOptions lockOptions, SharedSessionContractImplementor session) {
-		if ( queryLoader != null ) {
-			// if the user specified a custom query loader we need to that
-			// regardless of any other consideration
-			return queryLoader;
-		}
-		else if ( isAffectedByEnabledFilters( session ) ) {
-			// because filters affect the rows returned (because they add
-			// restrictions) these need to be next in precedence
-			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
-		}
-		else if ( session.getLoadQueryInfluencers().getInternalFetchProfile() != null && LockMode.UPGRADE.greaterThan(
-				lockOptions.getLockMode()
-		) ) {
-			// Next, we consider whether an 'internal' fetch profile has been set.
-			// This indicates a special fetch profile Hibernate needs applied
-			// (for its merge loading process e.g.).
-			return loaders.get( session.getLoadQueryInfluencers().getInternalFetchProfile() );
-		}
-		else if ( isAffectedByEnabledFetchProfiles( session ) ) {
-			// If the session has associated influencers we need to adjust the
-			// SQL query used for loading based on those influencers
-			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
-		}
-		else if ( isAffectedByEntityGraph( session ) ) {
-			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
-		}
-		else if ( lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER ) {
-			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
-		}
-		else {
-			return getLoaderByLockMode( lockOptions.getLockMode() );
-		}
+	@Override
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
+		return loadQueryInfluencers.hasEnabledFilters()
+				&& filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() );
 	}
 
 	protected final boolean isAllNull(Object[] array, int tableNumber) {

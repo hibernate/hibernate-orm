@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.mutation.spi;
 
-import org.hibernate.metamodel.model.mapping.EntityTypeDescriptor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 
 /**
@@ -27,8 +27,13 @@ public abstract class AbstractMutationHandler implements Handler {
 		return sqmDeleteOrUpdateStatement;
 	}
 
-	public EntityTypeDescriptor<?> getEntityDescriptor() {
-		return sqmDeleteOrUpdateStatement.getTarget().getReferencedPathSource();
+	public EntityPersister getEntityDescriptor() {
+		final String entityName = sqmDeleteOrUpdateStatement.getTarget()
+				.getReferencedPathSource()
+				.getHibernateEntityName();
+
+		return creationContext.getSessionFactory().getMetamodel().getEntityDescriptor( entityName );
+
 	}
 
 	public HandlerCreationContext getCreationContext() {

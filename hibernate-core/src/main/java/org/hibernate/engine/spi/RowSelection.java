@@ -17,6 +17,16 @@ public final class RowSelection {
 	private Integer timeout;
 	private Integer fetchSize;
 
+	public RowSelection() {
+	}
+
+	public RowSelection(Integer firstRow, Integer maxRows, Integer timeout, Integer fetchSize) {
+		this.firstRow = firstRow;
+		this.maxRows = maxRows;
+		this.timeout = timeout;
+		this.fetchSize = fetchSize;
+	}
+
 	public void setFirstRow(Integer firstRow) {
 		if ( firstRow != null && firstRow < 0 ) {
 			throw new IllegalArgumentException( "first-row value cannot be negative : " + firstRow );

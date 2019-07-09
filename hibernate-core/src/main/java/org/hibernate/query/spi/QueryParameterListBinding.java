@@ -10,6 +10,7 @@ import java.util.Collection;
 import javax.persistence.TemporalType;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.type.Type;
 
@@ -36,7 +37,7 @@ public interface QueryParameterListBinding<T> {
 	 * @param values The bind values
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValues(Collection<T> values, Type clarifiedType);
+	void setBindValues(Collection<T> values, AllowableParameterType clarifiedType);
 
 	/**Sets the parameter binding value using the explicit TemporalType in regards to the individual values.
 	 *

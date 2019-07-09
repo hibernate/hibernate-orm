@@ -66,6 +66,7 @@ public class QueryEngine {
 			Map properties,
 			NamedQueryRepository namedQueryRepository) {
 		this.namedQueryRepository = namedQueryRepository;
+		// todo (6.0) : allow SemanticQueryProducer to be pluggable (see legacy `QueryTranslatorFactoryInitiator`)
 		this.semanticQueryProducer = new SemanticQueryProducerImpl( sqmCreationContext, sqmCreationOptions );
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				this,

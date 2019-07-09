@@ -6,16 +6,18 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.sql.ast.consume.spi.SqlDeleteToJdbcDeleteConverter;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmDeleteInterpretation;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmDeleteToSqlAstConverterSimple;
-import org.hibernate.sql.exec.internal.JdbcMutationExecutorImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcMutation;
-
-import static org.hibernate.query.internal.QueryHelper.buildJdbcParameterBindings;
+//import org.hibernate.sql.ast.consume.spi.SqlDeleteToJdbcDeleteConverter;
+//import org.hibernate.sql.ast.produce.sqm.spi.SqmDeleteInterpretation;
+//import org.hibernate.sql.ast.produce.sqm.spi.SqmDeleteToSqlAstConverterSimple;
+//import org.hibernate.sql.exec.internal.JdbcMutationExecutorImpl;
+//import org.hibernate.sql.exec.spi.ExecutionContext;
+//import org.hibernate.sql.exec.spi.JdbcMutation;
+//
+//import static org.hibernate.query.internal.QueryHelper.buildJdbcParameterBindings;
 
 /**
  * @author Steve Ebersole
@@ -33,27 +35,28 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 	@Override
 	public int executeUpdate(ExecutionContext executionContext) {
-		final SqmDeleteInterpretation sqmInterpretation = SqmDeleteToSqlAstConverterSimple.interpret(
-				sqmStatement,
-				executionContext.getQueryOptions(),
-				domainParameterXref,
-				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-				executionContext.getSession()
-		);
-
-		// the converter should enforce this, simple assertion here
-		assert sqmInterpretation.getSqlDeletes().size() == 1;
-
-		final JdbcMutation jdbcDelete = SqlDeleteToJdbcDeleteConverter.interpret(
-				sqmInterpretation.getSqlDeletes().get( 0 ),
-				executionContext.getSession().getSessionFactory()
-		);
-
-
-		return JdbcMutationExecutorImpl.WITH_AFTER_STATEMENT_CALL.execute(
-				jdbcDelete,
-				buildJdbcParameterBindings( sqmStatement, sqmInterpretation, executionContext ),
-				executionContext
-		);
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		final SqmDeleteInterpretation sqmInterpretation = SqmDeleteToSqlAstConverterSimple.interpret(
+//				sqmStatement,
+//				executionContext.getQueryOptions(),
+//				domainParameterXref,
+//				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+//				executionContext.getSession()
+//		);
+//
+//		// the converter should enforce this, simple assertion here
+//		assert sqmInterpretation.getSqlDeletes().size() == 1;
+//
+//		final JdbcMutation jdbcDelete = SqlDeleteToJdbcDeleteConverter.interpret(
+//				sqmInterpretation.getSqlDeletes().get( 0 ),
+//				executionContext.getSession().getSessionFactory()
+//		);
+//
+//
+//		return JdbcMutationExecutorImpl.WITH_AFTER_STATEMENT_CALL.execute(
+//				jdbcDelete,
+//				buildJdbcParameterBindings( sqmStatement, sqmInterpretation, executionContext ),
+//				executionContext
+//		);
 	}
 }

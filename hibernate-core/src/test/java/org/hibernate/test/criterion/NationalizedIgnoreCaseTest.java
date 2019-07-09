@@ -11,7 +11,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.Criteria;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;

@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.internal;
 
 import org.hibernate.Incubating;
-import org.hibernate.sql.exec.spi.RowTransformer;
+import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
  * Essentially a no-op transformer - simply passes the result through

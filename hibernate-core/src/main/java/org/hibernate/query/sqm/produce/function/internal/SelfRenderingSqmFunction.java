@@ -6,15 +6,14 @@
  */
 package org.hibernate.query.sqm.produce.function.internal;
 
+import java.util.List;
+
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
-
-import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -47,11 +46,6 @@ public class SelfRenderingSqmFunction<T> extends AbstractSqmExpression<T> implem
 
 	public SelfRenderingFunctionSupport getRenderingSupport() {
 		return renderingSupport;
-	}
-
-	@Override
-	public SelfRenderingFunctionSqlAstExpression<T> convertToSqlAst(SqmToSqlAstConverter walker) {
-		return new SelfRenderingFunctionSqlAstExpression<>( this, walker );
 	}
 
 	@Override

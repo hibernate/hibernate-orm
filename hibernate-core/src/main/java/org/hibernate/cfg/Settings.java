@@ -19,8 +19,6 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.hql.spi.QueryTranslatorFactory;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
@@ -171,10 +169,6 @@ public final class Settings {
 		return sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled();
 	}
 
-	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
-		return sessionFactoryOptions.getMultiTableBulkIdStrategy();
-	}
-
 	public BatchFetchStyle getBatchFetchStyle() {
 		return sessionFactoryOptions.getBatchFetchStyle();
 	}
@@ -306,10 +300,6 @@ public final class Settings {
 
 	public JtaPlatform getJtaPlatform() {
 		return sessionFactoryOptions.getServiceRegistry().getService( JtaPlatform.class );
-	}
-
-	public QueryTranslatorFactory getQueryTranslatorFactory() {
-		return sessionFactoryOptions.getServiceRegistry().getService( QueryTranslatorFactory.class );
 	}
 
 	public void setCheckNullability(boolean enabled) {

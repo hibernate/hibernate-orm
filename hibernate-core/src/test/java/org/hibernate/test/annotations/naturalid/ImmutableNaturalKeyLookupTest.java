@@ -9,7 +9,6 @@ package org.hibernate.test.annotations.naturalid;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;

@@ -9,8 +9,9 @@ package org.hibernate.query.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
@@ -34,7 +35,8 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private final Limit limit = new Limit();
 	private final LockOptions lockOptions = new LockOptions();
 	private Integer fetchSize;
-	private CacheMode cacheMode;
+	private CacheRetrieveMode cacheRetrieveMode;
+	private CacheStoreMode cacheStoreMode;
 	private Boolean resultCachingEnabled;
 	private String resultCacheRegionName;
 	private Boolean readOnlyEnabled;
@@ -115,15 +117,31 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
-	public CacheMode getCacheMode() {
-		if ( cacheMode == null ) {
-			return CacheMode.IGNORE;
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		if ( cacheRetrieveMode == null ) {
+			return CacheRetrieveMode.BYPASS;
 		}
-		return cacheMode;
+
+		return cacheRetrieveMode;
 	}
 
-	public void setCacheMode(CacheMode cacheMode) {
-		this.cacheMode = cacheMode;
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		if ( cacheStoreMode == null ) {
+			return CacheStoreMode.BYPASS;
+		}
+
+		return cacheStoreMode;
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode retrieveMode) {
+		this.cacheRetrieveMode = retrieveMode;
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode storeMode) {
+		this.cacheStoreMode = storeMode;
 	}
 
 	@Override

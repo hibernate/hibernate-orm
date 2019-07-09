@@ -10,10 +10,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -52,7 +52,7 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentArrayHolder( key, session, collectionDescriptor );
+		return new PersistentArrayHolder( session, collectionDescriptor );
 	}
 
 	@Override
@@ -60,13 +60,12 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 			Object rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentArrayHolder( session, collectionDescriptor, rawCollection );
+		return new PersistentArrayHolder( session, rawCollection );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <E> Iterator<E> getElementIterator(Object[] rawCollection) {
-		return (Iterator<E>) Arrays.stream( rawCollection ).iterator();
+	public Iterator getElementIterator(Object[] rawCollection) {
+		return Arrays.stream( rawCollection ).iterator();
 	}
 
 	@Override

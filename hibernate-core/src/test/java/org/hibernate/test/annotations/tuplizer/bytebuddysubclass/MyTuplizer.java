@@ -8,7 +8,7 @@ package org.hibernate.test.annotations.tuplizer.bytebuddysubclass;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.spi.Instantiator;
+import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.PojoEntityTuplizer;
 

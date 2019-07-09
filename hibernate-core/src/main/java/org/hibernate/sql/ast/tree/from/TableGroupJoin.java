@@ -18,7 +18,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
 /**
  * @author Steve Ebersole
  */
-public class TableGroupJoin implements SqlAstNode, DomainResultProducer, SqmExpressionInterpretation {
+public class TableGroupJoin implements SqlAstNode, DomainResultProducer {
 	private final NavigablePath navigablePath;
 	private final JoinType joinType;
 	private final TableGroup joinedGroup;
@@ -52,14 +52,8 @@ public class TableGroupJoin implements SqlAstNode, DomainResultProducer, SqmExpr
 		sqlTreeWalker.visitTableGroupJoin( this );
 	}
 
-	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
-	}
-
-	@Override
-	public Navigable getNavigable() {
-		return joinedGroup.getNavigable();
 	}
 
 	@Override

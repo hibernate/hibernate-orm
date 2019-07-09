@@ -9,18 +9,14 @@ package org.hibernate.internal;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import javax.transaction.SystemException;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
-import org.hibernate.ScrollMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.UnresolvableObjectException;
@@ -29,20 +25,18 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -64,6 +58,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		@Override
 		public void setInternalFetchProfile(String internalFetchProfile) {
 		}
+
 	};
 
 	private final PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
@@ -329,23 +324,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
-			throws HibernateException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public List listFilter(Object collection, String filter, QueryParameters queryParameters)
-			throws HibernateException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return getFactory().getSessionFactoryOptions().isAutoCloseSessionEnabled();
 	}
@@ -532,94 +510,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( !isTransactionInProgress() ) {
 			getJdbcCoordinator().afterTransaction();
 		}
-	}
-
-	@Override
-	public Criteria createCriteria(Class persistentClass, String alias) {
-		checkOpen();
-		return new CriteriaImpl( persistentClass.getName(), alias, this );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName, String alias) {
-		checkOpen();
-		return new CriteriaImpl( entityName, alias, this );
-	}
-
-	@Override
-	public Criteria createCriteria(Class persistentClass) {
-		checkOpen();
-		return new CriteriaImpl( persistentClass.getName(), this );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName) {
-		checkOpen();
-		return new CriteriaImpl( entityName, this );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode) {
-		// TODO: Is this guaranteed to always be CriteriaImpl?
-		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
-
-		checkOpen();
-		String entityName = criteriaImpl.getEntityOrClassName();
-		CriteriaLoader loader = new CriteriaLoader(
-				getOuterJoinLoadable( entityName ),
-				getFactory(),
-				criteriaImpl,
-				entityName,
-				getLoadQueryInfluencers()
-		);
-		return loader.scroll( this, scrollMode );
-	}
-
-	@Override
-	@SuppressWarnings({"unchecked"})
-	public List list(Criteria criteria) throws HibernateException {
-		// TODO: Is this guaranteed to always be CriteriaImpl?
-		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
-
-		checkOpen();
-		String[] implementors = getFactory().getMetamodel().getImplementors( criteriaImpl.getEntityOrClassName() );
-		int size = implementors.length;
-
-		CriteriaLoader[] loaders = new CriteriaLoader[size];
-		for ( int i = 0; i < size; i++ ) {
-			loaders[i] = new CriteriaLoader(
-					getOuterJoinLoadable( implementors[i] ),
-					getFactory(),
-					criteriaImpl,
-					implementors[i],
-					getLoadQueryInfluencers()
-			);
-		}
-
-
-		List results = Collections.EMPTY_LIST;
-		boolean success = false;
-		try {
-			for ( int i = 0; i < size; i++ ) {
-				final List currentResults = loaders[i].list( this );
-				currentResults.addAll( results );
-				results = currentResults;
-			}
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-		}
-		temporaryPersistenceContext.clear();
-		return results;
-	}
-
-	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
-		if ( !( persister instanceof OuterJoinLoadable ) ) {
-			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
-		}
-		return (OuterJoinLoadable) persister;
 	}
 
 	@Override

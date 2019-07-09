@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Descriptor for the mapping of a JDBC ResultSet providing
@@ -36,35 +35,6 @@ public interface JdbcValuesMappingDescriptor {
 	//
 	// Both `ResultSetMappingDescriptorDefined` and `ResultSetMappingDescriptorUndefined` could
 	// 		definitely use better names
-
-
-	/**
-	 * Access to information about the underlying JDBC values
-	 * such as type, position, column name, etc
-	 */
-	interface JdbcValuesMetadata {
-		/**
-		 * Number of values in the underlying result
-		 */
-		int getColumnCount();
-
-		/**
-		 * Position of a particular result value by name
-		 */
-		int resolveColumnPosition(String columnName);
-
-		/**
-		 * Name of a particular result value by position
-		 */
-		String resolveColumnName(int position);
-
-		/**
-		 * Descriptor of the JDBC/SQL type of a particular result value by
-		 * position
-		 */
-		SqlTypeDescriptor resolveSqlTypeDescriptor(int position);
-
-	}
 
 	/**
 	 * Resolve the selections (both at the JDBC and object level) for this

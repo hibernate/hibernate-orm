@@ -9,7 +9,7 @@ package org.hibernate.test.annotations.tuplizer.bytebuddysubclass;
 import java.io.Serializable;
 
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.spi.Instantiator;
+import org.hibernate.tuple.Instantiator;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.implementation.FixedValue;

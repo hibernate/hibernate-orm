@@ -17,14 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.sql.ordering.antlr.ColumnMapper;
-import org.hibernate.sql.ordering.antlr.OrderByAliasResolver;
-import org.hibernate.sql.ordering.antlr.OrderByFragmentTranslator;
-import org.hibernate.sql.ordering.antlr.OrderByTranslation;
-import org.hibernate.sql.ordering.antlr.SqlValueReference;
-import org.hibernate.sql.ordering.antlr.TranslationContext;
 
 /**
  * Parses SQL fragments specified in mapping documents
@@ -626,102 +619,6 @@ public final class Template {
 			token = tokens.nextToken();
 		}
 		return valueBuilder.toString().trim();
-	}
-
-	public static class NoOpColumnMapper implements ColumnMapper {
-		public static final NoOpColumnMapper INSTANCE = new NoOpColumnMapper();
-		public SqlValueReference[] map(String reference) {
-//			return new String[] { reference };
-			return null;
-		}
-	}
-
-	/**
-	 * Performs order-by template rendering without {@link ColumnMapper column mapping}.  An <tt>ORDER BY</tt> template
-	 * has all column references "qualified" with a placeholder identified by {@link Template#TEMPLATE}
-	 *
-	 * @param orderByFragment The order-by fragment to render.
-	 * @param dialect The SQL dialect being used.
-	 * @param functionRegistry The SQL function registry
-	 *
-	 * @return The rendered <tt>ORDER BY</tt> template.
-	 *
-	 * @deprecated Use {@link #translateOrderBy} instead
-	 */
-	@Deprecated
-	public static String renderOrderByStringTemplate(
-			String orderByFragment,
-			Dialect dialect,
-			SQLFunctionRegistry functionRegistry) {
-		return renderOrderByStringTemplate(
-				orderByFragment,
-				NoOpColumnMapper.INSTANCE,
-				null,
-				dialect,
-				functionRegistry
-		);
-	}
-
-	public static String renderOrderByStringTemplate(
-			String orderByFragment,
-			final ColumnMapper columnMapper,
-			final SessionFactoryImplementor sessionFactory,
-			final Dialect dialect,
-			final SQLFunctionRegistry functionRegistry) {
-		return translateOrderBy(
-				orderByFragment,
-				columnMapper,
-				sessionFactory,
-				dialect,
-				functionRegistry
-		).injectAliases( LEGACY_ORDER_BY_ALIAS_RESOLVER );
-	}
-
-	public static final OrderByAliasResolver LEGACY_ORDER_BY_ALIAS_RESOLVER = new OrderByAliasResolver() {
-		@Override
-		public String resolveTableAlias(String columnReference) {
-			return TEMPLATE;
-		}
-	};
-
-	/**
-	 * Performs order-by template rendering allowing {@link ColumnMapper column mapping}.  An <tt>ORDER BY</tt> template
-	 * has all column references "qualified" with a placeholder identified by {@link Template#TEMPLATE} which can later
-	 * be used to easily inject the SQL alias.
-	 *
-	 * @param orderByFragment The order-by fragment to render.
-	 * @param columnMapper The column mapping strategy to use.
-	 * @param sessionFactory The session factory.
-	 * @param dialect The SQL dialect being used.
-	 * @param functionRegistry The SQL function registry
-	 *
-	 * @return The rendered <tt>ORDER BY</tt> template.
-	 */
-	public static OrderByTranslation translateOrderBy(
-			String orderByFragment,
-			final ColumnMapper columnMapper,
-			final SessionFactoryImplementor sessionFactory,
-			final Dialect dialect,
-			final SQLFunctionRegistry functionRegistry) {
-		TranslationContext context = new TranslationContext() {
-			public SessionFactoryImplementor getSessionFactory() {
-				return sessionFactory;
-			}
-
-			public Dialect getDialect() {
-				return dialect;
-			}
-
-			public SQLFunctionRegistry getSqlFunctionRegistry() {
-				return functionRegistry;
-			}
-
-			public ColumnMapper getColumnMapper() {
-				return columnMapper;
-			}
-		};
-
-		return OrderByFragmentTranslator.translate( context, orderByFragment );
 	}
 
 	private static boolean isNamedParameter(String token) {

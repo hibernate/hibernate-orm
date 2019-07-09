@@ -10,6 +10,7 @@ import java.io.Closeable;
 import java.io.Serializable;
 import java.sql.Connection;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.query.NativeQuery;
 
 /**
@@ -173,6 +174,8 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	@Deprecated
 	Connection connection();
 
-	@Override
-	NativeQuery createSQLQuery(String queryString);
+	@Remove
+	default <@Remove T> NativeQuery<T> createSQLQuery(String queryString) {
+		return createNativeQuery( queryString );
+	}
 }

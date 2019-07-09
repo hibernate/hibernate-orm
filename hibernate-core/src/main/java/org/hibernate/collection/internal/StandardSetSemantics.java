@@ -9,9 +9,8 @@ package org.hibernate.collection.internal;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.collection.spi.CollectionClassification;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -39,21 +38,19 @@ public class StandardSetSemantics extends AbstractSetSemantics<Set<?>> {
 	}
 
 	@Override
-	public <E> PersistentCollection<E> instantiateWrapper(
+	public PersistentSet instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		//noinspection unchecked
-		return new PersistentSet( session, collectionDescriptor, key );
+		return new PersistentSet( session );
 	}
 
 	@Override
-	public <E> PersistentCollection<E> wrap(
+	public PersistentSet wrap(
 			Object rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		//noinspection unchecked
-		return new PersistentSet( session, collectionDescriptor, (Set) rawCollection );
+		return new PersistentSet( session, (Set) rawCollection );
 	}
 
 }

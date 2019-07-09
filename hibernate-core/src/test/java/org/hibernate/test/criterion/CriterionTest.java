@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.criterion;
 
-import org.hibernate.Criteria;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;

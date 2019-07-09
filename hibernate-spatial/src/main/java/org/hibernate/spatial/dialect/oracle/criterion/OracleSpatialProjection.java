@@ -6,7 +6,6 @@
  */
 package org.hibernate.spatial.dialect.oracle.criterion;
 
-import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.SimpleProjection;

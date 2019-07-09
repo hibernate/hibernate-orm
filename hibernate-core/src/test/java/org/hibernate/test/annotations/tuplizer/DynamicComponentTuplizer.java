@@ -8,7 +8,7 @@
 //$Id$
 package org.hibernate.test.annotations.tuplizer;
 import org.hibernate.mapping.Component;
-import org.hibernate.metamodel.spi.Instantiator;
+import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.component.PojoComponentTuplizer;
 
 /**

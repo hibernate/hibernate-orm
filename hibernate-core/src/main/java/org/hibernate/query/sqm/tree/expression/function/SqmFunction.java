@@ -9,9 +9,6 @@ package org.hibernate.query.sqm.tree.expression.function;
 import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Contract for functions impls that would like to control the
@@ -24,16 +21,16 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  * @author Steve Ebersole
  */
 public interface SqmFunction<T> extends SqmExpression<T>, JpaFunction<T> {
-	/**
-	 * Generate the SQL AST form of the function as an expression.
-	 *
-	 * To be able to use this in the select-clause, the returned
-	 * expression must also implement the
-	 * {@link DomainResultProducer}
-	 * contract
-	 */
-	Expression convertToSqlAst(SqmToSqlAstConverter walker);
-
+//	/**
+//	 * Generate the SQL AST form of the function as an expression.
+//	 *
+//	 * To be able to use this in the select-clause, the returned
+//	 * expression must also implement the
+//	 * {@link DomainResultProducer}
+//	 * contract
+//	 */
+//	Expression convertToSqlAst(SqmToSqlAstConverter walker);
+//
 	@Override
 	default <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitFunction( this );

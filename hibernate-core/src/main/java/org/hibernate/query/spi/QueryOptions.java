@@ -10,9 +10,13 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
+import org.hibernate.annotations.Cache;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.Limit;
 import org.hibernate.query.ResultListTransformer;
@@ -71,10 +75,26 @@ public interface QueryOptions {
 	Boolean isResultCachingEnabled();
 
 	/**
-	 * The cache-mode to be used for the query.  No effect unless
-	 * {@link #isResultCachingEnabled} returns {@code true}
+	 * Controls whether query results are read from the cache.
+	 * No effect unless {@link #isResultCachingEnabled} returns
+	 * {@code true}
+	 *
+	 * @see CacheMode
 	 */
-	CacheMode getCacheMode();
+	CacheRetrieveMode getCacheRetrieveMode();
+
+	/**
+	 * Controls whether query results are put into the cache.
+	 * No effect unless {@link #isResultCachingEnabled} returns
+	 * {@code true}
+	 *
+	 * @see CacheMode
+	 */
+	CacheStoreMode getCacheStoreMode();
+
+	default CacheMode getCacheMode() {
+		return CacheMode.fromJpaModes( getCacheRetrieveMode(), getCacheStoreMode() );
+	}
 
 	/**
 	 * The query cache region in which the results should be cached.  No
@@ -205,6 +225,16 @@ public interface QueryOptions {
 		@Override
 		public Boolean isReadOnly() {
 			return null;
+		}
+
+		@Override
+		public CacheRetrieveMode getCacheRetrieveMode() {
+			return CacheRetrieveMode.BYPASS;
+		}
+
+		@Override
+		public CacheStoreMode getCacheStoreMode() {
+			return CacheStoreMode.BYPASS;
 		}
 
 		@Override

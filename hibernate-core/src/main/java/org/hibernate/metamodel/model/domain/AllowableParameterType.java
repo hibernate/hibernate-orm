@@ -18,5 +18,5 @@ import org.hibernate.query.Query;
  * @author Steve Ebersole
  */
 @Incubating
-public interface AllowableParameterType<J> extends Writeable<J> {
+public interface AllowableParameterType<J> extends Writeable {
 }

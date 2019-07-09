@@ -13,7 +13,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.DynamicMapInstantiator;
-import org.hibernate.metamodel.spi.Instantiator;
+import org.hibernate.tuple.Instantiator;
 
 /**
  * A {@link ComponentTuplizer} specific to the dynamic-map entity mode.

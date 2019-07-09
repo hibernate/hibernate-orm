@@ -10,8 +10,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.mapping.PersistentCollectionDescriptor;
-import org.hibernate.metamodel.model.mapping.internal.PersistentArrayDescriptorImpl;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
@@ -20,13 +19,13 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  * @author Steve Ebersole
  */
 public class LoadingCollectionEntry {
-	private final PersistentCollectionDescriptor collectionDescriptor;
+	private final CollectionPersister collectionDescriptor;
 	private final CollectionInitializer initializer;
 	private final Object key;
 	private final PersistentCollection collectionInstance;
 
 	public LoadingCollectionEntry(
-			PersistentCollectionDescriptor collectionDescriptor,
+			CollectionPersister collectionDescriptor,
 			CollectionInitializer initializer,
 			Object key,
 			PersistentCollection collectionInstance) {
@@ -35,11 +34,11 @@ public class LoadingCollectionEntry {
 		this.key = key;
 		this.collectionInstance = collectionInstance;
 
-		collectionInstance.beforeInitialize( -1, getCollectionDescriptor() );
+		collectionInstance.beforeInitialize( getCollectionDescriptor(), -1 );
 		collectionInstance.beginRead();
 	}
 
-	public PersistentCollectionDescriptor getCollectionDescriptor() {
+	public CollectionPersister getCollectionDescriptor() {
 		return collectionDescriptor;
 	}
 
@@ -68,12 +67,12 @@ public class LoadingCollectionEntry {
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
 
 		CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
-
 		if ( collectionEntry == null ) {
 			collectionEntry = persistenceContext.addInitializedCollection(
-					getCollectionDescriptor(),
+					collectionDescriptor,
 					getCollectionInstance(),
 					getKey()
 			);
@@ -82,7 +81,7 @@ public class LoadingCollectionEntry {
 			collectionEntry.postInitialize( collectionInstance );
 		}
 
-		if ( getCollectionDescriptor() instanceof PersistentArrayDescriptorImpl ) {
+		if ( collectionDescriptor.getCollectionType().hasHolder() ) {
 			persistenceContext.addCollectionHolder( collectionInstance );
 		}
 

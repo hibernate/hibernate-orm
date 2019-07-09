@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.spi.Instantiator;
 
 public class DynamicMapInstantiator implements Instantiator {
 	public static final String KEY = "$type$";

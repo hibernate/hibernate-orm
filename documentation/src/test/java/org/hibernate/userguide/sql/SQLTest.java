@@ -13,7 +13,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -37,8 +36,6 @@ import org.hibernate.userguide.model.WireTransferPayment;
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;

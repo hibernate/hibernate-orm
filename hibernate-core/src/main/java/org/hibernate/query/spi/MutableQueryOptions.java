@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.spi;
 
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.query.ResultListTransformer;
@@ -21,9 +24,22 @@ public interface MutableQueryOptions extends QueryOptions {
 	void setFlushMode(FlushMode flushMode);
 
 	/**
+	 * Corollary to {@link #getCacheRetrieveMode}
+	 */
+	void setCacheRetrieveMode(CacheRetrieveMode retrieveMode);
+
+	/**
+	 * Corollary to {@link #getCacheStoreMode()}
+	 */
+	void setCacheStoreMode(CacheStoreMode storeMode);
+
+	/**
 	 * Corollary to {@link #getCacheMode()}
 	 */
-	void setCacheMode(CacheMode cacheMode);
+	default void setCacheMode(CacheMode cacheMode) {
+		setCacheRetrieveMode( cacheMode.getJpaRetrieveMode() );
+		setCacheStoreMode( cacheMode.getJpaStoreMode() );
+	}
 
 	/**
 	 * Corollary to {@link #isResultCachingEnabled()}

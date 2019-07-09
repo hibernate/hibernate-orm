@@ -84,12 +84,6 @@ import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ordering.antlr.ColumnMapper;
-import org.hibernate.sql.ordering.antlr.ColumnReference;
-import org.hibernate.sql.ordering.antlr.FormulaReference;
-import org.hibernate.sql.ordering.antlr.OrderByAliasResolver;
-import org.hibernate.sql.ordering.antlr.OrderByTranslation;
-import org.hibernate.sql.ordering.antlr.SqlValueReference;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
@@ -622,50 +616,50 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
-	private class ColumnMapperImpl implements ColumnMapper {
-		@Override
-		public SqlValueReference[] map(String reference) {
-			final String[] columnNames;
-			final String[] formulaTemplates;
-
-			// handle the special "$element$" property name...
-			if ( "$element$".equals( reference ) ) {
-				columnNames = elementColumnNames;
-				formulaTemplates = elementFormulaTemplates;
-			}
-			else {
-				columnNames = elementPropertyMapping.toColumns( reference );
-				formulaTemplates = formulaTemplates( reference, columnNames.length );
-			}
-
-			final SqlValueReference[] result = new SqlValueReference[ columnNames.length ];
-			int i = 0;
-			for ( final String columnName : columnNames ) {
-				if ( columnName == null ) {
-					// if the column name is null, it indicates that this index in the property value mapping is
-					// actually represented by a formula.
-//					final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
-					final String formulaTemplate = formulaTemplates[i];
-					result[i] = new FormulaReference() {
-						@Override
-						public String getFormulaFragment() {
-							return formulaTemplate;
-						}
-					};
-				}
-				else {
-					result[i] = new ColumnReference() {
-						@Override
-						public String getColumnName() {
-							return columnName;
-						}
-					};
-				}
-				i++;
-			}
-			return result;
-		}
-	}
+//	private class ColumnMapperImpl implements ColumnMapper {
+//		@Override
+//		public SqlValueReference[] map(String reference) {
+//			final String[] columnNames;
+//			final String[] formulaTemplates;
+//
+//			// handle the special "$element$" property name...
+//			if ( "$element$".equals( reference ) ) {
+//				columnNames = elementColumnNames;
+//				formulaTemplates = elementFormulaTemplates;
+//			}
+//			else {
+//				columnNames = elementPropertyMapping.toColumns( reference );
+//				formulaTemplates = formulaTemplates( reference, columnNames.length );
+//			}
+//
+//			final SqlValueReference[] result = new SqlValueReference[ columnNames.length ];
+//			int i = 0;
+//			for ( final String columnName : columnNames ) {
+//				if ( columnName == null ) {
+//					// if the column name is null, it indicates that this index in the property value mapping is
+//					// actually represented by a formula.
+////					final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
+//					final String formulaTemplate = formulaTemplates[i];
+//					result[i] = new FormulaReference() {
+//						@Override
+//						public String getFormulaFragment() {
+//							return formulaTemplate;
+//						}
+//					};
+//				}
+//				else {
+//					result[i] = new ColumnReference() {
+//						@Override
+//						public String getColumnName() {
+//							return columnName;
+//						}
+//					};
+//				}
+//				i++;
+//			}
+//			return result;
+//		}
+//	}
 
 	private String[] formulaTemplates(String reference, int expectedSize) {
 		try {
@@ -2098,24 +2092,24 @@ public abstract class AbstractCollectionPersister
 		return mappedByProperty;
 	}
 
-	private class StandardOrderByAliasResolver implements OrderByAliasResolver {
-		private final String rootAlias;
-
-		private StandardOrderByAliasResolver(String rootAlias) {
-			this.rootAlias = rootAlias;
-		}
-
-		@Override
-		public String resolveTableAlias(String columnReference) {
-			if ( elementPersister == null ) {
-				// we have collection of non-entity elements...
-				return rootAlias;
-			}
-			else {
-				return ( (Loadable) elementPersister ).getTableAliasForColumn( columnReference, rootAlias );
-			}
-		}
-	}
+//	private class StandardOrderByAliasResolver implements OrderByAliasResolver {
+//		private final String rootAlias;
+//
+//		private StandardOrderByAliasResolver(String rootAlias) {
+//			this.rootAlias = rootAlias;
+//		}
+//
+//		@Override
+//		public String resolveTableAlias(String columnReference) {
+//			if ( elementPersister == null ) {
+//				// we have collection of non-entity elements...
+//				return rootAlias;
+//			}
+//			else {
+//				return ( (Loadable) elementPersister ).getTableAliasForColumn( columnReference, rootAlias );
+//			}
+//		}
+//	}
 
 	public abstract FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 

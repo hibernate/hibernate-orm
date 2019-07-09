@@ -6,44 +6,21 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import javax.persistence.Parameter;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.query.spi.NamedParameterDescriptor;
-import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.MathHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.spi.QueryParameterListBinding;
-import org.hibernate.type.SerializableType;
-import org.hibernate.type.Type;
 
 /**
  * Manages the group of QueryParameterBinding for a particular query.
@@ -56,7 +33,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( QueryParameterBindingsImpl.class );
 
 	private final SessionFactoryImplementor sessionFactory;
-	private final ParameterMetadataImplementor<QueryParameterImplementor<?>> parameterMetadata;
+	private final ParameterMetadataImplementor parameterMetadata;
 	private final boolean queryParametersValidationEnabled;
 
 	private final int jdbcStyleOrdinalCountBase;
@@ -133,7 +110,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@Override
-	public QueryParameterBinding<?> getBinding(QueryParameterImplementor parameter) {
+	public <P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
 		if ( parameterBindingMap == null ) {
 			return null;
 		}
@@ -154,13 +131,15 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@Override
-	public QueryParameterBinding<?> getBinding(int position) {
-		return getBinding( parameterMetadata.getQueryParameter( position ) );
+	public <P> QueryParameterBinding<P> getBinding(int position) {
+		//noinspection unchecked
+		return (QueryParameterBinding<P>) getBinding( parameterMetadata.getQueryParameter( position ) );
 	}
 
 	@Override
-	public QueryParameterBinding<?> getBinding(String name) {
-		return getBinding( parameterMetadata.getQueryParameter( name ) );
+	public <P> QueryParameterBinding<P> getBinding(String name) {
+		//noinspection unchecked
+		return (QueryParameterBinding<P>) getBinding( parameterMetadata.getQueryParameter( name ) );
 	}
 
 	@Override

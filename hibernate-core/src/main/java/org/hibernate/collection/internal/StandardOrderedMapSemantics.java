@@ -10,10 +10,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.mapping.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * @author Steve Ebersole
@@ -35,24 +35,24 @@ public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHash
 	@Override
 	public LinkedHashMap<?, ?> instantiateRaw(
 			int anticipatedSize,
-			PersistentCollectionDescriptor collectionDescriptor) {
+			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? new LinkedHashMap<>() : new LinkedHashMap<>( anticipatedSize );
 	}
 
 	@Override
-	public <E> PersistentCollection<E> instantiateWrapper(
+	public PersistentCollection instantiateWrapper(
 			Object key,
-			PersistentCollectionDescriptor<?, LinkedHashMap<?, ?>, E> collectionDescriptor,
+			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap<>( session, collectionDescriptor, key );
+		return new PersistentMap( session );
 	}
 
 	@Override
-	public <E> PersistentCollection<E> wrap(
+	public PersistentCollection wrap(
 			Object rawCollection,
-			PersistentCollectionDescriptor<?, LinkedHashMap<?, ?>, E> collectionDescriptor,
+			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap<>( session, collectionDescriptor, (Map) rawCollection );
+		return new PersistentMap( session, (Map) rawCollection );
 	}
 
 	@Override

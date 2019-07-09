@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 
@@ -73,12 +74,12 @@ public class UpdateStatement implements MutationStatement {
 			return this;
 		}
 
-		public SqlAstUpdateDescriptor createUpdateDescriptor() {
-			return new SqlAstUpdateDescriptorImpl(
-					createUpdateAst(),
-					Collections.singleton( targetTableRef.getTable().getTableExpression() )
-			);
-		}
+//		public SqlAstUpdateDescriptor createUpdateDescriptor() {
+//			return new SqlAstUpdateDescriptorImpl(
+//					createUpdateAst(),
+//					Collections.singleton( targetTableRef.getTable().getTableExpression() )
+//			);
+//		}
 
 		public UpdateStatement createUpdateAst() {
 			if ( assignments == null || assignments.isEmpty() ) {

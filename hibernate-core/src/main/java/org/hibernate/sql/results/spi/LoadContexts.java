@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.spi;
 
-import java.sql.ResultSet;
-
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -17,11 +15,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.StandardStack;
 
 /**
- * Maps {@link ResultSet result-sets} to specific contextual data related to processing that result set
- * <p/>
- * Considering the JDBC-redesign work, would further like this contextual info not mapped separately, but available
- * based on the result set being processed.  This would also allow maintaining a single mapping as we could reliably
- * get notification of the result-set closing...
+ * Maintains a Stack of processing state related to performing load operations.
+ * The state is defined by {@link JdbcValuesSourceProcessingState} which
+ * encapsulates the data to be processed by the load whether the data comes from
+ * a ResultSet or second-level cache hit.
  *
  * @author Steve Ebersole
  */

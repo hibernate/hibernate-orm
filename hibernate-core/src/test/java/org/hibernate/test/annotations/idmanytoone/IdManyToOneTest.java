@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.annotations.idmanytoone;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;

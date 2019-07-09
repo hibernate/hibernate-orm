@@ -11,7 +11,7 @@ package org.hibernate.userguide.proxy.tuplizer;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.metamodel.spi.Instantiator;
+import org.hibernate.tuple.Instantiator;
 
 /**
  * @author Emmanuel Bernard

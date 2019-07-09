@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;

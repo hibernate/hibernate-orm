@@ -7,7 +7,6 @@
 
 package org.hibernate.spatial.criterion;
 
-import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.dialect.Dialect;

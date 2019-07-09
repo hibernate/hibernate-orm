@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.spi.JdbcValuesMappingDescriptor;
+import org.hibernate.sql.results.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.SqlSelectionGroupNode;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -52,9 +53,7 @@ public interface SqlSelection extends SqlSelectionGroupNode {
 		return getValuesArrayPosition() + 1;
 	}
 
-	default void prepare(
-			JdbcValuesMappingDescriptor.JdbcValuesMetadata jdbcResultsMetadata,
-			SessionFactoryImplementor sessionFactory) {
+	default void prepare(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory) {
 		// By default we have nothing to do.  Here as a hook for NativeQuery mapping resolutions
 	}
 

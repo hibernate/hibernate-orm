@@ -18,7 +18,6 @@ import junit.framework.ComparisonFailure;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.internal.ast.QueryTranslatorImpl;

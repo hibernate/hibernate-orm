@@ -18,13 +18,11 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**

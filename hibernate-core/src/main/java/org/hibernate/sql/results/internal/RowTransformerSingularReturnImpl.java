@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.results.internal;
 
-import org.hibernate.sql.exec.spi.RowTransformer;
+import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
  * @author Steve Ebersole

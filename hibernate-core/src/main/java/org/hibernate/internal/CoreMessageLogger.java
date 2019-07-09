@@ -30,8 +30,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
-import org.hibernate.engine.loading.internal.CollectionLoadContext;
-import org.hibernate.engine.loading.internal.EntityLoadContext;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -307,13 +305,13 @@ public interface CoreMessageLogger extends BasicLogger {
 			+ " to unsafe use of the session): %s", id = 99)
 	void failed(Throwable throwable);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Fail-safe cleanup (collections) : %s", id = 100)
-	void failSafeCollectionsCleanup(CollectionLoadContext collectionLoadContext);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Fail-safe cleanup (entities) : %s", id = 101)
-	void failSafeEntitiesCleanup(EntityLoadContext entityLoadContext);
+//	@LogMessage(level = WARN)
+//	@Message(value = "Fail-safe cleanup (collections) : %s", id = 100)
+//	void failSafeCollectionsCleanup(CollectionLoadContext collectionLoadContext);
+//
+//	@LogMessage(level = WARN)
+//	@Message(value = "Fail-safe cleanup (entities) : %s", id = 101)
+//	void failSafeEntitiesCleanup(EntityLoadContext entityLoadContext);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Fetching database metadata", id = 102)

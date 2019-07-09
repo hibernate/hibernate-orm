@@ -33,13 +33,11 @@ public abstract class AbstractBagSemantics<B extends Collection<?>> implements C
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <E> Iterator<E> getElementIterator(B rawCollection) {
+	public Iterator getElementIterator(B rawCollection) {
 		if ( rawCollection == null ) {
 			return null;
 		}
-
-		return (Iterator<E>) rawCollection.iterator();
+		return rawCollection.iterator();
 	}
 
 	@Override

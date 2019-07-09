@@ -6,11 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-
 /**
  * An SQL dialect for the SAP HANA row store.
  * <p>

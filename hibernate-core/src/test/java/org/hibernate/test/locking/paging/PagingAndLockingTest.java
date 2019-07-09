@@ -8,7 +8,6 @@ package org.hibernate.test.locking.paging;
 
 import java.util.List;
 
-import org.hibernate.Criteria;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;

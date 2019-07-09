@@ -10,11 +10,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -44,7 +44,6 @@ public class StandardListSemantics implements CollectionSemantics<List> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Iterator getElementIterator(List rawCollection) {
 		return rawCollection.iterator();
 	}
@@ -60,15 +59,14 @@ public class StandardListSemantics implements CollectionSemantics<List> {
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentList( session, collectionDescriptor, key );
+		return new PersistentList( session );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <E> PersistentCollection<E> wrap(
+	public PersistentCollection wrap(
 			Object rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentList( session, collectionDescriptor, (List) rawCollection );
+		return new PersistentList( session, (List) rawCollection );
 	}
 }

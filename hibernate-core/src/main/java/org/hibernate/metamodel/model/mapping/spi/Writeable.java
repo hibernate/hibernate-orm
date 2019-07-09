@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.mapping.spi;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -20,6 +21,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface Writeable {
+	default int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
+		final AtomicInteger value = new AtomicInteger( 0 );
+		visitJdbcTypes(
+				sqlExpressableType -> value.incrementAndGet(),
+				Clause.IRRELEVANT,
+				typeConfiguration
+		);
+
+		return value.get();
+	}
 
 	/**
 	 * Visit all of the SqlExpressableTypes associated with this this Writeable.

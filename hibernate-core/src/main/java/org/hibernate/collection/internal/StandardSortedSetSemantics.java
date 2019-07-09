@@ -10,9 +10,9 @@ import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -36,30 +36,27 @@ public class StandardSortedSetSemantics extends AbstractSetSemantics<SortedSet<?
 	public SortedSet instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return new TreeSet<>( collectionDescriptor.getSortingComparator() );
+		return new TreeSet( collectionDescriptor.getSortingComparator() );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public PersistentCollection instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedSet( session, collectionDescriptor, key );
+		return new PersistentSortedSet( session );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public PersistentCollection wrap(
 			Object rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedSet( session, collectionDescriptor, (SortedSet) rawCollection );
+		return new PersistentSortedSet( session, (SortedSet) rawCollection );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <E> Iterator<E> getElementIterator(SortedSet<?> rawCollection) {
-		return (Iterator<E>) rawCollection.iterator();
+	public Iterator getElementIterator(SortedSet<?> rawCollection) {
+		return rawCollection.iterator();
 	}
 }

@@ -45,7 +45,6 @@ import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -187,7 +186,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private EntityTuplizerFactory entityTuplizerFactory = new EntityTuplizerFactory();
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
-	private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
 	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
 	private BatchFetchStyle batchFetchStyle;
 	private boolean delayBatchFetchLoaderCreations;
@@ -332,12 +330,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.currentTenantIdentifierResolver = strategySelector.resolveStrategy(
 				CurrentTenantIdentifierResolver.class,
 				configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
-		);
-
-		this.multiTableBulkIdStrategy = strategySelector.resolveDefaultableStrategy(
-				MultiTableBulkIdStrategy.class,
-				configurationSettings.get( HQL_BULK_ID_STRATEGY ),
-				jdbcServices.getJdbcEnvironment().getDialect().getDefaultMultiTableBulkIdStrategy()
 		);
 
 		this.batchFetchStyle = BatchFetchStyle.interpret( configurationSettings.get( BATCH_FETCH_STYLE ) );
@@ -798,11 +790,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
-		return multiTableBulkIdStrategy;
-	}
-
-	@Override
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return tempTableDdlTransactionHandling;
 	}
@@ -1166,10 +1153,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyEntityTuplizer(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass) {
 		this.entityTuplizerFactory.registerDefaultTuplizerClass( entityMode, tuplizerClass );
-	}
-
-	public void applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
-		this.multiTableBulkIdStrategy = strategy;
 	}
 
 	public void applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {

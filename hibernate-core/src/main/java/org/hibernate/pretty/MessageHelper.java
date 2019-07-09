@@ -152,8 +152,8 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#<1,2,3>]
 	 */
 	public static String infoString(
-			EntityPersister persister, 
-			Serializable[] ids, 
+			EntityPersister persister,
+			Object[] ids,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
@@ -237,10 +237,10 @@ public final class MessageHelper {
 	 * @param session The session
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
-	public static String collectionInfoString( 
+	public static String collectionInfoString(
 			CollectionPersister persister,
 			PersistentCollection collection,
-			Serializable collectionKey,
+			Object collectionKey,
 			SharedSessionContractImplementor session ) {
 		
 		StringBuilder s = new StringBuilder();
@@ -254,7 +254,7 @@ public final class MessageHelper {
 			
 			Type ownerIdentifierType = persister.getOwnerEntityPersister()
 					.getIdentifierType();
-			Serializable ownerKey;
+			Object ownerKey;
 			// TODO: Is it redundant to attempt to use the collectionKey,
 			// or is always using the owner id sufficient?
 			if ( collectionKey.getClass().isAssignableFrom( 
@@ -284,8 +284,8 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#<1,2,3>]
 	 */
 	public static String collectionInfoString(
-			CollectionPersister persister, 
-			Serializable[] ids, 
+			CollectionPersister persister,
+			Object[] ids,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
@@ -317,8 +317,8 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
 	public static String collectionInfoString(
-			CollectionPersister persister, 
-			Serializable id, 
+			CollectionPersister persister,
+			Object id,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
@@ -343,7 +343,7 @@ public final class MessageHelper {
 	
 	private static void addIdToCollectionInfoString(
 			CollectionPersister persister,
-			Serializable id,
+			Object id,
 			SessionFactoryImplementor factory,
 			StringBuilder s ) {
 		// Need to use the identifier type of the collection owner
@@ -374,7 +374,7 @@ public final class MessageHelper {
 	 * @param id The id value of the owner
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
-	public static String collectionInfoString(String role, Serializable id) {
+	public static String collectionInfoString(String role, Object id) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if( role == null ) {

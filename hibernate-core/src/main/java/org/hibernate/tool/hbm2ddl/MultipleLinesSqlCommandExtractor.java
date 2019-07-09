@@ -9,8 +9,12 @@ package org.hibernate.tool.hbm2ddl;
 import java.io.Reader;
 import java.util.List;
 
-import org.hibernate.hql.internal.antlr.SqlStatementLexer;
-import org.hibernate.hql.internal.antlr.SqlStatementParser;
+import org.hibernate.tool.hbm2ddl.grammar.SqlStatementLexer;
+import org.hibernate.tool.hbm2ddl.grammar.SqlStatementParser;
+
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.UnbufferedCharStream;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 /**
  * Class responsible for extracting SQL statements from import script. Supports instructions/comments and quoted
@@ -21,16 +25,18 @@ import org.hibernate.hql.internal.antlr.SqlStatementParser;
 public class MultipleLinesSqlCommandExtractor implements ImportSqlCommandExtractor {
 	@Override
 	public String[] extractCommands(Reader reader) {
-		final SqlStatementLexer lexer = new SqlStatementLexer( reader );
-		final SqlStatementParser parser = new SqlStatementParser( lexer );
 		try {
-			parser.script(); // Parse script.
-			parser.throwExceptionIfErrorOccurred();
+			final SqlStatementLexer lexer;
+			lexer = new SqlStatementLexer( new UnbufferedCharStream( reader ) );
+			final SqlStatementParser parser = new SqlStatementParser( new CommonTokenStream( lexer ) );
+			SqlStatementParserListenerImpl listener = new SqlStatementParserListenerImpl();
+			ParseTreeWalker parseTreeWalker = new ParseTreeWalker();
+			parseTreeWalker.walk( listener, parser.statements() );
+			final List<String> statements = listener.getStatements();
+			return statements.toArray( new String[0] );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			throw new ImportScriptException( "Error during import script parsing.", e );
 		}
-		List<String> statementList = parser.getStatementList();
-		return statementList.toArray( new String[statementList.size()] );
 	}
 }

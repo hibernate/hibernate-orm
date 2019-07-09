@@ -10,7 +10,6 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

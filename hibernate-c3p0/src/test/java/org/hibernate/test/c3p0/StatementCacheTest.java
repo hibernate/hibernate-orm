@@ -8,7 +8,6 @@ package org.hibernate.test.c3p0;
 
 import java.util.List;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 
 import org.junit.Assert;

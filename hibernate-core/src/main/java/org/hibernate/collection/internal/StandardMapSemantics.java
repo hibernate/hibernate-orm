@@ -8,10 +8,10 @@ package org.hibernate.collection.internal;
 
 import java.util.Map;
 
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -41,18 +41,18 @@ public class StandardMapSemantics extends AbstractMapSemantics<Map<?,?>> {
 	}
 
 	@Override
-	public <E> PersistentCollection<E> instantiateWrapper(
+	public PersistentCollection instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap( session, collectionDescriptor, key );
+		return new PersistentMap( session );
 	}
 
 	@Override
-	public <E> PersistentCollection<E> wrap(
+	public PersistentCollection wrap(
 			Object rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap( session, collectionDescriptor, (Map) rawCollection );
+		return new PersistentMap( session, (Map) rawCollection );
 	}
 }

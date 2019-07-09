@@ -9,9 +9,9 @@ package org.hibernate.collection.internal;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -35,24 +35,22 @@ public class StandardSortedMapSemantics extends AbstractMapSemantics<SortedMap<?
 	public TreeMap<?, ?> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return new TreeMap<>( collectionDescriptor.getSortingComparator() );
+		return new TreeMap( collectionDescriptor.getSortingComparator() );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public PersistentCollection instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedMap( session, collectionDescriptor, key );
+		return new PersistentSortedMap( session );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public PersistentCollection wrap(
 			Object rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedMap( session, collectionDescriptor, (SortedMap) rawCollection );
+		return new PersistentSortedMap( session, (SortedMap) rawCollection );
 	}
 }

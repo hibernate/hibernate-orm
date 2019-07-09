@@ -7,16 +7,19 @@
 package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
-import java.sql.SQLException;
-import java.util.List;
+import java.util.function.Consumer;
 import javax.persistence.ParameterMode;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.sql.exec.spi.JdbcCall;
 
 /**
  * Standard implementation of CallableStatementSupport
@@ -41,34 +44,49 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 	}
 
 	@Override
-	public String renderCallableStatement(
+	public JdbcCall interpretCall(
 			String procedureName,
-			ParameterStrategy parameterStrategy,
-			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
+			FunctionReturnImpl functionReturn,
+			ParameterMetadataImplementor parameterMetadata,
+			ProcedureParamBindings paramBindings,
 			SharedSessionContractImplementor session) {
 		final StringBuilder buffer = new StringBuilder().append( "{call " )
 				.append( procedureName )
 				.append( "(" );
-		String sep = "";
-		for ( ParameterRegistrationImplementor parameter : parameterRegistrations ) {
-			if ( parameter == null ) {
-				throw new QueryException( "Parameter registrations had gaps" );
-			}
 
-			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-				verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
-				buffer.append( sep ).append( "?" );
-				sep = ",";
-			}
-			else {
-				for ( int i = 0; i < parameter.getSqlTypes().length; i++ ) {
-					buffer.append( sep ).append( "?" );
-					sep = ",";
+		parameterMetadata.visitParameters(
+				new Consumer<QueryParameterImplementor<?>>() {
+					String sep = "";
+
+					@Override
+					public void accept(QueryParameterImplementor<?> param) {
+						if ( param == null ) {
+							throw new QueryException( "Parameter registrations had gaps" );
+						}
+
+						final ProcedureParameterImplementor parameter = (ProcedureParameterImplementor) param;
+
+						if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
+							verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
+							buffer.append( sep ).append( "?" );
+							sep = ",";
+						}
+						else {
+							final int jdbcTypeCount = parameter.getHibernateType().getJdbcTypeCount(
+									session.getFactory().getTypeConfiguration()
+							);
+
+							for ( int i = 0; i < jdbcTypeCount; i++ ) {
+								buffer.append( sep ).append( "?" );
+								sep = ",";
+							}
+						}
+					}
 				}
-			}
-		}
+		);
 
-		return buffer.append( ")}" ).toString();
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		return buffer.append( ")}" ).toString();
 	}
 
 	private void verifyRefCursorSupport(Dialect dialect) {
@@ -82,28 +100,32 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 			String procedureName,
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
-			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
+			ParameterMetadataImplementor parameterMetadata,
 			SharedSessionContractImplementor session) {
-		// prepare parameters
-		int i = 1;
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-		try {
-			for ( ParameterRegistrationImplementor parameter : parameterRegistrations ) {
-				parameter.prepare( statement, i );
-				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-					i++;
-				}
-				else {
-					i += parameter.getSqlTypes().length;
-				}
-			}
-		}
-		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Error registering CallableStatement parameters",
-					procedureName
-			);
-		}
+//		final AtomicInteger count = new AtomicInteger( 1 );
+//
+//		try {
+//			parameterMetadata.visitParameters(
+//					param -> {
+//						final ProcedureParameterImplementor parameter = (ProcedureParameterImplementor) param;
+//						parameter.prepare( statement, count.get() );
+//						if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
+//							i++;
+//						}
+//						else {
+//							i += parameter.getSqlTypes().length;
+//						}
+//					}
+//			);
+//		}
+//		catch (SQLException e) {
+//			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+//					e,
+//					"Error registering CallableStatement parameters",
+//					procedureName
+//			);
+//		}
 	}
 }

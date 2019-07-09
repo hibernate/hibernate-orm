@@ -8,12 +8,9 @@ package org.hibernate.test.annotations.naturalid;
 
 import java.util.List;
 
-import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Test;
 
-import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;

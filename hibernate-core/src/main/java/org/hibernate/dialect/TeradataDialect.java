@@ -11,11 +11,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.hql.spi.id.IdTableSupport;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -24,7 +19,7 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Jay Nance
  */
-public class TeradataDialect extends Dialect implements IdTableSupport {
+public class TeradataDialect extends Dialect {
 	
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 

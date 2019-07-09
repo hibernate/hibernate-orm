@@ -10,12 +10,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.results.internal.StandardResultSetMapping;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.JdbcValuesMetadata;
-import org.hibernate.sql.ast.spi.SqlSelection;
 
 /**
  * Hibernate's standard ResultSetMappingDescriptor implementation for cases
@@ -31,7 +30,7 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 
 
 	public JdbcValuesMappingProducerStandard(Set<SqlSelection> sqlSelections, List<DomainResult> domainResults) {
-		resolvedMapping = new StandardResultSetMapping( sqlSelections, domainResults );
+		resolvedMapping = new StandardJdbcValuesMapping( sqlSelections, domainResults );
 	}
 
 	@Override

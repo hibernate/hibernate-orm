@@ -7,8 +7,8 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -20,13 +20,13 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> {
 	public SqmUnaryOperation(
 			UnaryArithmeticOperator operation,
 			SqmExpression<T> operand) {
-		this( operation, operand, (BasicValuedExpressableType<T>) operand.getNodeType() );
+		this( operation, operand, operand.getNodeType() );
 	}
 
 	public SqmUnaryOperation(
 			UnaryArithmeticOperator operation,
 			SqmExpression<T> operand,
-			BasicValuedExpressableType<T> inherentType) {
+			SqmExpressable<T> inherentType) {
 		super( inherentType, operand.nodeBuilder() );
 		this.operation = operation;
 		this.operand = operand;
@@ -38,11 +38,6 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> {
 
 	public UnaryArithmeticOperator getOperation() {
 		return operation;
-	}
-
-	@Override
-	public BasicValuedExpressableType<T> getNodeType() {
-		return (BasicValuedExpressableType<T>) super.getNodeType();
 	}
 
 	@Override

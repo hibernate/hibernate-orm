@@ -24,6 +24,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.loader.spi.InternalFetchProfile;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -297,15 +298,15 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			}
 		}
 
-		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
-		source.getLoadQueryInfluencers().setInternalFetchProfile( "merge" );
-
-		//we must clone embedded composite identifiers, or
-		//we will get back the same instance that we pass in
+		// we must clone embedded composite identifiers or we will get back the same instance that we pass in
 		final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType().deepCopy( id, source.getFactory() );
-		final Object result = source.get( entityName, clonedIdentifier );
 
-		source.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
+		// apply the special MERGE fetch profile and perform the resolution (Session#get)
+		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
+				InternalFetchProfile.MERGE,
+				() -> source.get( entityName, clonedIdentifier )
+
+		);
 
 		if ( result == null ) {
 			//TODO: we should throw an exception if we really *know* for sure

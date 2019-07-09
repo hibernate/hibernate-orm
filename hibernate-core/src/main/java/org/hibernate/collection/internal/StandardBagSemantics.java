@@ -8,9 +8,9 @@ package org.hibernate.collection.internal;
 
 import java.util.Collection;
 
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -37,16 +37,15 @@ public class StandardBagSemantics extends AbstractBagSemantics<Collection<?>> {
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentBag( session, collectionDescriptor );
+		return new PersistentBag( session );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <E> PersistentCollection<E> wrap(
+	public PersistentCollection wrap(
 			Object rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentBag( session, collectionDescriptor, (Collection) rawCollection );
+		return new PersistentBag( session, (Collection) rawCollection );
 	}
 
 }

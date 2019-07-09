@@ -12,7 +12,7 @@ import java.lang.reflect.Proxy;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.metamodel.spi.Instantiator;
+import org.hibernate.tuple.Instantiator;
 
 import org.hibernate.test.dynamicentity.Address;
 import org.hibernate.test.dynamicentity.Company;

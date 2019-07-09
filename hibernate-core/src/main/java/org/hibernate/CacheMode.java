@@ -7,6 +7,8 @@
 package org.hibernate;
 
 import java.util.Locale;
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
 
 /**
  * Controls how the session interacts with the second-level cache and query cache.
@@ -19,37 +21,44 @@ public enum CacheMode {
 	/**
 	 * The session may read items from the cache, and add items to the cache.
 	 */
-	NORMAL( true, true ),
+	NORMAL( CacheStoreMode.USE, CacheRetrieveMode.USE ),
 	/**
 	 * The session will never interact with the cache, except to invalidate
 	 * cache items when updates occur.
 	 */
-	IGNORE( false, false ),
+	IGNORE( CacheStoreMode.BYPASS, CacheRetrieveMode.BYPASS ),
 	/**
 	 * The session may read items from the cache, but will not add items,
 	 * except to invalidate items when updates occur.
 	 */
-	GET( false, true ),
+	GET( CacheStoreMode.BYPASS, CacheRetrieveMode.USE ),
 	/**
 	 * The session will never read items from the cache, but will add items
 	 * to the cache as it reads them from the database.
 	 */
-	PUT( true, false ),
+	PUT( CacheStoreMode.USE, CacheRetrieveMode.BYPASS ),
 	/**
 	 * The session will never read items from the cache, but will add items
 	 * to the cache as it reads them from the database.  In this mode, the
 	 * effect of <tt>hibernate.cache.use_minimal_puts</tt> is bypassed, in
 	 * order to <em>force</em> a cache refresh.
 	 */
-	REFRESH( true, false );
+	REFRESH( CacheStoreMode.REFRESH, CacheRetrieveMode.BYPASS );
 
+	private final CacheStoreMode storeMode;
+	private final CacheRetrieveMode retrieveMode;
 
-	private final boolean isPutEnabled;
-	private final boolean isGetEnabled;
+	CacheMode(CacheStoreMode storeMode, CacheRetrieveMode retrieveMode) {
+		this.storeMode = storeMode;
+		this.retrieveMode = retrieveMode;
+	}
 
-	private CacheMode( boolean isPutEnabled, boolean isGetEnabled) {
-		this.isPutEnabled = isPutEnabled;
-		this.isGetEnabled = isGetEnabled;
+	public CacheStoreMode getJpaStoreMode() {
+		return storeMode;
+	}
+
+	public CacheRetrieveMode getJpaRetrieveMode() {
+		return retrieveMode;
 	}
 
 	/**
@@ -58,7 +67,7 @@ public enum CacheMode {
 	 * @return {@code true} if cache reads are allowed; {@code false} otherwise.
 	 */
 	public boolean isGetEnabled() {
-		return isGetEnabled;
+		return retrieveMode == CacheRetrieveMode.USE;
 	}
 
 	/**
@@ -67,7 +76,7 @@ public enum CacheMode {
 	 * @return {@code true} if cache writes are allowed; {@code false} otherwise.
 	 */
 	public boolean isPutEnabled() {
-		return isPutEnabled;
+		return storeMode == CacheStoreMode.USE || storeMode == CacheStoreMode.REFRESH;
 	}
 
 	/**
@@ -89,6 +98,36 @@ public enum CacheMode {
 		}
 		catch ( IllegalArgumentException e ) {
 			throw new MappingException( "Unknown Cache Mode: " + setting );
+		}
+	}
+
+	public static CacheMode fromJpaModes(CacheRetrieveMode retrieveMode, CacheStoreMode storeMode) {
+		if ( storeMode == null ) {
+			storeMode = CacheStoreMode.BYPASS;
+		}
+
+		if ( retrieveMode == null ) {
+			retrieveMode = CacheRetrieveMode.BYPASS;
+		}
+
+		switch ( storeMode ) {
+			case BYPASS: {
+				return retrieveMode == CacheRetrieveMode.USE
+						? GET
+						: IGNORE;
+			}
+			case REFRESH: {
+				// technically should combo `CacheStoreMode#REFRESH` and `CacheRetrieveMode#USE` be illegal?
+				return REFRESH;
+			}
+			case USE: {
+				return retrieveMode == CacheRetrieveMode.USE
+						? NORMAL
+						: PUT;
+			}
+			default: {
+				throw new UnsupportedOperationException( "Unrecognized CacheStoreMode : " + storeMode );
+			}
 		}
 	}
 }

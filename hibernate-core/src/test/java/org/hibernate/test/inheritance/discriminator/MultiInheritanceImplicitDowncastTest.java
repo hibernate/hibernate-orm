@@ -52,7 +52,6 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
-import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.spi.QueryTranslator;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

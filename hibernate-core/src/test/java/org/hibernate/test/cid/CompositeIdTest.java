@@ -24,7 +24,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.hql.spi.QueryTranslator;
 

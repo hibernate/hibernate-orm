@@ -11,7 +11,7 @@ import java.util.List;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 
-import org.hibernate.sql.exec.spi.RowTransformer;
+import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
  * RowTransformer generating a JPA {@link Tuple}

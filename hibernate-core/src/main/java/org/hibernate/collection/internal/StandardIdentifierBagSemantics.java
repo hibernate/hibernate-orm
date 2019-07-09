@@ -7,10 +7,11 @@
 package org.hibernate.collection.internal;
 
 import java.util.Collection;
+import java.util.Iterator;
 
-import org.hibernate.collection.spi.CollectionClassification;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -33,20 +34,18 @@ public class StandardIdentifierBagSemantics<E> extends AbstractBagSemantics<Coll
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public PersistentCollection<E> instantiateWrapper(
+	public PersistentCollection instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentIdentifierBag( session, collectionDescriptor, key );
+		return new PersistentIdentifierBag( session );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public PersistentCollection<E> wrap(
+	public PersistentCollection wrap(
 			Object rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentIdentifierBag( session, collectionDescriptor, (Collection) rawCollection );
+		return new PersistentIdentifierBag( session, (Collection) rawCollection );
 	}
 }

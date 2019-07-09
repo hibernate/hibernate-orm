@@ -28,21 +28,21 @@ public interface CollectionSemantics<C> {
 	 */
 	CollectionClassification getCollectionClassification();
 
-	<E> C instantiateRaw(
+	C instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor);
 
-	<E> PersistentCollection instantiateWrapper(
+	PersistentCollection instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session);
 
-	<E> PersistentCollection wrap(
+	PersistentCollection wrap(
 			Object rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session);
 
-	<E> Iterator<E> getElementIterator(C rawCollection);
+	Iterator getElementIterator(C rawCollection);
 
 	void visitElements(C rawCollection, Consumer action);
 }

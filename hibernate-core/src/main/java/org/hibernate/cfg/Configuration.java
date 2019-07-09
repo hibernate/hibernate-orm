@@ -43,6 +43,7 @@ import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.internal.CoreLogging;
@@ -91,10 +92,10 @@ public class Configuration {
 	// used during processing mappings
 	private ImplicitNamingStrategy implicitNamingStrategy;
 	private PhysicalNamingStrategy physicalNamingStrategy;
-	private List<BasicType> basicTypes = new ArrayList<BasicType>();
-	private List<TypeContributor> typeContributorRegistrations = new ArrayList<TypeContributor>();
+	private List<BasicType> basicTypes = new ArrayList<>();
+	private List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
 	private Map<String, NamedHqlQueryMementoImpl> namedQueries;
-	private Map<String, NamedSQLQueryDefinition> namedSqlQueries;
+	private Map<String, NamedNativeQueryMemento> namedSqlQueries;
 	private Map<String, NamedProcedureCallDefinitionImpl> namedProcedureCallMap;
 	private Map<String, ResultSetMappingDescriptor> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
@@ -130,10 +131,10 @@ public class Configuration {
 	}
 
 	private static BootstrapServiceRegistry getBootstrapRegistry(ServiceRegistry serviceRegistry) {
-		if ( BootstrapServiceRegistry.class.isInstance( serviceRegistry ) ) {
+		if ( serviceRegistry instanceof BootstrapServiceRegistry ) {
 			return (BootstrapServiceRegistry) serviceRegistry;
 		}
-		else if ( StandardServiceRegistry.class.isInstance( serviceRegistry ) ) {
+		else if ( serviceRegistry instanceof StandardServiceRegistry ) {
 			final StandardServiceRegistry ssr = (StandardServiceRegistry) serviceRegistry;
 			return (BootstrapServiceRegistry) ssr.getParentServiceRegistry();
 		}
@@ -148,11 +149,11 @@ public class Configuration {
 	protected void reset() {
 		implicitNamingStrategy = ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
 		physicalNamingStrategy = PhysicalNamingStrategyStandardImpl.INSTANCE;
-		namedQueries = new HashMap<String, NamedHqlQueryMementoImpl>();
-		namedSqlQueries = new HashMap<String,NamedSQLQueryDefinition>();
-		sqlResultSetMappings = new HashMap<String, ResultSetMappingDescriptor>();
-		namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>();
-		namedProcedureCallMap = new HashMap<String, NamedProcedureCallDefinitionImpl>(  );
+		namedQueries = new HashMap<>();
+		namedSqlQueries = new HashMap<>();
+		sqlResultSetMappings = new HashMap<>();
+		namedEntityGraphMap = new HashMap<>();
+		namedProcedureCallMap = new HashMap<>();
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 		entityTuplizerFactory = new EntityTuplizerFactory();

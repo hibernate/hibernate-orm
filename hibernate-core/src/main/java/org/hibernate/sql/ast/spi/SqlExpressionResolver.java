@@ -28,25 +28,25 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SqlExpressionResolver {
-	/**
-	 * Given a qualifier + a qualifiable SqlExpressable, resolve the
-	 * (Sql)Expression reference.
-	 */
-	Expression resolveSqlExpression(ColumnReferenceQualifier qualifier, QualifiableSqlExpressable sqlSelectable);
-
-	/**
-	 * Given a SqlExpressable not needing to be qualified, resolve the
-	 * (Sql)Expression reference.
-	 */
-	Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable);
-
-	/**
-	 * Resolve the SqlSelection for the given expression
-	 */
-	SqlSelection resolveSqlSelection(
-			Expression expression,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration);
-
-	SqlSelection emptySqlSelection();
+//	/**
+//	 * Given a qualifier + a qualifiable SqlExpressable, resolve the
+//	 * (Sql)Expression reference.
+//	 */
+//	Expression resolveSqlExpression(ColumnReferenceQualifier qualifier, QualifiableSqlExpressable sqlSelectable);
+//
+//	/**
+//	 * Given a SqlExpressable not needing to be qualified, resolve the
+//	 * (Sql)Expression reference.
+//	 */
+//	Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable);
+//
+//	/**
+//	 * Resolve the SqlSelection for the given expression
+//	 */
+//	SqlSelection resolveSqlSelection(
+//			Expression expression,
+//			JavaTypeDescriptor javaTypeDescriptor,
+//			TypeConfiguration typeConfiguration);
+//
+//	SqlSelection emptySqlSelection();
 }

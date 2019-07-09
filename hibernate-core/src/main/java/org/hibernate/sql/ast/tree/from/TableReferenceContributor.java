@@ -6,19 +6,19 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import org.hibernate.metamodel.model.mapping.spi.TableReferenceJoinCollector;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 
 /**
  * @author Steve Ebersole
  */
 public interface TableReferenceContributor {
-	/**
-	 * Apply the Tables mapped by this producer to the collector as TableReferences
-	 */
-	void applyTableReferenceJoins(
-			ColumnReferenceQualifier lhs,
-			JoinType joinType,
-			SqlAliasBase sqlAliasBase,
-			TableReferenceJoinCollector joinCollector);
+//	/**
+//	 * Apply the Tables mapped by this producer to the collector as TableReferences
+//	 */
+//	void applyTableReferenceJoins(
+//			ColumnReferenceQualifier lhs,
+//			JoinType joinType,
+//			SqlAliasBase sqlAliasBase,
+//			TableReferenceJoinCollector joinCollector);
 }

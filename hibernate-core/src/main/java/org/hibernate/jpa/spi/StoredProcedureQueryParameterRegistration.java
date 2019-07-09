@@ -6,8 +6,6 @@
  */
 package org.hibernate.jpa.spi;
 
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
-
 /**
  * ParameterRegistration extension specifically for stored procedure parameters
  * exposing some functionality of Hibernate's native

@@ -126,7 +126,7 @@ public abstract class BlobSqlDescriptor extends AbstractTemplateSqlTypeDescripto
 					if ( executionContext.getSession().useStreamForLobBinding() ) {
 						st.setBlob(
 								index,
-								javaTypeDescriptor.unwrap( value, InputStream.class, executionContext.getSession() )
+								javaTypeDescriptor.unwrap( value, BinaryStream.class, executionContext.getSession() ).getInputStream()
 						);
 					}
 					else {

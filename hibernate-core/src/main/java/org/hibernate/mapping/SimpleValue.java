@@ -617,7 +617,7 @@ public class SimpleValue implements KeyValue {
 			}
 		}
 		if ( isNationalized() ) {
-			jdbcTypeCode = NationalizedTypeMappings.INSTANCE.getCorrespondingNationalizedCode( jdbcTypeCode );
+			jdbcTypeCode = NationalizedTypeMappings.toNationalizedTypeCode( jdbcTypeCode );
 		}
 
 		// find the standard SqlTypeDescriptor for that JDBC type code (allow itr to be remapped if needed!)

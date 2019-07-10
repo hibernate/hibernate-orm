@@ -12,7 +12,6 @@ import java.sql.Types;
 import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -33,6 +32,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -368,7 +368,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+	public SqmMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		return new LocalTemporaryTableBulkIdStrategy(

@@ -13,8 +13,6 @@ import org.hibernate.Incubating;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -30,13 +28,9 @@ import org.hibernate.query.spi.QueryParameterImplementor;
  */
 @Incubating
 public class QueryParameterBindingsImpl implements QueryParameterBindings {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( QueryParameterBindingsImpl.class );
-
 	private final SessionFactoryImplementor sessionFactory;
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final boolean queryParametersValidationEnabled;
-
-	private final int jdbcStyleOrdinalCountBase;
 
 	private Map<QueryParameter, QueryParameterBinding> parameterBindingMap;
 
@@ -84,8 +78,6 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		this.queryParametersValidationEnabled = queryParametersValidationEnabled;
 
 		this.parameterBindingMap = CollectionHelper.concurrentMap( parameterMetadata.getParameterCount() );
-
-		this.jdbcStyleOrdinalCountBase = sessionFactory.getSessionFactoryOptions().jdbcStyleParamsZeroBased() ? 0 : 1;
 	}
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
@@ -106,6 +98,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public boolean isBound(QueryParameterImplementor parameter) {
+		//noinspection unchecked
 		return getBinding( parameter ).isBound();
 	}
 
@@ -127,6 +120,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			binding = makeBinding( parameter );
 		}
 
+		//noinspection unchecked
 		return binding;
 	}
 
@@ -173,6 +167,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	public void visitBindings(BiConsumer action) {
 		parameterMetadata.visitRegistrations(
 				queryParameterImplementor -> {
+					//noinspection unchecked
 					action.accept( queryParameterImplementor, parameterBindingMap.get( queryParameterImplementor ) );
 				}
 		);

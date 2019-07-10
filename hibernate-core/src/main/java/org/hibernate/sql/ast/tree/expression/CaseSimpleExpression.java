@@ -24,7 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class CaseSimpleExpression implements Expression, Selectable, SqlExpressable, DomainResultProducer {
+public class CaseSimpleExpression implements Expression, /*Selectable,*/ SqlExpressable, DomainResultProducer {
 	private final SqlExpressableType type;
 	private final Expression fixture;
 

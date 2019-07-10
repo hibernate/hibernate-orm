@@ -24,6 +24,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.transform.ResultTransformer;
@@ -290,7 +291,10 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 		 */
 		RootReturn setLockMode(LockMode lockMode);
 
-		RootReturn addIdColumnAliases(String... aliases);
+		default RootReturn addIdColumnAliases(String... aliases){
+			throw new NotYetImplementedFor6Exception( getClass() );
+
+		}
 
 		/**
 		 * Name the column alias that identifies the entity's discriminator.

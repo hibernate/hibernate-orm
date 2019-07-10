@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.ParameterMetadata;
@@ -68,6 +69,11 @@ public class SqmCriteriaParameter<T>
 	@Override
 	public void disallowMultiValuedBinding() {
 		allowMultiValuedBinding = false;
+	}
+
+	@Override
+	public void applyAnticipatedType(AllowableParameterType type) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

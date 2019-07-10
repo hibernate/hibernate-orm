@@ -30,10 +30,10 @@ public class EmptyScrollableResults implements ScrollableResultsImplementor {
 		return true;
 	}
 
-	@Override
-	public int getNumberOfTypes() {
-		return 0;
-	}
+//	@Override
+//	public int getNumberOfTypes() {
+//		return 0;
+//	}
 
 	@Override
 	public void close() {
@@ -100,108 +100,108 @@ public class EmptyScrollableResults implements ScrollableResultsImplementor {
 		return new Object[0];
 	}
 
-	@Override
-	public Object get(int i) {
-		return null;
-	}
-
-	@Override
-	public Type getType(int i) {
-		return null;
-	}
-
-	@Override
-	public Integer getInteger(int col) {
-		return null;
-	}
-
-	@Override
-	public Long getLong(int col) {
-		return null;
-	}
-
-	@Override
-	public Float getFloat(int col) {
-		return null;
-	}
-
-	@Override
-	public Boolean getBoolean(int col) {
-		return null;
-	}
-
-	@Override
-	public Double getDouble(int col) {
-		return null;
-	}
-
-	@Override
-	public Short getShort(int col) {
-		return null;
-	}
-
-	@Override
-	public Byte getByte(int col) {
-		return null;
-	}
-
-	@Override
-	public Character getCharacter(int col) {
-		return null;
-	}
-
-	@Override
-	public byte[] getBinary(int col) {
-		return new byte[0];
-	}
-
-	@Override
-	public String getText(int col) {
-		return null;
-	}
-
-	@Override
-	public Blob getBlob(int col) {
-		return null;
-	}
-
-	@Override
-	public Clob getClob(int col) {
-		return null;
-	}
-
-	@Override
-	public String getString(int col) {
-		return null;
-	}
-
-	@Override
-	public BigDecimal getBigDecimal(int col) {
-		return null;
-	}
-
-	@Override
-	public BigInteger getBigInteger(int col) {
-		return null;
-	}
-
-	@Override
-	public Date getDate(int col) {
-		return null;
-	}
-
-	@Override
-	public Locale getLocale(int col) {
-		return null;
-	}
-
-	@Override
-	public Calendar getCalendar(int col) {
-		return null;
-	}
-
-	@Override
-	public TimeZone getTimeZone(int col) {
-		return null;
-	}
+//	@Override
+//	public Object get(int i) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Type getType(int i) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Integer getInteger(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Long getLong(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Float getFloat(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Boolean getBoolean(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Double getDouble(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Short getShort(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Byte getByte(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Character getCharacter(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public byte[] getBinary(int col) {
+//		return new byte[0];
+//	}
+//
+//	@Override
+//	public String getText(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Blob getBlob(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Clob getClob(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public String getString(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public BigDecimal getBigDecimal(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public BigInteger getBigInteger(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Date getDate(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Locale getLocale(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public Calendar getCalendar(int col) {
+//		return null;
+//	}
+//
+//	@Override
+//	public TimeZone getTimeZone(int col) {
+//		return null;
+//	}
 }

@@ -32,6 +32,7 @@ import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.hql.SemanticQueryProducer;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -116,11 +117,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public Interceptor getInterceptor() {
 		return delegate.getInterceptor();
-	}
-
-	@Override
-	public SemanticQueryProducer getSemanticQueryProducer() {
-		return delegate.getSemanticQueryProducer();
 	}
 
 	@Override
@@ -395,6 +391,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public SemanticQueryProducer getHqlTranslator() {
+		return delegate.getHqlTranslator();
+	}
+
+	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
 	}
@@ -407,11 +408,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return delegate.getCriteriaLiteralHandlingMode();
-	}
-
-	@Override
-	public boolean jdbcStyleParamsZeroBased() {
-		return delegate.jdbcStyleParamsZeroBased();
 	}
 
 	@Override
@@ -452,6 +448,21 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isEnhancementAsProxyEnabled() {
 		return delegate.isEnhancementAsProxyEnabled();
+	}
+
+	@Override
+	public boolean isUseOfJdbcNamedParametersEnabled() {
+		return delegate().isUseOfJdbcNamedParametersEnabled();
+	}
+
+	@Override
+	public Integer getNonJpaNativeQueryOrdinalParameterBase() {
+		return delegate().getNonJpaNativeQueryOrdinalParameterBase();
+	}
+
+	@Override
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return delegate().getSqmFunctionRegistry();
 	}
 
 	@Override

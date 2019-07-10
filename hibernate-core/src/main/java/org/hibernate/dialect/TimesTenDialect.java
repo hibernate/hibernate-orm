@@ -24,6 +24,7 @@ import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.sql.JoinFragment;
@@ -217,7 +218,7 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+	public SqmMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		return new GlobalTemporaryTableBulkIdStrategy(

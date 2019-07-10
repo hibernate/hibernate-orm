@@ -297,9 +297,7 @@ public class SQLQueryParser {
 		private List<ParameterBinder> paramValueBinders;
 
 		public ParameterSubstitutionRecognizer(SessionFactoryImplementor factory) {
-			this.jdbcPositionalParamCount = factory.getSessionFactoryOptions().jdbcStyleParamsZeroBased()
-					? 0
-					: 1;
+			this.jdbcPositionalParamCount = 1;
 		}
 
 		@Override

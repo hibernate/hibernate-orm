@@ -205,9 +205,9 @@ public class SqmMutationStrategyHelper {
 	 */
 	@SuppressWarnings("WeakerAccess")
 	public static boolean isNonIdentifierReference(SqmExpression expression) {
-		if ( expression instanceof SqmNavigableReference ) {
-			return ! EntityIdentifier.class.isInstance( expression );
-		}
+//		if ( expression instanceof SqmNavigableReference ) {
+//			return ! EntityIdentifier.class.isInstance( expression );
+//		}
 
 		return false;
 	}

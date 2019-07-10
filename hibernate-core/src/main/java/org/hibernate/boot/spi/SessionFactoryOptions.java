@@ -317,6 +317,8 @@ public interface SessionFactoryOptions {
 		return false;
 	}
 
+	SqmFunctionRegistry getSqmFunctionRegistry();
+
 	/**
 	 * See {@link org.hibernate.cfg.AvailableSettings#NATIVE_QUERY_ORDINAL_PARAMETER_BASE} and
 	 * {@link org.hibernate.boot.SessionFactoryBuilder#applyNonJpaNativeQueryOrdinalParameterBase(Integer)} for details.

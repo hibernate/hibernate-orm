@@ -626,11 +626,11 @@ public class QuerySplitter {
 			);
 		}
 
-		@Override
-		public SqmQuerySpecCreationProcessingState getCurrentQuerySpecProcessingState() {
-			// todo (6.0) : not sure these are needed
-			throw new NotYetImplementedFor6Exception(  );
-		}
+//		@Override
+//		public SqmQuerySpecCreationProcessingState getCurrentQuerySpecProcessingState() {
+//			// todo (6.0) : not sure these are needed
+//			throw new NotYetImplementedFor6Exception(  );
+//		}
 
 		@Override
 		public Stack<SqmCreationProcessingState> getProcessingStateStack() {
@@ -648,17 +648,17 @@ public class QuerySplitter {
 			return () -> false;
 		}
 
-		@Override
-		public String generateUniqueIdentifier() {
-			// todo (6.0) : not sure these are needed
-			throw new NotYetImplementedFor6Exception(  );
-		}
-
-		@Override
-		public ImplicitAliasGenerator getImplicitAliasGenerator() {
-			// todo (6.0) : not sure these are needed
-			throw new NotYetImplementedFor6Exception(  );
-		}
+//		@Override
+//		public String generateUniqueIdentifier() {
+//			// todo (6.0) : not sure these are needed
+//			throw new NotYetImplementedFor6Exception(  );
+//		}
+//
+//		@Override
+//		public ImplicitAliasGenerator getImplicitAliasGenerator() {
+//			// todo (6.0) : not sure these are needed
+//			throw new NotYetImplementedFor6Exception(  );
+//		}
 	}
 
 }

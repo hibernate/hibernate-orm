@@ -17,7 +17,6 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -44,6 +43,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
@@ -504,7 +504,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+	public SqmMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		// Hibernate uses this information for temporary tables that it uses for its own operations

@@ -27,12 +27,12 @@ public class NativeQueryInterpreterInitiator implements SessionFactoryServiceIni
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions,
 			ServiceRegistryImplementor registry) {
-		return new NativeQueryInterpreterStandardImpl( sessionFactory );
+		return new NativeQueryInterpreterStandardImpl();
 	}
 
 	@Override
 	public NativeQueryInterpreter initiateService(SessionFactoryServiceInitiatorContext context) {
-		return new NativeQueryInterpreterStandardImpl( context.getSessionFactory() );
+		return new NativeQueryInterpreterStandardImpl();
 	}
 
 	@Override

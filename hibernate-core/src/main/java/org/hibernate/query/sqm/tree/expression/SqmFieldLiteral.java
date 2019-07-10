@@ -6,14 +6,15 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.QueryException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -30,19 +31,41 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, SemanticPathPart {
 	private final T value;
-	private final JavaTypeDescriptor<T> fieldOwnerJavaTypeDescriptor;
+	private final JavaTypeDescriptor<T> fieldJavaTypeDescriptor;
 	private final String fieldName;
 	private final NodeBuilder nodeBuilder;
 
 	private SqmExpressable<T> expressable;
 
 	public SqmFieldLiteral(
+			Field field,
+			JavaTypeDescriptor<T> fieldJavaTypeDescriptor,
+			NodeBuilder nodeBuilder){
+		this(
+				extractValue( field ),
+				fieldJavaTypeDescriptor,
+				field.getName(),
+				nodeBuilder
+		);
+	}
+
+	private static <T> T extractValue(Field field) {
+		try {
+			//noinspection unchecked
+			return (T) field.get( null );
+		}
+		catch (IllegalAccessException e) {
+			throw new QueryException( "Could not access Field value for SqmFieldLiteral", e );
+		}
+	}
+
+	public SqmFieldLiteral(
 			T value,
-			JavaTypeDescriptor<T> fieldOwnerJavaTypeDescriptor,
+			JavaTypeDescriptor<T> fieldJavaTypeDescriptor,
 			String fieldName,
 			NodeBuilder nodeBuilder) {
 		this.value = value;
-		this.fieldOwnerJavaTypeDescriptor = fieldOwnerJavaTypeDescriptor;
+		this.fieldJavaTypeDescriptor = fieldJavaTypeDescriptor;
 		this.fieldName = fieldName;
 		this.nodeBuilder = nodeBuilder;
 
@@ -53,8 +76,8 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 		return value;
 	}
 
-	public JavaTypeDescriptor<T> getFieldOwnerJavaTypeDescriptor() {
-		return fieldOwnerJavaTypeDescriptor;
+	public JavaTypeDescriptor<T> getFieldJavaTypeDescriptor() {
+		return fieldJavaTypeDescriptor;
 	}
 
 	public String getFieldName() {
@@ -79,7 +102,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	@Override
 	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
 		if ( expressable == this ) {
-			return fieldOwnerJavaTypeDescriptor;
+			return fieldJavaTypeDescriptor;
 		}
 
 		return expressable.getExpressableJavaTypeDescriptor();
@@ -185,7 +208,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldOwnerJavaTypeDescriptor.getJavaType().getName(),
+						fieldJavaTypeDescriptor.getJavaType().getName(),
 						fieldName
 				)
 		);
@@ -200,7 +223,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldOwnerJavaTypeDescriptor.getJavaType().getName(),
+						fieldJavaTypeDescriptor.getJavaType().getName(),
 						fieldName
 				)
 		);

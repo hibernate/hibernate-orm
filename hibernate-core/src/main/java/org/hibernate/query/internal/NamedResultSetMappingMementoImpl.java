@@ -6,10 +6,21 @@
  */
 package org.hibernate.query.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.spi.ResultSetMapping;
 
 /**
  * @author Steve Ebersole
  */
 public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMemento {
+	@Override
+	public String getName() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public ResultSetMapping toResultSetMapping() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 }

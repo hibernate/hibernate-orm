@@ -6,13 +6,12 @@
  */
 package org.hibernate.engine.query.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
-import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.loader.custom.sql.SQLCustomQuery;
 import org.hibernate.query.sql.internal.ParameterParser;
+import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
+import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 /**
@@ -30,16 +29,18 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 	}
 
 	@Override
-	public NativeSQLQueryPlan createQueryPlan(
-			NativeSQLQuerySpecification specification,
+	public <R> NativeSelectQueryPlan<R> createQueryPlan(
+			NativeSelectQueryDefinition<R> queryDefinition,
 			SessionFactoryImplementor sessionFactory) {
-		CustomQuery customQuery = new SQLCustomQuery(
-				specification.getQueryString(),
-				specification.getQueryReturns(),
-				specification.getQuerySpaces(),
-				sessionFactory
-		);
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-		return new NativeSQLQueryPlan( specification.getQueryString(), customQuery );
+//		CustomQuery customQuery = new SQLCustomQuery(
+//				specification.getQueryString(),
+//				specification.getQueryReturns(),
+//				specification.getQuerySpaces(),
+//				sessionFactory
+//		);
+//
+//		return new NativeSQLQueryPlan( specification.getQueryString(), customQuery );
 	}
 }

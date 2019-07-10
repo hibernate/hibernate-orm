@@ -24,6 +24,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
@@ -587,9 +588,10 @@ public class DerbyDialect extends DB2Dialect {
 	 * see HHH-10238.
 	 * </p>
 	 * @return
+	 * @param runtimeRootEntityDescriptor
 	 */
 	@Override
-	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+	public SqmMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 //		return new LocalTemporaryTableBulkIdStrategy(new IdTableSupportStandardImpl() {
 //			@Override

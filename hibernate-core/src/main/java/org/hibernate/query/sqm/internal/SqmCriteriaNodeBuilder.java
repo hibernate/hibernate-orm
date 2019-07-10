@@ -1081,28 +1081,32 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	@Override
 	public SqmFunction<Date> currentDate() {
 		//noinspection unchecked
-		return getFunctionTemplate("current_date").makeSqmFunctionExpression(
-				StandardBasicTypes.DATE,
-				queryEngine
-		);
+//		return getFunctionTemplate("current_date").makeSqmFunctionExpression(
+//				StandardBasicTypes.DATE,
+//				queryEngine
+//		);
+
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public SqmFunction<Timestamp> currentTimestamp() {
 		//noinspection unchecked
-		return getFunctionTemplate("current_timestamp").makeSqmFunctionExpression(
-				StandardBasicTypes.TIMESTAMP,
-				queryEngine
-		);
+//		return getFunctionTemplate("current_timestamp").makeSqmFunctionExpression(
+//				StandardBasicTypes.TIMESTAMP,
+//				queryEngine
+//		);
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public SqmFunction<Time> currentTime() {
 		//noinspection unchecked
-		return getFunctionTemplate("current_time").makeSqmFunctionExpression(
-				StandardBasicTypes.TIME,
-				queryEngine
-		);
+//		return getFunctionTemplate("current_time").makeSqmFunctionExpression(
+//				StandardBasicTypes.TIME,
+//				queryEngine
+//		);
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

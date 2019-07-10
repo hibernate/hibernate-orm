@@ -9,6 +9,7 @@ package org.hibernate.boot.registry.selector.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -403,21 +404,22 @@ public class StrategySelectorBuilder {
 	}
 
 	private void addMultiTableBulkIdStrategies(StrategySelectorImpl strategySelector) {
-		strategySelector.registerStrategyImplementor(
-				MultiTableBulkIdStrategy.class,
-				PersistentTableBulkIdStrategy.SHORT_NAME,
-				PersistentTableBulkIdStrategy.class
-		);
-		strategySelector.registerStrategyImplementor(
-				MultiTableBulkIdStrategy.class,
-				GlobalTemporaryTableBulkIdStrategy.SHORT_NAME,
-				GlobalTemporaryTableBulkIdStrategy.class
-		);
-		strategySelector.registerStrategyImplementor(
-				MultiTableBulkIdStrategy.class,
-				LocalTemporaryTableBulkIdStrategy.SHORT_NAME,
-				LocalTemporaryTableBulkIdStrategy.class
-		);
+//		strategySelector.registerStrategyImplementor(
+//				MultiTableBulkIdStrategy.class,
+//				PersistentTableBulkIdStrategy.SHORT_NAME,
+//				PersistentTableBulkIdStrategy.class
+//		);
+//		strategySelector.registerStrategyImplementor(
+//				MultiTableBulkIdStrategy.class,
+//				GlobalTemporaryTableBulkIdStrategy.SHORT_NAME,
+//				GlobalTemporaryTableBulkIdStrategy.class
+//		);
+//		strategySelector.registerStrategyImplementor(
+//				MultiTableBulkIdStrategy.class,
+//				LocalTemporaryTableBulkIdStrategy.SHORT_NAME,
+//				LocalTemporaryTableBulkIdStrategy.class
+//		);
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	private void addImplicitNamingStrategies(StrategySelectorImpl strategySelector) {

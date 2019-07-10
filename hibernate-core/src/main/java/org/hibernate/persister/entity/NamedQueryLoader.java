@@ -41,9 +41,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 		super();
 		this.queryName = queryName;
 		this.persister = persister;
-		this.position = persister.getFactory().getSessionFactoryOptions().jdbcStyleParamsZeroBased()
-				? 0
-				: 1;
+		this.position = 1;
 	}
 
 	@Override
@@ -63,7 +61,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 
 		final AbstractProducedQuery query = (AbstractProducedQuery) session.getNamedQuery( queryName );
 		if ( query.getParameterMetadata().hasNamedParameters() ) {
-			query.setParameter( query.getNamedParameters()[0], id, persister.getIdentifierType() );
+			query.setParameter( query.getParameterMetadata().getNamedParameterNames().iterator().next(), id, persister.getIdentifierType() );
 		}
 		else {
 			query.setParameter( position, id, persister.getIdentifierType() );
@@ -72,7 +70,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 		query.setOptionalId( id );
 		query.setOptionalEntityName( persister.getEntityName() );
 		query.setOptionalObject( optionalObject );
-		query.setFlushMode( FlushMode.MANUAL );
+		query.setHibernateFlushMode( FlushMode.MANUAL );
 		query.list();
 
 		// now look up the object we are really interested in!

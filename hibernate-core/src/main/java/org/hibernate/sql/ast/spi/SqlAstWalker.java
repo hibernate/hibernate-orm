@@ -86,7 +86,7 @@ public interface SqlAstWalker {
 
 	void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression);
 
-	void visitGenericParameter(GenericParameter parameter);
+//	void visitGenericParameter(GenericParameter parameter);
 
 	void visitQueryLiteral(QueryLiteral queryLiteral);
 

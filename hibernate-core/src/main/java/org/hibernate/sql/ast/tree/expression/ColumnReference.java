@@ -10,6 +10,7 @@ package org.hibernate.sql.ast.tree.expression;
 import java.util.Locale;
 import java.util.Objects;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.persister.SqlExpressableType;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
@@ -52,8 +53,9 @@ public class ColumnReference implements Expression {
 //	}
 
 	public ColumnReference(Identifier columnName, SqlExpressableType sqlExpressableType) {
-		this.columnName = columnName;
-		this.sqlExpressableType = sqlExpressableType;
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		this.columnName = columnName;
+//		this.sqlExpressableType = sqlExpressableType;
 //		this.sqlFragment = renderSqlFragment( null, columnName );
 	}
 

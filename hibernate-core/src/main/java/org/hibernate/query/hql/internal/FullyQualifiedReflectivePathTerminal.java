@@ -24,9 +24,12 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -90,13 +93,26 @@ public class FullyQualifiedReflectivePathTerminal
 				final Class namedClass = cls.classForName( parentFullPath );
 				if ( namedClass != null ) {
 					if ( namedClass.isEnum() ) {
-						return semanticQueryWalker.visitFullyQualifiedEnum(
-								Enum.valueOf( namedClass, getLocalName() )
+						return new SqmEnumLiteral(
+								Enum.valueOf( namedClass, getLocalName() ),
+								(EnumJavaTypeDescriptor) creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeDescriptorRegistry().resolveDescriptor(
+										namedClass,
+										() -> new EnumJavaTypeDescriptor( namedClass )
+								),
+								getLocalName(),
+								nodeBuilder()
 						);
 					}
 					else {
 						final Field field = namedClass.getField( getLocalName() );
-						return semanticQueryWalker.visitFullyQualifiedField( field );
+						return new SqmFieldLiteral(
+								field,
+								creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeDescriptorRegistry().resolveDescriptor(
+										namedClass,
+										() -> new EnumJavaTypeDescriptor( namedClass )
+								),
+								nodeBuilder()
+						);
 					}
 				}
 			}

@@ -31,11 +31,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilderImplementor<T exten
 	}
 
 	@Override
-	public void enableJdbcStyleParamsZeroBased() {
-		delegate().enableJdbcStyleParamsZeroBased();
-	}
-
-	@Override
 	public SessionFactoryOptions buildSessionFactoryOptions() {
 		return delegate().buildSessionFactoryOptions();
 	}

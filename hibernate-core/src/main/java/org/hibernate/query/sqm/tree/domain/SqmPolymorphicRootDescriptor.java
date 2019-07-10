@@ -23,7 +23,6 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.DomainType;

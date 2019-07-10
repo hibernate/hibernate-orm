@@ -36,6 +36,10 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 	private final int jdbcStyleOrdinalCountBase;
 	private int jdbcStyleOrdinalCount;
 
+	public ParamLocationRecognizer() {
+		this( 1 );
+	}
+
 	public ParamLocationRecognizer(int jdbcStyleOrdinalCountBase) {
 		this.jdbcStyleOrdinalCountBase = jdbcStyleOrdinalCountBase;
 		this.jdbcStyleOrdinalCount = jdbcStyleOrdinalCountBase;
@@ -44,17 +48,11 @@ public class ParamLocationRecognizer implements ParameterRecognizer {
 	/**
 	 * Convenience method for creating a param location recognizer and
 	 * initiating the parse.
-	 *
-	 * @param query The query to be parsed for parameter locations.
-	 * @param sessionFactory
-	 * @return The generated recognizer, with journaled location info.
 	 */
 	public static ParamLocationRecognizer parseLocations(
 			String query,
 			SessionFactoryImplementor sessionFactory) {
-		final ParamLocationRecognizer recognizer = new ParamLocationRecognizer(
-				sessionFactory.getSessionFactoryOptions().jdbcStyleParamsZeroBased() ? 0 : 1
-		);
+		final ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 1 );
 		ParameterParser.parse( query, recognizer );
 		return recognizer;
 	}

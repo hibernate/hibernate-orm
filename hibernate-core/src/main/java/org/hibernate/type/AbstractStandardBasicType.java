@@ -377,10 +377,10 @@ public abstract class AbstractStandardBasicType<T>
 		return true;
 	}
 
-	@Override
-	public ValueExtractor<T> getValueExtractor() {
-		return getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() );
-	}
+//	@Override
+//	public ValueExtractor<T> getValueExtractor() {
+//		return getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() );
+//	}
 
 	@Override
 	public T extract(CallableStatement statement, int startIndex, final SharedSessionContractImplementor session) throws SQLException {

@@ -364,23 +364,23 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 	}
 
-	@Override
-	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
-		queryParameters.validateParameters();
-		HQLQueryPlan plan = getQueryPlan( query, false );
-		boolean success = false;
-		int result = 0;
-		try {
-			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-		}
-		temporaryPersistenceContext.clear();
-		return result;
-	}
+//	@Override
+//	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
+//		checkOpen();
+//		queryParameters.validateParameters();
+//		HQLQueryPlan plan = getQueryPlan( query, false );
+//		boolean success = false;
+//		int result = 0;
+//		try {
+//			result = plan.performExecuteUpdate( queryParameters, this );
+//			success = true;
+//		}
+//		finally {
+//			afterOperation( success );
+//		}
+//		temporaryPersistenceContext.clear();
+//		return result;
+//	}
 
 	@Override
 	public CacheMode getCacheMode() {
@@ -488,23 +488,23 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	//TODO: COPY/PASTE FROM SessionImpl, pull up!
 
-	@Override
-	public List list(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
-		queryParameters.validateParameters();
-		HQLQueryPlan plan = getQueryPlan( query, false );
-		boolean success = false;
-		List results = Collections.EMPTY_LIST;
-		try {
-			results = plan.performList( queryParameters, this );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-		}
-		temporaryPersistenceContext.clear();
-		return results;
-	}
+//	@Override
+//	public List list(String query, QueryParameters queryParameters) throws HibernateException {
+//		checkOpen();
+//		queryParameters.validateParameters();
+//		HQLQueryPlan plan = getQueryPlan( query, false );
+//		boolean success = false;
+//		List results = Collections.EMPTY_LIST;
+//		try {
+//			results = plan.performList( queryParameters, this );
+//			success = true;
+//		}
+//		finally {
+//			afterOperation( success );
+//		}
+//		temporaryPersistenceContext.clear();
+//		return results;
+//	}
 
 	public void afterOperation(boolean success) {
 		if ( !isTransactionInProgress() ) {
@@ -539,12 +539,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return loader.scroll( queryParameters, this );
 	}
 
-	@Override
-	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
-		HQLQueryPlan plan = getQueryPlan( query, false );
-		return plan.performScroll( queryParameters, this );
-	}
+//	@Override
+//	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
+//		checkOpen();
+//		HQLQueryPlan plan = getQueryPlan( query, false );
+//		return plan.performScroll( queryParameters, this );
+//	}
 
 	@Override
 	public void afterScrollOperation() {
@@ -566,26 +566,26 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return temporaryPersistenceContext;
 	}
 
-	@Override
-	public int executeNativeUpdate(
-			NativeSQLQuerySpecification nativeSQLQuerySpecification,
-			QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
-		queryParameters.validateParameters();
-		NativeSQLQueryPlan plan = getNativeQueryPlan( nativeSQLQuerySpecification );
-
-		boolean success = false;
-		int result = 0;
-		try {
-			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-		}
-		temporaryPersistenceContext.clear();
-		return result;
-	}
+//	@Override
+//	public int executeNativeUpdate(
+//			NativeSQLQuerySpecification nativeSQLQuerySpecification,
+//			QueryParameters queryParameters) throws HibernateException {
+//		checkOpen();
+//		queryParameters.validateParameters();
+//		NativeSQLQueryPlan plan = getNativeQueryPlan( nativeSQLQuerySpecification );
+//
+//		boolean success = false;
+//		int result = 0;
+//		try {
+//			result = plan.performExecuteUpdate( queryParameters, this );
+//			success = true;
+//		}
+//		finally {
+//			afterOperation( success );
+//		}
+//		temporaryPersistenceContext.clear();
+//		return result;
+//	}
 
 	@Override
 	public void afterTransactionBegin() {

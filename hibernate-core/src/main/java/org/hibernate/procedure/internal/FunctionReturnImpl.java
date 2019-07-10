@@ -10,6 +10,7 @@ package org.hibernate.procedure.internal;
 import java.sql.Types;
 import javax.persistence.ParameterMode;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -42,30 +43,30 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	}
 
 
-	public JdbcCallFunctionReturn toJdbcFunctionReturn(SharedSessionContractImplementor persistenceContext) {
-		final AllowableParameterType ormType;
-		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
-		final JdbcCallParameterExtractorImpl parameterExtractor;
-
-		if ( getJdbcTypeCode() == Types.REF_CURSOR ) {
-			refCursorExtractor = new JdbcCallRefCursorExtractorImpl( null, 0 );
-			ormType = null;
-			parameterExtractor = null;
-		}
-		else {
-
-			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getMetamodel().getTypeConfiguration();
-			final SqlTypeDescriptor sqlTypeDescriptor = typeConfiguration.getSqlTypeDescriptorRegistry()
-					.getDescriptor( getJdbcTypeCode() );
-			final JavaTypeDescriptor javaTypeMapping = sqlTypeDescriptor
-					.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
-			ormType = typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaType() );
-			parameterExtractor = new JdbcCallParameterExtractorImpl( procedureCall.getProcedureName(), null, 0, ormType );
-			refCursorExtractor = null;
-		}
-
-		return new JdbcCallFunctionReturnImpl( getJdbcTypeCode(), ormType, parameterExtractor, refCursorExtractor );
-	}
+//	public JdbcCallFunctionReturn toJdbcFunctionReturn(SharedSessionContractImplementor persistenceContext) {
+//		final AllowableParameterType ormType;
+//		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
+//		final JdbcCallParameterExtractorImpl parameterExtractor;
+//
+//		if ( getJdbcTypeCode() == Types.REF_CURSOR ) {
+//			refCursorExtractor = new JdbcCallRefCursorExtractorImpl( null, 0 );
+//			ormType = null;
+//			parameterExtractor = null;
+//		}
+//		else {
+//
+//			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getMetamodel().getTypeConfiguration();
+//			final SqlTypeDescriptor sqlTypeDescriptor = typeConfiguration.getSqlTypeDescriptorRegistry()
+//					.getDescriptor( getJdbcTypeCode() );
+//			final JavaTypeDescriptor javaTypeMapping = sqlTypeDescriptor
+//					.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+//			ormType = typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaType() );
+//			parameterExtractor = new JdbcCallParameterExtractorImpl( procedureCall.getProcedureName(), null, 0, ormType );
+//			refCursorExtractor = null;
+//		}
+//
+//		return new JdbcCallFunctionReturnImpl( getJdbcTypeCode(), ormType, parameterExtractor, refCursorExtractor );
+//	}
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -94,12 +95,19 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 
 	@Override
 	public Class getParameterType() {
-		return ormType == null ? null : ormType.getJavaType();
+
+//		return ormType == null ? null : ormType.getJavaType();
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void disallowMultiValuedBinding() {
 		// no-op
+	}
+
+	@Override
+	public void applyAnticipatedType(AllowableParameterType type) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

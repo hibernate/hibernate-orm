@@ -10,6 +10,7 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -74,24 +75,26 @@ public class StandardFunctionReturnTypeResolvers {
 	private static boolean areCompatible(
 			AllowableFunctionReturnType<?> defined,
 			AllowableFunctionReturnType<?> implied) {
-		if ( defined == null || defined.getSqlExpressableType() == null ) {
-			return true;
-		}
+		throw new NotYetImplementedFor6Exception( StandardFunctionReturnTypeResolvers.class );
 
-		if ( implied == null || implied.getSqlExpressableType() == null ) {
-			return false;
-		}
-
-		//This list of cases defines legal promotions from a SQL function return
-		//type specified in the function template (i.e. in the Dialect) and a type
-		//that is determined by how the function is used in the HQL query. In essence
-		//the types are compatible if the map to the same JDBC type, of if they are
-		//both numeric types.
-		int impliedTypeCode = implied.getSqlExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
-		int definedTypeCode = defined.getSqlExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
-		return impliedTypeCode == definedTypeCode
-			|| isInteger(impliedTypeCode) && isInteger(definedTypeCode)
-			|| isFloat(impliedTypeCode) && isFloat(definedTypeCode);
+//		if ( defined == null || defined.getSqlExpressableType() == null ) {
+//			return true;
+//		}
+//
+//		if ( implied == null || implied.getSqlExpressableType() == null ) {
+//			return false;
+//		}
+//
+//		//This list of cases defines legal promotions from a SQL function return
+//		//type specified in the function template (i.e. in the Dialect) and a type
+//		//that is determined by how the function is used in the HQL query. In essence
+//		//the types are compatible if the map to the same JDBC type, of if they are
+//		//both numeric types.
+//		int impliedTypeCode = implied.getSqlExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
+//		int definedTypeCode = defined.getSqlExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
+//		return impliedTypeCode == definedTypeCode
+//			|| isInteger(impliedTypeCode) && isInteger(definedTypeCode)
+//			|| isFloat(impliedTypeCode) && isFloat(definedTypeCode);
 	}
 
 	private static boolean isInteger(int type) {

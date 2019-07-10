@@ -46,14 +46,9 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			ordinalParameterBase = 1;
 		}
 		else {
-			final Integer configuredBase = factory.getSessionFactoryOptions().getNonJpaNativeQueryOrdinalParameterBase();
-			ordinalParameterBase = configuredBase == null
-					? 1
-					: configuredBase;
+			ordinalParameterBase = 1;
 		}
-		assert ordinalParameterBase == 0 || ordinalParameterBase == 1;
-
-		ordinalParameterImplicitPosition = ordinalParameterBase;
+		ordinalParameterImplicitPosition = 1;
 	}
 
 	@Override

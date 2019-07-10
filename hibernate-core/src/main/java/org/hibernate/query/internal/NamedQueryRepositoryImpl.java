@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.SemanticQueryProducer;
@@ -155,35 +156,36 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 		// Check native-sql queries
 		log.debugf( "Checking %s named SQL queries", sqlMementoMap.size() );
 		for ( NamedNativeQueryMemento memento : sqlMementoMap.values() ) {
-			// this will throw an error if there's something wrong.
-			try {
-				log.debugf( "Checking named SQL query: %s", memento.getRegistrationName() );
-				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
-				// currently not doable though because of the resultset-ref stuff...
-				NativeSQLQuerySpecification spec;
-				if ( memento.getResultSetMappingName() != null ) {
-					NamedResultSetMappingMemento resultSetMappingMemento = getResultSetMappingMemento( memento.getResultSetMappingName() );
-					if ( resultSetMappingMemento == null ) {
-						throw new MappingException( "Unable to find resultset-ref resultSetMappingMemento: " + memento.getResultSetMappingName() );
-					}
-					spec = new NativeSQLQuerySpecification(
-							namedSQLQueryDefinition.getQueryString(),
-							resultSetMappingMemento.getQueryReturns(),
-							namedSQLQueryDefinition.getQuerySpaces()
-					);
-				}
-				else {
-					spec =  new NativeSQLQuerySpecification(
-							namedSQLQueryDefinition.getQueryString(),
-							namedSQLQueryDefinition.getQueryReturns(),
-							namedSQLQueryDefinition.getQuerySpaces()
-					);
-				}
-				queryEngine.getNativeSQLQueryPlan( spec );
-			}
-			catch ( HibernateException e ) {
-				errors.put( namedSQLQueryDefinition.getName(), e );
-			}
+//			// this will throw an error if there's something wrong.
+//			try {
+//				log.debugf( "Checking named SQL query: %s", memento.getRegistrationName() );
+//				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
+//				// currently not doable though because of the resultset-ref stuff...
+//				NativeSQLQuerySpecification spec;
+//				if ( memento.getResultSetMappingName() != null ) {
+//					NamedResultSetMappingMemento resultSetMappingMemento = getResultSetMappingMemento( memento.getResultSetMappingName() );
+//					if ( resultSetMappingMemento == null ) {
+//						throw new MappingException( "Unable to find resultset-ref resultSetMappingMemento: " + memento.getResultSetMappingName() );
+//					}
+//					spec = new NativeSQLQuerySpecification(
+//							namedSQLQueryDefinition.getQueryString(),
+//							resultSetMappingMemento.getQueryReturns(),
+//							namedSQLQueryDefinition.getQuerySpaces()
+//					);
+//				}
+//				else {
+//					spec =  new NativeSQLQuerySpecification(
+//							namedSQLQueryDefinition.getQueryString(),
+//							namedSQLQueryDefinition.getQueryReturns(),
+//							namedSQLQueryDefinition.getQuerySpaces()
+//					);
+//				}
+//				queryEngine.getNativeSQLQueryPlan( spec );
+//			}
+//			catch ( HibernateException e ) {
+//				errors.put( namedSQLQueryDefinition.getName(), e );
+//			}
+		throw new NotYetImplementedFor6Exception( getClass() );
 		}
 
 		return errors;

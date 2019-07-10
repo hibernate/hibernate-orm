@@ -237,7 +237,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		}
 
 		@SuppressWarnings("UnnecessaryUnboxing")
-		public ParameterMemento toMemento(SessionFactoryImpl sessionFactory) {
+		public ParameterMemento toMemento(SessionFactoryImplementor sessionFactory) {
 			final boolean initialPassNullSetting = explicitPassNullSetting != null
 					? explicitPassNullSetting.booleanValue()
 					: sessionFactory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();

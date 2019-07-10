@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.produce.internal;
 
-import java.lang.reflect.Field;
 import java.util.Locale;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.QueryLogger;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -30,11 +30,13 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
-import org.hibernate.query.sqm.tree.expression.SqmEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
@@ -42,6 +44,7 @@ import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.function.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.function.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmStar;
 import org.hibernate.query.sqm.tree.expression.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -51,18 +54,18 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -78,7 +81,6 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 
 import org.jboss.logging.Logger;
 
@@ -847,21 +849,19 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitFullyQualifiedField(Field field) {
-		return null;
+	public Object visitEnumLiteral(SqmEnumLiteral sqmEnumLiteral) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
-	public Object visitFullyQualifiedEnum(Enum value) {
-		return null;
+	public Object visitFieldLiteral(SqmFieldLiteral sqmFieldLiteral) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public Object visitFullyQualifiedClass(Class namedClass) {
 		return null;
 	}
-
-
 
 	@Override
 	public Object visitRestrictedSubQueryExpression(SqmRestrictedSubQueryExpression sqmRestrictedSubQueryExpression) {

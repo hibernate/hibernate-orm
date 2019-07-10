@@ -262,7 +262,7 @@ public class AttributeFactory {
 
 					embeddableType = new EmbeddableTypeImpl<Y>(
 							javaTypeDescriptor,
-							context.getCriteriaBuilder()
+							context.getCriteriaBuilder().getDomainModel()
 					);
 
 					context.registerEmbeddableType( embeddableType );
@@ -272,7 +272,7 @@ public class AttributeFactory {
 				else {
 					embeddableType = new EmbeddableTypeImpl(
 							component.getRoleName(),
-							context.getCriteriaBuilder()
+							context.getCriteriaBuilder().getDomainModel()
 					);
 				}
 

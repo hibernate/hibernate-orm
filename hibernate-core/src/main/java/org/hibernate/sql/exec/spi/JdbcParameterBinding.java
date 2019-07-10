@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+
 import org.hibernate.persister.SqlExpressableType;
 
 /**

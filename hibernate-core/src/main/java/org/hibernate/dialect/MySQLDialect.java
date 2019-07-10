@@ -17,7 +17,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -34,6 +33,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -343,7 +343,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+	public SqmMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		return new LocalTemporaryTableBulkIdStrategy(

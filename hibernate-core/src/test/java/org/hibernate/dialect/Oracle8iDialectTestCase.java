@@ -20,7 +20,8 @@ public class Oracle8iDialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9290")
 	public void testTemporaryTableNameTruncation() throws Exception {
-		final AbstractMultiTableBulkIdStrategyImpl strategy = (AbstractMultiTableBulkIdStrategyImpl) new Oracle8iDialect().getFallbackSqmMutationStrategy();
+		final AbstractMultiTableBulkIdStrategyImpl strategy = (AbstractMultiTableBulkIdStrategyImpl) new Oracle8iDialect().getFallbackSqmMutationStrategy(
+				runtimeRootEntityDescriptor );
 
 		String temporaryTableName = strategy.getIdTableSupport().generateIdTableName(
 				"TABLE_NAME_THAT_EXCEEDS_30_CHARACTERS"

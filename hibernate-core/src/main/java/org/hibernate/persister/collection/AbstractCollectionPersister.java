@@ -15,12 +15,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.boot.model.relational.Database;
@@ -30,6 +32,7 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StructuredCollectionCacheEntry;
 import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -63,6 +66,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -125,10 +129,10 @@ public abstract class AbstractCollectionPersister
 	private final String sqlWhereStringTemplate;
 
 	private final boolean hasOrder;
-	private final OrderByTranslation orderByTranslation;
+//	private final OrderByTranslation orderByTranslation;
 
 	private final boolean hasManyToManyOrder;
-	private final OrderByTranslation manyToManyOrderByTranslation;
+//	private final OrderByTranslation manyToManyOrderByTranslation;
 
 	private final int baseIndex;
 
@@ -563,16 +567,18 @@ public abstract class AbstractCollectionPersister
 		hasOrder = collectionBinding.getOrderBy() != null;
 		if ( hasOrder ) {
 			LOG.debugf( "Translating order-by fragment [%s] for collection role : %s",  collectionBinding.getOrderBy(), getRole() );
-			orderByTranslation = Template.translateOrderBy(
-					collectionBinding.getOrderBy(),
-					new ColumnMapperImpl(),
-					factory,
-					dialect,
-					factory.getSqlFunctionRegistry()
-			);
+//			orderByTranslation = Template.translateOrderBy(
+//					collectionBinding.getOrderBy(),
+//					new ColumnMapperImpl(),
+//					factory,
+//					dialect,
+//					factory.getSqlFunctionRegistry()
+//			);
+			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 		else {
-			orderByTranslation = null;
+//			orderByTranslation = null;
+
 		}
 
 		// Handle any filters applied to this collectionBinding
@@ -590,16 +596,17 @@ public abstract class AbstractCollectionPersister
 		hasManyToManyOrder = collectionBinding.getManyToManyOrdering() != null;
 		if ( hasManyToManyOrder ) {
 			LOG.debugf( "Translating many-to-many order-by fragment [%s] for collection role : %s",  collectionBinding.getOrderBy(), getRole() );
-			manyToManyOrderByTranslation = Template.translateOrderBy(
-					collectionBinding.getManyToManyOrdering(),
-					new ColumnMapperImpl(),
-					factory,
-					dialect,
-					factory.getSqlFunctionRegistry()
-			);
+//			manyToManyOrderByTranslation = Template.translateOrderBy(
+//					collectionBinding.getManyToManyOrdering(),
+//					new ColumnMapperImpl(),
+//					factory,
+//					dialect,
+//					factory.getSqlFunctionRegistry()
+//			);
+			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 		else {
-			manyToManyOrderByTranslation = null;
+//			manyToManyOrderByTranslation = null;
 		}
 
 		initCollectionPropertyMap();
@@ -780,16 +787,18 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String getSQLOrderByString(String alias) {
-		return hasOrdering()
-				? orderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
-				: "";
+//		return hasOrdering()
+//				? orderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
+//				: "";
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public String getManyToManyOrderByString(String alias) {
-		return hasManyToManyOrdering()
-				? manyToManyOrderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
-				: "";
+//		return hasManyToManyOrdering()
+//				? manyToManyOrderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
+//				: "";
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -1697,10 +1706,10 @@ public abstract class AbstractCollectionPersister
 		return elementPropertyMapping.toColumns( propertyName );
 	}
 
-	@Override
-	public Type getType() {
-		return elementPropertyMapping.getType(); // ==elementType ??
-	}
+//	@Override
+//	public Type getType() {
+//		return elementPropertyMapping.getType(); // ==elementType ??
+//	}
 
 	@Override
 	public String getName() {
@@ -2233,6 +2242,17 @@ public abstract class AbstractCollectionPersister
 				}
 
 				return new CompositeCollectionElementDefinition() {
+					@Override
+					public void visitValueMappings(Consumer consumer) {
+						throw new NotYetImplementedFor6Exception( getClass() );
+
+					}
+
+					@Override
+					public ValueMapping findValueMapping(String name) {
+						throw new NotYetImplementedFor6Exception( getClass() );
+					}
+
 					@Override
 					public String getName() {
 						return "";

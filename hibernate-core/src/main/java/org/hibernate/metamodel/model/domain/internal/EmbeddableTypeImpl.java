@@ -13,9 +13,8 @@ import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Standard Hibernate implementation of JPA's {@link javax.persistence.metamodel.EmbeddableType}
@@ -30,24 +29,21 @@ public class EmbeddableTypeImpl<J>
 
 	public EmbeddableTypeImpl(
 			JavaTypeDescriptor<J> javaTypeDescriptor,
-			NodeBuilder nodeBuilder,
-			TypeConfiguration typeConfiguration) {
-		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, typeConfiguration );
+			JpaMetamodel domainMetamodel) {
+		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, domainMetamodel );
 	}
 
 	public EmbeddableTypeImpl(
 			String name,
-			NodeBuilder nodeBuilder,
-			TypeConfiguration typeConfiguration) {
+			JpaMetamodel domainMetamodel) {
 		//noinspection unchecked
 		super(
 				name,
-				(JavaTypeDescriptor) nodeBuilder.getDomainModel()
-						.getTypeConfiguration()
+				(JavaTypeDescriptor) domainMetamodel.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( Map.class ),
 				null,
-				typeConfiguration
+				domainMetamodel
 		);
 	}
 

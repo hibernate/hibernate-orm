@@ -11,119 +11,111 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
-import org.hibernate.type.Type;
+import org.hibernate.sql.results.spi.RowReader;
 
 /**
  * Implementation of ScrollableResults which can handle collection fetches.
  *
  * @author Steve Ebersole
  */
-public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
-	private Object[] currentRow;
+public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
+	private R currentRow;
 	private int currentPosition;
 	private Integer maxPosition;
 
-	/**
-	 * Constructs a FetchingScrollableResultsImpl.
-	 *
-	 * @param rs The scrollable result set
-	 * @param ps The prepared statement used to obtain the result set
-	 * @param sess The originating session
-	 * @param loader The loader
-	 * @param queryParameters query parameters
-	 * @param types The result types
-	 * @param holderInstantiator Ugh
-	 */
 	public FetchingScrollableResultsImpl(
 			ResultSet rs,
 			PreparedStatement ps,
 			SharedSessionContractImplementor sess,
 			Loader loader,
 			QueryParameters queryParameters,
-			Type[] types,
-			HolderInstantiator holderInstantiator) {
-		super( rs, ps, sess, loader, queryParameters, types, holderInstantiator );
+			RowReader<R> rowReader) {
+		super( rs, ps, sess, loader, queryParameters, rowReader );
 	}
 
 	@Override
-	protected Object[] getCurrentRow() {
+	protected R getCurrentRow() {
 		return currentRow;
 	}
 
 	@Override
 	public boolean next() {
-		if ( maxPosition != null && maxPosition <= currentPosition ) {
-			currentRow = null;
-			currentPosition = maxPosition + 1;
-			return false;
-		}
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-		if ( isResultSetEmpty() ) {
-			currentRow = null;
-			currentPosition = 0;
-			return false;
-		}
-
-		final Object row = getLoader().loadSequentialRowsForward(
-				getResultSet(),
-				getSession(),
-				getQueryParameters(),
-				true
-		);
-
-
-		final boolean afterLast;
-		try {
-			afterLast = getResultSet().isAfterLast();
-		}
-		catch (SQLException e) {
-			throw getSession().getFactory().getSQLExceptionHelper().convert(
-					e,
-					"exception calling isAfterLast()"
-			);
-		}
-
-		currentPosition++;
-		currentRow = new Object[] {row};
-
-		if ( afterLast ) {
-			if ( maxPosition == null ) {
-				// we just hit the last position
-				maxPosition = currentPosition;
-			}
-		}
-
-		afterScrollOperation();
-
-		return true;
+//		if ( maxPosition != null && maxPosition <= currentPosition ) {
+//			currentRow = null;
+//			currentPosition = maxPosition + 1;
+//			return false;
+//		}
+//
+//		if ( isResultSetEmpty() ) {
+//			currentRow = null;
+//			currentPosition = 0;
+//			return false;
+//		}
+//
+//		final Object row = getLoader().loadSequentialRowsForward(
+//				getResultSet(),
+//				getSession(),
+//				getQueryParameters(),
+//				true
+//		);
+//
+//
+//		final boolean afterLast;
+//		try {
+//			afterLast = getResultSet().isAfterLast();
+//		}
+//		catch (SQLException e) {
+//			throw getSession().getFactory().getSQLExceptionHelper().convert(
+//					e,
+//					"exception calling isAfterLast()"
+//			);
+//		}
+//
+//		currentPosition++;
+//		currentRow = new Object[] {row};
+//
+//		if ( afterLast ) {
+//			if ( maxPosition == null ) {
+//				// we just hit the last position
+//				maxPosition = currentPosition;
+//			}
+//		}
+//
+//		afterScrollOperation();
+//
+//		return true;
 	}
 
 	@Override
 	public boolean previous() {
-		if ( currentPosition <= 1 ) {
-			currentPosition = 0;
-			currentRow = null;
-			return false;
-		}
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-		final Object loadResult = getLoader().loadSequentialRowsReverse(
-				getResultSet(),
-				getSession(),
-				getQueryParameters(),
-				false,
-				( maxPosition != null && currentPosition > maxPosition )
-		);
-
-		currentRow = new Object[] {loadResult};
-		currentPosition--;
-
-		afterScrollOperation();
-
-		return true;
+//		if ( currentPosition <= 1 ) {
+//			currentPosition = 0;
+//			currentRow = null;
+//			return false;
+//		}
+//
+//		final Object loadResult = getLoader().loadSequentialRowsReverse(
+//				getResultSet(),
+//				getSession(),
+//				getQueryParameters(),
+//				false,
+//				( maxPosition != null && currentPosition > maxPosition )
+//		);
+//
+//		currentRow = new Object[] {loadResult};
+//		currentPosition--;
+//
+//		afterScrollOperation();
+//
+//		return true;
 	}
 
 	@Override

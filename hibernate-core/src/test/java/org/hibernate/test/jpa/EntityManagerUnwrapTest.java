@@ -6,45 +6,55 @@
  */
 package org.hibernate.test.jpa;
 
+import javax.persistence.metamodel.Metamodel;
+
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * @author Chris Cranford
  */
 public class EntityManagerUnwrapTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
-	@TestForIssue(jiraKey = "HHH-13281")
-	public void testUnwrapEjbHibernateEntityManagerInterface() {
-		org.hibernate.ejb.HibernateEntityManager em = getOrCreateEntityManager().unwrap( org.hibernate.ejb.HibernateEntityManager.class );
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-13281")
-	public void testUnwrapJpaHibernateEntityManagerInterface() {
-		org.hibernate.jpa.HibernateEntityManager em = getOrCreateEntityManager().unwrap( org.hibernate.jpa.HibernateEntityManager.class );
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-13281")
-	public void testUnwrapSessionImplementor() {
-		SessionImplementor session = getOrCreateEntityManager().unwrap( SessionImplementor.class );
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-13281")
 	public void testUnwrapSession() {
-		Session session = getOrCreateEntityManager().unwrap( Session.class );
+		getOrCreateEntityManager().unwrap( Session.class );
+		getOrCreateEntityManager().unwrap( SessionImplementor.class );
+		getOrCreateEntityManager().unwrap( SharedSessionContractImplementor.class );
+
+		getOrCreateEntityManager().unwrap( PersistenceContext.class );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13281")
-	public void testUnwrapSharedSessionContractImplementor() {
-		SharedSessionContractImplementor session = getOrCreateEntityManager().unwrap( SharedSessionContractImplementor.class );
+	public void testUnwrapSessionFactory() {
+		entityManagerFactory().unwrap( SessionFactory.class );
+		entityManagerFactory().unwrap( SessionFactoryImplementor.class );
+
+		entityManagerFactory().unwrap( SessionFactoryServiceRegistry.class );
+		entityManagerFactory().unwrap( ServiceRegistry.class );
+
+		entityManagerFactory().unwrap( JdbcServices.class );
+
+		entityManagerFactory().unwrap( javax.persistence.Cache.class );
+		entityManagerFactory().unwrap( org.hibernate.Cache.class );
+
+		entityManagerFactory().unwrap( javax.persistence.metamodel.Metamodel.class );
+		entityManagerFactory().unwrap( Metamodel.class );
+		entityManagerFactory().unwrap( MetamodelImplementor.class );
+		entityManagerFactory().unwrap( DomainMetamodel.class );
+
+		entityManagerFactory().unwrap( QueryEngine.class );
 	}
 }

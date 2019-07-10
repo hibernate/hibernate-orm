@@ -13,7 +13,11 @@ import org.hibernate.query.Query;
 /**
  * Specialization of DomainType for types that can be used as {@link Query} parameter bind values
  *
- * todo (6.0) : extend Writeable (and therefore Readable too)?  or composition?
+ * todo (6.0) : extend Writeable?  or expose Writeable as "component"?
+ * 		i.e.
+ * 			````
+ * 				Writeable getWriteable();
+ * 			````
  *
  * @author Steve Ebersole
  */

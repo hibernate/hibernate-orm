@@ -270,7 +270,7 @@ Exists as a `Service` mainly so that integrations such as OGM can override it.
 
 ===== `CacheImplementor`
 
-`org.hibernate.engine.spi.CacheImplementor` provides a way to customize the way Hibernate interacts with the second-level caching implementation.
+`org.hibernate.cache.spi.CacheImplementor` provides a way to customize the way Hibernate interacts with the second-level caching implementation.
 
 [[services-custom]]
 === Custom Services

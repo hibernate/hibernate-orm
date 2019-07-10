@@ -20,7 +20,6 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.stat.NaturalIdCacheStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
@@ -31,7 +30,6 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * Test API and SPI expectation wrt region names - whether they expect the
@@ -135,36 +133,6 @@ public class RegionNameTest extends BaseNonConfigCoreFunctionalTestCase {
 
 //		sessionFactory().getCache().evictQueryRegions();
 	}
-
-	@Test
-	public void testLegacyCacheSpi() {
-		// these need to be the prefixed name
-		final String regionName = cachePrefix + '.' + localName;
-
-		final CacheImplementor cache = sessionFactory().getCache();
-
-		// just like stats, the cache for queries cannot be accessed second level cache regions map
-		assertEquals( 2, cache.getSecondLevelCacheRegionNames().length );
-
-		boolean foundRegion = false;
-		for ( String name : cache.getSecondLevelCacheRegionNames() ) {
-			if ( regionName.equals( name ) ) {
-				foundRegion = true;
-				break;
-			}
-		}
-		if ( !foundRegion ) {
-			fail( "Could not find region [" + regionName + "] in reported list of region names" );
-		}
-
-		final NavigableRole personEntityName = new NavigableRole( Person.class.getName() );
-		final NavigableRole nickNamesRole = personEntityName.append( "nickNames");
-
-		assert cache.getEntityRegionAccess( personEntityName ) != null;
-		assert cache.getNaturalIdCacheRegionAccessStrategy( personEntityName ) != null;
-		assert cache.getCollectionRegionAccess( nickNamesRole ) != null;
-	}
-
 
 
 	@Entity( name = "Person" )

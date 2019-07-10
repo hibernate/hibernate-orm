@@ -1259,28 +1259,10 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String QUERY_PLAN_CACHE_ENABLED = "hibernate.query.plan_cache_enabled";
 
 	/**
-	 * The maximum number of strong references maintained by {@link QueryInterpretationCache}. Default is 128.
-	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE}
-	 */
-	@Deprecated
-	String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
-
-	/**
-	 * The maximum number of soft references maintained by {@link QueryInterpretationCache}. Default is 2048.
-	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_MAX_SIZE}
-	 */
-	@Deprecated
-	String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
-
-	/**
-	 * The maximum number of entries including:
-	 * <ul>
-	 *     <li>{@link org.hibernate.engine.query.spi.HQLQueryPlan}</li>
-	 *     <li>{@link org.hibernate.engine.query.spi.FilterQueryPlan}</li>
-	 *     <li>{@link org.hibernate.engine.query.spi.NativeSQLQueryPlan}</li>
-	 * </ul>
+	 * The maximum number of entries in the Hibernate "Query Plan Cache".  The
+	 * default size is 2048.
 	 *
-	 * maintained by {@link QueryInterpretationCache}. Default is 2048.
+	 * @see org.hibernate.query.spi.QueryPlanCache
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 

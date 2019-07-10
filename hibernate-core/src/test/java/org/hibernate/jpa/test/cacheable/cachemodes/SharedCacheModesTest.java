@@ -36,7 +36,7 @@ public class SharedCacheModesTest extends BaseEntityManagerFunctionalTestCase {
 		Session session;
 
 		em = getOrCreateEntityManager();
-		session = ( (HibernateEntityManager) em ).getSession();
+		session = em.unwrap( Session.class );
 
 		// defaults...
 		assertEquals( CacheStoreMode.USE, em.getProperties().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );

@@ -18,6 +18,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.cache.spi.QueryKey;
@@ -26,7 +27,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.CollectionAliases;
@@ -39,6 +39,7 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
@@ -376,16 +377,11 @@ public class CustomLoader extends Loader {
 
 		ResultTransformer resultTransformer = queryParameters.getResultTransformer();
 
-		HolderInstantiator holderInstantiator = ( resultTransformer == null ) ?
-				HolderInstantiator.NOOP_INSTANTIATOR :
-				new HolderInstantiator( resultTransformer, this::getReturnAliasesForTransformer );
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-		return scroll(
-				queryParameters,
-				resultTypes,
-				holderInstantiator,
-				session
-		);
+//		final RowReader rowReader = ...;
+//
+//		return scroll( queryParameters, resultTypes, rowReader, session );
 	}
 
 	@Override

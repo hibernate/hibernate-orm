@@ -13,10 +13,10 @@ import javax.persistence.SharedCacheMode;
 import javax.persistence.TypedQuery;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
@@ -130,9 +130,8 @@ public class CachedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 
 		em.getEntityManagerFactory().getCache().evictAll();
-		em.unwrap( HibernateEntityManagerImplementor.class )
+		em.unwrap( SessionImplementor.class )
 				.getFactory()
-				.getSessionFactory()
 				.getCache()
 				.evictQueryRegions();
 

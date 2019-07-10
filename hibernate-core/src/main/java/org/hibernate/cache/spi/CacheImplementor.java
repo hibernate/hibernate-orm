@@ -30,7 +30,7 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-public interface CacheImplementor extends Service, Cache, org.hibernate.engine.spi.CacheImplementor, Serializable {
+public interface CacheImplementor extends Service, Cache, Serializable {
 	@Override
 	SessionFactoryImplementor getSessionFactory();
 

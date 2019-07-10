@@ -46,10 +46,7 @@ import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.ColumnNameCache;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.loading.internal.CollectionLoadContext;
-import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
@@ -85,7 +82,6 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
@@ -2856,7 +2852,7 @@ public abstract class Loader {
 	 *
 	 * @param queryParameters The parameters with which the query should be executed.
 	 * @param returnTypes The expected return types of the query
-	 * @param holderInstantiator If the return values are expected to be wrapped
+	 * @param rowReader If the return values are expected to be wrapped
 	 * in a holder, this is the thing that knows how to wrap them.
 	 * @param session The session from which the scroll request originated.
 	 *
@@ -2868,7 +2864,7 @@ public abstract class Loader {
 	protected ScrollableResultsImplementor scroll(
 			final QueryParameters queryParameters,
 			final Type[] returnTypes,
-			final HolderInstantiator holderInstantiator,
+			final RowReader rowReader,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		checkScrollability();
 
@@ -2903,25 +2899,25 @@ public abstract class Loader {
 			}
 
 			if ( needsFetchingScroll() ) {
+				//noinspection unchecked
 				return new FetchingScrollableResultsImpl(
 						rs,
 						st,
 						session,
 						this,
 						queryParameters,
-						returnTypes,
-						holderInstantiator
+						rowReader
 				);
 			}
 			else {
+				//noinspection unchecked
 				return new ScrollableResultsImpl(
 						rs,
 						st,
 						session,
 						this,
 						queryParameters,
-						returnTypes,
-						holderInstantiator
+						rowReader
 				);
 			}
 

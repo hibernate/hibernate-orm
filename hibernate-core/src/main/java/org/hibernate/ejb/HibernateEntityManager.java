@@ -10,5 +10,5 @@ package org.hibernate.ejb;
  * @deprecated Use {@link org.hibernate.jpa.HibernateEntityManager} instead
  */
 @Deprecated
-public interface HibernateEntityManager extends org.hibernate.jpa.HibernateEntityManager {
+public interface HibernateEntityManager {
 }

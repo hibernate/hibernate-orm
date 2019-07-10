@@ -136,7 +136,6 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
@@ -187,7 +186,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  */
 public final class SessionImpl
 		extends AbstractSessionImpl
-		implements EventSource, SessionImplementor, HibernateEntityManagerImplementor {
+		implements SessionImplementor, EventSource {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 
 	// Defaults to null which means the properties are the default - as defined in FastSessionServices#defaultSessionProperties
@@ -1378,101 +1377,6 @@ public final class SessionImpl
 		checkOpenOrWaitingForAutoClose();
 		doFlush();
 	}
-
-	@Override
-	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		queryParameters.validateParameters();
-		HQLQueryPlan plan = getQueryPlan( query, false );
-		autoFlushIfRequired( plan.getQuerySpaces() );
-
-		verifyImmutableEntityUpdate( plan );
-
-		boolean success = false;
-		int result = 0;
-		try {
-			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return result;
-	}
-
-	private void verifyImmutableEntityUpdate(HQLQueryPlan plan) {
-		if ( plan.isUpdate() ) {
-			List<String> primaryFromClauseTables = new ArrayList<>();
-			for ( QueryTranslator queryTranslator : plan.getTranslators() ) {
-				primaryFromClauseTables.addAll( queryTranslator.getPrimaryFromClauseTables() );
-			}
-			for ( EntityPersister entityPersister : getSessionFactory().getMetamodel().entityPersisters().values() ) {
-				if ( !entityPersister.isMutable() ) {
-					List<Serializable> entityQuerySpaces = new ArrayList<>(
-							Arrays.asList( entityPersister.getQuerySpaces() )
-					);
-					boolean matching = false;
-					for ( Serializable entityQuerySpace : entityQuerySpaces ) {
-						if ( primaryFromClauseTables.contains( entityQuerySpace ) ) {
-							matching = true;
-							break;
-						}
-					}
-
-					if ( matching ) {
-						ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode = getSessionFactory()
-								.getSessionFactoryOptions()
-								.getImmutableEntityUpdateQueryHandlingMode();
-
-						String querySpaces = Arrays.toString( entityQuerySpaces.toArray() );
-
-						switch ( immutableEntityUpdateQueryHandlingMode ) {
-							case WARNING:
-								log.immutableEntityUpdateQuery( plan.getSourceQuery(), querySpaces );
-								break;
-							case EXCEPTION:
-								throw new HibernateException(
-										"The query: [" + plan.getSourceQuery() + "] attempts to update an immutable entity: " + querySpaces
-								);
-							default:
-								throw new UnsupportedOperationException(
-										"The " + immutableEntityUpdateQueryHandlingMode + " is not supported!"
-								);
-
-						}
-					}
-				}
-			}
-		}
-	}
-
-	@Override
-	public int executeNativeUpdate(
-			NativeSQLQuerySpecification nativeQuerySpecification,
-			QueryParameters queryParameters) throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		queryParameters.validateParameters();
-		NativeSQLQueryPlan plan = getNativeQueryPlan( nativeQuerySpecification );
-
-
-		autoFlushIfRequired( plan.getCustomQuery().getQuerySpaces() );
-
-		boolean success = false;
-		int result = 0;
-		try {
-			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-			delayedAfterCompletion();
-		}
-		return result;
-	}
-
 
 	@Override
 	public Object instantiate(String entityName, Serializable id) throws HibernateException {

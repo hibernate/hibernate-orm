@@ -15,6 +15,7 @@ import java.util.Date;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -65,7 +66,7 @@ public class EntityManagerFactorySerializationTest extends BaseEntityManagerFunc
 		//em.getTransaction().commit();
 
 		//fake the in container work
-		( (HibernateEntityManager) em ).getSession().disconnect();
+		em.unwrap( Session.class ).disconnect();
 		stream = new ByteArrayOutputStream();
 		out = new ObjectOutputStream( stream );
 		out.writeObject( em );

@@ -12,13 +12,10 @@ import java.util.Set;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Selection;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -54,8 +51,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionImplementor
-		extends Session, SharedSessionContractImplementor, HibernateEntityManagerImplementor {
+public interface SessionImplementor extends Session, SharedSessionContractImplementor {
 
 	@Override
 	default SessionImplementor getSession() {

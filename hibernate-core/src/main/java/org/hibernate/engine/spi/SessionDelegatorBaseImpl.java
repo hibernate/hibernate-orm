@@ -79,27 +79,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	protected final SessionImplementor delegate;
 
-	/**
-	 * @deprecated (since 5.3) SessionDelegatorBaseImpl should take just one argument, the SessionImplementor.
-	 * Use the {@link #SessionDelegatorBaseImpl(SessionImplementor)} form instead
-	 */
-	@Deprecated
-	public SessionDelegatorBaseImpl(SessionImplementor delegate, Session session) {
-		if ( delegate == null ) {
-			throw new IllegalArgumentException( "Unable to create a SessionDelegatorBaseImpl from a null delegate object" );
-		}
-		if ( session == null ) {
-			throw new IllegalArgumentException( "Unable to create a SessionDelegatorBaseImpl from a null Session" );
-		}
-		if ( delegate != session ) {
-			throw new IllegalArgumentException( "Unable to create a SessionDelegatorBaseImpl from different Session/SessionImplementor references" );
-		}
-
-		this.delegate = delegate;
-	}
-
 	public SessionDelegatorBaseImpl(SessionImplementor delegate) {
-		this( delegate, delegate );
+		this.delegate = delegate;
 	}
 
 	/**
@@ -155,16 +136,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
 		delegate.checkTransactionNeededForUpdateOperation( exceptionMessage );
-	}
-
-	@Override
-	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
-		return delegate.getLockRequest( lockModeType, properties );
-	}
-
-	@Override
-	public LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
-		return delegate.buildLockOptions( lockModeType, properties );
 	}
 
 	@Override
@@ -250,16 +221,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public PersistenceContext getPersistenceContext() {
 		return delegate.getPersistenceContext();
-	}
-
-	@Override
-	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-		return delegate.executeUpdate( query, queryParameters );
-	}
-
-	@Override
-	public int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters) throws HibernateException {
-		return delegate.executeNativeUpdate( specification, queryParameters );
 	}
 
 	@Override
@@ -619,11 +580,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Object getDelegate() {
 		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor createSQLQuery(String queryString) {
-		return delegate.createSQLQuery( queryString );
 	}
 
 	@Override

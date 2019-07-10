@@ -19,6 +19,7 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.exec.spi.JdbcCall;
 
 /**
@@ -72,14 +73,14 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 							sep = ",";
 						}
 						else {
-							final int jdbcTypeCount = parameter.getHibernateType().getJdbcTypeCount(
+							parameter.getHibernateType().visitJdbcTypes(
+									sqlExpressableType -> {
+										buffer.append( sep ).append( "?" );
+										sep = ",";
+									},
+									Clause.IRRELEVANT,
 									session.getFactory().getTypeConfiguration()
 							);
-
-							for ( int i = 0; i < jdbcTypeCount; i++ ) {
-								buffer.append( sep ).append( "?" );
-								sep = ",";
-							}
 						}
 					}
 				}

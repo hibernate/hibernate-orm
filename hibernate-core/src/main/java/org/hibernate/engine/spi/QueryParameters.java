@@ -59,8 +59,6 @@ public final class QueryParameters {
 	private Type[] processedPositionalParameterTypes;
 	private Object[] processedPositionalParameterValues;
 
-	private HQLQueryPlan queryPlan;
-
 	public QueryParameters() {
 		this( ArrayHelper.EMPTY_TYPE_ARRAY, ArrayHelper.EMPTY_OBJECT_ARRAY );
 	}
@@ -642,14 +640,6 @@ public final class QueryParameters {
 		copy.processedPositionalParameterValues = this.processedPositionalParameterValues;
 		copy.passDistinctThrough = this.passDistinctThrough;
 		return copy;
-	}
-
-	public HQLQueryPlan getQueryPlan() {
-		return queryPlan;
-	}
-
-	public void setQueryPlan(HQLQueryPlan queryPlan) {
-		this.queryPlan = queryPlan;
 	}
 
 	public void bindDynamicParameter(Type paramType, Object paramValue) {

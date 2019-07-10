@@ -14,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.JDBCException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -33,6 +34,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -341,22 +343,24 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new LocalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create temporary table if not exists";
-					}
+	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-					@Override
-					public String getDropIdTableCommand() {
-						return "drop temporary table";
-					}
-				},
-				AfterUseAction.DROP,
-				TempTableDdlTransactionHandling.NONE
-		);
+//		return new LocalTemporaryTableBulkIdStrategy(
+//				new IdTableSupportStandardImpl() {
+//					@Override
+//					public String getCreateIdTableCommand() {
+//						return "create temporary table if not exists";
+//					}
+//
+//					@Override
+//					public String getDropIdTableCommand() {
+//						return "drop temporary table";
+//					}
+//				},
+//				AfterUseAction.DROP,
+//				TempTableDdlTransactionHandling.NONE
+//		);
 	}
 
 	@Override

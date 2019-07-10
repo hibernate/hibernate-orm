@@ -497,21 +497,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String JTA_CACHE_UT = "hibernate.jta.cacheUserTransaction";
 
-	/**
-	 * `true` / `false - should zero be used as the base for JDBC-style parameters
-	 * found in native-queries?
-	 *
-	 * @since 5.3
-	 *
-	 * @see DeprecationLogger#logUseOfDeprecatedZeroBasedJdbcStyleParams
-	 *
-	 * @deprecated This is a temporary backwards-compatibility setting to help applications
-	 * using versions prior to 5.3 in upgrading.  Deprecation warnings are issued when this
-	 * is set to `true`.
-	 */
-	@Deprecated
-	String JDBC_TYLE_PARAMS_ZERO_BASE = "hibernate.query.sql.jdbc_style_params_base";
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// MetadataBuilder level settings
@@ -932,8 +917,35 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 	/**
 	 * The classname of the HQL query parser factory
+	 *
+	 * @deprecated Use {@link #SEMANTIC_QUERY_PRODUCER}
 	 */
+	@Deprecated
 	String QUERY_TRANSLATOR = "hibernate.query.factory_class";
+
+	/**
+	 * Names the {@link org.hibernate.query.hql.SemanticQueryProducer} class to use.
+	 */
+	String SEMANTIC_QUERY_PRODUCER = "hibernate.query.hql.translator";
+
+	/**
+	 * @deprecated Use {@link #QUERY_MULTI_TABLE_MUTATION_STRATEGY} instead
+	 */
+	@Deprecated
+	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
+
+	/**
+	 * @deprecated Use {@link #QUERY_MULTI_TABLE_MUTATION_STRATEGY} instead
+	 */
+	@Deprecated
+	String ID_TABLE_STRATEGY = "hibernate.id_table_strategy";
+
+	/**
+	 * Defines the "global" strategy to use for handling HQL and Criteria mutation queries.
+	 *
+	 * Names the {@link org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy} to use.
+	 */
+	String QUERY_MULTI_TABLE_MUTATION_STRATEGY = "hibernate.query.mutation_strategy";
 
 	/**
 	 * A comma-separated list of token substitutions to use when translating a Hibernate
@@ -1663,14 +1675,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
 
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
-
-	/**
-	 * @deprecated Use {@link #ID_TABLE_STRATEGY} instead
-	 */
-	@Deprecated
-	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
-
-	String ID_TABLE_STRATEGY = "hibernate.id_table_strategy";
 
 	/**
 	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the

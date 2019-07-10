@@ -30,6 +30,8 @@ import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.hql.SemanticQueryProducer;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -114,6 +116,16 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public Interceptor getInterceptor() {
 		return delegate.getInterceptor();
+	}
+
+	@Override
+	public SemanticQueryProducer getSemanticQueryProducer() {
+		return delegate.getSemanticQueryProducer();
+	}
+
+	@Override
+	public SqmMutationStrategy getSqmMutationStrategy() {
+		return delegate.getSqmMutationStrategy();
 	}
 
 	@Override

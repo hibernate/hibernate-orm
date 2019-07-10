@@ -14,6 +14,7 @@ import java.util.Locale;
 
 import org.hibernate.JDBCException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
@@ -36,6 +37,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -394,30 +396,32 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		// Prior to DB2 9.7, "real" global temporary tables that can be shared between sessions
-		// are *not* supported; even though the DB2 command says to declare a "global" temp table
-		// Hibernate treats it as a "local" temp table.
-		return new LocalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String generateIdTableName(String baseName) {
-						return "session." + super.generateIdTableName( baseName );
-					}
+	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-					@Override
-					public String getCreateIdTableCommand() {
-						return "declare global temporary table";
-					}
-
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						return "not logged";
-					}
-				},
-				AfterUseAction.DROP,
-				null
-		);
+//		// Prior to DB2 9.7, "real" global temporary tables that can be shared between sessions
+//		// are *not* supported; even though the DB2 command says to declare a "global" temp table
+//		// Hibernate treats it as a "local" temp table.
+//		return new LocalTemporaryTableBulkIdStrategy(
+//				new IdTableSupportStandardImpl() {
+//					@Override
+//					public String generateIdTableName(String baseName) {
+//						return "session." + super.generateIdTableName( baseName );
+//					}
+//
+//					@Override
+//					public String getCreateIdTableCommand() {
+//						return "declare global temporary table";
+//					}
+//
+//					@Override
+//					public String getCreateIdTableStatementOptions() {
+//						return "not logged";
+//					}
+//				},
+//				AfterUseAction.DROP,
+//				null
+//		);
 	}
 
 	@Override

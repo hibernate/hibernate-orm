@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.function.Supplier;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -317,6 +318,18 @@ public final class ConfigurationHelper {
 			return null;
 		}
 		return value;
+	}
+
+	public static String extractValue(
+			String name,
+			Map values,
+			Supplier<String> fallbackValueFactory) {
+		final String value = extractPropertyValue( name, values );
+		if ( value != null ) {
+			return value;
+		}
+
+		return fallbackValueFactory.get();
 	}
 
 	/**

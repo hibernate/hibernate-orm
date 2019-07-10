@@ -13,6 +13,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -23,6 +24,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
@@ -584,24 +586,26 @@ public class DerbyDialect extends DB2Dialect {
 	 * will make temporary tables created at startup and hence unavailable for subsequent connections.<br/>
 	 * see HHH-10238.
 	 * </p>
-     */
+	 * @return
+	 */
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new LocalTemporaryTableBulkIdStrategy(new IdTableSupportStandardImpl() {
-			@Override
-			public String generateIdTableName(String baseName) {
-				return "session." + super.generateIdTableName( baseName );
-			}
-
-			@Override
-			public String getCreateIdTableCommand() {
-				return "declare global temporary table";
-			}
-
-			@Override
-			public String getCreateIdTableStatementOptions() {
-				return "not logged";
-			}
-		}, AfterUseAction.CLEAN, null);
+	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		return new LocalTemporaryTableBulkIdStrategy(new IdTableSupportStandardImpl() {
+//			@Override
+//			public String generateIdTableName(String baseName) {
+//				return "session." + super.generateIdTableName( baseName );
+//			}
+//
+//			@Override
+//			public String getCreateIdTableCommand() {
+//				return "declare global temporary table";
+//			}
+//
+//			@Override
+//			public String getCreateIdTableStatementOptions() {
+//				return "not logged";
+//			}
+//		}, AfterUseAction.CLEAN, null);
 	}
 }

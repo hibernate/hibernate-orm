@@ -32,6 +32,8 @@ import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.hql.SemanticQueryProducer;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -139,6 +141,10 @@ public interface SessionFactoryOptions {
 			}
 		};
 	}
+
+	SemanticQueryProducer getHqlTranslator();
+
+	SqmMutationStrategy getSqmMutationStrategy();
 
 	StatementInspector getStatementInspector();
 
@@ -272,8 +278,6 @@ public interface SessionFactoryOptions {
 		return LiteralHandlingMode.AUTO;
 	}
 
-	boolean jdbcStyleParamsZeroBased();
-
 	JpaCompliance getJpaCompliance();
 
 	boolean isFailOnPaginationOverCollectionFetchEnabled();
@@ -312,8 +316,6 @@ public interface SessionFactoryOptions {
 	default boolean isEnhancementAsProxyEnabled() {
 		return false;
 	}
-
-	SqmFunctionRegistry getSqmFunctionRegistry();
 
 	/**
 	 * See {@link org.hibernate.cfg.AvailableSettings#NATIVE_QUERY_ORDINAL_PARAMETER_BASE} and

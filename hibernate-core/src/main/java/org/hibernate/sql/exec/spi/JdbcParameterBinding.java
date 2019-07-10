@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import org.hibernate.sql.SqlExpressableType;
+import org.hibernate.persister.SqlExpressableType;
 
 /**
  * @author Steve Ebersole

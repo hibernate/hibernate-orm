@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 import org.hibernate.ConnectionAcquisitionMode;
@@ -24,12 +25,14 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -48,6 +51,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -55,6 +59,9 @@ import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.hql.SemanticQueryProducer;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -74,6 +81,7 @@ import static org.hibernate.cfg.AvailableSettings.AUTO_SESSION_EVENTS_LISTENER;
 import static org.hibernate.cfg.AvailableSettings.BATCH_FETCH_STYLE;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.cfg.AvailableSettings.CACHE_REGION_PREFIX;
+import static org.hibernate.cfg.AvailableSettings.CALLABLE_NAMED_PARAMS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.CHECK_NULLABILITY;
 import static org.hibernate.cfg.AvailableSettings.COLLECTION_JOIN_SUBQUERY;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
@@ -87,12 +95,11 @@ import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
 import static org.hibernate.cfg.AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
-import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.IN_CLAUSE_PARAMETER_PADDING;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
-import static org.hibernate.cfg.AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE;
+import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
@@ -100,12 +107,12 @@ import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLV
 import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
-import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING;
 import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
+import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
 import static org.hibernate.cfg.AvailableSettings.RELEASE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
@@ -114,7 +121,6 @@ import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
-import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK;
@@ -205,12 +211,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
 
 	// Queries
+	private SemanticQueryProducer semanticQueryProducer;
+	private SqmMutationStrategy sqmMutationStrategy;
+	private Boolean useOfJdbcNamedParametersEnabled;
 	private Map querySubstitutions;
 	private boolean namedQueryStartupCheckingEnabled;
 	private boolean conventionalJavaConstants;
 	private final boolean procedureParameterNullPassingEnabled;
 	private final boolean collectionJoinSubqueryRewriteEnabled;
-	private boolean jdbcStyleParamsZeroBased;
 	private final boolean omitJoinOfSuperclassTablesEnabled;
 
 	// Caching
@@ -347,6 +355,41 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.callbacksEnabled = ConfigurationHelper.getBoolean( JPA_CALLBACKS_ENABLED, configurationSettings, true );
 
 		this.jtaTrackByThread = cfgService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
+
+		final String semanticQueryProducerImplName = ConfigurationHelper.extractValue(
+				AvailableSettings.SEMANTIC_QUERY_PRODUCER,
+				configurationSettings,
+				() -> ConfigurationHelper.extractPropertyValue(
+						AvailableSettings.QUERY_TRANSLATOR,
+						configurationSettings
+				)
+		);
+		this.semanticQueryProducer = resolveSemanticQueryProducer(
+				semanticQueryProducerImplName,
+				serviceRegistry,
+				strategySelector
+		);
+
+		final String sqmMutationStrategyImplName = ConfigurationHelper.extractValue(
+				AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
+				configurationSettings,
+				() -> ConfigurationHelper.extractValue(
+						AvailableSettings.ID_TABLE_STRATEGY,
+						configurationSettings,
+						() -> ConfigurationHelper.extractPropertyValue(
+								AvailableSettings.HQL_BULK_ID_STRATEGY,
+								configurationSettings
+						)
+				)
+		);
+
+		this.sqmMutationStrategy = resolveSqmMutationStrategy(
+				sqmMutationStrategyImplName,
+				serviceRegistry,
+				strategySelector
+		);
+
+		this.useOfJdbcNamedParametersEnabled = cfgService.getSetting( CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
 		this.querySubstitutions = ConfigurationHelper.toMap( QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", configurationSettings );
 		this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
@@ -485,12 +528,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings.get( CRITERIA_LITERAL_HANDLING_MODE )
 		);
 
-		this.jdbcStyleParamsZeroBased = ConfigurationHelper.getBoolean(
-				JDBC_TYLE_PARAMS_ZERO_BASE,
-				configurationSettings,
-				false
-		);
-
 		// added the boolean parameter in case we want to define some form of "all" as discussed
 		this.jpaCompliance = context.getJpaCompliance();
 
@@ -526,6 +563,50 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			log.nativeExceptionHandling51ComplianceJpaBootstrapping();
 			this.nativeExceptionHandling51Compliance = false;
 		}
+	}
+
+	private SqmMutationStrategy resolveSqmMutationStrategy(
+			String strategyName,
+			StandardServiceRegistry serviceRegistry,
+			StrategySelector strategySelector) {
+		if ( strategyName == null ) {
+			return null;
+		}
+
+		//noinspection Convert2Lambda
+		return strategySelector.resolveDefaultableStrategy(
+				SqmMutationStrategy.class,
+				strategyName,
+				new Callable<SqmMutationStrategy>() {
+					@Override
+					public SqmMutationStrategy call() throws Exception {
+						final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+						return (SqmMutationStrategy) classLoaderService.classForName( strategyName ).newInstance();
+					}
+				}
+		);
+	}
+
+	private SemanticQueryProducer resolveSemanticQueryProducer(
+			String producerName,
+			StandardServiceRegistry serviceRegistry,
+			StrategySelector strategySelector) {
+		if ( StringHelper.isEmpty( producerName ) ) {
+			return null;
+		}
+
+		//noinspection Convert2Lambda
+		return strategySelector.resolveDefaultableStrategy(
+				SemanticQueryProducer.class,
+				producerName,
+				new Callable<SemanticQueryProducer>() {
+					@Override
+					public SemanticQueryProducer call() throws Exception {
+						final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+						return (SemanticQueryProducer) classLoaderService.classForName( producerName ).newInstance();
+					}
+				}
+		);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -747,6 +828,26 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier() {
 		return statelessInterceptorSupplier;
+	}
+
+	@Override
+	public SemanticQueryProducer getHqlTranslator() {
+		return semanticQueryProducer;
+	}
+
+	@Override
+	public SqmMutationStrategy getSqmMutationStrategy() {
+		return sqmMutationStrategy;
+	}
+
+	@Override
+	public boolean isUseOfJdbcNamedParametersEnabled() {
+		return this.useOfJdbcNamedParametersEnabled;
+	}
+
+	@Override
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -1012,11 +1113,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return immutableEntityUpdateQueryHandlingMode;
-	}
-
-	@Override
-	public boolean jdbcStyleParamsZeroBased() {
-		return this.jdbcStyleParamsZeroBased;
 	}
 
 	@Override
@@ -1348,10 +1444,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void disableJtaTransactionAccess() {
 		this.jtaTransactionAccessEnabled = false;
-	}
-
-	public void enableJdbcStyleParamsZeroBased() {
-		this.jdbcStyleParamsZeroBased = true;
 	}
 
 	public SessionFactoryOptions buildOptions() {

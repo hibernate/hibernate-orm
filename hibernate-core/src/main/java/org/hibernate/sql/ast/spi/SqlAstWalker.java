@@ -8,11 +8,15 @@ package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -82,11 +86,7 @@ public interface SqlAstWalker {
 
 	void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression);
 
-	void visitNamedParameter(NamedParameter namedParameter);
-
 	void visitGenericParameter(GenericParameter parameter);
-
-	void visitPositionalParameter(PositionalParameter positionalParameter);
 
 	void visitQueryLiteral(QueryLiteral queryLiteral);
 
@@ -126,13 +126,13 @@ public interface SqlAstWalker {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// functions
 
-	void visitExtractUnit(ExtractUnit unit);
-
-	void visitCastTarget(CastTarget castTarget);
-
-	void visitTrimSpecification(TrimSpecification trimSpecification);
-
-	void visitStar(Star star);
-
-	void visitDistinct(Distinct distinct);
+//	void visitExtractUnit(ExtractUnit unit);
+//
+//	void visitCastTarget(CastTarget castTarget);
+//
+//	void visitTrimSpecification(TrimSpecification trimSpecification);
+//
+//	void visitStar(Star star);
+//
+//	void visitDistinct(Distinct distinct);
 }

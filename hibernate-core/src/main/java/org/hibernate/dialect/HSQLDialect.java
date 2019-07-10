@@ -15,6 +15,7 @@ import java.util.Locale;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
@@ -44,7 +45,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Lockable;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
@@ -503,53 +504,55 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		// Hibernate uses this information for temporary tables that it uses for its own operations
-		// therefore the appropriate strategy is taken with different versions of HSQLDB
+	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-		// All versions of HSQLDB support GLOBAL TEMPORARY tables where the table
-		// definition is shared by all users but data is private to the session
-		// HSQLDB 2.0 also supports session-based LOCAL TEMPORARY tables where
-		// the definition and data is private to the session and table declaration
-		// can happen in the middle of a transaction
-
-		if ( hsqldbVersion < 200 ) {
-			return new GlobalTemporaryTableBulkIdStrategy(
-					new IdTableSupportStandardImpl() {
-						@Override
-						public String generateIdTableName(String baseName) {
-							return "HT_" + baseName;
-						}
-
-						@Override
-						public String getCreateIdTableCommand() {
-							return "create global temporary table";
-						}
-					},
-					// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
-					// of the session (by default, data is cleared at commit).
-					AfterUseAction.CLEAN
-			);
-		}
-		else {
-			return new LocalTemporaryTableBulkIdStrategy(
-					new IdTableSupportStandardImpl() {
-						@Override
-						public String generateIdTableName(String baseName) {
-							// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
-							// statement (in-case there is a global name beginning with HT_)
-							return "MODULE.HT_" + baseName;
-						}
-
-						@Override
-						public String getCreateIdTableCommand() {
-							return "declare local temporary table";
-						}
-					},
-					AfterUseAction.DROP,
-					TempTableDdlTransactionHandling.NONE
-			);
-		}
+//		// Hibernate uses this information for temporary tables that it uses for its own operations
+//		// therefore the appropriate strategy is taken with different versions of HSQLDB
+//
+//		// All versions of HSQLDB support GLOBAL TEMPORARY tables where the table
+//		// definition is shared by all users but data is private to the session
+//		// HSQLDB 2.0 also supports session-based LOCAL TEMPORARY tables where
+//		// the definition and data is private to the session and table declaration
+//		// can happen in the middle of a transaction
+//
+//		if ( hsqldbVersion < 200 ) {
+//			return new GlobalTemporaryTableBulkIdStrategy(
+//					new IdTableSupportStandardImpl() {
+//						@Override
+//						public String generateIdTableName(String baseName) {
+//							return "HT_" + baseName;
+//						}
+//
+//						@Override
+//						public String getCreateIdTableCommand() {
+//							return "create global temporary table";
+//						}
+//					},
+//					// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
+//					// of the session (by default, data is cleared at commit).
+//					AfterUseAction.CLEAN
+//			);
+//		}
+//		else {
+//			return new LocalTemporaryTableBulkIdStrategy(
+//					new IdTableSupportStandardImpl() {
+//						@Override
+//						public String generateIdTableName(String baseName) {
+//							// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
+//							// statement (in-case there is a global name beginning with HT_)
+//							return "MODULE.HT_" + baseName;
+//						}
+//
+//						@Override
+//						public String getCreateIdTableCommand() {
+//							return "declare local temporary table";
+//						}
+//					},
+//					AfterUseAction.DROP,
+//					TempTableDdlTransactionHandling.NONE
+//			);
+//		}
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

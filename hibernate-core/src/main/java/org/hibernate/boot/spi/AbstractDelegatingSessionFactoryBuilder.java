@@ -175,12 +175,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
-		delegate.applyMultiTableBulkIdStrategy( strategy );
-		return getThis();
-	}
-
-	@Override
 	public T applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		delegate.applyTempTableDdlTransactionHandling( handling );
 		return getThis();

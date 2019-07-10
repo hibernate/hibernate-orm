@@ -46,7 +46,7 @@ public class GlobalQuotedIdentifiersBulkIdTest
 	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE );
-		options.put( AvailableSettings.HQL_BULK_ID_STRATEGY, InlineIdsOrClauseBulkIdStrategy.class.getName() );
+		options.put( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, InlineIdsOrClauseBulkIdStrategy.class.getName() );
 	}
 
 	@Before

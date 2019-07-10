@@ -43,6 +43,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	private final MetadataImplementor metadata;
 	private final SessionFactoryOptionsBuilder optionsBuilder;
 
+	@SuppressWarnings("WeakerAccess")
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
 		this( metadata, new SessionFactoryOptionsBuilder(
 				metadata.getMetadataBuildingOptions().getServiceRegistry(),
@@ -50,6 +51,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		) );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
 		this.metadata = metadata;
 		this.optionsBuilder = optionsBuilder;
@@ -197,12 +199,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			EntityMode entityMode,
 			Class<? extends EntityTuplizer> tuplizerClass) {
 		this.optionsBuilder.applyEntityTuplizer( entityMode, tuplizerClass );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
-		this.optionsBuilder.applyMultiTableBulkIdStrategy( strategy );
 		return this;
 	}
 
@@ -443,10 +439,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public void disableJtaTransactionAccess() {
 		this.optionsBuilder.disableJtaTransactionAccess();
-	}
-
-	public void enableJdbcStyleParamsZeroBased() {
-		this.optionsBuilder.enableJdbcStyleParamsZeroBased();
 	}
 
 	@Override

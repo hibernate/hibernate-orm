@@ -95,7 +95,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10238")
 	public void testDefaultMultiTableBulkIdStrategyIsLocal() {
-		MultiTableBulkIdStrategy actual = new LocalDerbyDialect().getDefaultMultiTableBulkIdStrategy();
+		MultiTableBulkIdStrategy actual = new LocalDerbyDialect().getFallbackSqmMutationStrategy();
 		assertThat(actual, is(instanceOf(LocalTemporaryTableBulkIdStrategy.class)));
 	}
 }

@@ -279,17 +279,6 @@ public interface SessionFactoryBuilder {
 			EntityMode entityMode,
 			Class<? extends EntityTuplizer> tuplizerClass);
 
-	/**
-	 * How should Query-based updates and deletes be handled when the target spans multiple tables?
-	 *
-	 * @param strategy The strategy for handling multi-table updates and deletes.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#ID_TABLE_STRATEGY
-	 */
-	SessionFactoryBuilder applyMultiTableBulkIdStrategy(SqmMutationStrategy strategy);
-
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
 	/**
@@ -751,21 +740,6 @@ public interface SessionFactoryBuilder {
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
 	 */
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
-
-	/**
-	 * See the discussion on {@link org.hibernate.cfg.AvailableSettings#NATIVE_QUERY_ORDINAL_PARAMETER_BASE}
-	 * <p/>
-	 * The passed value will be validated to be either:<ul>
-	 *     <li>0</li>
-	 *     <li>1</li>
-	 *     <li>{@code null}</li>
-	 * </ul>
-	 *
-	 * @param base The base to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	SessionFactoryBuilder applyNonJpaNativeQueryOrdinalParameterBase(Integer base);
 
 	/**
 	 * Allows unwrapping this builder as another, more specific type.

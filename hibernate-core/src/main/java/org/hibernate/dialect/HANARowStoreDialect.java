@@ -6,6 +6,9 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+
 /**
  * An SQL dialect for the SAP HANA row store.
  * <p>
@@ -32,13 +35,15 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy( new IdTableSupportStandardImpl() {
+	public SqmMutationStrategy getFallbackSqmMutationStrategy() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-			@Override
-			public String getCreateIdTableCommand() {
-				return "create global temporary row table";
-			}
-		}, AfterUseAction.CLEAN );
+//		return new GlobalTemporaryTableBulkIdStrategy( new IdTableSupportStandardImpl() {
+//
+//			@Override
+//			public String getCreateIdTableCommand() {
+//				return "create global temporary row table";
+//			}
+//		}, AfterUseAction.CLEAN );
 	}
 }

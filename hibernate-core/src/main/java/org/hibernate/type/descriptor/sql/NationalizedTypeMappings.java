@@ -16,18 +16,21 @@ import java.util.Map;
  * corresponding nationalized equivalent, so that's all we implement for now
  *
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
-public class NationalizedTypeMappings {
+public final class NationalizedTypeMappings {
 
 	/**
 	 * Singleton access
+	 * @deprecated use the static methods instead
 	 */
+	@Deprecated
 	public static final NationalizedTypeMappings INSTANCE = new NationalizedTypeMappings();
 
 	private NationalizedTypeMappings() {
 	}
 
-	public int getCorrespondingNationalizedCode(int jdbcCode) {
+	public static int toNationalizedTypeCode(final int jdbcCode) {
 		switch ( jdbcCode ) {
 			case Types.CHAR: return Types.NCHAR;
 			case Types.CLOB: return Types.NCLOB;
@@ -37,4 +40,15 @@ public class NationalizedTypeMappings {
 				throw new IllegalArgumentException( "Unable to locate nationalized jdbc-code equivalent for given jdbc code : " + jdbcCode );
 		}
 	}
+
+	/**
+	 * @deprecated use {@link #toNationalizedTypeCode(int)}
+	 * @param jdbcCode
+	 * @return
+	 */
+	@Deprecated
+	public int getCorrespondingNationalizedCode(int jdbcCode) {
+		return toNationalizedTypeCode( jdbcCode );
+	}
+
 }

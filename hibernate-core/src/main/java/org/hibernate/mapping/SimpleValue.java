@@ -597,8 +597,8 @@ public class SimpleValue implements KeyValue {
 		);
 		int jdbcTypeCode = recommendedSqlType.getSqlType();
 		if ( isLob() ) {
-			if ( LobTypeMappings.INSTANCE.hasCorrespondingLobCode( jdbcTypeCode ) ) {
-				jdbcTypeCode = LobTypeMappings.INSTANCE.getCorrespondingLobCode( jdbcTypeCode );
+			if ( LobTypeMappings.isMappedToKnownLobCode( jdbcTypeCode ) ) {
+				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );
 			}
 			else {
 				if ( Serializable.class.isAssignableFrom( entityAttributeJavaTypeDescriptor.getJavaType() ) ) {

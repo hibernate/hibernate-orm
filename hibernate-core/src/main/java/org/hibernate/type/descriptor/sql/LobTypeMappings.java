@@ -16,17 +16,41 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
  * @author Steve Ebersole
  * @author Sanne Grinovero
  */
-public class LobTypeMappings {
+public final class LobTypeMappings {
 
 	/**
 	 * Singleton access
+	 * @deprecated use the static method helpers instead.
 	 */
+	@Deprecated
 	public static final LobTypeMappings INSTANCE = new LobTypeMappings();
 
 	private LobTypeMappings() {
 	}
 
+	/**
+	 *
+	 * @param jdbcTypeCode
+	 * @return
+	 * @deprecated use {@link #isMappedToKnownLobCode(int)}
+	 */
+	@Deprecated
 	public boolean hasCorrespondingLobCode(final int jdbcTypeCode) {
+		return isMappedToKnownLobCode( jdbcTypeCode );
+	}
+
+	/**
+	 *
+	 * @param jdbcTypeCode
+	 * @return
+	 * @deprecated use {@link #getLobCodeTypeMapping(int)}
+	 */
+	@Deprecated
+	public int getCorrespondingLobCode(final int jdbcTypeCode) {
+		return getLobCodeTypeMapping( jdbcTypeCode );
+	}
+
+	public static boolean isMappedToKnownLobCode(final int jdbcTypeCode) {
 		return
 				// BLOB mappings
 				jdbcTypeCode == Types.BLOB ||
@@ -47,7 +71,7 @@ public class LobTypeMappings {
 				jdbcTypeCode == Types.LONGNVARCHAR;
 	}
 
-	public int getCorrespondingLobCode(final int jdbcTypeCode) {
+	public static int getLobCodeTypeMapping(final int jdbcTypeCode) {
 		switch ( jdbcTypeCode ) {
 
 			// BLOB mappings
@@ -71,12 +95,12 @@ public class LobTypeMappings {
 			// Anything else:
 			default:
 				throw new IllegalArgumentException(
-					String.format(
-							Locale.ROOT,
-							"JDBC type-code [%s (%s)] not known to have a corresponding LOB equivalent",
-							jdbcTypeCode,
-							JdbcTypeNameMapper.getTypeName( jdbcTypeCode )
-					) );
+						String.format(
+								Locale.ROOT,
+								"JDBC type-code [%s (%s)] not known to have a corresponding LOB equivalent",
+								jdbcTypeCode,
+								JdbcTypeNameMapper.getTypeName( jdbcTypeCode )
+						) );
 		}
 	}
 

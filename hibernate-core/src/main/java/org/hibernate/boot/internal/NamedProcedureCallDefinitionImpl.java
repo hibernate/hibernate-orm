@@ -17,6 +17,7 @@ import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.NamedProcedureCallDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.QueryHintDefinition;
@@ -89,63 +90,64 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
 
-		if ( specifiesResultClasses ) {
-			Util.resolveResultClasses(
-					new Util.ResultClassesResolutionContext() {
-						@Override
-						public SessionFactoryImplementor getSessionFactory() {
-							return sessionFactory;
-						}
-
-						@Override
-						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-							Collections.addAll( collectedQueryReturns, queryReturns );
-						}
-
-						@Override
-						public void addQuerySpaces(String... spaces) {
-							Collections.addAll( collectedQuerySpaces, spaces );
-						}
-					},
-					resultClasses
-			);
-		}
-		else if ( specifiesResultSetMappings ) {
-			Util.resolveResultSetMappings(
-					new Util.ResultSetMappingResolutionContext() {
-						@Override
-						public SessionFactoryImplementor getSessionFactory() {
-							return sessionFactory;
-						}
-
-						@Override
-						public ResultSetMappingDescriptor findResultSetMapping(String name) {
-							return sessionFactory.getQueryEngine().getNamedQueryRepository().getResultSetMappingMemento( name );
-						}
-
-						@Override
-						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-							Collections.addAll( collectedQueryReturns, queryReturns );
-						}
-
-						@Override
-						public void addQuerySpaces(String... spaces) {
-							Collections.addAll( collectedQuerySpaces, spaces );
-						}
-					},
-					resultSetMappings
-			);
-		}
-
-		return new NamedCallableQueryMementoImpl(
-				getRegistrationName(),
-				procedureName,
-				collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] ),
-				parameterDefinitions.getParameterStrategy(),
-				parameterDefinitions.toMementos( sessionFactory ),
-				collectedQuerySpaces,
-				hints
-		);
+//		if ( specifiesResultClasses ) {
+//			Util.resolveResultClasses(
+//					new Util.ResultClassesResolutionContext() {
+//						@Override
+//						public SessionFactoryImplementor getSessionFactory() {
+//							return sessionFactory;
+//						}
+//
+//						@Override
+//						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
+//							Collections.addAll( collectedQueryReturns, queryReturns );
+//						}
+//
+//						@Override
+//						public void addQuerySpaces(String... spaces) {
+//							Collections.addAll( collectedQuerySpaces, spaces );
+//						}
+//					},
+//					resultClasses
+//			);
+//		}
+//		else if ( specifiesResultSetMappings ) {
+//			Util.resolveResultSetMappings(
+//					new Util.ResultSetMappingResolutionContext() {
+//						@Override
+//						public SessionFactoryImplementor getSessionFactory() {
+//							return sessionFactory;
+//						}
+//
+//						@Override
+//						public ResultSetMappingDescriptor findResultSetMapping(String name) {
+//							return sessionFactory.getQueryEngine().getNamedQueryRepository().getResultSetMappingMemento( name );
+//						}
+//
+//						@Override
+//						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
+//							Collections.addAll( collectedQueryReturns, queryReturns );
+//						}
+//
+//						@Override
+//						public void addQuerySpaces(String... spaces) {
+//							Collections.addAll( collectedQuerySpaces, spaces );
+//						}
+//					},
+//					resultSetMappings
+//			);
+//		}
+//
+//		return new NamedCallableQueryMementoImpl(
+//				getRegistrationName(),
+//				procedureName,
+//				collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] ),
+//				parameterDefinitions.getParameterStrategy(),
+//				parameterDefinitions.toMementos( sessionFactory ),
+//				collectedQuerySpaces,
+//				hints
+//		);
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	static class ParameterDefinitions {
@@ -242,14 +244,15 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 					? explicitPassNullSetting.booleanValue()
 					: sessionFactory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
-			return new ParameterMemento(
-					position,
-					name,
-					parameterMode,
-					type,
-					sessionFactory.getTypeResolver().heuristicType( type.getName() ),
-					initialPassNullSetting
-			);
+//			return new ParameterMemento(
+//					position,
+//					name,
+//					parameterMode,
+//					type,
+//					sessionFactory.getTypeResolver().heuristicType( type.getName() ),
+//					initialPassNullSetting
+//			);
+			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 	}
 

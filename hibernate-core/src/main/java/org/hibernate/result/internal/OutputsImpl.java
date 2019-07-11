@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -80,11 +81,12 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected JDBCException convert(SQLException e, String message) {
-		return context.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-				e,
-				message,
-				context.getSql()
-		);
+//		return context.getSession().getJdbcServices().getSqlExceptionHelper().convert(
+//				e,
+//				message,
+//				context.getSql()
+//		);
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -230,41 +232,43 @@ public class OutputsImpl implements Outputs {
 	private static CustomLoaderExtension buildSpecializedCustomLoader(final ResultContext context) {
 		// might be better to just manually construct the Return(s).. SQLQueryReturnProcessor does a lot of
 		// work that is really unnecessary here.
-		final SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(
-				context.getQueryReturns(),
-				context.getSession().getFactory()
-		);
-		processor.process();
-		final List<org.hibernate.loader.custom.Return> customReturns = processor.generateCallableReturns();
+//		final SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(
+//				context.getQueryReturns(),
+//				context.getSession().getFactory()
+//		);
+//		processor.process();
+//		final List<org.hibernate.loader.custom.Return> customReturns = processor.generateCallableReturns();
+//
+//		CustomQuery customQuery = new CustomQuery() {
+//			@Override
+//			public String getSQL() {
+//				return context.getSql();
+//			}
+//
+//			@Override
+//			public Set<String> getQuerySpaces() {
+//				return context.getSynchronizedQuerySpaces();
+//			}
+//
+//			@Override
+//			public List<ParameterBinder> getParameterValueBinders() {
+//				// no parameters in terms of embedded in the SQL string
+//				return Collections.emptyList();
+//			}
+//
+//			@Override
+//			public List<org.hibernate.loader.custom.Return> getCustomQueryReturns() {
+//				return customReturns;
+//			}
+//		};
 
-		CustomQuery customQuery = new CustomQuery() {
-			@Override
-			public String getSQL() {
-				return context.getSql();
-			}
+//		return new CustomLoaderExtension(
+//				customQuery,
+//				context.getQueryParameters(),
+//				context.getSession()
+//		);
+		throw new NotYetImplementedFor6Exception( );
 
-			@Override
-			public Set<String> getQuerySpaces() {
-				return context.getSynchronizedQuerySpaces();
-			}
-
-			@Override
-			public List<ParameterBinder> getParameterValueBinders() {
-				// no parameters in terms of embedded in the SQL string
-				return Collections.emptyList();
-			}
-
-			@Override
-			public List<org.hibernate.loader.custom.Return> getCustomQueryReturns() {
-				return customReturns;
-			}
-		};
-
-		return new CustomLoaderExtension(
-				customQuery,
-				context.getQueryParameters(),
-				context.getSession()
-		);
 	}
 
 	private static class CustomLoaderExtension extends CustomLoader {

@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,6 +18,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -25,6 +27,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.LoggableUserType;
 
@@ -324,5 +328,38 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 	public boolean hasNotNullProperty() {
 		// We just don't know.  So assume nullable
 		return false;
+	}
+
+	@Override
+	public Class getJavaType() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public boolean canDoExtraction() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		return null;
+	}
+
+	@Override
+	public Object extract(
+			CallableStatement statement, int paramIndex, SharedSessionContractImplementor session) throws SQLException {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public Object extract(
+			CallableStatement statement, String paramName, SharedSessionContractImplementor session)
+			throws SQLException {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

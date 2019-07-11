@@ -9,6 +9,8 @@ package org.hibernate.graph;
 import java.util.List;
 import javax.persistence.metamodel.Attribute;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+
 /**
  * Hibernate extension to the JPA entity-graph Subgraph contract.
  *
@@ -41,21 +43,26 @@ public interface SubGraph<J> extends Graph<J>, javax.persistence.Subgraph<J> {
 		}
 
 		for ( Attribute<J, ?> node : attribute ) {
-			addAttributeNode( node );
+//			addAttributeNode( node );
+			throw new NotYetImplementedFor6Exception( getClass() );
+
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	default <X> SubGraph<X> addSubgraph(Attribute<J, X> attribute) {
-		return addSubGraph( attribute );
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		return addSubGraph( attribute );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	default <X> SubGraph<? extends X> addSubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-		return addSubGraph( attribute, type );
+//		return addSubGraph( attribute, type );
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
+
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -72,13 +79,17 @@ public interface SubGraph<J> extends Graph<J>, javax.persistence.Subgraph<J> {
 	@Override
 	@SuppressWarnings("unchecked")
 	default <X> SubGraph<X> addKeySubgraph(Attribute<J, X> attribute) {
-		return addKeySubGraph( attribute );
+		throw new NotYetImplementedFor6Exception( getClass() );
+
+//		return addKeySubGraph( attribute );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-		return addKeySubGraph( attribute, type );
+//		return addKeySubGraph( attribute, type );
+		throw new NotYetImplementedFor6Exception( getClass() );
+
 	}
 
 	@Override

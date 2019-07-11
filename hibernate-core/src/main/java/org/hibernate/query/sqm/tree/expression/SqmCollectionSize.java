@@ -49,15 +49,15 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements
 		return "SIZE(" + pluralPath.asLoggableText() + ")";
 	}
 
-	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception(  );
-//		return new ScalarQueryResultImpl(
-//				resultVariable,
-//				creationContext.getSqlExpressionResolver().resolveSqlSelection( expression ),
-//				getNodeType()
-//		);
-	}
+//	@Override
+//	public DomainResult createDomainResult(
+//			String resultVariable,
+//			DomainResultCreationState creationState) {
+//		throw new NotYetImplementedFor6Exception(  );
+////		return new ScalarQueryResultImpl(
+////				resultVariable,
+////				creationContext.getSqlExpressionResolver().resolveSqlSelection( expression ),
+////				getNodeType()
+////		);
+//	}
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.spi;
 
+import java.sql.ResultSet;
+
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -81,4 +83,5 @@ public class LoadContexts {
 		}
 		jdbcValuesSourceProcessingStateStack.clear();
 	}
+
 }

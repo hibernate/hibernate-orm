@@ -19,6 +19,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.EntityManagerMessageLogger;

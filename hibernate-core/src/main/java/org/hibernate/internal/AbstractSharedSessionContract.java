@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
@@ -686,32 +687,33 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		delayedAfterCompletion();
-
-		final NativeQueryImplementor query;
-		try {
-			if ( StringHelper.isNotEmpty( resultSetMapping ) ) {
-				final ResultSetMappingDescriptor resultSetMappingDescriptor = getFactory().getQueryEngine()
-						.getNamedQueryRepository()
-						.getResultSetMappingDescriptor( resultSetMapping );
-
-				if ( resultSetMappingDescriptor == null ) {
-					throw new HibernateException( "Could not resolve specified result-set mapping name : " + resultSetMapping );
-				}
-
-				query = new NativeQueryImpl( sqlString, resultSetMappingDescriptor, this );
-			}
-			else {
-				query = new NativeQueryImpl( sqlString, this );
-			}
-		}
-		catch ( RuntimeException he ) {
-			throw getExceptionConverter().convert( he );
-		}
-
-		return query;
+//		checkOpen();
+//		pulseTransactionCoordinator();
+//		delayedAfterCompletion();
+//
+//		final NativeQueryImplementor query;
+//		try {
+//			if ( StringHelper.isNotEmpty( resultSetMapping ) ) {
+//				final ResultSetMappingDescriptor resultSetMappingDescriptor = getFactory().getQueryEngine()
+//						.getNamedQueryRepository()
+//						.getResultSetMappingDescriptor( resultSetMapping );
+//
+//				if ( resultSetMappingDescriptor == null ) {
+//					throw new HibernateException( "Could not resolve specified result-set mapping name : " + resultSetMapping );
+//				}
+//
+//				query = new NativeQueryImpl( sqlString, resultSetMappingDescriptor, this );
+//			}
+//			else {
+//				query = new NativeQueryImpl( sqlString, this );
+//			}
+//		}
+//		catch (RuntimeException he) {
+//			throw getExceptionConverter().convert( he );
+//		}
+//
+//		return query;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 
@@ -833,12 +835,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
-		return listCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
+//		return listCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
-		return scrollCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
+//		return scrollCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

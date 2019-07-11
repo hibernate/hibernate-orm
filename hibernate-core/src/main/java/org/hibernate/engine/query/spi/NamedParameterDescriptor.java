@@ -7,6 +7,8 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.type.Type;
 
 /**
@@ -25,7 +27,7 @@ public class NamedParameterDescriptor extends AbstractParameterDescriptor {
 	 * @param expectedType The expected type of the parameter, according to the translator
 	 * @param sourceLocations The locations of the named parameters (aye aye aye)
 	 */
-	public NamedParameterDescriptor(String name, Type expectedType, int[] sourceLocations) {
+	public NamedParameterDescriptor(String name, AllowableParameterType expectedType, int[] sourceLocations) {
 		super( sourceLocations, expectedType );
 		this.name = name;
 	}
@@ -51,5 +53,10 @@ public class NamedParameterDescriptor extends AbstractParameterDescriptor {
 	@Override
 	public int hashCode() {
 		return getName().hashCode();
+	}
+
+	@Override
+	public boolean allowsMultiValuedBinding() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

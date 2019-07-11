@@ -7,6 +7,7 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.type.Type;
 
@@ -19,9 +20,9 @@ import org.hibernate.type.Type;
 public abstract class AbstractParameterDescriptor implements QueryParameter {
 	private final int[] sourceLocations;
 
-	private Type expectedType;
+	private AllowableParameterType expectedType;
 
-	public AbstractParameterDescriptor(int[] sourceLocations, Type expectedType) {
+	public AbstractParameterDescriptor(int[] sourceLocations, AllowableParameterType expectedType) {
 		this.sourceLocations = sourceLocations;
 		this.expectedType = expectedType;
 	}
@@ -38,24 +39,20 @@ public abstract class AbstractParameterDescriptor implements QueryParameter {
 
 	@Override
 	public Class getParameterType() {
-		return expectedType == null ? null : expectedType.getReturnedClass();
+		return expectedType == null ? null : expectedType.getExpressableJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
-	public Type getHibernateType() {
+	public AllowableParameterType getHibernateType() {
 		return getExpectedType();
 	}
 
-	@Override
-	public int[] getSourceLocations() {
-		return sourceLocations;
-	}
 
-	public Type getExpectedType() {
+	public AllowableParameterType getExpectedType() {
 		return expectedType;
 	}
 
-	public void resetExpectedType(Type expectedType) {
+	public void resetExpectedType(AllowableParameterType expectedType) {
 		this.expectedType = expectedType;
 	}
 }

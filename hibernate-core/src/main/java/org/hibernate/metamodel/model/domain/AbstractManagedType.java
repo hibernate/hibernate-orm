@@ -28,6 +28,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Commonality for Hibernate's implementations of the JPA {@link ManagedType}
@@ -76,7 +77,7 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void visitAttributes(Consumer<PersistentAttribute<? super J, ?>> action) {
+	public void visitAttributes(Consumer<PersistentAttribute<J, ?>> action) {
 		visitDeclaredAttributes( (Consumer) action );
 		if ( getSuperType() != null ) {
 			getSuperType().visitAttributes( (Consumer) action );

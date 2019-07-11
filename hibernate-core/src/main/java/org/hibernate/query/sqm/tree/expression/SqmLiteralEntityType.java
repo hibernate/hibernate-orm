@@ -58,13 +58,13 @@ public class SqmLiteralEntityType<T>
 		return walker.visitEntityTypeLiteralExpression( this );
 	}
 
-	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new SemanticException( "Selecting an entity type is not allowed. An entity type expression can be used to restrict query polymorphism ");
-		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
-	}
+//	@Override
+//	public DomainResult createDomainResult(
+//			String resultVariable,
+//			DomainResultCreationState creationState) {
+//		throw new SemanticException( "Selecting an entity type is not allowed. An entity type expression can be used to restrict query polymorphism ");
+//		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
+//	}
 
 
 	@Override

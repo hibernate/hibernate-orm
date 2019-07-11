@@ -161,7 +161,7 @@ public abstract class AbstractIdentifiableType<J>
 		Set<SingularPersistentAttribute<? super J, ?>> idClassAttributes = getIdClassAttributesSafely();
 		if ( idClassAttributes != null ) {
 			if ( idClassAttributes.size() == 1 ) {
-				return (SimpleDomainType<?>) idClassAttributes.iterator().next().getType();
+				return idClassAttributes.iterator().next().getType();
 			}
 		}
 
@@ -185,7 +185,7 @@ public abstract class AbstractIdentifiableType<J>
 			return null;
 		}
 
-		return (Set) attributes;
+		return attributes;
 	}
 
 	@Override

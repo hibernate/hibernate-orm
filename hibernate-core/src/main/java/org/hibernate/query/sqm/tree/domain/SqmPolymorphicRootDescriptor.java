@@ -44,7 +44,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	private final Set<EntityDomainType<?>> implementors;
-	private final Map<String, PersistentAttribute<? super T, ?>> commonAttributes;
+	private final Map<String, PersistentAttribute> commonAttributes;
 
 	private final JavaTypeDescriptor<T> polymorphicJavaDescriptor;
 
@@ -55,7 +55,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 		this.implementors = implementors;
 
-		final HashMap<String, PersistentAttribute> workMap = new HashMap<>();
+		final Map<String, PersistentAttribute> workMap = new HashMap<>();
 
 		final ArrayList<EntityDomainType<?>> implementorsList = new ArrayList<>( implementors );
 
@@ -151,8 +151,8 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public void visitAttributes(Consumer<PersistentAttribute<? super T, ?>> action) {
-		commonAttributes.values().forEach( action );
+	public void visitAttributes(Consumer<PersistentAttribute<T, ?>> action) {
+		commonAttributes.values().forEach( (Consumer) action );
 	}
 
 	@Override

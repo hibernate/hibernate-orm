@@ -10,6 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.mapping.spi.Writeable;
 import org.hibernate.query.Query;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -24,7 +25,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 @Incubating
-public interface AllowableParameterType<J> extends Writeable {
+public interface AllowableParameterType<J> extends Writeable, SqmExpressable<J> {
 
 	JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor();
 }

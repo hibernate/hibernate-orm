@@ -7,9 +7,14 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * @author Emmanuel Bernard
@@ -32,5 +37,28 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
 
 	public Class<J> getJavaType() {
 		return getExpressableJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	public boolean canDoExtraction() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public J extract(
+			CallableStatement statement, int paramIndex, SharedSessionContractImplementor session) throws SQLException {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public J extract(
+			CallableStatement statement, String paramName, SharedSessionContractImplementor session)
+			throws SQLException {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

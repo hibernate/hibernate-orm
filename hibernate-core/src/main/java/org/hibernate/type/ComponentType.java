@@ -19,6 +19,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.jdbc.Size;
@@ -32,6 +33,8 @@ import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Handles "component" mappings
@@ -762,6 +765,11 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return canDoExtraction;
 	}
 
+	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
 	private boolean determineIfProcedureParamExtractionCanBePerformed() {
 		for ( Type propertyType : propertyTypes ) {
 			if ( !ProcedureParameterExtractionAware.class.isInstance( propertyType ) ) {
@@ -812,30 +820,32 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			throws SQLException {
 		// for this form to work all sub-property spans must be one (1)...
 
-		Object[] values = new Object[propertySpan];
+//		Object[] values = new Object[propertySpan];
+//
+//		int indx = 0;
+//		boolean notNull = false;
+//		for ( String paramName : paramName ) {
+//			// we know this cast is safe from canDoExtraction
+//			final ProcedureParameterExtractionAware propertyType = (ProcedureParameterExtractionAware) propertyTypes[indx];
+//			final Object value = propertyType.extract( statement, new String[] {paramName}, session );
+//			if ( value == null ) {
+//				if ( isKey ) {
+//					return null; //different nullability rules for pk/fk
+//				}
+//			}
+//			else {
+//				notNull = true;
+//			}
+//			values[indx] = value;
+//		}
+//
+//		if ( !notNull ) {
+//			values = null;
+//		}
+//
+//		return resolve( values, session, null );
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-		int indx = 0;
-		boolean notNull = false;
-		for ( String paramName : paramName ) {
-			// we know this cast is safe from canDoExtraction
-			final ProcedureParameterExtractionAware propertyType = (ProcedureParameterExtractionAware) propertyTypes[indx];
-			final Object value = propertyType.extract( statement, new String[] {paramName}, session );
-			if ( value == null ) {
-				if ( isKey ) {
-					return null; //different nullability rules for pk/fk
-				}
-			}
-			else {
-				notNull = true;
-			}
-			values[indx] = value;
-		}
-
-		if ( !notNull ) {
-			values = null;
-		}
-
-		return resolve( values, session, null );
 	}
 
 	@Override
@@ -845,5 +855,10 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	private boolean isCreateEmptyCompositesEnabled() {
 		return createEmptyCompositesEnabled;
+	}
+
+	@Override
+	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

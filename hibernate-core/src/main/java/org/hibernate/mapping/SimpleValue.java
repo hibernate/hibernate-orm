@@ -580,7 +580,7 @@ public class SimpleValue implements KeyValue {
 				}
 		);
 
-		final BasicJavaDescriptor entityAttributeJavaTypeDescriptor = jpaAttributeConverter.getDomainJavaTypeDescriptor();
+		final BasicJavaDescriptor entityAttributeJavaTypeDescriptor = (BasicJavaDescriptor) jpaAttributeConverter.getDomainJavaTypeDescriptor();
 
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

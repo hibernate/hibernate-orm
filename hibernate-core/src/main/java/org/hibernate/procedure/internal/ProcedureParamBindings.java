@@ -11,6 +11,7 @@ import java.util.Map;
 
 import javax.persistence.ParameterMode;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.procedure.ProcedureParameterBinding;
 import org.hibernate.procedure.spi.ProcedureParameterBindingImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
@@ -47,13 +48,9 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 
 	@Override
 	public <P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
-		return getBinding( parameterMetadata.resolve( parameter ) );
-	}
-
-//	@Override
-//	public QueryParameterBinding<?> getBinding(QueryParameterImplementor<?> parameter) {
 //		return getBinding( parameterMetadata.resolve( parameter ) );
-//	}
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 
 	public ProcedureParameterBindingImplementor<?> getBinding(ProcedureParameterImplementor<?> parameter) {
 		final ProcedureParameterImplementor procParam = parameterMetadata.resolve( parameter );
@@ -74,28 +71,31 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 
 	@Override
 	public ProcedureParameterBinding<?> getBinding(String name) {
-		return (ProcedureParameterBinding<?>) getBinding( parameterMetadata.getQueryParameter( name ) );
+//		return (ProcedureParameterBinding<?>) getBinding( parameterMetadata.getQueryParameter( name ) );
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public ProcedureParameterBinding getBinding(int position) {
-		return getBinding( parameterMetadata.getQueryParameter( position ) );
+//		return getBinding( parameterMetadata.getQueryParameter( position ) );
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void validate() {
-		parameterMetadata.visitRegistrations(
-				queryParameter -> {
-					final ProcedureParameterImplementor procParam = (ProcedureParameterImplementor) queryParameter;
-					if ( procParam.getMode() == ParameterMode.IN
-							|| procParam.getMode() == ParameterMode.INOUT ) {
-						if ( !getBinding( procParam ).isBound() ) {
-							// depending on "pass nulls" this might be ok...
-							//  for now, just log a warning
-						}
-					}
-				}
-		);
+//		parameterMetadata.visitRegistrations(
+//				queryParameter -> {
+//					final ProcedureParameterImplementor procParam = (ProcedureParameterImplementor) queryParameter;
+//					if ( procParam.getMode() == ParameterMode.IN
+//							|| procParam.getMode() == ParameterMode.INOUT ) {
+//						if ( !getBinding( procParam ).isBound() ) {
+//							// depending on "pass nulls" this might be ok...
+//							//  for now, just log a warning
+//						}
+//					}
+//				}
+//		);
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

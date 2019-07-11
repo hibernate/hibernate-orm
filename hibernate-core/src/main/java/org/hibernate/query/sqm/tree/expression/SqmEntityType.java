@@ -47,12 +47,12 @@ public class SqmEntityType<T> extends AbstractSqmExpression<T> implements Domain
 		return walker.visitParameterizedEntityTypeExpression( this );
 	}
 
-	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException( "At the moment, selection of an entity's type as a QueryResult is not supported" );
-		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
-	}
+//	@Override
+//	public DomainResult createDomainResult(
+//			String resultVariable,
+//			DomainResultCreationState creationState) {
+//		throw new UnsupportedOperationException( "At the moment, selection of an entity's type as a QueryResult is not supported" );
+//		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
+//	}
 
 }

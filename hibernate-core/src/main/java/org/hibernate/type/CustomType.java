@@ -17,12 +17,15 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.Sized;
@@ -314,6 +317,11 @@ public class CustomType
 	}
 
 	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
 	public Object extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
 		if ( canDoExtraction() ) {
 			return ((ProcedureParameterExtractionAware) getUserType() ).extract( statement, startIndex, session );
@@ -346,5 +354,15 @@ public class CustomType
 	@Override
 	public boolean equals(Object obj) {
 		return ( obj instanceof CustomType ) && getUserType().equals( ( (CustomType) obj ).getUserType() );
+	}
+
+	@Override
+	public Class getJavaType() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

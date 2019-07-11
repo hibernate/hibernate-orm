@@ -93,7 +93,7 @@ public class SqmCriteriaParameter<T>
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getJavaType();
+		return this.getNodeType().getExpressableJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override

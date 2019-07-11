@@ -302,12 +302,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.metamodel = (MetamodelImplementor) metadata.getTypeConfiguration().scope( this )
 					.create( metadata, determineJpaMetaModelPopulationSetting( properties ) );
 
-			settings.getMultiTableBulkIdStrategy().prepare(
-					jdbcServices,
-					buildLocalConnectionAccess(),
-					metadata,
-					sessionFactoryOptions
-			);
+			// todo (6.0) : manage old getMultiTableBulkIdStrategy
+
+//			settings.getMultiTableBulkIdStrategy().prepare(
+//					jdbcServices,
+//					buildLocalConnectionAccess(),
+//					metadata,
+//					sessionFactoryOptions
+//			);
 
 			SchemaManagementToolCoordinator.process(
 					metadata,
@@ -745,7 +747,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.closing();
 		observer.sessionFactoryClosing( this );
 
-		settings.getMultiTableBulkIdStrategy().release( serviceRegistry.getService( JdbcServices.class ), buildLocalConnectionAccess() );
+		// todo (6.0) : manage old getMultiTableBulkIdStrategy
+//		settings.getMultiTableBulkIdStrategy().release( serviceRegistry.getService( JdbcServices.class ), buildLocalConnectionAccess() );
 
 		// NOTE : the null checks below handle cases where close is called from
 		//		a failed attempt to create the SessionFactory

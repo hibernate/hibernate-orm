@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -137,32 +136,33 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		Type elementType = persister.getElementType();
-		List<Object> sn = (List<Object>) getSnapshot();
+		final Type elementType = persister.getElementType();
+		final List<Object> sn = (List<Object>) getSnapshot();
 		if ( sn.size() != bag.size() ) {
 			return false;
 		}
 
 		// HHH-11032 - Group objects by Type.getHashCode() to reduce the complexity of the search
-		Map<Integer, List<Object>> instanceCountBag = groupByEqualityHash( bag, elementType );
-		Map<Integer, List<Object>> instanceCountSn = groupByEqualityHash( sn, elementType );
-		if ( instanceCountBag.size() != instanceCountSn.size() ) {
+		final Map<Integer, List<Object>> hashToInstancesBag = groupByEqualityHash( bag, elementType );
+		final Map<Integer, List<Object>> HashToInstancesSn = groupByEqualityHash( sn, elementType );
+		if ( hashToInstancesBag.size() != HashToInstancesSn.size() ) {
 			return false;
 		}
 
-		for ( Object elt : bag ) {
-			List<Object> candidatesBag = getItemsWithSameHash( instanceCountBag, elt, elementType );
-			List<Object> candidatesSn = getItemsWithSameHash( instanceCountSn, elt, elementType );
-
-			if ( countOccurrences( elt, candidatesBag, elementType ) != countOccurrences( elt, candidatesSn, elementType ) ) {
+		for ( Map.Entry<Integer, List<Object>> hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
+			final int hash = hashToInstancesBagEntry.getKey();
+			final List<Object> instancesBag = hashToInstancesBagEntry.getValue();
+			final List<Object> instancesSn = HashToInstancesSn.getOrDefault( hash, Collections.emptyList() );
+			if ( instancesBag.size() != instancesSn.size() ) {
 				return false;
+			}
+			for ( Object instance : instancesBag ) {
+				if ( countOccurrences( instance, instancesBag, elementType ) != countOccurrences( instance, instancesSn, elementType ) ) {
+					return false;
+				}
 			}
 		}
 		return true;
-	}
-
-	private List<Object> getItemsWithSameHash(Map<Integer, List<Object>> instanceCountBag, Object elt, Type elementType) {
-		return instanceCountBag.getOrDefault( elementType.getHashCode( elt ), Collections.emptyList() );
 	}
 
 	/**

@@ -35,10 +35,6 @@ public class BasicEntityPropertyMapping extends AbstractPropertyMapping {
 		return persister.getEntityName();
 	}
 
-	public Type getType() {
-		return persister.getType();
-	}
-
 	public String[] toColumns(final String alias, final String propertyName) throws QueryException {
 		return super.toColumns( 
 				AbstractEntityPersister.generateTableAlias(

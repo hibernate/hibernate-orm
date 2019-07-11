@@ -112,8 +112,4 @@ public class CompositePropertyMapping implements PropertyMapping {
 		return parentPropertyMapping.toColumns( toParentPropertyPath( propertyName ) );
 	}
 
-	@Override
-	public CompositeType getType() {
-		return compositeType;
-	}
 }

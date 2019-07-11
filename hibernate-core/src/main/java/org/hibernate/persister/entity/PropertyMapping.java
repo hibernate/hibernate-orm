@@ -75,9 +75,4 @@ public interface PropertyMapping {
 	 * Given a property path, return the corresponding column name(s).
 	 */
 	public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException;
-	/**
-	 * Get the type of the thing containing the properties
-	 */
-	@Remove
-	public Type getType();
 }

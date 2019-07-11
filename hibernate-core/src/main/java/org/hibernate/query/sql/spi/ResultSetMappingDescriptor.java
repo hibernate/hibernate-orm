@@ -90,7 +90,7 @@ public interface ResultSetMappingDescriptor {
 	/**
 	 * temporary so I can call externally
 	 */
-	public interface QueryResultDefinition {
+	interface QueryResultDefinition {
 		// what args?
 		QueryResultBuilder resolve();
 	}

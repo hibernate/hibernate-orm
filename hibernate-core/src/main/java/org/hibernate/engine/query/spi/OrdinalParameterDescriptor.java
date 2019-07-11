@@ -7,6 +7,7 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.type.Type;
 
 /**
@@ -39,5 +40,10 @@ public class OrdinalParameterDescriptor extends AbstractParameterDescriptor {
 
 	public int getValuePosition() {
 		return valuePosition;
+	}
+
+	@Override
+	public boolean allowsMultiValuedBinding() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

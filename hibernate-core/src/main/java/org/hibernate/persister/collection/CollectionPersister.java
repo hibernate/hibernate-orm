@@ -9,6 +9,7 @@ package org.hibernate.persister.collection;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -20,6 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
@@ -320,4 +322,14 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * @return the name of the property this collection is mapped by
 	 */
 	String getMappedByProperty();
+
+	/**
+	 * For sorted collections, the comparator to use.  Non-parameterized
+	 * because for SORTED_SET the elements are compared but for SORTED_MAP the
+	 * keys are compared
+	 *
+	 * @see CollectionClassification#SORTED_MAP
+	 * @see CollectionClassification#SORTED_SET
+	 */
+	Comparator<?> getSortingComparator();
 }

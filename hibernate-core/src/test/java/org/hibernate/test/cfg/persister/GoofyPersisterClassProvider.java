@@ -30,6 +30,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -628,6 +629,21 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public boolean canUseReferenceCacheEntries() {
 			return false;
 		}
+
+		@Override
+		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+			return false;
+		}
+
+		@Override
+		public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+			return false;
+		}
+
+		@Override
+		public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+			return false;
+		}
 	}
 
 	public static class NoopCollectionPersister implements CollectionPersister {
@@ -874,6 +890,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public String getMappedByProperty() {
+			return null;
+		}
+
+		@Override
+		public Comparator<?> getSortingComparator() {
 			return null;
 		}
 

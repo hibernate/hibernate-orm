@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -228,6 +229,9 @@ public abstract class AbstractCollectionPersister
 	private final Serializable[] spaces;
 
 	private Map collectionPropertyColumnAliases = new HashMap();
+
+	private final Comparator comparator;
+
 
 	public AbstractCollectionPersister(
 			Collection collectionBinding,
@@ -609,7 +613,14 @@ public abstract class AbstractCollectionPersister
 //			manyToManyOrderByTranslation = null;
 		}
 
+		comparator = collectionBinding.getComparator();
+
 		initCollectionPropertyMap();
+	}
+
+	@Override
+	public Comparator<?> getSortingComparator() {
+		return comparator;
 	}
 
 	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {

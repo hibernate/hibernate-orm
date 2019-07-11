@@ -26,7 +26,5 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 @Incubating
 public interface AllowableParameterType<J> extends Writeable {
 
-	default JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor(){
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor();
 }

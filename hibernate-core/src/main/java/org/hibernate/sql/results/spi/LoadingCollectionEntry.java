@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -21,13 +23,14 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 public class LoadingCollectionEntry {
 	private final CollectionPersister collectionDescriptor;
 	private final CollectionInitializer initializer;
-	private final Object key;
+	// todo (6.0) : change from Serializable to Object
+	private final Serializable key;
 	private final PersistentCollection collectionInstance;
 
 	public LoadingCollectionEntry(
 			CollectionPersister collectionDescriptor,
 			CollectionInitializer initializer,
-			Object key,
+			Serializable key,
 			PersistentCollection collectionInstance) {
 		this.collectionDescriptor = collectionDescriptor;
 		this.initializer = initializer;
@@ -49,7 +52,7 @@ public class LoadingCollectionEntry {
 		return initializer;
 	}
 
-	public Object getKey() {
+	public Serializable getKey() {
 		return key;
 	}
 

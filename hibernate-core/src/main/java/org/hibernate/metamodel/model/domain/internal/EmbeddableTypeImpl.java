@@ -9,11 +9,13 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -27,10 +29,14 @@ public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
 		implements EmbeddableDomainType<J>, Serializable {
 
+	private final ManagedTypeRepresentationStrategy representationStrategy;
+
 	public EmbeddableTypeImpl(
 			JavaTypeDescriptor<J> javaTypeDescriptor,
+			ManagedTypeRepresentationStrategy representationStrategy,
 			JpaMetamodel domainMetamodel) {
 		super( javaTypeDescriptor.getJavaType().getName(), javaTypeDescriptor, null, domainMetamodel );
+		this.representationStrategy = representationStrategy;
 	}
 
 	public EmbeddableTypeImpl(
@@ -45,6 +51,14 @@ public class EmbeddableTypeImpl<J>
 				null,
 				domainMetamodel
 		);
+
+		// todo (6.0) : need ManagedTypeRepresentationStrategy impls
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public ManagedTypeRepresentationStrategy getRepresentationStrategy() {
+		return representationStrategy;
 	}
 
 	@Override

@@ -44,6 +44,7 @@ import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -63,6 +64,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 class MetadataContext {
 	private static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( MetadataContext.class );
+
+	private final RuntimeModelCreationContext runtimeModelCreationContext;
 
 	private final SqmCriteriaNodeBuilder criteriaBuilder;
 	private Set<MappedSuperclass> knownMappedSuperclasses;
@@ -90,19 +93,24 @@ class MetadataContext {
 	private InflightRuntimeMetamodel metamodel;
 
 	public MetadataContext(
+			RuntimeModelCreationContext runtimeModelCreationContext,
 			InflightRuntimeMetamodel metamodel,
 			SqmCriteriaNodeBuilder criteriaBuilder,
 			Set<MappedSuperclass> mappedSuperclasses,
 			TypeConfiguration typeConfiguration,
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
-			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting
-	) {
+			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
+		this.runtimeModelCreationContext = runtimeModelCreationContext;
 		this.metamodel = metamodel;
 		this.criteriaBuilder = criteriaBuilder;
 		this.knownMappedSuperclasses = mappedSuperclasses;
 		this.typeConfiguration = typeConfiguration;
 		this.ignoreUnsupported = jpaMetaModelPopulationSetting == JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED;
 		this.jpaStaticMetaModelPopulationSetting = jpaStaticMetaModelPopulationSetting;
+	}
+
+	public RuntimeModelCreationContext getRuntimeModelCreationContext() {
+		return runtimeModelCreationContext;
 	}
 
 	public SqmCriteriaNodeBuilder getCriteriaBuilder() {

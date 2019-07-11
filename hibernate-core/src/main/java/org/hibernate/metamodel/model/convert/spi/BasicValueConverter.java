@@ -18,29 +18,29 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * 		* implicitly, based on the Java type (e.g., enums)
  * 	    * etc
  *
- * @param <O> The Java type we can use to represent the domain (object) type
+ * @param <D> The Java type we can use to represent the domain (object) type
  * @param <R> The Java type we can use to represent the relational type
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface BasicValueConverter<O,R> {
+public interface BasicValueConverter<D,R> {
 	/**
 	 * Convert the relational form just retrieved from JDBC ResultSet into
 	 * the domain form.
 	 */
-	O toDomainValue(R relationalForm);
+	D toDomainValue(R relationalForm);
 
 	/**
 	 * Convert the domain form into the relational form in preparation for
 	 * storage into JDBC
 	 */
-	R toRelationalValue(O domainForm);
+	R toRelationalValue(D domainForm);
 
 	/**
 	 * Descriptor for the Java type for the domain portion of this converter
 	 */
-	JavaTypeDescriptor<O> getDomainJavaDescriptor();
+	JavaTypeDescriptor<D> getDomainJavaDescriptor();
 
 	/**
 	 * Descriptor for the Java type for the relational portion of this converter

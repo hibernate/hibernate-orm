@@ -8,6 +8,8 @@ package org.hibernate.metamodel.model.domain;
 
 import javax.persistence.metamodel.EmbeddableType;
 
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
+
 /**
  * Hibernate extension to the JPA {@link EmbeddableType} contract.
  *
@@ -17,4 +19,5 @@ import javax.persistence.metamodel.EmbeddableType;
  * @author Steve Ebersole
  */
 public interface EmbeddableDomainType<J> extends ManagedDomainType<J>, EmbeddableType<J> {
+	ManagedTypeRepresentationStrategy getRepresentationStrategy();
 }

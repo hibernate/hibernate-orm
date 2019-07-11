@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
@@ -24,8 +25,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.metamodel.spi.DomainMetamodel;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -83,12 +83,15 @@ public class RuntimeModelCreationProcess {
 	// ````
 
 
+	private final BootstrapContext bootstrapContext;
 	private final SessionFactoryImplementor sessionFactory;
 	private TypeConfiguration typeConfiguration;
 
 	public RuntimeModelCreationProcess(
+			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory,
 			TypeConfiguration typeConfiguration) {
+		this.bootstrapContext = bootstrapContext;
 		this.sessionFactory = sessionFactory;
 		this.typeConfiguration = typeConfiguration;
 	}
@@ -100,7 +103,12 @@ public class RuntimeModelCreationProcess {
 	public DomainMetamodel create(
 			MetadataImplementor bootMetamodel,
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
-		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
+		final RuntimeModelCreationContext persisterCreationContext = new RuntimeModelCreationContext() {
+			@Override
+			public BootstrapContext getBootstrapContext() {
+				return bootstrapContext;
+			}
+
 			@Override
 			public SessionFactoryImplementor getSessionFactory() {
 				return sessionFactory;
@@ -112,9 +120,9 @@ public class RuntimeModelCreationProcess {
 			}
 		};
 
-		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry()
-				.getService( PersisterFactory.class );
 		final InflightRuntimeMetamodel inflightRuntimeMetamodel = new InflightRuntimeMetamodel( typeConfiguration );
+
+		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
 
 		primeSecondLevelCacheRegions( bootMetamodel );
 
@@ -130,17 +138,16 @@ public class RuntimeModelCreationProcess {
 
 		);
 
-		JpaMetamodel jpaMetamodel = new JpaMetamodelImpl(
+		final JpaMetamodel jpaMetamodel = new JpaMetamodelImpl(
 				inflightRuntimeMetamodel,
 				bootMetamodel.getNamedEntityGraphs().values()
 		);
 
-		DomainMetamodelImpl domainMetamodel = new DomainMetamodelImpl(
+		return new DomainMetamodelImpl(
 				sessionFactory,
 				inflightRuntimeMetamodel,
 				jpaMetamodel
 		);
-		return domainMetamodel;
 	}
 
 	private void primeSecondLevelCacheRegions(MetadataImplementor mappingMetadata) {
@@ -160,7 +167,7 @@ public class RuntimeModelCreationProcess {
 							.addEntityConfig( bootEntityDescriptor, accessType );
 				}
 
-				if ( RootClass.class.isInstance( bootEntityDescriptor )
+				if ( bootEntityDescriptor instanceof RootClass
 						&& bootEntityDescriptor.hasNaturalId()
 						&& bootEntityDescriptor.getNaturalIdCacheRegionName() != null ) {
 					regionConfigBuilders.computeIfAbsent(

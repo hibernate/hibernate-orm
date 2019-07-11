@@ -26,6 +26,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
@@ -175,6 +176,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public RuntimeModelCreationProcess scope(SessionFactoryImplementor sessionFactory) {
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImpl [%s]", this, sessionFactory );
 
+		if ( scope.getMetadataBuildingContext() == null ) {
+			throw new IllegalStateException( "MetadataBuildingContext not known" );
+		}
+		final BootstrapContext bootstrapContext = scope.getMetadataBuildingContext().getBootstrapContext();
+
 		for ( Map.Entry<String, String> importEntry : scope.metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
 			if ( importMap.containsKey( importEntry.getKey() ) ) {
 				continue;
@@ -185,7 +191,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		scope.setSessionFactory( sessionFactory );
 		sessionFactory.addObserver( this );
-		return new RuntimeModelCreationProcess( sessionFactory, this );
+		return new RuntimeModelCreationProcess( bootstrapContext, sessionFactory, this );
 	}
 
 	/**

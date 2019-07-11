@@ -9,12 +9,8 @@ package org.hibernate.metamodel.model.convert.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -73,16 +69,6 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 	@Override
 	public JavaTypeDescriptor<Integer> getRelationalJavaDescriptor() {
 		return relationalJavaDescriptor;
-	}
-
-	@Override
-	public E readValue(ResultSet resultSet, String name, SharedSessionContractImplementor session) throws SQLException {
-		return toDomainValue( valueExtractor.extract( resultSet, name, session ) );
-	}
-
-	@Override
-	public void writeValue(PreparedStatement statement, E value, int position, SharedSessionContractImplementor session) throws SQLException {
-		valueBinder.bind( statement, toRelationalValue( value ), position, session );
 	}
 
 	@Override

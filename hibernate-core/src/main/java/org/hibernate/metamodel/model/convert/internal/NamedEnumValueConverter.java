@@ -9,13 +9,9 @@ package org.hibernate.metamodel.model.convert.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -73,17 +69,6 @@ public class NamedEnumValueConverter<E extends Enum> implements EnumValueConvert
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.VARCHAR;
-	}
-
-
-	@Override
-	public E readValue(ResultSet resultSet, String name, SharedSessionContractImplementor session) throws SQLException {
-		return toDomainValue( valueExtractor.extract( resultSet, name, session ) );
-	}
-
-	@Override
-	public void writeValue(PreparedStatement statement, E value, int position, SharedSessionContractImplementor session) throws SQLException {
-		valueBinder.bind( statement, toRelationalValue( value ), position, session );
 	}
 
 	@Override

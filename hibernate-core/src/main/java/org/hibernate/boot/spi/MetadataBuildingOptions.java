@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -24,7 +25,9 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 
 import org.jboss.jandex.IndexView;
 
@@ -50,6 +53,14 @@ public interface MetadataBuildingOptions {
 	 * @return The mapping defaults
 	 */
 	MappingDefaults getMappingDefaults();
+
+	default ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	default CollectionSemanticsResolver getPersistentCollectionRepresentationResolver() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 
 	/**
 	 * Access the list of BasicType registrations.  These are the BasicTypes explicitly

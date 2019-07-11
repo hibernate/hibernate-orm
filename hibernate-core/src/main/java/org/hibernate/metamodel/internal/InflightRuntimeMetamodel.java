@@ -33,6 +33,7 @@ import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -86,7 +87,7 @@ public class InflightRuntimeMetamodel {
 			SqmCriteriaNodeBuilder criteriaBuilder,
 			CacheImplementor cacheImplementor,
 			PersisterFactory persisterFactory,
-			PersisterCreationContext persisterCreationContext,
+			RuntimeModelCreationContext modelCreationContext,
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
 		this.imports.putAll( bootMetamodel.getImports() );
@@ -94,14 +95,14 @@ public class InflightRuntimeMetamodel {
 				bootMetamodel.getEntityBindings(),
 				cacheImplementor,
 				persisterFactory,
-				persisterCreationContext
+				modelCreationContext
 		);
 
 		processBootCollections(
 				bootMetamodel.getCollectionBindings(),
 				cacheImplementor,
 				persisterFactory,
-				persisterCreationContext
+				modelCreationContext
 		);
 
 		finishDomainMetamodelInitialization();
@@ -183,7 +184,6 @@ public class InflightRuntimeMetamodel {
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
 		if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.DISABLED ) {
-
 			MetadataContext context = new MetadataContext(
 					this,
 					criteriaBuilder,
@@ -216,7 +216,7 @@ public class InflightRuntimeMetamodel {
 			java.util.Collection<PersistentClass> entityBindings,
 			CacheImplementor cacheImplementor,
 			PersisterFactory persisterFactory,
-			PersisterCreationContext persisterCreationContext) {
+			RuntimeModelCreationContext modelCreationContext) {
 		for ( final PersistentClass model : entityBindings ) {
 			final NavigableRole rootEntityRole = new NavigableRole( model.getRootClass().getEntityName() );
 			final EntityDataAccess accessStrategy = cacheImplementor.getEntityRegionAccess( rootEntityRole );
@@ -227,7 +227,7 @@ public class InflightRuntimeMetamodel {
 					model,
 					accessStrategy,
 					naturalIdAccessStrategy,
-					persisterCreationContext
+					modelCreationContext
 			);
 			entityPersisterMap.put( model.getEntityName(), cp );
 

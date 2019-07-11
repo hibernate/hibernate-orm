@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.CoreLogging;
@@ -66,20 +67,22 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 					);
 				}
 
-				Object collectionOwner = findCollectionOwner( collectionRowKey, resultSet, context );
 
-				PersistentCollection rowCollection = persistenceContext.getLoadContexts()
-						.getCollectionLoadContext( resultSet )
-						.getLoadingCollection( collectionReference.getCollectionPersister(), collectionRowKey );
+				throw new NotYetImplementedFor6Exception( getClass() );
 
-				if ( rowCollection != null ) {
-					rowCollection.readFrom(
-							resultSet,
-							collectionReference.getCollectionPersister(),
-							aliases.getCollectionColumnAliases(),
-							collectionOwner
-					);
-				}
+//				Object collectionOwner = findCollectionOwner( collectionRowKey, resultSet, context );
+//				PersistentCollection rowCollection = persistenceContext.getLoadContexts()
+//						.getCollectionLoadContext( resultSet )
+//						.getLoadingCollection( collectionReference.getCollectionPersister(), collectionRowKey );
+//
+//				if ( rowCollection != null ) {
+//					rowCollection.readFrom(
+//							resultSet,
+//							collectionReference.getCollectionPersister(),
+//							aliases.getCollectionColumnAliases(),
+//							collectionOwner
+//					);
+//				}
 
 			}
 			else {
@@ -99,10 +102,12 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 								)
 						);
 					}
-					// handle empty collection
-					persistenceContext.getLoadContexts()
-							.getCollectionLoadContext( resultSet )
-							.getLoadingCollection( collectionReference.getCollectionPersister(), optionalKey );
+
+					throw new NotYetImplementedFor6Exception( getClass() );
+//					// handle empty collection
+//					persistenceContext.getLoadContexts()
+//							.getCollectionLoadContext( resultSet )
+//							.getLoadingCollection( collectionReference.getCollectionPersister(), optionalKey );
 
 				}
 			}
@@ -148,9 +153,10 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 
 	@Override
 	public void endLoading(ResultSetProcessingContextImpl context) {
-		context.getSession().getPersistenceContextInternal()
-				.getLoadContexts()
-				.getCollectionLoadContext( context.getResultSet() )
-				.endLoadingCollections( collectionReference.getCollectionPersister() );
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		context.getSession().getPersistenceContextInternal()
+//				.getLoadContexts()
+//				.getCollectionLoadContext( context.getResultSet() )
+//				.endLoadingCollections( collectionReference.getCollectionPersister() );
 	}
 }

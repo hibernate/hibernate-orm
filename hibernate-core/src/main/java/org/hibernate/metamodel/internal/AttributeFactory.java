@@ -19,7 +19,6 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -492,32 +491,32 @@ public class AttributeFactory {
 	private <X, Y> AttributeMetadata<X, Y> determineAttributeMetadata(
 			AttributeContext<X> attributeContext,
 			MemberResolver memberResolver) {
-		LOG.trace(
-				"Starting attribute metadata determination [" + attributeContext.getPropertyMapping()
-						.getName() + "]"
-		);
+		final Property propertyMapping = attributeContext.getPropertyMapping();
+		final String propertyName = propertyMapping.getName();
+
+		LOG.trace( "Starting attribute metadata determination [" + propertyName + "]" );
+
 		final Member member = memberResolver.resolveMember( attributeContext );
 		LOG.trace( "    Determined member [" + member + "]" );
 
-		final Value value = attributeContext.getPropertyMapping().getValue();
+		final Value value = propertyMapping.getValue();
 		final org.hibernate.type.Type type = value.getType();
 		LOG.trace( "    Determined type [name=" + type.getName() + ", class=" + type.getClass().getName() + "]" );
 
 		if ( type.isAnyType() ) {
-			// ANY mappings are currently not supported in the JPA metamodel; see HHH-6589
-			if ( context.isIgnoreUnsupported() ) {
-				return null;
-			}
-			else {
-				throw new UnsupportedOperationException( "ANY not supported" );
-			}
+			return new SingularAttributeMetadataImpl<>(
+					propertyMapping,
+					attributeContext.getOwnerType(),
+					member,
+					AttributeClassification.ANY
+			);
 		}
 		else if ( type.isAssociationType() ) {
 			// collection or entity
 			if ( type.isEntityType() ) {
 				// entity
 				return new SingularAttributeMetadataImpl<X, Y>(
-						attributeContext.getPropertyMapping(),
+						propertyMapping,
 						attributeContext.getOwnerType(),
 						member,
 						determineSingularAssociationClassification( member )
@@ -528,21 +527,17 @@ public class AttributeFactory {
 				final Collection collValue = (Collection) value;
 				final Value elementValue = collValue.getElement();
 				final org.hibernate.type.Type elementType = elementValue.getType();
+				final boolean isManyToMany = isManyToMany( member );
 
 				// First, determine the type of the elements and use that to help determine the
 				// collection type)
 				final AttributeClassification elementClassification;
 				final AttributeClassification attributeClassification;
 				if ( elementType.isAnyType() ) {
-					if ( context.isIgnoreUnsupported() ) {
-						return null;
-					}
-					else {
-						throw new UnsupportedOperationException( "collection of any not supported yet" );
-					}
+					attributeClassification = AttributeClassification.ELEMENT_COLLECTION;
+					elementClassification = AttributeClassification.ANY;
 				}
-				final boolean isManyToMany = isManyToMany( member );
-				if ( elementValue instanceof Component ) {
+				else if ( elementValue instanceof Component ) {
 					elementClassification = AttributeClassification.EMBEDDED;
 					attributeClassification = AttributeClassification.ELEMENT_COLLECTION;
 				}
@@ -565,14 +560,9 @@ public class AttributeFactory {
 					final org.hibernate.type.Type keyType = keyValue.getType();
 
 					if ( keyType.isAnyType() ) {
-						if ( context.isIgnoreUnsupported() ) {
-							return null;
-						}
-						else {
-							throw new UnsupportedOperationException( "collection of any not supported yet" );
-						}
+						indexClassification = AttributeClassification.ANY;
 					}
-					if ( keyValue instanceof Component ) {
+					else if ( keyValue instanceof Component ) {
 						indexClassification = AttributeClassification.EMBEDDED;
 					}
 					else if ( keyType.isAssociationType() ) {
@@ -589,7 +579,7 @@ public class AttributeFactory {
 					indexClassification = null;
 				}
 				return new PluralAttributeMetadataImpl(
-						attributeContext.getPropertyMapping(),
+						propertyMapping,
 						attributeContext.getOwnerType(),
 						member,
 						attributeClassification,
@@ -617,10 +607,10 @@ public class AttributeFactory {
 //					);
 			}
 		}
-		else if ( attributeContext.getPropertyMapping().isComposite() ) {
+		else if ( propertyMapping.isComposite() ) {
 			// component
 			return new SingularAttributeMetadataImpl<>(
-					attributeContext.getPropertyMapping(),
+					propertyMapping,
 					attributeContext.getOwnerType(),
 					member,
 					AttributeClassification.EMBEDDED
@@ -629,13 +619,13 @@ public class AttributeFactory {
 		else {
 			// basic type
 			return new SingularAttributeMetadataImpl<>(
-					attributeContext.getPropertyMapping(),
+					propertyMapping,
 					attributeContext.getOwnerType(),
 					member,
 					AttributeClassification.BASIC
 			);
 		}
-		throw new UnsupportedOperationException( "oops, we are missing something: " + attributeContext.getPropertyMapping() );
+		throw new UnsupportedOperationException( "oops, we are missing something: " + propertyMapping );
 	}
 
 	public static AttributeClassification determineSingularAssociationClassification(Member member) {

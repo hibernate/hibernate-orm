@@ -20,6 +20,7 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.Internal;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
@@ -62,7 +63,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
-class MetadataContext {
+@Internal
+public class MetadataContext {
 	private static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( MetadataContext.class );
 
 	private final RuntimeModelCreationContext runtimeModelCreationContext;
@@ -70,7 +72,6 @@ class MetadataContext {
 	private final SqmCriteriaNodeBuilder criteriaBuilder;
 	private Set<MappedSuperclass> knownMappedSuperclasses;
 	private TypeConfiguration typeConfiguration;
-	private final boolean ignoreUnsupported;
 	private final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
@@ -97,15 +98,12 @@ class MetadataContext {
 			InflightRuntimeMetamodel metamodel,
 			SqmCriteriaNodeBuilder criteriaBuilder,
 			Set<MappedSuperclass> mappedSuperclasses,
-			TypeConfiguration typeConfiguration,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
 		this.runtimeModelCreationContext = runtimeModelCreationContext;
 		this.metamodel = metamodel;
 		this.criteriaBuilder = criteriaBuilder;
 		this.knownMappedSuperclasses = mappedSuperclasses;
-		this.typeConfiguration = typeConfiguration;
-		this.ignoreUnsupported = jpaMetaModelPopulationSetting == JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED;
+		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
 		this.jpaStaticMetaModelPopulationSetting = jpaStaticMetaModelPopulationSetting;
 	}
 
@@ -127,10 +125,6 @@ class MetadataContext {
 
 	InflightRuntimeMetamodel getMetamodel() {
 		return metamodel;
-	}
-
-	/*package*/ boolean isIgnoreUnsupported() {
-		return ignoreUnsupported;
 	}
 
 	/**
@@ -162,11 +156,7 @@ class MetadataContext {
 		return mappedSuperClassTypeMap;
 	}
 
-	/*package*/ void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
-		if ( ignoreUnsupported && entityType.getBindableJavaType() == null ) {
-			return;
-		}
-
+	public  void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
 		if ( entityType.getBindableJavaType() != null ) {
 			entityTypes.put( entityType.getBindableJavaType(), entityType );
 		}
@@ -176,14 +166,14 @@ class MetadataContext {
 		orderedMappings.add( persistentClass );
 	}
 
-	/*package*/ void registerEmbeddableType(EmbeddableDomainType<?> embeddableType) {
+	public void registerEmbeddableType(EmbeddableDomainType<?> embeddableType) {
 		assert embeddableType.getJavaType() != null;
 		assert ! Map.class.isAssignableFrom( embeddableType.getJavaType() );
 
 		embeddables.put( embeddableType.getJavaType(), embeddableType );
 	}
 
-	/*package*/ void registerMappedSuperclassType(
+	public void registerMappedSuperclassType(
 			MappedSuperclass mappedSuperclass,
 			MappedSuperclassDomainType<?> mappedSuperclassType) {
 		mappedSuperclassByMappedSuperclassMapping.put( mappedSuperclass, mappedSuperclassType );

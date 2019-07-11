@@ -100,10 +100,8 @@ public class RuntimeModelCreationProcess {
 	 * Perform the runtime metamodel creation based on the information obtained during
 	 * the first phase of booting, returning the
 	 */
-	public DomainMetamodel create(
-			MetadataImplementor bootMetamodel,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
-		final RuntimeModelCreationContext persisterCreationContext = new RuntimeModelCreationContext() {
+	public DomainMetamodel create(MetadataImplementor bootMetamodel) {
+		final RuntimeModelCreationContext runtimeModelCreationContext = new RuntimeModelCreationContext() {
 			@Override
 			public BootstrapContext getBootstrapContext() {
 				return bootstrapContext;
@@ -126,20 +124,21 @@ public class RuntimeModelCreationProcess {
 
 		primeSecondLevelCacheRegions( bootMetamodel );
 
+		final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( sessionFactory.getProperties() );
+
 		inflightRuntimeMetamodel.processBootMetaModel(
 				bootMetamodel,
-				sessionFactory.getQueryEngine().getCriteriaBuilder(),
 				sessionFactory.getCache(),
 				persisterFactory,
-				persisterCreationContext,
-				jpaMetaModelPopulationSetting,
-				determineJpaMetaModelPopulationSetting(
-						sessionFactory.getProperties() )
-
+				runtimeModelCreationContext
 		);
 
-		final JpaMetamodel jpaMetamodel = new JpaMetamodelImpl(
+		final JpaMetamodel jpaMetamodel = JpaMetamodelImpl.buildMetamodel(
+				runtimeModelCreationContext,
+				bootMetamodel,
 				inflightRuntimeMetamodel,
+				sessionFactory.getQueryEngine().getCriteriaBuilder(),
+				jpaStaticMetaModelPopulationSetting,
 				bootMetamodel.getNamedEntityGraphs().values()
 		);
 

@@ -24,6 +24,7 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
@@ -34,14 +35,21 @@ import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.internal.InflightRuntimeMetamodel;
-import org.hibernate.metamodel.model.domain.AbstractDomainType;
+import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
+import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -53,13 +61,9 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	private final TypeConfiguration typeConfiguration;
 
-	private final Map<String, EntityDomainType<?>> entityDescriptorMap;
-
-	private final Map<Class<?>, MappedSuperclassDomainType<?>> mappedSuperclassTypeMap;
-
-	private final Map<Class, EmbeddableDomainType<?>> embeddableDescriptorMap;
-
-	private final Map<String, String> nameToImportNameMap;
+	private final Map<String, EntityDomainType<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
+	private final Map<Class<?>, MappedSuperclassDomainType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
+	private final  Map<Class, EmbeddableDomainType<?>> jpaEmbeddableDescriptorMap = new ConcurrentHashMap<>();
 
 	private final transient Map<String, RootGraphImplementor> entityGraphMap = new ConcurrentHashMap<>();
 
@@ -67,26 +71,14 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	private final Map<Class, String> entityProxyInterfaceMap;
 
+	private final Map<String, String> nameToImportNameMap;
 
-	public JpaMetamodelImpl(
-			InflightRuntimeMetamodel runtimeMetamodel,
-			java.util.Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions) {
+
+	public JpaMetamodelImpl(InflightRuntimeMetamodel runtimeMetamodel) {
 		this.typeConfiguration = runtimeMetamodel.getTypeConfiguration();
-
-		entityDescriptorMap = runtimeMetamodel.getJpaEntityTypeMap();
-		mappedSuperclassTypeMap = runtimeMetamodel.getJpaMappedSuperclassTypeMap();
-		embeddableDescriptorMap = runtimeMetamodel.getJpaEmbeddableDescriptorMap();
-
-//		entityDescriptorMap.values()
-//				.forEach( domainType -> ( (AbstractDomainType) domainType ).injectJpaMetamodel( this ) );
-//		mappedSuperclassTypeMap.values().forEach( domainType -> ( (AbstractDomainType) domainType ).injectJpaMetamodel(
-//				this ) );
-//		entityDescriptorMap.values()
-//				.forEach( domainType -> ( (AbstractDomainType) domainType ).injectJpaMetamodel( this ) );
 
 		nameToImportNameMap = runtimeMetamodel.getNameToImportNameMap();
 		entityProxyInterfaceMap = runtimeMetamodel.getEntityProxyInterfaceMap();
-		applyNamedEntityGraphs( namedEntityGraphDefinitions );
 	}
 
 	@Override
@@ -97,7 +89,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	@Override
 	public <X> EntityDomainType<X> entity(String entityName) {
 		//noinspection unchecked
-		return (EntityDomainType) entityDescriptorMap.get( entityName );
+		return (EntityDomainType) jpaEntityTypeMap.get( entityName );
 	}
 
 	@Override
@@ -125,17 +117,17 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	public void visitManagedTypes(Consumer<ManagedDomainType<?>> action) {
 		visitEntityTypes( (Consumer) action );
 		visitEmbeddables( (Consumer) action );
-		mappedSuperclassTypeMap.values().forEach( action );
+		jpaMappedSuperclassTypeMap.values().forEach( action );
 	}
 
 	@Override
 	public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
-		ManagedType<?> type = entityDescriptorMap.get( cls );
+		ManagedType<?> type = jpaEntityTypeMap.get( cls );
 		if ( type == null ) {
-			type = mappedSuperclassTypeMap.get( cls );
+			type = jpaMappedSuperclassTypeMap.get( cls );
 		}
 		if ( type == null ) {
-			type = embeddableDescriptorMap.get( cls );
+			type = jpaEmbeddableDescriptorMap.get( cls );
 		}
 		if ( type == null ) {
 			return null;
@@ -147,12 +139,12 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public void visitEntityTypes(Consumer<EntityDomainType<?>> action) {
-		entityDescriptorMap.values().forEach( action );
+		jpaEntityTypeMap.values().forEach( action );
 	}
 
 	@Override
 	public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
-		final EntityType<?> entityType = entityDescriptorMap.get( cls );
+		final EntityType<?> entityType = jpaEntityTypeMap.get( cls );
 		if ( entityType == null ) {
 			return null;
 		}
@@ -162,7 +154,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public void visitRootEntityTypes(Consumer<EntityDomainType<?>> action) {
-		entityDescriptorMap.values().forEach(
+		jpaEntityTypeMap.values().forEach(
 				entityDomainType -> {
 					if ( entityDomainType.getSuperType() == null ) {
 						action.accept( entityDomainType );
@@ -173,17 +165,17 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public void visitEmbeddables(Consumer<EmbeddableDomainType<?>> action) {
-		embeddableDescriptorMap.values().forEach( action );
+		jpaEmbeddableDescriptorMap.values().forEach( action );
 	}
 
 	@Override
 	public <X> ManagedDomainType<X> managedType(Class<X> cls) {
-		ManagedType<?> type = entityDescriptorMap.get( cls );
+		ManagedType<?> type = jpaEntityTypeMap.get( cls );
 		if ( type == null ) {
-			type = mappedSuperclassTypeMap.get( cls );
+			type = jpaMappedSuperclassTypeMap.get( cls );
 		}
 		if ( type == null ) {
-			type = embeddableDescriptorMap.get( cls );
+			type = jpaEmbeddableDescriptorMap.get( cls );
 		}
 		if ( type == null ) {
 			// per JPA
@@ -196,7 +188,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <X> EntityDomainType<X> entity(Class<X> cls) {
-		final EntityType<?> entityType = entityDescriptorMap.get( cls );
+		final EntityType<?> entityType = jpaEntityTypeMap.get( cls );
 		if ( entityType == null ) {
 			throw new IllegalArgumentException( "Not an entity: " + cls );
 		}
@@ -206,7 +198,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <X> EmbeddableDomainType<X> embeddable(Class<X> cls) {
-		final EmbeddableDomainType<?> embeddableType = embeddableDescriptorMap.get( cls );
+		final EmbeddableDomainType<?> embeddableType = jpaEmbeddableDescriptorMap.get( cls );
 		if ( embeddableType == null ) {
 			throw new IllegalArgumentException( "Not an embeddable: " + cls );
 		}
@@ -217,23 +209,23 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	@Override
 	public Set<ManagedType<?>> getManagedTypes() {
 		final int setSize = CollectionHelper.determineProperSizing(
-				entityDescriptorMap.size() + mappedSuperclassTypeMap.size() + embeddableDescriptorMap.size()
+				jpaEntityTypeMap.size() + jpaMappedSuperclassTypeMap.size() + jpaEmbeddableDescriptorMap.size()
 		);
 		final Set<ManagedType<?>> managedTypes = new HashSet<>( setSize );
-		managedTypes.addAll( entityDescriptorMap.values() );
-		managedTypes.addAll( mappedSuperclassTypeMap.values() );
-		managedTypes.addAll( embeddableDescriptorMap.values() );
+		managedTypes.addAll( jpaEntityTypeMap.values() );
+		managedTypes.addAll( jpaMappedSuperclassTypeMap.values() );
+		managedTypes.addAll( jpaEmbeddableDescriptorMap.values() );
 		return managedTypes;
 	}
 
 	@Override
 	public Set<EntityType<?>> getEntities() {
-		return new HashSet<>( entityDescriptorMap.values() );
+		return new HashSet<>( jpaEntityTypeMap.values() );
 	}
 
 	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
-		return new HashSet<>( embeddableDescriptorMap.values() );
+		return new HashSet<>( jpaEmbeddableDescriptorMap.values() );
 	}
 
 	@Override
@@ -405,7 +397,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	public <T> EntityDomainType<T> resolveEntityReference(Class<T> javaType) {
 		// try the incoming Java type as a "strict" entity reference
 		{
-			final EntityDomainType<?> descriptor = entityDescriptorMap.get( javaType );
+			final EntityDomainType<?> descriptor = jpaEntityTypeMap.get( javaType );
 			if ( descriptor != null ) {
 				return (EntityDomainType<T>) descriptor;
 			}
@@ -415,7 +407,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		{
 			final String proxyEntityName = entityProxyInterfaceMap.get( javaType );
 			if ( proxyEntityName != null ) {
-				return (EntityDomainType<T>) entityDescriptorMap.get( proxyEntityName );
+				return (EntityDomainType<T>) jpaEntityTypeMap.get( proxyEntityName );
 			}
 		}
 
@@ -444,5 +436,157 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		}
 
 		throw new IllegalArgumentException( "Could not resolve entity reference : " + javaType.getName() );
+	}
+
+	public static JpaMetamodel buildMetamodel(
+			RuntimeModelCreationContext runtimeModelCreationContext,
+			MetadataImplementor bootMetamodel,
+			InflightRuntimeMetamodel inflightRuntimeMetamodel,
+			SqmCriteriaNodeBuilder criteriaBuilder,
+			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
+			java.util.Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions) {
+		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( inflightRuntimeMetamodel );
+
+		jpaMetamodel.processJpa(
+				runtimeModelCreationContext,
+				bootMetamodel,
+				inflightRuntimeMetamodel,
+				criteriaBuilder,
+				jpaStaticMetaModelPopulationSetting,
+				namedEntityGraphDefinitions
+		);
+
+		return jpaMetamodel;
+	}
+
+	private void processJpa(
+			RuntimeModelCreationContext runtimeModelCreationContext,
+			MetadataImplementor bootMetamodel,
+			InflightRuntimeMetamodel inflightRuntimeMetamodel,
+			SqmCriteriaNodeBuilder criteriaBuilder,
+			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
+			java.util.Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions) {
+		if ( jpaStaticMetaModelPopulationSetting != JpaStaticMetaModelPopulationSetting.DISABLED ) {
+			MetadataContext context = new MetadataContext(
+					runtimeModelCreationContext,
+					inflightRuntimeMetamodel,
+					criteriaBuilder,
+					bootMetamodel.getMappedSuperclassMappingsCopy(),
+					jpaStaticMetaModelPopulationSetting
+			);
+
+			for ( PersistentClass entityBinding : bootMetamodel.getEntityBindings() ) {
+				locateOrBuildEntityType( entityBinding, context, typeConfiguration );
+			}
+			handleUnusedMappedSuperclasses( context, typeConfiguration );
+
+			context.wrapUp();
+
+			this.nameToImportNameMap.putAll( bootMetamodel.getImports() );
+
+			this.jpaEntityTypeMap.putAll( context.getEntityTypesByEntityName() );
+			this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
+
+			for ( EmbeddableDomainType<?> embeddable : context.getEmbeddableTypeSet() ) {
+				this.jpaEmbeddableDescriptorMap.put( embeddable.getJavaType(), embeddable );
+			}
+		}
+
+		applyNamedEntityGraphs( namedEntityGraphDefinitions );
+	}
+
+	private EntityDomainType<?> locateOrBuildEntityType(
+			PersistentClass persistentClass,
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
+		EntityDomainType<?> entityType = context.locateEntityType( persistentClass );
+		if ( entityType == null ) {
+			entityType = buildEntityType( persistentClass, context, typeConfiguration );
+		}
+		return entityType;
+	}
+
+	@SuppressWarnings("unchecked")
+	private EntityTypeImpl<?> buildEntityType(
+			PersistentClass persistentClass,
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
+		final Class javaType = persistentClass.getMappedClass();
+		context.pushEntityWorkedOn( persistentClass );
+		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
+		IdentifiableDomainType<?> superType = superMappedSuperclass == null
+				? null
+				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
+		//no mappedSuperclass, check for a super entity
+		if ( superType == null ) {
+			final PersistentClass superPersistentClass = persistentClass.getSuperclass();
+			superType = superPersistentClass == null
+					? null
+					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
+		}
+
+		final JavaTypeDescriptor javaTypeDescriptor = context.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		final EntityTypeImpl entityType = new EntityTypeImpl(
+				javaTypeDescriptor,
+				superType,
+				persistentClass,
+				this
+		);
+		context.registerEntityType( persistentClass, entityType );
+		context.popEntityWorkedOn( persistentClass );
+		return entityType;
+	}
+
+	private void handleUnusedMappedSuperclasses(MetadataContext context, TypeConfiguration typeConfiguration) {
+		final Set<MappedSuperclass> unusedMappedSuperclasses = context.getUnusedMappedSuperclasses();
+		if ( !unusedMappedSuperclasses.isEmpty() ) {
+			for ( MappedSuperclass mappedSuperclass : unusedMappedSuperclasses ) {
+				log.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
+				locateOrBuildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
+			}
+		}
+	}
+
+	private MappedSuperclassDomainType<?> locateOrBuildMappedSuperclassType(
+			MappedSuperclass mappedSuperclass,
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
+		MappedSuperclassDomainType<?> mappedSuperclassType = context.locateMappedSuperclassType( mappedSuperclass );
+		if ( mappedSuperclassType == null ) {
+			mappedSuperclassType = buildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
+		}
+		return mappedSuperclassType;
+	}
+
+	@SuppressWarnings("unchecked")
+	private MappedSuperclassTypeImpl<?> buildMappedSuperclassType(
+			MappedSuperclass mappedSuperclass,
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
+		final MappedSuperclass superMappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
+		IdentifiableDomainType<?> superType = superMappedSuperclass == null
+				? null
+				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
+		//no mappedSuperclass, check for a super entity
+		if ( superType == null ) {
+			final PersistentClass superPersistentClass = mappedSuperclass.getSuperPersistentClass();
+			superType = superPersistentClass == null
+					? null
+					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
+		}
+		final JavaTypeDescriptor javaTypeDescriptor = context.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( mappedSuperclass.getMappedClass() );
+		final MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(
+				javaTypeDescriptor,
+				mappedSuperclass,
+				superType,
+				this
+		);
+
+		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
+		return mappedSuperclassType;
 	}
 }

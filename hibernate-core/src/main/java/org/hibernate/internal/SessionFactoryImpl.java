@@ -299,8 +299,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			LOG.debug( "Instantiated session factory" );
 
-			this.metamodel = (MetamodelImplementor) metadata.getTypeConfiguration().scope( this )
-					.create( metadata, determineJpaMetaModelPopulationSetting( properties ) );
+			this.metamodel = (MetamodelImplementor) metadata.getTypeConfiguration().scope( this ).create( metadata );
 
 			// todo (6.0) : manage old getMultiTableBulkIdStrategy
 

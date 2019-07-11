@@ -24,25 +24,16 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
-import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -64,14 +55,6 @@ public class InflightRuntimeMetamodel {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// JPA metamodel
-
-	private final Map<String, EntityDomainType<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
-	private final Map<Class<?>, MappedSuperclassDomainType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
-	private Map<Class, EmbeddableDomainType<?>> jpaEmbeddableDescriptorMap = new ConcurrentHashMap<>();
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Misc
 
 	private final Map<String, String> nameToImportNameMap = new HashMap<>();
@@ -84,12 +67,9 @@ public class InflightRuntimeMetamodel {
 
 	public void processBootMetaModel(
 			MetadataImplementor bootMetamodel,
-			SqmCriteriaNodeBuilder criteriaBuilder,
 			CacheImplementor cacheImplementor,
 			PersisterFactory persisterFactory,
-			RuntimeModelCreationContext modelCreationContext,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
-			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
+			RuntimeModelCreationContext modelCreationContext) {
 		this.imports.putAll( bootMetamodel.getImports() );
 		processBootEntities(
 				bootMetamodel.getEntityBindings(),
@@ -106,13 +86,6 @@ public class InflightRuntimeMetamodel {
 		);
 
 		finishDomainMetamodelInitialization();
-
-		processJpa(
-				bootMetamodel,
-				criteriaBuilder,
-				jpaMetaModelPopulationSetting,
-				jpaStaticMetaModelPopulationSetting
-		);
 
 	}
 
@@ -134,18 +107,6 @@ public class InflightRuntimeMetamodel {
 
 	public Map<String, Set<String>> getCollectionRolesByEntityParticipant() {
 		return collectionRolesByEntityParticipant;
-	}
-
-	public Map<String, EntityDomainType<?>> getJpaEntityTypeMap() {
-		return jpaEntityTypeMap;
-	}
-
-	public Map<Class<?>, MappedSuperclassDomainType<?>> getJpaMappedSuperclassTypeMap() {
-		return jpaMappedSuperclassTypeMap;
-	}
-
-	public Map<Class, EmbeddableDomainType<?>> getJpaEmbeddableDescriptorMap() {
-		return jpaEmbeddableDescriptorMap;
 	}
 
 	public Map<String, String> getNameToImportNameMap() {
@@ -176,40 +137,6 @@ public class InflightRuntimeMetamodel {
 	 */
 	public EntityPersister findEntityDescriptor(String entityName) {
 		return entityPersisterMap.get( entityName );
-	}
-
-	private void processJpa(
-			MetadataImplementor bootMetamodel,
-			SqmCriteriaNodeBuilder criteriaBuilder,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
-			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
-		if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.DISABLED ) {
-			MetadataContext context = new MetadataContext(
-					this,
-					criteriaBuilder,
-					bootMetamodel.getMappedSuperclassMappingsCopy(),
-					typeConfiguration,
-					jpaMetaModelPopulationSetting,
-					jpaStaticMetaModelPopulationSetting
-			);
-
-			for ( PersistentClass entityBinding : bootMetamodel.getEntityBindings() ) {
-				locateOrBuildEntityType( entityBinding, context, typeConfiguration );
-			}
-			handleUnusedMappedSuperclasses( context, typeConfiguration );
-
-			context.wrapUp();
-
-			this.nameToImportNameMap.putAll( bootMetamodel.getImports() );
-
-			this.jpaEntityTypeMap.putAll( context.getEntityTypesByEntityName() );
-			this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
-
-			for ( EmbeddableDomainType<?> embeddable : context.getEmbeddableTypeSet() ) {
-				this.jpaEmbeddableDescriptorMap.put( embeddable.getJavaType(), embeddable );
-			}
-
-		}
 	}
 
 	private void processBootEntities(
@@ -337,101 +264,6 @@ public class InflightRuntimeMetamodel {
 		for ( EntityNameResolver resolver : resolvers ) {
 			entityNameResolvers.add( resolver );
 		}
-	}
-
-	private static void handleUnusedMappedSuperclasses(MetadataContext context, TypeConfiguration typeConfiguration) {
-		final Set<MappedSuperclass> unusedMappedSuperclasses = context.getUnusedMappedSuperclasses();
-		if ( !unusedMappedSuperclasses.isEmpty() ) {
-			for ( MappedSuperclass mappedSuperclass : unusedMappedSuperclasses ) {
-				log.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
-				locateOrBuildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
-			}
-		}
-	}
-
-	private static MappedSuperclassDomainType<?> locateOrBuildMappedSuperclassType(
-			MappedSuperclass mappedSuperclass,
-			MetadataContext context,
-			TypeConfiguration typeConfiguration) {
-		MappedSuperclassDomainType<?> mappedSuperclassType = context.locateMappedSuperclassType( mappedSuperclass );
-		if ( mappedSuperclassType == null ) {
-			mappedSuperclassType = buildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
-		}
-		return mappedSuperclassType;
-	}
-
-	@SuppressWarnings("unchecked")
-	private static MappedSuperclassTypeImpl<?> buildMappedSuperclassType(
-			MappedSuperclass mappedSuperclass,
-			MetadataContext context,
-			TypeConfiguration typeConfiguration) {
-		final MappedSuperclass superMappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
-		IdentifiableDomainType<?> superType = superMappedSuperclass == null
-				? null
-				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
-		//no mappedSuperclass, check for a super entity
-		if ( superType == null ) {
-			final PersistentClass superPersistentClass = mappedSuperclass.getSuperPersistentClass();
-			superType = superPersistentClass == null
-					? null
-					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
-		}
-		final JavaTypeDescriptor javaTypeDescriptor = context.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( mappedSuperclass.getMappedClass() );
-		MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(
-				javaTypeDescriptor,
-				mappedSuperclass,
-				superType,
-				typeConfiguration
-		);
-
-		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
-		return mappedSuperclassType;
-	}
-
-	private static EntityDomainType<?> locateOrBuildEntityType(
-			PersistentClass persistentClass,
-			MetadataContext context,
-			TypeConfiguration typeConfiguration) {
-		EntityDomainType<?> entityType = context.locateEntityType( persistentClass );
-		if ( entityType == null ) {
-			entityType = buildEntityType( persistentClass, context, typeConfiguration );
-		}
-		return entityType;
-	}
-
-	@SuppressWarnings("unchecked")
-	private static EntityTypeImpl<?> buildEntityType(
-			PersistentClass persistentClass,
-			MetadataContext context,
-			TypeConfiguration typeConfiguration) {
-		final Class javaType = persistentClass.getMappedClass();
-		context.pushEntityWorkedOn( persistentClass );
-		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
-		IdentifiableDomainType<?> superType = superMappedSuperclass == null
-				? null
-				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
-		//no mappedSuperclass, check for a super entity
-		if ( superType == null ) {
-			final PersistentClass superPersistentClass = persistentClass.getSuperclass();
-			superType = superPersistentClass == null
-					? null
-					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
-		}
-
-		final JavaTypeDescriptor javaTypeDescriptor = context.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		EntityTypeImpl entityType = new EntityTypeImpl(
-				javaTypeDescriptor,
-				superType,
-				persistentClass,
-				typeConfiguration
-		);
-		context.registerEntityType( persistentClass, entityType );
-		context.popEntityWorkedOn( persistentClass );
-		return entityType;
 	}
 
 	public Map<String, String> getImports() {

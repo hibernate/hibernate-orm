@@ -19,6 +19,7 @@ import javax.persistence.MapKeyEnumerated;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -303,8 +304,9 @@ public class EnumType<T extends Enum>
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		verifyConfigured();
-		return enumValueConverter.readValue( rs, names[0], session );
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		verifyConfigured();
+//		return enumValueConverter.readValue( rs, names[0], session );
 	}
 
 	private void verifyConfigured() {
@@ -315,8 +317,9 @@ public class EnumType<T extends Enum>
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		verifyConfigured();
-		enumValueConverter.writeValue( st, (Enum) value, index, session );
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		verifyConfigured();
+//		enumValueConverter.writeValue( st, (Enum) value, index, session );
 	}
 
 	@Override

@@ -45,6 +45,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.sql.results.spi.LoadingCollectionEntry;
 
 import org.jboss.logging.Logger;
 
@@ -809,9 +810,13 @@ public abstract class CollectionType extends AbstractType implements Association
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
 		final CollectionKey collectionKey = new CollectionKey( persister, key );
+		PersistentCollection collection = null;
+
 		// check if collection is currently being loaded
-		PersistentCollection collection = persistenceContext.getLoadContexts()
-				.locateLoadingCollection( persister, collectionKey );
+		final LoadingCollectionEntry loadingCollectionEntry = persistenceContext.getLoadContexts().findLoadingCollectionEntry( collectionKey );
+		if ( loadingCollectionEntry != null ) {
+			collection = loadingCollectionEntry.getCollectionInstance();
+		}
 
 		if ( collection == null ) {
 

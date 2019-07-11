@@ -654,6 +654,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				getQueryPlan( queryString, false ).getParameterMetadata(),
 				queryString
 		);
+		applyQuerySettingsAndHints( query );
 		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
 		if ( queryDefinition.getLockOptions() != null ) {
@@ -661,7 +662,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 
 		initQueryFromNamedDefinition( query, queryDefinition );
-//		applyQuerySettingsAndHints( query );
 
 		return query;
 	}
@@ -682,10 +682,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				this,
 				parameterMetadata
 		);
+		applyQuerySettingsAndHints( query );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
 
 		initQueryFromNamedDefinition( query, queryDefinition );
-		applyQuerySettingsAndHints( query );
 
 		return query;
 	}
@@ -731,8 +731,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					getQueryPlan( queryString, false ).getParameterMetadata(),
 					queryString
 			);
-			query.setComment( queryString );
 			applyQuerySettingsAndHints( query );
+			query.setComment( queryString );
 			return query;
 		}
 		catch (RuntimeException e) {
@@ -941,6 +941,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if (Tuple.class.equals(resultType)) {
 			query.setResultTransformer(new NativeQueryTupleTransformer());
 		}
+		applyQuerySettingsAndHints( query );
 		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
 		if ( queryDefinition.getLockOptions() != null ) {
@@ -948,7 +949,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 
 		initQueryFromNamedDefinition( query, queryDefinition );
-		applyQuerySettingsAndHints( query );
 
 		return query;
 	}
@@ -1092,6 +1092,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					getFactory().getQueryPlanCache().getSQLParameterMetadata( queryString, isOrdinalParameterZeroBased )
 			);
 			query.setComment( "dynamic native SQL query" );
+			applyQuerySettingsAndHints( query );
 			return query;
 		}
 		catch ( RuntimeException he ) {

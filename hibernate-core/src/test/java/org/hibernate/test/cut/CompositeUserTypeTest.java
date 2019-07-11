@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;

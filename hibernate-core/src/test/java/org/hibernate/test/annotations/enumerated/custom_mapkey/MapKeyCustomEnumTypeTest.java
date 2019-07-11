@@ -8,13 +8,12 @@ package org.hibernate.test.annotations.enumerated.custom_mapkey;
 
 import java.io.Serializable;
 
-import org.hibernate.SQLQuery;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
 
@@ -103,7 +102,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		assetEntityMapEnumEquals( expected, found );
 
 		//native query check
-		SQLQuery sqlQuery = session.createSQLQuery( nativeQueryCheck );
+		NativeQuery sqlQuery = session.createNativeQuery( nativeQueryCheck );
 		sqlQuery.setParameter( "idEntityMapEnum", expected.id );
 		Object o = sqlQuery.uniqueResult();
 		assertNotNull( o );

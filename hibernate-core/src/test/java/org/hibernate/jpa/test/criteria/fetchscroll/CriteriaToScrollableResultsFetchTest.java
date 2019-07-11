@@ -17,7 +17,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -90,7 +90,7 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 			int rows = scrollableResults.getRowNumber() + 1;
 			scrollableResults.beforeFirst();
 			while ( scrollableResults.next() ) {
-				lines.add( (OrderLine) scrollableResults.get( 0 ) );
+				lines.add( (OrderLine) scrollableResults.get(  ) );
 			}
 			assertNotNull( lines );
 			assertEquals( "Expected one order line", 1, lines.size() );

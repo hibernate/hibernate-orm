@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
@@ -30,6 +29,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.testing.SkipForDialect;
@@ -84,9 +84,9 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 		s.beginTransaction();
-		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
-		s.createSQLQuery( sql2 ).setResultSetMapping( "all" ).list();
-		SQLQuery q = s.createSQLQuery( sql2 );
+		s.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
+		s.createNativeQuery( sql2 ).setResultSetMapping( "all" ).list();
+		NativeQuery q = s.createNativeQuery( sql2 );
 		q.addRoot( "t", AllTables.class ).addProperty( "tableName", "t_name" ).addProperty( "daysOld", "t_time" );
 		q.list();
 		s.getTransaction().commit();
@@ -108,7 +108,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		);
 		Session s = openSession();
 		s.beginTransaction();
-		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
+		s.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -227,12 +227,12 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
+		List chaoses = s.createNativeQuery( "select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size = :chaos_size" )
+		chaoses = s.createNativeQuery( "select * from CHAOS where chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null )
 				.list();
 		// should be no results because null != null
@@ -268,12 +268,12 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
+		List chaoses = s.createNativeQuery( "select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size = :chaos_size" )
+		chaoses = s.createNativeQuery( "select * from CHAOS where chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 				.list();
 		// should be no results because null != null

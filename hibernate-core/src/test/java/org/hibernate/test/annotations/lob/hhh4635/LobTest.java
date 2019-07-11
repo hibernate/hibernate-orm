@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.lob.hhh4635;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.testing.RequiresDialect;
@@ -56,7 +56,7 @@ public class LobTest extends BaseCoreFunctionalTestCase {
 		
 		Session session = openSession();
 		session.beginTransaction();
-		Query query = session.createSQLQuery( sql );
+		Query query = session.createNativeQuery( sql );
 		
 		String s = (String) query.uniqueResult();
 		log.debug( "Using Oracle charset " + s );

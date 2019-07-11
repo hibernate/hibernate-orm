@@ -14,8 +14,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
@@ -71,7 +71,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		Simple sim = new Simple( Long.valueOf(1) );
 		sim.setDate( new Date() );
 		session.save( sim );
-		Query q = session.createSQLQuery( "select {sim.*} from SimpleEntity {sim} where {sim}.date_ = ?" ).addEntity( "sim", Simple.class );
+		Query q = session.createNativeQuery( "select {sim.*} from SimpleEntity {sim} where {sim}.date_ = ?" ).addEntity( "sim", Simple.class );
 		q.setTimestamp( 0, sim.getDate() );
 		assertTrue ( q.list().size()==1 );
 		session.delete(sim);
@@ -111,9 +111,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.save( b );
 		session.flush();
 
-		session.createSQLQuery( "select {category.*} from category {category}" ).addEntity( "category", Category.class ).list();
-		session.createSQLQuery( "select {simple.*} from SimpleEntity {simple}" ).addEntity( "simple", Simple.class ).list();
-		session.createSQLQuery( "select {a.*} from TA {a}" ).addEntity( "a", A.class ).list();
+		session.createNativeQuery( "select {category.*} from category {category}" ).addEntity( "category", Category.class ).list();
+		session.createNativeQuery( "select {simple.*} from SimpleEntity {simple}" ).addEntity( "simple", Simple.class ).list();
+		session.createNativeQuery( "select {a.*} from TA {a}" ).addEntity( "a", A.class ).list();
 
 		session.getTransaction().commit();
 		session.close();
@@ -135,7 +135,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.setName( "WannaBeFound" );
 		session.flush();
 
-		Query query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name = :name" )
+		Query query = session.createNativeQuery( "select {category.*} from category {category} where {category}.name = :name" )
 				.addEntity( "category", Category.class );
 
 		query.setProperties( s );
@@ -143,24 +143,24 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		query.list();
 
-		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in (:names)" )
+		query = session.createNativeQuery( "select {category.*} from category {category} where {category}.name in (:names)" )
 				.addEntity( "category", Category.class );
 		String[] str = new String[] { "WannaBeFound", "NotThere" };
 		query.setParameterList( "names", str );
 		query.uniqueResult();
 
-		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in :names" )
+		query = session.createNativeQuery( "select {category.*} from category {category} where {category}.name in :names" )
 				.addEntity( "category", Category.class );
 		query.setParameterList("names", str);
 		query.uniqueResult();
 
-		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in (:names)" )
+		query = session.createNativeQuery( "select {category.*} from category {category} where {category}.name in (:names)" )
 				.addEntity( "category", Category.class );
 		str = new String[] { "WannaBeFound" };
 		query.setParameterList( "names", str );
 		query.uniqueResult();
 
-		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in :names" )
+		query = session.createNativeQuery( "select {category.*} from category {category} where {category}.name in :names" )
 				.addEntity( "category", Category.class );
 		query.setParameterList( "names", str );
 		query.uniqueResult();
@@ -194,7 +194,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		List list = s.createSQLQuery( "select {category.*} from category {category}" ).addEntity( "category", Category.class ).list();
+		List list = s.createNativeQuery( "select {category.*} from category {category}" ).addEntity( "category", Category.class ).list();
 		list.get(0);
 		s.getTransaction().commit();
 		s.close();
@@ -308,7 +308,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.beginTransaction();
 		String sql = "select {category.*}, {assignable.*} from category {category}, \"assign-able\" {assignable}";
 
-		List list = s.createSQLQuery( sql ).addEntity( "category", Category.class ).addEntity( "assignable", Assignable.class ).list();
+		List list = s.createNativeQuery( sql ).addEntity( "category", Category.class ).addEntity( "assignable", Assignable.class ).list();
 
 		assertTrue(list.size() == 6); // crossproduct of 2 categories x 3 assignables
 		assertTrue(list.get(0) instanceof Object[]);
@@ -370,19 +370,19 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		Query basicParam = s.createSQLQuery( "select {category.*} from category {category} where {category}.name = 'Best'" )
+		Query basicParam = s.createNativeQuery( "select {category.*} from category {category} where {category}.name = 'Best'" )
 				.addEntity( "category", Category.class );
 		List list = basicParam.list();
 		assertEquals(1, list.size());
 
-		Query unnamedParam = s.createSQLQuery( "select {category.*} from category {category} where {category}.name = ? or {category}.name = ?" )
+		Query unnamedParam = s.createNativeQuery( "select {category.*} from category {category} where {category}.name = ? or {category}.name = ?" )
 				.addEntity( "category", Category.class );
 		unnamedParam.setString(0, "Good");
 		unnamedParam.setString(1, "Best");
 		list = unnamedParam.list();
 		assertEquals(2, list.size());
 
-		Query namedParam = s.createSQLQuery( "select {category.*} from category {category} where ({category}.name=:firstCat or {category}.name=:secondCat)" )
+		Query namedParam = s.createNativeQuery( "select {category.*} from category {category} where ({category}.name=:firstCat or {category}.name=:secondCat)" )
 				.addEntity( "category", Category.class);
 		namedParam.setString("firstCat", "Better");
 		namedParam.setString("secondCat", "Best");
@@ -419,11 +419,11 @@ public class SQLLoaderTest extends LegacyTestCase {
 		if( getDialect() instanceof TimesTenDialect) {
             // TimesTen does not permit general expressions (like UPPER) in the second part of a LIKE expression,
             // so we execute a similar test 
-            query = session.createSQLQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like 'MAX'" )
+            query = session.createNativeQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like 'MAX'" )
 					.addEntity( "a", A.class );
         }
 		else {
-            query = session.createSQLQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like {fn ucase('max')}" )
+            query = session.createNativeQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like {fn ucase('max')}" )
 					.addEntity( "a", A.class );
         }
 		List list = query.list();
@@ -465,7 +465,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 				"    b.name as {a2.name} " +
 				"from TA a, TA b " +
 				"where a.identifier_column = b.identifier_column";
-		Query query = session.createSQLQuery( sql ).addEntity( "a1", A.class ).addEntity( "a2", A.class );
+		Query query = session.createNativeQuery( sql ).addEntity( "a1", A.class ).addEntity( "a2", A.class );
 		List list = query.list();
 
 		assertNotNull(list);
@@ -487,20 +487,20 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session = openSession();
 		session.beginTransaction();
 
-		SQLQuery query = session.createSQLQuery( "select {sing.*} from Single {sing}" ).addEntity( "sing", Single.class );
+		NativeQuery query = session.createNativeQuery( "select {sing.*} from Single {sing}" ).addEntity( "sing", Single.class );
 		List list = query.list();
 		assertTrue(list.size()==1);
 
 		session.clear();
 
-		query = session.createSQLQuery( "select {sing.*} from Single {sing} where sing.id = ?" ).addEntity( "sing", Single.class );
+		query = session.createNativeQuery( "select {sing.*} from Single {sing} where sing.id = ?" ).addEntity( "sing", Single.class );
 	   	query.setString(0, "my id");
 	   	list = query.list();
 		assertTrue(list.size()==1);
 
 		session.clear();
 
-		query = session.createSQLQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
+		query = session.createNativeQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
 			   .addEntity( "sing", Single.class );
 		query.setString(0, "my id");
 	   	list = query.list();
@@ -508,7 +508,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		session.clear();
 
-		query = session.createSQLQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
+		query = session.createNativeQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
 			   .addEntity( "sing", Single.class );
 		query.setString(0, "my id");
 		list = query.list();
@@ -554,7 +554,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		Session session = openSession();
 		session.beginTransaction();
-		SQLQuery q = session.createSQLQuery( sql ).addEntity( "comp", Componentizable.class );
+		NativeQuery q = session.createNativeQuery( sql ).addEntity( "comp", Componentizable.class );
 	    List list = q.list();
 	    assertEquals( list.size(), 1 );
 
@@ -599,7 +599,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.save(s);
 		session.flush();
 
-		Query query = session.createSQLQuery( "select s.category_key_col as {category.id}, s.name as {category.name}, s.\"assign-able-id\" as {category.assignable} from {category} s" )
+		Query query = session.createNativeQuery( "select s.category_key_col as {category.id}, s.name as {category.name}, s.\"assign-able-id\" as {category.assignable} from {category} s" )
 				.addEntity( "category", Category.class );
 		List list = query.list();
 
@@ -628,7 +628,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session = openSession();
 		session.beginTransaction();
 
-		Query query = session.createSQLQuery( "select s.category_key_col as {category.id}, s.name as {category.name}, s.\"assign-able-id\" as {category.assignable} from {category} s" )
+		Query query = session.createNativeQuery( "select s.category_key_col as {category.id}, s.name as {category.name}, s.\"assign-able-id\" as {category.assignable} from {category} s" )
 				.addEntity( "category", Category.class );
 		List list = query.list();
 
@@ -656,7 +656,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.save(savedB);
 		session.flush();
 
-		Query query = session.createSQLQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, name as {a.name}, count_ as {a.count} from TA {a}" )
+		Query query = session.createNativeQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, name as {a.name}, count_ as {a.count} from TA {a}" )
 				.addEntity( "a", A.class );
 		List list = query.list();
 
@@ -704,7 +704,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		Query query = session.createSQLQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA" )
+		Query query = session.createNativeQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA" )
 				.addEntity( "a", A.class );
 		List list = query.list();
 
@@ -750,7 +750,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 				getDialect().openQuote() + "user" + getDialect().closeQuote()
 		);
 
-		SQLQuery query = s.createSQLQuery( sql ).addEntity( "c", CompositeIdId.class );
+		NativeQuery query = s.createNativeQuery( sql ).addEntity( "c", CompositeIdId.class );
         query.setString(0, "c64");
         query.setString(1, "games");
 

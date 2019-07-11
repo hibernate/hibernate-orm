@@ -19,7 +19,7 @@ import javax.persistence.OptimisticLockException;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;

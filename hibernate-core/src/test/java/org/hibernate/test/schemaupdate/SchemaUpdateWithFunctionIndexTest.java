@@ -13,7 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
@@ -65,7 +65,7 @@ public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunction
 	private void createTable() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
-		Query query = session.createSQLQuery( "CREATE TABLE MyEntity(id bigint, name varchar(255));" );
+		Query query = session.createNativeQuery( "CREATE TABLE MyEntity(id bigint, name varchar(255));" );
 		query.executeUpdate();
 		transaction.commit();
 		session.close();
@@ -74,7 +74,7 @@ public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunction
 	private void createFunctionIndex() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
-		Query query = session.createSQLQuery( "CREATE UNIQUE INDEX uk_MyEntity_name_lowercase ON MyEntity (lower(name));" );
+		Query query = session.createNativeQuery( "CREATE UNIQUE INDEX uk_MyEntity_name_lowercase ON MyEntity (lower(name));" );
 		query.executeUpdate();
 		transaction.commit();
 		session.close();
@@ -83,7 +83,7 @@ public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunction
 	private void dropTable() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
-		Query query = session.createSQLQuery( "DROP TABLE IF EXISTS MyEntity;" );
+		Query query = session.createNativeQuery( "DROP TABLE IF EXISTS MyEntity;" );
 		query.executeUpdate();
 		transaction.commit();
 		session.close();
@@ -92,7 +92,7 @@ public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunction
 	private void dropFunctionIndex() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
-		Query query = session.createSQLQuery( "DROP INDEX IF EXISTS uk_MyEntity_name_lowercase;" );
+		Query query = session.createNativeQuery( "DROP INDEX IF EXISTS uk_MyEntity_name_lowercase;" );
 		query.executeUpdate();
 		transaction.commit();
 		session.close();

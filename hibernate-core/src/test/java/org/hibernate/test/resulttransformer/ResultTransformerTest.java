@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -83,9 +83,7 @@ public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
 			sr.first();
 		}
 
-		Object[] row = sr.get();
-		assertEquals(1, row.length);
-		Object obj = row[0];
+		Object obj = sr.get();
 		assertTrue(obj instanceof PartnerA);
 		PartnerA obj2 = (PartnerA) obj;
 		assertEquals("Partner A", obj2.getName());

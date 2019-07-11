@@ -17,7 +17,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 
@@ -95,7 +95,7 @@ public class QueryLiteralTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( "HUNDRED", entity.getSameTypeConverter() );
 
 		Session session = openSession();
-		String value = (String) session.createSQLQuery( "select e.same_type_converter from entity_converter e where e.id=:id" )
+		String value = (String) session.createNativeQuery( "select e.same_type_converter from entity_converter e where e.id=:id" )
 				.setParameter( "id", entity.getId() )
 				.uniqueResult();
 		assertEquals( "VALUE_HUNDRED", value );

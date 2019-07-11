@@ -8,6 +8,7 @@ package org.hibernate.persister.entity;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
+import org.hibernate.annotations.Remove;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.persister.SqlExpressableType;
 import org.hibernate.type.Type;
@@ -74,4 +75,9 @@ public interface PropertyMapping {
 	 * Given a property path, return the corresponding column name(s).
 	 */
 	public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException;
+	/**
+	 * Get the type of the thing containing the properties
+	 */
+	@Remove
+	public Type getType();
 }

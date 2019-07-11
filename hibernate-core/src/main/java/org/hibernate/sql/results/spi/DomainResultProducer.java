@@ -19,10 +19,12 @@ public interface DomainResultProducer<T> {
 	/**
 	 * Produce the domain query
 	 */
-	DomainResult<T> createDomainResult(
+	default DomainResult<T> createDomainResult(
 			int valuesArrayPosition,
 			String resultVariable,
-			DomainResultCreationState creationState);
+			DomainResultCreationState creationState){
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 
 	/**
 	 * Used when this producer is a selection in a sub-query.  The

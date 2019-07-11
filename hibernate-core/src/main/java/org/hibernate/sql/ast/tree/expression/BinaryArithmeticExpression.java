@@ -71,22 +71,22 @@ public class BinaryArithmeticExpression
 		walker.visitBinaryArithmeticExpression( this );
 	}
 
-	@Override
-	public DomainResult createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = creationState.getSqlExpressionResolver().resolveSqlSelection(
-				this,
-				getType().getJavaTypeDescriptor(),
-				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
-		);
-		//noinspection unchecked
-		return new ScalarDomainResultImpl(
-				sqlSelection.getValuesArrayPosition(),
-				resultVariable,
-				resultType.getJavaTypeDescriptor()
-		);
-	}
+//	@Override
+//	public DomainResult createDomainResult(
+//			String resultVariable,
+//			DomainResultCreationState creationState) {
+//		final SqlSelection sqlSelection = creationState.getSqlExpressionResolver().resolveSqlSelection(
+//				this,
+//				getType().getJavaTypeDescriptor(),
+//				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+//		);
+//		//noinspection unchecked
+//		return new ScalarDomainResultImpl(
+//				sqlSelection.getValuesArrayPosition(),
+//				resultVariable,
+//				resultType.getJavaTypeDescriptor()
+//		);
+//	}
 
 	/**
 	 * Get the left-hand operand.

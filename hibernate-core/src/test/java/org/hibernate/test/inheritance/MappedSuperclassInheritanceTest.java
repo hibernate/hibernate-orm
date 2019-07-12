@@ -14,9 +14,9 @@ import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -75,7 +75,7 @@ public class MappedSuperclassInheritanceTest extends BaseEntityManagerFunctional
 				entityManager.createQuery("from Employee").getResultList();
 				fail();
 			} catch (Exception expected) {
-				QuerySyntaxException rootException = (QuerySyntaxException) ExceptionUtil.rootCause(expected);
+				SemanticException rootException = (SemanticException) ExceptionUtil.rootCause( expected);
 				assertEquals("Employee is not mapped", rootException.getMessage());
 			}
 		} );

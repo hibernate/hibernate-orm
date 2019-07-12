@@ -8,17 +8,15 @@ package org.hibernate.test.naturalid.immutable;
 
 import javax.persistence.PersistenceException;
 
-import org.junit.Test;
-
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.persister.entity.EntityPersister;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -112,10 +110,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		u = ( User ) s.createCriteria( User.class )
-				.add( Restrictions.naturalId().set( "userName", "steve" ) )
-				.setCacheable( true )
-				.uniqueResult();
+		u = s.bySimpleNaturalId( User.class ).load( "steve" );
 		assertNotNull( u );
 		s.getTransaction().commit();
 		s.close();
@@ -135,17 +130,11 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		u = ( User ) s.createCriteria( User.class )
-				.add( Restrictions.naturalId().set( "userName", "steve" ) )
-				.setCacheable( true )
-				.uniqueResult();
+		u = s.bySimpleNaturalId( User.class ).load( "steve" );
 		assertNotNull( u );
 		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() ); //0: incorrect stats since hbm.xml can't enable NaturalId caching
 		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() ); //1: no stats since hbm.xml can't enable NaturalId caching
-		u = ( User ) s.createCriteria( User.class )
-				.add( Restrictions.naturalId().set( "userName", "steve" ) )
-				.setCacheable( true )
-				.uniqueResult();
+		u = s.bySimpleNaturalId( User.class ).load( "steve" );
 		assertNotNull( u );
 		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() ); //0: incorrect stats since hbm.xml can't enable NaturalId caching
 		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() ); //2: no stats since hbm.xml can't enable NaturalId caching
@@ -172,10 +161,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		u = ( User ) s.createCriteria( User.class )
-				.add( Restrictions.naturalId().set( "userName", "steve" ) )
-				.setCacheable( true )
-				.uniqueResult();
+		u = s.bySimpleNaturalId( User.class ).load( "steve" );
 		assertNotNull( u );
 		s.getTransaction().commit();
 		s.close();
@@ -188,11 +174,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		u = ( User ) s.createCriteria( User.class )
-				.add( Restrictions.naturalId().set( "userName", "steve" ) )
-				.setCacheable( true )
-				.uniqueResult();
-		assertNotNull( u );
+		u = s.bySimpleNaturalId( User.class ).load( "steve" );
 		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() ); //0: incorrect stats since hbm.xml can't enable NaturalId caching
 		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() ); //1: no stats since hbm.xml can't enable NaturalId caching
 
@@ -203,10 +185,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		u = ( User ) s.createCriteria( User.class )
-				.add( Restrictions.naturalId().set( "userName", "steve" ) )
-				.setCacheable( true )
-				.uniqueResult();
+		u = s.bySimpleNaturalId( User.class ).load( "steve" );
 		assertNull( u );
 		s.getTransaction().commit();
 		s.close();
@@ -227,10 +206,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		u = ( User ) s.createCriteria( User.class )
-				.add( Restrictions.naturalId().set( "userName", "steve" ) )
-				.setCacheable( true )
-				.uniqueResult();
+		u = s.bySimpleNaturalId( User.class ).load( "steve" );
 		assertNotNull( u );
 
 		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );
@@ -241,10 +217,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s = openSession();
 		s.beginTransaction();
-		u = ( User ) s.createCriteria( User.class )
-				.add( Restrictions.naturalId().set( "userName", "steve" ) )
-				.setCacheable( true )
-				.uniqueResult();
+		u = s.bySimpleNaturalId( User.class ).load( "steve" );
 		assertNotNull( u );
 		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() ); //0: incorrect stats since hbm.xml can't enable NaturalId caching
 		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() ); //1: no stats since hbm.xml can't enable NaturalId caching

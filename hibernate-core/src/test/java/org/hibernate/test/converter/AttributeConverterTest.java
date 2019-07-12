@@ -29,8 +29,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.hql.internal.ast.tree.JavaConstantNode;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -349,17 +347,10 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 				s = sf.openSession();
 				s.beginTransaction();
-				entity = (EntityWithConvertibleField) s.load( EntityWithConvertibleField.class, entityID );
+				entity = s.load( EntityWithConvertibleField.class, entityID );
 				assertEquals( ConvertibleEnum.VALUE, entity.getConvertibleEnum() );
 				s.getTransaction().commit();
 				s.close();
-
-				JavaConstantNode javaConstantNode = new JavaConstantNode();
-				javaConstantNode.setExpectedType( type );
-				javaConstantNode.setSessionFactory( (SessionFactoryImplementor) sf );
-				javaConstantNode.setText( "org.hibernate.test.converter.AttributeConverterTest$ConvertibleEnum.VALUE" );
-				final String outcome = javaConstantNode.getRenderText( (SessionFactoryImplementor) sf );
-				assertEquals( "'VALUE'", outcome );
 
 				s = sf.openSession();
 				s.beginTransaction();

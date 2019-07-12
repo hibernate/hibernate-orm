@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.criteria.limitexpression">
+    <class name="Person" table="person">
+        <id name="id" column="id" type="long">
+            <generator class="increment"/>
+        </id>
+        
+        <set name="states" table="person_states" inverse="false" lazy="false" fetch="join">
+            <key column="id_person" not-null="true"/>
+            <many-to-many class="UsState" column="code_state"/>
+        </set>
+        
+        <set name="countries" table="person_countries" inverse="false" lazy="false" fetch="join">
+            <key column="id_person" not-null="true"/>
+            <many-to-many class="Country" column="code_country"/>
+        </set>
+    </class>
+    
+    <class name="UsState" table="us_state">
+        <id column="code" name="code" type="string"/>
+    </class>
+    
+    <class name="Country" table="country">
+        <id column="code" name="code" type="string"/>
+    </class>
+</hibernate-mapping>

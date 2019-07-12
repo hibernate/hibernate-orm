@@ -25,13 +25,11 @@ package org.hibernate.test.inheritance.discriminator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.Basic;
@@ -52,14 +50,12 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
-import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.NotYetImplementedFor6Exception;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 /**
  * @author Christian Beikov
@@ -116,27 +112,28 @@ public class MultiInheritanceImplicitDowncastTest extends BaseCoreFunctionalTest
 	}
 
 	private void testMultiJoinAddition(String hql) {
-		final HQLQueryPlan plan = sessionFactory().getQueryInterpretationCache().getHQLQueryPlan(
-				hql,
-				false,
-				Collections.EMPTY_MAP
-		);
-		assertEquals( 1, plan.getTranslators().length );
-		final QueryTranslator translator = plan.getTranslators()[0];
-		final String generatedSql = translator.getSQLString();
-
-		int sub1JoinColumnIndex = generatedSql.indexOf( ".base_sub_1" );
-		assertNotEquals(
-				"Generated SQL doesn't contain a join for 'base' with 'PolymorphicSub1' via 'base_sub_1':\n" + generatedSql,
-				-1,
-				sub1JoinColumnIndex
-		);
-		int sub2JoinColumnIndex = generatedSql.indexOf( ".base_sub_2" );
-		assertNotEquals(
-				"Generated SQL doesn't contain a join for 'base' with 'PolymorphicSub2' via 'base_sub_2':\n" + generatedSql,
-				-1,
-				sub2JoinColumnIndex
-		);
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		final HQLQueryPlan plan = sessionFactory().getQueryInterpretationCache().getHQLQueryPlan(
+//				hql,
+//				false,
+//				Collections.EMPTY_MAP
+//		);
+//		assertEquals( 1, plan.getTranslators().length );
+//		final QueryTranslator translator = plan.getTranslators()[0];
+//		final String generatedSql = translator.getSQLString();
+//
+//		int sub1JoinColumnIndex = generatedSql.indexOf( ".base_sub_1" );
+//		assertNotEquals(
+//				"Generated SQL doesn't contain a join for 'base' with 'PolymorphicSub1' via 'base_sub_1':\n" + generatedSql,
+//				-1,
+//				sub1JoinColumnIndex
+//		);
+//		int sub2JoinColumnIndex = generatedSql.indexOf( ".base_sub_2" );
+//		assertNotEquals(
+//				"Generated SQL doesn't contain a join for 'base' with 'PolymorphicSub2' via 'base_sub_2':\n" + generatedSql,
+//				-1,
+//				sub2JoinColumnIndex
+//		);
 	}
 
 	@MappedSuperclass

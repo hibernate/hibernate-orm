@@ -6,14 +6,12 @@
  */
 package org.hibernate.test.propertyref.cachedcollections;
 
-import org.junit.Test;
-
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -44,7 +42,7 @@ public class CachedPropertyRefCollectionTest extends BaseCoreFunctionalTestCase 
 		// First attempt to load it via PK lookup
 		session = openSession();
 		session.beginTransaction();
-		ManagedObject obj = (ManagedObject) session.get( ManagedObject.class, 1L );
+		ManagedObject obj = session.get( ManagedObject.class, 1L );
 		assertNotNull( obj );
 		assertTrue( Hibernate.isInitialized( obj ) );
 		obj.getMembers().size();
@@ -55,11 +53,7 @@ public class CachedPropertyRefCollectionTest extends BaseCoreFunctionalTestCase 
 		// Now try to access it via natural key
 		session = openSession();
 		session.beginTransaction();
-		Criteria criteria = session.createCriteria( ManagedObject.class )
-				.add( Restrictions.naturalId().set( "name", "test" ) )
-				.setCacheable( true )
-				.setFetchMode( "members", FetchMode.JOIN );
-		obj = (ManagedObject) criteria.uniqueResult();
+		obj = session.bySimpleNaturalId( ManagedObject.class ).load( "test" );
 		assertNotNull( obj );
 		assertTrue( Hibernate.isInitialized( obj ) );
 		obj.getMembers().size();

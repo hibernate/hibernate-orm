@@ -7,7 +7,6 @@
 package org.hibernate.test.tm;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.transaction.Transaction;
@@ -17,7 +16,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.criterion.Order;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
@@ -33,7 +31,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
@@ -109,14 +106,14 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s1 = openSession();
-		s1.createCriteria( "Item" ).list();
+		s1.createQuery( "from Item" ).list();
 		//foo.put("description", "a big red foo");
 		//s1.flush();
 		tx = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s2 = openSession();
-		s2.createCriteria( "Item" ).list();
+		s2.createQuery( "from Item" ).list();
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx );
@@ -124,7 +121,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s2 = openSession();
-		s2.createCriteria( "Item" ).list();
+		s2.createQuery( "from Item" ).list();
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( 7, sessionFactory().getStatistics().getEntityLoadCount() );
@@ -171,15 +168,13 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s1 = openSession();
-		List r1 = s1.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
-				.setCacheable( true ).list();
+		List r1 = s1.createQuery( "from Item order by description" ).setCacheable( true ).list();
 		assertEquals( r1.size(), 2 );
 		Transaction tx1 = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s2 = openSession();
-		List r2 = s2.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
-				.setCacheable( true ).list();
+		List r2 = s2.createQuery( "from Item order by description" ).setCacheable( true ).list();
 		assertEquals( r2.size(), 2 );
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
@@ -199,8 +194,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s3 = openSession();
-		s3.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
-				.setCacheable( true ).list();
+		s3.createQuery( "from Item order by description" ).setCacheable( true ).list();
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 4 );
@@ -216,8 +210,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount(), 0 );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx4 );
-		List r4 = s4.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
-				.setCacheable( true ).list();
+		List r4 = s4.createQuery( "from Item order by description" ).setCacheable( true ).list();
 		assertEquals( r4.size(), 2 );
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
@@ -272,8 +265,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		// open a new TX and execute a query, this would fill the query cache.
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s1 = openSession();
-		List r1 = s1.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
-				.setCacheable( true ).list();
+		List r1 = s1.createQuery( "from Item order by description" ).setCacheable( true ).list();
 		assertEquals( r1.size(), 2 );
 		foo = ( Map ) r1.get( 0 );
 		// update data and make query cache stale, but TX is suspended
@@ -285,8 +277,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		// this TX is committed after query
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s2 = openSession();
-		List r2 = s2.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
-				.setCacheable( true ).list();
+		List r2 = s2.createQuery( "from Item order by description" ).setCacheable( true ).list();
 		assertEquals( r2.size(), 2 );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
@@ -321,8 +312,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s3 = openSession();
-		s3.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
-				.setCacheable( true ).list();
+		s3.createQuery( "from Item order by description" ).setCacheable( true ).list();
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
@@ -337,8 +327,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( 2, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx4 );
-		List r4 = s4.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
-				.setCacheable( true ).list();
+		List r4 = s4.createQuery( "from Item order by description" ).setCacheable( true ).list();
 		assertEquals( r4.size(), 2 );
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
@@ -420,53 +409,6 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		// TODO : would be nice to automate-test that the SF internal map actually gets cleaned up
 		//      i verified that is does currently in my debugger...
-	}
-
-	@Test
-	public void testCurrentSessionWithIterate() throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		Session s = openSession();
-		Map item1 = new HashMap();
-		item1.put( "name", "Item - 1" );
-		item1.put( "description", "The first item" );
-		s.persist( "Item", item1 );
-
-		Map item2 = new HashMap();
-		item2.put( "name", "Item - 2" );
-		item2.put( "description", "The second item" );
-		s.persist( "Item", item2 );
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		// First, test iterating the partial iterator; iterate to past
-		// the first, but not the second, item
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = sessionFactory().getCurrentSession();
-		Iterator itr = s.createQuery( "from Item" ).iterate();
-		if ( !itr.hasNext() ) {
-			fail( "No results in iterator" );
-		}
-		itr.next();
-		if ( !itr.hasNext() ) {
-			fail( "Only one result in iterator" );
-		}
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		// Next, iterate the entire result
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = sessionFactory().getCurrentSession();
-		itr = s.createQuery( "from Item" ).iterate();
-		if ( !itr.hasNext() ) {
-			fail( "No results in iterator" );
-		}
-		while ( itr.hasNext() ) {
-			itr.next();
-		}
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		s = openSession();
-		s.createQuery( "delete from Item" ).executeUpdate();
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test

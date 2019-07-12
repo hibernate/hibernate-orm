@@ -12,14 +12,12 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -78,7 +76,7 @@ public class JpaFunctionTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		catch ( Exception e ) {
-			assertEquals( QuerySyntaxException.class, e.getCause().getClass() );
+			assertEquals( SemanticException.class, e.getCause().getClass() );
 		}
 	}
 

@@ -9,9 +9,8 @@ package org.hibernate.test.naturalid.cid;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Restrictions;
-
 import org.hibernate.persister.entity.EntityPersister;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -72,10 +71,7 @@ public class CompositeIdAndNaturalIdTest extends BaseCoreFunctionalTestCase {
 
         s = openSession();
         s.beginTransaction();
-        u = ( Account ) s.createCriteria( Account.class )
-                .add( Restrictions.naturalId().set( "shortCode", "testAcct" ) )
-                .setCacheable( true )
-                .uniqueResult();
+        u = s.bySimpleNaturalId( Account.class ).load( "testAcct" );
         assertNotNull( u );
         s.getTransaction().commit();
         s.close();

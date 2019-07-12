@@ -6,8 +6,11 @@
  */
 package org.hibernate.test.inheritance.discriminator.joinedsubclass;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Transaction;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.junit.Before;
@@ -84,9 +87,11 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 	public void shouldRetrieveSubSubEntityWithCriteria() {
 		session = openSession();
 		try {
-			SubSubEntity loaded = (SubSubEntity) session.createCriteria( SubSubEntity.class )
-					.add( Restrictions.idEq( subSubEntityId ) )
-					.uniqueResult();
+			final CriteriaBuilder criteriaBuilder = session.getSessionFactory().getCriteriaBuilder();
+			final CriteriaQuery<SubSubEntity> criteria = criteriaBuilder.createQuery( SubSubEntity.class );
+			final Root<SubSubEntity> root = criteria.from( SubSubEntity.class );
+			criteria.where( criteriaBuilder.equal( root.get( SubSubEntity_.id ), subSubEntityId ) );
+			final SubSubEntity loaded = session.createQuery( criteria ).uniqueResult();
 			assertNotNull( loaded );
 		}
 		finally {
@@ -98,9 +103,12 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 	public void shouldNotRetrieveSubSubSubEntityWithCriteria() {
 		session = openSession();
 		try {
-			SubSubSubEntity loaded = (SubSubSubEntity) session.createCriteria( SubSubSubEntity.class )
-					.add( Restrictions.idEq( subSubEntityId ) )
-					.uniqueResult();
+			final CriteriaBuilder criteriaBuilder = session.getSessionFactory().getCriteriaBuilder();
+			final CriteriaQuery<SubSubSubEntity> criteria = criteriaBuilder.createQuery( SubSubSubEntity.class );
+			final Root<SubSubSubEntity> root = criteria.from( SubSubSubEntity.class );
+
+			criteria.where( criteriaBuilder.equal( root.get( SubSubSubEntity_.id ), subSubEntityId ) );
+			final SubSubEntity loaded = session.createQuery( criteria ).uniqueResult();
 			assertNull( loaded );
 		}
 		finally {
@@ -116,7 +124,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		try {
 			SubSubEntity loaded = (SubSubEntity) session.createQuery(
 					"select se from SubSubEntity se where se.id = :id" )
-					.setLong( "id", subSubEntityId )
+					.setParameter( "id", subSubEntityId )
 					.uniqueResult();
 			assertNotNull( loaded );
 		}
@@ -131,7 +139,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		try {
 			SubSubSubEntity loaded = (SubSubSubEntity) session.createQuery(
 					"select se from SubSubSubEntity se where se.id = :id" )
-					.setLong( "id", subSubEntityId )
+					.setParameter( "id", subSubEntityId )
 					.uniqueResult();
 			assertNull( loaded );
 		}

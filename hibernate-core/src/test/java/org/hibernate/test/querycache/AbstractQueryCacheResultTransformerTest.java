@@ -12,6 +12,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Root;
+
 import org.junit.Test;
 
 import org.hibernate.CacheMode;
@@ -25,7 +32,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
+import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
@@ -65,11 +75,28 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	}
 
 	protected abstract class CriteriaExecutor extends QueryExecutor {
-		protected abstract Criteria getCriteria(Session s) throws Exception;
+		protected abstract JpaCriteriaQuery<?> getCriteria(Session s) throws Exception;
+
+		protected ResultTransformer getResultTransformer() {
+			return AliasToEntityMapResultTransformer.INSTANCE;
+		}
+
 		@Override
         protected Object getResults(Session s, boolean isSingleResult) throws Exception {
-			Criteria criteria = getCriteria( s ).setCacheable( getQueryCacheMode() != CacheMode.IGNORE ).setCacheMode( getQueryCacheMode() );
-			return ( isSingleResult ? criteria.uniqueResult() : criteria.list() );
+			final CacheMode cacheMode = getQueryCacheMode();
+
+			final JpaCriteriaQuery<?> criteria = getCriteria( s );
+			final Query<?> query = s.createQuery( criteria ).setCacheMode( cacheMode );
+
+			if ( cacheMode != CacheMode.IGNORE ) {
+				query.setCacheable( true );
+			}
+
+			if ( getResultTransformer() != null ) {
+				query.setResultTransformer( getResultTransformer() );
+			}
+
+			return ( isSingleResult ? query.uniqueResult() : query.list() );
 		}
 	}
 
@@ -193,14 +220,20 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToEntityMapNoProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			@Override
-            protected Criteria getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.enrolments", "e", CriteriaSpecification.LEFT_JOIN )
-						.createAlias( "e.course", "c", CriteriaSpecification.LEFT_JOIN )
-								.setResultTransformer( CriteriaSpecification.ALIAS_TO_ENTITY_MAP )
-						.addOrder( Order.asc( "s.studentNumber") );
+            protected JpaCriteriaQuery getCriteria(Session s) {
+				final CriteriaBuilder builder = s.getSessionFactory().getCriteriaBuilder();
+
+				final JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+
+				final Root<Student> studentRoot = criteria.from( Student.class );
+				studentRoot.join( "enrolments", JoinType.LEFT ).join( "course", JoinType.LEFT );
+
+				criteria.orderBy( builder.asc( studentRoot.get( "studentNumber" ) ) );
+
+				return criteria;
 			}
 		};
+
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			@Override
             public Query getQuery(Session s) {
@@ -208,6 +241,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
+
 		ResultChecker checker = new ResultChecker() {
 			public void check(Object results) {
 				List resultList = ( List ) results;
@@ -232,12 +266,18 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToEntityMapNoProjectionMultiAndNullList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			@Override
-            protected Criteria getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.preferredCourse", "p", CriteriaSpecification.LEFT_JOIN )
-						.createAlias( "s.addresses", "a", CriteriaSpecification.LEFT_JOIN )
-								.setResultTransformer( CriteriaSpecification.ALIAS_TO_ENTITY_MAP )
-						.addOrder( Order.asc( "s.studentNumber" ) );
+            protected JpaCriteriaQuery getCriteria(Session s) {
+				final CriteriaBuilder builder = s.getSessionFactory().getCriteriaBuilder();
+
+				final JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+
+				final Root<Student> studentRoot = criteria.from( Student.class );
+				studentRoot.join( "preferredCourse", JoinType.LEFT );
+				studentRoot.join( "addresses", JoinType.LEFT );
+
+				criteria.orderBy( builder.asc( studentRoot.get( "studentNumber" ) ) );
+
+				return criteria;
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -282,7 +322,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToEntityMapNoProjectionNullAndNonNullAliasList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			@Override
-            protected Criteria getCriteria(Session s) {
+            protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.addresses", "a", CriteriaSpecification.LEFT_JOIN )
 								.setResultTransformer( CriteriaSpecification.ALIAS_TO_ENTITY_MAP )
@@ -323,7 +363,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithNonLazyOneToManyUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Course.class );
 			}
@@ -347,7 +387,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithNonLazyManyToOneList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( CourseMeeting.class )
 						.addOrder( Order.asc( "id.day" ) );
@@ -376,7 +416,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithLazyAssnUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.add( Restrictions.eq( "studentNumber", shermanExpected.getStudentNumber() ) );
@@ -403,7 +443,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithLazyAssnList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class )
 						.addOrder( Order.asc( "studentNumber" ) );
@@ -437,7 +477,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testEntityWithUnaliasedJoinFetchedLazyOneToManySingleElementList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.setFetchMode( "enrolments", FetchMode.JOIN )
@@ -473,7 +513,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testJoinWithFetchJoinListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
 						.setFetchMode( "enrolments", FetchMode.JOIN )
@@ -689,7 +729,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithSelectFetchedLazyOneToManySingleElementListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.setFetchMode( "enrolments", FetchMode.SELECT )
@@ -716,7 +756,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testEntityWithJoinFetchedLazyOneToManyMultiAndNullElementList() throws Exception {
 		//unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.setFetchMode( "addresses", FetchMode.JOIN )
@@ -731,7 +771,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 
 		//aliased
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
@@ -740,7 +780,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
@@ -749,7 +789,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased3 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.addresses", "a", Criteria.LEFT_JOIN )
@@ -758,7 +798,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased4 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.addresses", "a", Criteria.LEFT_JOIN )
@@ -800,7 +840,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testEntityWithJoinFetchedLazyManyToOneList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.setFetchMode( "preferredCourse", FetchMode.JOIN )
@@ -815,7 +855,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 
 		// aliased
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
@@ -824,7 +864,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
@@ -833,7 +873,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased3 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
@@ -842,7 +882,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased4 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
@@ -878,7 +918,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testEntityWithJoinFetchedLazyManyToOneUsingProjectionList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
 						.createAlias( "e.student", "s", Criteria.LEFT_JOIN )
@@ -927,7 +967,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithJoinedLazyOneToManySingleElementListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.enrolments", Criteria.LEFT_JOIN )
@@ -935,7 +975,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.enrolments", "e", Criteria.LEFT_JOIN )
@@ -943,7 +983,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.enrolments", "e", Criteria.LEFT_JOIN )
@@ -974,7 +1014,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithJoinedLazyOneToManyMultiAndNullListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.addresses", Criteria.LEFT_JOIN )
@@ -982,7 +1022,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.addresses", "a", Criteria.LEFT_JOIN )
@@ -990,7 +1030,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
@@ -1022,7 +1062,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithJoinedLazyManyToOneListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.preferredCourse", Criteria.LEFT_JOIN )
@@ -1030,7 +1070,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createCriteria( "s.preferredCourse", "p", Criteria.LEFT_JOIN )
@@ -1038,7 +1078,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.preferredCourse", "p", Criteria.LEFT_JOIN )
@@ -1159,7 +1199,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToEntityMapOneProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection( Projections.property( "e.student" ).as( "student" ) )
 						.addOrder( Order.asc( "e.studentNumber") )
@@ -1195,7 +1235,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToEntityMapMultiProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection(
 								Projections.projectionList()
@@ -1243,7 +1283,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToEntityMapMultiProjectionWithNullAliasList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection(
 								Projections.projectionList()
@@ -1288,7 +1328,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToEntityMapMultiAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class )
 						.setProjection(
 								Projections.projectionList()
@@ -1320,7 +1360,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneNonEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection( Projections.property( "e.semester" ) )
@@ -1345,7 +1385,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneNonEntityProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection( Projections.property( "e.semester" ) )
@@ -1401,7 +1441,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class )
 						.setProjection( Projections.property( "student" ) )
@@ -1430,7 +1470,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testOneEntityProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			// should use PassThroughTransformer by default
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection( Projections.property( "e.student" ) )
 						.addOrder( Order.asc( "e.studentNumber") );
@@ -1458,7 +1498,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class )
 						.setProjection(
@@ -1500,7 +1540,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiEntityProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection(
@@ -1545,7 +1585,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiEntityProjectionAliasedList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection(
@@ -1590,7 +1630,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testSingleAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class )
 						.setProjection( Projections.min( "studentNumber" ) );
 			}
@@ -1612,7 +1652,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class )
 						.setProjection(
 								Projections.projectionList()
@@ -1641,7 +1681,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToBeanDtoOneArgList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
 				.createAlias( "e.course", "co" )
@@ -1674,7 +1714,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToBeanDtoMultiArgList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
 				.createAlias( "e.course", "co" )
@@ -1711,7 +1751,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiProjectionListThenApplyAliasToBean() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
 				.createAlias( "e.course", "co" )
@@ -1755,7 +1795,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToBeanDtoLiteralArgList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
 				.createAlias( "e.course", "co" )
@@ -1797,7 +1837,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToBeanDtoWithNullAliasList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
 				.createAlias( "e.course", "co" )
@@ -1835,7 +1875,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneSelectNewNoAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) throws Exception {
+			protected JpaCriteriaQuery getCriteria(Session s) throws Exception {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection( Projections.property( "s.name" ) )
 				.addOrder( Order.asc( "s.studentNumber" ) )
@@ -1868,7 +1908,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneSelectNewAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) throws Exception {
+			protected JpaCriteriaQuery getCriteria(Session s) throws Exception {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection( Projections.property( "s.name" ).as( "name" ))
 				.addOrder( Order.asc( "s.studentNumber" ) )
@@ -1901,7 +1941,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewList() throws Exception{
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) throws Exception {
+			protected JpaCriteriaQuery getCriteria(Session s) throws Exception {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
@@ -1938,7 +1978,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewWithLiteralList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) throws Exception {
+			protected JpaCriteriaQuery getCriteria(Session s) throws Exception {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
@@ -1976,7 +2016,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewListList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
@@ -2010,7 +2050,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewMapUsingAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
@@ -2044,7 +2084,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewMapUsingAliasesWithFetchJoinList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
 						.setFetchMode( "enrolments", FetchMode.JOIN )
@@ -2081,7 +2121,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectAliasToEntityMapUsingAliasesWithFetchJoinList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
 						.setFetchMode( "enrolments", FetchMode.JOIN )
@@ -2149,7 +2189,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testSelectNewMapUsingAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
@@ -2183,7 +2223,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testSelectNewEntityConstructorList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
@@ -2224,7 +2264,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMapKeyList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
+			protected JpaCriteriaQuery getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.addresses", "a" )
 				.setProjection( Projections.property( "a.addressType" ) );

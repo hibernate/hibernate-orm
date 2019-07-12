@@ -6,21 +6,19 @@
  */
 package org.hibernate.test.naturalid.immutable;
 
-import javax.persistence.PersistenceException;
 import java.lang.reflect.Field;
+import javax.persistence.PersistenceException;
 
-import org.junit.Test;
-
-import org.hibernate.FetchMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.tuple.entity.EntityMetamodel;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.tuple.entity.EntityMetamodel;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
@@ -107,11 +105,9 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
         s = openSession();
         t = s.beginTransaction();
 
-        p = (Parent) s.createCriteria(Parent.class)
-				.add( Restrictions.eq("name", "alex") )
-				.setFetchMode("children", FetchMode.JOIN)
-        .setCacheable(true)
-        .uniqueResult();
+        p = s.createQuery( "from Parent p join fetch p.children where p.name = 'alex'", Parent.class )
+				.setCacheable( true )
+				.uniqueResult();
 
         t.commit();
         s.close();

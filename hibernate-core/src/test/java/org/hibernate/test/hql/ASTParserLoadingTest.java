@@ -20,7 +20,6 @@ import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.query.Query;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -47,17 +46,22 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.MultipleBagFetchException;
-import org.hibernate.persister.entity.DiscriminatorType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.Query;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
@@ -77,13 +81,15 @@ import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
+import org.hamcrest.CoreMatchers;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -151,7 +157,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.QUERY_TRANSLATOR, ASTQueryTranslatorFactory.class.getName() );
 	}
 
 	@Test
@@ -251,33 +256,40 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testJpaTypeOperator() {
-		// just checking syntax here...
-		Session s = openSession();
-		s.beginTransaction();
+		inTransaction(
+				session -> {
+					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					// where clause
 
-		///////////////////////////////////////////////////////////////
-		// where clause
-		// control
-		s.createQuery( "from Animal a where a.class = Dog" ).list();
-        // test
-		s.createQuery( "from Animal a where type(a) = Dog" ).list();
+					// control
+					session.createQuery( "from Animal a where a.class = Dog" ).list();
+					// test
+					session.createQuery( "from Animal a where type(a) = Dog" ).list();
 
-		///////////////////////////////////////////////////////////////
-		// select clause (at some point we should unify these)
-		// control
-		Query query = s.createQuery( "select a.class from Animal a where a.class = Dog" );
-		query.list(); // checks syntax
-		assertEquals( 1, query.getReturnTypes().length );
-		assertEquals( Integer.class, query.getReturnTypes()[0].getReturnedClass() ); // always integer for joined
-        // test
-		query = s.createQuery( "select type(a) from Animal a where type(a) = Dog" );
-		query.list(); // checks syntax
-		assertEquals( 1, query.getReturnTypes().length );
-		assertEquals( DiscriminatorType.class, query.getReturnTypes()[0].getClass() );
-		assertEquals( Class.class, query.getReturnTypes()[0].getReturnedClass() );
 
-		s.getTransaction().commit();
-		s.close();
+					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					// select clause
+
+					// control
+					Query query = session.createQuery( "select a.class from Animal a where a.class = Dog" );
+					query.list();
+					SqmSelectStatement sqmStatement = (SqmSelectStatement) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					List<SqmSelection> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
+					assertEquals( 1, selections.size() );
+					SqmSelection typeSelection = selections.get( 0 );
+					// always integer for joined
+					assertEquals( Integer.class, typeSelection.getNodeJavaTypeDescriptor().getJavaType() );
+
+					// test
+					query = session.createQuery( "select type(a) from Animal a where type(a) = Dog" );
+					query.list();
+					sqmStatement = (SqmSelectStatement) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
+					assertEquals( 1, selections.size() );
+					typeSelection = selections.get( 0 );
+					assertEquals( Class.class, typeSelection.getNodeJavaTypeDescriptor().getJavaType() );
+				}
+		);
 	}
 
 	@Test
@@ -955,42 +967,40 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testExpressionWithParamInFunction() {
 		Session s = openSession();
 		s.beginTransaction();
-		s.createQuery( "from Animal a where abs(a.bodyWeight-:param) < 2.0" ).setLong( "param", 1 ).list();
-		s.createQuery( "from Animal a where abs(:param - a.bodyWeight) < 2.0" ).setLong( "param", 1 ).list();
+		s.createQuery( "from Animal a where abs(a.bodyWeight-:param) < 2.0" ).setParameter( "param", 1 ).list();
+		s.createQuery( "from Animal a where abs(:param - a.bodyWeight) < 2.0" ).setParameter( "param", 1 ).list();
 		if ( ( getDialect() instanceof HSQLDialect ) || ( getDialect() instanceof DB2Dialect ) ) {
 			// HSQLDB and DB2 don't like the abs(? - ?) syntax. bit work if at least one parameter is typed...
-			s.createQuery( "from Animal where abs(cast(:x as long) - :y) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
-			s.createQuery( "from Animal where abs(:x - cast(:y as long)) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
-			s.createQuery( "from Animal where abs(cast(:x as long) - cast(:y as long)) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
+			s.createQuery( "from Animal where abs(cast(:x as long) - :y) < 2.0" ).setParameter( "x", 1 ).setParameter( "y", 1 ).list();
+			s.createQuery( "from Animal where abs(:x - cast(:y as long)) < 2.0" ).setParameter( "x", 1 ).setParameter( "y", 1 ).list();
+			s.createQuery( "from Animal where abs(cast(:x as long) - cast(:y as long)) < 2.0" ).setParameter( "x", 1 ).setParameter( "y", 1 ).list();
 		}
 		else {
-			s.createQuery( "from Animal where abs(:x - :y) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
+			s.createQuery( "from Animal where abs(:x - :y) < 2.0" ).setParameter( "x", 1 ).setParameter( "y", 1 ).list();
 		}
 
 		if ( getDialect() instanceof DB2Dialect ) {
-			s.createQuery( "from Animal where lower(upper(cast(:foo as string))) like 'f%'" ).setString( "foo", "foo" ).list();
+			s.createQuery( "from Animal where lower(upper(cast(:foo as string))) like 'f%'" ).setParameter( "foo", "foo" ).list();
 		}
 		else {
-			s.createQuery( "from Animal where lower(upper(:foo)) like 'f%'" ).setString( "foo", "foo" ).list();
+			s.createQuery( "from Animal where lower(upper(:foo)) like 'f%'" ).setParameter( "foo", "foo" ).list();
 		}
-		s.createQuery( "from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0" ).setLong(
-				"param", 1
-		).list();
+
+		s.createQuery( "from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0" ).setParameter( "param", 1 ).list();
+
 		if ( getDialect() instanceof DB2Dialect ) {
-			s.createQuery( "from Animal where lower(upper('foo') || upper(cast(:bar as string))) like 'f%'" ).setString( "bar", "xyz" ).list();
+			s.createQuery( "from Animal where lower(upper('foo') || upper(cast(:bar as string))) like 'f%'" ).setParameter( "bar", "xyz" ).list();
 		}
 		else {
-			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setString( "bar", "xyz" ).list();
+			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setParameter( "bar", "xyz" ).list();
 		}
 		
 		if ( getDialect() instanceof AbstractHANADialect ) {
-			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" )
-					.setLong( "param", 1 ).list();
+			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" ).setParameter( "param", 1 ).list();
 		}
 		else if ( !( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
 				|| getDialect() instanceof MySQLDialect ) ) {
-			s.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" )
-					.setLong( "param", 1 ).list();
+			s.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" ).setParameter( "param", 1 ).list();
 		}
 
 		s.getTransaction().commit();
@@ -1024,8 +1034,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		results = s.createQuery( "select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e" ).list();
 		assertEquals( 1, results.size() );
-		Iterator itr = s.createQuery( "select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e" ).iterate();
-		assertTrue( itr.hasNext() ); itr.next(); assertFalse( itr.hasNext() );
 
 		s.delete( top );
 		s.delete( next );
@@ -1125,14 +1133,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void checkCounts(String hql, int expected, String testCondition) {
-		Session s = openSession();
-		s.beginTransaction();
-		int count = determineCount( s.createQuery( hql ).list().iterator() );
-		assertEquals( "list() [" + testCondition + "]", expected, count );
-		count = determineCount( s.createQuery( hql ).iterate() );
-		assertEquals( "iterate() [" + testCondition + "]", expected, count );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					int count = determineCount( session.createQuery( hql ).list().iterator() );
+					assertEquals( "list() [" + testCondition + "]", expected, count );
+				}
+		);
 	}
 
 	@Test
@@ -1156,8 +1162,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	 	s = openSession();
 		s.beginTransaction();
 		int count = determineCount( s.createQuery( "select e.id, e.owner from SimpleAssociatedEntity e" ).list().iterator() );
-		assertEquals( 1, count ); // thing two would be removed from the result due to the inner join
-		count = determineCount( s.createQuery( "select e.id, e.owner from SimpleAssociatedEntity e" ).iterate() );
+		// thing two would be removed from the result due to the inner join
 		assertEquals( 1, count );
 		s.getTransaction().commit();
 		s.close();
@@ -1410,8 +1415,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// (2) description is defined as a property of the superclass (Animal)
 		// (3) name is defined as a property of a particular subclass (Human)
 
-		new SyntaxChecker( "from Zoo z join z.mammals as m where m.name.first = 'John'" ).checkIterate();
-
 		new SyntaxChecker( "from Zoo z join z.mammals as m where m.pregnant = false" ).checkAll();
 		new SyntaxChecker( "select m.pregnant from Zoo z join z.mammals as m where m.pregnant = false" ).checkAll();
 
@@ -1437,8 +1440,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test
 	public void testExplicitEntityCasting() {
-		new SyntaxChecker( "from Zoo z join treat(z.mammals as Human) as m where m.name.first = 'John'" ).checkIterate();
-		new SyntaxChecker( "from Zoo z join z.mammals as m where treat(m as Human).name.first = 'John'" ).checkIterate();
+		new SyntaxChecker( "from Zoo z join treat(z.mammals as Human) as m where m.name.first = 'John'" ).checkAll();
+		new SyntaxChecker( "from Zoo z join z.mammals as m where treat(m as Human).name.first = 'John'" ).checkAll();
 	}
 
 	@Test
@@ -1503,29 +1506,32 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testComponentQueries() {
-		Session s = openSession();
-		s.beginTransaction();
+		inTransaction(
+				session -> {
+					final QueryImplementor query = session.createQuery( "select h.name from Human h" );
+					final SqmSelectStatement sqmStatement = (SqmSelectStatement) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					assertEquals( 1, sqmStatement.getQuerySpec().getSelectClause().getSelections().size() );
+					final SqmSelection selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+					final SqmExpressable selectionType = selection.getSelectableNode().getNodeType();
+					assertThat( selectionType, CoreMatchers.instanceOf( EmbeddableDomainType.class ) );
+					assertEquals( Name.class, selection.getNodeJavaTypeDescriptor().getJavaType() );
 
-		Type[] types = s.createQuery( "select h.name from Human h" ).getReturnTypes();
-		assertEquals( 1, types.length );
-		assertTrue( types[0] instanceof ComponentType );
 
-		// Test the ability to perform comparisons between component values
-		s.createQuery( "from Human h where h.name = h.name" ).list();
-		s.createQuery( "from Human h where h.name = :name" ).setParameter( "name", new Name() ).list();
-		s.createQuery( "from Human where name = :name" ).setParameter( "name", new Name() ).list();
-		s.createQuery( "from Human h where :name = h.name" ).setParameter( "name", new Name() ).list();
-		s.createQuery( "from Human h where :name <> h.name" ).setParameter( "name", new Name() ).list();
+					// Test the ability to perform comparisons between component values
+					session.createQuery( "from Human h where h.name = h.name" ).list();
+					session.createQuery( "from Human h where h.name = :name" ).setParameter( "name", new Name() ).list();
+					session.createQuery( "from Human where name = :name" ).setParameter( "name", new Name() ).list();
+					session.createQuery( "from Human h where :name = h.name" ).setParameter( "name", new Name() ).list();
+					session.createQuery( "from Human h where :name <> h.name" ).setParameter( "name", new Name() ).list();
 
-		// Test the ability to perform comparisons between a component and an explicit row-value
-		s.createQuery( "from Human h where h.name = ('John', 'X', 'Doe')" ).list();
-		s.createQuery( "from Human h where ('John', 'X', 'Doe') = h.name" ).list();
-		s.createQuery( "from Human h where ('John', 'X', 'Doe') <> h.name" ).list();
+					// Test the ability to perform comparisons between a component and an explicit row-value
+					session.createQuery( "from Human h where h.name = ('John', 'X', 'Doe')" ).list();
+					session.createQuery( "from Human h where ('John', 'X', 'Doe') = h.name" ).list();
+					session.createQuery( "from Human h where ('John', 'X', 'Doe') <> h.name" ).list();
 
-		s.createQuery( "from Human h order by h.name" ).list();
-
-		s.getTransaction().commit();
-		s.close();
+					session.createQuery( "from Human h order by h.name" ).list();
+				}
+		);
 	}
 
 	@Test
@@ -1782,10 +1788,19 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testQueryMetadataRetrievalWithFetching() {
 		// HHH-1464 : there was a problem due to the fact they we polled
 		// the shallow version of the query plan to get the metadata.
+		inSession(
+				session -> {
+					final Query query = session.createQuery( "from Animal a inner join fetch a.mother" );
+					final SqmSelectStatement sqmStatement = (SqmSelectStatement) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					assertEquals( 1, sqmStatement.getQuerySpec().getSelectClause().getSelections().size() );
+					final SqmSelection selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+					final SqmExpressable selectionType = selection.getSelectableNode().getNodeType();
+					assertThat( selectionType, instanceOf( EntityDomainType.class ) );
+					assertThat( selectionType.getExpressableJavaTypeDescriptor().getJavaType(), equalTo( Animal.class ) );
+					assertThat( selection.getAlias(), is( "a" ) );
+				}
+		);
 		Session s = openSession();
-		Query query = s.createQuery( "from Animal a inner join fetch a.mother" );
-		assertEquals( 1, query.getReturnTypes().length );
-		assertNull( query.getReturnAliases() );
 		s.close();
 	}
 
@@ -1980,13 +1995,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist(zoo);
 		s.createQuery("select 2*2*2*2*(2*2) from Zoo").uniqueResult();
 		s.createQuery("select 2 / (1+1) from Zoo").uniqueResult();
-		int result0 = ( (Integer) s.createQuery("select 2 - (1+1) from Zoo").uniqueResult() ).intValue();
-		int result1 = ( (Integer) s.createQuery("select 2 - 1 + 1 from Zoo").uniqueResult() ).intValue();
-		int result2 = ( (Integer) s.createQuery("select 2 * (1-1) from Zoo").uniqueResult() ).intValue();
-		int result3 = ( (Integer) s.createQuery("select 4 / (2 * 2) from Zoo").uniqueResult() ).intValue();
-		int result4 = ( (Integer) s.createQuery("select 4 / 2 * 2 from Zoo").uniqueResult() ).intValue();
-		int result5 = ( (Integer) s.createQuery("select 2 * (2/2) from Zoo").uniqueResult() ).intValue();
-		int result6 = ( (Integer) s.createQuery("select 2 * (2/2+1) from Zoo").uniqueResult() ).intValue();
+		int result0 = (Integer) s.createQuery( "select 2 - (1+1) from Zoo" ).uniqueResult();
+		int result1 = (Integer) s.createQuery( "select 2 - 1 + 1 from Zoo" ).uniqueResult();
+		int result2 = (Integer) s.createQuery( "select 2 * (1-1) from Zoo" ).uniqueResult();
+		int result3 = (Integer) s.createQuery( "select 4 / (2 * 2) from Zoo" ).uniqueResult();
+		int result4 = (Integer) s.createQuery( "select 4 / 2 * 2 from Zoo" ).uniqueResult();
+		int result5 = (Integer) s.createQuery( "select 2 * (2/2) from Zoo" ).uniqueResult();
+		int result6 = (Integer) s.createQuery( "select 2 * (2/2+1) from Zoo" ).uniqueResult();
 		assertEquals(result0, 0);
 		assertEquals(result1, 2);
 		assertEquals(result2, 0);
@@ -2084,10 +2099,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist(zoo);
 		s.flush();
 		s.clear();
+
 		Query q = s.createQuery("select distinct a.zoo from Animal a where a.zoo is not null");
-		Type type = q.getReturnTypes()[0];
-		assertTrue( type instanceof ManyToOneType );
-		assertEquals( ( (ManyToOneType) type ).getAssociatedEntityName(), "org.hibernate.test.hql.Zoo" );
+
+		verifyAnimalZooSelection( q );
+
 		zoo = (Zoo) q.list().get(0);
 		assertEquals( zoo.getMammals().size(), 1 );
 		assertEquals( zoo.getAnimals().size(), 1 );
@@ -2096,6 +2112,19 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.delete(zoo);
 		t.commit();
 		s.close();
+	}
+
+	private static void verifyAnimalZooSelection(Query q) {
+		final SqmSelectStatement sqmStatement = (SqmSelectStatement) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
+		final SqmSelection sqmSelection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
+		assertThat( sqmSelection.getSelectableNode(), instanceOf( SqmPath.class ) );
+		final SqmPath selectedPath = (SqmPath) sqmSelection.getSelectableNode();
+		assertThat( selectedPath.getReferencedPathSource(), instanceOf( SingularPersistentAttribute.class ) );
+		final SingularPersistentAttribute selectedAttr = (SingularPersistentAttribute) selectedPath.getReferencedPathSource();
+		assertThat( selectedAttr.getName(), is( "zoo" ) );
+		assertThat( selectedAttr.getType(), instanceOf( EntityDomainType.class ) );
+		final EntityDomainType zooType = (EntityDomainType) selectedAttr.getType();
+		assertThat( zooType.getHibernateEntityName(), is( Zoo.class.getName() ) );
 	}
 
 	@Test
@@ -2140,10 +2169,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist( otherZoo );
 		s.flush();
 		s.clear();
+
 		Query q = s.createQuery("select a.zoo from Animal a where a.zoo is not null order by a.zoo.name");
-		Type type = q.getReturnTypes()[0];
-		assertTrue( type instanceof ManyToOneType );
-		assertEquals( ( (ManyToOneType) type ).getAssociatedEntityName(), "org.hibernate.test.hql.Zoo" );
+
+		verifyAnimalZooSelection( q );
+
 		List<Zoo> zoos = (List<Zoo>) q.list();
 		assertEquals( 3, zoos.size() );
 		assertEquals( otherZoo.getName(), zoos.get( 0 ).getName() );
@@ -2204,10 +2234,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist( otherZoo );
 		s.flush();
 		s.clear();
+
 		Query q = s.createQuery("select distinct a.zoo from Animal a where a.zoo is not null order by a.zoo.name");
-		Type type = q.getReturnTypes()[0];
-		assertTrue( type instanceof ManyToOneType );
-		assertEquals( ( (ManyToOneType) type ).getAssociatedEntityName(), "org.hibernate.test.hql.Zoo" );
+
+		verifyAnimalZooSelection( q );
+
 		List<Zoo> zoos = (List<Zoo>) q.list();
 		assertEquals( 2, zoos.size() );
 		assertEquals( otherZoo.getName(), zoos.get( 0 ).getName() );
@@ -2246,12 +2277,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist(zoo);
 		s.flush();
 		s.clear();
+
 		Query q = s.createQuery("select distinct a.zoo from Animal a where a.zoo is not null");
-		Type type = q.getReturnTypes()[0];
-		assertTrue( type instanceof ManyToOneType );
-		assertEquals( ( (ManyToOneType) type ).getAssociatedEntityName(), "org.hibernate.test.hql.Zoo" );
-		zoo = (Zoo) q
-			.iterate().next();
+
+		verifyAnimalZooSelection( q );
+
+		zoo = (Zoo) q.list().iterator().next();
 		assertEquals( zoo.getMammals().size(), 1 );
 		assertEquals( zoo.getAnimals().size(), 1 );
 		s.clear();
@@ -2301,7 +2332,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 
 		// Check order via SQL. Numbers are negated in the DB, so second comes first.
-		List listViaSql = s.createSQLQuery("select ID from SIMPLE_1 order by negated_num").list();
+		List listViaSql = s.createNativeQuery("select ID from SIMPLE_1 order by negated_num").list();
 		assertEquals( 2, listViaSql.size() );
 		assertEquals( second.getId().longValue(), ((Number) listViaSql.get( 0 )).longValue() );
 		assertEquals( first.getId().longValue(), ((Number) listViaSql.get( 1 )).longValue() );
@@ -2364,7 +2395,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		// Value returned by Oracle is a Types.NUMERIC, which is mapped to a BigDecimalType;
 		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
-		Double sizeViaSql = ( (Number)s.createSQLQuery("select size_mb from image").uniqueResult() ).doubleValue();
+		Double sizeViaSql = ( (Number)s.createNativeQuery("select size_mb from image").uniqueResult() ).doubleValue();
 		assertEquals(SIZE_IN_MB, sizeViaSql, 0.01d);
 		t.commit();
 		s.close();
@@ -2377,7 +2408,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.update( image );
 		s.flush();
 
-		sizeViaSql = ( (Number)s.createSQLQuery("select size_mb from image").uniqueResult() ).doubleValue();
+		sizeViaSql = ( (Number)s.createNativeQuery("select size_mb from image").uniqueResult() ).doubleValue();
 		assertEquals(NEW_SIZE_IN_MB, sizeViaSql, 0.01d);
 
 		s.delete(image);
@@ -2531,12 +2562,20 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		a.setBodyWeight(12.4f);
 		a.setDescription("an animal");
 		s.persist(a);
-		String[] aliases1 = s.createQuery("select a.bodyWeight as abw, a.description from Animal a").getReturnAliases();
-		assertEquals( "abw", aliases1[0] );
-		assertEquals( null, aliases1[1] );
-		String[] aliases2 = s.createQuery("select count(*), avg(a.bodyWeight) as avg from Animal a").getReturnAliases();
-		assertEquals( null, aliases2[0] );
-		assertEquals( "avg", aliases2[1] );
+
+		Query q = s.createQuery( "select a.bodyWeight as abw, a.description from Animal a" );
+		SqmSelectStatement sqmStatement = (SqmSelectStatement) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
+		List<SqmSelection> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
+		assertThat( selections.size(), is( 2 ) );
+		assertThat( selections.get( 0 ).getAlias(), is( "abw" ) );
+		assertThat( selections.get( 1 ).getAlias(), nullValue() );
+
+		q = s.createQuery("select count(*), avg(a.bodyWeight) as avg from Animal a");
+		sqmStatement = (SqmSelectStatement) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
+		selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
+		assertThat( selections.size(), is( 2 ) );
+		assertThat( selections.get( 0 ), nullValue() );
+		assertThat( selections.get( 1 ), is( "avg" ) );
 		s.delete(a);
 		t.commit();
 		s.close();
@@ -2554,9 +2593,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2 or a.bodyWeight = :bw" )
-				.setString( 1, "something" )
-				.setFloat( 2, 12345f )
-				.setFloat( "bw", 123f )
+				.setParameter( 1, "something" )
+				.setParameter( 2, 12345f )
+				.setParameter( "bw", 123f )
 				.list();
 		t.commit();
 		s.close();
@@ -2567,12 +2606,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2" )
-				.setString( 1, "something" )
-				.setFloat( 2, 123f )
+				.setParameter( 1, "something" )
+				.setParameter( 2, 123f )
 				.list();
 		s.createQuery( "from Animal a where a.bodyWeight in (?1, ?2)" )
-				.setFloat( 1, 999f )
-				.setFloat( 2, 123f )
+				.setParameter( 1, 999f )
+				.setParameter( 2, 123f )
 				.list();
 		t.commit();
 		s.close();
@@ -2794,131 +2833,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			session.createQuery("select extract(second from current_timestamp()), extract(minute from current_timestamp()), extract(hour from current_timestamp()) from Mammal m").list();
 			session.createQuery("select extract(day from m.birthdate), extract(month from m.birthdate), extract(year from m.birthdate) from Mammal m").list();
 		}
-		txn.commit();
-		session.close();
-	}
-
-	@Test
-	@SkipForDialect(
-			value = IngresDialect.class,
-			jiraKey = "HHH-4976",
-			comment = "Ingres 9.3 does not support sub-selects in the select list"
-	)
-	public void testOneToManyFilter() throws Throwable {
-		Session session = openSession();
-		Transaction txn = session.beginTransaction();
-
-		Product product = new Product();
-		product.setDescription( "My Product" );
-		product.setNumberAvailable( 10 );
-		product.setPrice( new BigDecimal( 123 ) );
-		product.setProductId( "4321" );
-		session.save( product );
-
-		Customer customer = new Customer();
-		customer.setCustomerId( "123456789" );
-		customer.setName( "My customer" );
-		customer.setAddress( "somewhere" );
-		session.save( customer );
-
-		Order order = customer.generateNewOrder( new BigDecimal( 1234 ) );
-		session.save( order );
-
-		LineItem li = order.generateLineItem( product, 5 );
-		session.save( li );
-
-		session.flush();
-
-		assertEquals( session.createFilter( customer.getOrders(), "" ).list().size(), 1 );
-
-		assertEquals( session.createFilter( order.getLineItems(), "" ).list().size(), 1 );
-		assertEquals( session.createFilter( order.getLineItems(), "where this.quantity > :quantity" ).setInteger( "quantity", 5 ).list().size(), 0 );
-
-		session.delete(li);
-		session.delete(order);
-		session.delete(product);
-		session.delete(customer);
-		txn.commit();
-		session.close();
-	}
-
-	@Test
-	@SuppressWarnings( {"unchecked"})
-	public void testManyToManyFilter() throws Throwable {
-		Session session = openSession();
-		Transaction txn = session.beginTransaction();
-
-		Human human = new Human();
-		human.setName( new Name( "Steve", 'L', "Ebersole" ) );
-		session.save( human );
-
-		Human friend = new Human();
-		friend.setName( new Name( "John", 'Q', "Doe" ) );
-		friend.setBodyWeight( 11.0f );
-		session.save( friend );
-
-		human.setFriends( new ArrayList() );
-		friend.setFriends( new ArrayList() );
-		human.getFriends().add( friend );
-		friend.getFriends().add( human );
-
-		session.flush();
-
-		assertEquals( session.createFilter( human.getFriends(), "" ).list().size(), 1 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight > ?1" ).setFloat( 1, 10f ).list().size(), 1 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.bodyWeight < ?1" ).setFloat( 1, 10f ).list().size(), 0 );
-
-		session.delete(human);
-		session.delete(friend);
-
-		txn.commit();
-		session.close();
-	}
-
-	@Test
-	@SuppressWarnings( {"unchecked"})
-	public void testFilterWithCustomColumnReadAndWrite() {
-		Session session = openSession();
-		Transaction txn = session.beginTransaction();
-
-		Human human = new Human();
-		human.setName( new Name( "Steve", 'L', "Ebersole" ) );
-		human.setHeightInches( 73d );
-		session.save( human );
-
-		Human friend = new Human();
-		friend.setName( new Name( "John", 'Q', "Doe" ) );
-		friend.setHeightInches( 50d );
-		session.save( friend );
-
-		human.setFriends( new ArrayList() );
-		friend.setFriends( new ArrayList() );
-		human.getFriends().add( friend );
-		friend.getFriends().add( human );
-
-		session.flush();
-
-		assertEquals( session.createFilter( human.getFriends(), "" ).list().size(), 1 );
-		assertEquals(
-				session.createFilter( human.getFriends(), "where this.heightInches < ?1" ).setDouble( 1, 51d ).list().size(),
-				1
-		);
-		assertEquals(
-				session.createFilter( human.getFriends(), "where this.heightInches > ?1" ).setDouble( 1, 51d ).list().size(),
-				0
-		);
-		assertEquals(
-				session.createFilter( human.getFriends(), "where this.heightInches between 49 and 51" ).list().size(),
-				1
-		);
-		assertEquals(
-				session.createFilter( human.getFriends(), "where this.heightInches not between 49 and 51" ).list().size(),
-				0
-		);
-
-		session.delete( human );
-		session.delete( friend );
-
 		txn.commit();
 		session.close();
 	}
@@ -3290,10 +3204,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertClassAssignability( results.get( 0 ).getClass(), Animal.class );
 
-		Iterator iter = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" ).iterate();
-		assertTrue( "Incorrect result size", iter.hasNext() );
-		assertTrue( "Incorrect return type", iter.next() instanceof Animal );
-
 		results = session.createQuery( "select new list(an.description, an.bodyWeight) from Animal an" ).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertTrue( "Incorrect return type", results.get( 0 ) instanceof List );
@@ -3304,17 +3214,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "Incorrect return type", results.get( 0 ) instanceof List );
 		assertEquals( "Incorrect return type", ( (List) results.get( 0 ) ).size(), 2 );
 
-		iter = session.createQuery( "select new list(an.description, an.bodyWeight) from Animal an" ).iterate();
-		assertTrue( "Incorrect result size", iter.hasNext() );
-		Object obj = iter.next();
-		assertTrue( "Incorrect return type", obj instanceof List );
-		assertEquals( "Incorrect return type", ( (List) obj ).size(), 2 );
-
-		iter = session.createQuery( "select new list(an.description, an.bodyWeight) from Animal an" ).iterate();
-		assertTrue( "Incorrect result size", iter.hasNext() );
-		obj = iter.next();
-		assertTrue( "Incorrect return type", obj instanceof List );
-		assertEquals( "Incorrect return type", ( (List) obj ).size(), 2 );
+		Object obj;
 
 		results = session.createQuery( "select new map(an.description, an.bodyWeight) from Animal an" ).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
@@ -3330,22 +3230,16 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertTrue( ( (Map) results.get( 0 ) ).containsKey("descr") );
 		assertTrue( ( (Map) results.get( 0 ) ).containsKey("bw") );
 
-		iter = session.createQuery( "select new map(an.description, an.bodyWeight) from Animal an" ).iterate();
-		assertTrue( "Incorrect result size", iter.hasNext() );
-		obj = iter.next();
-		assertTrue( "Incorrect return type", obj instanceof Map );
-		assertEquals( "Incorrect return type", ( (Map) obj ).size(), 2 );
-
 		ScrollableResults sr = session.createQuery( "select new map(an.description, an.bodyWeight) from Animal an" ).scroll();
 		assertTrue( "Incorrect result size", sr.next() );
-		obj = sr.get(0);
+		obj = sr.get();
 		assertTrue( "Incorrect return type", obj instanceof Map );
 		assertEquals( "Incorrect return type", ( (Map) obj ).size(), 2 );
 		sr.close();
 
 		sr = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" ).scroll();
 		assertTrue( "Incorrect result size", sr.next() );
-		assertTrue( "Incorrect return type", sr.get(0) instanceof Animal );
+		assertTrue( "Incorrect return type", sr.get() instanceof Animal );
 		sr.close();
 
 		// caching...
@@ -3598,17 +3492,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		}
 
 		try {
-			getSelectNewQuery( session ).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).iterate();
-			fail("'select new' together with a resulttransformer should result in error!");
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch(HibernateException he) {
-			assertTrue(he.getMessage().indexOf("ResultTransformer")==0);
-		}
-
-		try {
 			getSelectNewQuery( session ).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).scroll();
 			fail("'select new' together with a resulttransformer should result in error!");
 		}
@@ -3650,23 +3533,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		t = session.beginTransaction();
-		Iterator iter = session.createQuery( query )
-	     .setResultTransformer(Transformers.aliasToBean(Animal.class)).iterate();
-		assertTrue( "Incorrect result size", iter.hasNext() );
-		assertTrue( "Incorrect return type", iter.next() instanceof Animal );
-
-		t.commit();
-		session.close();
-
-		session = openSession();
-		t = session.beginTransaction();
 
 		ScrollableResults sr = session.createQuery( query )
 			     .setResultTransformer(Transformers.aliasToBean(Animal.class)).scroll();
 
 		assertTrue( "Incorrect result size", sr.next() );
-		assertTrue( "Incorrect return type", sr.get(0) instanceof Animal );
-		assertFalse( session.contains( sr.get( 0 ) ) );
+		assertTrue( "Incorrect return type", sr.get() instanceof Animal );
+		assertFalse( session.contains( sr.get() ) );
 		sr.close();
 
 		t.commit();
@@ -3719,25 +3592,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		t = session.beginTransaction();
 
-		Iterator iter = session.createQuery( query )
-	     .setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).iterate();
-		assertTrue( "Incorrect result size", iter.hasNext() );
-		map = (Map) iter.next();
-		firstAnimal = (Animal) map.get("an");
-		assertEquals( "Mammal #1", firstAnimal.getDescription() );
-		assertTrue( "Incorrect result size", iter.hasNext() );
-
-		t.commit();
-		session.close();
-
-		session = openSession();
-		t = session.beginTransaction();
-
 		ScrollableResults sr = session.createQuery( query )
 				.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).scroll();
 
 		assertTrue( "Incorrect result size", sr.next() );
-		assertTrue( "Incorrect return type", sr.get(0) instanceof Map );
+		assertTrue( "Incorrect return type", sr.get() instanceof Map );
 		sr.close();
 
 		t.commit();
@@ -3873,7 +3732,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (IllegalArgumentException e) {
 			final Throwable cause = e.getCause();
-			assertThat( cause, instanceOf( QuerySyntaxException.class ) );
+			assertThat( cause, instanceOf( SemanticException.class ) );
 			assertTrue( cause.getMessage().contains( "expecting EOF, found ')'" ) );
 		}
 	}
@@ -3925,7 +3784,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		public void checkAll() {
 			checkList();
-			checkIterate();
 			checkScroll();
 		}
 
@@ -3946,17 +3804,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			Query query = s.createQuery( hql );
 			preparer.prepare( query );
 			query.scroll();
-			s.getTransaction().commit();
-			s.close();
-			return this;
-		}
-
-		public SyntaxChecker checkIterate() {
-			Session s = openSession();
-			s.beginTransaction();
-			Query query = s.createQuery( hql );
-			preparer.prepare( query );
-			query.iterate();
 			s.getTransaction().commit();
 			s.close();
 			return this;

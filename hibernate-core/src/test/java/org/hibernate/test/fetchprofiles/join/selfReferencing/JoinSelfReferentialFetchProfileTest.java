@@ -6,8 +6,9 @@
  */
 package org.hibernate.test.fetchprofiles.join.selfReferencing;
 
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import org.junit.Test;
 
@@ -24,13 +25,16 @@ public class JoinSelfReferentialFetchProfileTest extends BaseCoreFunctionalTestC
 
 	@Test
 	public void testEnablingJoinFetchProfileAgainstSelfReferentialAssociation() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.enableFetchProfile( Employee.FETCH_PROFILE_TREE );
-		s.createCriteria( Employee.class )
-				.add( Restrictions.isNull( "manager" ) )
-				.list();
-		s.getTransaction().commit();
-		s.close();
+		inTransaction( s-> {
+			s.enableFetchProfile( Employee.FETCH_PROFILE_TREE );
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Employee> criteria = criteriaBuilder.createQuery( Employee.class );
+			Root<Employee> root = criteria.from( Employee.class );
+			criteria.where( criteriaBuilder.isNull( root.get( "manager" ) ) );
+			s.createQuery( criteria ).list();
+//		s.createCriteria( Employee.class )
+//				.add( Restrictions.isNull( "manager" ) )
+//				.list();
+		} );
 	}
 }

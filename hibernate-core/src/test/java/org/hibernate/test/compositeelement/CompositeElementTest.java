@@ -8,10 +8,13 @@ package org.hibernate.test.compositeelement;
 
 import java.util.ArrayList;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -88,42 +91,51 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testCustomColumnReadAndWrite() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Child c = new Child( "Child One" );
-		c.setPosition( 1 );
-		Parent p = new Parent( "Parent" );
-		p.getChildren().add( c );
-		c.setParent( p );
-		s.save( p );
-		s.flush();
+		inTransaction( s -> {
+			Child c = new Child( "Child One" );
+			c.setPosition( 1 );
+			Parent p = new Parent( "Parent" );
+			p.getChildren().add( c );
+			c.setParent( p );
+			s.save( p );
+			s.flush();
 
-		// Oracle returns BigDecimaal while other dialects return Integer;
-		// casting to Number so it works on all dialects
-		Number sqlValue = ((Number) s.createSQLQuery("select child_position from ParentChild c where c.name='Child One'")
-				.uniqueResult());
-		assertEquals( 0, sqlValue.intValue() );
+			// Oracle returns BigDecimaal while other dialects return Integer;
+			// casting to Number so it works on all dialects
+			Number sqlValue = ( (Number) s.createNativeQuery(
+					"select child_position from ParentChild c where c.name='Child One'" )
+					.uniqueResult() );
+			assertEquals( 0, sqlValue.intValue() );
 
-		Integer hqlValue = (Integer)s.createQuery("select c.position from Parent p join p.children c where p.name='Parent'")
-				.uniqueResult();
-		assertEquals( 1, hqlValue.intValue() );
+			Integer hqlValue = (Integer) s.createQuery(
+					"select c.position from Parent p join p.children c where p.name='Parent'" )
+					.uniqueResult();
+			assertEquals( 1, hqlValue.intValue() );
 
-		p = (Parent)s.createCriteria(Parent.class).add(Restrictions.eq("name", "Parent")).uniqueResult();
-		c = (Child)p.getChildren().iterator().next();
-		assertEquals( 1, c.getPosition() );
+//			p = (Parent) s.createCriteria( Parent.class ).add( Restrictions.eq( "name", "Parent" ) ).uniqueResult();
 
-		p = (Parent)s.createQuery("from Parent p join p.children c where c.position = 1").uniqueResult();
-		c = (Child)p.getChildren().iterator().next();
-		assertEquals( 1, c.getPosition() );
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Parent> criteria = criteriaBuilder.createQuery( Parent.class );
+			Root<Parent> root = criteria.from( Parent.class );
+			criteria.where( criteriaBuilder.equal( root.get( "name" ),"Parent"  ) );
 
-		c.setPosition( 2 );
-		s.flush();
-		sqlValue = ( (Number) s.createSQLQuery("select child_position from ParentChild c where c.name='Child One'")
-				.uniqueResult() );
-		assertEquals( 1, sqlValue.intValue() );
-		s.delete( p );
-		t.commit();
-		s.close();
+			p = s.createQuery( criteria ).uniqueResult();
+
+			c = (Child) p.getChildren().iterator().next();
+			assertEquals( 1, c.getPosition() );
+
+			p = (Parent) s.createQuery( "from Parent p join p.children c where c.position = 1" ).uniqueResult();
+			c = (Child) p.getChildren().iterator().next();
+			assertEquals( 1, c.getPosition() );
+
+			c.setPosition( 2 );
+			s.flush();
+			sqlValue = ( (Number) s.createNativeQuery(
+					"select child_position from ParentChild c where c.name='Child One'" )
+					.uniqueResult() );
+			assertEquals( 1, sqlValue.intValue() );
+			s.delete( p );
+		} );
 	}
 
 }

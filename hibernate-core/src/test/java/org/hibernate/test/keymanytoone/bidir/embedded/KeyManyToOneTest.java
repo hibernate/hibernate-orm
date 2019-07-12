@@ -7,12 +7,17 @@
 package org.hibernate.test.keymanytoone.bidir.embedded;
 import java.util.List;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Restrictions;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -35,59 +40,55 @@ public class KeyManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCriteriaRestrictionOnKeyManyToOne() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( "from Order o where o.customer.name = 'Acme'" ).list();
-		Criteria criteria = s.createCriteria( Order.class );
-		criteria.createCriteria( "customer" ).add( Restrictions.eq( "name", "Acme" ) );
-		criteria.list();
-		s.getTransaction().commit();
-		s.close();
+		inTransaction( s -> {
+			s.createQuery( "from Order o where o.customer.name = 'Acme'" ).list();
+//		Criteria criteria = s.createCriteria( Order.class );
+//		criteria.createCriteria( "customer" ).add( Restrictions.eq( "name", "Acme" ) );
+//		criteria.list();
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Order> criteria = criteriaBuilder.createQuery( Order.class );
+			Root<Order> root = criteria.from( Order.class );
+			Join<Object, Object> customer = root.join( "customer", JoinType.INNER );
+			criteria.where( criteriaBuilder.equal( customer.get( "name" ), "Acme" ) );
+			s.createQuery( criteria ).list();
+		} );
 	}
 
 	@Test
 	public void testSaveCascadedToKeyManyToOne() {
 		// test cascading a save to an association with a key-many-to-one which refers to a
 		// just saved entity
-		Session s = openSession();
-		s.beginTransaction();
-		Customer cust = new Customer( "Acme, Inc." );
-		Order order = new Order( cust, 1 );
-		cust.getOrders().add( order );
-		sessionFactory().getStatistics().clear();
-		s.save( cust );
-		s.flush();
-		assertEquals( 2, sessionFactory().getStatistics().getEntityInsertCount() );
-		s.delete( cust );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction( s -> {
+			Customer cust = new Customer( "Acme, Inc." );
+			Order order = new Order( cust, 1 );
+			cust.getOrders().add( order );
+			sessionFactory().getStatistics().clear();
+			s.save( cust );
+			s.flush();
+			assertEquals( 2, sessionFactory().getStatistics().getEntityInsertCount() );
+			s.delete( cust );
+		} );
 	}
 
 	@Test
 	public void testQueryingOnMany2One() {
-		Session s = openSession();
-		s.beginTransaction();
 		Customer cust = new Customer( "Acme, Inc." );
 		Order order = new Order( cust, 1 );
-		cust.getOrders().add( order );
-		s.save( cust );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction( s -> {
+			cust.getOrders().add( order );
+			s.save( cust );
+		} );
 
-		s = openSession();
-		s.beginTransaction();
-		List results = s.createQuery( "from Order o where o.customer.name = :name" )
-				.setParameter( "name", cust.getName() )
-				.list();
-		assertEquals( 1, results.size() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction( s -> {
+			List results = s.createQuery( "from Order o where o.customer.name = :name" )
+					.setParameter( "name", cust.getName() )
+					.list();
+			assertEquals( 1, results.size() );
+		} );
 
-		s = openSession();
-		s.beginTransaction();
-		s.delete( cust );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction( s -> {
+			s.delete( cust );
+		} );
 	}
 
 	@Test

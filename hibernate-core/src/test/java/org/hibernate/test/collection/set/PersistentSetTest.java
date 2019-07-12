@@ -9,11 +9,15 @@ package org.hibernate.test.collection.set;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.internal.PersistentSet;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.query.Query;
 import org.hibernate.stat.CollectionStatistics;
 
 import org.hibernate.testing.FailureExpected;
@@ -146,7 +150,7 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		parent = ( Parent ) session.get( Parent.class, "p1" );
+		parent = session.get( Parent.class, "p1" );
 		assertEquals( 1, parent.getChildren().size() );
 		session.getTransaction().commit();
 		session.close();
@@ -243,7 +247,7 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		container = ( Container ) session.get( Container.class, container.getId() );
+		container = session.get( Container.class, container.getId() );
 		assertEquals( 1, container.getContents().size() );
 		session.delete( container );
 		session.getTransaction().commit();
@@ -268,7 +272,7 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		container = ( Container ) session.get( Container.class, container.getId() );
+		container = session.get( Container.class, container.getId() );
 		assertEquals( 1, container.getContents().size() );
 		session.getTransaction().commit();
 		session.close();
@@ -279,7 +283,7 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		container = ( Container ) session.get( Container.class, container.getId() );
+		container = session.get( Container.class, container.getId() );
 		assertEquals( 1, container.getContents().size() );
 		session.delete( container );
 		session.getTransaction().commit();
@@ -305,7 +309,7 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		parent = ( Parent ) session.get( Parent.class, parent.getName() );
+		parent = session.get( Parent.class, parent.getName() );
 		assertTrue( parent.getChildren().contains( child ) );
 		assertTrue( parent.getChildren().contains( otherChild ) );
 		session.getTransaction().commit();
@@ -313,22 +317,34 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 		session = openSession();
 		session.beginTransaction();
 
-		child = ( Child ) session.get( Child.class, child.getName() );
+		child = session.get( Child.class, child.getName() );
 		assertTrue( child.getParent().getChildren().contains( child ) );
 		session.clear();
 
-		child = ( Child ) session.createCriteria( Child.class, child.getName() )
-				.setCacheable( true )
-				.add( Restrictions.idEq( "c1" ) )
-				.uniqueResult();
+		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+		CriteriaQuery<Child> criteria = criteriaBuilder.createQuery( Child.class );
+		Root<Child> root = criteria.from( Child.class );
+		criteria.where( criteriaBuilder.equal( root.get( "name" ), "c1" ));
+		child = session.createQuery( criteria ).uniqueResult();
+//		child = ( Child ) session.createCriteria( Child.class, child.getName() )
+//				.setCacheable( true )
+//				.add( Restrictions.idEq( "c1" ) )
+//				.uniqueResult();
 		assertTrue( child.getParent().getChildren().contains( child ) );
 		assertTrue( child.getParent().getChildren().contains( otherChild ) );
 		session.clear();
 
-		child = ( Child ) session.createCriteria( Child.class, child.getName() )
-				.setCacheable( true )
-				.add( Restrictions.idEq( "c1" ) )
-				.uniqueResult();
+		CriteriaQuery<Child> criteriaQuery = criteriaBuilder.createQuery( Child.class );
+		Root<Child> childRoot = criteriaQuery.from( Child.class );
+		criteriaQuery.where( criteriaBuilder.equal( childRoot.get( "name" ), "c1" ));
+		Query<Child> query = session.createQuery( criteriaQuery );
+		query.setCacheable( true );
+		child = query.uniqueResult();
+
+//		child = ( Child ) session.createCriteria( Child.class, child.getName() )
+//				.setCacheable( true )
+//				.add( Restrictions.idEq( "c1" ) )
+//				.uniqueResult();
 		assertTrue( child.getParent().getChildren().contains( child ) );
 		assertTrue( child.getParent().getChildren().contains( otherChild ) );
 		session.clear();
@@ -366,7 +382,7 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 		session = openSession();
 		session.beginTransaction();
 		session.setCacheMode( CacheMode.IGNORE );
-		parent = ( Parent ) session.get( Parent.class, parent.getName() );
+		parent = session.get( Parent.class, parent.getName() );
 		assertTrue( parent.getChildren().contains( child ) );
 		assertTrue( parent.getChildren().contains( otherChild ) );
 		session.getTransaction().commit();
@@ -375,13 +391,19 @@ public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.beginTransaction();
 		session.setCacheMode( CacheMode.IGNORE );
 
-		child = ( Child ) session.get( Child.class, child.getName() );
+		child = session.get( Child.class, child.getName() );
 		assertTrue( child.getParent().getChildren().contains( child ) );
 		session.clear();
 
-		child = ( Child ) session.createCriteria( Child.class, child.getName() )
-				.add( Restrictions.idEq( "c1" ) )
-				.uniqueResult();
+		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+		CriteriaQuery<Child> criteria = criteriaBuilder.createQuery( Child.class );
+		Root<Child> root = criteria.from( Child.class );
+		criteria.where( criteriaBuilder.equal( root.get( "name" ), "c1" ) );
+
+		child = session.createQuery( criteria ).uniqueResult();
+//		child = ( Child ) session.createCriteria( Child.class, child.getName() )
+//				.add( Restrictions.idEq( "c1" ) )
+//				.uniqueResult();
 		assertTrue( child.getParent().getChildren().contains( child ) );
 		assertTrue( child.getParent().getChildren().contains( otherChild ) );
 		session.clear();

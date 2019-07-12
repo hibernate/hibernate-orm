@@ -6,11 +6,15 @@
  */
 package org.hibernate.test.annotations.idmanytoone;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.criterion.Restrictions;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -23,7 +27,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
-	public void testFkCreationOrdering() throws Exception {
+	public void testFkCreationOrdering() {
 		//no real test case, the sessionFactory building is tested
 		Session s = openSession();
 		s.close();
@@ -31,47 +35,49 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testIdClassManyToOne() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Store store = new Store();
-		Customer customer = new Customer();
-		s.persist( store );
-		s.persist( customer );
-		StoreCustomer sc = new StoreCustomer( store, customer );
-		s.persist( sc );
-		s.flush();
-		s.clear();
+		inTransaction( s-> {
+			Store store = new Store();
+			Customer customer = new Customer();
+			s.persist( store );
+			s.persist( customer );
+			StoreCustomer sc = new StoreCustomer( store, customer );
+			s.persist( sc );
+			s.flush();
+			s.clear();
 
-		store = (Store) s.get(Store.class, store.id );
-		assertEquals( 1, store.customers.size() );
-		assertEquals( customer.id, store.customers.iterator().next().customer.id );
-		tx.rollback();
-
+			store = s.get(Store.class, store.id );
+			assertEquals( 1, store.customers.size() );
+			assertEquals( customer.id, store.customers.iterator().next().customer.id );
+		} );
 		//TODO test Customers / ShoppingBaskets / BasketItems testIdClassManyToOneWithReferenceColumn
-		s.close();
 	}
 
     @Test
 	@TestForIssue( jiraKey = "HHH-7767" )
     public void testCriteriaRestrictionOnIdManyToOne() {
-        Session s = openSession();
-        s.beginTransaction();
+		inTransaction( s -> {
+			s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'" ).list();
 
-        s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'" ).list();
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Course> criteria = criteriaBuilder.createQuery( Course.class );
+			Root<Course> root = criteria.from( Course.class );
+			Join<Object, Object> students = root.join( "students", JoinType.INNER );
+			Join<Object, Object> student = students.join( "student", JoinType.INNER );
+			criteria.where( criteriaBuilder.equal( student.get( "name" ), "Foo" ) );
+			session.createQuery( criteria ).list();
+//		Criteria criteria = s.createCriteria( Course.class );
+//        criteria.createCriteria( "students" ).createCriteria( "student" ).add( Restrictions.eq( "name", "Foo" ) );
+//        criteria.list();
 
-        Criteria criteria = s.createCriteria( Course.class );
-        criteria.createCriteria( "students" ).createCriteria( "student" ).add( Restrictions.eq( "name", "Foo" ) );
-        criteria.list();
+//		CriteriaQuery<Course> criteria2 = criteriaBuilder.createQuery( Course.class );
 
-        Criteria criteria2 = s.createCriteria( Course.class );
-        criteria2.createAlias( "students", "cs" );
-        criteria2.add( Restrictions.eq( "cs.value", "Bar" ) );
-        criteria2.createAlias( "cs.student", "s" );
-        criteria2.add( Restrictions.eq( "s.name", "Foo" ) );
-        criteria2.list();
-
-        s.getTransaction().commit();
-        s.close();
+//        Criteria criteria2 = s.createCriteria( Course.class );
+//        criteria2.createAlias( "students", "cs" );
+//        criteria2.add( Restrictions.eq( "cs.value", "Bar" ) );
+//        criteria2.createAlias( "cs.student", "s" );
+//        criteria2.add( Restrictions.eq( "s.name", "Foo" ) );
+//        criteria2.list();
+		} );
     }
 
 	@Override

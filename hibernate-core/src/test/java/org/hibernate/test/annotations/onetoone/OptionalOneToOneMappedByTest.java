@@ -8,8 +8,10 @@ package org.hibernate.test.annotations.onetoone;
 
 import java.util.concurrent.atomic.AtomicReference;
 import javax.persistence.PersistenceException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
 
 import org.hibernate.testing.TestForIssue;
@@ -49,7 +51,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testBidirAssignedId() throws Exception {
+	public void testBidirAssignedId() {
 		doInHibernate( this::sessionFactory, session -> {
 			PartyAffiliate affiliate = new PartyAffiliate();
 			affiliate.partyId = "id";
@@ -58,10 +60,16 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {
-			PartyAffiliate affiliate = (PartyAffiliate) session.createCriteria(
-					PartyAffiliate.class )
-					.add( Restrictions.idEq( "id" ) )
-					.uniqueResult();
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<PartyAffiliate> criteria = criteriaBuilder.createQuery( PartyAffiliate.class );
+			Root<PartyAffiliate> root = criteria.from( PartyAffiliate.class );
+			criteria.where( criteriaBuilder.equal( root.get("partyId"), "id" ) );
+
+			PartyAffiliate affiliate = session.createQuery( criteria ).uniqueResult();
+//			PartyAffiliate affiliate = (PartyAffiliate) session.createCriteria(
+//					PartyAffiliate.class )
+//					.add( Restrictions.idEq( "id" ) )
+//					.uniqueResult();
 			assertNotNull( affiliate );
 			assertEquals( "id", affiliate.partyId );
 			assertNull( affiliate.party );
@@ -79,7 +87,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testBidirDefaultIdGenerator() throws Exception {
+	public void testBidirDefaultIdGenerator() {
 		PersonAddress _personAddress = doInHibernate(
 				this::sessionFactory,
 				session -> {
@@ -93,10 +101,15 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 		);
 
 		doInHibernate( this::sessionFactory, session -> {
-			PersonAddress personAddress = (PersonAddress) session.createCriteria(
-					PersonAddress.class )
-					.add( Restrictions.idEq( _personAddress.getId() ) )
-					.uniqueResult();
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<PersonAddress> criteria = criteriaBuilder.createQuery( PersonAddress.class );
+			Root<PersonAddress> root = criteria.from( PersonAddress.class );
+			criteria.where( criteriaBuilder.equal( root.get("id"), _personAddress.getId()) );
+			PersonAddress personAddress = session.createQuery( criteria ).uniqueResult();
+//			PersonAddress personAddress = (PersonAddress) session.createCriteria(
+//					PersonAddress.class )
+//					.add( Restrictions.idEq( _personAddress.getId() ) )
+//					.uniqueResult();
 			assertNotNull( personAddress );
 			assertNull( personAddress.getPerson() );
 		} );
@@ -114,7 +127,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-5757")
-	public void testBidirQueryEntityProperty() throws Exception {
+	public void testBidirQueryEntityProperty() {
 
 		AtomicReference<Person> personHolder = new AtomicReference<>();
 
@@ -135,11 +148,16 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
+		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 		doInHibernate( this::sessionFactory, session -> {
-			PersonAddress personAddress = (PersonAddress) session.createCriteria(
-					PersonAddress.class )
-					.add( Restrictions.idEq( _personAddress.getId() ) )
-					.uniqueResult();
+			CriteriaQuery<PersonAddress> criteria = criteriaBuilder.createQuery( PersonAddress.class );
+			Root<PersonAddress> root = criteria.from( PersonAddress.class );
+			criteria.where( criteriaBuilder.equal( root.get("id"), _personAddress.getId()) );
+			PersonAddress personAddress = session.createQuery( criteria ).uniqueResult();
+//			PersonAddress personAddress = (PersonAddress) session.createCriteria(
+//					PersonAddress.class )
+//					.add( Restrictions.idEq( _personAddress.getId() ) )
+//					.uniqueResult();
 			assertNotNull( personAddress );
 			assertNotNull( personAddress.getPerson() );
 		} );
@@ -147,15 +165,20 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			Person person = personHolder.get();
 			// this call throws GenericJDBCException
-			PersonAddress personAddress = (PersonAddress) session.createQuery(
+			PersonAddress personAddress = session.createQuery(
 					"select pa from PersonAddress pa where pa.person = :person", PersonAddress.class )
 					.setParameter( "person", person )
 					.getSingleResult();
 
+			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+			Root<Person> root = criteria.from( Person.class );
+			criteria.where( criteriaBuilder.equal( root.get("personAddress"), personAddress ) );
+
+			session.createQuery( criteria ).uniqueResult();
 			// the other way should also work
-			person = (Person) session.createCriteria( Person.class )
-					.add( Restrictions.eq( "personAddress", personAddress ) )
-					.uniqueResult();
+//			person = (Person) session.createCriteria( Person.class )
+//					.add( Restrictions.eq( "personAddress", personAddress ) )
+//					.uniqueResult();
 
 			session.delete( personAddress );
 		} );

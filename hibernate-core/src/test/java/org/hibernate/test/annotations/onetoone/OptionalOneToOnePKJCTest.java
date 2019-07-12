@@ -7,10 +7,12 @@
 package org.hibernate.test.annotations.onetoone;
 
 import javax.persistence.PersistenceException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
 
 import org.hibernate.testing.TestForIssue;
@@ -97,9 +99,15 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		owner = ( Owner ) s.createCriteria( Owner.class )
-				.add( Restrictions.idEq( owner.getId() ) )
-				.uniqueResult();
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<Owner> criteria = criteriaBuilder.createQuery( Owner.class );
+		Root<Owner> root = criteria.from( Owner.class );
+		criteria.where( criteriaBuilder.equal( root.get( "id" ), owner.getId() ) );
+
+		owner = s.createQuery( criteria ).uniqueResult();
+//		owner = ( Owner ) s.createCriteria( Owner.class )
+//				.add( Restrictions.idEq( owner.getId() ) )
+//				.uniqueResult();
 		assertNotNull( owner );
 		assertNull( owner.getAddress() );
 		s.delete( owner );
@@ -127,9 +135,16 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		party = ( Party ) s.createCriteria( Party.class )
-				.add( Restrictions.idEq( "id" ) )
-				.uniqueResult();
+
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<Party> criteria = criteriaBuilder.createQuery( Party.class );
+		Root<Party> root = criteria.from( Party.class );
+		criteria.where( criteriaBuilder.equal( root.get( "partyId" ), "id" ) );
+
+		party = s.createQuery( criteria ).uniqueResult();
+//		party = ( Party ) s.createCriteria( Party.class )
+//				.add( Restrictions.idEq( "id" ) )
+//				.uniqueResult();
 		assertNotNull( party );
 		assertEquals( "id", party.partyId );
 		assertNull( party.partyAffiliate );

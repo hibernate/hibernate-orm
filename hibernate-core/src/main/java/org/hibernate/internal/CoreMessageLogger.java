@@ -1866,4 +1866,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "A class should not be annotated with both @Inheritance and @MappedSuperclass. @Inheritance will be ignored for: %s.", id = 503)
 	void unsupportedMappedSuperclassWithEntityInheritance(String entityName);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'javax.persistence.create-database-schemas', 'hibernate.hbm2ddl.create_namespaces', 'hibernate.hbm2dll.create_namespaces' (this last being deprecated).", id = 504)
+	void multipleSchemaCreationSettingsDefined();
+
 }

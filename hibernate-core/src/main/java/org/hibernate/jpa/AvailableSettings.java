@@ -187,11 +187,11 @@ public interface AvailableSettings {
 	String SCHEMA_GEN_SCRIPTS_DROP_TARGET = org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET;
 
 	/**
-	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DLL_CREATE_NAMESPACES}
-	 * or {@link org.hibernate.cfg.AvailableSettings#HBM2DLL_CREATE_SCHEMAS} instead
+	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_NAMESPACES}
+	 * or {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SCHEMAS} instead
 	 */
 	@Deprecated
-	String SCHEMA_GEN_CREATE_SCHEMAS = org.hibernate.cfg.AvailableSettings.HBM2DLL_CREATE_NAMESPACES;
+	String SCHEMA_GEN_CREATE_SCHEMAS = org.hibernate.cfg.AvailableSettings.HBM2DDL_CREATE_NAMESPACES;
 
 	/**
 	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_CONNECTION} instead

@@ -105,12 +105,18 @@ public class Helper {
 	public static boolean interpretNamespaceHandling(Map configurationValues) {
 		// prefer the JPA setting...
 		return ConfigurationHelper.getBoolean(
-				AvailableSettings.HBM2DLL_CREATE_SCHEMAS,
+				AvailableSettings.HBM2DDL_CREATE_SCHEMAS,
 				configurationValues,
+				//Then try the Hibernate ORM setting:
 				ConfigurationHelper.getBoolean(
 						AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
 						configurationValues,
-						false
+						//And finally fall back to the old name this had before we fixed the typo:
+						ConfigurationHelper.getBoolean(
+								AvailableSettings.HBM2DLL_CREATE_NAMESPACES,
+								configurationValues,
+								false
+						)
 				)
 		);
 	}

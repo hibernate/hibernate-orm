@@ -8,13 +8,16 @@ package org.hibernate.test.annotations.naturalid;
 
 import java.util.List;
 
-import org.hibernate.Criteria;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.query.Query;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -315,10 +318,14 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private State getState(Session s, String name) {
-		Criteria criteria = s.createCriteria( State.class );
-		criteria.add( Restrictions.eq( "name", name ) );
-		criteria.setCacheable( true );
-		return (State) criteria.list().get( 0 );
+		final CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<State> criteria = criteriaBuilder.createQuery( State.class );
+		Root<State> root = criteria.from( State.class );
+		criteria.select( root ).where( criteriaBuilder.equal( root.get( "name" ), name ) );
+
+		Query<State> query = s.createQuery( criteria );
+		query.setCacheable( true );
+		return query.list().get( 0 );
 	}
 
 	@Override

@@ -10,9 +10,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -20,20 +24,22 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.exception.LockTimeoutException;
-import org.junit.Test;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+//import org.hibernate.criterion.Order;
+//import org.hibernate.criterion.Projections;
 
 /**
  * used driver hibernate.connection.driver_class com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -257,14 +263,24 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 			session.clear();
 
 			// count number of products in each category
-			List<Object[]> result = session.createCriteria( Category.class, "c" ).createAlias( "products", "p" )
-					.setProjection(
-							Projections.projectionList()
-									.add( Projections.groupProperty( "c.id" ) )
-									.add( Projections.countDistinct( "p.id" ) )
-					)
-					.addOrder( Order.asc( "c.id" ) )
-					.setFirstResult( 1 ).setMaxResults( 3 ).list();
+//			List<Object[]> result = session.createCriteria( Category.class, "c" ).createAlias( "products", "p" )
+//					.setProjection(
+//							Projections.projectionList()
+//									.add( Projections.groupProperty( "c.id" ) )
+//									.add( Projections.countDistinct( "p.id" ) )
+//					)
+//					.addOrder( Order.asc( "c.id" ) )
+//					.setFirstResult( 1 ).setMaxResults( 3 ).list();
+
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<Object[]> criteria = criteriaBuilder.createQuery( Object[].class );
+			Root<Category> root = criteria.from( Category.class );
+			Join<Object, Object> products = root.join( "products", JoinType.INNER );
+			criteria.multiselect( root.get( "id" ), criteriaBuilder.countDistinct( products.get( "id" ) ) );
+			criteria.orderBy( criteriaBuilder.asc( root.get( "id" ) ) );
+			Query<Object[]> query = session.createQuery( criteria );
+
+			List<Object[]> result = query.setFirstResult( 1 ).setMaxResults( 3 ).list();
 
 			assertEquals( 2, result.size() );
 			assertArrayEquals( new Object[] { 2, 2L }, result.get( 0 ) ); // two products of second category

@@ -13,9 +13,12 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.Query;
@@ -117,10 +120,17 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		// test Criteria
 		doInHibernate( this::sessionFactory, s -> {
-			Criteria criteria = s.createCriteria( Employee.class )
-					.addQueryHint( "ALL_ROWS" )
-					.createCriteria( "department" ).add( Restrictions.eq( "name", "Sales" ) );
-			List results = criteria.list();
+			final CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Employee> criteria = criteriaBuilder.createQuery( Employee.class );
+			Root<Employee> root = criteria.from( Employee.class );
+			Join<Object, Object> departmentJoin = root.join( "department" );
+			criteria.select( root ).where( criteriaBuilder.equal( departmentJoin.get( "name" ),"Sales" ) );
+//			Criteria criteria = s.createCriteria( Employee.class )
+//					.addQueryHint( "ALL_ROWS" )
+//					.createCriteria( "department" ).add( Restrictions.eq( "name", "Sales" ) );
+			Query<Employee> query = s.createQuery( criteria );
+			query.addQueryHint( "ALL_ROWS" );
+			List results = query.list();
 
 			assertEquals(results.size(), 2);
 		} );

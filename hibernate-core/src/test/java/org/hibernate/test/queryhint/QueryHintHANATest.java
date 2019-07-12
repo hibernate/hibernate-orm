@@ -19,9 +19,14 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.Query;
@@ -29,6 +34,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.test.annotations.naturalid.State;
 import org.junit.Test;
 
 /**
@@ -118,10 +124,21 @@ public class QueryHintHANATest extends BaseNonConfigCoreFunctionalTestCase {
 
 		// test Criteria
 		doInHibernate( this::sessionFactory, s -> {
-			Criteria criteria = s.createCriteria( Employee.class )
-					.addQueryHint( "NO_CS_JOIN" )
-					.createCriteria( "department" ).add( Restrictions.eq( "name", "Sales" ) );
-			List<?> results = criteria.list();
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Employee> criteria = criteriaBuilder.createQuery( Employee.class );
+			Root<Employee> root = criteria.from( Employee.class );
+			Join<Employee, Department> department = root.join( "department", JoinType.INNER );
+			criteria.select( root ).where( criteriaBuilder.equal( department.<String>get("name"), "Sales" ) );
+
+			Query<Employee> query = s.createQuery( criteria );
+			query.addQueryHint(  "NO_CS_JOIN" );
+
+			List<Employee> results = query.list();
+
+//			Criteria criteria = s.createCriteria( Employee.class )
+//					.addQueryHint( "NO_CS_JOIN" )
+//					.createCriteria( "department" ).add( Restrictions.eq( "name", "Sales" ) );
+//			List<?> results = criteria.list();
 
 			assertEquals( results.size(), 2 );
 		} );

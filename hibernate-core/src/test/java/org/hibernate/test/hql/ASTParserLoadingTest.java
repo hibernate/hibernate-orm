@@ -20,7 +20,7 @@ import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -946,7 +946,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// simple syntax checking...
 		Session s = openSession();
 		s.beginTransaction();
-		s.createQuery( "from Human h where h.nickName = '1' || 'ov' || 'tha' || 'few'" ).list();
+		s.createQuery( "from Human h wherFe h.nickName = '1' || 'ov' || 'tha' || 'few'" ).list();
 		s.getTransaction().commit();
 		s.close();
 	}

@@ -21,7 +21,6 @@ import org.hibernate.Session;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -93,24 +92,24 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 		final String sqlString = "SELECT * FROM GAME g WHERE title = ?";
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			NativeQuery sqlQuery = entityManager.unwrap( Session.class ).createSQLQuery( sqlString );
-			sqlQuery.setString( 1, "Super Mario Brothers" ).setCacheable( true );
+			NativeQuery sqlQuery = entityManager.unwrap( Session.class ).createNativeQuery( sqlString );
+			sqlQuery.setParameter( 1, "Super Mario Brothers" ).setCacheable( true );
 
 			List results = sqlQuery.list();
 			assertEquals( 1, results.size() );
 
-			NativeQueryImplementor query = (NativeQueryImplementor) entityManager.createNativeQuery( sqlString );
-			query.setString( 1, "Super Mario Brothers" );
+			NativeQuery query = (NativeQuery) entityManager.createNativeQuery( sqlString );
+			query.setParameter( 1, "Super Mario Brothers" );
 			List list = query.list();
 			assertEquals( 1, list.size() );
 
-			sqlQuery = entityManager.unwrap( Session.class ).createSQLQuery( sqlString );
-			sqlQuery.setString( 1, "Super Mario Brothers" ).setCacheable( true );
+			sqlQuery = entityManager.unwrap( Session.class ).createNativeQuery( sqlString );
+			sqlQuery.setParameter( 1, "Super Mario Brothers" ).setCacheable( true );
 
 			results = sqlQuery.list();
 			assertEquals( 1, results.size() );
 
-			query.setString( 1, "Super Mario Brothers" );
+			query.setParameter( 1, "Super Mario Brothers" );
 		} );
 	}
 

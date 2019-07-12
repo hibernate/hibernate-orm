@@ -8,13 +8,15 @@ package org.hibernate.test.annotations.naturalid;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
@@ -94,7 +96,8 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		Criteria criteria = s.createCriteria( NaturalIdOnManyToOne.class );
+		CriteriaQuery<NaturalIdOnManyToOne> query = s.getCriteriaBuilder().createQuery( NaturalIdOnManyToOne.class );
+		query.
 		criteria.add( Restrictions.naturalId().set( "citizen", c1 ) );
 		criteria.setCacheable( true );
 

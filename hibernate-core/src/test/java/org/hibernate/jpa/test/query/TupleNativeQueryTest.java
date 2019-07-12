@@ -2,7 +2,9 @@ package org.hibernate.jpa.test.query;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.spi.NativeQueryImplementor;
+import org.hibernate.query.sql.internal.NativeQueryImpl;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.After;
@@ -723,7 +725,10 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 
     @SuppressWarnings("unchecked")
     private List<Tuple> getStreamedTupleAliasedResult(EntityManager entityManager) {
-        NativeQueryImplementor query = (NativeQueryImplementor) entityManager.createNativeQuery("SELECT id AS alias1, firstname AS alias2 FROM users", Tuple.class);
+        NativeQueryImpl query = (NativeQueryImpl) entityManager.createNativeQuery(
+                "SELECT id AS alias1, firstname AS alias2 FROM users",
+                Tuple.class
+        );
         return (List<Tuple>) query.stream().collect(Collectors.toList());
     }
 
@@ -740,7 +745,7 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 
     @SuppressWarnings("unchecked")
     private List<Tuple> getStreamedTupleResult(EntityManager entityManager) {
-        NativeQueryImplementor query = (NativeQueryImplementor) entityManager.createNativeQuery("SELECT id, firstname FROM users", Tuple.class);
+        NativeQueryImplementor query = (NativeQueryImplementor) entityManager.createNativeQuery( "SELECT id, firstname FROM users", Tuple.class);
         return (List<Tuple>) query.stream().collect(Collectors.toList());
     }
 

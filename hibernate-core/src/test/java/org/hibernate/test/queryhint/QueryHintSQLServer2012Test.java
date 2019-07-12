@@ -12,12 +12,16 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.SQLServer2012Dialect;
 
 import org.hibernate.testing.RequiresDialect;
@@ -107,9 +111,18 @@ public class QueryHintSQLServer2012Test extends BaseCoreFunctionalTestCase {
 
 		// test Criteria
 		s.getTransaction().begin();
-		Criteria criteria = s.createCriteria( Employee.class ).addQueryHint( "MAXDOP 2" ).createCriteria( "department" )
-				.add( Restrictions.eq( "name", "Sales" ) );
-		results = criteria.list();
+
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<Employee> criteria = criteriaBuilder.createQuery( Employee.class );
+		Root<Employee> root = criteria.from( Employee.class );
+		Join<Object, Object> departement = root.join( "departement", JoinType.INNER );
+		criteria.select( root ).where( criteriaBuilder.equal( departement.get( "name" ), "Sales" ) );
+//		Criteria criteria = s.createCriteria( Employee.class ).addQueryHint( "MAXDOP 2" ).createCriteria( "department" )
+//				.add( Restrictions.eq( "name", "Sales" ) );
+//		results = criteria.list();
+		Query<Employee> criteriaQuery = s.createQuery( criteria );
+		criteriaQuery.addQueryHint( "MAXDOP 2" );
+		results = criteriaQuery.list();
 		s.getTransaction().commit();
 		s.close();
 

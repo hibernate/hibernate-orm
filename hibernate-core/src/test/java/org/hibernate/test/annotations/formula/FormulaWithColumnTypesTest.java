@@ -18,7 +18,6 @@ import org.hibernate.Transaction;
 import org.hibernate.annotations.Formula;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Order;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;

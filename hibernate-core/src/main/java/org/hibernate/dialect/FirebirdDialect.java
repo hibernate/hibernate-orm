@@ -17,6 +17,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.pagination.SkipFirstLimitHandler;
 import org.hibernate.dialect.sequence.FirebirdSequenceSupport;
+import org.hibernate.dialect.sequence.InterbaseSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -60,7 +61,7 @@ import static org.hibernate.query.CastType.STRING;
 import static org.hibernate.type.descriptor.internal.DateTimeUtils.formatAsTimestampWithMillis;
 
 /**
- * An SQL dialect for Firebird 2.5 and above.
+ * An SQL dialect for Firebird 2.0 and above.
  *
  * @author Reha CENANI
  * @author Gavin King
@@ -331,7 +332,7 @@ public class FirebirdDialect extends Dialect {
 	}
 	@Override
 	public boolean supportsCommentOn() {
-		return true;
+		return getVersion() >= 200;
 	}
 
 	@Override
@@ -384,13 +385,10 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-		if ( getVersion() < 300 ) {
-			return super.toBooleanValueString( bool );
-		}
-		else {
-			//'boolean' type introduced in 3.0
-			return bool ? "true" : "false";
-		}
+		//'boolean' type introduced in 3.0
+		return getVersion() < 300
+				? super.toBooleanValueString( bool )
+				: bool ? "true" : "false";
 	}
 
 	@Override
@@ -402,9 +400,15 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getVersion() < 300
-				? FirebirdSequenceSupport.LEGACY_INSTANCE
-				: FirebirdSequenceSupport.INSTANCE;
+		if ( getVersion() < 200 ) {
+			return InterbaseSequenceSupport.INSTANCE;
+		}
+		else if ( getVersion() < 300 ) {
+			return FirebirdSequenceSupport.LEGACY_INSTANCE;
+		}
+		else {
+			return FirebirdSequenceSupport.INSTANCE;
+		}
 	}
 
 	@Override
@@ -435,7 +439,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return version < 300
+		return getVersion() < 300
 				? SkipFirstLimitHandler.INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
@@ -443,7 +447,9 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public String getSelectGUIDString() {
-		return "select uuid_to_char(gen_uuid()) " + getFromDual();
+		return getVersion() < 210
+				? super.getSelectGUIDString()
+				: "select uuid_to_char(gen_uuid()) " + getFromDual();
 	}
 
 	@Override
@@ -461,7 +467,9 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public SqmMutationStrategy getDefaultIdTableStrategy() {
-		return new GlobalTemporaryTableStrategy( generateIdTableSupport() );
+		return getVersion() < 210
+				? super.getDefaultIdTableStrategy()
+				: new GlobalTemporaryTableStrategy( generateIdTableSupport() );
 	}
 
 	private IdTableSupport generateIdTableSupport() {

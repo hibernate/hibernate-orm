@@ -157,7 +157,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 
 			writeOutEnhancedClass( enhancedBytecode, file );
 
-			getLog().info( "Successfully enhanced class [" + file + "]" );
+			getLog().debug( "Successfully enhanced class [" + file + "]" );
 		}
 	}
 

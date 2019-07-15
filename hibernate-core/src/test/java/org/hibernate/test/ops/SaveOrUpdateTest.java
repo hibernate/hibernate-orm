@@ -13,7 +13,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.criterion.Projections;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;

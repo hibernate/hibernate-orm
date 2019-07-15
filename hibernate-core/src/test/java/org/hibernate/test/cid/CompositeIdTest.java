@@ -25,7 +25,6 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.hql.spi.QueryTranslator;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

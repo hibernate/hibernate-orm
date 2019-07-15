@@ -11,13 +11,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Property;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.mapping.Component;
@@ -91,7 +95,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		u = (User) s.get(User.class, "gavin");
+		u = s.get(User.class, "gavin");
 		assertEquals( u.getPerson().getName(), "Gavin King" );
 		s.delete(u);
 		t.commit();
@@ -113,7 +117,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		
 		s = openSession();
 		t = s.beginTransaction();
-		u = (User) s.get(User.class, "gavin");
+		u = s.get(User.class, "gavin");
 		assertEquals( u.getPerson().getAddress(), "Phipps Place" );
 		assertEquals( u.getPerson().getPreviousAddress(), "Karbarook Ave" );
 		assertEquals( u.getPerson().getYob(), u.getPerson().getDob().getYear()+1900 );
@@ -123,7 +127,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		u = (User) s.get(User.class, "gavin");
+		u = s.get(User.class, "gavin");
 		assertEquals( u.getPerson().getAddress(), "Phipps Place" );
 		assertEquals( u.getPerson().getPreviousAddress(), "Karbarook Ave" );
 		assertEquals( u.getPassword(), "$ecret" );
@@ -204,14 +208,22 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.createQuery("from User u where u.person.yob = 1999").list();
-		s.createCriteria(User.class)
-			.add( Property.forName("person.yob").between( new Integer(1999), new Integer(2002) ) )
-			.list();
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
+		Root<User> root = criteria.from( User.class );
+		Join<Object, Object> person = root.join( "person", JoinType.INNER );
+		criteria.where( criteriaBuilder.between( person.get( "yob" ), new Integer(1999), new Integer(2002) ) );
+		s.createQuery( criteria ).list();
+
+//		s.createCriteria(User.class)
+//			.add( Property.forName("person.yob").between( new Integer(1999), new Integer(2002) ) )
+//			.list();
+
 		if ( getDialect().supportsRowValueConstructorSyntax() ) {
 			s.createQuery("from User u where u.person = ('gavin', :dob, 'Peachtree Rd', 'Karbarook Ave', 1974, 34, 'Peachtree Rd')")
-				.setDate("dob", new Date("March 25, 1974")).list();
+				.setParameter("dob", new Date("March 25, 1974")).list();
 			s.createQuery("from User where person = ('gavin', :dob, 'Peachtree Rd', 'Karbarook Ave', 1974, 34, 'Peachtree Rd')")
-				.setDate("dob", new Date("March 25, 1974")).list();
+				.setParameter("dob", new Date("March 25, 1974")).list();
 		}
 		t.commit();
 		s.close();
@@ -232,7 +244,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
 		Double heightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult())
+				( (Number)s.createNativeQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult())
 						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 
@@ -241,15 +253,21 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals(HEIGHT_INCHES, heightViaHql, 0.01d);
 		
 		// Test restriction and entity load via criteria
-		u = (User)s.createCriteria(User.class)
-			.add(Restrictions.between("person.heightInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
-			.uniqueResult();
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
+		Root<User> root = criteria.from( User.class );
+		Join<Object, Object> person = root.join( "person", JoinType.INNER );
+		criteria.where( criteriaBuilder.between( person.get( "heightInches" ), HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d) );
+		u = s.createQuery( criteria ).uniqueResult();
+//		u = (User)s.createCriteria(User.class)
+//			.add(Restrictions.between("person.heightInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
+//			.uniqueResult();
 		assertEquals(HEIGHT_INCHES, u.getPerson().getHeightInches(), 0.01d);
 		
 		// Test predicate and entity load via HQL
 		u = (User)s.createQuery("from User u where u.person.heightInches between ?1 and ?2")
-			.setDouble(1, HEIGHT_INCHES - 0.01d)
-			.setDouble(2, HEIGHT_INCHES + 0.01d)
+			.setParameter(1, HEIGHT_INCHES - 0.01d)
+			.setParameter(2, HEIGHT_INCHES + 0.01d)
 			.uniqueResult();
 		assertEquals(HEIGHT_INCHES, u.getPerson().getHeightInches(), 0.01d);
 		
@@ -257,7 +275,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		u.getPerson().setHeightInches(1);
 		s.flush();
 		heightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult() )
+				( (Number)s.createNativeQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult() )
 						.doubleValue();
 		assertEquals(2.54d, heightViaSql, 0.01d);
 		s.delete(u);
@@ -291,7 +309,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		emp = (Employee)s.get( Employee.class, emp.getId() );
+		emp = s.get( Employee.class, emp.getId() );
 		t.commit();
 		s.close();
 
@@ -308,7 +326,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		emp = (Employee)s.get( Employee.class, emp.getId() );
+		emp = s.get( Employee.class, emp.getId() );
 		t.commit();
 		s.close();
 
@@ -325,7 +343,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		emp = (Employee)s.get( Employee.class, emp.getId() );
+		emp = s.get( Employee.class, emp.getId() );
 		Hibernate.initialize(emp.getDirectReports());
 		t.commit();
 		s.close();
@@ -347,7 +365,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		emp = (Employee)s.get( Employee.class, emp.getId() );
+		emp = s.get( Employee.class, emp.getId() );
 		Hibernate.initialize(emp.getDirectReports());
 		t.commit();
 		s.close();
@@ -367,7 +385,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		emp = (Employee)s.get( Employee.class, emp.getId() );
+		emp = s.get( Employee.class, emp.getId() );
 		Hibernate.initialize(emp.getDirectReports());
 		t.commit();
 		s.close();
@@ -387,7 +405,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		emp = (Employee)s.get( Employee.class, emp.getId() );
+		emp = s.get( Employee.class, emp.getId() );
 		Hibernate.initialize(emp.getDirectReports());
 		t.commit();
 		s.close();

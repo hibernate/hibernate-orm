@@ -8,7 +8,6 @@ package org.hibernate.test.flush;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.test.hql.SimpleEntityWithAssociation;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

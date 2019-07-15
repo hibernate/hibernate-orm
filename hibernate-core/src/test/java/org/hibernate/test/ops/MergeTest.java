@@ -18,7 +18,6 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
-import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.AbstractHANADialect;
 
 import org.hibernate.testing.DialectChecks;

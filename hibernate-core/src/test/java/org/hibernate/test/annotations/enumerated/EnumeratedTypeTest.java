@@ -12,9 +12,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.query.Query;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -98,7 +103,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( Common.A2, entityEnum.getOrdinal() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where ordinal=1" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where ordinal=1" ).executeUpdate() );
 
 		session.getTransaction().commit();
 		session.close();
@@ -128,7 +133,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( Common.B1, entityEnum.getString() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where string='B1'" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where string='B1'" ).executeUpdate() );
 		session.getTransaction().commit();
 		session.close();
 
@@ -157,7 +162,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( FirstLetter.C_LETTER, entityEnum.getFirstLetter() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where firstLetter='C'" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where firstLetter='C'" ).executeUpdate() );
 
 		session.getTransaction().commit();
 		session.close();
@@ -187,7 +192,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( LastNumber.NUMBER_1, entityEnum.getLastNumber() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where lastNumber='1'" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where lastNumber='1'" ).executeUpdate() );
 
 		session.getTransaction().commit();
 		session.close();
@@ -219,7 +224,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( LastNumber.NUMBER_2, entityEnum.getExplicitOverridingImplicit() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where explicitOverridingImplicit='NUMBER_2'" )
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where explicitOverridingImplicit='NUMBER_2'" )
 				.executeUpdate() );
 
 		session.getTransaction().commit();
@@ -242,12 +247,20 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 
 		// find
-		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
-				.add( Restrictions.eq( "ordinal", Common.A1 ) ).uniqueResult();
+
+		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+		CriteriaQuery<EntityEnum> criteria = criteriaBuilder.createQuery( EntityEnum.class );
+		Root<EntityEnum> root = criteria.from( EntityEnum.class );
+		Join<Object, Object> ordinal = root.join( "ordinal", JoinType.INNER );
+		criteria.where( criteriaBuilder.equal( ordinal, Common.A1 ) );
+		entityEnum = session.createQuery( criteria ).uniqueResult();
+
+//		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
+//				.add( Restrictions.eq( "ordinal", Common.A1 ) ).uniqueResult();
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( Common.A1, entityEnum.getOrdinal() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where ordinal=0" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where ordinal=0" ).executeUpdate() );
 
 		session.getTransaction().commit();
 		session.close();
@@ -267,12 +280,16 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 
 		// find
-		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
-				.add( Restrictions.eq( "string", Common.B2 ) ).uniqueResult();
+		criteria = criteriaBuilder.createQuery( EntityEnum.class );
+		root = criteria.from( EntityEnum.class );
+		criteria.where( criteriaBuilder.equal( root.get( "string" ), Common.B2 ) );
+		entityEnum = session.createQuery( criteria ).uniqueResult();
+//		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
+//				.add( Restrictions.eq( "string", Common.B2 ) ).uniqueResult();
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( Common.B2, entityEnum.getString() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where string='B2'" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where string='B2'" ).executeUpdate() );
 
 		session.getTransaction().commit();
 		session.close();
@@ -292,12 +309,17 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 
 		// find
-		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
-				.add( Restrictions.eq( "firstLetter", FirstLetter.A_LETTER ) ).uniqueResult();
+
+		criteria = criteriaBuilder.createQuery( EntityEnum.class );
+		root = criteria.from( EntityEnum.class );
+		criteria.where( criteriaBuilder.equal( root.get( "firstLetter" ), FirstLetter.A_LETTER));
+		entityEnum = session.createQuery( criteria).uniqueResult();
+//		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
+//				.add( Restrictions.eq( "firstLetter", FirstLetter.A_LETTER ) ).uniqueResult();
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( FirstLetter.A_LETTER, entityEnum.getFirstLetter() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where firstLetter='A'" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where firstLetter='A'" ).executeUpdate() );
 
 		session.getTransaction().commit();
 		session.close();
@@ -317,12 +339,16 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 
 		// find
-		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
-				.add( Restrictions.eq( "lastNumber", LastNumber.NUMBER_3 ) ).uniqueResult();
+		criteria = criteriaBuilder.createQuery( EntityEnum.class );
+		root = criteria.from( EntityEnum.class );
+		criteria.where( criteriaBuilder.equal( root.get( "lastNumber" ), LastNumber.NUMBER_3 ) );
+		entityEnum =  session.createQuery( criteria ).uniqueResult();
+//		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
+//				.add( Restrictions.eq( "lastNumber", LastNumber.NUMBER_3 ) ).uniqueResult();
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( LastNumber.NUMBER_3, entityEnum.getLastNumber() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where lastNumber='3'" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where lastNumber='3'" ).executeUpdate() );
 
 		session.getTransaction().commit();
 		session.close();
@@ -342,12 +368,16 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.getTransaction().begin();
 
 		// find
-		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
-				.add( Restrictions.eq( "explicitOverridingImplicit", LastNumber.NUMBER_2 ) ).uniqueResult();
+		criteria = criteriaBuilder.createQuery( EntityEnum.class );
+		root = criteria.from( EntityEnum.class );
+		criteria.where( criteriaBuilder.equal( root.get( "explicitOverridingImplicit" ), LastNumber.NUMBER_2 ) );
+		entityEnum =  session.createQuery( criteria ).uniqueResult();
+//		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
+//				.add( Restrictions.eq( "explicitOverridingImplicit", LastNumber.NUMBER_2 ) ).uniqueResult();
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( LastNumber.NUMBER_2, entityEnum.getExplicitOverridingImplicit() );
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where explicitOverridingImplicit='NUMBER_2'" )
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum where explicitOverridingImplicit='NUMBER_2'" )
 				.executeUpdate() );
 
 		session.getTransaction().commit();
@@ -443,8 +473,8 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( Common.B2, entityEnum.getSet().iterator().next() );
 
 		// delete
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM set_enum" ).executeUpdate() );
-		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM set_enum" ).executeUpdate() );
+		assertEquals( 1, session.createNativeQuery( "DELETE FROM EntityEnum" ).executeUpdate() );
 
 		session.getTransaction().commit();
 		session.close();

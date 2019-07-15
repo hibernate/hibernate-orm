@@ -6,17 +6,20 @@
  */
 package org.hibernate.test.annotations.naturalid;
 
+import javax.persistence.FlushModeType;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.FetchMode;
-import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
+import org.hibernate.query.Query;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -38,7 +41,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx.commit();
 		
 		newTx = s.beginTransaction();
-		getCriteria( s ).uniqueResult(); // put query-result into cache
+		getQuery( s ).uniqueResult(); // put query-result into cache
 		A a2 = new A();
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
@@ -53,7 +56,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
 		s.getSessionFactory().getStatistics().clear();
 
-		getCriteria( s ).uniqueResult(); // should produce a hit in StandardQuery cache region
+		getQuery( s ).uniqueResult(); // should produce a hit in StandardQuery cache region
 
 		Assert.assertEquals(
 				"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions",
@@ -79,7 +82,17 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx.commit();
 
 		newTx = s.beginTransaction();
-		getCriteria( s ).add( Restrictions.isNull( "singleD" ) ).uniqueResult(); // put query-result into cache
+
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<A> criteria = criteriaBuilder.createQuery( A.class );
+		Root<A> root = criteria.from( A.class );
+		criteria.where( criteriaBuilder.and(  criteriaBuilder.equal( root.get( "name" ), "name1" ), criteriaBuilder.isNull( root.get( "singleD" ) )) );
+
+		Query<A> query = session.createQuery( criteria );
+		query.setFlushMode( FlushModeType.COMMIT );
+		query.setCacheable( true );
+		query.uniqueResult();
+//		getCriteria( s ).add( Restrictions.isNull( "singleD" ) ).uniqueResult(); // put query-result into cache
 		A a2 = new A();
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
@@ -91,7 +104,15 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.getSessionFactory().getStatistics().clear();
 
 		// should not produce a hit in StandardQuery cache region because there is a constraint
-		getCriteria( s ).add( Restrictions.isNull( "singleD" ) ).uniqueResult();
+		criteria = criteriaBuilder.createQuery( A.class );
+		root = criteria.from( A.class );
+		criteria.where( criteriaBuilder.and(  criteriaBuilder.equal( root.get( "name" ), "name1" ), criteriaBuilder.isNull( root.get( "singleD" ) )) );
+
+		query = session.createQuery( criteria );
+		query.setFlushMode( FlushModeType.COMMIT );
+		query.setCacheable( true );
+		query.uniqueResult();
+//		getCriteria( s ).add( Restrictions.isNull( "singleD" ) ).uniqueResult();
 
 		Assert.assertEquals( 0, s.getSessionFactory().getStatistics().getQueryCacheHitCount() );
 
@@ -118,7 +139,9 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx.commit();
 
 		newTx = s.beginTransaction();
-		getCriteria( s ).setFetchMode( "ds", FetchMode.JOIN ).uniqueResult(); // put query-result into cache
+
+		getQueryFecth( s, "ds", JoinType.LEFT ).uniqueResult();
+//		getQuery( s ).setFetchMode( "ds", FetchMode.JOIN ).uniqueResult(); // put query-result into cache
 		A a2 = new A();
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
@@ -139,7 +162,8 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.getSessionFactory().getStatistics().clear();
 
 		// should produce a hit in StandardQuery cache region
-		getCriteria( s ).setFetchMode( "ds", FetchMode.JOIN ).uniqueResult();
+		getQueryFecth( s, "ds", JoinType.LEFT ).uniqueResult();
+//		getCriteria( s ).setFetchMode( "ds", FetchMode.JOIN ).uniqueResult();
 
 		Assert.assertEquals(
 				"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions",
@@ -170,7 +194,8 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx.commit();
 
 		newTx = s.beginTransaction();
-		getCriteria( s ).setFetchMode( "singleD", FetchMode.JOIN ).uniqueResult(); // put query-result into cache
+		getQueryFecth( s, "singleD" , JoinType.LEFT).uniqueResult();
+//		getCriteria( s ).setFetchMode( "singleD", FetchMode.JOIN ).uniqueResult(); // put query-result into cache
 		A a2 = new A();
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
@@ -186,7 +211,8 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.getSessionFactory().getStatistics().clear();
 
 		// should produce a hit in StandardQuery cache region
-		getCriteria( s ).setFetchMode( "singleD", FetchMode.JOIN ).uniqueResult();
+		getQueryFecth( s, "singleD", JoinType.LEFT ).uniqueResult();
+//		getCriteria( s ).setFetchMode( "singleD", FetchMode.JOIN ).uniqueResult();
 
 		Assert.assertEquals(
 				"query is not considered as isImmutableNaturalKeyLookup, despite fullfilling all conditions",
@@ -217,8 +243,9 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx.commit();
 
 		newTx = s.beginTransaction();
-		getCriteria( s ).createAlias( "singleD", "d", JoinType.LEFT_OUTER_JOIN )
-				.uniqueResult(); // put query-result into cache
+		getQueryFecth( s, "singleD", JoinType.LEFT).uniqueResult();
+//		getCriteria( s ).createAlias( "singleD", "d", JoinType.LEFT_OUTER_JOIN )
+//				.uniqueResult(); // put query-result into cache
 		A a2 = new A();
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
@@ -235,7 +262,8 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.getSessionFactory().getStatistics().clear();
 
 		// should not produce a hit in StandardQuery cache region because createAlias() creates a subcriteria
-		getCriteria( s ).createAlias( "singleD", "d", JoinType.LEFT_OUTER_JOIN ).uniqueResult();
+		getQueryFecth( s, "singleD", JoinType.LEFT).uniqueResult();
+//		getCriteria( s ).createAlias( "singleD", "d", JoinType.LEFT_OUTER_JOIN ).uniqueResult();
 
 		Assert.assertEquals( 0, s.getSessionFactory().getStatistics().getQueryCacheHitCount() );
 		s.createQuery( "delete from A" ).executeUpdate();
@@ -263,8 +291,10 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx.commit();
 
 		newTx = s.beginTransaction();
-		getCriteria( s ).createCriteria( "singleD", "d", JoinType.LEFT_OUTER_JOIN )
-				.uniqueResult(); // put query-result into cache
+		getQueryFecth( s, "singleD", JoinType.LEFT).uniqueResult();
+
+//		getCriteria( s ).createCriteria( "singleD", "d", JoinType.LEFT_OUTER_JOIN )
+//				.uniqueResult(); // put query-result into cache
 		A a2 = new A();
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
@@ -281,7 +311,9 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.getSessionFactory().getStatistics().clear();
 
 		// should not produce a hit in StandardQuery cache region because createCriteria() creates a subcriteria
-		getCriteria( s ).createCriteria( "singleD", "d", JoinType.LEFT_OUTER_JOIN ).uniqueResult();
+		getQueryFecth( s, "singleD", JoinType.LEFT).uniqueResult();
+
+//		getCriteria( s ).createCriteria( "singleD", "d", JoinType.LEFT_OUTER_JOIN ).uniqueResult();
 
 		Assert.assertEquals( 0, s.getSessionFactory().getStatistics().getQueryCacheHitCount() );
 		s.createQuery( "delete from A" ).executeUpdate();
@@ -292,13 +324,39 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	private Criteria getCriteria(Session s) {
-		Criteria crit = s.createCriteria( A.class, "anAlias" );
-		crit.add( Restrictions.naturalId().set( "name", "name1" ) );
-		crit.setFlushMode( FlushMode.COMMIT );
-		crit.setCacheable( true );
-		return crit;
+	private Query<A> getQuery(Session s) {
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<A> criteria = criteriaBuilder.createQuery( A.class );
+		Root<A> root = criteria.from( A.class );
+		criteria.where( criteriaBuilder.equal( root.get( "name" ), "name1" ) );
+
+		Query<A> query = session.createQuery( criteria );
+		query.setFlushMode( FlushModeType.COMMIT );
+		query.setCacheable( true );
+		return query;
 	}
+
+	private Query<A> getQueryFecth(Session s, String fecth, JoinType joinType) {
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<A> criteria = criteriaBuilder.createQuery( A.class );
+		Root<A> root = criteria.from( A.class );
+		root.join( fecth, joinType );
+
+		criteria.where( criteriaBuilder.equal( root.get( "name" ), "name1" ) );
+
+		Query<A> query = session.createQuery( criteria );
+		query.setFlushMode( FlushModeType.COMMIT );
+		query.setCacheable( true );
+		return query;
+	}
+
+//	private CriteriaQuery getCriteria(Session s) {
+//		Criteria crit = s.createCriteria( A.class, "anAlias" );
+//		crit.add( Restrictions.naturalId().set( "name", "name1" ) );
+//		crit.setFlushMode( FlushMode.COMMIT );
+//		crit.setCacheable( true );
+//		return crit;
+//	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

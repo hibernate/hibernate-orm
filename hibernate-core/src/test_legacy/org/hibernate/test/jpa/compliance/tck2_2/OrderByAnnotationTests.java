@@ -19,12 +19,6 @@ import org.hibernate.cfg.annotations.CollectionBinder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ordering.antlr.ColumnMapper;
-import org.hibernate.sql.ordering.antlr.ColumnReference;
-import org.hibernate.sql.ordering.antlr.OrderByFragmentTranslator;
-import org.hibernate.sql.ordering.antlr.OrderByTranslation;
-import org.hibernate.sql.ordering.antlr.SqlValueReference;
-import org.hibernate.sql.ordering.antlr.TranslationContext;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;

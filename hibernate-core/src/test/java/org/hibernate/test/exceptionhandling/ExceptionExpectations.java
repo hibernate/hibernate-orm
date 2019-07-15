@@ -16,7 +16,6 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.id.IdentifierGenerationException;
 
 import static org.hamcrest.CoreMatchers.instanceOf;

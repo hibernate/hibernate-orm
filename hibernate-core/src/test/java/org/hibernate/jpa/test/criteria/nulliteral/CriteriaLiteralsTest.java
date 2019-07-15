@@ -25,7 +25,6 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;

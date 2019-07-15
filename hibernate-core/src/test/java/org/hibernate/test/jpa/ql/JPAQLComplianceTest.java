@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.query.Query;
+import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil2;
@@ -41,7 +41,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	public void testIdentifierCaseSensitive() throws Exception {
+	public void testIdentifierCaseSensitive() {
 		Session s = openSession( );
 		// a control test (a user reported that the JPA 'case insensitivity' support
 		// caused problems with the "discriminator resolution" code; unable to reproduce)...
@@ -54,7 +54,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	public void testIdentifierCasesensitivityAndDuplicateFromElements() throws Exception {
+	public void testIdentifierCasesensitivityAndDuplicateFromElements() {
 		Session s = openSession();
 		s.createQuery( "select e from MyEntity e where exists (select 1 from MyEntity e2 where e2.other.name  = 'something' and e2.other.other = e)" );
 		s.close();
@@ -86,7 +86,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 						fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
 					} catch ( IllegalArgumentException e ) {
 						assertNotNull( e.getCause() );
-						assertTyping( QuerySyntaxException.class, e.getCause() );
+						assertTyping( SemanticException.class, e.getCause() );
 					}
 				}
 		);
@@ -104,7 +104,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 					}
 					catch (IllegalArgumentException e) {
 						assertNotNull( e.getCause() );
-						assertTyping( QuerySyntaxException.class, e.getCause() );
+						assertTyping( SemanticException.class, e.getCause() );
 					}
 				}
 		);
@@ -164,7 +164,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 					}
 					catch (IllegalArgumentException e) {
 						assertNotNull( e.getCause() );
-						assertTyping( QuerySyntaxException.class, e.getCause() );
+						assertTyping( SemanticException.class, e.getCause() );
 					}
 				}
 		);

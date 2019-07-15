@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
-
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;

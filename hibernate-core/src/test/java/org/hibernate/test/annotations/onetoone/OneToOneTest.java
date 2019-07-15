@@ -8,12 +8,15 @@ package org.hibernate.test.annotations.onetoone;
 
 import java.util.Iterator;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.MappingException;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -53,7 +56,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		final Client client = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			Query q = session.createQuery( "select c from Client c where c.name = :name" );
-			q.setString( "name", clientName );
+			q.setParameter( "name", clientName );
 			Client c = (Client) q.uniqueResult();
 			//c = (Client) s.get(Client.class, c.getId());
 
@@ -350,9 +353,14 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 			s.flush();
 			s.clear();
 
-			owner = (Owner) s.createCriteria( Owner.class )
-					.add( Restrictions.idEq( owner.getId() ) )
-					.uniqueResult();
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Owner> criteria = criteriaBuilder.createQuery( Owner.class );
+			Root<Owner> root = criteria.from( Owner.class );
+			criteria.where( criteriaBuilder.equal( root.get("id"), owner.getId() ) );
+			owner = s.createQuery( criteria ).uniqueResult();
+//			owner = (Owner) s.createCriteria( Owner.class )
+//					.add( Restrictions.idEq( owner.getId() ) )
+//					.uniqueResult();
 
 			assertNotNull( owner );
 			assertNotNull( owner.getAddress() );
@@ -360,9 +368,14 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 			s.flush();
 			s.clear();
 
-			address = (OwnerAddress) s.createCriteria( OwnerAddress.class )
-					.add( Restrictions.idEq( address.getId() ) )
-					.uniqueResult();
+			CriteriaQuery<OwnerAddress> criteriaQuery = criteriaBuilder.createQuery( OwnerAddress.class );
+			Root<OwnerAddress> ownerAddressRoot = criteriaQuery.from( OwnerAddress.class );
+			criteriaQuery.where( criteriaBuilder.equal( ownerAddressRoot.get( "id" ), address.getId() ) );
+
+			address = s.createQuery( criteriaQuery ).uniqueResult();
+//			address = (OwnerAddress) s.createCriteria( OwnerAddress.class )
+//					.add( Restrictions.idEq( address.getId() ) )
+//					.uniqueResult();
 
 			address = s.get( OwnerAddress.class, address.getId() );
 			assertNotNull( address );

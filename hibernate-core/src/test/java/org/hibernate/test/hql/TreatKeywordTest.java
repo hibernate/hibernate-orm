@@ -8,7 +8,7 @@ package org.hibernate.test.hql;
 
 import java.util.List;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 
 import org.hibernate.testing.TestForIssue;

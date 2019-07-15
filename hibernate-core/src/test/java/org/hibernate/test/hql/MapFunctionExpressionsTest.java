@@ -17,7 +17,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.Session;
-import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -33,7 +32,6 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class MapFunctionExpressionsTest extends BaseNonConfigCoreFunctionalTestCase {
-	private final ASTQueryTranslatorFactory queryTranslatorFactory = new ASTQueryTranslatorFactory();
 
 	@Before
 	public void prepareTestData() {

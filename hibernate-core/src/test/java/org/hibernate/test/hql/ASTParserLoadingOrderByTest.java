@@ -17,7 +17,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
+import org.hibernate.query.hql.SemanticQueryProducer;
+
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -54,7 +55,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.QUERY_TRANSLATOR, ASTQueryTranslatorFactory.class.getName() );
+		cfg.setProperty( Environment.SEMANTIC_QUERY_PRODUCER, SemanticQueryProducer.class.getName() );
 	}
 
 	private void createData() {

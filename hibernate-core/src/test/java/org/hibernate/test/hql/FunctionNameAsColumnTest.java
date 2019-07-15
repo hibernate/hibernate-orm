@@ -8,13 +8,17 @@ package org.hibernate.test.hql;
 
 import java.util.List;
 
-import org.hibernate.FetchMode;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -84,7 +88,13 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		e = ( EntityWithArgFunctionAsColumn ) s.createCriteria( EntityWithArgFunctionAsColumn.class ).uniqueResult();
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<EntityWithArgFunctionAsColumn> criteria = criteriaBuilder.createQuery( EntityWithArgFunctionAsColumn.class );
+		criteria.from( EntityWithArgFunctionAsColumn.class );
+
+		e = s.createQuery( criteria ).uniqueResult();
+
+//		e = ( EntityWithArgFunctionAsColumn ) s.createCriteria( EntityWithArgFunctionAsColumn.class ).uniqueResult();
 		assertEquals( 3, e.getLower() );
 		assertEquals( " abc ", e.getUpper() );
 		t.commit();
@@ -157,12 +167,23 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		holder1 = ( EntityWithFunctionAsColumnHolder ) s.createCriteria( EntityWithFunctionAsColumnHolder.class )
-				.add( Restrictions.isNotNull( "nextHolder" ))
-				.setFetchMode( "entityWithArgFunctionAsColumns", FetchMode.JOIN )
-				.setFetchMode( "nextHolder", FetchMode.JOIN )
-				.setFetchMode( "nextHolder.entityWithArgFunctionAsColumns", FetchMode.JOIN )
-				.uniqueResult();
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<EntityWithFunctionAsColumnHolder> criteria = criteriaBuilder.createQuery(
+				EntityWithFunctionAsColumnHolder.class );
+		Root<EntityWithFunctionAsColumnHolder> root = criteria.from( EntityWithFunctionAsColumnHolder.class );
+		root.join( "entityWithArgFunctionAsColumns", JoinType.LEFT );
+		Join<Object, Object> nextHolder = root.join( "nextHolder", JoinType.LEFT );
+		nextHolder.join( "entityWithArgFunctionAsColumns", JoinType.LEFT );
+		criteria.where( criteriaBuilder.isNotNull( root.get( "nextHolder" ) ) );
+
+		holder1 = s.createQuery( criteria ).uniqueResult();
+
+//		holder1 = ( EntityWithFunctionAsColumnHolder ) s.createCriteria( EntityWithFunctionAsColumnHolder.class )
+//				.add( Restrictions.isNotNull( "nextHolder" ))
+//				.setFetchMode( "entityWithArgFunctionAsColumns", FetchMode.JOIN )
+//				.setFetchMode( "nextHolder", FetchMode.JOIN )
+//				.setFetchMode( "nextHolder.entityWithArgFunctionAsColumns", FetchMode.JOIN )
+//				.uniqueResult();
 		assertTrue( Hibernate.isInitialized( holder1.getEntityWithArgFunctionAsColumns() ) );
 		assertTrue( Hibernate.isInitialized( holder1.getNextHolder() ) );
 		assertTrue( Hibernate.isInitialized( holder1.getNextHolder().getEntityWithArgFunctionAsColumns() ) );
@@ -181,7 +202,7 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetMultiColumnSameNameAsNoArgFunctionHQL() throws Exception {
+	public void testGetMultiColumnSameNameAsNoArgFunctionHQL() {
 		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
 			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
@@ -251,12 +272,22 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		holder1 = ( EntityWithFunctionAsColumnHolder ) s.createCriteria( EntityWithFunctionAsColumnHolder.class )
-				.add( Restrictions.isNotNull( "nextHolder" ))
-				.setFetchMode( "entityWithNoArgFunctionAsColumns", FetchMode.JOIN )
-				.setFetchMode( "nextHolder", FetchMode.JOIN )
-				.setFetchMode( "nextHolder.entityWithNoArgFunctionAsColumns", FetchMode.JOIN )
-				.uniqueResult();
+
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<EntityWithFunctionAsColumnHolder> criteria = criteriaBuilder.createQuery(
+				EntityWithFunctionAsColumnHolder.class );
+		Root<EntityWithFunctionAsColumnHolder> root = criteria.from( EntityWithFunctionAsColumnHolder.class );
+		root.join( "entityWithArgFunctionAsColumns", JoinType.LEFT );
+		Join<Object, Object> nextHolder = root.join( "nextHolder", JoinType.LEFT );
+		nextHolder.join( "entityWithArgFunctionAsColumns", JoinType.LEFT );
+		criteria.where( criteriaBuilder.isNotNull( root.get( "nextHolder" ) ) );
+
+//		holder1 = ( EntityWithFunctionAsColumnHolder ) s.createCriteria( EntityWithFunctionAsColumnHolder.class )
+//				.add( Restrictions.isNotNull( "nextHolder" ))
+//				.setFetchMode( "entityWithNoArgFunctionAsColumns", FetchMode.JOIN )
+//				.setFetchMode( "nextHolder", FetchMode.JOIN )
+//				.setFetchMode( "nextHolder.entityWithNoArgFunctionAsColumns", FetchMode.JOIN )
+//				.uniqueResult();
 		assertTrue( Hibernate.isInitialized( holder1.getEntityWithNoArgFunctionAsColumns() ) );
 		assertTrue( Hibernate.isInitialized( holder1.getNextHolder() ) );
 		assertTrue( Hibernate.isInitialized( holder1.getNextHolder().getEntityWithNoArgFunctionAsColumns() ) );

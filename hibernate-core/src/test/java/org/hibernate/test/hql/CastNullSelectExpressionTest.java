@@ -14,14 +14,11 @@ import javax.persistence.Table;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Gail Badner

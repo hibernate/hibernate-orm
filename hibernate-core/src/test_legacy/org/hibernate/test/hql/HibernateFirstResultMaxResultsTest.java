@@ -8,11 +8,9 @@ package org.hibernate.test.hql;
 
 import java.util.List;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.Query;
-import org.hibernate.Session;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -44,10 +42,10 @@ public class HibernateFirstResultMaxResultsTest extends BaseNonConfigCoreFunctio
 					assertNull( query.getHibernateFirstResult() );
 
 					// the following is special case; when initialized to -1, getHibernateFirstResult returns 0
-					assertEquals( Integer.valueOf( 0 ), query.setHibernateFirstResult( -1 ).getHibernateFirstResult() );
+					assertEquals(  0 , query.setFirstResult( -1 ).getFirstResult() );
 
-					assertEquals( Integer.valueOf( 0 ), query.setHibernateFirstResult( 0 ).getHibernateFirstResult() );
-					assertEquals( Integer.valueOf( 1 ), query.setHibernateFirstResult( 1 ).getHibernateFirstResult() );
+					assertEquals( Integer.valueOf( 0 ), query.setFirstResult( 0 ).getHibernateFirstResult() );
+					assertEquals( Integer.valueOf( 1 ), query.setFirstResult( 1 ).getHibernateFirstResult() );
 
 					assertEquals( Integer.valueOf( 10 ), query.setFirstResult( 10 ).getHibernateFirstResult() );
 				}

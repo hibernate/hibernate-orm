@@ -7,8 +7,8 @@
 
 package org.hibernate.test.hql;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -281,17 +281,18 @@ public class NaturalIdDereferenceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private String getSQLQuery(Query query) {
-		FilterTranslator naturalIdJoinGenerationTest1 = this.sessionFactory()
-				.getSettings()
-				.getQueryTranslatorFactory()
-				.createFilterTranslator(
-						"nid",
-						query.getQueryString(),
-						Collections.emptyMap(),
-						this.sessionFactory()
-				);
-		naturalIdJoinGenerationTest1.compile( Collections.emptyMap(), false );
-		return naturalIdJoinGenerationTest1.getSQLString();
+//		FilterTranslator naturalIdJoinGenerationTest1 = this.sessionFactory()
+//				.getSettings()
+//				.getQueryTranslatorFactory()
+//				.createFilterTranslator(
+//						"nid",
+//						query.getQueryString(),
+//						Collections.emptyMap(),
+//						this.sessionFactory()
+//				);
+//		naturalIdJoinGenerationTest1.compile( Collections.emptyMap(), false );
+//		return naturalIdJoinGenerationTest1.getSQLString();
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

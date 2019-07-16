@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.CacheMode;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -35,16 +34,15 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * Represents state associated with the processing of a given {@link ResultSet}
- * in regards to loading collections.
+ * Represents state associated with the processing of a given {@link ResultSet} in regards to loading collections.
  * <p/>
- * Another implementation option to consider is to not expose {@link ResultSet}s
- * directly (in the JDBC redesign) but to always "wrap" them and apply a
- * [series of] context[s] to that wrapper.
+ * Another implementation option to consider is to not expose {@link ResultSet}s directly (in the JDBC redesign) but to
+ * always "wrap" them and apply a [series of] context[s] to that wrapper.
  *
  * @author Steve Ebersole
  */
 public class CollectionLoadContext {
+
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CollectionLoadContext.class );
 
 	private final LoadContexts loadContexts;
@@ -71,29 +69,27 @@ public class CollectionLoadContext {
 	}
 
 	/**
-	 * Retrieve the collection that is being loaded as part of processing this
-	 * result set.
+	 * Retrieve the collection that is being loaded as part of processing this result set.
 	 * <p/>
-	 * Basically, there are two valid return values from this method:<ul>
-	 * <li>an instance of {@link org.hibernate.collection.spi.PersistentCollection} which indicates to
-	 * continue loading the result set row data into that returned collection
-	 * instance; this may be either an instance already associated and in the
-	 * midst of being loaded, or a newly instantiated instance as a matching
-	 * associated collection was not found.</li>
-	 * <li><i>null</i> indicates to ignore the corresponding result set row
-	 * data relating to the requested collection; this indicates that either
-	 * the collection was found to already be associated with the persistence
-	 * context in a fully loaded state, or it was found in a loading state
-	 * associated with another result set processing context.</li>
+	 * Basically, there are two valid return values from this method:
+	 * <ul>
+	 * <li>an instance of {@link org.hibernate.collection.spi.PersistentCollection} which indicates to continue loading
+	 * the result set row data into that returned collection instance; this may be either an instance already associated
+	 * and in the midst of being loaded, or a newly instantiated instance as a matching associated collection was not
+	 * found.</li>
+	 * <li><i>null</i> indicates to ignore the corresponding result set row data relating to the requested collection;
+	 * this indicates that either the collection was found to already be associated with the persistence context in a
+	 * fully loaded state, or it was found in a loading state associated with another result set processing
+	 * context.</li>
 	 * </ul>
 	 *
 	 * @param persister The persister for the collection being requested.
 	 * @param key The key of the collection being requested.
-	 *
 	 * @return The loading collection (see discussion above).
 	 */
 	public PersistentCollection getLoadingCollection(final CollectionPersister persister, final Serializable key) {
-		final CollectionKey collectionKey = new CollectionKey( persister, key );
+		final SharedSessionContractImplementor session = getLoadContext().getPersistenceContext().getSession();
+		final CollectionKey collectionKey = new CollectionKey( persister, key, session.getTenantIdentifier() );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Starting attempt to find loading collection [{0}]",
 					MessageHelper.collectionInfoString( persister.getRole(), key ) );
@@ -142,9 +138,8 @@ public class CollectionLoadContext {
 	}
 
 	/**
-	 * Finish the process of collection-loading for this bound result set.  Mainly this
-	 * involves cleaning up resources and notifying the collections that loading is
-	 * complete.
+	 * Finish the process of collection-loading for this bound result set. Mainly this involves cleaning up resources
+	 * and notifying the collections that loading is complete.
 	 *
 	 * @param persister The persister for which to complete loading.
 	 */
@@ -159,7 +154,7 @@ public class CollectionLoadContext {
 		// potential recursive calls back through here as a result of the
 		// eventual call to PersistentCollection#endRead), we scan the
 		// internal loadingCollections map for matches and store those matches
-		// in a temp collection.  the temp collection is then used to "drive"
+		// in a temp collection. the temp collection is then used to "drive"
 		// the #endRead processing.
 		List<LoadingCollectionEntry> matches = null;
 		final Iterator itr = localLoadingCollectionKeys.iterator();
@@ -178,14 +173,13 @@ public class CollectionLoadContext {
 					session.getPersistenceContext().addUnownedCollection(
 							new CollectionKey(
 									persister,
-									lce.getKey()
-							),
-							lce.getCollection()
-					);
+									lce.getKey(), session.getTenantIdentifier() ),
+							lce.getCollection() );
 				}
 				LOG.tracev( "Removing collection load entry [{0}]", lce );
 
-				// todo : i'd much rather have this done from #endLoadingCollection(CollectionPersister,LoadingCollectionEntry)...
+				// todo : i'd much rather have this done from
+				// #endLoadingCollection(CollectionPersister,LoadingCollectionEntry)...
 				loadContexts.unregisterLoadingCollectionXRef( collectionKey );
 				itr.remove();
 			}
@@ -195,8 +189,8 @@ public class CollectionLoadContext {
 		if ( localLoadingCollectionKeys.isEmpty() ) {
 			// todo : hack!!!
 			// NOTE : here we cleanup the load context when we have no more local
-			// LCE entries.  This "works" for the time being because really
-			// only the collection load contexts are implemented.  Long term,
+			// LCE entries. This "works" for the time being because really
+			// only the collection load contexts are implemented. Long term,
 			// this cleanup should become part of the "close result set"
 			// processing from the (sandbox/jdbc) jdbc-container code.
 			loadContexts.cleanup( resultSet );
@@ -242,9 +236,10 @@ public class CollectionLoadContext {
 		}
 		else {
 			ce.postInitialize( lce.getCollection() );
-//			if (ce.getLoadedPersister().getBatchSize() > 1) { // not the best place for doing this, moved into ce.postInitialize
-//				getLoadContext().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce); 
-//			}
+			// if (ce.getLoadedPersister().getBatchSize() > 1) { // not the best place for doing this, moved into
+			// ce.postInitialize
+			// getLoadContext().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce);
+			// }
 		}
 
 		// The collection has been completely initialized and added to the PersistenceContext.
@@ -252,29 +247,24 @@ public class CollectionLoadContext {
 		if ( lce.getCollection().getOwner() != null ) {
 			// If the owner is bytecode-enhanced and the owner's collection value is uninitialized,
 			// then go ahead and set it to the newly initialized collection.
-			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata =
-					persister.getOwnerEntityPersister().getBytecodeEnhancementMetadata();
+			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = persister.getOwnerEntityPersister().getBytecodeEnhancementMetadata();
 			if ( bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
 				// Lazy properties in embeddables/composites are not currently supported for embeddables (HHH-10480),
 				// so check to make sure the collection is not in an embeddable before checking to see if
 				// the collection is lazy.
 				// TODO: More will probably need to be done here when HHH-10480 is fixed..
-				if ( StringHelper.qualifier( persister.getRole() ).length() ==
-						persister.getOwnerEntityPersister().getEntityName().length() ) {
+				if ( StringHelper.qualifier( persister.getRole() ).length() == persister.getOwnerEntityPersister().getEntityName().length() ) {
 					// Assume the collection is not in an embeddable.
 					// Strip off <entityName><dot> to get the collection property name.
 					final String propertyName = persister.getRole().substring(
-							persister.getOwnerEntityPersister().getEntityName().length() + 1
-					);
+							persister.getOwnerEntityPersister().getEntityName().length() + 1 );
 					if ( !bytecodeEnhancementMetadata.isAttributeLoaded( lce.getCollection().getOwner(), propertyName ) ) {
 						int propertyIndex = persister.getOwnerEntityPersister().getEntityMetamodel().getPropertyIndex(
-								propertyName
-						);
+								propertyName );
 						persister.getOwnerEntityPersister().setPropertyValue(
 								lce.getCollection().getOwner(),
 								propertyIndex,
-								lce.getCollection()
-						);
+								lce.getCollection() );
 					}
 				}
 			}
@@ -284,10 +274,10 @@ public class CollectionLoadContext {
 		boolean addToCache =
 				// there were no queued additions
 				hasNoQueuedAdds
-				// and the role has a cache
-				&& persister.hasCache()
-				// and this is not a forced initialization during flush
-				&& session.getCacheMode().isPutEnabled() && !ce.isDoremove();
+						// and the role has a cache
+						&& persister.hasCache()
+						// and this is not a forced initialization during flush
+						&& session.getCacheMode().isPutEnabled() && !ce.isDoremove();
 		if ( addToCache ) {
 			addCollectionToCache( lce, persister );
 		}
@@ -295,8 +285,7 @@ public class CollectionLoadContext {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Collection fully initialized: %s",
-					MessageHelper.collectionInfoString( persister, lce.getCollection(), lce.getKey(), session )
-			);
+					MessageHelper.collectionInfoString( persister, lce.getCollection(), lce.getKey(), session ) );
 		}
 		if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
 			session.getFactory().getStatistics().loadCollection( persister.getRole() );
@@ -322,9 +311,11 @@ public class CollectionLoadContext {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debug( "Refusing to add to cache due to enabled filters" );
 			}
-			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from non-filtered;
-			//      DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read from
-			//      cache with enabled filters).
+			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from
+			// non-filtered;
+			// DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read
+			// from
+			// cache with enabled filters).
 			// EARLY EXIT!!!!!
 			return;
 		}
@@ -334,8 +325,8 @@ public class CollectionLoadContext {
 			Object collectionOwner = getLoadContext().getPersistenceContext().getCollectionOwner( lce.getKey(), persister );
 			if ( collectionOwner == null ) {
 				// generally speaking this would be caused by the collection key being defined by a property-ref, thus
-				// the collection key and the owner key would not match up.  In this case, try to use the key of the
-				// owner instance associated with the collection itself, if one.  If the collection does already know
+				// the collection key and the owner key would not match up. In this case, try to use the key of the
+				// owner instance associated with the collection itself, if one. If the collection does already know
 				// about its owner, that owner should be the same instance as associated with the PC, but we do the
 				// resolution against the PC anyway just to be safe since the lookup should not be costly.
 				if ( lce.getCollection() != null ) {
@@ -349,8 +340,7 @@ public class CollectionLoadContext {
 					throw new HibernateException(
 							"Unable to resolve owner of loading collection [" +
 									MessageHelper.collectionInfoString( persister, lce.getCollection(), lce.getKey(), session ) +
-									"] for second level caching"
-					);
+									"] for second level caching" );
 				}
 			}
 			version = getLoadContext().getPersistenceContext().getEntry( collectionOwner ).getVersion();
@@ -365,8 +355,7 @@ public class CollectionLoadContext {
 				lce.getKey(),
 				persister,
 				session.getFactory(),
-				session.getTenantIdentifier()
-		);
+				session.getTenantIdentifier() );
 
 		boolean isPutFromLoad = true;
 		if ( persister.getElementType().isAssociationType() ) {
@@ -380,7 +369,7 @@ public class CollectionLoadContext {
 		}
 
 		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
-		if (isPutFromLoad) {
+		if ( isPutFromLoad ) {
 			try {
 				session.getEventListenerManager().cachePutStart();
 				final boolean put = cacheAccess.putFromLoad(
@@ -388,14 +377,12 @@ public class CollectionLoadContext {
 						cacheKey,
 						persister.getCacheEntryStructure().structure( entry ),
 						version,
-						factory.getSessionFactoryOptions().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
-				);
+						factory.getSessionFactoryOptions().isMinimalPutsEnabled() && session.getCacheMode() != CacheMode.REFRESH );
 
 				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 					factory.getStatistics().collectionCachePut(
 							persister.getNavigableRole(),
-							persister.getCacheAccessStrategy().getRegion().getName()
-					);
+							persister.getCacheAccessStrategy().getRegion().getName() );
 				}
 			}
 			finally {
@@ -411,7 +398,6 @@ public class CollectionLoadContext {
 		loadContexts.cleanupCollectionXRefs( localLoadingCollectionKeys );
 		localLoadingCollectionKeys.clear();
 	}
-
 
 	@Override
 	public String toString() {

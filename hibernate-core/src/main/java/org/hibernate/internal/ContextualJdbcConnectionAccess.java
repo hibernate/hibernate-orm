@@ -19,7 +19,8 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
  * @author Steve Ebersole
  */
 public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
-	private final String tenantIdentifier;
+
+	private String tenantIdentifier;
 	private final SessionEventListener listener;
 	private final MultiTenantConnectionProvider connectionProvider;
 
@@ -65,5 +66,13 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return connectionProvider.supportsAggressiveRelease();
+	}
+
+	public String getTenantIdentifier() {
+		return tenantIdentifier;
+	}
+
+	public void setTenantIdentifier(String tenantIdentifier) {
+		this.tenantIdentifier = tenantIdentifier;
 	}
 }

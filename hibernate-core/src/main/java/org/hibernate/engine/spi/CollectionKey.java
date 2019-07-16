@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.hibernate.EntityMode;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -22,40 +23,44 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public final class CollectionKey implements Serializable {
+
 	private final String role;
 	private final Serializable key;
 	private final Type keyType;
 	private final SessionFactoryImplementor factory;
 	private final int hashCode;
+	private final String tenantIdentifier;
 
-	public CollectionKey(CollectionPersister persister, Serializable key) {
+	public CollectionKey(CollectionPersister persister, Serializable key, String tenantIdentifier) {
 		this(
 				persister.getRole(),
 				key,
 				persister.getKeyType(),
-				persister.getFactory()
-		);
+				persister.getFactory(), tenantIdentifier );
 	}
 
 	/**
 	 * The EntityMode parameter is now ignored. Use the other constructor.
+	 * 
 	 * @deprecated Use {@link #CollectionKey(CollectionPersister, Serializable)}
 	 */
 	@Deprecated
 	public CollectionKey(CollectionPersister persister, Serializable key, EntityMode em) {
-		this( persister.getRole(), key, persister.getKeyType(), persister.getFactory() );
+		this( persister.getRole(), key, persister.getKeyType(), persister.getFactory(), null );
 	}
 
 	private CollectionKey(
 			String role,
 			Serializable key,
 			Type keyType,
-			SessionFactoryImplementor factory) {
+			SessionFactoryImplementor factory,
+			String tenantIdentifier) {
 		this.role = role;
 		this.key = key;
 		this.keyType = keyType;
 		this.factory = factory;
-		//cache the hash-code
+		this.tenantIdentifier = tenantIdentifier;
+		// cache the hash-code
 		this.hashCode = generateHashCode();
 	}
 
@@ -63,6 +68,7 @@ public final class CollectionKey implements Serializable {
 		int result = 17;
 		result = 37 * result + role.hashCode();
 		result = 37 * result + keyType.getHashCode( key, factory );
+		result = 37 * result + Objects.hashCode( tenantIdentifier );
 		return result;
 	}
 
@@ -72,6 +78,10 @@ public final class CollectionKey implements Serializable {
 
 	public Serializable getKey() {
 		return key;
+	}
+
+	public String getTenantIdentifier() {
+		return this.tenantIdentifier;
 	}
 
 	@Override
@@ -91,7 +101,7 @@ public final class CollectionKey implements Serializable {
 
 		final CollectionKey that = (CollectionKey) other;
 		return that.role.equals( role )
-				&& keyType.isEqual( that.key, key, factory );
+				&& keyType.isEqual( that.key, key, factory ) && Objects.equals( this.tenantIdentifier, that.tenantIdentifier );
 	}
 
 	@Override
@@ -99,30 +109,26 @@ public final class CollectionKey implements Serializable {
 		return hashCode;
 	}
 
-
 	/**
-	 * Custom serialization routine used during serialization of a
-	 * Session/PersistenceContext for increased performance.
+	 * Custom serialization routine used during serialization of a Session/PersistenceContext for increased performance.
 	 *
 	 * @param oos The stream to which we should write the serial data.
-	 *
 	 * @throws java.io.IOException
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( role );
 		oos.writeObject( key );
 		oos.writeObject( keyType );
+		oos.writeObject( tenantIdentifier );
 	}
 
 	/**
-	 * Custom deserialization routine used during deserialization of a
-	 * Session/PersistenceContext for increased performance.
+	 * Custom deserialization routine used during deserialization of a Session/PersistenceContext for increased
+	 * performance.
 	 *
 	 * @param ois The stream from which to read the entry.
 	 * @param session The session being deserialized.
-	 *
 	 * @return The deserialized CollectionKey
-	 *
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
@@ -133,7 +139,6 @@ public final class CollectionKey implements Serializable {
 				(String) ois.readObject(),
 				(Serializable) ois.readObject(),
 				(Type) ois.readObject(),
-				(session == null ? null : session.getFactory())
-		);
+				( session == null ? null : session.getFactory() ), (String) ois.readObject() );
 	}
 }

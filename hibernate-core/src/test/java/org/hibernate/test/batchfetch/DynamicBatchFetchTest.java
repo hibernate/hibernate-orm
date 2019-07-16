@@ -6,9 +6,11 @@
  */
 package org.hibernate.test.batchfetch;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -17,12 +19,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 public class DynamicBatchFetchTest extends BaseCoreFunctionalTestCase {
+
 	private static int currentId = 1;
 
 	@Override
@@ -35,7 +35,7 @@ public class DynamicBatchFetchTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { A.class, B.class };
+		return new Class[]{ A.class, B.class };
 	}
 
 	@Test
@@ -44,8 +44,8 @@ public class DynamicBatchFetchTest extends BaseCoreFunctionalTestCase {
 		Integer aId2 = createAAndB();
 		Session s = openSession();
 		s.getTransaction().begin();
-		List resultList = s.createQuery("from A where id in (" + aId1 + "," + aId2 + ") order by id" ).list();
-		A a1 = (A) resultList.get(0);
+		List resultList = s.createQuery( "from A where id in (" + aId1 + "," + aId2 + ") order by id" ).list();
+		A a1 = (A) resultList.get( 0 );
 		A a2 = (A) resultList.get( 1 );
 		assertEquals( aId1, a1.getId() );
 		assertEquals( aId2, a2.getId() );
@@ -57,12 +57,10 @@ public class DynamicBatchFetchTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized( a2.getB() ) );
 		// the B entity has been loaded, but is has not been made the target of a2.getB() yet.
 		assertTrue( ( (SessionImplementor) session ).getPersistenceContext().containsEntity(
-						new EntityKey(
-								( (SessionImplementor) session ).getContextEntityIdentifier( a2.getB() ),
-								( (SessionImplementor) session ).getFactory().getEntityPersister( B.class.getName() )
-						)
-				)
-		);
+				new EntityKey(
+						( (SessionImplementor) session ).getContextEntityIdentifier( a2.getB() ),
+						( (SessionImplementor) session ).getFactory().getEntityPersister( B.class.getName() ),
+						( (SessionImplementor) session ).getTenantIdentifier() ) ) );
 		// a2.getB() is still uninitialized; getting the ID for a2.getB() did not initialize it.
 		assertFalse( Hibernate.isInitialized( a2.getB() ) );
 		assertEquals( "foo", a2.getB().getOtherProperty() );
@@ -78,8 +76,8 @@ public class DynamicBatchFetchTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		B b = new B();
 		b.setIdPart1( currentId );
-		b.setIdPart2( currentId);
-		b.setOtherProperty("foo");
+		b.setIdPart2( currentId );
+		b.setOtherProperty( "foo" );
 		s.save( b );
 
 		A a = new A();

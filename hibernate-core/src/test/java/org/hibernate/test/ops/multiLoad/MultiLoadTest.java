@@ -6,8 +6,17 @@
  */
 package org.hibernate.test.ops.multiLoad;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 import java.util.Objects;
+
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -28,21 +37,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.stat.Statistics;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -58,7 +58,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { SimpleEntity.class };
+		return new Class[]{ SimpleEntity.class };
 	}
 
 	@Override
@@ -108,12 +108,11 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?,?,?,?)" ) );
 
-				}
-		);
+				} );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10984" )
+	@TestForIssue(jiraKey = "HHH-10984")
 	public void testUnflushedDeleteAndThenMultiLoad() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -129,14 +128,13 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertNull( s5 );
 
 					// finally assert how multiLoad handles it
-					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
 					assertEquals( 56, list.size() );
-				}
-		);
+				} );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10617" )
+	@TestForIssue(jiraKey = "HHH-10617")
 	public void testDuplicatedRequestedIds() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -149,12 +147,11 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 					// un-ordered multiLoad
 					list = session.byMultipleIds( SimpleEntity.class ).enableOrderedReturn( false ).multiLoad( 1, 2, 3, 2, 2 );
 					assertEquals( 3, list.size() );
-				}
-		);
+				} );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10617" )
+	@TestForIssue(jiraKey = "HHH-10617")
 	public void testNonExistentIdRequest() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -166,8 +163,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 					// un-ordered multiLoad
 					list = session.byMultipleIds( SimpleEntity.class ).enableOrderedReturn( false ).multiLoad( 1, 699, 2 );
 					assertEquals( 2, list.size() );
-				}
-		);
+				} );
 	}
 
 	@Test
@@ -175,7 +171,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session session = openSession();
 		session.getTransaction().begin();
 		SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
-		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids(56) );
+		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
 		assertEquals( 56, list.size() );
 		// this check is HIGHLY specific to implementation in the batch loader
 		// which puts existing managed entities first...
@@ -189,7 +185,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session session = openSession();
 		session.getTransaction().begin();
 		SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
-		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).enableSessionCheck( true ).multiLoad( ids(56) );
+		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).enableSessionCheck( true ).multiLoad( ids( 56 ) );
 		assertEquals( 56, list.size() );
 		// this check is HIGHLY specific to implementation in the batch loader
 		// which puts existing managed entities first...
@@ -232,7 +228,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( 3, entities.size() );
 			assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
 
-			for(SimpleEntity entity: entities) {
+			for ( SimpleEntity entity : entities ) {
 				assertTrue( session.contains( entity ) );
 			}
 
@@ -275,7 +271,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( 3, entities.size() );
 			assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
 
-			for(SimpleEntity entity: entities) {
+			for ( SimpleEntity entity : entities ) {
 				assertTrue( session.contains( entity ) );
 			}
 
@@ -300,7 +296,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 					.multiLoad( ids( 3 ) );
 			assertEquals( 3, entities.size() );
 
-			assertNull( entities.get(1) );
+			assertNull( entities.get( 1 ) );
 
 			assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?)" ) );
 		} );
@@ -324,10 +320,10 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 					.multiLoad( ids( 3 ) );
 			assertEquals( 3, entities.size() );
 
-			SimpleEntity deletedEntity = entities.get(1);
+			SimpleEntity deletedEntity = entities.get( 1 );
 			assertNotNull( deletedEntity );
 
-			final EntityEntry entry = ((SharedSessionContractImplementor) session).getPersistenceContext().getEntry( deletedEntity );
+			final EntityEntry entry = ( (SharedSessionContractImplementor) session ).getPersistenceContext().getEntry( deletedEntity );
 			assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
 
 			assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?)" ) );
@@ -378,7 +374,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 			SimpleEntity deletedEntity = entities.stream().filter( simpleEntity -> simpleEntity.getId().equals( 2 ) ).findAny().orElse( null );
 			assertNotNull( deletedEntity );
 
-			final EntityEntry entry = ((SharedSessionContractImplementor) session).getPersistenceContext().getEntry( deletedEntity );
+			final EntityEntry entry = ( (SharedSessionContractImplementor) session ).getPersistenceContext().getEntry( deletedEntity );
 			assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
 
 			assertTrue( sqlStatementInterceptor.getSqlQueries().getFirst().endsWith( "id in (?,?)" ) );
@@ -388,12 +384,12 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testMultiLoadWithCacheModeIgnore() {
 		// do the multi-load, telling Hibernate to IGNORE the L2 cache -
-		//		the end result should be that the cache is (still) empty afterwards
+		// the end result should be that the cache is (still) empty afterwards
 		Session session = openSession();
 		session.getTransaction().begin();
 		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
 				.with( CacheMode.IGNORE )
-				.multiLoad( ids(56) );
+				.multiLoad( ids( 56 ) );
 		session.getTransaction().commit();
 		session.close();
 
@@ -407,8 +403,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testMultiLoadClearsBatchFetchQueue() {
 		final EntityKey entityKey = new EntityKey(
 				1,
-				sessionFactory().getEntityPersister( SimpleEntity.class.getName() )
-		);
+				sessionFactory().getEntityPersister( SimpleEntity.class.getName() ), null );
 
 		Session session = openSession();
 		session.getTransaction().begin();
@@ -417,7 +412,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertTrue( ( (SessionImplementor) session ).getPersistenceContext().getBatchFetchQueue().containsEntityKey( entityKey ) );
 
 		// now bulk load, which should clean up the BatchFetchQueue entry
-		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).enableSessionCheck( true ).multiLoad( ids(56) );
+		List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).enableSessionCheck( true ).multiLoad( ids( 56 ) );
 
 		assertEquals( 56, list.size() );
 		assertFalse( ( (SessionImplementor) session ).getPersistenceContext().getBatchFetchQueue().containsEntityKey( entityKey ) );
@@ -429,16 +424,17 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 	private Integer[] ids(int count) {
 		Integer[] ids = new Integer[count];
 		for ( int i = 1; i <= count; i++ ) {
-			ids[i-1] = i;
+			ids[i - 1] = i;
 		}
 		return ids;
 	}
 
-	@Entity( name = "SimpleEntity" )
-	@Table( name = "SimpleEntity" )
+	@Entity(name = "SimpleEntity")
+	@Table(name = "SimpleEntity")
 	@Cacheable()
-	@BatchSize( size = 15 )
+	@BatchSize(size = 15)
 	public static class SimpleEntity {
+
 		Integer id;
 		String text;
 

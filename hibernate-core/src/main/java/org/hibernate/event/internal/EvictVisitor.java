@@ -18,35 +18,35 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 
 /**
- * Evict any collections referenced by the object from the session cache.
- * This will NOT pick up any collections that were dereferenced, so they
- * will be deleted (suboptimal but not exactly incorrect).
+ * Evict any collections referenced by the object from the session cache. This will NOT pick up any collections that
+ * were dereferenced, so they will be deleted (suboptimal but not exactly incorrect).
  *
  * @author Gavin King
  */
 public class EvictVisitor extends AbstractVisitor {
+
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EvictVisitor.class );
-	
+
 	private Object owner;
 
 	EvictVisitor(EventSource session, Object owner) {
-		super(session);
+		super( session );
 		this.owner = owner;
 	}
 
 	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
-		if (collection != null) {
-			evictCollection(collection, type);
+		if ( collection != null ) {
+			evictCollection( collection, type );
 		}
 
 		return null;
 	}
-	
+
 	public void evictCollection(Object value, CollectionType type) {
 		final PersistentCollection collection;
 		if ( type.hasHolder() ) {
-			collection = getSession().getPersistenceContext().removeCollectionHolder(value);
+			collection = getSession().getPersistenceContext().removeCollectionHolder( value );
 		}
 		else if ( value instanceof PersistentCollection ) {
 			collection = (PersistentCollection) value;
@@ -55,16 +55,16 @@ public class EvictVisitor extends AbstractVisitor {
 			collection = (PersistentCollection) type.resolve( value, getSession(), this.owner );
 		}
 		else {
-			return; //EARLY EXIT!
+			return; // EARLY EXIT!
 		}
 
 		if ( collection != null && collection.unsetSession( getSession() ) ) {
-			evictCollection(collection);
+			evictCollection( collection );
 		}
 	}
 
 	private void evictCollection(PersistentCollection collection) {
-		CollectionEntry ce = (CollectionEntry) getSession().getPersistenceContext().getCollectionEntries().remove(collection);
+		CollectionEntry ce = (CollectionEntry) getSession().getPersistenceContext().getCollectionEntries().remove( collection );
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Evicting collection: %s",
@@ -73,17 +73,16 @@ public class EvictVisitor extends AbstractVisitor {
 							ce.getLoadedKey(),
 							getSession() ) );
 		}
-		if (ce.getLoadedPersister() != null && ce.getLoadedPersister().getBatchSize() > 1) {
-			getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce);
+		if ( ce.getLoadedPersister() != null && ce.getLoadedPersister().getBatchSize() > 1 ) {
+			getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection( ce );
 		}
 		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
-			//TODO: is this 100% correct?
+			// TODO: is this 100% correct?
 			getSession().getPersistenceContext().getCollectionsByKey().remove(
-					new CollectionKey( ce.getLoadedPersister(), ce.getLoadedKey() )
-			);
+					new CollectionKey( ce.getLoadedPersister(), ce.getLoadedKey(), getSession().getTenantIdentifier() ) );
 		}
 	}
-	
+
 	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
 		return true;

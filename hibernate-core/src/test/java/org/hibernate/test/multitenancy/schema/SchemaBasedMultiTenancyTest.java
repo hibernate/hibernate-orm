@@ -6,32 +6,36 @@
  */
 package org.hibernate.test.multitenancy.schema;
 
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSessionBuilder;
+import static org.junit.Assert.assertThat;
+
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.junit.Assert;
 import org.junit.Test;
-
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature( value = ConnectionProviderBuilder.class )
-public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancyTest<
-		AbstractMultiTenantConnectionProvider, DriverManagerConnectionProviderImpl> {
+@RequiresDialectFeature(value = ConnectionProviderBuilder.class)
+public class SchemaBasedMultiTenancyTest
+		extends AbstractSchemaBasedMultiTenancyTest<AbstractMultiTenantConnectionProvider, DriverManagerConnectionProviderImpl> {
 
 	protected AbstractMultiTenantConnectionProvider buildMultiTenantConnectionProvider() {
 		acmeProvider = ConnectionProviderBuilder.buildConnectionProvider( "acme" );
 		jbossProvider = ConnectionProviderBuilder.buildConnectionProvider( "jboss" );
 		return new AbstractMultiTenantConnectionProvider() {
+
 			@Override
 			protected ConnectionProvider getAnyConnectionProvider() {
 				return acmeProvider;
@@ -51,7 +55,7 @@ public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancy
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11651")
+	@TestForIssue(jiraKey = "HHH-11651")
 	public void testUnwrappingConnectionProvider() {
 		final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );
@@ -77,5 +81,72 @@ public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancy
 		final MultiTenantConnectionProvider connectionProvider = multiTenantConnectionProvider.unwrap(
 				MultiTenantConnectionProvider.class );
 		assertThat( connectionProvider, is( notNullValue() ) );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13435")
+	public void testChangeTenantIdentifierForSameSession() {
+
+		doInHibernateSessionBuilder( () -> newSession( "acme" ), session -> {
+			Customer _steve = new Customer( 1L, "steve acme" );
+			session.save( _steve );
+			return _steve;
+		} );
+
+		doInHibernateSessionBuilder( () -> newSession( "jboss" ), session -> {
+			Customer _steve = new Customer( 1L, "steve jboss" );
+			session.save( _steve );
+			return _steve;
+		} );
+
+		Customer customerAcme = null;
+		Customer customerJboss = null;
+
+		Session session = null;
+		try {
+
+			sessionFactory.getStatistics().clear();
+
+			session = newSession( "acme" ).openSession();
+			customerAcme = session.load( Customer.class, 1L );
+			assertThat( customerAcme, is( notNullValue() ) );
+			assertThat( customerAcme.getName(), equalTo( "steve acme" ) );
+
+			Assert.assertEquals( sessionFactory.getStatistics().getSecondLevelCacheMissCount(), 0 );
+			Assert.assertEquals( sessionFactory.getStatistics().getSecondLevelCacheHitCount(), 1 );
+
+			sessionFactory.getStatistics().clear();
+
+			// change tenant identifier to jboss
+			session.setTenantIdentifier( "jboss" );
+
+			customerJboss = session.load( Customer.class, 1L );
+			assertThat( customerJboss, is( notNullValue() ) );
+			assertThat( customerJboss.getName(), equalTo( "steve jboss" ) );
+
+			Assert.assertEquals( sessionFactory.getStatistics().getSecondLevelCacheMissCount(), 0 );
+			Assert.assertEquals( sessionFactory.getStatistics().getSecondLevelCacheHitCount(), 1 );
+
+		}
+		finally {
+			if ( session != null ) {
+				session.close();
+			}
+
+			if ( customerJboss != null ) {
+				final Customer cJboss = customerJboss;
+				doInHibernateSessionBuilder( () -> newSession( "jboss" ), sessionJboss -> {
+					sessionJboss.delete( cJboss );
+				} );
+			}
+
+			if ( customerAcme != null ) {
+				final Customer cAcme = customerAcme;
+				doInHibernateSessionBuilder( () -> newSession( "acme" ), sessionAcme -> {
+					sessionAcme.delete( cAcme );
+				} );
+			}
+
+		}
 	}
 }

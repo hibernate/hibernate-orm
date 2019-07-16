@@ -17,14 +17,13 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * Uniquely identifies of an entity instance in a particular Session by identifier.
- * Note that it's only safe to be used within the scope of a Session: it doesn't consider for example the tenantId
- * as part of the equality definition.
+ * Uniquely identifies of an entity instance in a particular Session by identifier. Note that it's only safe to be used
+ * within the scope of a Session: it doesn't consider for example the tenantId as part of the equality definition.
  * <p/>
  * Information used to determine uniqueness consists of the entity-name and the identifier value (see {@link #equals}).
  * <p/>
- * Performance considerations: lots of instances of this type are created at runtime. Make sure each one is as small as possible
- * by storing just the essential needed.
+ * Performance considerations: lots of instances of this type are created at runtime. Make sure each one is as small as
+ * possible by storing just the essential needed.
  *
  * @author Gavin King
  * @author Sanne Grinovero
@@ -34,23 +33,25 @@ public final class EntityKey implements Serializable {
 	private final Serializable identifier;
 	private final int hashCode;
 	private final EntityPersister persister;
+	private final String tenantIdentifier;
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
 	 * <p/>
-	 * NOTE : This signature has changed to accommodate both entity mode and multi-tenancy, both of which relate to
-	 * the Session to which this key belongs.  To help minimize the impact of these changes in the future, the
+	 * NOTE : This signature has changed to accommodate both entity mode and multi-tenancy, both of which relate to the
+	 * Session to which this key belongs. To help minimize the impact of these changes in the future, the
 	 * {@link SessionImplementor#generateEntityKey} method was added to hide the session-specific changes.
 	 *
 	 * @param id The entity id
 	 * @param persister The entity persister
 	 */
-	public EntityKey(Serializable id, EntityPersister persister) {
+	public EntityKey(Serializable id, EntityPersister persister, String tenantId) {
 		this.persister = persister;
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier" );
 		}
 		this.identifier = id;
+		this.tenantIdentifier = tenantId;
 		this.hashCode = generateHashCode();
 	}
 
@@ -59,6 +60,7 @@ public final class EntityKey implements Serializable {
 		final String rootEntityName = persister.getRootEntityName();
 		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
 		result = 37 * result + persister.getIdentifierType().getHashCode( identifier, persister.getFactory() );
+		result = 37 * result + Objects.hashCode( tenantIdentifier );
 		return result;
 	}
 
@@ -78,6 +80,10 @@ public final class EntityKey implements Serializable {
 		return persister;
 	}
 
+	public String getTenantIdentifier() {
+		return this.tenantIdentifier;
+	}
+
 	@Override
 	public boolean equals(Object other) {
 		if ( this == other ) {
@@ -88,9 +94,14 @@ public final class EntityKey implements Serializable {
 		}
 
 		final EntityKey otherKey = (EntityKey) other;
-		return samePersistentType( otherKey )
-				&& sameIdentifier( otherKey );
 
+		return samePersistentType( otherKey ) && sameIdentifier( otherKey ) && sameTenant( otherKey );
+
+	}
+
+	private boolean sameTenant(EntityKey otherKey) {
+
+		return Objects.equals( tenantIdentifier, otherKey.tenantIdentifier );
 	}
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
@@ -113,39 +124,37 @@ public final class EntityKey implements Serializable {
 
 	@Override
 	public String toString() {
-		return "EntityKey" +
-				MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
+		return "EntityKey" + MessageHelper.infoString( this.persister, identifier, persister.getFactory(), this.tenantIdentifier );
 	}
 
 	/**
-	 * Custom serialization routine used during serialization of a
-	 * Session/PersistenceContext for increased performance.
+	 * Custom serialization routine used during serialization of a Session/PersistenceContext for increased performance.
 	 *
 	 * @param oos The stream to which we should write the serial data.
-	 *
 	 * @throws IOException Thrown by Java I/O
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( identifier );
 		oos.writeObject( persister.getEntityName() );
+		oos.writeObject( tenantIdentifier );
 	}
 
 	/**
-	 * Custom deserialization routine used during deserialization of a
-	 * Session/PersistenceContext for increased performance.
+	 * Custom deserialization routine used during deserialization of a Session/PersistenceContext for increased
+	 * performance.
 	 *
 	 * @param ois The stream from which to read the entry.
 	 * @param sessionFactory The SessionFactory owning the Session being deserialized.
-	 *
 	 * @return The deserialized EntityEntry
-	 *
 	 * @throws IOException Thrown by Java I/O
 	 * @throws ClassNotFoundException Thrown by Java I/O
 	 */
-	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory) throws IOException, ClassNotFoundException {
+	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory)
+			throws IOException, ClassNotFoundException {
 		final Serializable id = (Serializable) ois.readObject();
 		final String entityName = (String) ois.readObject();
+		final String tenantId = (String) ois.readObject();
 		final EntityPersister entityPersister = sessionFactory.getEntityPersister( entityName );
-		return new EntityKey(id, entityPersister);
+		return new EntityKey( id, entityPersister, tenantId );
 	}
 }

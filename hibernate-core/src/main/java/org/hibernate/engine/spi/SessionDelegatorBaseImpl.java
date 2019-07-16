@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.FlushModeType;
@@ -70,12 +71,9 @@ import org.hibernate.stat.SessionStatistics;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
- * This class is meant to be extended.
- *
- * Wraps and delegates all methods to a {@link SessionImplementor} and
- * a {@link Session}. This is useful for custom implementations of this
- * API so that only some methods need to be overridden
- * (Used by Hibernate Search).
+ * This class is meant to be extended. Wraps and delegates all methods to a {@link SessionImplementor} and a
+ * {@link Session}. This is useful for custom implementations of this API so that only some methods need to be
+ * overridden (Used by Hibernate Search).
  *
  * @author Sanne Grinovero <sanne@hibernate.org> (C) 2012 Red Hat Inc.
  */
@@ -85,8 +83,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	protected final SessionImplementor delegate;
 
 	/**
-	 * @deprecated (since 5.3) SessionDelegatorBaseImpl should take just one argument, the SessionImplementor.
-	 * Use the {@link #SessionDelegatorBaseImpl(SessionImplementor)} form instead
+	 * @deprecated (since 5.3) SessionDelegatorBaseImpl should take just one argument, the SessionImplementor. Use the
+	 * {@link #SessionDelegatorBaseImpl(SessionImplementor)} form instead
 	 */
 	@Deprecated
 	public SessionDelegatorBaseImpl(SessionImplementor delegate, Session session) {
@@ -178,7 +176,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 			Class<T> resultClass,
 			Selection selection,
 			QueryOptions queryOptions) {
-		return delegate.createQuery( jpaqlString,resultClass, selection, queryOptions );
+		return delegate.createQuery( jpaqlString, resultClass, selection, queryOptions );
 	}
 
 	@Override
@@ -608,7 +606,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
-		return delegate.createNativeQuery( sqlString, resultClass );
+		return (NativeQueryImplementor) delegate.createNativeQuery( sqlString, resultClass );
 	}
 
 	@Override
@@ -1228,5 +1226,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
+	}
+
+	@Override
+	public void setTenantIdentifier(String tenantIdentifier) {
+		delegate.setTenantIdentifier( tenantIdentifier );
+
 	}
 }

@@ -14,18 +14,26 @@ import org.hibernate.query.QueryProducer;
 /**
  * Contract methods shared between {@link Session} and {@link StatelessSession}.
  * <p/>
- * NOTE : Poorly named.  "shared" simply indicates that its a unified contract between {@link Session} and
+ * NOTE : Poorly named. "shared" simply indicates that its a unified contract between {@link Session} and
  * {@link StatelessSession}.
  * 
  * @author Steve Ebersole
  */
 public interface SharedSessionContract extends QueryProducer, Serializable {
+
 	/**
 	 * Obtain the tenant identifier associated with this session.
 	 *
 	 * @return The tenant identifier associated with this session, or {@code null}
 	 */
 	String getTenantIdentifier();
+
+	/**
+	 * Obtain the tenant identifier associated with this session.
+	 *
+	 * @return The tenant identifier associated with this session, or {@code null}
+	 */
+	void setTenantIdentifier(String tenantIdentifier);
 
 	/**
 	 * End the session by releasing the JDBC connection and cleaning up.
@@ -49,18 +57,17 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	boolean isConnected();
 
 	/**
-	 * Begin a unit of work and return the associated {@link Transaction} object.  If a new underlying transaction is
-	 * required, begin the transaction.  Otherwise continue the new work in the context of the existing underlying
+	 * Begin a unit of work and return the associated {@link Transaction} object. If a new underlying transaction is
+	 * required, begin the transaction. Otherwise continue the new work in the context of the existing underlying
 	 * transaction.
 	 *
 	 * @return a Transaction instance
-	 *
 	 * @see #getTransaction
 	 */
 	Transaction beginTransaction();
 
 	/**
-	 * Get the {@link Transaction} instance associated with this session.  The concrete type of the returned
+	 * Get the {@link Transaction} instance associated with this session. The concrete type of the returned
 	 * {@link Transaction} object is determined by the {@code hibernate.transaction_factory} property.
 	 *
 	 * @return a Transaction instance
@@ -77,9 +84,7 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * Gets a ProcedureCall based on a named template
 	 *
 	 * @param name The name given to the template
-	 *
 	 * @return The ProcedureCall
-	 *
 	 * @see javax.persistence.NamedStoredProcedureQuery
 	 */
 	ProcedureCall getNamedProcedureCall(String name);
@@ -88,18 +93,16 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * Creates a call to a stored procedure.
 	 *
 	 * @param procedureName The name of the procedure.
-	 *
 	 * @return The representation of the procedure call.
 	 */
 	ProcedureCall createStoredProcedureCall(String procedureName);
 
 	/**
-	 * Creates a call to a stored procedure with specific result set entity mappings.  Each class named
-	 * is considered a "root return".
+	 * Creates a call to a stored procedure with specific result set entity mappings. Each class named is considered a
+	 * "root return".
 	 *
 	 * @param procedureName The name of the procedure.
 	 * @param resultClasses The entity(s) to map the result on to.
-	 *
 	 * @return The representation of the procedure call.
 	 */
 	ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses);
@@ -109,7 +112,6 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 *
 	 * @param procedureName The name of the procedure.
 	 * @param resultSetMappings The explicit result set mapping(s) to use for mapping the results
-	 *
 	 * @return The representation of the procedure call.
 	 */
 	ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings);
@@ -118,23 +120,18 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors).
 	 *
 	 * @param persistentClass The class, which is an entity, or has entity subclasses/implementors
-	 *
 	 * @return The criteria instance for manipulation and execution
-	 *
 	 * @deprecated (since 5.2) for Session, use the JPA Criteria
 	 */
 	@Deprecated
 	Criteria createCriteria(Class persistentClass);
 
 	/**
-	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors), using a specific
-	 * alias.
+	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors), using a specific alias.
 	 *
 	 * @param persistentClass The class, which is an entity, or has entity subclasses/implementors
 	 * @param alias The alias to use
-	 *
 	 * @return The criteria instance for manipulation and execution
-	 *
 	 * @deprecated (since 5.2) for Session, use the JPA Criteria
 	 */
 	@Deprecated
@@ -144,9 +141,7 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * Create {@link Criteria} instance for the given entity name.
 	 *
 	 * @param entityName The entity name
-
 	 * @return The criteria instance for manipulation and execution
-	 *
 	 * @deprecated (since 5.2) for Session, use the JPA Criteria
 	 */
 	@Deprecated
@@ -157,35 +152,30 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 *
 	 * @param entityName The entity name
 	 * @param alias The alias to use
-	 *
 	 * @return The criteria instance for manipulation and execution
-	 *
 	 * @deprecated (since 5.2) for Session, use the JPA Criteria
 	 */
 	@Deprecated
 	Criteria createCriteria(String entityName, String alias);
 
 	/**
-	 * Get the Session-level JDBC batch size for the current Session.
-	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 * Get the Session-level JDBC batch size for the current Session. Overrides the SessionFactory JDBC batch size
+	 * defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current
+	 * {@code Session}.
 	 *
 	 * @return Session-level JDBC batch size
-	 *
 	 * @since 5.2
-	 *
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */
 	Integer getJdbcBatchSize();
 
 	/**
-	 * Set the Session-level JDBC batch size.
-	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 * Set the Session-level JDBC batch size. Overrides the SessionFactory JDBC batch size defined by the
+	 * {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
 	 *
 	 * @param jdbcBatchSize Session-level JDBC batch size
-	 *
 	 * @since 5.2
-	 *
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */

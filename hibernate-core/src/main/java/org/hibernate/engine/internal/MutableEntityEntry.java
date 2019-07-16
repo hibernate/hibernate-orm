@@ -24,12 +24,13 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  * @author Gunnar Morling
- * @author Sanne Grinovero  <sanne@hibernate.org>
+ * @author Sanne Grinovero <sanne@hibernate.org>
  */
 public final class MutableEntityEntry extends AbstractEntityEntry {
+
 	/**
-	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
-	 * Use the other constructor!
+	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them. Use
+	 * the other constructor!
 	 */
 	@Deprecated
 	public MutableEntityEntry(
@@ -46,8 +47,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {
 		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
-				persister,disableVersionIncrement, persistenceContext
-		);
+				persister, disableVersionIncrement, persistenceContext );
 	}
 
 	public MutableEntityEntry(
@@ -62,14 +62,13 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {
 		super( status, loadedState, rowId, id, version, lockMode, existsInDatabase, persister,
-				disableVersionIncrement, persistenceContext
-		);
+				disableVersionIncrement, persistenceContext, persistenceContext != null ? persistenceContext.getSession().getTenantIdentifier() : null );
 	}
 
 	/**
 	 * This for is used during custom deserialization handling
 	 */
-	@SuppressWarnings( {"JavaDoc"})
+	@SuppressWarnings({ "JavaDoc" })
 	private MutableEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
@@ -84,22 +83,18 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final boolean isBeingReplicated,
 			final PersistenceContext persistenceContext) {
 		super( factory, entityName, id, status, previousStatus, loadedState, deletedState,
-				version, lockMode, existsInDatabase, isBeingReplicated, persistenceContext
-		);
+				version, lockMode, existsInDatabase, isBeingReplicated, persistenceContext, persistenceContext.getSession().getTenantIdentifier() );
 	}
 
 	/**
-	 * Custom deserialization routine used during deserialization of a
-	 * Session/PersistenceContext for increased performance.
+	 * Custom deserialization routine used during deserialization of a Session/PersistenceContext for increased
+	 * performance.
 	 *
 	 * @param ois The stream from which to read the entry.
 	 * @param persistenceContext The context being deserialized.
-	 *
 	 * @return The deserialized EntityEntry
-	 *
 	 * @throws java.io.IOException If a stream error occurs
-	 * @throws ClassNotFoundException If any of the classes declared in the stream
-	 * cannot be found
+	 * @throws ClassNotFoundException If any of the classes declared in the stream cannot be found
 	 */
 	public static EntityEntry deserialize(
 			ObjectInputStream ois,
@@ -119,7 +114,6 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 				LockMode.valueOf( (String) ois.readObject() ),
 				ois.readBoolean(),
 				ois.readBoolean(),
-				persistenceContext
-		);
+				persistenceContext );
 	}
 }

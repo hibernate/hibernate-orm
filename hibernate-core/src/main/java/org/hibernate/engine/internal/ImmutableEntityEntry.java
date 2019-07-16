@@ -21,21 +21,20 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * An EntityEntry implementation for immutable entities.  Note that this implementation is not completely
- * immutable in terms of its internal state; the term immutable here refers to the entity is describes.
+ * An EntityEntry implementation for immutable entities. Note that this implementation is not completely immutable in
+ * terms of its internal state; the term immutable here refers to the entity is describes.
  *
  * @author Gavin King
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  * @author Gunnar Morling
- * @author Sanne Grinovero  <sanne@hibernate.org>
- *
+ * @author Sanne Grinovero <sanne@hibernate.org>
  * @see org.hibernate.annotations.Immutable
  */
 public final class ImmutableEntityEntry extends AbstractEntityEntry {
 
 	/**
-	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
-	 * Use the other constructor!
+	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them. Use
+	 * the other constructor!
 	 */
 	@Deprecated
 	public ImmutableEntityEntry(
@@ -62,8 +61,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				persister,
 				disableVersionIncrement,
 				// purposefully do not pass along the session/persistence-context : HHH-10251
-				null
-		);
+				null );
 	}
 
 	public ImmutableEntityEntry(
@@ -89,14 +87,13 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				persister,
 				disableVersionIncrement,
 				// purposefully do not pass along the session/persistence-context : HHH-10251
-				null
-		);
+				null, persistenceContext != null ? persistenceContext.getSession().getTenantIdentifier() : null );
 	}
 
 	/**
 	 * This for is used during custom deserialization handling
 	 */
-	@SuppressWarnings( {"JavaDoc"})
+	@SuppressWarnings({ "JavaDoc" })
 	private ImmutableEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
@@ -109,11 +106,11 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final boolean isBeingReplicated,
-			final PersistenceContext persistenceContext) {
+			final PersistenceContext persistenceContext,
+			String tenantId) {
 
 		super( factory, entityName, id, status, previousStatus, loadedState, deletedState,
-				version, lockMode, existsInDatabase, isBeingReplicated, persistenceContext
-		);
+				version, lockMode, existsInDatabase, isBeingReplicated, persistenceContext, tenantId );
 	}
 
 	@Override
@@ -131,17 +128,14 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 	}
 
 	/**
-	 * Custom deserialization routine used during deserialization of a
-	 * Session/PersistenceContext for increased performance.
+	 * Custom deserialization routine used during deserialization of a Session/PersistenceContext for increased
+	 * performance.
 	 *
 	 * @param ois The stream from which to read the entry.
 	 * @param persistenceContext The context being deserialized.
-	 *
 	 * @return The deserialized EntityEntry
-	 *
 	 * @throws java.io.IOException If a stream error occurs
-	 * @throws ClassNotFoundException If any of the classes declared in the stream
-	 * cannot be found
+	 * @throws ClassNotFoundException If any of the classes declared in the stream cannot be found
 	 */
 	public static EntityEntry deserialize(
 			ObjectInputStream ois,
@@ -161,8 +155,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 				LockMode.valueOf( (String) ois.readObject() ),
 				ois.readBoolean(),
 				ois.readBoolean(),
-				null
-		);
+				null, persistenceContext.getSession().getTenantIdentifier() );
 	}
 
 	@Override

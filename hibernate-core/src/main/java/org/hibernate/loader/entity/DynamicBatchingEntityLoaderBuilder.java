@@ -39,16 +39,16 @@ import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
 
 /**
- * A BatchingEntityLoaderBuilder that builds UniqueEntityLoader instances capable of dynamically building
- * its batch-fetch SQL based on the actual number of entity ids waiting to be fetched.
+ * A BatchingEntityLoaderBuilder that builds UniqueEntityLoader instances capable of dynamically building its
+ * batch-fetch SQL based on the actual number of entity ids waiting to be fetched.
  *
  * @author Steve Ebersole
  */
 public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuilder {
+
 	private static final Logger log = Logger.getLogger( DynamicBatchingEntityLoaderBuilder.class );
 
 	public static final DynamicBatchingEntityLoaderBuilder INSTANCE = new DynamicBatchingEntityLoaderBuilder();
@@ -76,7 +76,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 
 		final List result = CollectionHelper.arrayList( ids.length );
 
-		final LockOptions lockOptions = (loadOptions.getLockOptions() == null)
+		final LockOptions lockOptions = ( loadOptions.getLockOptions() == null )
 				? new LockOptions( LockMode.NONE )
 				: loadOptions.getLockOptions();
 
@@ -87,8 +87,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		else {
 			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
 					persister.getIdentifierType().getColumnSpan( session.getFactory() ),
-					ids.length
-			);
+					ids.length );
 		}
 
 		final List<Serializable> idsInBatch = new ArrayList<>();
@@ -96,15 +95,14 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 
 		for ( int i = 0; i < ids.length; i++ ) {
 			final Serializable id = ids[i];
-			final EntityKey entityKey = new EntityKey( id, persister );
+			final EntityKey entityKey = new EntityKey( id, persister, session.getTenantIdentifier() );
 
 			if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
 				LoadEvent loadEvent = new LoadEvent(
 						id,
 						persister.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session
-				);
+						(EventSource) session );
 
 				Object managedEntity = null;
 
@@ -114,8 +112,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 							.loadFromSessionCache(
 									loadEvent,
 									entityKey,
-									LoadEventListener.GET
-							);
+									LoadEventListener.GET );
 					managedEntity = persistenceContextEntry.getEntity();
 
 					if ( managedEntity != null && !loadOptions.isReturnOfDeletedEntitiesEnabled() && !persistenceContextEntry
@@ -131,8 +128,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					managedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
 							loadEvent,
 							persister,
-							entityKey
-					);
+							entityKey );
 				}
 
 				if ( managedEntity != null ) {
@@ -182,16 +178,15 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			LockOptions lockOptions,
 			OuterJoinLoadable persister,
 			SharedSessionContractImplementor session) {
-		final int batchSize =  idsInBatch.size();
+		final int batchSize = idsInBatch.size();
 		final DynamicEntityLoader batchingLoader = new DynamicEntityLoader(
 				persister,
 				batchSize,
 				lockOptions,
 				session.getFactory(),
-				session.getLoadQueryInfluencers()
-		);
+				session.getLoadQueryInfluencers() );
 
-		final Serializable[] idsInBatchArray = idsInBatch.toArray( new Serializable[ idsInBatch.size() ] );
+		final Serializable[] idsInBatchArray = idsInBatch.toArray( new Serializable[idsInBatch.size()] );
 
 		QueryParameters qp = buildMultiLoadQueryParameters( persister, idsInBatchArray, lockOptions );
 		batchingLoader.doEntityBatchFetch( session, qp, idsInBatchArray );
@@ -209,27 +204,26 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 
 		final List result = CollectionHelper.arrayList( ids.length );
 
-		final LockOptions lockOptions = (loadOptions.getLockOptions() == null)
+		final LockOptions lockOptions = ( loadOptions.getLockOptions() == null )
 				? new LockOptions( LockMode.NONE )
 				: loadOptions.getLockOptions();
 
 		if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
 			// the user requested that we exclude ids corresponding to already managed
-			// entities from the generated load SQL.  So here we will iterate all
+			// entities from the generated load SQL. So here we will iterate all
 			// incoming id values and see whether it corresponds to an existing
 			// entity associated with the PC - if it does we add it to the result
 			// list immediately and remove its id from the group of ids to load.
 			boolean foundAnyManagedEntities = false;
 			final List<Serializable> nonManagedIds = new ArrayList<Serializable>();
 			for ( Serializable id : ids ) {
-				final EntityKey entityKey = new EntityKey( id, persister );
+				final EntityKey entityKey = new EntityKey( id, persister, session.getTenantIdentifier() );
 
 				LoadEvent loadEvent = new LoadEvent(
 						id,
 						persister.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session
-				);
+						(EventSource) session );
 
 				Object managedEntity = null;
 
@@ -238,8 +232,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 						.loadFromSessionCache(
 								loadEvent,
 								entityKey,
-								LoadEventListener.GET
-						);
+								LoadEventListener.GET );
 				if ( loadOptions.isSessionCheckingEnabled() ) {
 					managedEntity = persistenceContextEntry.getEntity();
 
@@ -255,8 +248,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					managedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
 							loadEvent,
 							persister,
-							entityKey
-					);
+							entityKey );
 				}
 
 				if ( managedEntity != null ) {
@@ -279,9 +271,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					ids = nonManagedIds.toArray(
 							(Serializable[]) Array.newInstance(
 									ids.getClass().getComponentType(),
-									nonManagedIds.size()
-							)
-					);
+									nonManagedIds.size() ) );
 				}
 			}
 		}
@@ -294,20 +284,18 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		else {
 			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
 					persister.getIdentifierType().getColumnSpan( session.getFactory() ),
-					numberOfIdsLeft
-			);
+					numberOfIdsLeft );
 		}
 
 		int idPosition = 0;
 		while ( numberOfIdsLeft > 0 ) {
-			int batchSize =  Math.min( numberOfIdsLeft, maxBatchSize );
+			int batchSize = Math.min( numberOfIdsLeft, maxBatchSize );
 			final DynamicEntityLoader batchingLoader = new DynamicEntityLoader(
 					persister,
 					batchSize,
 					lockOptions,
 					session.getFactory(),
-					session.getLoadQueryInfluencers()
-			);
+					session.getLoadQueryInfluencers() );
 
 			Serializable[] idsInBatch = new Serializable[batchSize];
 			System.arraycopy( ids, idPosition, idsInBatch, 0, batchSize );
@@ -339,7 +327,6 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		return qp;
 	}
 
-
 	@Override
 	protected UniqueEntityLoader buildBatchingLoader(
 			OuterJoinLoadable persister,
@@ -361,6 +348,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 	}
 
 	public static class DynamicBatchingEntityLoader extends BatchingEntityLoader {
+
 		private final int maxBatchSize;
 		private final UniqueEntityLoader singleKeyLoader;
 		private final DynamicEntityLoader dynamicLoader;
@@ -401,7 +389,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 
 			final int numberOfIds = ArrayHelper.countNonNull( batch );
 			if ( numberOfIds <= 1 ) {
-				final Object result =  singleKeyLoader.load( id, optionalObject, session );
+				final Object result = singleKeyLoader.load( id, optionalObject, session );
 				if ( result == null ) {
 					// There was no entity with the specified ID. Make sure the EntityKey does not remain
 					// in the batch to avoid including it in future batches that get executed.
@@ -429,9 +417,9 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		}
 	}
 
-
 	private static class DynamicEntityLoader extends EntityLoader {
-		// todo : see the discussion on org.hibernate.loader.collection.DynamicBatchingCollectionInitializerBuilder.DynamicBatchingCollectionLoader
+		// todo : see the discussion on
+		// org.hibernate.loader.collection.DynamicBatchingCollectionInitializerBuilder.DynamicBatchingCollectionLoader
 
 		private final String sqlTemplate;
 		private final String alias;
@@ -459,14 +447,14 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					-1,
 					lockMode,
 					factory,
-					loadQueryInfluencers) {
+					loadQueryInfluencers ) {
+
 				@Override
 				protected StringBuilder whereString(String alias, String[] columnNames, int batchSize) {
 					return StringHelper.buildBatchFetchRestrictionFragment(
 							alias,
 							columnNames,
-							getFactory().getDialect()
-					);
+							getFactory().getDialect() );
 				}
 			};
 
@@ -480,8 +468,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 						"SQL-template for dynamic entity [%s] batch-fetching [%s] : %s",
 						entityName,
 						lockMode,
-						sqlTemplate
-				);
+						sqlTemplate );
 			}
 		}
 
@@ -504,8 +491,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					ids,
 					alias,
 					persister.getKeyColumnNames(),
-					session.getJdbcServices().getJdbcEnvironment().getDialect()
-			);
+					session.getJdbcServices().getJdbcEnvironment().getDialect() );
 
 			try {
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
@@ -538,24 +524,20 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 					persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
 				}
 			}
-			catch ( SQLException sqle ) {
+			catch (SQLException sqle) {
 				throw session.getJdbcServices().getSqlExceptionHelper().convert(
 						sqle,
 						"could not load an entity batch: " + MessageHelper.infoString(
 								getEntityPersisters()[0],
 								ids,
-								session.getFactory()
-						),
-						sql
-				);
+								session.getFactory() ),
+						sql );
 			}
 		}
 
 		private List doTheLoad(String sql, QueryParameters queryParameters, SharedSessionContractImplementor session) throws SQLException {
 			final RowSelection selection = queryParameters.getRowSelection();
-			final int maxRows = LimitHelper.hasMaxRows( selection ) ?
-					selection.getMaxRows() :
-					Integer.MAX_VALUE;
+			final int maxRows = LimitHelper.hasMaxRows( selection ) ? selection.getMaxRows() : Integer.MAX_VALUE;
 
 			final List<AfterLoadAction> afterLoadActions = new ArrayList<>();
 			final SqlStatementWrapper wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );

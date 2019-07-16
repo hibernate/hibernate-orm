@@ -17,9 +17,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
 /**
- * MessageHelper methods for rendering log messages relating to managed
- * entities and collections typically used in log statements and exception
- * messages.
+ * MessageHelper methods for rendering log messages relating to managed entities and collections typically used in log
+ * statements and exception messages.
  *
  * @author Max Andersen, Gavin King
  */
@@ -28,12 +27,10 @@ public final class MessageHelper {
 	private MessageHelper() {
 	}
 
-
 	// entities ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Generate an info message string relating to a particular entity,
-	 * based on the given entityName and id.
+	 * Generate an info message string relating to a particular entity, based on the given entityName and id.
 	 *
 	 * @param entityName The defined entity name.
 	 * @param id The entity id value.
@@ -42,7 +39,7 @@ public final class MessageHelper {
 	public static String infoString(String entityName, Serializable id) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
-		if( entityName == null ) {
+		if ( entityName == null ) {
 			s.append( "<null entity name>" );
 		}
 		else {
@@ -69,14 +66,11 @@ public final class MessageHelper {
 	 * @param factory The session factory - Could be null!
 	 * @return An info string, in the form [FooBar#1]
 	 */
-	public static String infoString(
-			EntityPersister persister,
-			Object id, 
-			SessionFactoryImplementor factory) {
+	public static String infoString(EntityPersister persister, Object id, SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		Type idType;
-		if( persister == null ) {
+		if ( persister == null ) {
 			s.append( "<null EntityPersister>" );
 			idType = null;
 		}
@@ -109,6 +103,60 @@ public final class MessageHelper {
 	}
 
 	/**
+	 * Generate an info message string relating to a particular entity with tenant id.
+	 *
+	 * @param persister The persister for the entity
+	 * @param id The entity id value
+	 * @param factory The session factory - Could be null!
+	 * @param tenantId - Could be null!
+	 * @return An info string, in the form [FooBar#1]
+	 */
+	public static String infoString(EntityPersister persister, Object id, SessionFactoryImplementor factory,
+			String tenandtId) {
+		StringBuilder s = new StringBuilder();
+		s.append( '[' );
+		Type idType;
+		if ( persister == null ) {
+			s.append( "<null EntityPersister>" );
+			idType = null;
+		}
+		else {
+			s.append( persister.getEntityName() );
+			idType = persister.getIdentifierType();
+		}
+		s.append( '#' );
+
+		if ( id == null ) {
+			s.append( "<null>" );
+		}
+		else {
+			if ( idType == null ) {
+				s.append( id );
+			}
+			else {
+				if ( factory != null ) {
+					s.append( idType.toLoggableString( id, factory ) );
+				}
+				else {
+					s.append( "<not loggable>" );
+				}
+			}
+		}
+		s.append( '|' );
+		if ( tenandtId != null ) {
+			s.append( tenandtId );
+		}
+		else {
+			s.append( "<null tenant id>" );
+		}
+
+		s.append( ']' );
+
+		return s.toString();
+
+	}
+
+	/**
 	 * Generate an info message string relating to a particular entity,.
 	 *
 	 * @param persister The persister for the entity
@@ -117,14 +165,11 @@ public final class MessageHelper {
 	 * @param factory The session factory
 	 * @return An info string, in the form [FooBar#1]
 	 */
-	public static String infoString(
-			EntityPersister persister, 
-			Object id, 
-			Type identifierType,
+	public static String infoString(EntityPersister persister, Object id, Type identifierType,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
-		if( persister == null ) {
+		if ( persister == null ) {
 			s.append( "<null EntityPersister>" );
 		}
 		else {
@@ -151,21 +196,18 @@ public final class MessageHelper {
 	 * @param factory The session factory
 	 * @return An info string, in the form [FooBar#<1,2,3>]
 	 */
-	public static String infoString(
-			EntityPersister persister, 
-			Serializable[] ids, 
-			SessionFactoryImplementor factory) {
+	public static String infoString(EntityPersister persister, Serializable[] ids, SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
-		if( persister == null ) {
+		if ( persister == null ) {
 			s.append( "<null EntityPersister>" );
 		}
 		else {
 			s.append( persister.getEntityName() );
 			s.append( "#<" );
-			for ( int i=0; i<ids.length; i++ ) {
+			for ( int i = 0; i < ids.length; i++ ) {
 				s.append( persister.getIdentifierType().toLoggableString( ids[i], factory ) );
-				if ( i < ids.length-1 ) {
+				if ( i < ids.length - 1 ) {
 					s.append( ", " );
 				}
 			}
@@ -197,8 +239,7 @@ public final class MessageHelper {
 	}
 
 	/**
-	 * Generate an info message string relating to a given property value
-	 * for an entity.
+	 * Generate an info message string relating to a given property value for an entity.
 	 *
 	 * @param entityName The entity name
 	 * @param propertyName The name of the property
@@ -206,11 +247,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
 	public static String infoString(String entityName, String propertyName, Object key) {
-		StringBuilder s = new StringBuilder()
-				.append( '[' )
-				.append( entityName )
-				.append( '.' )
-				.append( propertyName )
+		StringBuilder s = new StringBuilder().append( '[' ).append( entityName ).append( '.' ).append( propertyName )
 				.append( '#' );
 
 		if ( key == null ) {
@@ -223,13 +260,11 @@ public final class MessageHelper {
 		return s.toString();
 	}
 
-
 	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
+
 	/**
-	 * Generate an info message string relating to a particular managed
-	 * collection.  Attempts to intelligently handle property-refs issues
-	 * where the collection key is not the same as the owner key.
+	 * Generate an info message string relating to a particular managed collection. Attempts to intelligently handle
+	 * property-refs issues where the collection key is not the same as the owner key.
 	 *
 	 * @param persister The persister for the collection
 	 * @param collection The collection itself
@@ -237,12 +272,9 @@ public final class MessageHelper {
 	 * @param session The session
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
-	public static String collectionInfoString( 
-			CollectionPersister persister,
-			PersistentCollection collection,
-			Serializable collectionKey,
-			SharedSessionContractImplementor session ) {
-		
+	public static String collectionInfoString(CollectionPersister persister, PersistentCollection collection,
+			Serializable collectionKey, SharedSessionContractImplementor session) {
+
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if ( persister == null ) {
@@ -251,23 +283,22 @@ public final class MessageHelper {
 		else {
 			s.append( persister.getRole() );
 			s.append( '#' );
-			
-			Type ownerIdentifierType = persister.getOwnerEntityPersister()
-					.getIdentifierType();
+
+			Type ownerIdentifierType = persister.getOwnerEntityPersister().getIdentifierType();
 			Serializable ownerKey;
 			// TODO: Is it redundant to attempt to use the collectionKey,
 			// or is always using the owner id sufficient?
-			if ( collectionKey.getClass().isAssignableFrom( 
-					ownerIdentifierType.getReturnedClass() ) ) {
+			if ( collectionKey.getClass().isAssignableFrom( ownerIdentifierType.getReturnedClass() ) ) {
 				ownerKey = collectionKey;
 			}
 			else {
 				Object collectionOwner = collection == null ? null : collection.getOwner();
-				EntityEntry entry = collectionOwner == null ? null : session.getPersistenceContext().getEntry(collectionOwner);
+				EntityEntry entry = collectionOwner == null
+						? null
+						: session.getPersistenceContext().getEntry( collectionOwner );
 				ownerKey = entry == null ? null : entry.getId();
 			}
-			s.append( ownerIdentifierType.toLoggableString( 
-					ownerKey, session.getFactory() ) );
+			s.append( ownerIdentifierType.toLoggableString( ownerKey, session.getFactory() ) );
 		}
 		s.append( ']' );
 
@@ -275,17 +306,14 @@ public final class MessageHelper {
 	}
 
 	/**
-	 * Generate an info message string relating to a series of managed
-	 * collections.
+	 * Generate an info message string relating to a series of managed collections.
 	 *
 	 * @param persister The persister for the collections
 	 * @param ids The id values of the owners
 	 * @param factory The session factory
 	 * @return An info string, in the form [Foo.bars#<1,2,3>]
 	 */
-	public static String collectionInfoString(
-			CollectionPersister persister, 
-			Serializable[] ids, 
+	public static String collectionInfoString(CollectionPersister persister, Serializable[] ids,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
@@ -297,7 +325,7 @@ public final class MessageHelper {
 			s.append( "#<" );
 			for ( int i = 0; i < ids.length; i++ ) {
 				addIdToCollectionInfoString( persister, ids[i], factory, s );
-				if ( i < ids.length-1 ) {
+				if ( i < ids.length - 1 ) {
 					s.append( ", " );
 				}
 			}
@@ -308,17 +336,14 @@ public final class MessageHelper {
 	}
 
 	/**
-	 * Generate an info message string relating to a particular managed
-	 * collection.
+	 * Generate an info message string relating to a particular managed collection.
 	 *
 	 * @param persister The persister for the collection
 	 * @param id The id value of the owner
 	 * @param factory The session factory
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
-	public static String collectionInfoString(
-			CollectionPersister persister, 
-			Serializable id, 
+	public static String collectionInfoString(CollectionPersister persister, Serializable id,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
@@ -340,23 +365,18 @@ public final class MessageHelper {
 
 		return s.toString();
 	}
-	
-	private static void addIdToCollectionInfoString(
-			CollectionPersister persister,
-			Serializable id,
-			SessionFactoryImplementor factory,
-			StringBuilder s ) {
+
+	private static void addIdToCollectionInfoString(CollectionPersister persister, Serializable id,
+			SessionFactoryImplementor factory, StringBuilder s) {
 		// Need to use the identifier type of the collection owner
 		// since the incoming is value is actually the owner's id.
 		// Using the collection's key type causes problems with
 		// property-ref keys.
 		// Also need to check that the expected identifier type matches
-		// the given ID.  Due to property-ref keys, the collection key
+		// the given ID. Due to property-ref keys, the collection key
 		// may not be the owner key.
-		Type ownerIdentifierType = persister.getOwnerEntityPersister()
-				.getIdentifierType();
-		if ( id.getClass().isAssignableFrom( 
-				ownerIdentifierType.getReturnedClass() ) ) {
+		Type ownerIdentifierType = persister.getOwnerEntityPersister().getIdentifierType();
+		if ( id.getClass().isAssignableFrom( ownerIdentifierType.getReturnedClass() ) ) {
 			s.append( ownerIdentifierType.toLoggableString( id, factory ) );
 		}
 		else {
@@ -367,8 +387,7 @@ public final class MessageHelper {
 	}
 
 	/**
-	 * Generate an info message string relating to a particular managed
-	 * collection.
+	 * Generate an info message string relating to a particular managed collection.
 	 *
 	 * @param role The role-name of the collection
 	 * @param id The id value of the owner
@@ -377,7 +396,7 @@ public final class MessageHelper {
 	public static String collectionInfoString(String role, Serializable id) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
-		if( role == null ) {
+		if ( role == null ) {
 			s.append( "<unreferenced>" );
 		}
 		else {

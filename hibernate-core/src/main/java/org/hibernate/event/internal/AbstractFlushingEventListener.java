@@ -40,7 +40,6 @@ import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.internal.util.collections.LazyIterator;
 import org.hibernate.persister.entity.EntityPersister;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -64,9 +63,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Coordinates the processing necessary to get things ready for executions
-	 * as db calls by preping the session caches and moving the appropriate
-	 * entities and collections to their respective execution queues.
+	 * Coordinates the processing necessary to get things ready for executions as db calls by preping the session caches
+	 * and moving the appropriate entities and collections to their respective execution queues.
 	 *
 	 * @param event The flush event.
 	 * @throws HibernateException Error flushing caches to execution queues.
@@ -98,14 +96,14 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			event.setNumberOfCollectionsProcessed( collectionCount );
 		}
 		finally {
-			persistenceContext.setFlushing(false);
+			persistenceContext.setFlushing( false );
 		}
 
-		//some statistics
+		// some statistics
 		logFlushResults( event );
 	}
 
-	@SuppressWarnings( value = {"unchecked"} )
+	@SuppressWarnings(value = { "unchecked" })
 	private void logFlushResults(FlushEvent event) {
 		if ( !LOG.isDebugEnabled() ) {
 			return;
@@ -117,33 +115,29 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				session.getActionQueue().numberOfInsertions(),
 				session.getActionQueue().numberOfUpdates(),
 				session.getActionQueue().numberOfDeletions(),
-				persistenceContext.getNumberOfManagedEntities()
-		);
+				persistenceContext.getNumberOfManagedEntities() );
 		LOG.debugf(
 				"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
 				session.getActionQueue().numberOfCollectionCreations(),
 				session.getActionQueue().numberOfCollectionUpdates(),
 				session.getActionQueue().numberOfCollectionRemovals(),
-				persistenceContext.getCollectionEntries().size()
-		);
+				persistenceContext.getCollectionEntries().size() );
 		new EntityPrinter( session.getFactory() ).toString(
-				persistenceContext.getEntitiesByKey().entrySet()
-		);
+				persistenceContext.getEntitiesByKey().entrySet() );
 	}
 
 	/**
-	 * process cascade save/update at the start of a flush to discover
-	 * any newly referenced entity that must be passed to saveOrUpdate(),
-	 * and also apply orphan delete
+	 * process cascade save/update at the start of a flush to discover any newly referenced entity that must be passed
+	 * to saveOrUpdate(), and also apply orphan delete
 	 */
 	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext) throws HibernateException {
 
 		LOG.debug( "Processing flush-time cascades" );
 
 		final Object anything = getAnything();
-		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
-		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
-//		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
+		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
+		for ( Map.Entry<Object, EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
+			// for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			EntityEntry entry = (EntityEntry) me.getValue();
 			Status status = entry.getStatus();
 			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
@@ -153,7 +147,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, Object anything)
-	throws HibernateException {
+			throws HibernateException {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {
 			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
@@ -182,8 +176,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	/**
-	 * Initialize the flags of the CollectionEntry, including the
-	 * dirty check.
+	 * Initialize the flags of the CollectionEntry, including the dirty check.
 	 */
 	private void prepareCollectionFlushes(PersistenceContext persistenceContext) throws HibernateException {
 
@@ -192,16 +185,14 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.debug( "Dirty checking collections" );
 
-		for ( Map.Entry<PersistentCollection,CollectionEntry> entry :
-				IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+		for ( Map.Entry<PersistentCollection, CollectionEntry> entry : IdentityMap
+				.concurrentEntries( (Map<PersistentCollection, CollectionEntry>) persistenceContext.getCollectionEntries() ) ) {
 			entry.getValue().preFlush( entry.getKey() );
 		}
 	}
 
 	/**
-	 * 1. detect any dirty entities
-	 * 2. schedule any entity updates
-	 * 3. search out any reachable collections
+	 * 1. detect any dirty entities 2. schedule any entity updates 3. search out any reachable collections
 	 */
 	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext) throws HibernateException {
 
@@ -219,10 +210,10 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		// So this needs to be safe from concurrent modification problems.
 
-		final Map.Entry<Object,EntityEntry>[] entityEntries = persistenceContext.reentrantSafeEntityEntries();
+		final Map.Entry<Object, EntityEntry>[] entityEntries = persistenceContext.reentrantSafeEntityEntries();
 		final int count = entityEntries.length;
 
-		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
+		for ( Map.Entry<Object, EntityEntry> me : entityEntries ) {
 
 			// Update the status of the object and if necessary, schedule an update
 
@@ -243,20 +234,18 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	/**
-	 * process any unreferenced collections and then inspect all known collections,
-	 * scheduling creates/removes/updates
+	 * process any unreferenced collections and then inspect all known collections, scheduling creates/removes/updates
 	 */
 	@SuppressWarnings("unchecked")
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext) throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
 
-		final Map.Entry<PersistentCollection,CollectionEntry>[] entries = IdentityMap.concurrentEntries(
-				(Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries()
-		);
+		final Map.Entry<PersistentCollection, CollectionEntry>[] entries = IdentityMap.concurrentEntries(
+				(Map<PersistentCollection, CollectionEntry>) persistenceContext.getCollectionEntries() );
 
 		final int count = entries.length;
 
-		for ( Map.Entry<PersistentCollection,CollectionEntry> me : entries ) {
+		for ( Map.Entry<PersistentCollection, CollectionEntry> me : entries ) {
 			CollectionEntry ce = me.getValue();
 			if ( !ce.isReached() && !ce.isIgnore() ) {
 				Collections.processUnreachableCollection( me.getKey(), session );
@@ -268,8 +257,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
 
 		ActionQueue actionQueue = session.getActionQueue();
-		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
-			IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+		for ( Map.Entry<PersistentCollection, CollectionEntry> me : IdentityMap
+				.concurrentEntries( (Map<PersistentCollection, CollectionEntry>) persistenceContext.getCollectionEntries() ) ) {
 			PersistentCollection coll = me.getKey();
 			CollectionEntry ce = me.getValue();
 
@@ -280,9 +269,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 								coll,
 								ce.getCurrentPersister(),
 								ce.getCurrentKey(),
-								session
-							)
-					);
+								session ) );
 			}
 			if ( ce.isDoremove() ) {
 				session.getInterceptor().onCollectionRemove( coll, ce.getLoadedKey() );
@@ -291,10 +278,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 								coll,
 								ce.getLoadedPersister(),
 								ce.getLoadedKey(),
-								ce.isSnapshotEmpty(coll),
-								session
-							)
-					);
+								ce.isSnapshotEmpty( coll ),
+								session ) );
 			}
 			if ( ce.isDoupdate() ) {
 				session.getInterceptor().onCollectionUpdate( coll, ce.getLoadedKey() );
@@ -303,10 +288,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 								coll,
 								ce.getLoadedPersister(),
 								ce.getLoadedKey(),
-								ce.isSnapshotEmpty(coll),
-								session
-							)
-					);
+								ce.isSnapshotEmpty( coll ),
+								session ) );
 			}
 
 			// todo : I'm not sure the !wasInitialized part should really be part of this check
@@ -316,9 +299,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 								coll,
 								ce.getLoadedPersister(),
 								ce.getLoadedKey(),
-								session
-							)
-					);
+								session ) );
 			}
 
 		}
@@ -329,13 +310,14 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	/**
-	 * Execute all SQL (and second-level cache updates) in a special order so that foreign-key constraints cannot
-	 * be violated: <ol>
-	 * <li> Inserts, in the order they were performed
-	 * <li> Updates
-	 * <li> Deletion of collection elements
-	 * <li> Insertion of collection elements
-	 * <li> Deletes, in the order they were performed
+	 * Execute all SQL (and second-level cache updates) in a special order so that foreign-key constraints cannot be
+	 * violated:
+	 * <ol>
+	 * <li>Inserts, in the order they were performed
+	 * <li>Updates
+	 * <li>Deletion of collection elements
+	 * <li>Insertion of collection elements
+	 * <li>Deletes, in the order they were performed
 	 * </ol>
 	 *
 	 * @param session The session being flushed
@@ -344,8 +326,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.trace( "Executing flush" );
 
 		// IMPL NOTE : here we alter the flushing flag of the persistence context to allow
-		//		during-flush callbacks more leniency in regards to initializing proxies and
-		//		lazy collections during their processing.
+		// during-flush callbacks more leniency in regards to initializing proxies and
+		// lazy collections during their processing.
 		// For more information, see HHH-2763
 		try {
 			session.getJdbcCoordinator().flushBeginning();
@@ -361,15 +343,13 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		}
 	}
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Post-flushing section
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * 1. Recreate the collection key -> collection map
-	 * 2. rebuild the collection entries
-	 * 3. call Interceptor.postFlush()
+	 * 1. Recreate the collection key -> collection map 2. rebuild the collection entries 3. call
+	 * Interceptor.postFlush()
 	 */
 	protected void postFlush(SessionImplementor session) throws HibernateException {
 
@@ -377,7 +357,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		persistenceContext.getCollectionsByKey().clear();
-		
+
 		// the database has changed now, so the subselect results need to be invalidated
 		// the batch fetching queues should also be cleared - especially the collection batch fetching one
 		persistenceContext.getBatchFetchQueue().clear();
@@ -385,21 +365,20 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		for ( Map.Entry<PersistentCollection, CollectionEntry> me : IdentityMap.concurrentEntries( persistenceContext.getCollectionEntries() ) ) {
 			CollectionEntry collectionEntry = me.getValue();
 			PersistentCollection persistentCollection = me.getKey();
-			collectionEntry.postFlush(persistentCollection);
+			collectionEntry.postFlush( persistentCollection );
 			if ( collectionEntry.getLoadedPersister() == null ) {
-				//if the collection is dereferenced, unset its session reference and remove from the session cache
-				//iter.remove(); //does not work, since the entrySet is not backed by the set
+				// if the collection is dereferenced, unset its session reference and remove from the session cache
+				// iter.remove(); //does not work, since the entrySet is not backed by the set
 				persistentCollection.unsetSession( session );
 				persistenceContext.getCollectionEntries()
-						.remove(persistentCollection);
+						.remove( persistentCollection );
 			}
 			else {
-				//otherwise recreate the mapping between the collection and its key
+				// otherwise recreate the mapping between the collection and its key
 				CollectionKey collectionKey = new CollectionKey(
 						collectionEntry.getLoadedPersister(),
-						collectionEntry.getLoadedKey()
-				);
-				persistenceContext.getCollectionsByKey().put(collectionKey, persistentCollection);
+						collectionEntry.getLoadedKey(), session.getTenantIdentifier() );
+				persistenceContext.getCollectionsByKey().put( collectionKey, persistentCollection );
 			}
 		}
 

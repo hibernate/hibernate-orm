@@ -25,6 +25,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -162,7 +163,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						new LazyInitializationWork<Boolean>() {
 							@Override
 							public Boolean doWork() {
-								final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
+								final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
 
 								if ( entry != null ) {
 									final CollectionPersister persister = entry.getLoadedPersister();
@@ -253,7 +254,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				( (Session) session ).beginTransaction();
 			}
 
-			session.getPersistenceContext().addUninitializedDetachedCollection(
+			session.getPersistenceContextInternal().addUninitializedDetachedCollection(
 					session.getFactory().getCollectionPersister( getRole() ),
 					this
 			);
@@ -289,7 +290,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		final SessionFactoryImplementor sf = (SessionFactoryImplementor)
 				SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
 		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
-		session.getPersistenceContext().setDefaultReadOnly( true );
+		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setFlushMode( FlushMode.MANUAL );
 		return session;
 	}
@@ -300,7 +301,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 					new LazyInitializationWork<Boolean>() {
 						@Override
 						public Boolean doWork() {
-							final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
+							final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
 							final CollectionPersister persister = entry.getLoadedPersister();
 							if ( persister.isExtraLazy() ) {
 								if ( hasQueuedOperations() ) {
@@ -328,7 +329,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 					new LazyInitializationWork<Boolean>() {
 						@Override
 						public Boolean doWork() {
-							final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
+							final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
 							final CollectionPersister persister = entry.getLoadedPersister();
 							if ( persister.isExtraLazy() ) {
 								if ( hasQueuedOperations() ) {
@@ -360,7 +361,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 				@Override
 				public Object doWork() {
-					final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
+					final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
 					final CollectionPersister persister = entry.getLoadedPersister();
 					isExtraLazy = persister.isExtraLazy();
 					if ( isExtraLazy ) {
@@ -394,7 +395,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	protected boolean isConnectedToSession() {
 		return session != null
 				&& session.isOpen()
-				&& session.getPersistenceContext().containsCollection( this );
+				&& session.getPersistenceContextInternal().containsCollection( this );
 	}
 
 	protected boolean isInitialized() {
@@ -449,7 +450,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 */
 	@SuppressWarnings({"JavaDoc"})
 	protected boolean isInverseCollection() {
-		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
+		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
 		return ce != null && ce.getLoadedPersister().isInverse();
 	}
 
@@ -459,7 +460,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 */
 	@SuppressWarnings({"JavaDoc"})
 	protected boolean isInverseCollectionNoOrphanDelete() {
-		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
+		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
 		return ce != null
 				&&
 				ce.getLoadedPersister().isInverse() &&
@@ -472,7 +473,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 */
 	@SuppressWarnings({"JavaDoc"})
 	protected boolean isInverseOneToManyOrNoOrphanDelete() {
-		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
+		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
 		return ce != null
 				&& ce.getLoadedPersister().isInverse()
 				&& ( ce.getLoadedPersister().isOneToMany() || !ce.getLoadedPersister().hasOrphanDelete() );
@@ -714,7 +715,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			sb.append( MessageHelper.collectionInfoString( roleCurrent, keyCurrent ) );
 		}
 		else {
-			final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
+			final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( this );
 			if ( ce != null ) {
 				sb.append(
 						MessageHelper.collectionInfoString(
@@ -1249,9 +1250,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		// collect EntityIdentifier(s) of the *current* elements - add them into a HashSet for fast access
 		final java.util.Set currentIds = new HashSet();
 		final java.util.Set currentSaving = new IdentitySet();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		for ( Object current : currentElements ) {
 			if ( current != null && ForeignKeys.isNotTransient( entityName, current, null, session ) ) {
-				final EntityEntry ee = session.getPersistenceContext().getEntry( current );
+				final EntityEntry ee = persistenceContext.getEntry( current );
 				if ( ee != null && ee.getStatus() == Status.SAVING ) {
 					currentSaving.add( current );
 				}

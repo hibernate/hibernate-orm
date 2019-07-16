@@ -80,7 +80,7 @@ public class PropertyAccessStrategyIndexBackRefImpl implements PropertyAccessStr
 				return PropertyAccessStrategyBackRefImpl.UNKNOWN;
 			}
 			else {
-				return session.getPersistenceContext().getIndexInOwner( entityName, propertyName, owner, mergeMap );
+				return session.getPersistenceContextInternal().getIndexInOwner( entityName, propertyName, owner, mergeMap );
 			}
 		}
 

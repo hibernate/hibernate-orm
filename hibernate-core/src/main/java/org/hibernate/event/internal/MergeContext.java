@@ -374,7 +374,7 @@ class MergeContext implements Map {
 	}
 
 	private String printEntity(Object entity) {
-		if ( session.getPersistenceContext().getEntry( entity ) != null ) {
+		if ( session.getPersistenceContextInternal().getEntry( entity ) != null ) {
 			return MessageHelper.infoString( session.getEntityName( entity ), session.getIdentifier( entity ) );
 		}
 		// Entity was not found in current persistence context. Use Object#toString() method.

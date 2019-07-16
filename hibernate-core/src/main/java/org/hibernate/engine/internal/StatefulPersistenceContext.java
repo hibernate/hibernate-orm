@@ -229,7 +229,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		for ( Entry<Object, EntityEntry> objectEntityEntryEntry : entityEntryContext.reentrantSafeEntityEntries() ) {
-			// todo : I dont think this need be reentrant safe
 			if ( objectEntityEntryEntry.getKey() instanceof PersistentAttributeInterceptable ) {
 				final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) objectEntityEntryEntry.getKey() )
 						.$$_hibernate_getInterceptor();
@@ -239,9 +238,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 		}
 
-		for ( Map.Entry<PersistentCollection, CollectionEntry> aCollectionEntryArray : IdentityMap.concurrentEntries( collectionEntries ) ) {
-			aCollectionEntryArray.getKey().unsetSession( getSession() );
-		}
+		final SharedSessionContractImplementor session = getSession();
+		IdentityMap.onEachKey( collectionEntries, k -> k.unsetSession( session ) );
 
 		arrayHolders.clear();
 		entitiesByKey.clear();
@@ -727,6 +725,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			return impl;
 		}
 		return proxyFor( e.getPersister(), e.getEntityKey(), impl );
+	}
+
+	@Override
+	public void addEnhancedProxy(EntityKey key, PersistentAttributeInterceptable entity) {
+		entitiesByKey.put( key, entity );
 	}
 
 	@Override
@@ -1375,7 +1378,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			setEntityReadOnly( object, readOnly );
 			// PersistenceContext.proxyFor( entity ) returns entity if there is no proxy for that entity
 			// so need to check the return value to be sure it is really a proxy
-			final Object maybeProxy = getSession().getPersistenceContext().proxyFor( object );
+			final Object maybeProxy = getSession().getPersistenceContextInternal().proxyFor( object );
 			if ( maybeProxy instanceof HibernateProxy ) {
 				setProxyReadOnly( (HibernateProxy) maybeProxy, readOnly );
 			}

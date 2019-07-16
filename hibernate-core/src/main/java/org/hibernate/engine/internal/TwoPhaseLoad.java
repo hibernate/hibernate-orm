@@ -83,7 +83,7 @@ public final class TwoPhaseLoad {
 			final LockMode lockMode,
 			final SharedSessionContractImplementor session) {
 		final Object version = Versioning.getVersion( values, persister );
-		session.getPersistenceContext().addEntry(
+		session.getPersistenceContextInternal().addEntry(
 				object,
 				Status.LOADING,
 				values,
@@ -152,7 +152,7 @@ public final class TwoPhaseLoad {
 		final SharedSessionContractImplementor session,
 		final PreLoadEvent preLoadEvent,
 		final Iterable<PreLoadEventListener> preLoadEventListeners) {
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		if ( entityEntry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
@@ -167,7 +167,7 @@ public final class TwoPhaseLoad {
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent,
 			final Iterable<PreLoadEventListener> preLoadEventListeners) throws HibernateException {
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = entityEntry.getPersister();
 		final Serializable id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
@@ -264,7 +264,7 @@ public final class TwoPhaseLoad {
 			// 		2) Session#clear + some form of load
 			//
 			// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
-			if ( session.getPersistenceContext().wasInsertedDuringTransaction( persister, id ) ) {
+			if ( session.getPersistenceContextInternal().wasInsertedDuringTransaction( persister, id ) ) {
 				cache.update(
 						session,
 						cacheKey,
@@ -380,18 +380,17 @@ public final class TwoPhaseLoad {
 			String entityName,
 			String associationName,
 			Type type) {
-		if ( type.isAssociationType() || type.isCollectionType() ) {
+		// Performance: check type.isCollectionType() first, as type.isAssociationType() is megamorphic
+		if ( type.isCollectionType() || type.isAssociationType()  ) {
 			Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );
 
-			if ( LOG.isDebugEnabled() ) {
-				if ( overridingEager != null ) {
-					LOG.debugf(
-							"Overriding eager fetching using active fetch profile. EntityName: %s, associationName: %s, eager fetching: %s",
-							entityName,
-							associationName,
-							overridingEager
-					);
-				}
+			if ( overridingEager != null ) {
+				LOG.debugf(
+						"Overriding eager fetching using active fetch profile. EntityName: %s, associationName: %s, eager fetching: %s",
+						entityName,
+						associationName,
+						overridingEager
+				);
 			}
 
 			return overridingEager;
@@ -438,7 +437,7 @@ public final class TwoPhaseLoad {
 
 		if ( session.isEventSource() ) {
 			final PersistenceContext persistenceContext
-					= session.getPersistenceContext();
+					= session.getPersistenceContextInternal();
 			final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 
 			postLoadEvent.setEntity( entity ).setId( entityEntry.getId() ).setPersister( entityEntry.getPersister() );
@@ -497,7 +496,7 @@ public final class TwoPhaseLoad {
 			final EntityPersister persister,
 			final LockMode lockMode,
 			final SharedSessionContractImplementor session) {
-		session.getPersistenceContext().addEntity(
+		session.getPersistenceContextInternal().addEntity(
 				object,
 				Status.LOADING,
 				null,
@@ -527,7 +526,7 @@ public final class TwoPhaseLoad {
 			final LockMode lockMode,
 			final Object version,
 			final SharedSessionContractImplementor session) {
-		session.getPersistenceContext().addEntity(
+		session.getPersistenceContextInternal().addEntity(
 				object,
 				Status.LOADING,
 				null,

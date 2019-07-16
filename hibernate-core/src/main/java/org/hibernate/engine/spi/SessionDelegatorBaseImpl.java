@@ -465,6 +465,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public PersistenceContext getPersistenceContextInternal() {
+		return delegate.getPersistenceContextInternal();
+	}
+
+	@Override
 	public SessionEventListenerManager getEventListenerManager() {
 		return delegate.getEventListenerManager();
 	}

@@ -6,9 +6,11 @@
  */
 package org.hibernate.tuple.entity;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
@@ -16,10 +18,13 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -128,6 +133,46 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 	@Override
 	public LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException {
 		return (LazyAttributeLoadingInterceptor) extractLazyInterceptor( entity );
+	}
+
+	@Override
+	public PersistentAttributeInterceptable createEnhancedProxy(EntityKey entityKey, boolean addEmptyEntry, SharedSessionContractImplementor session) {
+		final EntityPersister persister = entityKey.getPersister();
+		final Serializable identifier = entityKey.getIdentifier();
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+
+		// first, instantiate the entity instance to use as the proxy
+		final PersistentAttributeInterceptable entity = (PersistentAttributeInterceptable) persister.getEntityTuplizer().instantiate( identifier, session );
+
+		// add the entity (proxy) instance to the PC
+		persistenceContext.addEnhancedProxy( entityKey, entity );
+
+		// if requested, add the "holder entry" to the PC
+		if ( addEmptyEntry ) {
+			persistenceContext.addEntry(
+					entity,
+					Status.MANAGED,
+					// loaded state
+					null,
+					// row-id
+					null,
+					identifier,
+					// version
+					null,
+					LockMode.NONE,
+					// we assume it exists in db
+					true,
+					persister,
+					true
+			);
+		}
+
+		// inject the interceptor
+		persister.getEntityMetamodel()
+				.getBytecodeEnhancementMetadata()
+				.injectEnhancedEntityAsProxyInterceptor( entity, entityKey, session );
+
+		return entity;
 	}
 
 	@Override

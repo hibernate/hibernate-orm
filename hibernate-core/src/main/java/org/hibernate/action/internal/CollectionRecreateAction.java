@@ -18,6 +18,7 @@ import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for recreating a collection
@@ -47,13 +48,15 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection collection = getCollection();
 		
 		preRecreate();
-		getPersister().recreate( collection, getKey(), getSession() );
-		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
+		final SharedSessionContractImplementor session = getSession();
+		getPersister().recreate( collection, getKey(), session);
+		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().recreateCollection( getPersister().getRole() );
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.recreateCollection( getPersister().getRole() );
 		}
 	}
 

@@ -272,7 +272,7 @@ public class BatchFetchNotFoundIgnoreDefaultStyleTest extends BaseCoreFunctional
 	private static void checkInBatchFetchQueue(long id, Session session, boolean expected) {
 		final SessionImplementor sessionImplementor = (SessionImplementor) session;
 		final EntityPersister persister = sessionImplementor.getFactory().getMetamodel().entityPersister( Task.class );
-		final BatchFetchQueue batchFetchQueue = sessionImplementor.getPersistenceContext().getBatchFetchQueue();
+		final BatchFetchQueue batchFetchQueue = sessionImplementor.getPersistenceContextInternal().getBatchFetchQueue();
 		assertEquals( expected, batchFetchQueue.containsEntityKey( new EntityKey( id, persister, session.getTenantIdentifier() ) ) );
 	}
 

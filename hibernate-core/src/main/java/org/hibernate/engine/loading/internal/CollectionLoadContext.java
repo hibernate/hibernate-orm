@@ -22,6 +22,7 @@ import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
@@ -158,6 +159,7 @@ public class CollectionLoadContext {
 		// the #endRead processing.
 		List<LoadingCollectionEntry> matches = null;
 		final Iterator itr = localLoadingCollectionKeys.iterator();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		while ( itr.hasNext() ) {
 			final CollectionKey collectionKey = (CollectionKey) itr.next();
 			final LoadingCollectionEntry lce = loadContexts.locateLoadingCollectionEntry( collectionKey );
@@ -170,7 +172,7 @@ public class CollectionLoadContext {
 				}
 				matches.add( lce );
 				if ( lce.getCollection().getOwner() == null ) {
-					session.getPersistenceContext().addUnownedCollection(
+					persistenceContext.addUnownedCollection(
 							new CollectionKey(
 									persister,
 									lce.getKey(), session.getTenantIdentifier() ),
@@ -299,7 +301,8 @@ public class CollectionLoadContext {
 	 * @param persister The persister
 	 */
 	private void addCollectionToCache(LoadingCollectionEntry lce, CollectionPersister persister) {
-		final SharedSessionContractImplementor session = getLoadContext().getPersistenceContext().getSession();
+		final PersistenceContext persistenceContext = getLoadContext().getPersistenceContext();
+		final SharedSessionContractImplementor session = persistenceContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 
 		if ( LOG.isDebugEnabled() ) {
@@ -322,7 +325,7 @@ public class CollectionLoadContext {
 
 		final Object version;
 		if ( persister.isVersioned() ) {
-			Object collectionOwner = getLoadContext().getPersistenceContext().getCollectionOwner( lce.getKey(), persister );
+			Object collectionOwner = persistenceContext.getCollectionOwner( lce.getKey(), persister );
 			if ( collectionOwner == null ) {
 				// generally speaking this would be caused by the collection key being defined by a property-ref, thus
 				// the collection key and the owner key would not match up. In this case, try to use the key of the
@@ -333,7 +336,7 @@ public class CollectionLoadContext {
 					final Object linkedOwner = lce.getCollection().getOwner();
 					if ( linkedOwner != null ) {
 						final Serializable ownerKey = persister.getOwnerEntityPersister().getIdentifier( linkedOwner, session );
-						collectionOwner = getLoadContext().getPersistenceContext().getCollectionOwner( ownerKey, persister );
+						collectionOwner = persistenceContext.getCollectionOwner( ownerKey, persister );
 					}
 				}
 				if ( collectionOwner == null ) {
@@ -343,7 +346,7 @@ public class CollectionLoadContext {
 									"] for second level caching" );
 				}
 			}
-			version = getLoadContext().getPersistenceContext().getEntry( collectionOwner ).getVersion();
+			version = persistenceContext.getEntry( collectionOwner ).getVersion();
 		}
 		else {
 			version = null;
@@ -361,7 +364,7 @@ public class CollectionLoadContext {
 		if ( persister.getElementType().isAssociationType() ) {
 			for ( Serializable id : entry.getState() ) {
 				EntityPersister entityPersister = ( (QueryableCollection) persister ).getElementPersister();
-				if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityPersister, id ) ) {
+				if ( persistenceContext.wasInsertedDuringTransaction( entityPersister, id ) ) {
 					isPutFromLoad = false;
 					break;
 				}

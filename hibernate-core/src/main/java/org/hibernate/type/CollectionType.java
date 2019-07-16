@@ -366,8 +366,9 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The collection owner's key
 	 */
 	public Serializable getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
+		final PersistenceContext pc = session.getPersistenceContextInternal();
 
-		EntityEntry entityEntry = session.getPersistenceContext().getEntry( owner );
+		EntityEntry entityEntry = pc.getEntry( owner );
 		if ( entityEntry == null ) {
 			// This just handles a particular case of component
 			// projection, perhaps get rid of it and throw an exception
@@ -630,7 +631,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		}
 
-		CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( result );
+		CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( result );
 		if ( ce != null ) {
 			ce.resetStoredSnapshot( result, targetSnapshot );
 		}
@@ -756,7 +757,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	public Object getCollection(Serializable key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
 
 		final CollectionPersister persister = getPersister( session );
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
 		final CollectionKey collectionKey = new CollectionKey( persister, key, session.getTenantIdentifier() );
 		// check if collection is currently being loaded

@@ -183,7 +183,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 		if ( isTemporarySession ) {
 			// Add an entry for this entity in the PC of the temp Session
-			session.getPersistenceContext().addEntity(
+			session.getPersistenceContextInternal().addEntity(
 					target,
 					Status.READ_ONLY,
 					// loaded state

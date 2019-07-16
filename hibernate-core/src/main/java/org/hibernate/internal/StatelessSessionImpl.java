@@ -24,6 +24,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -46,6 +47,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.tuple.entity.EntityMetamodel;
 
 /**
  * @author Gavin King
@@ -251,7 +253,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
-		if ( getPersistenceContext().isLoadFinished() ) {
+		if ( getPersistenceContextInternal().isLoadFinished() ) {
 			throw new SessionException( "proxies cannot be fetched by a stateless session" );
 		}
 		// unless we are still in the process of handling a top-level load
@@ -298,19 +300,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 			// first, check to see if we can use "bytecode proxies"
 
-			if ( allowBytecodeProxy
-					&& persister.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			if ( allowBytecodeProxy && bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
 
 				// we cannot use bytecode proxy for entities with subclasses
-				if ( !persister.getEntityMetamodel().hasSubclasses() ) {
-					final Object entity = persister.getEntityTuplizer().instantiate( id, this );
-
-					persister.getEntityMetamodel()
-							.getBytecodeEnhancementMetadata()
-							.injectEnhancedEntityAsProxyInterceptor( entity, entityKey, this );
-
-					getPersistenceContext().addEntity( entityKey, entity );
-					return entity;
+				if ( !entityMetamodel.hasSubclasses() ) {
+					return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
 			}
 
@@ -465,14 +461,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
 		checkOpen();
 
-		final Object result = getPersistenceContext().getEntity( key );
+		final PersistenceContext persistenceContext = getPersistenceContext();
+		final Object result = persistenceContext.getEntity( key );
 		if ( result != null ) {
 			return result;
 		}
 
 		final Object newObject = getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() );
 		if ( newObject != null ) {
-			getPersistenceContext().addEntity( key, newObject );
+			persistenceContext.addEntity( key, newObject );
 			return newObject;
 		}
 
@@ -671,6 +668,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return NO_INFLUENCERS;
+	}
+
+	@Override
+	public PersistenceContext getPersistenceContextInternal() {
+		//In this case implemented the same as #getPersistenceContext
+		return temporaryPersistenceContext;
 	}
 
 	@Override

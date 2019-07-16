@@ -87,7 +87,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 						final Object[] loadedState = null;
 						//		2) does a row exist in the db for this entity?
 						final boolean existsInDb = true;
-						session.getPersistenceContext().addEntity(
+						session.getPersistenceContextInternal().addEntity(
 								target,
 								Status.READ_ONLY,
 								loadedState,

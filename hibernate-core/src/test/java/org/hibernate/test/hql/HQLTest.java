@@ -171,35 +171,35 @@ public class HQLTest extends QueryTranslatorTestCase {
 	} )
 
     public void testRowValueConstructorSyntaxInInListBeingTranslated() {
-		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?1)");
-		assertInExist("'in' should be translated to 'and'", false, translator);
-		translator = createNewQueryTranslator("from LineItem l where l.id in ?1");
-		assertInExist("'in' should be translated to 'and'", false, translator);
-		translator = createNewQueryTranslator("from LineItem l where l.id in (('a1',1,'b1'),('a2',2,'b2'))");
-		assertInExist("'in' should be translated to 'and'", false, translator);
-		translator = createNewQueryTranslator("from Animal a where a.id in (?1)");
-		assertInExist("only translated tuple has 'in' syntax", true, translator);
-		translator = createNewQueryTranslator("from Animal a where a.id in ?1");
-		assertInExist("only translated tuple has 'in' syntax", true, translator);
-		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)");
-		assertInExist("do not translate sub-queries", true, translator);
+		QueryTranslatorImpl translator = createNewQueryTranslator( "from LineItem l where l.id in (?1)" );
+		assertInExist( "'in' should be translated to 'and'", false, translator );
+		translator = createNewQueryTranslator("from LineItem l where l.id in ?1" );
+		assertInExist( "'in' should be translated to 'and'", false, translator );
+		translator = createNewQueryTranslator("from LineItem l where l.id in (('a1',1,'b1'),('a2',2,'b2'))" );
+		assertInExist( "'in' should be translated to 'and'", false, translator );
+		translator = createNewQueryTranslator("from Animal a where a.id in (?1)" );
+		assertInExist( "only translated tuple has 'in' syntax", true, translator );
+		translator = createNewQueryTranslator("from Animal a where a.id in ?1" );
+		assertInExist( "only translated tuple has 'in' syntax", true, translator );
+		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)" );
+		assertInExist( "do not translate sub-queries", true, translator );
     }
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsRowValueConstructorSyntaxInInListCheck.class )
     public void testRowValueConstructorSyntaxInInList() {
-		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?1)");
-		assertInExist(" 'in' should be kept, since the dialect supports this syntax", true, translator);
-		translator = createNewQueryTranslator("from LineItem l where l.id in ?1");
-		assertInExist(" 'in' should be kept, since the dialect supports this syntax", true, translator);
-		translator = createNewQueryTranslator("from LineItem l where l.id in (('a1',1,'b1'),('a2',2,'b2'))");
-		assertInExist(" 'in' should be kept, since the dialect supports this syntax", true,translator);
-		translator = createNewQueryTranslator("from Animal a where a.id in (?1)");
-		assertInExist("only translated tuple has 'in' syntax", true, translator);
-		translator = createNewQueryTranslator("from Animal a where a.id in ?1");
-		assertInExist("only translated tuple has 'in' syntax", true, translator);
-		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)");
-		assertInExist("do not translate sub-queries", true, translator);
+		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?1)" );
+		assertInExist( " 'in' should be kept, since the dialect supports this syntax", true, translator );
+		translator = createNewQueryTranslator("from LineItem l where l.id in ?1" );
+		assertInExist( " 'in' should be kept, since the dialect supports this syntax", true, translator );
+		translator = createNewQueryTranslator("from LineItem l where l.id in (('a1',1,'b1'),('a2',2,'b2'))" );
+		assertInExist( " 'in' should be kept, since the dialect supports this syntax", true, translator );
+		translator = createNewQueryTranslator("from Animal a where a.id in (?1)" );
+		assertInExist( "only translated tuple has 'in' syntax", true, translator );
+		translator = createNewQueryTranslator("from Animal a where a.id in ?1" );
+		assertInExist( "only translated tuple has 'in' syntax", true, translator );
+		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)" );
+		assertInExist( "do not translate sub-queries", true, translator );
     }
 
 	private void assertInExist( String message, boolean expected, QueryTranslatorImpl translator ) {
@@ -348,41 +348,41 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testSubselectBetween() {
-		assertTranslation("from Animal x where (select max(a.bodyWeight) from Animal a) between :min and :max");
-		assertTranslation("from Animal x where (select max(a.description) from Animal a) like 'big%'");
-		assertTranslation("from Animal x where (select max(a.bodyWeight) from Animal a) is not null");
-		assertTranslation("from Animal x where exists (select max(a.bodyWeight) from Animal a)");
-		assertTranslation("from Animal x where (select max(a.bodyWeight) from Animal a) in (1,2,3)");
+		assertTranslation( "from Animal x where (select max(a.bodyWeight) from Animal a) between :min and :max" );
+		assertTranslation( "from Animal x where (select max(a.description) from Animal a) like 'big%'" );
+		assertTranslation( "from Animal x where (select max(a.bodyWeight) from Animal a) is not null" );
+		assertTranslation( "from Animal x where exists (select max(a.bodyWeight) from Animal a)" );
+		assertTranslation( "from Animal x where (select max(a.bodyWeight) from Animal a) in (1,2,3)" );
 	}
 
 	@Test
 	public void testFetchOrderBy() {
-		assertTranslation("from Animal a left outer join fetch a.offspring where a.mother.id = :mid order by a.description");
+		assertTranslation( "from Animal a left outer join fetch a.offspring where a.mother.id = :mid order by a.description");
 	}
 
 	@Test
 	public void testCollectionOrderBy() {
-		assertTranslation("from Animal a join a.offspring o order by a.description");
-		assertTranslation("from Animal a join fetch a.offspring order by a.description");
-		assertTranslation("from Animal a join fetch a.offspring o order by o.description");
-		assertTranslation("from Animal a join a.offspring o order by a.description, o.description");
+		assertTranslation( "from Animal a join a.offspring o order by a.description" );
+		assertTranslation( "from Animal a join fetch a.offspring order by a.description" );
+		assertTranslation( "from Animal a join fetch a.offspring o order by o.description" );
+		assertTranslation( "from Animal a join a.offspring o order by a.description, o.description" );
 	}
 
 	@Test
 	public void testExpressionWithParamInFunction() {
-		assertTranslation("from Animal a where abs(a.bodyWeight-:param) < 2.0");
-		assertTranslation("from Animal a where abs(:param - a.bodyWeight) < 2.0");
-		assertTranslation("from Animal where abs(:x - :y) < 2.0");
-		assertTranslation("from Animal where lower(upper(:foo)) like 'f%'");
+		assertTranslation("from Animal a where abs(a.bodyWeight-:param) < 2.0" );
+		assertTranslation("from Animal a where abs(:param - a.bodyWeight) < 2.0" );
+		assertTranslation("from Animal where abs(:x - :y) < 2.0" );
+		assertTranslation("from Animal where lower(upper(:foo)) like 'f%'" );
 		if ( ! ( getDialect() instanceof SybaseDialect ) &&  ! ( getDialect() instanceof Sybase11Dialect ) &&  ! ( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SQLServerDialect ) && ! ( getDialect() instanceof TeradataDialect ) ) {
 			// Transact-SQL dialects (except SybaseAnywhereDialect) map the length function -> len; 
 			// classic translator does not consider that *when nested*;
 			// SybaseAnywhereDialect supports the length function
 
-			assertTranslation("from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0");
+			assertTranslation( "from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0" );
 		}
 		if ( !( getDialect() instanceof MySQLDialect ) && ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SybaseAnywhereDialect ) && ! ( getDialect() instanceof SQLServerDialect ) && ! ( getDialect() instanceof TeradataDialect ) ) {
-			assertTranslation("from Animal where lower(upper('foo') || upper(:bar)) like 'f%'");
+			assertTranslation( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" );
 		}
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect || getDialect() instanceof TeradataDialect) {
 			return;
@@ -398,7 +398,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 			// parser does not; so the outputs do not match here...
 			return;
 		}
-		assertTranslation("from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0");
+		assertTranslation( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" );
 	}
 
 	@Test
@@ -795,7 +795,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 			// uses '+' operator; updated Ingres9Dialect to use "||".
 			return;
 		}
-		assertTranslation("from Human h where h.nickName = '1' || 'ov' || 'tha' || 'few'");
+		assertTranslation("from Human h where h.nickName = '1' || 'ov' || 'tha' || 'few'" );
 	}
 
 	@Test
@@ -823,10 +823,10 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3/5)" );
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3+5)" );
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3*5)" );
-		SQLFunction concat = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "concat");
+		SQLFunction concat = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "concat" );
 		List list = new ArrayList();
-		list.add("'fat'");
-		list.add("'skinny'");
+		list.add( "'fat'" );
+		list.add( "'skinny'" );
 		assertTranslation(
 				"from Animal an where an.description = " +
 						concat.render( StringType.INSTANCE, list, sessionFactory() )
@@ -1563,7 +1563,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	@Test
 	public void testAssociationPropertyWithoutAlias() throws Exception {
 		// The classic translator doesn't do this right, so don't bother asserting.
-		compileWithAstQueryTranslator("from Animal where zoo is null", false);
+		compileWithAstQueryTranslator( "from Animal where zoo is null", false );
 	}
 
 	private void compileWithAstQueryTranslator(String hql, boolean scalar) {
@@ -1577,7 +1577,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	@Test
 	public void testComponentNoAlias() throws Exception {
 		// The classic translator doesn't do this right, so don't bother asserting.
-		compileWithAstQueryTranslator( "from Human where name.first = 'Gavin'", false);
+		compileWithAstQueryTranslator( "from Human where name.first = 'Gavin'", false );
 	}
 
 }

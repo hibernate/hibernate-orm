@@ -10,6 +10,8 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.JDBCException;
 import org.hibernate.NullPrecedence;
@@ -45,6 +47,12 @@ import org.hibernate.type.StandardBasicTypes;
 @SuppressWarnings("deprecation")
 public class MySQLDialect extends Dialect {
 
+	private static final Pattern ESCAPE_PATTERN = Pattern.compile(
+			"\\",
+			Pattern.LITERAL
+	);
+	public static final String ESCAPE_PATTERN_REPLACEMENT = Matcher.quoteReplacement(
+			"\\\\" );
 	private final UniqueDelegate uniqueDelegate;
 	private final MySQLStorageEngine storageEngine;
 
@@ -593,6 +601,6 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	protected String escapeLiteral(String literal) {
-		return super.escapeLiteral( literal ).replace("\\", "\\\\");
+		return ESCAPE_PATTERN.matcher( super.escapeLiteral( literal ) ).replaceAll( ESCAPE_PATTERN_REPLACEMENT );
 	}
 }

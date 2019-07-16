@@ -312,13 +312,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 			// we could not use bytecode proxy, check to see if we can use HibernateProxy
 			if ( persister.hasProxy() ) {
-				final Object existingProxy = getPersistenceContext().getProxy( entityKey );
+				final PersistenceContext persistenceContext = getPersistenceContext();
+				final Object existingProxy = persistenceContext.getProxy( entityKey );
 				if ( existingProxy != null ) {
-					return getPersistenceContext().narrowProxy( existingProxy, persister, entityKey, null );
+					return persistenceContext.narrowProxy( existingProxy, persister, entityKey, null );
 				}
 				else {
 					final Object proxy = persister.createProxy( id, this );
-					getPersistenceContext().addProxy( entityKey, proxy );
+					persistenceContext.addProxy( entityKey, proxy );
 					return proxy;
 				}
 			}

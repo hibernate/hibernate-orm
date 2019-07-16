@@ -8,6 +8,7 @@ package org.hibernate.boot.jaxb.internal.stax;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
@@ -28,7 +29,8 @@ import org.hibernate.boot.xsd.MappingXsdSupport;
  * @author Steve Ebersole
  */
 public class HbmEventReader extends EventReaderDelegate {
-	private static final List<String> NAMESPACE_URIS_TO_MAP = Arrays.asList(
+
+	private static final List<String> NAMESPACE_URIS_TO_MAP = Collections.singletonList(
 			// we need to recognize the initial, prematurely-chosen hbm.xml xsd namespace
 			"http://www.hibernate.org/xsd/hibernate-mapping"
 	);

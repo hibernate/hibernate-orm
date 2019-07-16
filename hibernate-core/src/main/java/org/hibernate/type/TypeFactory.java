@@ -149,7 +149,7 @@ public final class TypeFactory implements Serializable {
 		catch (ClassNotFoundException cnfe) {
 			throw new MappingException( "user collection type class not found: " + typeName, cnfe );
 		}
-		CustomCollectionType result = new CustomCollectionType( typeScope, typeClass, role, propertyRef );
+		CustomCollectionType result = new CustomCollectionType( typeClass, role, propertyRef );
 		if ( typeParameters != null ) {
 			injectParameters( result.getUserType(), typeParameters );
 		}
@@ -349,53 +349,53 @@ public final class TypeFactory implements Serializable {
 	// collection type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public CollectionType array(String role, String propertyRef, Class elementClass) {
-		return new ArrayType( typeScope, role, propertyRef, elementClass );
+		return new ArrayType( role, propertyRef, elementClass );
 	}
 
 	public CollectionType list(String role, String propertyRef) {
-		return new ListType( typeScope, role, propertyRef );
+		return new ListType( role, propertyRef );
 	}
 
 	public CollectionType bag(String role, String propertyRef) {
-		return new BagType( typeScope, role, propertyRef );
+		return new BagType( role, propertyRef );
 	}
 
 	public CollectionType idbag(String role, String propertyRef) {
-		return new IdentifierBagType( typeScope, role, propertyRef );
+		return new IdentifierBagType( role, propertyRef );
 	}
 
 	public CollectionType map(String role, String propertyRef) {
-		return new MapType( typeScope, role, propertyRef );
+		return new MapType( role, propertyRef );
 	}
 
 	public CollectionType orderedMap(String role, String propertyRef) {
-		return new OrderedMapType( typeScope, role, propertyRef );
+		return new OrderedMapType( role, propertyRef );
 	}
 
 	public CollectionType sortedMap(String role, String propertyRef, Comparator comparator) {
-		return new SortedMapType( typeScope, role, propertyRef, comparator );
+		return new SortedMapType( role, propertyRef, comparator );
 	}
 
 	public CollectionType set(String role, String propertyRef) {
-		return new SetType( typeScope, role, propertyRef );
+		return new SetType( role, propertyRef );
 	}
 
 	public CollectionType orderedSet(String role, String propertyRef) {
-		return new OrderedSetType( typeScope, role, propertyRef );
+		return new OrderedSetType( role, propertyRef );
 	}
 
 	public CollectionType sortedSet(String role, String propertyRef, Comparator comparator) {
-		return new SortedSetType( typeScope, role, propertyRef, comparator );
+		return new SortedSetType( role, propertyRef, comparator );
 	}
 
 	// component type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public ComponentType component(ComponentMetamodel metamodel) {
-		return new ComponentType( typeScope, metamodel );
+		return new ComponentType( metamodel );
 	}
 
 	public EmbeddedComponentType embeddedComponent(ComponentMetamodel metamodel) {
-		return new EmbeddedComponentType( typeScope, metamodel );
+		return new EmbeddedComponentType( metamodel );
 	}
 
 

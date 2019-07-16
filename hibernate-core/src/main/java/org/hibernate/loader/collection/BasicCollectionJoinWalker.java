@@ -8,8 +8,10 @@ package org.hibernate.loader.collection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.FetchMode;
+import org.hibernate.Filter;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -51,11 +53,10 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 
 		walkCollectionTree(collectionPersister, alias);
 
-		List allAssociations = new ArrayList();
-		allAssociations.addAll(associations);
+		List allAssociations = new ArrayList( associations );
 		allAssociations.add( OuterJoinableAssociation.createRoot( collectionPersister.getCollectionType(), alias, getFactory() ) );
-		initPersisters(allAssociations, LockMode.NONE);
-		initStatementString(alias, batchSize, subquery);
+		initPersisters( allAssociations, LockMode.NONE );
+		initStatementString( alias, batchSize, subquery );
 	}
 
 	private void initStatementString(
@@ -76,8 +77,9 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 				batchSize
 			);
 
-		String manyToManyOrderBy = "";
-		String filter = collectionPersister.filterFragment( alias, getLoadQueryInfluencers().getEnabledFilters() );
+		StringBuilder sb = null;
+		final Map<String, Filter> enabledFilters = getLoadQueryInfluencers().getEnabledFilters();
+		String filter = collectionPersister.filterFragment( alias, enabledFilters );
 		if ( collectionPersister.isManyToMany() ) {
 			// from the collection of associations, locate OJA for the
 			// ManyToOne corresponding to this persister to fully
@@ -85,16 +87,17 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 			// use its alias here
 			// TODO : is there a better way here?
 			Iterator itr = associations.iterator();
+			sb = new StringBuilder( 20 );
 			AssociationType associationType = ( AssociationType ) collectionPersister.getElementType();
 			while ( itr.hasNext() ) {
 				OuterJoinableAssociation oja = ( OuterJoinableAssociation ) itr.next();
 				if ( oja.getJoinableType() == associationType ) {
 					// we found it
 					filter += collectionPersister.getManyToManyFilterFragment( 
-							oja.getRHSAlias(), 
-							getLoadQueryInfluencers().getEnabledFilters() 
+							oja.getRHSAlias(),
+							enabledFilters
 						);
-					manyToManyOrderBy += collectionPersister.getManyToManyOrderByString( oja.getRHSAlias() );
+					sb.append( collectionPersister.getManyToManyOrderByString( oja.getRHSAlias() ) );
 				}
 			}
 		}
@@ -104,7 +107,7 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 		Select select = new Select( getDialect() )
 			.setSelectClause(
 				collectionPersister.selectFragment(alias, collectionSuffixes[0] ) +
-				selectString(associations)
+				selectString( associations )
 			)
 			.setFromClause( collectionPersister.getTableName(), alias )
 			.setWhereClause( whereString.toString()	)
@@ -113,7 +116,7 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 				ojf.toWhereFragmentString()
 			);
 
-		select.setOrderByClause( orderBy( associations, mergeOrderings( collectionPersister.getSQLOrderByString(alias), manyToManyOrderBy ) ) );
+		select.setOrderByClause( orderBy( associations, mergeOrderings( collectionPersister.getSQLOrderByString( alias ), sb == null ? "" : sb.toString() ) ) );
 
 		if ( getFactory().getSettings().isCommentsEnabled() ) {
 			select.setComment( "load collection " + collectionPersister.getRole() );

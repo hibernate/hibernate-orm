@@ -89,10 +89,10 @@ public class LoadEvent extends AbstractEvent {
 			boolean isAssociationFetch,
 			EventSource source) {
 
-		super(source);
+		super( source );
 
 		if ( entityId == null ) {
-			throw new IllegalArgumentException("id to load is required for loading");
+			throw new IllegalArgumentException( "id to load is required for loading" );
 		}
 
 		if ( lockOptions.getLockMode() == LockMode.WRITE ) {

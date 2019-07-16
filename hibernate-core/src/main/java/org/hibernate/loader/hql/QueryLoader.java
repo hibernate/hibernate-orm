@@ -45,6 +45,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -514,7 +515,8 @@ public class QueryLoader extends BasicLoader {
 			QueryParameters queryParameters,
 			EventSource session) throws HibernateException {
 		checkQuery( queryParameters );
-		final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final boolean stats = statistics.isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
 			startTime = System.nanoTime();
@@ -545,7 +547,7 @@ public class QueryLoader extends BasicLoader {
 			if ( stats ) {
 				final long endTime = System.nanoTime();
 				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				session.getFactory().getStatistics().queryExecuted(
+				statistics.queryExecuted(
 //						"HQL: " + queryTranslator.getQueryString(),
 						getQueryIdentifier(),
 						0,

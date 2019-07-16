@@ -222,8 +222,9 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			final Object ck = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheAfterInsert( cache, ck );
 
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().entityCachePut(
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( put && statistics.isStatisticsEnabled() ) {
+				statistics.entityCachePut(
 						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);

@@ -178,6 +178,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
@@ -233,9 +234,6 @@ public final class SessionImpl
 	private transient int dontFlushFromFind;
 
 	private transient ExceptionMapper exceptionMapper;
-	private transient ManagedFlushChecker managedFlushChecker;
-
-	private transient AfterCompletionAction afterCompletionAction;
 
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
@@ -257,19 +255,24 @@ public final class SessionImpl
 		this.autoClose = options.shouldAutoClose();
 		this.queryParametersValidationEnabled = options.isQueryParametersValidationEnabled();
 
-		this.discardOnClose = getFactory().getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
+		this.discardOnClose = factory.getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 
-		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
+		if ( options instanceof SharedSessionCreationOptions ) {
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
-			if ( sharedOptions.getTransactionCompletionProcesses() != null ) {
-				actionQueue.setTransactionCompletionProcesses( sharedOptions.getTransactionCompletionProcesses(), true );
+			final ActionQueue.TransactionCompletionProcesses transactionCompletionProcesses = sharedOptions.getTransactionCompletionProcesses();
+			if ( sharedOptions.isTransactionCoordinatorShared() && transactionCompletionProcesses != null ) {
+				actionQueue.setTransactionCompletionProcesses(
+						transactionCompletionProcesses,
+						true
+				);
 			}
 		}
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
-		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
-			getFactory().getStatistics().openSession();
+		final StatisticsImplementor statistics = factory.getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.openSession();
 		}
 
 		// NOTE : pulse() already handles auto-join-ability correctly
@@ -317,12 +320,12 @@ public final class SessionImpl
 		if ( lockOptions.getLockMode() != LockMode.NONE ) {
 			query.setLockMode( getLockMode( lockOptions.getLockMode() ) );
 		}
-		Object queryTimeout;
-		if ( (queryTimeout = getProperties().get( QueryHints.SPEC_HINT_TIMEOUT ) ) != null ) {
+		final Object queryTimeout;
+		if ( ( queryTimeout = properties.get( QueryHints.SPEC_HINT_TIMEOUT ) ) != null ) {
 			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
 		}
-		Object lockTimeout;
-		if( (lockTimeout = getProperties().get( JPA_LOCK_TIMEOUT ))!=null){
+		final Object lockTimeout;
+		if ( ( lockTimeout = properties.get( JPA_LOCK_TIMEOUT ) ) != null ) {
 			query.setHint( JPA_LOCK_TIMEOUT, lockTimeout );
 		}
 	}
@@ -344,23 +347,9 @@ public final class SessionImpl
 			else {
 				exceptionMapper = ExceptionMapperStandardImpl.INSTANCE;
 			}
-			if ( sessionOwner.getAfterCompletionAction() != null ) {
-				afterCompletionAction = sessionOwner.getAfterCompletionAction();
-			}
-			else {
-				afterCompletionAction = STANDARD_AFTER_COMPLETION_ACTION;
-			}
-			if ( sessionOwner.getManagedFlushChecker() != null ) {
-				managedFlushChecker = sessionOwner.getManagedFlushChecker();
-			}
-			else {
-				managedFlushChecker = STANDARD_MANAGED_FLUSH_CHECKER;
-			}
 		}
 		else {
 			exceptionMapper = ExceptionMapperStandardImpl.INSTANCE;
-			afterCompletionAction = STANDARD_AFTER_COMPLETION_ACTION;
-			managedFlushChecker = STANDARD_MANAGED_FLUSH_CHECKER;
 		}
 	}
 
@@ -418,7 +407,8 @@ public final class SessionImpl
 		}
 
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
-		if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+		final SessionFactoryImplementor sessionFactory = getSessionFactory();
+		if ( sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ) {
 			// Original hibernate-entitymanager EM#close behavior
 			checkSessionFactoryOpen();
 			checkOpenOrWaitingForAutoClose();
@@ -435,8 +425,9 @@ public final class SessionImpl
 			super.close();
 		}
 
-		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
-			getFactory().getStatistics().closeSession();
+		final StatisticsImplementor statistics = sessionFactory.getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.closeSession();
 		}
 	}
 
@@ -2572,8 +2563,9 @@ public final class SessionImpl
 
 		getEventListenerManager().transactionCompletion( successful );
 
-		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
-			getFactory().getStatistics().endTransaction( successful );
+		final StatisticsImplementor statistics = getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.endTransaction( successful );
 		}
 
 		try {

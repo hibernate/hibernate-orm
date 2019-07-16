@@ -69,7 +69,6 @@ public class SimpleValue implements KeyValue {
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
-	private MetadataBuildingContext buildingContext;
 	private final MetadataImplementor metadata;
 
 	private final List<Selectable> columns = new ArrayList<>();
@@ -111,13 +110,16 @@ public class SimpleValue implements KeyValue {
 		this.table = table;
 	}
 
+	/**
+	 * @deprecated Use {@link SimpleValue#SimpleValue(MetadataBuildingContext, Table)} instead.
+	 */
+	@Deprecated
 	public SimpleValue(MetadataBuildingContext buildingContext) {
-		this(buildingContext.getMetadataCollector());
-		this.buildingContext = buildingContext;
+		this( buildingContext.getMetadataCollector() );
 	}
 
 	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
-		this( buildingContext );
+		this.metadata = buildingContext.getMetadataCollector();
 		this.table = table;
 	}
 
@@ -597,8 +599,8 @@ public class SimpleValue implements KeyValue {
 		);
 		int jdbcTypeCode = recommendedSqlType.getSqlType();
 		if ( isLob() ) {
-			if ( LobTypeMappings.INSTANCE.hasCorrespondingLobCode( jdbcTypeCode ) ) {
-				jdbcTypeCode = LobTypeMappings.INSTANCE.getCorrespondingLobCode( jdbcTypeCode );
+			if ( LobTypeMappings.isMappedToKnownLobCode( jdbcTypeCode ) ) {
+				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );
 			}
 			else {
 				if ( Serializable.class.isAssignableFrom( entityAttributeJavaTypeDescriptor.getJavaType() ) ) {
@@ -617,7 +619,7 @@ public class SimpleValue implements KeyValue {
 			}
 		}
 		if ( isNationalized() ) {
-			jdbcTypeCode = NationalizedTypeMappings.INSTANCE.getCorrespondingNationalizedCode( jdbcTypeCode );
+			jdbcTypeCode = NationalizedTypeMappings.toNationalizedTypeCode( jdbcTypeCode );
 		}
 
 		// find the standard SqlTypeDescriptor for that JDBC type code (allow itr to be remapped if needed!)

@@ -66,7 +66,11 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		final String extraPhysycalTableTypesConfig = configService.getSetting(
 				AvailableSettings.EXTRA_PHYSICAL_TABLE_TYPES,
 				StandardConverters.STRING,
-				""
+				configService.getSetting(
+						AvailableSettings.DEPRECATED_EXTRA_PHYSICAL_TABLE_TYPES,
+						StandardConverters.STRING,
+						""
+				)
 		);
 		if ( !"".equals( extraPhysycalTableTypesConfig.trim() ) ) {
 			this.extraPhysicalTableTypes = StringHelper.splitTrimmingTokens(

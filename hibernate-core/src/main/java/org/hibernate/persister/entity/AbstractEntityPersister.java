@@ -129,6 +129,7 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
@@ -2467,8 +2468,9 @@ public abstract class AbstractEntityPersister
 		}
 		catch (StaleStateException e) {
 			if ( !isNullableTable( tableNumber ) ) {
-				if ( getFactory().getStatistics().isStatisticsEnabled() ) {
-					getFactory().getStatistics().optimisticFailure( getEntityName() );
+				final StatisticsImplementor statistics = getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.optimisticFailure( getEntityName() );
 				}
 				throw new StaleObjectStateException( getEntityName(), id );
 			}
@@ -3486,7 +3488,7 @@ public abstract class AbstractEntityPersister
 				// }
 				// // no dirty fields and no dirty collections so no update needed ???
 				// }
-				if ( fieldsPreUpdateNeeded.length != 0 && dirtyFields != null ) {
+				if ( dirtyFields != null ) {
 					dirtyFields = ArrayHelper.join( dirtyFields, ArrayHelper.trim( fieldsPreUpdateNeeded, count ) );
 				}
 			}
@@ -5177,7 +5179,7 @@ public abstract class AbstractEntityPersister
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Resolving natural-id [%s] to id : %s ",
-					naturalIdValues,
+					Arrays.asList( naturalIdValues ),
 					MessageHelper.infoString( this ) );
 		}
 
@@ -5224,7 +5226,7 @@ public abstract class AbstractEntityPersister
 					e,
 					String.format(
 							"could not resolve natural-id [%s] to id : %s",
-							naturalIdValues,
+							Arrays.asList( naturalIdValues ),
 							MessageHelper.infoString( this ) ),
 					sqlEntityIdByNaturalIdString );
 		}

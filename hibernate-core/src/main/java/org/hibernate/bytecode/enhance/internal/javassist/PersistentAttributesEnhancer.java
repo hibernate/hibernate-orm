@@ -162,7 +162,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 
 		try {
 			boolean declared = persistentField.getDeclaringClass().equals( managedCtClass );
-			String declaredReadFragment = "this." + fieldName + "";
+			String declaredReadFragment = "this." + fieldName;
 			String superReadFragment = "super." + readerName + "()";
 
 			if ( !declared ) {

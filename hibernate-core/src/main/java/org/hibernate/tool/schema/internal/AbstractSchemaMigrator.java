@@ -245,7 +245,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				for ( Table table : namespace.getTables() ) {
 					if ( schemaFilter.includeTable( table ) ) {
 						final TableInformation tableInformation = nameSpaceTablesInformation.getTableInformation( table );
-						if ( tableInformation == null || ( tableInformation != null && tableInformation.isPhysicalTable() ) ) {
+						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 							applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
 						}
 					}

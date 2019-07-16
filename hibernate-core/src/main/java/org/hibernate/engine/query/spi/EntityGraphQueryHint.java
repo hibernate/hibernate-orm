@@ -32,6 +32,8 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import antlr.SemanticException;
+
 /**
  * Encapsulates a JPA EntityGraph provided through a JPQL query hint.  Converts the fetches into a list of AST
  * FromElements.  The logic is kept here as much as possible in order to make it easy to remove this in the future,
@@ -172,7 +174,7 @@ public class EntityGraphQueryHint implements AppliedGraph {
 					}
 				}
 			}
-			catch (Exception e) {
+			catch (SemanticException e) {
 				throw new QueryException( "Could not apply the EntityGraph to the Query!", e );
 			}
 		}

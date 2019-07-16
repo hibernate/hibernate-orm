@@ -74,10 +74,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			bag = (List) coll;
 		}
 		else {
-			bag = new ArrayList();
-			for ( Object element : coll ) {
-				bag.add( element );
-			}
+			bag = new ArrayList( coll );
 		}
 		setInitialized();
 		setDirectlyAccessible( true );

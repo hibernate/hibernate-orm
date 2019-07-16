@@ -188,7 +188,7 @@ public class ParameterParser {
 						final String param = sqlString.substring( indx + 1, chopLocation );
 						// make sure this "name" is an integral
 						try {
-							recognizer.jpaPositionalParameter( Integer.valueOf( param ), indx );
+							recognizer.jpaPositionalParameter( Integer.parseInt( param ), indx );
 							indx = chopLocation - 1;
 						}
 						catch( NumberFormatException e ) {

@@ -20,6 +20,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -112,7 +113,8 @@ public class DefaultResolveNaturalIdEventListener
 	protected Serializable loadFromDatasource(final ResolveNaturalIdEvent event) {
 		final EventSource session = event.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
-		final boolean stats = factory.getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = factory.getStatistics();
+		final boolean stats = statistics.isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
 			startTime = System.nanoTime();
@@ -127,7 +129,7 @@ public class DefaultResolveNaturalIdEventListener
 		if ( stats ) {
 			final long endTime = System.nanoTime();
 			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-			factory.getStatistics().naturalIdQueryExecuted(
+			statistics.naturalIdQueryExecuted(
 					event.getEntityPersister().getRootEntityName(),
 					milliseconds
 			);

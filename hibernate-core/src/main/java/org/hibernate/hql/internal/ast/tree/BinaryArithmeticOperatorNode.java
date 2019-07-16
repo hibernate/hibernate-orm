@@ -37,7 +37,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression
 		final Type rhType = ( rhs instanceof SqlNode ) ? ( (SqlNode) rhs ).getDataType() : null;
 
 		if ( ExpectedTypeAwareNode.class.isAssignableFrom( lhs.getClass() ) && rhType != null ) {
-			Type expectedType = null;
+			final Type expectedType;
 			// we have something like : "? [op] rhs"
 			if ( isDateTimeType( rhType ) ) {
 				// more specifically : "? [op] datetime"

@@ -11,8 +11,10 @@ import java.io.Serializable;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
 
@@ -42,28 +44,32 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final RegionFactory regionFactory = factory.getCache().getRegionFactory();
 
-		final boolean stats = factory.getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = factory.getStatistics();
+		final boolean stats = statistics.isStatisticsEnabled();
 
 		final Long ts = regionFactory.nextTimestamp() + regionFactory.getTimeout();
 
+		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+		final boolean debugEnabled = log.isDebugEnabled();
+
 		for ( Serializable space : spaces ) {
-			if ( log.isDebugEnabled() ) {
+			if ( debugEnabled ) {
 				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
 
 			try {
-				session.getEventListenerManager().cachePutStart();
+				eventListenerManager.cachePutStart();
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
-				session.getEventListenerManager().cachePutEnd();
+				eventListenerManager.cachePutEnd();
 			}
 
 			if ( stats ) {
-				factory.getStatistics().updateTimestampsCachePut();
+				statistics.updateTimestampsCachePut();
 			}
 		}
 	}
@@ -72,24 +78,27 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	public void invalidate(
 			String[] spaces,
 			SharedSessionContractImplementor session) {
-		final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final boolean stats = statistics.isStatisticsEnabled();
 
 		final Long ts = session.getFactory().getCache().getRegionFactory().nextTimestamp();
+		final boolean debugEnabled = log.isDebugEnabled();
 
-		for (Serializable space : spaces) {
-			if ( log.isDebugEnabled() ) {
+		for ( Serializable space : spaces ) {
+			if ( debugEnabled ) {
 				log.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
 			}
 
+			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 			try {
-				session.getEventListenerManager().cachePutStart();
+				eventListenerManager.cachePutStart();
 				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
-				session.getEventListenerManager().cachePutEnd();
+				eventListenerManager.cachePutEnd();
 
 				if ( stats ) {
-					session.getFactory().getStatistics().updateTimestampsCachePut();
+					statistics.updateTimestampsCachePut();
 				}
 			}
 		}
@@ -100,7 +109,10 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			String[] spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
-		final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final boolean stats = statistics.isStatisticsEnabled();
+		final boolean debugEnabled = log.isDebugEnabled();
 
 		for ( Serializable space : spaces ) {
 			final Long lastUpdate = getLastUpdateTimestampForSpace( space, session );
@@ -108,11 +120,11 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 				// the last update timestamp for the given space was evicted from the
 				// cache or there have been no writes to it since startup
 				if ( stats ) {
-					session.getFactory().getStatistics().updateTimestampsCacheMiss();
+					statistics.updateTimestampsCacheMiss();
 				}
 			}
 			else {
-				if ( log.isDebugEnabled() ) {
+				if ( debugEnabled ) {
 					log.debugf(
 							"[%s] last update timestamp: %s",
 							space,
@@ -120,7 +132,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 					);
 				}
 				if ( stats ) {
-					session.getFactory().getStatistics().updateTimestampsCacheHit();
+					statistics.updateTimestampsCacheHit();
 				}
 				if ( lastUpdate >= timestamp ) {
 					return false;

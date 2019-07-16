@@ -23,6 +23,7 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -279,7 +280,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( columns != null ) {
 			for ( int i = 0; i < columns.length; i++ ) {
 				buf.append( columns[i] );
-				if ( i < columns.length ) {
+				if ( i < columns.length - 1 ) {
 					buf.append( " " );
 				}
 			}
@@ -341,10 +342,11 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 
 		final String[] propertyNames = getIdentifierPropertyNames();
 		List<String> columns = new ArrayList<>();
+		final boolean inSelect = getWalker().getStatementType() == HqlSqlTokenTypes.SELECT;
 		for ( int i = 0; i < propertyNames.length; i++ ) {
 			String[] propertyNameColumns = toColumns(
 					table, propertyNames[i],
-					getWalker().getStatementType() == HqlSqlTokenTypes.SELECT
+					inSelect
 			);
 			for ( int j = 0; j < propertyNameColumns.length; j++ ) {
 				columns.add( propertyNameColumns[j] );
@@ -444,7 +446,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( origin == null ) {
 			return null;
 		}
-		if ( origin.getText() == null || "".equals( origin.getText() ) ) {
+		if ( StringHelper.isEmpty( origin.getText() ) ) {
 			return origin.getRealOrigin();
 		}
 		return origin;
@@ -457,7 +459,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( !origin.isFetch() ) {
 			return origin;
 		}
-		if ( origin.getText() == null || "".equals( origin.getText() ) ) {
+		if ( StringHelper.isEmpty( origin.getText() ) ) {
 			return origin.getFetchOrigin();
 		}
 		return origin;

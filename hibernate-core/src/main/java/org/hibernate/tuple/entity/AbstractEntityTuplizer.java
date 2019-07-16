@@ -24,25 +24,23 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.Assigned;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-
-import static org.hibernate.internal.CoreLogging.messageLogger;
 
 
 /**
@@ -52,7 +50,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Gavin King
  */
 public abstract class AbstractEntityTuplizer implements EntityTuplizer {
-	private static final CoreMessageLogger LOG = messageLogger( AbstractEntityTuplizer.class );
 
 	//TODO: currently keeps Getters and Setters (instead of PropertyAccessors) because of the way getGetter() and getSetter() are implemented currently; yuck!
 
@@ -386,6 +383,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, entityMode );
 			final Object[] injectionValues = new Object[extractedValues.length];
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
 			for ( int i = 0; i < virtualIdComponent.getSubtypes().length; i++ ) {
 				final Type virtualPropertyType = virtualIdComponent.getSubtypes()[i];
 				final Type idClassPropertyType = mappedIdentifierType.getSubtypes()[i];
@@ -398,7 +396,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					final String associatedEntityName = ( (EntityType) virtualPropertyType ).getAssociatedEntityName();
 					final EntityKey entityKey = session.generateEntityKey(
 							(Serializable) extractedValues[i],
-							sessionFactory.getMetamodel().entityPersister( associatedEntityName )
+							metamodel.entityPersister( associatedEntityName )
 					);
 					// it is conceivable there is a proxy, so check that first
 					Object association = persistenceContext.getProxy( entityKey );
@@ -407,7 +405,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 						association = persistenceContext.getEntity( entityKey );
 						if ( association == null ) {
 							// get the association out of the entity itself
-							association = sessionFactory.getMetamodel().entityPersister( entityName ).getPropertyValue(
+							association = metamodel.entityPersister( entityName ).getPropertyValue(
 									entity,
 									virtualIdComponent.getPropertyNames()[i]
 							);
@@ -464,13 +462,14 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 		if ( session != null ) {
 			return session.getEntityPersister(
-					associationType.getAssociatedEntityName( session.getFactory() ),
+					associationType.getAssociatedEntityName( sessionFactory ),
 					entity
 			);
 		}
 
 		String entityName = null;
-		for ( EntityNameResolver entityNameResolver : sessionFactory.getMetamodel().getEntityNameResolvers() ) {
+		final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
+		for ( EntityNameResolver entityNameResolver : metamodel.getEntityNameResolvers() ) {
 			entityName = entityNameResolver.resolveEntityName( entity );
 			if ( entityName != null ) {
 				break;
@@ -481,7 +480,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			entityName = entity.getClass().getName();
 		}
 
-		return sessionFactory.getMetamodel().entityPersister( entityName );
+		return metamodel.entityPersister( entityName );
 	}
 
 	@Override
@@ -498,11 +497,12 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
 		//noinspection StatementWithEmptyBody
-		if ( entityMetamodel.getIdentifierProperty().getIdentifierGenerator() instanceof Assigned ) {
+		final IdentifierProperty identifierProperty = entityMetamodel.getIdentifierProperty();
+		if ( identifierProperty.getIdentifierGenerator() instanceof Assigned ) {
 		}
 		else {
 			//reset the id
-			Serializable result = entityMetamodel.getIdentifierProperty()
+			Serializable result = identifierProperty
 					.getUnsavedValue()
 					.getDefaultValue( currentId );
 			setIdentifier( entity, result, session );
@@ -527,11 +527,12 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	protected boolean shouldGetAllProperties(Object entity) {
-		if ( !getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+		final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
+		if ( !bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
 			return true;
 		}
 
-		return !getEntityMetamodel().getBytecodeEnhancementMetadata().hasUnFetchedAttributes( entity );
+		return !bytecodeEnhancementMetadata.hasUnFetchedAttributes( entity );
 	}
 
 	@Override
@@ -540,14 +541,16 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
 
 		final int span = entityMetamodel.getPropertySpan();
+		final String[] propertyNames = entityMetamodel.getPropertyNames();
 		final Object[] result = new Object[span];
 
 		for ( int j = 0; j < span; j++ ) {
+			final String propertyName = propertyNames[j];
 			// if the attribute is not lazy (bytecode sense), we can just use the value from the instance
 			// if the attribute is lazy but has been initialized we can just use the value from the instance
 			// todo : there should be a third case here when we merge transient instances
-			if ( ! lazyAttributesMetadata.isLazyAttribute( entityMetamodel.getPropertyNames()[j] )
-					|| enhancementMetadata.isAttributeLoaded( entity, entityMetamodel.getPropertyNames()[j] ) ) {
+			if ( ! lazyAttributesMetadata.isLazyAttribute( propertyName )
+					|| enhancementMetadata.isAttributeLoaded( entity, propertyName) ) {
 				result[j] = getters[j].get( entity );
 			}
 			else {
@@ -652,9 +655,10 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	public void setPropertyValues(Object entity, Object[] values) throws HibernateException {
 		boolean setAll = !entityMetamodel.hasLazyProperties();
 
+		final SessionFactoryImplementor factory = getFactory();
 		for ( int j = 0; j < entityMetamodel.getPropertySpan(); j++ ) {
 			if ( setAll || values[j] != LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				setters[j].set( entity, values[j], getFactory() );
+				setters[j].set( entity, values[j], factory );
 			}
 		}
 	}
@@ -743,8 +747,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public Getter getVersionGetter() {
-		if ( getEntityMetamodel().isVersioned() ) {
-			return getGetter( getEntityMetamodel().getVersionPropertyIndex() );
+		final EntityMetamodel entityMetamodel = getEntityMetamodel();
+		if ( entityMetamodel.isVersioned() ) {
+			return getGetter( entityMetamodel.getVersionPropertyIndex() );
 		}
 		return null;
 	}

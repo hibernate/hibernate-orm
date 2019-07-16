@@ -53,73 +53,10 @@ public class InvalidMappingException extends MappingException {
 	 * Constructs an InvalidMappingException using the given information.
 	 *
 	 * @param customMessage The custom message explaining the exception condition
-	 * @param xmlDocument The document that was invalid
-	 * @param cause The underlying cause
-	 */
-	public InvalidMappingException(String customMessage, XmlDocument xmlDocument, Throwable cause) {
-		this( customMessage, xmlDocument.getOrigin().getType(), xmlDocument.getOrigin().getName(), cause );
-	}
-
-	/**
-	 * Constructs an InvalidMappingException using the given information.
-	 *
-	 * @param customMessage The custom message explaining the exception condition
-	 * @param xmlDocument The document that was invalid
-	 */
-	public InvalidMappingException(String customMessage, XmlDocument xmlDocument) {
-		this( customMessage, xmlDocument.getOrigin().getType(), xmlDocument.getOrigin().getName() );
-	}
-
-	/**
-	 * Constructs an InvalidMappingException using the given information.
-	 *
-	 * @param customMessage The custom message explaining the exception condition
 	 * @param origin The origin of the invalid mapping document
 	 */
 	public InvalidMappingException(String customMessage, Origin origin) {
 		this( customMessage, origin.getType().getLegacyTypeText(), origin.getName() );
-	}
-
-	/**
-	 * Constructs an InvalidMappingException using the given information and a standard message.
-	 *
-	 * @param type The type of invalid mapping document
-	 * @param path The path (type specific) of the invalid mapping document
-	 */
-	public InvalidMappingException(String type, String path) {
-		this( "Could not parse mapping document from " + type + (path==null?"":" " + path), type, path );
-	}
-
-	/**
-	 * Constructs an InvalidMappingException using the given information and a standard message.
-	 *
-	 * @param type The type of invalid mapping document
-	 * @param path The path (type specific) of the invalid mapping document
-	 * @param cause The underlying cause
-	 */
-	public InvalidMappingException(String type, String path, Throwable cause) {
-		this( "Could not parse mapping document from " + type + (path==null?"":" " + path), type, path, cause );
-	}
-
-	/**
-	 * Constructs an InvalidMappingException using the given information.
-	 *
-	 * @param customMessage The custom message explaining the exception condition
-	 * @param origin The origin of the invalid mapping document
-	 * @param cause The underlying cause
-	 */
-	public InvalidMappingException(String customMessage, org.hibernate.internal.util.xml.Origin origin, Exception cause) {
-		this( customMessage, origin.getType(), origin.getName(), cause );
-	}
-
-	/**
-	 * Constructs an InvalidMappingException using the given information.
-	 *
-	 * @param customMessage The custom message explaining the exception condition
-	 * @param origin The origin of the invalid mapping document
-	 */
-	public InvalidMappingException(String customMessage, org.hibernate.internal.util.xml.Origin origin) {
-		this( customMessage, origin, null );
 	}
 
 	public String getType() {

@@ -59,12 +59,18 @@ public abstract class CollectionType extends AbstractType implements Association
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
 
-	private final TypeFactory.TypeScope typeScope;
 	private final String role;
 	private final String foreignKeyPropertyName;
 
+	/**
+	 * @deprecated Use the other contructor
+	 */
+	@Deprecated
 	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName) {
-		this.typeScope = typeScope;
+		this( role, foreignKeyPropertyName );
+	}
+
+	public CollectionType(String role, String foreignKeyPropertyName) {
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;
 	}

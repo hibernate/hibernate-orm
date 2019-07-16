@@ -42,7 +42,6 @@ public class AnsiSqlKeywords {
 		keywordsSql2003.add( "BEGIN" );
 		keywordsSql2003.add( "BETWEEN" );
 		keywordsSql2003.add( "BIGINT" );
-		keywordsSql2003.add( "BINARY" );
 		keywordsSql2003.add( "BLOB" );
 		keywordsSql2003.add( "BINARY" );
 		keywordsSql2003.add( "BOTH" );
@@ -55,7 +54,6 @@ public class AnsiSqlKeywords {
 		keywordsSql2003.add( "CHAR" );
 		keywordsSql2003.add( "CHARACTER" );
 		keywordsSql2003.add( "CHECK" );
-		keywordsSql2003.add( "CLOB" );
 		keywordsSql2003.add( "CLOB" );
 		keywordsSql2003.add( "CLOSE" );
 		keywordsSql2003.add( "COLLATE" );

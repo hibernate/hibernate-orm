@@ -46,7 +46,10 @@ import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.ColumnNameCache;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.loading.internal.CollectionLoadContext;
+import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
@@ -83,6 +86,7 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
@@ -968,8 +972,9 @@ public abstract class Loader {
 			);
 		}
 		finally {
-			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-			session.getJdbcCoordinator().afterStatementExecution();
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+			jdbcCoordinator.afterStatementExecution();
 		}
 
 	}
@@ -995,8 +1000,9 @@ public abstract class Loader {
 		LOG.trace( "Processing result set" );
 		int count;
 
+		final boolean debugEnabled = LOG.isDebugEnabled();
 		for ( count = 0; count < maxRows && rs.next(); count++ ) {
-			if ( LOG.isDebugEnabled() ) {
+			if ( debugEnabled ) {
 				LOG.debugf( "Result set row: %s", count );
 			}
 			Object result = getRowFromResultSet(
@@ -1068,6 +1074,7 @@ public abstract class Loader {
 			final String[] aliases = getAliases();
 			final String subselectQueryString = SubselectFetch.createSubselectFetchQueryFragment( queryParameters );
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
 			for ( Object key : keys ) {
 				final EntityKey[] rowKeys = (EntityKey[]) key;
 				for ( int i = 0; i < rowKeys.length; i++ ) {
@@ -1083,8 +1090,7 @@ public abstract class Loader {
 								namedParameterLocMap
 						);
 
-						persistenceContext
-								.getBatchFetchQueue()
+						batchFetchQueue
 								.addSubselect( rowKeys[i], subselectFetch );
 					}
 
@@ -1455,19 +1461,21 @@ public abstract class Loader {
 			// that the collection is empty and has no rows in the result set
 			CollectionPersister[] collectionPersisters = getCollectionPersisters();
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final boolean debugEnabled = LOG.isDebugEnabled();
+			final CollectionLoadContext collectionLoadContext = persistenceContext
+					.getLoadContexts()
+					.getCollectionLoadContext( (ResultSet) resultSetId );
 			for ( CollectionPersister collectionPersister : collectionPersisters ) {
 				for ( Serializable key : keys ) {
 					//handle empty collections
-					if ( LOG.isDebugEnabled() ) {
+					if ( debugEnabled ) {
 						LOG.debugf(
 								"Result set contains (possibly empty) collection: %s",
 								MessageHelper.collectionInfoString( collectionPersister, key, getFactory() )
 						);
 					}
 
-					persistenceContext
-							.getLoadContexts()
-							.getCollectionLoadContext( (ResultSet) resultSetId )
+					collectionLoadContext
 							.getLoadingCollection( collectionPersister, key );
 				}
 			}
@@ -1545,8 +1553,9 @@ public abstract class Loader {
 					null
 			);
 			if ( !versionType.isEqual( version, currentVersion ) ) {
-				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatistics().optimisticFailure( persister.getEntityName() );
+				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.optimisticFailure( persister.getEntityName() );
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), id );
 			}
@@ -2235,12 +2244,17 @@ public abstract class Loader {
 			return result;
 		}
 
-		for ( String name : namedParams.keySet() ) {
-			TypedValue typedValue = namedParams.get( name );
-			int columnSpan = typedValue.getType().getColumnSpan( getFactory() );
-			int[] locs = getNamedParameterLocs( name );
+		final boolean debugEnabled = LOG.isDebugEnabled();
+		final SessionFactoryImplementor factory = getFactory();
+
+		for ( Map.Entry<String, TypedValue> entry : namedParams.entrySet() ) {
+			final String name = entry.getKey();
+			final TypedValue typedValue = entry.getValue();
+			final Type type = typedValue.getType();
+			final int columnSpan = type.getColumnSpan( factory );
+			final int[] locs = getNamedParameterLocs( name );
 			for ( int loc : locs ) {
-				if ( LOG.isDebugEnabled() ) {
+				if ( debugEnabled ) {
 					LOG.debugf(
 							"bindNamedParameters() %s -> %s [%s]",
 							typedValue.getValue(),
@@ -2249,7 +2263,7 @@ public abstract class Loader {
 					);
 				}
 				int start = loc * columnSpan + startIndex;
-				typedValue.getType().nullSafeSet( statement, typedValue.getValue(), start, session );
+				type.nullSafeSet( statement, typedValue.getValue(), start, session );
 			}
 			result += locs.length;
 		}
@@ -2569,8 +2583,6 @@ public abstract class Loader {
 			final Type[] parameterTypes,
 			final Map<String, TypedValue> namedParameters,
 			final Type type) throws HibernateException {
-		final Type[] idTypes = new Type[ids.length];
-		Arrays.fill( idTypes, type );
 		try {
 			doQueryAndInitializeNonLazyCollections(
 					session,
@@ -2732,12 +2744,13 @@ public abstract class Loader {
 				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
 			}
 
-			if ( factory.getStatistics().isStatisticsEnabled() ) {
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
 				if ( result == null ) {
-					factory.getStatistics().queryCacheMiss( getQueryIdentifier(), queryCache.getRegion().getName() );
+					statistics.queryCacheMiss( getQueryIdentifier(), queryCache.getRegion().getName() );
 				}
 				else {
-					factory.getStatistics().queryCacheHit( getQueryIdentifier(), queryCache.getRegion().getName() );
+					statistics.queryCacheHit( getQueryIdentifier(), queryCache.getRegion().getName() );
 				}
 			}
 		}
@@ -2763,8 +2776,9 @@ public abstract class Loader {
 					key.getResultTransformer().getCachedResultTypes( resultTypes ),
 					session
 			);
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().queryCachePut( getQueryIdentifier(), queryCache.getRegion().getName() );
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( put && statistics.isStatisticsEnabled() ) {
+				statistics.queryCachePut( getQueryIdentifier(), queryCache.getRegion().getName() );
 			}
 		}
 	}
@@ -2784,7 +2798,8 @@ public abstract class Loader {
 			final ResultTransformer forcedResultTransformer)
 			throws HibernateException {
 
-		final boolean stats = getFactory().getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = getFactory().getStatistics();
+		final boolean stats = statistics.isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
 			startTime = System.nanoTime();
@@ -2805,7 +2820,7 @@ public abstract class Loader {
 		if ( stats ) {
 			final long endTime = System.nanoTime();
 			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-			getFactory().getStatistics().queryExecuted(
+			statistics.queryExecuted(
 					getQueryIdentifier(),
 					result.size(),
 					milliseconds
@@ -2858,8 +2873,9 @@ public abstract class Loader {
 			final SharedSessionContractImplementor session) throws HibernateException {
 		checkScrollability();
 
+		final StatisticsImplementor statistics = getFactory().getStatistics();
 		final boolean stats = getQueryIdentifier() != null &&
-				getFactory().getStatistics().isStatisticsEnabled();
+				statistics.isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
 			startTime = System.nanoTime();
@@ -2880,7 +2896,7 @@ public abstract class Loader {
 			if ( stats ) {
 				final long endTime = System.nanoTime();
 				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				getFactory().getStatistics().queryExecuted(
+				statistics.queryExecuted(
 						getQueryIdentifier(),
 						0,
 						milliseconds

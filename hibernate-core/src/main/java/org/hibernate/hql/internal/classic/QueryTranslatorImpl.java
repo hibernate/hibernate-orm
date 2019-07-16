@@ -62,6 +62,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.QuerySelect;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
@@ -649,10 +650,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		}
 		else {
 			rtsize = returnedTypes.size();
-			Iterator iter = entitiesToFetch.iterator();
-			while ( iter.hasNext() ) {
-				returnedTypes.add( iter.next() );
-			}
+			returnedTypes.addAll( entitiesToFetch );
 		}
 		int size = returnedTypes.size();
 		persisters = new Queryable[size];
@@ -1045,7 +1043,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	public Iterator iterate(QueryParameters queryParameters, EventSource session)
 			throws HibernateException {
 
-		boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		boolean stats = statistics.isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
 			startTime = System.nanoTime();
@@ -1078,7 +1077,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			if ( stats ) {
 				final long endTime = System.nanoTime();
 				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				session.getFactory().getStatistics().queryExecuted(
+				statistics.queryExecuted(
 						"HQL: " + queryString,
 						0,
 						milliseconds

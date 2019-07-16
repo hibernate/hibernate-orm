@@ -422,7 +422,7 @@ public class PostgreSQL81Dialect extends Dialect {
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
 		@Override
 		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			final int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) );
+			final int sqlState = Integer.parseInt( JdbcExceptionHelper.extractSqlState( sqle ) );
 			switch (sqlState) {
 				// CHECK VIOLATION
 				case 23514: return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );

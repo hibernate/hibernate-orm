@@ -26,7 +26,7 @@ public class ParameterizedFunctionExpression<X>
 		extends BasicFunctionExpression<X>
 		implements FunctionExpression<X> {
 
-	public static List<String> STANDARD_JPA_FUNCTION_NAMES = Arrays.asList(
+	public static final List<String> STANDARD_JPA_FUNCTION_NAMES = Arrays.asList(
 			// 4.6.17.2.1
 			"CONCAT",
 			"SUBSTRING",

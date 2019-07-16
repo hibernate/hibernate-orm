@@ -31,7 +31,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	private static final Logger log = Logger.getLogger( StrategySelectorImpl.class );
 
 
-	public static StrategyCreator STANDARD_STRATEGY_CREATOR = strategyClass -> {
+	public static final StrategyCreator STANDARD_STRATEGY_CREATOR = strategyClass -> {
 		try {
 			return strategyClass.newInstance();
 		}

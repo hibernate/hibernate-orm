@@ -14,14 +14,10 @@ import org.dom4j.Document;
  * Describes a parsed xml document.
  *
  * @author Steve Ebersole
+ * @deprecated no longer used
  */
+@Deprecated
 public interface XmlDocument extends Serializable {
-	/**
-	 * Retrieve the parsed DOM tree.
-	 *
-	 * @return the DOM tree
-	 */
-	public Document getDocumentTree();
 
 	/**
 	 * Retrieve the document's origin.

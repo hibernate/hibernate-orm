@@ -30,7 +30,7 @@ import org.hibernate.type.CompositeType;
 /**
  * @author Steve Ebersole
  */
-public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
+public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
 	/**
 	 * Static constructor
 	 */

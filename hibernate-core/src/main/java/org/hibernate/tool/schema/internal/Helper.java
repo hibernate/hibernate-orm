@@ -17,6 +17,8 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
@@ -39,7 +41,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class Helper {
-	private static final Logger log = Logger.getLogger( Helper.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( Helper.class );
 
 	public static ScriptSourceInput interpretScriptSourceSetting(
 			Object scriptSourceSetting,
@@ -103,14 +106,34 @@ public class Helper {
 	}
 
 	public static boolean interpretNamespaceHandling(Map configurationValues) {
+		//Print a warning if multiple conflicting properties are being set:
+		int count = 0;
+		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
+			count++;
+		}
+		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
+			count++;
+		}
+		if ( configurationValues.containsKey( AvailableSettings.HBM2DLL_CREATE_NAMESPACES ) ) {
+			count++;
+		}
+		if ( count > 1 ) {
+			log.multipleSchemaCreationSettingsDefined();
+		}
 		// prefer the JPA setting...
 		return ConfigurationHelper.getBoolean(
-				AvailableSettings.HBM2DLL_CREATE_SCHEMAS,
+				AvailableSettings.HBM2DDL_CREATE_SCHEMAS,
 				configurationValues,
+				//Then try the Hibernate ORM setting:
 				ConfigurationHelper.getBoolean(
-						AvailableSettings.HBM2DLL_CREATE_NAMESPACES,
+						AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
 						configurationValues,
-						false
+						//And finally fall back to the old name this had before we fixed the typo:
+						ConfigurationHelper.getBoolean(
+								AvailableSettings.HBM2DLL_CREATE_NAMESPACES,
+								configurationValues,
+								false
+						)
 				)
 		);
 	}

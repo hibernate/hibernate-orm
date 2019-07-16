@@ -1454,10 +1454,21 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *
 	 * @since 5.0
 	 */
+	String HBM2DDL_CREATE_NAMESPACES = "hibernate.hbm2ddl.create_namespaces";
+
+
+	/**
+	 * Specifies whether to automatically create also the database schema/catalog.
+	 * The default is false.
+	 *
+	 * @since 5.0
+	 * @deprecated
+	 */
+	@Deprecated
 	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
 
 	/**
-	 * The JPA variant of {@link #HBM2DLL_CREATE_NAMESPACES}
+	 * The JPA variant of {@link #HBM2DDL_CREATE_NAMESPACES}
 	 * <p/>
 	 * Specifies whether the persistence provider is to create the database schema(s) in addition to creating
 	 * database objects (tables, sequences, constraints, etc).  The value of this boolean property should be set
@@ -1465,7 +1476,13 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * contains "CREATE SCHEMA" commands.  If this property is not supplied (or is explicitly {@code false}), the
 	 * provider should not attempt to create database schemas.
 	 */
-	String HBM2DLL_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";
+	String HBM2DDL_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";
+
+	/**
+	 * @deprecated Use {@link #HBM2DDL_CREATE_SCHEMAS} instead: this variable name had a typo.
+	 */
+	@Deprecated
+	String HBM2DLL_CREATE_SCHEMAS = HBM2DDL_CREATE_SCHEMAS;
 
 	/**
 	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilterProvider} to be used by
@@ -1670,7 +1687,13 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *
 	 * @since 5.0
 	 */
-	String EXTRA_PHYSICAL_TABLE_TYPES = "hibernate.hbm2dll.extra_physical_table_types";
+	String EXTRA_PHYSICAL_TABLE_TYPES = "hibernate.hbm2ddl.extra_physical_table_types";
+
+	/**
+	 * @deprecated use {@link #EXTRA_PHYSICAL_TABLE_TYPES} instead.
+	 */
+	@Deprecated
+	String DEPRECATED_EXTRA_PHYSICAL_TABLE_TYPES = "hibernate.hbm2dll.extra_physical_table_types";
 
 	/**
 	 * Unique columns and unique keys both use unique constraints in most dialects.

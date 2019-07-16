@@ -22,7 +22,6 @@ import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Before;
 import org.junit.Test;
 

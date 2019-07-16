@@ -17,7 +17,6 @@ import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.id.PostInsertIdentifierGenerator;
 
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.RequiresDialectFeature;

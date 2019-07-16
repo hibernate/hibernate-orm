@@ -340,7 +340,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 		CriteriaQuery<A> criteria = criteriaBuilder.createQuery( A.class );
 		Root<A> root = criteria.from( A.class );
-		root.join( fecth, joinType );
+		root.fetch( fecth, joinType );
 
 		criteria.where( criteriaBuilder.equal( root.get( "name" ), "name1" ) );
 

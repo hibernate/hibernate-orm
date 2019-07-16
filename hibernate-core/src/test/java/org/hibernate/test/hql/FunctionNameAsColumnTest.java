@@ -10,7 +10,6 @@ import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 
@@ -171,9 +170,9 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 		CriteriaQuery<EntityWithFunctionAsColumnHolder> criteria = criteriaBuilder.createQuery(
 				EntityWithFunctionAsColumnHolder.class );
 		Root<EntityWithFunctionAsColumnHolder> root = criteria.from( EntityWithFunctionAsColumnHolder.class );
-		root.join( "entityWithArgFunctionAsColumns", JoinType.LEFT );
-		Join<Object, Object> nextHolder = root.join( "nextHolder", JoinType.LEFT );
-		nextHolder.join( "entityWithArgFunctionAsColumns", JoinType.LEFT );
+		root.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT )
+				.fetch( "nextHolder", JoinType.LEFT )
+				.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT );
 		criteria.where( criteriaBuilder.isNotNull( root.get( "nextHolder" ) ) );
 
 		holder1 = s.createQuery( criteria ).uniqueResult();
@@ -277,9 +276,9 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 		CriteriaQuery<EntityWithFunctionAsColumnHolder> criteria = criteriaBuilder.createQuery(
 				EntityWithFunctionAsColumnHolder.class );
 		Root<EntityWithFunctionAsColumnHolder> root = criteria.from( EntityWithFunctionAsColumnHolder.class );
-		root.join( "entityWithArgFunctionAsColumns", JoinType.LEFT );
-		Join<Object, Object> nextHolder = root.join( "nextHolder", JoinType.LEFT );
-		nextHolder.join( "entityWithArgFunctionAsColumns", JoinType.LEFT );
+		root.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT )
+				.fetch( "nextHolder", JoinType.LEFT )
+				.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT );
 		criteria.where( criteriaBuilder.isNotNull( root.get( "nextHolder" ) ) );
 
 //		holder1 = ( EntityWithFunctionAsColumnHolder ) s.createCriteria( EntityWithFunctionAsColumnHolder.class )

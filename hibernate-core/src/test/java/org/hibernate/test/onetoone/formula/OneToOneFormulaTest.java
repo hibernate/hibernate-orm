@@ -6,11 +6,15 @@
  */
 package org.hibernate.test.onetoone.formula;
 
-import org.hibernate.FetchMode;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Property;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
@@ -23,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -73,14 +78,14 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		address.setStreet( "Karbarook Ave" );
 		person.setAddress( address );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, session -> {
 			session.persist( person );
 		} );
 	}
 
 	@Override
 	protected void cleanupTest() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, session -> {
 			session.delete( person );
 		} );
 	}
@@ -88,7 +93,7 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneFormula() {
 
-		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, s -> {
 			Person p = (Person) s.createQuery( "from Person" ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
@@ -96,7 +101,7 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 			assertNull( p.getMailingAddress() );
 		} );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, s -> {
 			Person p = (Person) s.createQuery(
 					"from Person p left join fetch p.mailingAddress left join fetch p.address" ).uniqueResult();
 
@@ -105,7 +110,7 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 			assertNull( p.getMailingAddress() );
 		} );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, s -> {
 			Person p = (Person) s.createQuery( "from Person p left join fetch p.address" ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
@@ -113,28 +118,45 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 			assertNull( p.getMailingAddress() );
 		} );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
-			Person p = (Person) s.createCriteria( Person.class )
-					.createCriteria( "address" )
-					.add( Property.forName( "zip" ).eq( "3181" ) )
-					.uniqueResult();
+		doInHibernate( this::sessionFactory, s -> {
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+			Root<Person> root = criteria.from( Person.class );
+			Join<Object, Object> address = root.join( "address", JoinType.INNER );
+			criteria.where( criteriaBuilder.equal( address.get( "zip" ), "3181" ) );
+			Person p = s.createQuery( criteria ).uniqueResult();
+
+//			Person p = (Person) s.createCriteria( Person.class )
+//					.createCriteria( "address" )
+//					.add( Property.forName( "zip" ).eq( "3181" ) )
+//					.uniqueResult();
 			assertNotNull( p );
 		} );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
-			Person p = (Person) s.createCriteria( Person.class )
-					.setFetchMode( "address", FetchMode.JOIN )
-					.uniqueResult();
+		doInHibernate( this::sessionFactory, s -> {
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+			Root<Person> root = criteria.from( Person.class );
+			root.fetch( "address", JoinType.LEFT );
+			Person p = s.createQuery( criteria ).uniqueResult();
+//			Person p = (Person) s.createCriteria( Person.class )
+//					.setFetchMode( "address", FetchMode.JOIN )
+//					.uniqueResult();
 
 			assertNotNull( p.getAddress() );
 			assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 			assertNull( p.getMailingAddress() );
 		} );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
-			Person p = (Person) s.createCriteria( Person.class )
-					.setFetchMode( "mailingAddress", FetchMode.JOIN )
-					.uniqueResult();
+		doInHibernate( this::sessionFactory, s -> {
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+			Root<Person> root = criteria.from( Person.class );
+			root.fetch( "address", JoinType.LEFT );
+			Person p = s.createQuery( criteria ).uniqueResult();
+//			Person p = (Person) s.createCriteria( Person.class )
+//					.setFetchMode( "mailingAddress", FetchMode.JOIN )
+//					.uniqueResult();
 
 			assertNotNull( p.getAddress() );
 			assertTrue( Hibernate.isInitialized( p.getAddress() ) );
@@ -147,14 +169,14 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-5757")
 	public void testQuery() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, session -> {
 			Person p = (Person) session.createQuery( "from Person p where p.address = :address" ).setParameter(
 					"address",
 					address ).uniqueResult();
 			assertThat( p, notNullValue() );
 		} );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, session -> {
 			Address a = (Address) session.createQuery( "from Address a where a.person = :person" ).setParameter(
 					"person",
 					person ).uniqueResult();
@@ -165,7 +187,7 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testOneToOneEmbeddedCompositeKey() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, session -> {
 			Address a = new Address();
 			a.setType("HOME");
 			a.setPerson(person);
@@ -177,7 +199,7 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 			assertEquals(a.getZip(), "3181");
 		} );
 
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, session -> {
 			Address a = new Address();
 			a.setType("HOME");
 			a.setPerson(person);

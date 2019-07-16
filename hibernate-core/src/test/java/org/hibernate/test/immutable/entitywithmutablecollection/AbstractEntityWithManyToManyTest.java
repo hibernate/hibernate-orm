@@ -812,21 +812,24 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 		assertUpdateCount( isContractVersioned ? 1 : 0 );
 		clearCounts();
 
-		try {
-			inTransaction(
-					s -> {
-
+		inSession(
+				s -> {
+					pOrig.removeContract( cOrig );
+					try {
 						s.merge( pOrig );
 						assertFalse( isContractVersioned );
 					}
-			);
-		}
-		catch (PersistenceException ex) {
-			assertTyping( StaleObjectStateException.class, ex.getCause() );
-			assertTrue( isContractVersioned );
-		}
+					catch (PersistenceException ex) {
+						assertTyping(StaleObjectStateException.class, ex.getCause());
+						assertTrue( isContractVersioned);
+					}
+					finally {
+						s.getTransaction().rollback();
+					}
+				}
+		);
 
-		pOrig.removeContract( cOrig );
+
 
 		inTransaction(
 				s -> {
@@ -867,26 +870,24 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 		assertUpdateCount( isContractVersioned ? 1 : 0 );
 		clearCounts();
 
-		try {
-			inTransaction(
-					s -> {
-						pOrig.removeContract( cOrig );
-						s.update( pOrig );
-
+		inSession(
+				s -> {
+					try {
+						s.getTransaction().commit();
 						assertFalse( isContractVersioned );
-
 					}
-			);
-		}
-		catch (PersistenceException ex) {
-			assertTrue( isContractVersioned );
-			if ( !sessionFactory().getSessionFactoryOptions().isJdbcBatchVersionedData() ) {
-				assertTyping( StaleObjectStateException.class, ex.getCause() );
-			}
-			else {
-				assertTyping( StaleStateException.class, ex.getCause() );
-			}
-		}
+					catch (PersistenceException ex) {
+						s.getTransaction().rollback();
+						assertTrue( isContractVersioned );
+						if ( !sessionFactory().getSessionFactoryOptions().isJdbcBatchVersionedData() ) {
+							assertTyping( StaleObjectStateException.class, ex.getCause() );
+						}
+						else {
+							assertTyping( StaleStateException.class, ex.getCause() );
+						}
+					}
+				}
+		);
 
 		inTransaction(
 				s -> {

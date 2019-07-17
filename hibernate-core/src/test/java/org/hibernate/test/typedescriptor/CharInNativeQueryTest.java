@@ -41,7 +41,7 @@ public class CharInNativeQueryTest extends BaseCoreFunctionalTestCase {
 
         session = openSession(  );
         session.beginTransaction();
-        Object issueNumber = session.createSQLQuery( "select issue.issueNumber from Issue issue" ).uniqueResult();
+        Object issueNumber = session.createNativeQuery( "select issue.issueNumber from Issue issue" ).uniqueResult();
         session.getTransaction().commit();
         session.close();
 

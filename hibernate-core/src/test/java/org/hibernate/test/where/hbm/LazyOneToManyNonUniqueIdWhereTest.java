@@ -42,32 +42,32 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 		doInHibernate(
 				this::sessionFactory, session -> {
 
-					session.createSQLQuery( "DROP TABLE MAIN_TABLE" ).executeUpdate();
+					session.createNativeQuery( "DROP TABLE MAIN_TABLE" ).executeUpdate();
 
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"create table MAIN_TABLE( " +
 									"ID integer not null, NAME varchar(255) not null, CODE varchar(10) not null, " +
 									"MATERIAL_OWNER_ID integer, BUILDING_OWNER_ID integer, " +
 									"primary key (ID, CODE) )"
 					).executeUpdate();
 
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" )
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" )
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
 													"VALUES( 1, 'high', 'RATING', 1, 1 )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
 													"VALUES( 2, 'medium', 'RATING', 1, null )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
 													"VALUES( 3, 'low', 'RATING', 1, null )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
 													"VALUES( 1, 'small', 'SIZE', null, 1 )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE, MATERIAL_OWNER_ID, BUILDING_OWNER_ID) " +
 													"VALUES( 2, 'medium', 'SIZE', 1, null )" )
 							.executeUpdate();
 				}
@@ -78,7 +78,7 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 	public void cleanup() {
 		doInHibernate(
 				this::sessionFactory, session -> {
-					session.createSQLQuery( "delete from MAIN_TABLE" ).executeUpdate();
+					session.createNativeQuery( "delete from MAIN_TABLE" ).executeUpdate();
 				}
 		);
 	}

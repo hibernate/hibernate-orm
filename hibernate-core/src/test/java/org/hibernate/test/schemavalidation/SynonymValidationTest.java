@@ -28,8 +28,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 /**
  * Allows the BaseCoreFunctionalTestCase to create the schema using TestEntity.  The test method validates against an
  * identical entity, but using the synonym name.
@@ -51,14 +49,14 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Before
 	public void setUp() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createSQLQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();
+			session.createNativeQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();
 		} );
 	}
 
 	@After
 	public void tearDown() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createSQLQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate();
+			session.createNativeQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate();
 		});
 	}
 

@@ -19,11 +19,8 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -31,10 +28,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
@@ -120,7 +113,7 @@ public class JoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
 			.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
+				Employee e = (Employee) sr.get( );
 				e.setTitle( "Unknown" );
 			}
 		} );
@@ -132,7 +125,7 @@ public class JoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
 			.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
+				Employee e = (Employee) sr.get( );
 				s.delete( e );
 			}
 		} );

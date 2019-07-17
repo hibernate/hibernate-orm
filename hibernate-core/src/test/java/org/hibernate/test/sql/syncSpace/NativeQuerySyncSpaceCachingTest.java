@@ -67,7 +67,7 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
 
 		Session session = openSession();
-		session.createSQLQuery( "select * from Address" ).list();
+		session.createNativeQuery( "select * from Address" ).list();
 		session.close();
 
 		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
@@ -79,7 +79,7 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 
 		Session session = openSession();
 		session.beginTransaction();
-		session.createSQLQuery( "update Address set id = id" ).executeUpdate();
+		session.createNativeQuery( "update Address set id = id" ).executeUpdate();
 		session.getTransaction().commit();
 		session.close();
 
@@ -93,7 +93,7 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 
 		Session session = openSession();
 		session.beginTransaction();
-		session.createSQLQuery( "update Address set id = id" ).addSynchronizedEntityClass( Address.class ).executeUpdate();
+		session.createNativeQuery( "update Address set id = id" ).addSynchronizedEntityClass( Address.class ).executeUpdate();
 		session.getTransaction().commit();
 		session.close();
 
@@ -105,7 +105,7 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
 
 		Session session = openSession();
-		session.createSQLQuery( "select * from Customer" ).list();
+		session.createNativeQuery( "select * from Customer" ).list();
 		session.close();
 
 		assertTrue( sessionFactory().getCache().containsEntity( Customer.class, 1 ) );
@@ -117,7 +117,7 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 
 		Session session = openSession();
 		session.beginTransaction();
-		session.createSQLQuery( "update Customer set id = id" ).executeUpdate();
+		session.createNativeQuery( "update Customer set id = id" ).executeUpdate();
 		session.getTransaction().commit();
 		session.close();
 
@@ -131,7 +131,7 @@ public class NativeQuerySyncSpaceCachingTest extends BaseNonConfigCoreFunctional
 
 		Session session = openSession();
 		session.beginTransaction();
-		session.createSQLQuery( "update Customer set id = id" ).addSynchronizedEntityClass( Customer.class ).executeUpdate();
+		session.createNativeQuery( "update Customer set id = id" ).addSynchronizedEntityClass( Customer.class ).executeUpdate();
 		session.getTransaction().commit();
 		session.close();
 

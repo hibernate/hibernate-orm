@@ -117,7 +117,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 					.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
+				Employee e = (Employee) sr.get( );
 				e.setTitle( "Unknown" );
 			}
 		} );
@@ -129,7 +129,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 					.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
+				Employee e = (Employee) sr.get( );
 				s.delete( e );
 			}
 		} );
@@ -164,7 +164,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 					.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
+				Employee e = (Employee) sr.get( );
 				s.delete( e );
 			}
 		} );
@@ -197,7 +197,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 					.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
+				Employee e = (Employee) sr.get( );
 				s.delete( e );
 			}
 		} );

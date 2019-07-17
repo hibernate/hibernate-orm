@@ -55,74 +55,74 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 		Session session = openSession();
 		session.beginTransaction();
 		{
-					session.createSQLQuery( getDialect().getDropTableString( "MAIN_TABLE" ) ).executeUpdate();
-					session.createSQLQuery( getDialect().getDropTableString( "COLLECTION_TABLE" ) ).executeUpdate();
-					session.createSQLQuery( getDialect().getDropTableString( "MATERIAL_RATINGS" ) ).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "MAIN_TABLE" ) ).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "COLLECTION_TABLE" ) ).executeUpdate();
+					session.createNativeQuery( getDialect().getDropTableString( "MATERIAL_RATINGS" ) ).executeUpdate();
 
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"create table MAIN_TABLE( " +
 									"ID integer not null, NAME varchar(255) not null, CODE varchar(10) not null, " +
 									"primary key (ID, CODE) )"
 					).executeUpdate();
 
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" )
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" )
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'high', 'RATING' )" )
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'high', 'RATING' )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'RATING' )" )
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'RATING' )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 3, 'low', 'RATING' )" )
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 3, 'low', 'RATING' )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'small', 'SIZE' )" )
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'small', 'SIZE' )" )
 							.executeUpdate();
-					session.createSQLQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'SIZE' )" )
+					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'SIZE' )" )
 							.executeUpdate();
 
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"create table COLLECTION_TABLE( " +
 									"MAIN_ID integer not null, MAIN_CODE varchar(10) not null, " +
 									"ASSOCIATION_ID int not null, ASSOCIATION_CODE varchar(10) not null, " +
 									"primary key (MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE))"
 					).executeUpdate();
 
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'MATERIAL', 1, 'RATING' )"
 					).executeUpdate();
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'MATERIAL', 2, 'RATING' )"
 					).executeUpdate();
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'MATERIAL', 3, 'RATING' )"
 					).executeUpdate();
 
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'MATERIAL', 2, 'SIZE' )"
 					).executeUpdate();
 
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'BUILDING', 1, 'RATING' )"
 					).executeUpdate();
 
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
 									"VALUES( 1, 'BUILDING', 1, 'SIZE' )"
 					).executeUpdate();
 
 
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"create table MATERIAL_RATINGS( " +
 									"MATERIAL_ID integer not null, RATING_ID integer not null," +
 									" primary key (MATERIAL_ID, RATING_ID))"
 					).executeUpdate();
 
-					session.createSQLQuery(
+					session.createNativeQuery(
 							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 1 )"
 					).executeUpdate();
 		}
@@ -135,9 +135,9 @@ public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest extends 
 		Session session = openSession();
 		session.beginTransaction();
 		{
-					session.createSQLQuery( "delete from MATERIAL_RATINGS" ).executeUpdate();
-					session.createSQLQuery( "delete from COLLECTION_TABLE" ).executeUpdate();
-					session.createSQLQuery( "delete from MAIN_TABLE" ).executeUpdate();
+					session.createNativeQuery( "delete from MATERIAL_RATINGS" ).executeUpdate();
+					session.createNativeQuery( "delete from COLLECTION_TABLE" ).executeUpdate();
+					session.createNativeQuery( "delete from MAIN_TABLE" ).executeUpdate();
 		}
 		session.getTransaction().commit();
 		session.close();

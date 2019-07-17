@@ -10,9 +10,12 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Session;
+import org.hibernate.query.Query;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -99,13 +102,13 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		int i = 0;
-		for ( Iterator it = s.createQuery( "from Parent" ).iterate(); it.hasNext(); ) {
+		List<Parent> fromParent = s.createQuery( "from Parent" ).list();
+		for ( Parent  p : fromParent ) {
 			i++;
 			if (i % 2 == 0) {
 				s.flush();
 				s.clear();
 			}
-			Parent p = (Parent) it.next();
 			assertEquals( 1, p.getChildren().size() );
 		}
 		s.getTransaction().commit();
@@ -140,8 +143,8 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		int i = 0;
-		for (Iterator it = s.createQuery( "from Parent" ).iterate(); it.hasNext(); ) {
-			Parent p = (Parent) it.next();
+		List<Parent> fromParent = s.createQuery( "from Parent" ).list();
+		for (Parent p : fromParent ) {
 			assertEquals( 1, p.getChildren().size() );
 			i++;
 			if (i % 2 == 0) {
@@ -180,10 +183,9 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		Parent p = null;
-		for (Iterator it = s.createQuery( "from Parent" ).iterate(); it.hasNext(); ) {
+		List<Parent> fromParent = s.createQuery( "from Parent" ).list();
+		for (Parent p : fromParent ) {
 			if ( p != null) { s.evict(p); }
-			p = (Parent) it.next();
 			assertEquals( 1, p.getChildren().size() );
 		}
 		s.getTransaction().commit();
@@ -217,8 +219,8 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		for (Iterator it = s.createQuery( "from Parent" ).iterate(); it.hasNext(); ) {
-			Parent p = (Parent) it.next();
+		List<Parent> fromParent = s.createQuery( "from Parent" ).list();
+		for (Parent p : fromParent ) {
 			assertEquals( 1, p.getChildren().size() );
 			s.evict(p);
 		}

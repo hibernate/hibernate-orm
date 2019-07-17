@@ -61,7 +61,7 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		try {
 			session.beginTransaction();
-			List results = session.createSQLQuery(
+			List results = session.createNativeQuery(
 					"select u.name, u2.name from t_user u, t_user u2 where u.name='steve'" ).list();
 			// this should result in a result set like:
 			//   [0] steve, steve
@@ -108,7 +108,7 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		List result = session.createSQLQuery( QUERY_STRING ).list();
+		List result = session.createNativeQuery( QUERY_STRING ).list();
 		Object[] row = (Object[]) result.get( 0 );
 		Assert.assertEquals( "steve", row[0] );
 		Assert.assertEquals( "developer", row[1] );
@@ -120,7 +120,7 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDialectGetColumnAliasExtractor() throws Exception {
+	public void testDialectGetColumnAliasExtractor() {
 		Session session = openSession();
 		final SessionImplementor sessionImplementor = (SessionImplementor) session;
 		session.beginTransaction();

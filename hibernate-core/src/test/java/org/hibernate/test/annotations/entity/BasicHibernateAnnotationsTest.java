@@ -417,7 +417,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		team = (SoccerTeam)s.merge(team);
-		int count = ( (Long) s.createQuery( "select count(*) from Player" ).iterate().next() ).intValue();
+		int count = ( (Long) s.createQuery( "select count(*) from Player" ).list().get( 0 ) ).intValue();
 		assertEquals("expected count of 3 but got = " + count, count, 3);
 
 		// clear references to players, this should orphan the players which should
@@ -430,7 +430,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		count = ( (Long) s.createQuery( "select count(*) from Player" ).iterate().next() ).intValue();
+		count = ( (Long) s.createQuery( "select count(*) from Player" ).list().get( 0 ) ).intValue();
 		assertEquals("expected count of 0 but got = " + count, count, 0);
 		tx.commit();
 		s.close();
@@ -468,7 +468,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 		team2 = (SoccerTeam)s.load(team2.getClass(), team2.getId());
 		team = (SoccerTeam)s.load(team.getClass(), team.getId());
-		int count = ( (Long) s.createQuery( "select count(*) from Player" ).iterate().next() ).intValue();
+		int count = ( (Long) s.createQuery( "select count(*) from Player" ).list().get( 0 ) ).intValue();
 		assertEquals("expected count of 2 but got = " + count, count, 2);
 
 		// clear references to players, this should orphan the players which should
@@ -480,7 +480,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		count = ( (Long) s.createQuery( "select count(*) from Player" ).iterate().next() ).intValue();
+		count = ( (Long) s.createQuery( "select count(*) from Player" ).list().get( 0 ) ).intValue();
 		assertEquals("expected count of 0 but got = " + count, count, 0);
 		tx.commit();
 		s.close();
@@ -507,11 +507,11 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		s.enableFilter( "betweenLength" ).setParameter( "minLength", 5 ).setParameter( "maxLength", 50 );
-		long count = ( (Long) s.createQuery( "select count(*) from Forest" ).iterate().next() ).intValue();
+		long count = ( (Long) s.createQuery( "select count(*) from Forest" ).list().get( 0 ) ).intValue();
 		assertEquals( 1, count );
 		s.disableFilter( "betweenLength" );
 		s.enableFilter( "minLength" ).setParameter( "minLength", 5 );
-		count = ( (Long) s.createQuery( "select count(*) from Forest" ).iterate().next() ).longValue();
+		count = ( (Long) s.createQuery( "select count(*) from Forest" ).list().get( 0 ) ).longValue();
 		assertEquals( 2l, count );
 		s.disableFilter( "minLength" );
 		tx.rollback();
@@ -549,16 +549,16 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		//We test every filter with 2 queries, the first on the base class of the 
 		//inheritance hierarchy (Drill), and the second on a subclass (PowerDrill)
 		s.enableFilter( "byName" ).setParameter( "name", "HomeDrill1");
-		long count = ( (Long) s.createQuery( "select count(*) from Drill" ).iterate().next() ).intValue();
+		long count = ( (Long) s.createQuery( "select count(*) from Drill" ).list().get( 0 ) ).intValue();
 		assertEquals( 1, count );
-		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).iterate().next() ).intValue();
+		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).list().get( 0 ) ).intValue();
 		assertEquals( 1, count );
 		s.disableFilter( "byName" );
 		
 		s.enableFilter( "byCategory" ).setParameter( "category", "Industrial" );
-		count = ( (Long) s.createQuery( "select count(*) from Drill" ).iterate().next() ).longValue();
+		count = ( (Long) s.createQuery( "select count(*) from Drill" ).list().get( 0 ) ).longValue();
 		assertEquals( 1, count );
-		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).iterate().next() ).longValue();
+		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).list().get( 0 ) ).longValue();
 		assertEquals( 1, count );
 		s.disableFilter( "byCategory" );
 		
@@ -568,7 +568,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	public void testParameterizedType() throws Exception {
+	public void testParameterizedType() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -581,7 +581,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		Forest f2 = (Forest) s.get( Forest.class, f.getId() );
+		Forest f2 = s.get( Forest.class, f.getId() );
 		assertEquals( f.getSmallText().toLowerCase(Locale.ROOT), f2.getSmallText() );
 		assertEquals( f.getBigText().toUpperCase(Locale.ROOT), f2.getBigText() );
 		tx.commit();
@@ -590,13 +590,13 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	public void testSerialized() throws Exception {
+	public void testSerialized() {
 		Forest forest = new Forest();
 		forest.setName( "Shire" );
 		Country country = new Country();
 		country.setName( "Middle Earth" );
 		forest.setCountry( country );
-		Set<Country> near = new HashSet<Country>();
+		Set<Country> near = new HashSet<>();
 		country = new Country();
 		country.setName("Mordor");
 		near.add(country);
@@ -617,7 +617,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		forest = (Forest) s.get( Forest.class, forest.getId() );
+		forest = s.get( Forest.class, forest.getId() );
 		assertNotNull( forest );
 		country = forest.getCountry();
 		assertNotNull( country );

@@ -47,14 +47,14 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 	@Before
 	public void setUp() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createSQLQuery( "CREATE VIEW test_synonym AS SELECT * FROM test_entity" ).executeUpdate();
+			session.createNativeQuery( "CREATE VIEW test_synonym AS SELECT * FROM test_entity" ).executeUpdate();
 		} );
 	}
 
 	@After
 	public void tearDown() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createSQLQuery( "DROP VIEW test_synonym CASCADE" ).executeUpdate();
+			session.createNativeQuery( "DROP VIEW test_synonym CASCADE" ).executeUpdate();
 		} );
 	}
 

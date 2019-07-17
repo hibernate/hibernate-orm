@@ -582,7 +582,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 
 		Query queryWithCollection = s.getNamedQuery("organizationEmploymentsExplicitAliases");
-		queryWithCollection.setLong("id",  jboss.getId() );
+		queryWithCollection.setParameter("id",  jboss.getId() );
 		list = queryWithCollection.list();
 		assertEquals(list.size(),1);
 

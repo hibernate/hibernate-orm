@@ -86,7 +86,7 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 		rebuildSessionFactory();
 		prepareTest();
 		try (Session s = openSession()) {
-			s.createSQLQuery( "delete from MY_ENTITY" ).executeUpdate();
+			s.createNativeQuery( "delete from MY_ENTITY" ).executeUpdate();
 		}
 	}
 
@@ -96,7 +96,7 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 		rebuildSessionFactory();
 		prepareTest();
 		try (Session s = openSession()) {
-			s.createSQLQuery( "delete from MY_ENTITY" ).executeUpdate();
+			s.createNativeQuery( "delete from MY_ENTITY" ).executeUpdate();
 		}
 	}
 

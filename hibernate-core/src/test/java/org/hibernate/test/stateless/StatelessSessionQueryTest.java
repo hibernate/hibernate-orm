@@ -68,7 +68,7 @@ public class StatelessSessionQueryTest extends BaseCoreFunctionalTestCase {
 		query = s.getNamedQuery( Contact.class.getName() + ".contacts" );
 		assertEquals( 1, query.getResultList().size() );
 
-		org.hibernate.query.NativeQuery sqlQuery = s.createSQLQuery( "select id from Contact" );
+		org.hibernate.query.NativeQuery sqlQuery = s.createNativeQuery( "select id from Contact" );
 		assertEquals( 1, sqlQuery.getResultList().size() );
 
 		s.close();

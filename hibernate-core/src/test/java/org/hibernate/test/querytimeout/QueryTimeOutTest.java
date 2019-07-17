@@ -137,7 +137,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testCreateSQLQuerySetTimeout() {
 		doInHibernate(
 				this::sessionFactory, session -> {
-					NativeQuery query = session.createSQLQuery( QUERY );
+					NativeQuery query = session.createNativeQuery( QUERY );
 					query.setTimeout( 123 );
 					query.executeUpdate();
 
@@ -156,7 +156,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testCreateSQLQuerySetTimeoutHint() {
 		doInHibernate(
 				this::sessionFactory, session -> {
-					NativeQuery query = session.createSQLQuery( QUERY );
+					NativeQuery query = session.createNativeQuery( QUERY );
 					query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 123000 );
 					query.executeUpdate();
 

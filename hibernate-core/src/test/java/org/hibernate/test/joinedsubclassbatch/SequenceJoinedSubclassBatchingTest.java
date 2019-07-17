@@ -19,11 +19,9 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -119,7 +117,7 @@ public class SequenceJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
+				Employee e = (Employee) sr.get( );
 				e.setTitle( "Unknown" );
 			}
 		} );
@@ -131,7 +129,7 @@ public class SequenceJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
+				Employee e = (Employee) sr.get( );
 				s.delete( e );
 			}
 		} );
@@ -163,7 +161,7 @@ public class SequenceJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 					.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( 0 );
+				Employee e = (Employee) sr.get( );
 				s.delete( e );
 			}
 		} );

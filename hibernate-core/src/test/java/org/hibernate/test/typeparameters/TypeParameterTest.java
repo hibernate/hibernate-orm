@@ -35,7 +35,7 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSave() throws Exception {
+	public void testSave() {
 		deleteData();
 
 		Session s = openSession();
@@ -83,13 +83,13 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Widget obj = (Widget) s.createQuery("from Widget o where o.string = :string").setString("string", "all-normal").uniqueResult();
+		Widget obj = (Widget) s.createQuery("from Widget o where o.string = :string").setParameter("string", "all-normal").uniqueResult();
 		assertEquals("Non-Default value incorrectly loaded", obj.getValueOne(), 7);
 		assertEquals("Non-Default value incorrectly loaded", obj.getValueTwo(), 8);
 		assertEquals("Non-Default value incorrectly loaded", obj.getValueThree(), 9);
 		assertEquals("Non-Default value incorrectly loaded", obj.getValueFour(), 10);
 
-		obj = (Widget) s.createQuery("from Widget o where o.string = :string").setString("string", "all-default").uniqueResult();
+		obj = (Widget) s.createQuery("from Widget o where o.string = :string").setParameter("string", "all-default").uniqueResult();
 		assertEquals("Default value incorrectly loaded", obj.getValueOne(), 1);
 		assertEquals("Default value incorrectly loaded", obj.getValueTwo(), 2);
 		assertEquals("Default value incorrectly loaded", obj.getValueThree(), -1);
@@ -101,7 +101,7 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 		deleteData();
 	}
 
-	private void initData() throws Exception {
+	private void initData() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
@@ -125,7 +125,7 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	private void deleteData() throws Exception {
+	private void deleteData() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.createQuery( "delete from Widget" ).executeUpdate();

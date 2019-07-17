@@ -38,7 +38,7 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 	public void testScalarStoredProcedure() throws HibernateException, SQLException {
 		Session s = openSession();
 		Query namedQuery = s.getNamedQuery( "simpleScalar" );
-		namedQuery.setLong( "number", 43 );
+		namedQuery.setParameter( "number", 43 );
 		List list = namedQuery.list();
 		Object o[] = ( Object[] ) list.get( 0 );
 		assertEquals( o[0], "getAll" );
@@ -51,8 +51,8 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 		Session s = openSession();
 
 		Query namedQuery = s.getNamedQuery( "paramhandling" );
-		namedQuery.setLong( 1, 10 );
-		namedQuery.setLong( 2, 20 );
+		namedQuery.setParameter( 1, 10 );
+		namedQuery.setParameter( 2, 20 );
 		List list = namedQuery.list();
 		Object[] o = ( Object[] ) list.get( 0 );
 		assertEquals( o[0], Long.valueOf( 10 ) );

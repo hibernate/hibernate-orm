@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.internal.AbstractProducedQuery;
 
 /**
@@ -61,10 +62,12 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 
 		final AbstractProducedQuery query = (AbstractProducedQuery) session.getNamedQuery( queryName );
 		if ( query.getParameterMetadata().hasNamedParameters() ) {
-			query.setParameter( query.getParameterMetadata().getNamedParameterNames().iterator().next(), id, persister.getIdentifierType() );
+			query.setParameter( query.getParameterMetadata().getNamedParameterNames().iterator().next(), id,
+								(AllowableParameterType) persister.getIdentifierType()
+			);
 		}
 		else {
-			query.setParameter( position, id, persister.getIdentifierType() );
+			query.setParameter( position, id, (AllowableParameterType) persister.getIdentifierType() );
 		}
 
 		query.setOptionalId( id );

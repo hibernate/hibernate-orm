@@ -34,7 +34,6 @@ import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.NameableQuery;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
@@ -159,10 +158,10 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setParameter(String name, Object val);
 
-	@Override
-	default <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type type) {
-		return setParameter( parameter, val, (AllowableParameterType) type );
-	}
+//	@Override
+//	default <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type type) {
+//		return setParameter( parameter, val, (AllowableParameterType) type );
+//	}
 
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType type);
@@ -170,18 +169,18 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setParameter(int position, Object val);
 
-	@Override
-	default NativeQueryImplementor<R> setParameter(String name, Object val, Type type) {
-		return setParameter( name, val, (AllowableParameterType) type );
-	}
+//	@Override
+//	default NativeQueryImplementor<R> setParameter(String name, Object val, Type type) {
+//		return setParameter( name, val, (AllowableParameterType) type );
+//	}
 
 	@Override
 	NativeQueryImplementor<R> setParameter(String name, Object val, AllowableParameterType type);
 
-	@Override
-	default NativeQueryImplementor<R> setParameter(int position, Object val, Type type) {
-		return setParameter( position, val, (AllowableParameterType) type );
-	}
+//	@Override
+//	default NativeQueryImplementor<R> setParameter(int position, Object val, Type type) {
+//		return setParameter( position, val, (AllowableParameterType) type );
+//	}
 
 	@Override
 	NativeQueryImplementor<R> setParameter(int position, Object val, AllowableParameterType type);
@@ -206,18 +205,18 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setParameterList(String name, Collection values);
 
-	@Override
-	default NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type) {
-		return setParameterList( name, values, (AllowableParameterType) type );
-	}
+//	@Override
+//	default NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type) {
+//		return setParameterList( name, values, (AllowableParameterType) type );
+//	}
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(String name, Collection values, AllowableParameterType type);
-
-	@Override
-	default NativeQueryImplementor<R> setParameterList(String name, Object[] values, Type type) {
-		return setParameterList( name, values, (AllowableParameterType) type );
-	}
+//
+//	@Override
+//	default NativeQueryImplementor<R> setParameterList(String name, Object[] values, Type type) {
+//		return setParameterList( name, values, (AllowableParameterType) type );
+//	}
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType type);
@@ -312,14 +311,14 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setParameterList(int position, Collection values, Class type);
 
-	@Override
-	NativeQueryImplementor<R> setParameterList(int position, Collection values, Type type);
+//	@Override
+//	NativeQueryImplementor<R> setParameterList(int position, Collection values, Type type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(int position, Collection values, AllowableParameterType type);
 
-	@Override
-	NativeQueryImplementor<R> setParameterList(int position, Object[] values, Type type);
+//	@Override
+//	NativeQueryImplementor<R> setParameterList(int position, Object[] values, Type type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType type);

@@ -564,10 +564,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @deprecated Use {@link #setParameterList(String, Collection, AllowableParameterType)}
 	 */
-	@Deprecated
-	default Query<R> setParameterList(String name, Collection values, Type type){
-		return setParameter( name, values, (AllowableParameterType) type );
-	}
+//	@Deprecated
+//	default Query<R> setParameterList(String name, Collection values, Type type){
+//		return setParameter( name, values, (AllowableParameterType) type );
+//	}
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -581,10 +581,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @deprecated Use {@link #setParameterList(String, Collection, AllowableParameterType)}
 	 */
-	@Deprecated
-	default Query<R> setParameterList(int position, Collection values, Type type){
-		return setParameter( position, values, (AllowableParameterType) type );
-	}
+//	@Deprecated
+//	default Query<R> setParameterList(int position, Collection values, Type type){
+//		return setParameter( position, values, (AllowableParameterType) type );
+//	}
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -623,9 +623,9 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @deprecated Use {@link #setParameterList(String, Object[], AllowableParameterType)}
 	 */
 	@Deprecated
-	default Query<R> setParameterList(String name, Object[] values, Type type){
-		return setParameter( name, values, (AllowableParameterType)type );
-	}
+//	default Query<R> setParameterList(String name, Object[] values, Type type){
+//		return setParameter( name, values, (AllowableParameterType)type );
+//	}
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -639,10 +639,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @deprecated Use {@link #setParameterList(String, Object[], AllowableParameterType)}
 	 */
-	@Deprecated
-	default Query<R> setParameterList(int position, Object[] values, Type type){
-		return setParameter( position, values, (AllowableParameterType)type );
-	}
+//	@Deprecated
+//	default Query<R> setParameterList(int position, Object[] values, Type type){
+//		return setParameter( position, values, (AllowableParameterType)type );
+//	}
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -733,10 +733,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @deprecated Use {@link #setParameter(String, Object, AllowableParameterType)}
 	 */
-	@Deprecated
-	default Query<R> setParameter(String name, Object val, Type type){
-		return setParameter( name, val, (AllowableParameterType) type );
-	}
+//	@Deprecated
+//	default Query<R> setParameter(String name, Object val, Type type){
+//		return setParameter( name, val, (AllowableParameterType) type );
+//	}
 
 	/**
 	 * Bind a value to a JDBC-style query parameter.
@@ -750,10 +750,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @deprecated Use {@link #setParameter(int, Object, AllowableParameterType)}
 	 */
-	@Deprecated
-	default Query<R> setParameter(int position, Object val, Type type) {
-		return setParameter( position, val, (AllowableParameterType) type );
-	}
+//	@Deprecated
+//	default Query<R> setParameter(int position, Object val, Type type) {
+//		return setParameter( position, val, (AllowableParameterType) type );
+//	}
 
 	/**
 	 * Bind a query parameter using the supplied Type
@@ -766,10 +766,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @deprecated Use {@link #setParameter(QueryParameter, Object, AllowableParameterType)}
 	 */
-	@Deprecated
-	default <P> Query<R> setParameter(QueryParameter<P> parameter, P val, Type type){
-		return setParameter( parameter, val, (AllowableParameterType) type );
-	}
+//	@Deprecated
+//	default <P> Query<R> setParameter(QueryParameter<P> parameter, P val, Type type){
+//		return setParameter( parameter, val, (AllowableParameterType) type );
+//	}
 
 	/**
 	 * @deprecated (since 5.2) Use {@link #setTupleTransformer} or {@link #setResultListTransformer}

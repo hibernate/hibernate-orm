@@ -480,14 +480,14 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
 
 
-	@Override
-	NativeQuery<T> setParameter(String name, Object val, Type type);
-
-	@Override
-	NativeQuery<T> setParameter(int position, Object val, Type type);
-
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type type);
+//	@Override
+//	NativeQuery<T> setParameter(String name, Object val, Type type);
+//
+//	@Override
+//	NativeQuery<T> setParameter(int position, Object val, Type type);
+//
+//	@Override
+//	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type type);
 
 
 	@Override
@@ -526,16 +526,16 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setParameterList(String name, Collection values);
 
-	@Override
-	default NativeQuery<T> setParameterList(String name, Collection values, Type type) {
-		return setParameterList( name, values, (AllowableParameterType) type );
-	}
+//	@Override
+//	default NativeQuery<T> setParameterList(String name, Collection values, Type type) {
+//		return setParameterList( name, values, (AllowableParameterType) type );
+//	}
 
 	@Override
 	NativeQuery<T> setParameterList(String name, Collection values, AllowableParameterType type);
 
-	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values, Type type);
+//	@Override
+//	NativeQuery<T> setParameterList(String name, Object[] values, Type type);
 
 	@Override
 	NativeQuery<T> setParameterList(String name, Object[] values, AllowableParameterType type);
@@ -561,14 +561,14 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setParameterList(int position, Collection values, Class type);
 
-	@Override
-	NativeQuery<T> setParameterList(int position, Collection values, Type type);
+//	@Override
+//	NativeQuery<T> setParameterList(int position, Collection values, Type type);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, Collection values, AllowableParameterType type);
 
-	@Override
-	NativeQuery<T> setParameterList(int position, Object[] values, Type type);
+//	@Override
+//	NativeQuery<T> setParameterList(int position, Object[] values, Type type);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, Object[] values, AllowableParameterType type);

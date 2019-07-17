@@ -851,20 +851,20 @@ public class ProcedureCallImpl<R>
 		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, type );
 	}
 
-	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type type) {
-		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, type );
-	}
+//	@Override
+//	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type type) {
+//		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, type );
+//	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value, AllowableParameterType type) {
 		return (ProcedureCallImplementor<R>) super.setParameter( name, value, type );
 	}
 
-	@Override
-	public ProcedureCallImplementor<R> setParameter(String name, Object value, Type type) {
-		return (ProcedureCallImplementor<R>) super.setParameter( name, value, type );
-	}
+//	@Override
+//	public ProcedureCallImplementor<R> setParameter(String name, Object value, Type type) {
+//		return (ProcedureCallImplementor<R>) super.setParameter( name, value, type );
+//	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value, AllowableParameterType type) {
@@ -872,10 +872,10 @@ public class ProcedureCallImpl<R>
 		return (ProcedureCallImplementor<R>) super.setParameter( position, value, type );
 	}
 
-	@Override
-	public ProcedureCallImplementor<R> setParameter(int position, Object value, Type type) {
-		return (ProcedureCallImplementor<R>) super.setParameter( position, value, type );
-	}
+//	@Override
+//	public ProcedureCallImplementor<R> setParameter(int position, Object value, Type type) {
+//		return (ProcedureCallImplementor<R>) super.setParameter( position, value, type );
+//	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalPrecision) {

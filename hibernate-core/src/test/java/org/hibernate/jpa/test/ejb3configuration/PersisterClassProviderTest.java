@@ -28,6 +28,7 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -641,6 +642,21 @@ public class PersisterClassProviderTest {
 		@Override
 		public Iterable<AttributeDefinition> getAttributes() {
 			return null;
+		}
+
+		@Override
+		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+			return false;
+		}
+
+		@Override
+		public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+			return false;
+		}
+
+		@Override
+		public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+			return false;
 		}
 	}
 

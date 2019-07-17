@@ -128,7 +128,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 assertEquals( 1, list.size() );
 
 					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.query.Query sessionQuery = session.createSQLQuery(
+					 final org.hibernate.query.Query sessionQuery = session.createNativeQuery(
 							 "select * from Game g where title = ?" );
 					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();

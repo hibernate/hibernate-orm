@@ -60,7 +60,7 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		s.createQuery( "select case p.name when 'Steve' then :opt1 else p.name end from Person p" )
-				.setString( "opt1", "x" )
+				.setParameter( "opt1", "x" )
 				.list();
 
 		t.commit();
@@ -75,8 +75,8 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 					session-> {
 						try {
 							s.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p" )
-									.setString( "opt1", "x" )
-									.setString( "opt2", "y" )
+									.setParameter( "opt1", "x" )
+									.setParameter( "opt2", "y" )
 									.list();
 							fail( "was expecting an exception" );
 						}
@@ -93,8 +93,8 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 					s,
 					session-> {
 						s.createQuery( "select case p.name when 'Steve' then cast( :opt1 as string ) else cast( :opt2 as string) end from Person p" )
-								.setString( "opt1", "x" )
-								.setString( "opt2", "y" )
+								.setParameter( "opt1", "x" )
+								.setParameter( "opt2", "y" )
 								.list();
 					}
 			);
@@ -104,8 +104,8 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 					session -> {
 						try {
 							s.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p" )
-									.setString( "opt1", "x" )
-									.setString( "opt2", "y" )
+									.setParameter( "opt1", "x" )
+									.setParameter( "opt2", "y" )
 									.list();
 							fail( "was expecting an exception" );
 						}
@@ -161,7 +161,7 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		s.createQuery( "select case when p.name = 'Steve' then :opt1 else p.name end from Person p" )
-				.setString( "opt1", "x" )
+				.setParameter( "opt1", "x" )
 				.list();
 
 		t.commit();
@@ -176,8 +176,8 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 					session-> {
 						try {
 							s.createQuery( "select case when p.name = 'Steve' then :opt1 else :opt2 end from Person p" )
-									.setString( "opt1", "x" )
-									.setString( "opt2", "y" )
+									.setParameter( "opt1", "x" )
+									.setParameter( "opt2", "y" )
 									.list();
 							fail( "was expecting an exception" );
 						}
@@ -194,8 +194,8 @@ public class CaseStatementTest extends BaseCoreFunctionalTestCase {
 					s,
 					session-> {
 						s.createQuery( "select case when p.name = 'Steve' then cast( :opt1 as string) else :opt2 end from Person p" )
-								.setString( "opt1", "x" )
-								.setString( "opt2", "y" )
+								.setParameter( "opt1", "x" )
+								.setParameter( "opt2", "y" )
 								.list();
 
 					}

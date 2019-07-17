@@ -118,7 +118,7 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		final Query queryWithTimestamp =
 				s.createQuery( "from Entity where tsColumnDefault= ?1" )
-						.setTimestamp( 1, eOrig.tsColumnDefault );
+						.setParameter( 1, eOrig.tsColumnDefault, TimestampType.INSTANCE );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();
@@ -166,7 +166,7 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		final Query queryWithTimestamp =
 				s.createQuery( "from Entity where tsColumnDefinition= ?1" )
-						.setTimestamp( 1, eOrig.tsColumnDefinition );
+						.setParameter( 1, eOrig.tsColumnDefinition, TimestampType.INSTANCE );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();

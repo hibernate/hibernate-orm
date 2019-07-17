@@ -12,6 +12,8 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.Test;
@@ -63,6 +65,11 @@ public class JavaTypeDescriptorRegistryTest {
 
 		@Override
 		public MutabilityPlan getMutabilityPlan() {
+			return null;
+		}
+
+		@Override
+		public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 			return null;
 		}
 

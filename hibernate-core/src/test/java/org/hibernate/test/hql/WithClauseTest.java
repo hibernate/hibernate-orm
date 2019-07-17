@@ -47,7 +47,7 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 
 		try {
 			s.createQuery( "from Animal a inner join fetch a.offspring as o with o.bodyWeight = :someLimit" )
-			        .setDouble( "someLimit", 1 )
+			        .setParameter( "someLimit", 1 )
 			        .list();
 			fail( "ad-hoc on clause allowed with fetched association" );
 		}
@@ -74,18 +74,18 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 
 		// one-to-many
 		List list = s.createQuery( "from Human h inner join h.offspring as o with o.bodyWeight < :someLimit" )
-				.setDouble( "someLimit", 1 )
+				.setParameter( "someLimit", 1 )
 				.list();
 		assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
 
 		// many-to-one
 		list = s.createQuery( "from Animal a inner join a.mother as m with m.bodyWeight < :someLimit" )
-				.setDouble( "someLimit", 1 )
+				.setParameter( "someLimit", 1 )
 				.list();
 		assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
 
 		list = s.createQuery( "from Human h inner join h.friends f with f.bodyWeight < :someLimit" )
-				.setDouble( "someLimit", 25 )
+				.setParameter( "someLimit", 25 )
 				.list();
 		assertTrue( "ad-hoc on did take effect", !list.isEmpty() );
 
@@ -100,7 +100,7 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
 
 		list = s.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
-				.setEntity( "cousin", s.load( Human.class, Long.valueOf( "123" ) ) )
+				.setParameter( "cousin", s.load( Human.class, Long.valueOf( "123" ) ) )
 				.list();
 		assertTrue( "ad-hoc did take effect", list.isEmpty() );
 

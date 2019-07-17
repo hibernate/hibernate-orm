@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.type.TimeType;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -78,7 +79,7 @@ public class TimePropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 
-		final Query query = s.createQuery( queryString ).setTime( 1, eGotten.tAsDate );
+		final Query query = s.createQuery( queryString ).setParameter( 1, eGotten.tAsDate, TimeType.INSTANCE );
 		final Entity eQueried = (Entity) query.uniqueResult();
 		assertNotNull( eQueried );
 		s.getTransaction().commit();

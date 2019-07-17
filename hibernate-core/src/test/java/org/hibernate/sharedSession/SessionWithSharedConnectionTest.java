@@ -24,6 +24,9 @@ import org.junit.Test;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -43,7 +46,11 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 		Session secondSession = session.sessionWithOptions()
 				.transactionContext()
 				.openSession();
-		secondSession.createCriteria( IrrelevantEntity.class ).list();
+		CriteriaBuilder criteriaBuilder = secondSession.getCriteriaBuilder();
+		CriteriaQuery<IrrelevantEntity> criteria = criteriaBuilder.createQuery( IrrelevantEntity.class );
+		criteria.from( IrrelevantEntity.class );
+		session.createQuery( criteria ).list();
+//		secondSession.createCriteria( IrrelevantEntity.class ).list();
 
 		//the list should have registered and then released a JDBC resource
 		assertFalse(

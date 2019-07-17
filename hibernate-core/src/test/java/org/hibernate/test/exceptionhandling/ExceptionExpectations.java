@@ -17,6 +17,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.query.SemanticException;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;
@@ -51,7 +52,7 @@ interface ExceptionExpectations {
 			@Override
 			public void onInvalidQueryExecuted(RuntimeException e) {
 				assertThat( e, instanceOf( IllegalArgumentException.class ) );
-				assertThat( e.getCause(), instanceOf( QuerySyntaxException.class ) );
+				assertThat( e.getCause(), instanceOf( SemanticException.class ) );
 			}
 
 			@Override
@@ -129,7 +130,7 @@ interface ExceptionExpectations {
 
 			@Override
 			public void onInvalidQueryExecuted(RuntimeException e) {
-				assertThat( e, instanceOf( QuerySyntaxException.class ) );
+				assertThat( e, instanceOf( SemanticException.class ) );
 			}
 
 			@Override
@@ -204,7 +205,7 @@ interface ExceptionExpectations {
 			@Override
 			public void onInvalidQueryExecuted(RuntimeException e) {
 				assertThat( e, instanceOf( IllegalArgumentException.class ) );
-				assertThat( e.getCause(), instanceOf( QuerySyntaxException.class ) );
+				assertThat( e.getCause(), instanceOf( SemanticException.class ) );
 			}
 
 			@Override

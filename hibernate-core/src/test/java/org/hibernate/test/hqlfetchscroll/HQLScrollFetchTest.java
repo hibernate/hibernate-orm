@@ -49,7 +49,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc, c.name asc" ).scroll();
 		List list = new ArrayList();
 		while ( results.next() ) {
-			list.add( results.get( 0 ) );
+			list.add( results.get( ) );
 		}
 		assertResultFromAllUsers( list );
 		s.getTransaction().commit();
@@ -62,7 +62,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc" ).scroll();
 		results.next();
-		Parent p = (Parent) results.get( 0 );
+		Parent p = (Parent) results.get( );
 		assertResultFromOneUser( p );
 		s.getTransaction().commit();
 		s.close();
@@ -75,10 +75,10 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc" ).scroll();
 		results.next();
-		Parent p = (Parent) results.get( 0 );
+		Parent p = (Parent) results.get( );
 		assertResultFromOneUser( p );
 		results.next();
-		p = (Parent) results.get( 0 );
+		p = (Parent) results.get( );
 		assertResultFromOneUser( p );
 		s.getTransaction().commit();
 		s.close();
@@ -90,7 +90,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc" ).scroll();
 		results.next();
-		Parent p = (Parent) results.get( 0 );
+		Parent p = (Parent) results.get( );
 		assertResultFromOneUser( p );
 		tx.commit();
 		s.close();
@@ -103,10 +103,10 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc" ).scroll();
 		results.next();
-		Parent p = (Parent) results.get( 0 );
+		Parent p = (Parent) results.get( );
 		assertResultFromOneUser( p );
 		results.next();
-		p = (Parent) results.get( 0 );
+		p = (Parent) results.get( );
 		assertResultFromOneUser( p );
 		tx.commit();
 		s.close();
@@ -119,7 +119,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc" ).scroll();
 		results.next();
-		Parent p = (Parent) results.get( 0 );
+		Parent p = (Parent) results.get( );
 		assertResultFromOneUser( p );
 		// get the other parent entity from the persistence context along with its first child
 		// retrieved from the resultset.
@@ -160,7 +160,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc" ).scroll();
 		results.next();
-		Parent p = (Parent) results.get( 0 );
+		Parent p = (Parent) results.get( );
 		assertResultFromOneUser( p );
 		results.last();
 		// get the other parent entity from the persistence context.
@@ -205,7 +205,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc" ).scroll();
 		List list = new ArrayList();
 		while ( results.next() ) {
-			list.add( results.get( 0 ) );
+			list.add( results.get( ) );
 		}
 		assertResultFromAllUsers( list );
 		s.getTransaction().commit();
@@ -220,7 +220,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name desc" ).scroll();
 		List list = new ArrayList();
 		while ( results.next() ) {
-			list.add( results.get( 0 ) );
+			list.add( results.get( ) );
 		}
 		assertResultFromAllUsers( list );
 		s.getTransaction().commit();
@@ -235,7 +235,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc, c.name asc" ).scroll();
 		List list = new ArrayList();
 		while ( results.next() ) {
-			list.add( results.get( 0 ) );
+			list.add( results.get( ) );
 		}
 		assertResultFromAllUsers( list );
 		s.getTransaction().commit();
@@ -250,7 +250,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		ScrollableResults results = s.createQuery( QUERY + " order by p.name asc, c.name desc" ).scroll();
 		List list = new ArrayList();
 		while ( results.next() ) {
-			list.add( results.get( 0 ) );
+			list.add( results.get( ) );
 		}
 		assertResultFromAllUsers( list );
 		s.getTransaction().commit();
@@ -269,7 +269,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		ScrollableResults results = s.createQuery( QUERY + " order by c.name desc" ).scroll();
 		List list = new ArrayList();
 		while ( results.next() ) {
-			list.add( results.get( 0 ) );
+			list.add( results.get( ) );
 		}
 		try {
 			assertResultFromAllUsers( list );

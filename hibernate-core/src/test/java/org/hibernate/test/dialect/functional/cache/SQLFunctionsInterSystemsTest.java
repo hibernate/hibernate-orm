@@ -221,17 +221,17 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		Query q = s.createQuery("from Simple s where s.name=?");
 		q.setCacheable(true);
-		q.setString(0, "Simple 1");
+		q.setParameter(0, "Simple 1");
 		assertTrue( q.list().size()==1 );
 		assertTrue( q.list().size()==1 );
 		assertTrue( q.list().size()==1 );
 		q = s.createQuery("from Simple s where s.name=:name");
 		q.setCacheable(true);
-		q.setString("name", "Simple 1");
+		q.setParameter("name", "Simple 1");
 		assertTrue( q.list().size()==1 );
 		simple = (Simple) q.list().get(0);
 
-		q.setString("name", "Simple 2");
+		q.setParameter("name", "Simple 2");
 		assertTrue( q.list().size()==0 );
 		assertTrue( q.list().size()==0 );
 		simple.setName("Simple 2");
@@ -243,7 +243,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		q = s.createQuery("from Simple s where s.name=:name");
-		q.setString("name", "Simple 2");
+		q.setParameter("name", "Simple 2");
 		q.setCacheable(true);
 		assertTrue( q.list().size()==1 );
 		assertTrue( q.list().size()==1 );
@@ -261,7 +261,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		q = s.createQuery("from Simple s where s.name=?");
 		q.setCacheable(true);
-		q.setString(0, "Simple 1");
+		q.setParameter(0, "Simple 1");
 		assertTrue( q.list().size()==0 );
 		assertTrue( q.list().size()==0 );
 		t.commit();
@@ -282,18 +282,18 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		Query q = s.createQuery("from Simple s where s.name=?");
 		q.setCacheRegion("foo");
 		q.setCacheable(true);
-		q.setString(0, "Simple 1");
+		q.setParameter(0, "Simple 1");
 		assertTrue( q.list().size()==1 );
 		assertTrue( q.list().size()==1 );
 		assertTrue( q.list().size()==1 );
 		q = s.createQuery("from Simple s where s.name=:name");
 		q.setCacheRegion("foo");
 		q.setCacheable(true);
-		q.setString("name", "Simple 1");
+		q.setParameter("name", "Simple 1");
 		assertTrue( q.list().size()==1 );
 		simple = (Simple) q.list().get(0);
 
-		q.setString("name", "Simple 2");
+		q.setParameter("name", "Simple 2");
 		assertTrue( q.list().size()==0 );
 		assertTrue( q.list().size()==0 );
 		simple.setName("Simple 2");
@@ -314,7 +314,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		q = s.createQuery("from Simple s where s.name=?");
 		q.setCacheRegion("foo");
 		q.setCacheable(true);
-		q.setString(0, "Simple 1");
+		q.setParameter(0, "Simple 1");
 		assertTrue( q.list().size()==0 );
 		assertTrue( q.list().size()==0 );
 		t.commit();
@@ -418,17 +418,17 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		q = s.createQuery("from Simple s");
 		assertTrue( q.list().size() == 3 );
 		q = s.createQuery("from Simple s where s.name = ?");
-		q.setString( 0, "Simple 1" );
+		q.setParameter( 0, "Simple 1" );
 		assertTrue( q.list().size()==1 );
 		q = s.createQuery("from Simple s where s.name = ? and upper(s.name) = ?");
-		q.setString(1, "SIMPLE 1");
-		q.setString( 0, "Simple 1" );
+		q.setParameter(1, "SIMPLE 1");
+		q.setParameter( 0, "Simple 1" );
 		q.setFirstResult(0);
 		assertTrue( q.iterate().hasNext() );
 		q = s.createQuery("from Simple s where s.name = :foo and upper(s.name) = :bar or s.count=:count or s.count=:count + 1");
 		q.setParameter( "bar", "SIMPLE 1" );
-		q.setString( "foo", "Simple 1" );
-		q.setInteger("count", 69);
+		q.setParameter( "foo", "Simple 1" );
+		q.setParameter("count", 69);
 		q.setFirstResult(0);
 		assertTrue( q.iterate().hasNext() );
 		q = s.createQuery("select s.id from Simple s");
@@ -456,7 +456,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		ScrollableResults sr = s.createQuery("from Simple s").scroll();
 		sr.next();
-		sr.get(0);
+		sr.get();
 		sr.close();
 
 		s.delete( other );

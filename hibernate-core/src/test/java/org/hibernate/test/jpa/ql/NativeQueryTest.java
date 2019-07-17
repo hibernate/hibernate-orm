@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.jpa.ql;
 
-import org.hibernate.Session;
-
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.junit.Test;
 
@@ -17,10 +15,8 @@ import org.junit.Test;
 public class NativeQueryTest extends AbstractJPATest {
 	@Test
 	public void testJpaStylePositionalParametersInNativeSql() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.createSQLQuery( "select NAME from EJB3_ITEM where ITEM_ID = ?1" ).setParameter( 1, 123L ).list();
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				s -> s.createNativeQuery( "select NAME from EJB3_ITEM where ITEM_ID = ?1" ).setParameter( 1, 123L ).list()
+		);
 	}
 }

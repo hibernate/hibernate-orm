@@ -6,10 +6,7 @@
  */
 package org.hibernate.dialect;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -88,13 +85,5 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 
 		final String actual = new LocalDerbyDialect().getLimitString( input, offset, limit );
 		assertEquals( expected, actual );
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-10238")
-	public void testDefaultMultiTableBulkIdStrategyIsLocal() {
-		MultiTableBulkIdStrategy actual = new LocalDerbyDialect().getFallbackSqmMutationStrategy(
-				runtimeRootEntityDescriptor );
-		assertThat(actual, is(instanceOf(LocalTemporaryTableBulkIdStrategy.class)));
 	}
 }

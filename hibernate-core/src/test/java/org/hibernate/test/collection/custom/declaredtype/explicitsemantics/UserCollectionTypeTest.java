@@ -44,6 +44,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -89,7 +91,11 @@ public class UserCollectionTypeTest extends BaseCoreFunctionalTestCase {
 		} );
 
 		doInHibernate( this::sessionFactory, session -> {
-			User u2 = (User) session.createCriteria( User.class ).uniqueResult();
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
+			criteria.from( User.class );
+			User u2 = session.createQuery( criteria ).uniqueResult();
+//			User u2 = (User) session.createCriteria( User.class ).uniqueResult();
 			assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
 			assertEquals( u2.getEmailAddresses().size(), 2 );
 			assertNotNull( u2.getEmailAddresses().head() );

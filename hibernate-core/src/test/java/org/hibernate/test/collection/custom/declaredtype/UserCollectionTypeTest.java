@@ -37,6 +37,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -70,24 +72,27 @@ public abstract class UserCollectionTypeTest extends BaseCoreFunctionalTestCase 
 
 	@Test
 	public void testBasicOperation() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		User u = new User("max");
-		u.getEmailAddresses().add( new Email("max@hibernate.org") );
-		u.getEmailAddresses().add( new Email("max.andersen@jboss.com") );
-		s.persist(u);
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					User u = new User("max");
+					u.getEmailAddresses().add( new Email("max@hibernate.org") );
+					u.getEmailAddresses().add( new Email("max.andersen@jboss.com") );
+					s.persist(u);
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		User u2 = (User) s.createCriteria(User.class).uniqueResult();
-		assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
-		assertEquals( u2.getEmailAddresses().size(), 2 );
-		assertNotNull( u2.getEmailAddresses().head());
-		t.commit();
-		s.close();
-
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
+					criteria.from( User.class );
+					User u2 = s.createQuery( criteria ).uniqueResult();
+//		User u2 = (User) s.createCriteria(User.class).uniqueResult();
+					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
+					assertEquals( u2.getEmailAddresses().size(), 2 );
+					assertNotNull( u2.getEmailAddresses().head());
+				}
+		);
 	}
 
 	/**

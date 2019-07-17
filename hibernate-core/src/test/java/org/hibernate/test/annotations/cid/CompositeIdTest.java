@@ -86,7 +86,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "select c from Child c where c.id.nthChild = :nth" );
-		q.setInteger( "nth", 1 );
+		q.setParameter( "nth", 1 );
 		List results = q.list();
 		assertEquals( 1, results.size() );
 		c = (Child) results.get( 0 );
@@ -173,7 +173,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "select c from Child c where c.id.nthChild = :nth" );
-		q.setInteger( "nth", 1 );
+		q.setParameter( "nth", 1 );
 		List results = q.list();
 		assertEquals( 1, results.size() );
 		c = (LittleGenius) results.get( 0 );

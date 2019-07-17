@@ -84,7 +84,7 @@ public class StringNationalizedTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		try {
 			final Query query = s.createQuery( "from NationalizedEntity where name = :name" );
-			query.setString( "name", "Hello" );
+			query.setParameter( "name", "Hello" );
 			final List list = query.list();
 			assertThat( list.size(), is( 1 ) );
 		}

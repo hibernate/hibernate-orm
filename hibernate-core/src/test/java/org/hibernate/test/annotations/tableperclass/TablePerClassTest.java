@@ -48,7 +48,7 @@ public class TablePerClassTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "from Machine m where m.weight >= :weight" );
-		q.setDouble( "weight", new Double( 10 ) );
+		q.setParameter( "weight", new Double( 10 ) );
 		List result = q.list();
 		assertEquals( 2, result.size() );
 		tx.commit();

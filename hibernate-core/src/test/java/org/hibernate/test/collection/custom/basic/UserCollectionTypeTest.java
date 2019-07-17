@@ -6,9 +6,10 @@
  */
 package org.hibernate.test.collection.custom.basic;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -28,36 +29,40 @@ public abstract class UserCollectionTypeTest extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void testBasicOperation() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
 		User u = new User("max");
-		u.getEmailAddresses().add( new Email("max@hibernate.org") );
-		u.getEmailAddresses().add( new Email("max.andersen@jboss.com") );
-		s.persist(u);
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		User u2 = (User) s.createCriteria(User.class).uniqueResult();
-		assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
-		assertEquals( u2.getEmailAddresses().size(), 2 );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					u.getEmailAddresses().add( new Email("max@hibernate.org") );
+					u.getEmailAddresses().add( new Email("max.andersen@jboss.com") );
+					s.persist(u);
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		u2 = ( User ) s.get( User.class, u.getUserName() );
-		u2.getEmailAddresses().size();
-		assertEquals( 2, MyListType.lastInstantiationRequest );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
+					criteria.from( User.class );
+					User u2 = s.createQuery( criteria ).uniqueResult();
+//					User u2 = (User) s.createCriteria(User.class).uniqueResult();
+					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
+					assertEquals( u2.getEmailAddresses().size(), 2 );
 
-		s = openSession();
-		t = s.beginTransaction();
-		s.delete( u );
-		t.commit();
-		s.close();
+				}
+		);
+
+		inTransaction(
+				s -> {
+					User u2 = s.get( User.class, u.getUserName() );
+					u2.getEmailAddresses().size();
+					assertEquals( 2, MyListType.lastInstantiationRequest );
+
+				}
+		);
+
+		inTransaction(
+				s -> s.delete( u )
+		);
 	}
 
 }

@@ -106,7 +106,7 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 		// the type returned for count(*) in a native query depends on the dialect
 		// Oracle returns Types.NUMERIC, which is mapped to BigDecimal;
 		// H2 returns Types.BIGINT, which is mapped to BigInteger;
-		Object retVal = s.createSQLQuery( "select count(*) from " + tableName ).uniqueResult();
+		Object retVal = s.createNativeQuery( "select count(*) from " + tableName ).uniqueResult();
 		assertTrue( Number.class.isInstance( retVal ) );
 		return ( ( Number ) retVal ).longValue();
 	}

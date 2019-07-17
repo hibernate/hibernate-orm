@@ -16,6 +16,7 @@ import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -85,6 +86,11 @@ public class MaterializedNClobBindTest {
 
 		public MockWrapperOptions(boolean useStreamForLobBinding) {
 			this.useStreamForLobBinding = useStreamForLobBinding;
+		}
+
+		@Override
+		public SharedSessionContractImplementor getSession() {
+			return null;
 		}
 
 		@Override

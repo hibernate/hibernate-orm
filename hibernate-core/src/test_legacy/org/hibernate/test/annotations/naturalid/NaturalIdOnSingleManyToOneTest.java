@@ -8,9 +8,6 @@ package org.hibernate.test.annotations.naturalid;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaQuery;
-
 import org.junit.After;
 import org.junit.Test;
 
@@ -96,8 +93,7 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		CriteriaQuery<NaturalIdOnManyToOne> query = s.getCriteriaBuilder().createQuery( NaturalIdOnManyToOne.class );
-		query.
+		Criteria criteria = s.createCriteria( NaturalIdOnManyToOne.class );
 		criteria.add( Restrictions.naturalId().set( "citizen", c1 ) );
 		criteria.setCacheable( true );
 

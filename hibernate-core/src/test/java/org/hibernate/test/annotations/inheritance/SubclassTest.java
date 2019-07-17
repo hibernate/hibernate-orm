@@ -80,7 +80,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "from " + A320.class.getName() + " as a where a.javaEmbeddedVersion = :version" );
-		q.setString( "version", "Elephant" );
+		q.setParameter( "version", "Elephant" );
 		List a320s = q.list();
 		assertNotNull( a320s );
 		assertEquals( 1, a320s.size() );

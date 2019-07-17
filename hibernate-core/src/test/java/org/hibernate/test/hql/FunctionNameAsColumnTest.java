@@ -288,24 +288,24 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 							.fetch( "nextHolder", JoinType.LEFT )
 							.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT );
 					criteria.where( criteriaBuilder.isNotNull( root.get( "nextHolder" ) ) );
-
+					EntityWithFunctionAsColumnHolder holder = s.createQuery( criteria ).uniqueResult();
 //		holder1 = ( EntityWithFunctionAsColumnHolder ) s.createCriteria( EntityWithFunctionAsColumnHolder.class )
 //				.add( Restrictions.isNotNull( "nextHolder" ))
 //				.setFetchMode( "entityWithNoArgFunctionAsColumns", FetchMode.JOIN )
 //				.setFetchMode( "nextHolder", FetchMode.JOIN )
 //				.setFetchMode( "nextHolder.entityWithNoArgFunctionAsColumns", FetchMode.JOIN )
 //				.uniqueResult();
-					assertTrue( Hibernate.isInitialized( holder1.getEntityWithNoArgFunctionAsColumns() ) );
-					assertTrue( Hibernate.isInitialized( holder1.getNextHolder() ) );
-					assertTrue( Hibernate.isInitialized( holder1.getNextHolder()
+					assertTrue( Hibernate.isInitialized( holder.getEntityWithNoArgFunctionAsColumns() ) );
+					assertTrue( Hibernate.isInitialized( holder.getNextHolder() ) );
+					assertTrue( Hibernate.isInitialized( holder.getNextHolder()
 																 .getEntityWithNoArgFunctionAsColumns() ) );
-					assertEquals( 1, holder1.getEntityWithNoArgFunctionAsColumns().size() );
-					EntityWithNoArgFunctionAsColumn e1 = (EntityWithNoArgFunctionAsColumn) holder1.getEntityWithNoArgFunctionAsColumns()
+					assertEquals( 1, holder.getEntityWithNoArgFunctionAsColumns().size() );
+					EntityWithNoArgFunctionAsColumn e1 = (EntityWithNoArgFunctionAsColumn) holder.getEntityWithNoArgFunctionAsColumns()
 							.iterator()
 							.next();
 					assertEquals( "blah blah blah", e1.getCurrentDate() );
-					assertEquals( 1, holder1.getNextHolder().getEntityWithNoArgFunctionAsColumns().size() );
-					EntityWithNoArgFunctionAsColumn e2 = (EntityWithNoArgFunctionAsColumn) ( holder1.getNextHolder() ).getEntityWithNoArgFunctionAsColumns()
+					assertEquals( 1, holder.getNextHolder().getEntityWithNoArgFunctionAsColumns().size() );
+					EntityWithNoArgFunctionAsColumn e2 = (EntityWithNoArgFunctionAsColumn) ( holder.getNextHolder() ).getEntityWithNoArgFunctionAsColumns()
 							.iterator()
 							.next();
 					assertEquals( "yadda yadda yadda", e2.getCurrentDate() );

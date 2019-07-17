@@ -9,17 +9,19 @@ package org.hibernate.test.where.hbm;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.FetchMode;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import org.hibernate.test.where.hbm.File;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -86,7 +88,7 @@ public class WhereTest extends BaseCoreFunctionalTestCase {
 					final HashSet<File> filesSet = new HashSet<>( files );
 					assertEquals( 1, filesSet.size() );
 					File parent = files.get( 0 );
-					assertEquals( parent.getChildren().size(), 1 );
+					assertEquals( 1, parent.getChildren().size() );
 				}
 		);
 	}
@@ -95,11 +97,19 @@ public class WhereTest extends BaseCoreFunctionalTestCase {
 	public void testCriteria() {
 		inTransaction(
 				s -> {
-					File parent = (File) s.createCriteria( File.class )
-							.setFetchMode( "children", FetchMode.JOIN )
-							.add( Restrictions.isNull( "parent" ) )
-							.uniqueResult();
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<File> criteria = criteriaBuilder.createQuery( File.class );
+					Root<File> root = criteria.from( File.class );
+					root.fetch( "children", JoinType.LEFT );
+					criteria.where( criteriaBuilder.isNull( root.get("parent") ));
+					File parent = s.createQuery( criteria ).uniqueResult();
 					assertEquals( parent.getChildren().size(), 1 );
+
+//					File parent = (File) s.createCriteria( File.class )
+//							.setFetchMode( "children", FetchMode.JOIN )
+//							.add( Restrictions.isNull( "parent" ) )
+//							.uniqueResult();
+					assertEquals(  1, parent.getChildren().size() );
 				}
 		);
 	}
@@ -115,7 +125,7 @@ public class WhereTest extends BaseCoreFunctionalTestCase {
 
 					File parent = (File) ( (Object[]) query.list().get( 0 ) )[0];
 					// @Where should not be applied
-					assertEquals( parent.getChildren().size(), 2 );
+					assertEquals( 2, parent.getChildren().size() );
 				}
 		);
 	}

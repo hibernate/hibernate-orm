@@ -6,7 +6,11 @@
  */
 package org.hibernate.test.enums;
 
-import org.hibernate.criterion.Restrictions;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
+import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
@@ -73,22 +77,34 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8153")
 	public void hbmEnumTypeTest() {
-		doInHibernate( this::sessionFactory, s -> {
-			assertEquals( s.createCriteria( Person.class )
-								  .add( Restrictions.eq( "gender", Gender.MALE ) )
-								  .list().size(), 2 );
-			assertEquals( s.createCriteria( Person.class )
-								  .add( Restrictions.eq( "gender", Gender.MALE ) )
-								  .add( Restrictions.eq( "hairColor", HairColor.BROWN ) )
-								  .list().size(), 1 );
-			assertEquals( s.createCriteria( Person.class )
-								  .add( Restrictions.eq( "gender", Gender.FEMALE ) )
-								  .list().size(), 2 );
-			assertEquals( s.createCriteria( Person.class )
-								  .add( Restrictions.eq( "gender", Gender.FEMALE ) )
-								  .add( Restrictions.eq( "hairColor", HairColor.BROWN ) )
-								  .list().size(), 1 );
-		} );
+		doInHibernate(
+				this::sessionFactory,
+				s -> {
+					assertEquals( getNumberOfPersonByGender( s, Gender.MALE ), 2 );
+					assertEquals( getNumberOfPersonByGenderAndHairColor( s, Gender.MALE, HairColor.BROWN ), 1 );
+					assertEquals( getNumberOfPersonByGender( s, Gender.FEMALE ), 2 );
+					assertEquals( getNumberOfPersonByGenderAndHairColor( s, Gender.FEMALE, HairColor.BROWN ), 1 );
+				}
+		);
+	}
+
+	private int getNumberOfPersonByGender(Session session, Gender value) {
+		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+		CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+		Root<Person> root = criteria.from( Person.class );
+		criteria.where( criteriaBuilder.equal( root.get( "gender" ), value ) );
+		return session.createQuery( criteria ).list().size();
+	}
+
+	private int getNumberOfPersonByGenderAndHairColor(Session session, Gender gender, HairColor hairColor) {
+		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+		CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+		Root<Person> root = criteria.from( Person.class );
+		criteria.where( criteriaBuilder.and(
+				criteriaBuilder.equal( root.get( "gender" ), gender ),
+				criteriaBuilder.equal( root.get( "hairColor" ), hairColor )
+		) );
+		return session.createQuery( criteria ).list().size();
 	}
 
 	@Test

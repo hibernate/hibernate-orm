@@ -296,32 +296,25 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Parent> criteria = criteriaBuilder.createQuery( Parent.class );
 					Root<Parent> root = criteria.from( Parent.class );
-					Join<Object, Object> friends = root.join( "moreChildren", JoinType.INNER )
+					root.join( "moreChildren", JoinType.INNER )
 							.join( "friends", JoinType.INNER );
-					criteria.orderBy( criteriaBuilder.desc( friends.get( "name" ) ) );
+					criteria.orderBy( criteriaBuilder.desc( root.get( "name" ) ) );
 
 					s.createQuery( criteria ).list();
-
-
-					criteria = criteriaBuilder.createQuery( Parent.class );
-					root = criteria.from( Parent.class );
-					Join<Object, Object> moreChildren = root.join( "moreChildren", JoinType.LEFT );
-					friends = moreChildren.join( "friends", JoinType.LEFT );
-
-					root.fetch( "moreChildren", JoinType.LEFT ).fetch(
-							"friends",
-							JoinType.LEFT
-					);
-					criteria.orderBy( criteriaBuilder.desc( friends.get( "name" ) ) );
-
-					List parents = s.createQuery( criteria ).list();
-
 //					List parents = s.createCriteria( Parent.class )
 //							.createCriteria( "moreChildren" )
 //							.createCriteria( "friends" )
 //							.addOrder( Order.desc( "name" ) )
 //							.list();
-//
+
+
+					criteria = criteriaBuilder.createQuery( Parent.class );
+					root = criteria.from( Parent.class );
+					root.fetch( "moreChildren", JoinType.LEFT ).fetch( "friends", JoinType.LEFT );
+					criteria.orderBy( criteriaBuilder.desc( root.get( "name" ) ) );
+
+					List parents = s.createQuery( criteria ).list();
+
 //					parents = s.createCriteria( Parent.class )
 //							.setFetchMode( "moreChildren", FetchMode.JOIN )
 //							.setFetchMode( "moreChildren.friends", FetchMode.JOIN )

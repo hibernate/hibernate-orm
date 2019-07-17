@@ -6,14 +6,15 @@
  */
 package org.hibernate.test.unconstrained;
 
-import org.junit.Test;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
 
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -30,101 +31,114 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testUnconstrainedNoCache() {
-		Session session = openSession();
-		Transaction tx = session.beginTransaction();
-		Person p = new Person("gavin");
-		p.setEmployeeId("123456");
-		session.persist(p);
-		tx.commit();
-		session.close();
-		
-		sessionFactory().getCache().evictEntityRegion( Person.class );
-		
-		session = openSession();
-		tx = session.beginTransaction();
-		p = (Person) session.get(Person.class, "gavin");
-		assertNull( p.getEmployee() );
-		p.setEmployee( new Employee("123456") );
-		tx.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Person p = new Person( "gavin" );
+					p.setEmployeeId( "123456" );
+					session.persist( p );
+				}
+		);
 
 		sessionFactory().getCache().evictEntityRegion( Person.class );
-		
-		session = openSession();
-		tx = session.beginTransaction();
-		p = (Person) session.get(Person.class, "gavin");
-		assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
-		assertNotNull( p.getEmployee() );
-		session.delete(p);
-		tx.commit();
-		session.close();
+
+		inTransaction(
+				session -> {
+					Person p = session.get( Person.class, "gavin" );
+					assertNull( p.getEmployee() );
+					p.setEmployee( new Employee( "123456" ) );
+				}
+		);
+
+		sessionFactory().getCache().evictEntityRegion( Person.class );
+
+		inTransaction(
+				session -> {
+					Person p = session.get( Person.class, "gavin" );
+					assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
+					assertNotNull( p.getEmployee() );
+					session.delete( p );
+				}
+		);
 	}
 
 	@Test
 	public void testUnconstrainedOuterJoinFetch() {
-		Session session = openSession();
-		Transaction tx = session.beginTransaction();
-		Person p = new Person("gavin");
-		p.setEmployeeId("123456");
-		session.persist(p);
-		tx.commit();
-		session.close();
-		
-		sessionFactory().getCache().evictEntityRegion( Person.class );
-		
-		session = openSession();
-		tx = session.beginTransaction();
-		p = (Person) session.createCriteria(Person.class)
-			.setFetchMode("employee", FetchMode.JOIN)
-			.add( Restrictions.idEq("gavin") )
-			.uniqueResult();
-		assertNull( p.getEmployee() );
-		p.setEmployee( new Employee("123456") );
-		tx.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Person p = new Person( "gavin" );
+					p.setEmployeeId( "123456" );
+					session.persist( p );
+				}
+		);
 
 		sessionFactory().getCache().evictEntityRegion( Person.class );
-		
-		session = openSession();
-		tx = session.beginTransaction();
-		p = (Person) session.createCriteria(Person.class)
-			.setFetchMode("employee", FetchMode.JOIN)
-			.add( Restrictions.idEq("gavin") )
-			.uniqueResult();
-		assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
-		assertNotNull( p.getEmployee() );
-		session.delete(p);
-		tx.commit();
-		session.close();
+
+		inTransaction(
+				session -> {
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+					Root<Person> root = criteria.from( Person.class );
+					root.fetch( "employee", JoinType.LEFT );
+					criteria.where( criteriaBuilder.equal( root.get( "name" ), "gavin" ) );
+					Person p = session.createQuery( criteria ).uniqueResult();
+//					Person p = session.createCriteria( Person.class )
+//							.setFetchMode( "employee", FetchMode.JOIN )
+//							.add( Restrictions.idEq( "gavin" ) )
+//							.uniqueResult();
+					assertNull( p.getEmployee() );
+					p.setEmployee( new Employee( "123456" ) );
+				}
+		);
+
+
+		sessionFactory().getCache().evictEntityRegion( Person.class );
+
+		inTransaction(
+				session -> {
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+					Root<Person> root = criteria.from( Person.class );
+					root.fetch( "employee", JoinType.LEFT );
+					criteria.where( criteriaBuilder.equal( root.get( "name" ), "gavin" ) );
+					Person p = session.createQuery( criteria ).uniqueResult();
+
+//					Person p = session.createCriteria( Person.class )
+//							.setFetchMode( "employee", FetchMode.JOIN )
+//							.add( Restrictions.idEq( "gavin" ) )
+//							.uniqueResult();
+					assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
+					assertNotNull( p.getEmployee() );
+					session.delete( p );
+				}
+		);
 	}
 
 	@Test
 	public void testUnconstrained() {
-		Session session = openSession();
-		Transaction tx = session.beginTransaction();
-		Person p = new Person("gavin");
-		p.setEmployeeId("123456");
-		session.persist(p);
-		tx.commit();
-		session.close();
-		
-		session = openSession();
-		tx = session.beginTransaction();
-		p = (Person) session.get(Person.class, "gavin");
-		assertNull( p.getEmployee() );
-		p.setEmployee( new Employee("123456") );
-		tx.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Person p = new Person( "gavin" );
+					p.setEmployeeId( "123456" );
+					session.persist( p );
+				}
+		);
 
-		session = openSession();
-		tx = session.beginTransaction();
-		p = (Person) session.get(Person.class, "gavin");
-		assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
-		assertNotNull( p.getEmployee() );
-		session.delete(p);
-		tx.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Person p = session.get( Person.class, "gavin" );
+					assertNull( p.getEmployee() );
+					p.setEmployee( new Employee( "123456" ) );
+				}
+		);
+
+		inTransaction(
+				session -> {
+					Person p = session.get( Person.class, "gavin" );
+					assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
+					assertNotNull( p.getEmployee() );
+					session.delete( p );
+				}
+		);
 	}
 
 }
-

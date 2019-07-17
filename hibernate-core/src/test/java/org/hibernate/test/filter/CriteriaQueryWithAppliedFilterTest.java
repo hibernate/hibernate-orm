@@ -12,16 +12,16 @@ import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Property;
-import org.hibernate.criterion.Restrictions;
 
 import org.junit.After;
 import org.junit.Test;
@@ -76,31 +76,54 @@ public class CriteriaQueryWithAppliedFilterTest extends BaseCoreFunctionalTestCa
 
 	@Test
 	public void testSubquery() {
+		CriteriaBuilder detachedCriteriaBuilder = sessionFactory().getCriteriaBuilder();
+		CriteriaQuery<Student> criteria = detachedCriteriaBuilder.createQuery( Student.class );
+		criteria.from( Student.class );
+		Subquery<Integer> subquery = criteria.subquery( Integer.class );
+		Root<Student> studentRoot = subquery.from( Student.class );
+		subquery.select( detachedCriteriaBuilder.min( studentRoot.get( "age" ) ));
+
 		doInHibernate( this::sessionFactory, session -> {
-			final Criteria query = session.createCriteria( Student.class );
-			query.add( Restrictions.eq( "name", "dre" ) );
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<Student> query = criteriaBuilder.createQuery( Student.class );
+			Root<Student> root = query.from( Student.class );
+			query.where( criteriaBuilder.and(
+					criteriaBuilder.equal( root.get( "name" ), "dre" ),
+					criteriaBuilder.equal( root.get( "age" ), subquery )
+			) );
+			final List list = session.createQuery(query).list();
 
-			final DetachedCriteria inner = DetachedCriteria.forClass( Student.class );
-			inner.setProjection( Projections.min( "age" ) );
+//			final Criteria query = session.createCriteria( Student.class );
+//			query.add( Restrictions.eq( "name", "dre" ) );
 
-			query.add( Property.forName( "age" ).eq( inner ) );
-			query.add( Restrictions.eq( "name", "dre" ) );
-			final List list = query.list();
+//			final DetachedCriteria inner = DetachedCriteria.forClass( Student.class );
+//			inner.setProjection( Projections.min( "age" ) );
+
+//			query.add( Property.forName( "age" ).eq( inner ) );
 
 			assertThat( list.size(), is( 1 ) );
 	   });
 		doInHibernate( this::sessionFactory, session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "deleted" );
 
-			final Criteria query = session.createCriteria( Student.class );
-			query.add( Restrictions.eq( "name", "dre" ) );
+//			final Criteria query = session.createCriteria( Student.class );
+//			query.add( Restrictions.eq( "name", "dre" ) );
+//
+//			final DetachedCriteria inner = DetachedCriteria.forClass( Student.class );
+//			inner.setProjection( Projections.min( "age" ) );
+//
+//			query.add( Property.forName( "age" ).eq( inner ) );
+//			query.add( Restrictions.eq( "name", "dre" ) );
+//			final List list = query.list();
 
-			final DetachedCriteria inner = DetachedCriteria.forClass( Student.class );
-			inner.setProjection( Projections.min( "age" ) );
-
-			query.add( Property.forName( "age" ).eq( inner ) );
-			query.add( Restrictions.eq( "name", "dre" ) );
-			final List list = query.list();
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<Student> query = criteriaBuilder.createQuery( Student.class );
+			Root<Student> root = query.from( Student.class );
+			query.where( criteriaBuilder.and(
+					criteriaBuilder.equal( root.get( "name" ), "dre" ),
+					criteriaBuilder.equal( root.get( "age" ), subquery )
+			) );
+			final List list = session.createQuery(query).list();
 
 			assertThat( list.size(), is( 0 ) );
 	   });
@@ -108,18 +131,35 @@ public class CriteriaQueryWithAppliedFilterTest extends BaseCoreFunctionalTestCa
 
 	@Test
 	public void testSubqueryWithRestrictionsOnComponentTypes() {
+		CriteriaBuilder detachedCriteriaBuilder = sessionFactory().getCriteriaBuilder();
+		CriteriaQuery<Student> criteria = detachedCriteriaBuilder.createQuery( Student.class );
+		criteria.from( Student.class );
+		Subquery<Integer> subquery = criteria.subquery( Integer.class );
+		Root<Student> studentRoot = subquery.from( Student.class );
+		subquery.select( detachedCriteriaBuilder.max( studentRoot.get( "age" ) ));
+		subquery.where( detachedCriteriaBuilder.equal( studentRoot.get( "id" ), STUDENT_ID ) );
+
 		doInHibernate( this::sessionFactory, session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "active" );
 
-			final Criteria query = session.createCriteria( Student.class );
-			query.add( Restrictions.eq( "id", STUDENT_ID ) );
+//			final Criteria query = session.createCriteria( Student.class );
+//			query.add( Restrictions.eq( "id", STUDENT_ID ) );
+//
+//			final DetachedCriteria subSelect = DetachedCriteria.forClass( Student.class );
+//			subSelect.setProjection( Projections.max( "age" ) );
+//			subSelect.add( Restrictions.eq( "id", STUDENT_ID ) );
+//
+//			query.add( Property.forName( "age" ).eq( subSelect ) );
+//			final List list = query.list();
 
-			final DetachedCriteria subSelect = DetachedCriteria.forClass( Student.class );
-			subSelect.setProjection( Projections.max( "age" ) );
-			subSelect.add( Restrictions.eq( "id", STUDENT_ID ) );
-
-			query.add( Property.forName( "age" ).eq( subSelect ) );
-			final List list = query.list();
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<Student> query = criteriaBuilder.createQuery( Student.class );
+			Root<Student> root = query.from( Student.class );
+			query.where( criteriaBuilder.and(
+					criteriaBuilder.equal( root.get( "id" ), STUDENT_ID),
+					criteriaBuilder.equal( root.get( "age" ), subquery )
+			) );
+			final List list = session.createQuery(query).list();
 
 			assertThat( list.size(), is( 1 ) );
 		});
@@ -127,19 +167,40 @@ public class CriteriaQueryWithAppliedFilterTest extends BaseCoreFunctionalTestCa
 
 	@Test
 	public void testSubqueryWithRestrictionsOnComponentTypes2() {
+		CriteriaBuilder detachedCriteriaBuilder = sessionFactory().getCriteriaBuilder();
+		CriteriaQuery<Student> criteria = detachedCriteriaBuilder.createQuery( Student.class );
+		criteria.from( Student.class );
+		Subquery<Integer> subquery = criteria.subquery( Integer.class );
+		Root<Student> studentRoot = subquery.from( Student.class );
+		subquery.select( detachedCriteriaBuilder.max( studentRoot.get( "age" ) ));
+		subquery.where( detachedCriteriaBuilder.and(
+				detachedCriteriaBuilder.equal( studentRoot.get( "id" ), STUDENT_ID ),
+				detachedCriteriaBuilder.equal( studentRoot.get( "address" ), new Address( "London", "Lollard St" ) )
+
+				));
+
 		doInHibernate( this::sessionFactory, session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "active" );
 
-			final Criteria query = session.createCriteria( Student.class );
-			query.add( Restrictions.eq( "id", STUDENT_ID ) );
+//			final Criteria query = session.createCriteria( Student.class );
+//			query.add( Restrictions.eq( "id", STUDENT_ID ) );
+//
+//			final DetachedCriteria subSelect = DetachedCriteria.forClass( Student.class );
+//			subSelect.setProjection( Projections.max( "age" ) );
+//			subSelect.add( Restrictions.eq( "address", new Address( "London", "Lollard St" ) ) );
+//			subSelect.add( Restrictions.eq( "id", STUDENT_ID ) );
+//
+//			query.add( Property.forName( "age" ).eq( subSelect ) );
+//			final List list = query.list();
 
-			final DetachedCriteria subSelect = DetachedCriteria.forClass( Student.class );
-			subSelect.setProjection( Projections.max( "age" ) );
-			subSelect.add( Restrictions.eq( "address", new Address( "London", "Lollard St" ) ) );
-			subSelect.add( Restrictions.eq( "id", STUDENT_ID ) );
-
-			query.add( Property.forName( "age" ).eq( subSelect ) );
-			final List list = query.list();
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<Student> query = criteriaBuilder.createQuery( Student.class );
+			Root<Student> root = query.from( Student.class );
+			query.where( criteriaBuilder.and(
+					criteriaBuilder.equal( root.get( "id" ), STUDENT_ID),
+					criteriaBuilder.equal( root.get( "age" ), subquery )
+			) );
+			final List list = session.createQuery(query).list();
 
 			assertThat( list.size(), is( 1 ) );
 		});
@@ -150,12 +211,21 @@ public class CriteriaQueryWithAppliedFilterTest extends BaseCoreFunctionalTestCa
 		doInHibernate( this::sessionFactory, session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "active" );
 
-			final Criteria query = session.createCriteria( Student.class );
-			query.add( Restrictions.eq( "id", STUDENT_ID ) );
-			query.add( Restrictions.eq( "address", new Address( "London", "Lollard St" ) ) );
-			query.add( Restrictions.eq( "name", "dre" ) );
-
-			final List list = query.list();
+//			final Criteria query = session.createCriteria( Student.class );
+//			query.add( Restrictions.eq( "id", STUDENT_ID ) );
+//			query.add( Restrictions.eq( "address", new Address( "London", "Lollard St" ) ) );
+//			query.add( Restrictions.eq( "name", "dre" ) );
+//
+//			final List list = query.list();
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<Student> query = criteriaBuilder.createQuery( Student.class );
+			Root<Student> root = query.from( Student.class );
+			query.where( criteriaBuilder.and(
+					criteriaBuilder.equal( root.get( "id" ), STUDENT_ID),
+					criteriaBuilder.equal( root.get( "address" ), new Address( "London", "Lollard St" )  ),
+					criteriaBuilder.equal( root.get( "name" ), "dre")
+					) );
+			final List list = session.createQuery(query).list();
 
 			assertThat( list.size(), is( 1 ) );
 		});

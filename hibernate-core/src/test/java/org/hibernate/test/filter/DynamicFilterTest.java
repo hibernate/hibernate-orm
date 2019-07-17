@@ -113,7 +113,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		ts = ( ( SessionImplementor ) session ).getTimestamp();
 		session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 		sp = ( Salesperson ) session.createQuery( "from Salesperson as s where s.id = :id" )
-				.setLong( "id", testData.steveId )
+				.setParameter( "id", testData.steveId )
 				.uniqueResult();
 		assertEquals( "Filtered-collection not bypassing 2L-cache", 1, sp.getOrders().size() );
 
@@ -389,14 +389,14 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		List departments = session.createQuery(
 				"select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?1)"
-		).setString( 1, "steve" ).list();
+		).setParameter( 1, "steve" ).list();
 
 		assertEquals("Incorrect department count", 1, departments.size());
 
         log.info("query against Department with a subquery on Salesperson in the FooBar reqion...");
 
 		session.enableFilter("region").setParameter( "region", "Foobar" );
-		departments = session.createQuery("select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?1)").setString(1, "steve").list();
+		departments = session.createQuery("select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?1)").setParameter(1, "steve").list();
 
 		assertEquals( "Incorrect department count", 0, departments.size() );
 
@@ -404,7 +404,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.enableFilter("region").setParameter( "region", "APAC" );
 
 		List orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li, Product as p where p.id = li.product and li.quantity >= ?1 and p.name = ?2) and o.buyer = ?3")
-				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
+				.setParameter(1, 1L).setParameter(2, "Acme Hair Gel").setString(3, "gavin").list();
 
 		assertEquals( "Incorrect orders count", 1, orders.size() );
 
@@ -414,7 +414,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.enableFilter("effectiveDate").setParameter( "asOfDate", testData.lastMonth.getTime() );
 
 		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3")
-				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
+				.setParameter(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
 
 		assertEquals( "Incorrect orders count", 1, orders.size() );
 
@@ -427,7 +427,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.fourMonthsAgo.getTime());
 
 		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3")
-				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
+				.setParameter(1, 1L).setParameter(2, "Acme Hair Gel").setParameter(3, "gavin").list();
 
 		assertEquals("Incorrect orders count", 0, orders.size());
 
@@ -437,7 +437,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
 
 		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3")
-				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
+				.setParameter(1, 1L).setParameter(2, "Acme Hair Gel").setString(3, "gavin").list();
 
 		assertEquals("Incorrect orders count", 1, orders.size());
 
@@ -447,7 +447,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
 
 		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3")
-				.setLong(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
+				.setParameter(1, 1L).setString(2, "Acme Hair Gel").setString(3, "gavin").list();
 
 		assertEquals("Incorrect orders count", 1, orders.size());
 
@@ -721,7 +721,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		// Force the categories to not get initialized here
 		List result = session.createQuery( "from Product as p where p.id = :id" )
-		        .setLong( "id", testData.prod1Id )
+		        .setParameter( "id", testData.prod1Id )
 		        .list();
 		assertTrue( "No products returned from HQL", !result.isEmpty() );
 

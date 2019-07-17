@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.EntityGraph;
+import javax.persistence.criteria.CriteriaBuilder;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
@@ -86,7 +87,7 @@ public interface SessionFactoryImplementor
 	QueryEngine getQueryEngine();
 
 	@Override
-	NodeBuilder getCriteriaBuilder();
+	CriteriaBuilder getCriteriaBuilder();
 
 	@Override
 	SessionBuilderImplementor withOptions();

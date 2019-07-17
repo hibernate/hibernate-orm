@@ -112,7 +112,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(EntityPersister persister, Object id, SessionFactoryImplementor factory,
-			String tenandtId) {
+			String tenantId) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		Type idType;
@@ -143,8 +143,8 @@ public final class MessageHelper {
 			}
 		}
 		s.append( '|' );
-		if ( tenandtId != null ) {
-			s.append( tenandtId );
+		if ( tenantId != null ) {
+			s.append( tenantId );
 		}
 		else {
 			s.append( "<null tenant id>" );

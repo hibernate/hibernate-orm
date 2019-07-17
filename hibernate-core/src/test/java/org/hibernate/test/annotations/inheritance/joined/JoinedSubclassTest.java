@@ -10,6 +10,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -28,31 +31,32 @@ import static org.junit.Assert.fail;
  */
 public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 	@Test
-	public void testDefault() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+	public void testDefault() {
 		File doc = new Document( "Enron Stuff To Shred", 1000 );
 		Folder folder = new Folder( "Enron" );
-		s.persist( doc );
-		s.persist( folder );
-		tx.commit();
-		s.close();
-
-		s = openSession();
-		tx = s.beginTransaction();
-		List result = s.createCriteria( File.class ).list();
-		assertNotNull( result );
-		assertEquals( 2, result.size() );
-		File f2 = (File) result.get( 0 );
-		checkClassType( f2, doc, folder );
-		f2 = (File) result.get( 1 );
-		checkClassType( f2, doc, folder );
-		s.delete( result.get( 0 ) );
-		s.delete( result.get( 1 ) );
-		tx.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( doc );
+					s.persist( folder );
+				}
+		);
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<File> criteria = criteriaBuilder.createQuery( File.class );
+					criteria.from( File.class );
+					List<File> result = s.createQuery( criteria ).list();
+//					List result = s.createCriteria( File.class ).list();
+					assertNotNull( result );
+					assertEquals( 2, result.size() );
+					File f2 = result.get( 0 );
+					checkClassType( f2, doc, folder );
+					f2 = result.get( 1 );
+					checkClassType( f2, doc, folder );
+					s.delete( result.get( 0 ) );
+					s.delete( result.get( 1 ) );
+				}
+		);
 	}
 
 	@Test
@@ -62,22 +66,30 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		ProgramExecution remove = new ProgramExecution();
 		remove.setAction( "remove" );
 		remove.setAppliesOn( f );
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( f );
-		s.persist( remove );
-		tx.commit();
-		s.clear();
-		tx = s.beginTransaction();
-		remove = (ProgramExecution) s.get( ProgramExecution.class, remove.getId() );
-		assertNotNull( remove );
-		assertNotNull( remove.getAppliesOn().getName() );
-		s.delete( remove );
-		s.delete( remove.getAppliesOn() );
-		tx.commit();
-		s.close();
+
+		try(Session s = openSession()) {
+			Transaction tx = s.beginTransaction();
+			try {
+				s.persist( f );
+				s.persist( remove );
+				tx.commit();
+				s.clear();
+				tx = s.beginTransaction();
+				remove = s.get( ProgramExecution.class, remove.getId() );
+				assertNotNull( remove );
+				assertNotNull( remove.getAppliesOn().getName() );
+				s.delete( remove );
+				s.delete( remove.getAppliesOn() );
+
+				tx.commit();
+			}
+			catch (Exception e) {
+				if ( s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+				throw e;
+			}
+		}
 	}
 
 	private void checkClassType(File fruitToTest, File f, Folder a) {
@@ -93,7 +105,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testJoinedAbstractClass() throws Exception {
+	public void testJoinedAbstractClass() {
 		Session s;
 		s = openSession();
 		s.getTransaction().begin();
@@ -107,18 +119,18 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		sw = (Sweater) s.get( Sweater.class, sw.getId() );
+		sw = s.get( Sweater.class, sw.getId() );
 		s.delete( sw );
 		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
-	public void testInheritance() throws Exception {
+	public void testInheritance() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
 		String eventPK = "event1";
-		EventInformation event = (EventInformation) session.get( EventInformation.class, eventPK );
+		EventInformation event = session.get( EventInformation.class, eventPK );
 		if ( event == null ) {
 			event = new EventInformation();
 			event.setNotificationId( eventPK );
@@ -162,13 +174,13 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 		
-		c1 = (Client) s.load(Client.class, c1.getId());
+		c1 = s.load(Client.class, c1.getId());
 		assertEquals( 5000.0, c1.getAccount().getBalance(), 0.01 );
 		
 		s.flush();
 		s.clear();
 		
-		a1 = (Account) s.load(Account.class,a1.getId());
+		a1 = s.load(Account.class,a1.getId());
 		Set<Client> clients = a1.getClients();
 		assertEquals(1, clients.size());
 		Iterator<Client> it = clients.iterator();

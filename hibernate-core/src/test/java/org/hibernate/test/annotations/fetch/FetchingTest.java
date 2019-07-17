@@ -8,6 +8,9 @@ package org.hibernate.test.annotations.fetch;
 
 import java.util.Date;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
@@ -24,7 +27,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class FetchingTest extends BaseCoreFunctionalTestCase {
 	@Test
-	public void testLazy() throws Exception {
+	public void testLazy() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -45,7 +48,7 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testExtraLazy() throws Exception {
+	public void testExtraLazy() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -70,59 +73,76 @@ public class FetchingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testHibernateFetchingLazy() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Person p = new Person( "Gavin", "King", "JBoss Inc" );
-		Stay stay = new Stay( null, new Date(), new Date(), "A380", "Blah", "Blah" );
-		Stay stay2 = new Stay( null, new Date(), new Date(), "A320", "Blah", "Blah" );
-		Stay stay3 = new Stay( null, new Date(), new Date(), "A340", "Blah", "Blah" );
-		stay.setOldPerson( p );
-		stay2.setVeryOldPerson( p );
-		stay3.setVeryOldPerson( p );
-		p.addOldStay( stay );
-		p.addVeryOldStay( stay2 );
-		p.addVeryOldStay( stay3 );
-		s.persist( p );
-		tx.commit();
-		s.clear();
-		tx = s.beginTransaction();
-		p = (Person) s.createQuery( "from Person p where p.firstName = :name" )
-				.setParameter( "name", "Gavin" ).uniqueResult();
-		assertFalse( Hibernate.isInitialized( p.getOldStays() ) );
-		assertEquals( 1, p.getOldStays().size() );
-		assertFalse( "lazy extra is failing", Hibernate.isInitialized( p.getOldStays() ) );
-		s.clear();
-		stay = (Stay) s.get( Stay.class, stay.getId() );
-		assertTrue( ! Hibernate.isInitialized( stay.getOldPerson() ) );
-		s.clear();
-		stay3 = (Stay) s.get( Stay.class, stay3.getId() );
-		assertTrue( "FetchMode.JOIN should overrides lazy options", Hibernate.isInitialized( stay3.getVeryOldPerson() ) );
-		s.delete( stay3.getVeryOldPerson() );
-		tx.commit();
-		s.close();
+	public void testHibernateFetchingLazy() {
+		try(Session s = openSession()) {
+			Transaction tx = s.beginTransaction();
+			try {
+				Person p = new Person( "Gavin", "King", "JBoss Inc" );
+				Stay stay = new Stay( null, new Date(), new Date(), "A380", "Blah", "Blah" );
+				Stay stay2 = new Stay( null, new Date(), new Date(), "A320", "Blah", "Blah" );
+				Stay stay3 = new Stay( null, new Date(), new Date(), "A340", "Blah", "Blah" );
+				stay.setOldPerson( p );
+				stay2.setVeryOldPerson( p );
+				stay3.setVeryOldPerson( p );
+				p.addOldStay( stay );
+				p.addVeryOldStay( stay2 );
+				p.addVeryOldStay( stay3 );
+				s.persist( p );
+				tx.commit();
+				s.clear();
+				tx = s.beginTransaction();
+				p = (Person) s.createQuery( "from Person p where p.firstName = :name" )
+						.setParameter( "name", "Gavin" ).uniqueResult();
+				assertFalse( Hibernate.isInitialized( p.getOldStays() ) );
+				assertEquals( 1, p.getOldStays().size() );
+				assertFalse( "lazy extra is failing", Hibernate.isInitialized( p.getOldStays() ) );
+				s.clear();
+				stay = (Stay) s.get( Stay.class, stay.getId() );
+				assertTrue( !Hibernate.isInitialized( stay.getOldPerson() ) );
+				s.clear();
+				stay3 = (Stay) s.get( Stay.class, stay3.getId() );
+				assertTrue(
+						"FetchMode.JOIN should overrides lazy options",
+						Hibernate.isInitialized( stay3.getVeryOldPerson() )
+				);
+				s.delete( stay3.getVeryOldPerson() );
+				tx.commit();
+			}finally {
+				if ( tx.isActive() ) {
+					tx.rollback();
+				}
+			}
+		}
 	}
 
 	@Test
-	public void testOneToManyFetchEager() throws Exception {
+	public void testOneToManyFetchEager() {
 		Branch b = new Branch();
 		Session s = openSession( );
-		s.getTransaction().begin();
-		s.persist( b );
-		s.flush();
-		Leaf l = new Leaf();
-		l.setBranch( b );
-		s.persist( l );
-		s.flush();
+		try {
+			s.getTransaction().begin();
+			s.persist( b );
+			s.flush();
+			Leaf l = new Leaf();
+			l.setBranch( b );
+			s.persist( l );
+			s.flush();
 
-		s.clear();
+			s.clear();
 
-		s.createCriteria( Branch.class ).list();
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Branch> criteria = criteriaBuilder.createQuery( Branch.class );
+			criteria.from( Branch.class );
+			s.createQuery( criteria ).list();
+//			s.createCriteria( Branch.class ).list();
 
-		s.getTransaction().rollback();
-		s.close();
+		}
+		finally {
+			if ( s.getTransaction().isActive() ) {
+				s.getTransaction().rollback();
+			}
+			s.close();
+		}
 	}
 
 	@Override

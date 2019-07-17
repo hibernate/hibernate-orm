@@ -8,6 +8,9 @@ package org.hibernate.test.annotations.inheritance.union;
 
 import java.util.List;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -26,29 +29,31 @@ import static org.junit.Assert.fail;
  */
 public class SubclassTest extends BaseCoreFunctionalTestCase {
 	@Test
-	public void testDefault() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+	public void testDefault() {
 		File doc = new Document( "Enron Stuff To Shred", 1000 );
 		Folder folder = new Folder( "Enron" );
-		s.persist( doc );
-		s.persist( folder );
-		tx.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( doc );
+					s.persist( folder );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		List result = s.createCriteria( File.class ).list();
-		assertNotNull( result );
-		assertEquals( 2, result.size() );
-		File f2 = (File) result.get( 0 );
-		checkClassType( f2, doc, folder );
-		f2 = (File) result.get( 1 );
-		checkClassType( f2, doc, folder );
-		tx.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<File> criteria = criteriaBuilder.createQuery( File.class );
+					criteria.from( File.class );
+					List<File> result = s.createQuery( criteria ).list();
+//					List result = s.createCriteria( File.class ).list();
+					assertNotNull( result );
+					assertEquals( 2, result.size() );
+					File f2 = result.get( 0 );
+					checkClassType( f2, doc, folder );
+					f2 = result.get( 1 );
+					checkClassType( f2, doc, folder );
+				}
+		);
 	}
 
 	private void checkClassType(File fruitToTest, File f, Folder a) {

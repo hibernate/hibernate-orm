@@ -6,13 +6,10 @@
  */
 package org.hibernate.test.any;
 
-import javax.persistence.PersistenceException;
-
-import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
+import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -23,7 +20,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-1663" )
+@TestForIssue(jiraKey = "HHH-1663")
 public class AnyTypeTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -38,28 +35,28 @@ public class AnyTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testFlushProcessing() {
-		Session session = openSession();
-		session.beginTransaction();
 		Person person = new Person();
 		Address address = new Address();
 		person.setData( address );
-		session.saveOrUpdate(person);
-		session.saveOrUpdate(address);
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					session.saveOrUpdate( person );
+					session.saveOrUpdate( address );
+				}
+		);
 
-		session = openSession();
-		session.beginTransaction();
-        person = (Person) session.load( Person.class, person.getId() );
-        person.setName("makingpersondirty");
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Person p = session.load( Person.class, person.getId() );
+					p.setName( "makingpersondirty" );
+				}
+		);
 
-		session = openSession();
-		session.beginTransaction();
-		session.delete( person );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					session.delete( person );
+				}
+		);
 	}
 
 	@Test
@@ -73,11 +70,16 @@ public class AnyTypeTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (IllegalArgumentException e) {
 			//expected
-			assertTyping( QuerySyntaxException.class, e.getCause() );
-			session.getTransaction().rollback();
+			assertTyping( SemanticException.class, e.getCause() );
+			if ( session.getTransaction().isActive() ) {
+				session.getTransaction().rollback();
+			}
 		}
-		catch (QuerySyntaxException qe) {
+		catch (SemanticException qe) {
 			//expected
+			if ( session.getTransaction().isActive() ) {
+				session.getTransaction().rollback();
+			}
 		}
 		finally {
 			session.close();

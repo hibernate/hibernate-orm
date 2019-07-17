@@ -247,11 +247,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		for ( int tableIndex = 0; joinItr.hasNext(); tableIndex++ ) {
 			Join join = (Join) joinItr.next();
 
-			isNullableTable[tableIndex] = join.isOptional() ||
-					creationContext.getSessionFactory()
-							.getSessionFactoryOptions()
-							.getJpaCompliance()
-							.isJpaCacheComplianceEnabled();
+			isNullableTable[tableIndex] = join.isOptional();
 			isInverseTable[tableIndex] = join.isInverse();
 
 			Table table = join.getTable();
@@ -320,12 +316,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( joinTable ) );
 			isDeferreds.add( join.isSequentialSelect() );
 			isInverses.add( join.isInverse() );
-			isNullables.add(
-					join.isOptional() || creationContext.getSessionFactory()
-							.getSessionFactoryOptions()
-							.getJpaCompliance()
-							.isJpaCacheComplianceEnabled()
-			);
+			isNullables.add( join.isOptional() );
 			isLazies.add( join.isLazy() );
 
 			String joinTableName = determineTableName( joinTable, jdbcEnvironment );
@@ -423,11 +414,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			Join join = (Join) joinItr.next();
 
 			isInverseTable[j] = join.isInverse();
-			isNullableTable[j] = join.isOptional()
-					|| creationContext.getSessionFactory()
-					.getSessionFactoryOptions()
-					.getJpaCompliance()
-					.isJpaCacheComplianceEnabled();
+			isNullableTable[j] = join.isOptional();
 
 			customSQLInsert[j] = join.getCustomSQLInsert();
 			insertCallable[j] = customSQLInsert[j] != null && join.isCustomInsertCallable();

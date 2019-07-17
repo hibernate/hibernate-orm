@@ -530,22 +530,18 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias) {
-		return addScalar( columnAlias, (BasicDomainType) null );
+		return addScalar( columnAlias, null );
 	}
+
+//	@Override
+//	public NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type) {
+//		return null;
+//	}
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type) {
-		return null;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> addScalar(String columnAlias, Type type) {
 		addReturnBuilder(
-				new NativeQueryReturnBuilder() {
-					public NativeSQLQueryReturn buildReturn() {
-						return new NativeSQLQueryScalarReturn( columnAlias, type );
-					}
-				}
+				() -> new NativeSQLQueryScalarReturn( columnAlias, type )
 		);
 		return this;
 	}

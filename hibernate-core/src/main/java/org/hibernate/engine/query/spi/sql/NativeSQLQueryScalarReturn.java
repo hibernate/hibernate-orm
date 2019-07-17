@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.query.spi.sql;
 
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.type.Type;
 
 /**
@@ -14,11 +15,11 @@ import org.hibernate.type.Type;
  * @author gloegl
  */
 public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
-	private final Type type;
+	private final BasicDomainType type;
 	private final String columnAlias;
 	private final int hashCode;
 
-	public NativeSQLQueryScalarReturn(String alias, Type type) {
+	public NativeSQLQueryScalarReturn(String alias, BasicDomainType type) {
 		this.type = type;
 		this.columnAlias = alias;
 		this.hashCode = determineHashCode();
@@ -36,7 +37,7 @@ public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
 	}
 
 	public Type getType() {
-		return type;
+		return (Type) type;
 	}
 
 	@Override
@@ -69,7 +70,7 @@ public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
 	public void traceLog(TraceLogger logger) {
 		logger.writeLine( "Scalar[" );
 		logger.writeLine( "    columnAlias=" + columnAlias + "," );
-		logger.writeLine( "    type=" + ( type == null ? "<unknown>" : type.getName() ) + "," );
+		logger.writeLine( "    type=" + ( type == null ? "<unknown>" : type.getTypeName() ) + "," );
 		logger.writeLine( "]" );
 	}
 }

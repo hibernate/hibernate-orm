@@ -37,6 +37,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.type.Type;
 
 /**
@@ -103,7 +104,7 @@ public abstract class ResultSetMappingBinder {
 				);
 			}
 		}
-		return new NativeSQLQueryScalarReturn( column, type );
+		return new NativeSQLQueryScalarReturn( column, (BasicDomainType) type );
 	}
 
 

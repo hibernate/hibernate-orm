@@ -27,6 +27,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
@@ -53,7 +54,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addScalar(String columnAlias);
 
 	@Override
-	NativeQueryImplementor<R> addScalar(String columnAlias, Type type);
+	NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type);
 
 	@Override
 	RootReturn addRoot(String tableAlias, String entityName);

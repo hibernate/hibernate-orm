@@ -247,6 +247,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 			if (s.getTransaction().isActive()){
 				s.getTransaction().rollback();
 			}
+			throw e;
 		}finally {
 			if(s.isOpen()) {
 				s.close();

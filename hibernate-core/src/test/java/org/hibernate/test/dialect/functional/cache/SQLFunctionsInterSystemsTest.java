@@ -40,6 +40,7 @@ import org.junit.Test;
 import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -321,149 +322,154 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	public void testSQLFunctions() throws Exception {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Simple simple = new Simple( Long.valueOf(10) );
-		simple.setName("Simple 1");
-		s.save(simple );
+	public void testSQLFunctions() {
+		try(Session s = openSession()) {
+			Transaction t = s.beginTransaction();
+			Simple simple = new Simple( Long.valueOf( 10 ) );
+			simple.setName( "Simple 1" );
+			s.save( simple );
 
-		s.createQuery( "from Simple s where repeat('foo', 3) = 'foofoofoo'" ).list();
-		s.createQuery( "from Simple s where repeat(s.name, 3) = 'foofoofoo'" ).list();
-		s.createQuery( "from Simple s where repeat( lower(s.name), (3 + (1-1)) / 2) = 'foofoofoo'" ).list();
+			s.createQuery( "from Simple s where repeat('foo', 3) = 'foofoofoo'" ).list();
+			s.createQuery( "from Simple s where repeat(s.name, 3) = 'foofoofoo'" ).list();
+			s.createQuery( "from Simple s where repeat( lower(s.name), (3 + (1-1)) / 2) = 'foofoofoo'" ).list();
 
-		assertTrue(
-				s.createQuery( "from Simple s where upper( s.name ) ='SIMPLE 1'" ).list().size()==1
-		);
-		assertTrue(
-				s.createQuery(
-						"from Simple s where not( upper( s.name ) ='yada' or 1=2 or 'foo'='bar' or not('foo'='foo') or 'foo' like 'bar' )"
-				).list()
-						.size()==1
-		);
+			assertTrue(
+					s.createQuery( "from Simple s where upper( s.name ) ='SIMPLE 1'" ).list().size() == 1
+			);
+			assertTrue(
+					s.createQuery(
+							"from Simple s where not( upper( s.name ) ='yada' or 1=2 or 'foo'='bar' or not('foo'='foo') or 'foo' like 'bar' )"
+					).list()
+							.size() == 1
+			);
 
-		assertTrue(
-				s.createQuery( "from Simple s where lower( s.name || ' foo' ) ='simple 1 foo'" ).list().size()==1
-		);
-		assertTrue(
-				s.createQuery( "from Simple s where lower( concat(s.name, ' foo') ) ='simple 1 foo'" ).list().size()==1
-		);
+			assertTrue(
+					s.createQuery( "from Simple s where lower( s.name || ' foo' ) ='simple 1 foo'" ).list().size() == 1
+			);
+			assertTrue(
+					s.createQuery( "from Simple s where lower( concat(s.name, ' foo') ) ='simple 1 foo'" )
+							.list()
+							.size() == 1
+			);
 
-		Simple other = new Simple( Long.valueOf(20) );
-		other.setName( "Simple 2" );
-		other.setCount( 12 );
-		simple.setOther( other );
-		s.save( other );
-		//s.find("from Simple s where s.name ## 'cat|rat|bag'");
-		assertTrue(
-				s.createQuery( "from Simple s where upper( s.other.name ) ='SIMPLE 2'" ).list().size()==1
-		);
-		assertTrue(
-				s.createQuery( "from Simple s where not ( upper( s.other.name ) ='SIMPLE 2' )" ).list().size()==0
-		);
-		assertTrue(
-				s.createQuery(
-						"select distinct s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2"
-				).list()
-						.size()==1
-		);
-		assertTrue(
-				s.createQuery(
-						"select s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2 order by s.other.count"
-				).list()
-						.size()==1
-		);
-		Simple min = new Simple( Long.valueOf(30) );
-		min.setCount( -1 );
-		s.save(min );
+			Simple other = new Simple( Long.valueOf( 20 ) );
+			other.setName( "Simple 2" );
+			other.setCount( 12 );
+			simple.setOther( other );
+			s.save( other );
+			//s.find("from Simple s where s.name ## 'cat|rat|bag'");
+			assertTrue(
+					s.createQuery( "from Simple s where upper( s.other.name ) ='SIMPLE 2'" ).list().size() == 1
+			);
+			assertTrue(
+					s.createQuery( "from Simple s where not ( upper( s.other.name ) ='SIMPLE 2' )" ).list().size() == 0
+			);
+			assertTrue(
+					s.createQuery(
+							"select distinct s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2"
+					).list()
+							.size() == 1
+			);
+			assertTrue(
+					s.createQuery(
+							"select s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2 order by s.other.count"
+					).list()
+							.size() == 1
+			);
+			Simple min = new Simple( Long.valueOf( 30 ) );
+			min.setCount( -1 );
+			s.save( min );
 
-		assertTrue(
-				s.createQuery( "from Simple s where s.count > ( select min(sim.count) from Simple sim )" )
-						.list()
-						.size()==2
-		);
-		t.commit();
-		t = s.beginTransaction();
-		assertTrue(
-				s.createQuery(
-						"from Simple s where s = some( select sim from Simple sim where sim.count>=0 ) and s.count >= 0"
-				).list()
-						.size()==2
-		);
-		assertTrue(
-				s.createQuery(
-						"from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count ) and s.other.count > 0"
-				).list()
-						.size()==1
-		);
+			assertTrue(
+					s.createQuery( "from Simple s where s.count > ( select min(sim.count) from Simple sim )" )
+							.list()
+							.size() == 2
+			);
+			t.commit();
+			t = s.beginTransaction();
+			assertTrue(
+					s.createQuery(
+							"from Simple s where s = some( select sim from Simple sim where sim.count>=0 ) and s.count >= 0"
+					).list()
+							.size() == 2
+			);
+			assertTrue(
+					s.createQuery(
+							"from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count ) and s.other.count > 0"
+					).list()
+							.size() == 1
+			);
 
-		Iterator iter = s.createQuery( "select sum(s.count) from Simple s group by s.count having sum(s.count) > 10" )
-				.iterate();
-		assertTrue( iter.hasNext() );
-		assertEquals( Long.valueOf( 12 ), iter.next() );
-		assertTrue( !iter.hasNext() );
-		iter = s.createQuery( "select s.count from Simple s group by s.count having s.count = 12" ).iterate();
-		assertTrue( iter.hasNext() );
+			List list = s.createQuery( "select sum(s.count) from Simple s group by s.count having sum(s.count) > 10" )
+					.list();
+			assertEquals( 1, list.size() );
+			assertEquals( Long.valueOf( 12 ), list.get( 0 ) );
+			list = s.createQuery( "select s.count from Simple s group by s.count having s.count = 12" ).list();
+			assertFalse( list.isEmpty() );
 
-		s.createQuery(
-				"select s.id, s.count, count(t), max(t.date) from Simple s, Simple t where s.count = t.count group by s.id, s.count order by s.count"
-		).iterate();
+			s.createQuery(
+					"select s.id, s.count, count(t), max(t.date) from Simple s, Simple t where s.count = t.count group by s.id, s.count order by s.count"
+			).list();
 
-		Query q = s.createQuery("from Simple s");
-		q.setMaxResults( 10 );
-		assertTrue( q.list().size()==3 );
-		q = s.createQuery("from Simple s");
-		q.setMaxResults( 1 );
-		assertTrue( q.list().size()==1 );
-		q = s.createQuery("from Simple s");
-		assertTrue( q.list().size() == 3 );
-		q = s.createQuery("from Simple s where s.name = ?");
-		q.setParameter( 0, "Simple 1" );
-		assertTrue( q.list().size()==1 );
-		q = s.createQuery("from Simple s where s.name = ? and upper(s.name) = ?");
-		q.setParameter(1, "SIMPLE 1");
-		q.setParameter( 0, "Simple 1" );
-		q.setFirstResult(0);
-		assertTrue( q.iterate().hasNext() );
-		q = s.createQuery("from Simple s where s.name = :foo and upper(s.name) = :bar or s.count=:count or s.count=:count + 1");
-		q.setParameter( "bar", "SIMPLE 1" );
-		q.setParameter( "foo", "Simple 1" );
-		q.setParameter("count", 69);
-		q.setFirstResult(0);
-		assertTrue( q.iterate().hasNext() );
-		q = s.createQuery("select s.id from Simple s");
-		q.setFirstResult(1);
-		q.setMaxResults( 2 );
-		iter = q.iterate();
-		int i=0;
-		while ( iter.hasNext() ) {
-			assertTrue( iter.next() instanceof Long );
-			i++;
+			Query q = s.createQuery( "from Simple s" );
+			q.setMaxResults( 10 );
+			assertTrue( q.list().size() == 3 );
+			q = s.createQuery( "from Simple s" );
+			q.setMaxResults( 1 );
+			assertTrue( q.list().size() == 1 );
+			q = s.createQuery( "from Simple s" );
+			assertTrue( q.list().size() == 3 );
+			q = s.createQuery( "from Simple s where s.name = ?" );
+			q.setParameter( 0, "Simple 1" );
+			assertTrue( q.list().size() == 1 );
+			q = s.createQuery( "from Simple s where s.name = ? and upper(s.name) = ?" );
+			q.setParameter( 1, "SIMPLE 1" );
+			q.setParameter( 0, "Simple 1" );
+			q.setFirstResult( 0 );
+			assertFalse( q.list().isEmpty() );
+			q = s.createQuery(
+					"from Simple s where s.name = :foo and upper(s.name) = :bar or s.count=:count or s.count=:count + 1" );
+			q.setParameter( "bar", "SIMPLE 1" );
+			q.setParameter( "foo", "Simple 1" );
+			q.setParameter( "count", 69 );
+			q.setFirstResult( 0 );
+			assertFalse( q.list().isEmpty() );
+			q = s.createQuery( "select s.id from Simple s" );
+			q.setFirstResult( 1 );
+			q.setMaxResults( 2 );
+			list = q.list();
+			for ( Object l : list ) {
+				assertTrue( l instanceof Long );
+			}
+//		int i=0;
+//		while ( list.hasNext() ) {
+//			assertTrue( list.next() instanceof Long );
+//			i++;
+//		}
+			assertEquals( 2, list.size() );
+			q = s.createQuery( "select all s, s.other from Simple s where s = :s" );
+			q.setParameter( "s", simple );
+			assertTrue( q.list().size() == 1 );
+
+
+			q = s.createQuery( "from Simple s where s.name in (:name_list) and s.count > :count" );
+			HashSet set = new HashSet();
+			set.add( "Simple 1" );
+			set.add( "foo" );
+			q.setParameterList( "name_list", set );
+			q.setParameter( "count", new Integer( -1 ) );
+			assertTrue( q.list().size() == 1 );
+
+			ScrollableResults sr = s.createQuery( "from Simple s" ).scroll();
+			sr.next();
+			sr.get();
+			sr.close();
+
+			s.delete( other );
+			s.delete( simple );
+			s.delete( min );
+			t.commit();
 		}
-		assertTrue( i == 2 );
-		q = s.createQuery("select all s, s.other from Simple s where s = :s");
-		q.setParameter("s", simple);
-		assertTrue( q.list().size()==1 );
-
-
-		q = s.createQuery("from Simple s where s.name in (:name_list) and s.count > :count");
-		HashSet set = new HashSet();
-		set.add("Simple 1");
-		set.add("foo");
-		q.setParameterList( "name_list", set );
-		q.setParameter("count", new Integer(-1) );
-		assertTrue( q.list().size()==1 );
-
-		ScrollableResults sr = s.createQuery("from Simple s").scroll();
-		sr.next();
-		sr.get();
-		sr.close();
-
-		s.delete( other );
-		s.delete( simple );
-		s.delete( min );
-		t.commit();
-		s.close();
 
 	}
 

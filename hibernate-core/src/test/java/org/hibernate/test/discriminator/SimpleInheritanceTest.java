@@ -131,6 +131,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 			if ( s.getTransaction().isActive() ) {
 				s.getTransaction().rollback();
 			}
+			throw e;
 		}
 		finally {
 			s.close();
@@ -151,6 +152,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 			if ( s.getTransaction().isActive() ) {
 				s.getTransaction().rollback();
 			}
+			throw ex;
 		}
 		finally {
 			s.close();

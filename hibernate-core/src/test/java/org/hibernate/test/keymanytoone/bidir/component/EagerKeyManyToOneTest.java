@@ -6,6 +6,9 @@
  */
 package org.hibernate.test.keymanytoone.bidir.component;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
@@ -78,54 +81,56 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		// test cascading a save to an association with a key-many-to-one which refers to a
 		// just saved entity
-		Session s = openSession();
-		s.beginTransaction();
-		Customer cust = new Customer( "Acme, Inc." );
-		Order order = new Order( new Order.Id( cust, 1 ) );
-		cust.getOrders().add( order );
-		s.save( cust );
-		s.flush();
-		assertEquals( 2, sessionFactory().getStatistics().getEntityInsertCount() );
-		s.delete( cust );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				s -> {
+					Customer cust = new Customer( "Acme, Inc." );
+					Order order = new Order( new Order.Id( cust, 1 ) );
+					cust.getOrders().add( order );
+					s.save( cust );
+					s.flush();
+					assertEquals( 2, sessionFactory().getStatistics().getEntityInsertCount() );
+					s.delete( cust );
+				}
+		);
 	}
 
 	@Test
 	public void testLoadingStrategies() {
 		sessionFactory().getStatistics().clear();
 
-		Session s = openSession();
-		s.beginTransaction();
-		Customer cust = new Customer( "Acme, Inc." );
-		Order order = new Order( new Order.Id( cust, 1 ) );
-		cust.getOrders().add( order );
-		s.save( cust );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				s -> {
+					Customer cust = new Customer( "Acme, Inc." );
+					Order order = new Order( new Order.Id( cust, 1 ) );
+					cust.getOrders().add( order );
+					s.save( cust );
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
+		inTransaction(
+				s -> {
+					Customer cust = ( Customer ) s.createQuery( "from Customer" ).uniqueResult();
+					assertEquals( 1, cust.getOrders().size() );
+					s.clear();
 
-		cust = ( Customer ) s.createQuery( "from Customer" ).uniqueResult();
-		assertEquals( 1, cust.getOrders().size() );
-		s.clear();
+					cust = ( Customer ) s.createQuery( "from Customer c join fetch c.orders" ).uniqueResult();
+					assertEquals( 1, cust.getOrders().size() );
+					s.clear();
 
-		cust = ( Customer ) s.createQuery( "from Customer c join fetch c.orders" ).uniqueResult();
-		assertEquals( 1, cust.getOrders().size() );
-		s.clear();
+					cust = ( Customer ) s.createQuery( "from Customer c join fetch c.orders as o join fetch o.id.customer" ).uniqueResult();
+					assertEquals( 1, cust.getOrders().size() );
+					s.clear();
 
-		cust = ( Customer ) s.createQuery( "from Customer c join fetch c.orders as o join fetch o.id.customer" ).uniqueResult();
-		assertEquals( 1, cust.getOrders().size() );
-		s.clear();
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<Customer> criteria = criteriaBuilder.createQuery( Customer.class );
+					criteria.from( Customer.class );
+					cust = s.createQuery( criteria ).uniqueResult();
+					assertEquals( 1, cust.getOrders().size() );
+					s.clear();
 
-		cust = ( Customer ) s.createCriteria( Customer.class ).uniqueResult();
-		assertEquals( 1, cust.getOrders().size() );
-		s.clear();
-
-		s.delete( cust );
-		s.getTransaction().commit();
-		s.close();
+					s.delete( cust );
+				}
+		);
 	}
 
 	@Test

@@ -127,6 +127,7 @@ public class DiscriminatorTest extends BaseCoreFunctionalTestCase {
 			if(s.getTransaction().isActive()){
 				s.getTransaction().rollback();
 			}
+			throw exception;
 		}finally {
 			s.close();
 		}
@@ -139,10 +140,11 @@ public class DiscriminatorTest extends BaseCoreFunctionalTestCase {
 			e = s.get( Employee.class, new Long( employee.getId() ) );
 			c = s.get( Customer.class, new Long( employee.getId() ) );
 			s.getTransaction().commit();
-		}catch (Exception exc){
+		}catch (Exception exception){
 			if(s.getTransaction().isActive()){
 				s.getTransaction().rollback();
 			}
+			throw exception;
 		}finally{
 			s.close();
 		}

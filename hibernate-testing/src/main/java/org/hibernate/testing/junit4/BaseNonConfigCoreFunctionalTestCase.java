@@ -582,3 +582,9 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		return TransactionUtil2.fromTransaction( sessionFactory(), action );
 	}
 }
+
+	public <R> R inTransactionReturn(Function<SessionImplementor, R> action) {
+		log.trace( "#inTransaction(action)" );
+		return TransactionUtil2.inTransactionReturn( sessionFactory(), action );
+	}
+}

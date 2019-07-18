@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.NullPrecedence;
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -138,43 +137,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-465")
-	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class, SQLServer2008Dialect.class },
-			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
-					"For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
-					"MySQL and SQL Server 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
-	public void testCriteriaNullsFirstLast() {
-		Session session = openSession();
 
-		// Populating database with test data.
-		session.getTransaction().begin();
-		Zoo zoo1 = new Zoo( null );
-		Zoo zoo2 = new Zoo( "Warsaw ZOO" );
-		session.persist( zoo1 );
-		session.persist( zoo2 );
-		session.getTransaction().commit();
-
-		session.clear();
-
-		session.getTransaction().begin();
-		Criteria criteria = session.createCriteria( Zoo.class );
-		criteria.addOrder( org.hibernate.criterion.Order.asc( "name" ).nulls( NullPrecedence.LAST ) );
-		Iterator<Zoo> iterator = (Iterator<Zoo>) criteria.list().iterator();
-		Assert.assertEquals( zoo2.getName(), iterator.next().getName() );
-		Assert.assertNull( iterator.next().getName() );
-		session.getTransaction().commit();
-
-		session.clear();
-
-		// Cleanup data.
-		session.getTransaction().begin();
-		session.delete( zoo1 );
-		session.delete( zoo2 );
-		session.getTransaction().commit();
-
-		session.close();
-	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-465")

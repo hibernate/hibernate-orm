@@ -8,6 +8,12 @@ package org.hibernate.test.annotations.enumerated.custom_mapkey;
 
 import java.io.Serializable;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Session;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.PersistentClass;
@@ -194,19 +200,29 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 
 	private EntityMapEnum assertFindCriteria(
 			EntityMapEnum expected,
-			String mapPath, Object param) {
+			String mapPath,
+			Object param) {
 		assertNotEquals( 0, expected.id );
 
-		Session session = openNewSession();
-		session.beginTransaction();
-		EntityMapEnum found = (EntityMapEnum) session.createCriteria( EntityMapEnum.class )
-				.createCriteria( mapPath, "m" )
-				.add( Restrictions.eq( "indices", param ) )
-				.uniqueResult();
-		//find
-		assetEntityMapEnumEquals( expected, found );
-		session.getTransaction().commit();
-		session.close();
+		EntityMapEnum found =  inTransactionReturn(
+				session -> {
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<EntityMapEnum> criteria = criteriaBuilder.createQuery( EntityMapEnum.class );
+					Root<EntityMapEnum> root = criteria.from( EntityMapEnum.class );
+					MapJoin<Object, Object,Object> join = (MapJoin<Object, Object,Object>) root.join( mapPath, JoinType.INNER );
+					criteria.where( criteriaBuilder.equal( join.key(), param ) ) ;
+					EntityMapEnum result = session.createQuery( criteria ).uniqueResult();
+
+//					EntityMapEnum result = (EntityMapEnum) session.createCriteria( EntityMapEnum.class )
+//							.createCriteria( mapPath, "m" )
+//							.add( Restrictions.eq( "indices", param ) )
+//							.uniqueResult();
+					//find
+					assetEntityMapEnumEquals( expected, result );
+					return result;
+				}
+		);
+
 		return found;
 	}
 
@@ -219,7 +235,8 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 
 		EntityMapEnum found = assertFindCriteria(
 				entityMapEnum,
-				"ordinalMap", Common.A1
+				"ordinalMap",
+				Common.A1
 		);
 		assertFalse( found.ordinalMap.isEmpty() );
 		delete( id );
@@ -245,7 +262,8 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 
 		found = assertFindCriteria(
 				entityMapEnum,
-				"firstLetterMap", FirstLetter.A_LETTER
+				"firstLetterMap",
+				FirstLetter.A_LETTER
 		);
 		assertFalse( found.firstLetterMap.isEmpty() );
 		delete( id );

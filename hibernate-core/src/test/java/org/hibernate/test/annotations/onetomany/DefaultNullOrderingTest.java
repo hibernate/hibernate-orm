@@ -10,13 +10,17 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -40,98 +44,128 @@ public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testHqlDefaultNullOrdering() {
-		Session session = openSession();
+		inSession( session -> {
+// Populating database with test data.
+			try {
+				session.getTransaction().begin();
+				Monkey monkey1 = new Monkey();
+				monkey1.setName( null );
+				Monkey monkey2 = new Monkey();
+				monkey2.setName( "Warsaw ZOO" );
+				session.persist( monkey1 );
+				session.persist( monkey2 );
+				session.getTransaction().commit();
 
-		// Populating database with test data.
-		session.getTransaction().begin();
-		Monkey monkey1 = new Monkey();
-		monkey1.setName( null );
-		Monkey monkey2 = new Monkey();
-		monkey2.setName( "Warsaw ZOO" );
-		session.persist( monkey1 );
-		session.persist( monkey2 );
-		session.getTransaction().commit();
+				session.getTransaction().begin();
+				List<Zoo> orderedResults = (List<Zoo>) session.createQuery( "from Monkey m order by m.name" )
+						.list(); // Should order by NULLS LAST.
+				Assert.assertEquals( Arrays.asList( monkey2, monkey1 ), orderedResults );
+				session.getTransaction().commit();
 
-		session.getTransaction().begin();
-		List<Zoo> orderedResults = (List<Zoo>) session.createQuery( "from Monkey m order by m.name" ).list(); // Should order by NULLS LAST.
-		Assert.assertEquals( Arrays.asList( monkey2, monkey1 ), orderedResults );
-		session.getTransaction().commit();
+				session.clear();
 
-		session.clear();
-
-		// Cleanup data.
-		session.getTransaction().begin();
-		session.delete( monkey1 );
-		session.delete( monkey2 );
-		session.getTransaction().commit();
-
-		session.close();
+				// Cleanup data.
+				session.getTransaction().begin();
+				session.delete( monkey1 );
+				session.delete( monkey2 );
+				session.getTransaction().commit();
+			}
+			catch (Exception e) {
+				if ( session.getTransaction().isActive() ) {
+					session.getTransaction().rollback();
+				}
+				throw e;
+			}
+		} );
 	}
 
 	@Test
 	public void testAnnotationsDefaultNullOrdering() {
-		Session session = openSession();
+		inSession(
+				session -> {
+					try {
+						// Populating database with test data.
+						session.getTransaction().begin();
+						Troop troop = new Troop();
+						troop.setName( "Alpha 1" );
+						Soldier ranger = new Soldier();
+						ranger.setName( "Ranger 1" );
+						troop.addSoldier( ranger );
+						Soldier sniper = new Soldier();
+						sniper.setName( null );
+						troop.addSoldier( sniper );
+						session.persist( troop );
+						session.getTransaction().commit();
 
-		// Populating database with test data.
-		session.getTransaction().begin();
-		Troop troop = new Troop();
-		troop.setName( "Alpha 1" );
-		Soldier ranger = new Soldier();
-		ranger.setName( "Ranger 1" );
-		troop.addSoldier( ranger );
-		Soldier sniper = new Soldier();
-		sniper.setName( null );
-		troop.addSoldier( sniper );
-		session.persist( troop );
-		session.getTransaction().commit();
+						session.clear();
 
-		session.clear();
+						session.getTransaction().begin();
+						troop = (Troop) session.get( Troop.class, troop.getId() );
+						Iterator<Soldier> iterator = troop.getSoldiers().iterator(); // Should order by NULLS LAST.
+						Assert.assertEquals( ranger.getName(), iterator.next().getName() );
+						Assert.assertNull( iterator.next().getName() );
+						session.getTransaction().commit();
 
-		session.getTransaction().begin();
-		troop = (Troop) session.get( Troop.class, troop.getId() );
-		Iterator<Soldier> iterator = troop.getSoldiers().iterator(); // Should order by NULLS LAST.
-		Assert.assertEquals( ranger.getName(), iterator.next().getName() );
-		Assert.assertNull( iterator.next().getName() );
-		session.getTransaction().commit();
+						session.clear();
 
-		session.clear();
-
-		// Cleanup data.
-		session.getTransaction().begin();
-		session.delete( troop );
-		session.getTransaction().commit();
-
-		session.close();
+						// Cleanup data.
+						session.getTransaction().begin();
+						session.delete( troop );
+						session.getTransaction().commit();
+					}
+					catch (Exception e) {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+						throw e;
+					}
+				}
+		);
 	}
 
 	@Test
 	public void testCriteriaDefaultNullOrdering() {
-		Session session = openSession();
+		inSession(
+				session -> {
+					try{
+						// Populating database with test data.
+						session.getTransaction().begin();
+						Monkey monkey1 = new Monkey();
+						monkey1.setName( null );
+						Monkey monkey2 = new Monkey();
+						monkey2.setName( "Berlin ZOO" );
+						session.persist( monkey1 );
+						session.persist( monkey2 );
+						session.getTransaction().commit();
 
-		// Populating database with test data.
-		session.getTransaction().begin();
-		Monkey monkey1 = new Monkey();
-		monkey1.setName( null );
-		Monkey monkey2 = new Monkey();
-		monkey2.setName( "Berlin ZOO" );
-		session.persist( monkey1 );
-		session.persist( monkey2 );
-		session.getTransaction().commit();
+						session.getTransaction().begin();
+						CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+						CriteriaQuery<Monkey> criteria = criteriaBuilder.createQuery( Monkey.class );
+						Root<Monkey> root = criteria.from( Monkey.class );
+						criteria.orderBy( criteriaBuilder.asc( root.get( "name" ) ) );
 
-		session.getTransaction().begin();
-		Criteria criteria = session.createCriteria( Monkey.class );
-		criteria.addOrder( org.hibernate.criterion.Order.asc( "name" ) ); // Should order by NULLS LAST.
-		Assert.assertEquals( Arrays.asList( monkey2, monkey1 ), criteria.list() );
-		session.getTransaction().commit();
+						Assert.assertEquals( Arrays.asList( monkey2, monkey1 ), session.createQuery( criteria ).list() );
 
-		session.clear();
+//						Criteria criteria = session.createCriteria( Monkey.class );
+//						criteria.addOrder( org.hibernate.criterion.Order.asc( "name" ) ); // Should order by NULLS LAST.
+//						Assert.assertEquals( Arrays.asList( monkey2, monkey1 ), criteria.list() );
+						session.getTransaction().commit();
 
-		// Cleanup data.
-		session.getTransaction().begin();
-		session.delete( monkey1 );
-		session.delete( monkey2 );
-		session.getTransaction().commit();
+						session.clear();
 
-		session.close();
+						// Cleanup data.
+						session.getTransaction().begin();
+						session.delete( monkey1 );
+						session.delete( monkey2 );
+						session.getTransaction().commit();
+					}
+					catch (Exception e) {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+						throw e;
+					}
+				}
+		);
 	}
 }

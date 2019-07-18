@@ -12,9 +12,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.annotations.Formula;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -48,75 +49,84 @@ public class FormulaWithColumnTypesTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-9951")
 	public void testFormulaAnnotationWithTypeNames() {
 
-		Session session = openSession();
-		Transaction transaction = session.beginTransaction();
+		inTransaction(
+				session -> {
+					DisplayItem displayItem20 = new DisplayItem();
+					displayItem20.setDisplayCode( "20" );
 
-		DisplayItem displayItem20 = new DisplayItem();
-		displayItem20.setDisplayCode( "20" );
+					DisplayItem displayItem03 = new DisplayItem();
+					displayItem03.setDisplayCode( "03" );
 
-		DisplayItem displayItem03 = new DisplayItem();
-		displayItem03.setDisplayCode( "03" );
+					DisplayItem displayItem100 = new DisplayItem();
+					displayItem100.setDisplayCode( "100" );
 
-		DisplayItem displayItem100 = new DisplayItem();
-		displayItem100.setDisplayCode( "100" );
-
-		session.persist( displayItem20 );
-		session.persist( displayItem03 );
-		session.persist( displayItem100 );
-
-		transaction.commit();
-		session.close();
+					session.persist( displayItem20 );
+					session.persist( displayItem03 );
+					session.persist( displayItem100 );
+				}
+		);
 
 		// 1. Default sorting by display code natural ordering (resulting in 3-100-20).
-		session = openSession();
-		transaction = session.beginTransaction();
+		inTransaction(
+				session -> {
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<DisplayItem> criteria = criteriaBuilder.createQuery( DisplayItem.class );
+					Root<DisplayItem> root = criteria.from( DisplayItem.class );
+					criteria.orderBy( criteriaBuilder.asc( root.get( "displayCode" ) ) );
 
-		List displayItems = session.createCriteria( DisplayItem.class )
-				.addOrder( Order.asc( "displayCode" ) )
-				.list();
+					List displayItems = session.createQuery( criteria ).list();
 
-		assertNotNull( displayItems );
-		assertEquals( displayItems.size(), 3 );
-		assertEquals(
-				"03",
-				( (DisplayItem) displayItems.get( 0 ) ).getDisplayCode()
-		);
-		assertEquals(
-				"100",
-				( (DisplayItem) displayItems.get( 1 ) ).getDisplayCode()
-		);
-		assertEquals(
-				"20",
-				( (DisplayItem) displayItems.get( 2 ) ).getDisplayCode()
-		);
-		transaction.commit();
-		session.close();
+//					List displayItems = session.createCriteria( DisplayItem.class )
+//							.addOrder( Order.asc( "displayCode" ) )
+//							.list();
 
+					assertNotNull( displayItems );
+					assertEquals( displayItems.size(), 3 );
+					assertEquals(
+							"03",
+							( (DisplayItem) displayItems.get( 0 ) ).getDisplayCode()
+					);
+					assertEquals(
+							"100",
+							( (DisplayItem) displayItems.get( 1 ) ).getDisplayCode()
+					);
+					assertEquals(
+							"20",
+							( (DisplayItem) displayItems.get( 2 ) ).getDisplayCode()
+					);
+				}
+		);
 
 		// 2. Sorting by the casted type (resulting in 3-20-100).
-		session = openSession();
-		transaction = session.beginTransaction();
+		inTransaction(
+				session -> {
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<DisplayItem> criteria = criteriaBuilder.createQuery( DisplayItem.class );
+					Root<DisplayItem> root = criteria.from( DisplayItem.class );
+					criteria.orderBy( criteriaBuilder.asc( root.get( "displayCodeAsInteger" ) ) );
 
-		List displayItemsSortedByInteger = session.createCriteria( DisplayItem.class )
-				.addOrder( Order.asc( "displayCodeAsInteger" ) )
-				.list();
+					List displayItemsSortedByInteger = session.createQuery( criteria ).list();
 
-		assertNotNull( displayItemsSortedByInteger );
-		assertEquals( displayItemsSortedByInteger.size(), 3 );
-		assertEquals(
-				"03",
-				( (DisplayItem) displayItemsSortedByInteger.get( 0 ) ).getDisplayCode()
+//					List displayItemsSortedByInteger = session.createCriteria( DisplayItem.class )
+//							.addOrder( Order.asc( "displayCodeAsInteger" ) )
+//							.list();
+
+					assertNotNull( displayItemsSortedByInteger );
+					assertEquals( displayItemsSortedByInteger.size(), 3 );
+					assertEquals(
+							"03",
+							( (DisplayItem) displayItemsSortedByInteger.get( 0 ) ).getDisplayCode()
+					);
+					assertEquals(
+							"20",
+							( (DisplayItem) displayItemsSortedByInteger.get( 1 ) ).getDisplayCode()
+					);
+					assertEquals(
+							"100",
+							( (DisplayItem) displayItemsSortedByInteger.get( 2 ) ).getDisplayCode()
+					);
+				}
 		);
-		assertEquals(
-				"20",
-				( (DisplayItem) displayItemsSortedByInteger.get( 1 ) ).getDisplayCode()
-		);
-		assertEquals(
-				"100",
-				( (DisplayItem) displayItemsSortedByInteger.get( 2 ) ).getDisplayCode()
-		);
-		transaction.commit();
-		session.close();
 	}
 
 	@Override

@@ -44,7 +44,13 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 		// deregister under this uuid...
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, NAME, false, null );
 		// and then register under a different uuid...
-		SessionFactoryRegistry.INSTANCE.addSessionFactory( "some-other-uuid", NAME, false, factory, null );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory(
+				"some-other-uuid",
+				NAME,
+				false,
+				(SessionFactoryImplementor) factory,
+				null
+		);
 
 		SessionFactory factory2 = (SessionFactory) SerializationHelper.clone( factory );
 		assertSame( factory, factory2 );
@@ -69,7 +75,13 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 		// deregister under this uuid...
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, null, false, null );
 		// and then register under a different uuid...
-		SessionFactoryRegistry.INSTANCE.addSessionFactory( "some-other-uuid", null, false, factory, null );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory(
+				"some-other-uuid",
+				null,
+				false,
+				(SessionFactoryImplementor) factory,
+				null
+		);
 
 		try {
 			SerializationHelper.clone( factory );

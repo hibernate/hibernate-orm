@@ -7,11 +7,13 @@
 package org.hibernate.test.locking.paging;
 
 import java.util.List;
+import javax.persistence.LockModeType;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.LockMode;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-import org.hibernate.Session;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -26,7 +28,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-1168" )
+@TestForIssue(jiraKey = "HHH-1168")
 public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -35,76 +37,82 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 
 	@Before
 	public void createTestData() {
-		Session session = openSession();
-		session.beginTransaction();
-		session.save( new Door( 1, "Front" ) );
-		session.save( new Door( 2, "Back" ) );
-		session.save( new Door( 3, "Garage" ) );
-		session.save( new Door( 4, "French" ) );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					session.save( new Door( 1, "Front" ) );
+					session.save( new Door( 2, "Back" ) );
+					session.save( new Door( 3, "Garage" ) );
+					session.save( new Door( 4, "French" ) );
+
+				}
+		);
 	}
 
 	@After
 	public void deleteTestData() {
-		Session session = openSession();
-		session.beginTransaction();
-		session.createQuery( "delete Door" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				s -> session.createQuery( "delete Door" ).executeUpdate()
+		);
 	}
 
 	@Test
 	public void testHql() {
-		Session session = openSession();
-		session.beginTransaction();
-		Query qry = session.createQuery( "from Door" );
-		qry.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE );
-		qry.setFirstResult( 2 );
-		qry.setMaxResults( 2 );
-		@SuppressWarnings("unchecked") List<Door> results = qry.list();
-		assertEquals( 2, results.size() );
-		for ( Door door : results ) {
-			assertEquals( LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode( door ) );
-		}
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Query qry = session.createQuery( "from Door" );
+					qry.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE );
+					qry.setFirstResult( 2 );
+					qry.setMaxResults( 2 );
+					@SuppressWarnings("unchecked") List<Door> results = qry.list();
+					assertEquals( 2, results.size() );
+					for ( Door door : results ) {
+						assertEquals( LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode( door ) );
+					}
+				}
+		);
 	}
 
 	@Test
 	public void testCriteria() {
-		Session session = openSession();
-		session.beginTransaction();
-		Criteria criteria = session.createCriteria( Door.class );
-		criteria.setLockMode( LockMode.PESSIMISTIC_WRITE );
-		criteria.setFirstResult( 2 );
-		criteria.setMaxResults( 2 );
-		@SuppressWarnings("unchecked") List<Door> results = criteria.list();
-		assertEquals( 2, results.size() );
-		for ( Door door : results ) {
-			assertEquals( LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode( door ) );
-		}
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<Door> criteria = criteriaBuilder.createQuery( Door.class );
+					criteria.from( Door.class );
+//					Criteria criteria = session.createCriteria( Door.class );
+//					criteria.setLockMode( LockMode.PESSIMISTIC_WRITE );
+//					criteria.setFirstResult( 2 );
+//					criteria.setMaxResults( 2 );
+					List<Door> results = s.createQuery( criteria )
+							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+							.setFirstResult( 2 )
+							.setMaxResults( 2 )
+							.list();
+					assertEquals( 2, results.size() );
+					for ( Door door : results ) {
+						assertEquals( LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode( door ) );
+					}
+				}
+		);
 	}
 
 	@Test
 //	@Ignore( "Support for locking on native-sql queries not yet implemented" )
 	public void testNativeSql() {
-		Session session = openSession();
-		session.beginTransaction();
-		NativeQuery qry = session.createNativeQuery( "select * from door" );
-		qry.addRoot( "door", Door.class );
-		qry.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE );
-		qry.setFirstResult( 2 );
-		qry.setMaxResults( 2 );
-		@SuppressWarnings("unchecked") List results = qry.list();
-		assertEquals( 2, results.size() );
-		for ( Object door : results ) {
-			assertEquals( LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode( door ) );
-		}
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					NativeQuery qry = session.createNativeQuery( "select * from door" );
+					qry.addRoot( "door", Door.class );
+					qry.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE );
+					qry.setFirstResult( 2 );
+					qry.setMaxResults( 2 );
+					@SuppressWarnings("unchecked") List results = qry.list();
+					assertEquals( 2, results.size() );
+					for ( Object door : results ) {
+						assertEquals( LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode( door ) );
+					}
+				}
+		);
 	}
 
 }

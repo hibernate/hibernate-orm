@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.interceptor;
 import javax.persistence.PersistenceException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -192,25 +194,39 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testStatefulIntercept() {
+		User u = new User( "Gavin", "nivag" );
+
 		final StatefulInterceptor statefulInterceptor = new StatefulInterceptor();
-		Session s = openSession( statefulInterceptor );
-		statefulInterceptor.setSession(s);
+		try(Session s = openSession( statefulInterceptor )) {
+			statefulInterceptor.setSession( s );
 
-		Transaction t = s.beginTransaction();
-		User u = new User("Gavin", "nivag");
-		s.persist(u);
-		u.setPassword("vagni");
-		t.commit();
-		s.close();
+			Transaction t = s.beginTransaction();
+			try {
+				s.persist( u );
+				u.setPassword( "vagni" );
+				t.commit();
+			}
+			catch (Exception e) {
+				if ( t.isActive() ) {
+					t.rollback();
+				}
+				throw e;
+			}
+		}
 
-		s = openSession();
-		t = s.beginTransaction();
-		List logs = s.createCriteria(Log.class).list();
-		assertEquals( 2, logs.size() );
-		s.delete(u);
-		s.createQuery( "delete from Log" ).executeUpdate();
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<Log> criteria = criteriaBuilder.createQuery( Log.class );
+					criteria.from( Log.class );
+					List<Log> logs = s.createQuery( criteria ).list();
+//		List logs = s.createCriteria(Log.class).list();
+					assertEquals( 2, logs.size() );
+					s.delete(u);
+					s.createQuery( "delete from Log" ).executeUpdate();
+
+				}
+		);
 	}
 
 	@Test

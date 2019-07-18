@@ -16,18 +16,19 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
 
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -69,49 +70,59 @@ public class SortTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked"})
 	public void testOrderBy() {
-		Search s = new Search("Hibernate");
-		s.getSearchResults().add("jboss.com");
-		s.getSearchResults().add("hibernate.org");
-		s.getSearchResults().add("HiA");
+		Search search = new Search("Hibernate");
+		search.getSearchResults().add("jboss.com");
+		search.getSearchResults().add("hibernate.org");
+		search.getSearchResults().add("HiA");
 		
-		Session sess = openSession();
-		Transaction tx = sess.beginTransaction();
-		sess.persist(s);
-		sess.flush();
-		
-		sess.clear();
-		s = (Search) sess.createCriteria(Search.class).uniqueResult();
-		assertFalse( Hibernate.isInitialized( s.getSearchResults() ) );
-		Iterator iter = s.getSearchResults().iterator();
-		assertEquals( iter.next(), "HiA" );
-		assertEquals( iter.next(), "hibernate.org" );
-		assertEquals( iter.next(), "jboss.com" );
-		assertFalse( iter.hasNext() );
-		
-		sess.clear();
-		s = (Search) sess.createCriteria(Search.class)
-				.setFetchMode("searchResults", FetchMode.JOIN)
-				.uniqueResult();
-		assertTrue( Hibernate.isInitialized( s.getSearchResults() ) );
-		iter = s.getSearchResults().iterator();
-		assertEquals( iter.next(), "HiA" );
-		assertEquals( iter.next(), "hibernate.org" );
-		assertEquals( iter.next(), "jboss.com" );
-		assertFalse( iter.hasNext() );
-		
-		sess.clear();
-		s = (Search) sess.createQuery("from Search s left join fetch s.searchResults")
-				.uniqueResult();
-		assertTrue( Hibernate.isInitialized( s.getSearchResults() ) );
-		iter = s.getSearchResults().iterator();
-		assertEquals( iter.next(), "HiA" );
-		assertEquals( iter.next(), "hibernate.org" );
-		assertEquals( iter.next(), "jboss.com" );
-		assertFalse( iter.hasNext() );
-		
-		sess.delete(s);
-		tx.commit();
-		sess.close();
+		inTransaction(
+				sess -> {
+					sess.persist(search);
+					sess.flush();
+
+					sess.clear();
+					CriteriaBuilder criteriaBuilder = sess.getCriteriaBuilder();
+					CriteriaQuery<Search> criteria = criteriaBuilder.createQuery( Search.class );
+					criteria.from( Search.class );
+					Search s = sess.createQuery( criteria ).uniqueResult();
+//					Search s = (Search) sess.createCriteria(Search.class).uniqueResult();
+					assertFalse( Hibernate.isInitialized( s.getSearchResults() ) );
+					Iterator iter = s.getSearchResults().iterator();
+					assertEquals( iter.next(), "HiA" );
+					assertEquals( iter.next(), "hibernate.org" );
+					assertEquals( iter.next(), "jboss.com" );
+					assertFalse( iter.hasNext() );
+
+					sess.clear();
+					criteria = criteriaBuilder.createQuery( Search.class );
+					Root<Search> root = criteria.from( Search.class );
+					root.fetch( "searchResults" , JoinType.LEFT);
+					s = sess.createQuery( criteria ).uniqueResult();
+
+//					s = (Search) sess.createCriteria(Search.class)
+//							.setFetchMode("searchResults", FetchMode.JOIN)
+//							.uniqueResult();
+					assertTrue( Hibernate.isInitialized( s.getSearchResults() ) );
+					iter = s.getSearchResults().iterator();
+					assertEquals( iter.next(), "HiA" );
+					assertEquals( iter.next(), "hibernate.org" );
+					assertEquals( iter.next(), "jboss.com" );
+					assertFalse( iter.hasNext() );
+
+					sess.clear();
+					s = (Search) sess.createQuery("from Search s left join fetch s.searchResults")
+							.uniqueResult();
+					assertTrue( Hibernate.isInitialized( s.getSearchResults() ) );
+					iter = s.getSearchResults().iterator();
+					assertEquals( iter.next(), "HiA" );
+					assertEquals( iter.next(), "hibernate.org" );
+					assertEquals( iter.next(), "jboss.com" );
+					assertFalse( iter.hasNext() );
+
+					sess.delete(s);
+				}
+		);
+
 	}
 	
 	@Test

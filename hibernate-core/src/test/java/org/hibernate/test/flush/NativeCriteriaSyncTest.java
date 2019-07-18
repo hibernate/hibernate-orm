@@ -6,7 +6,14 @@
  */
 package org.hibernate.test.flush;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Root;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
 
 import org.hibernate.test.hql.SimpleEntityWithAssociation;
 import org.hibernate.testing.TestForIssue;
@@ -34,9 +41,20 @@ public class NativeCriteriaSyncTest extends BaseCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			session.save( e1 );
 
-			final Criteria criteria = session.createCriteria( SimpleEntityWithAssociation.class );
-			criteria.createCriteria( "manyToManyAssociatedEntities" ).add( Restrictions.eq( "name", "e2" ) );
-			assertEquals( 1, criteria.list().size() );
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<SimpleEntityWithAssociation> criteria = criteriaBuilder.createQuery( SimpleEntityWithAssociation.class );
+			Root<SimpleEntityWithAssociation> root = criteria.from( SimpleEntityWithAssociation.class );
+			Join<Object, Object> join = root.join(
+					"manyToManyAssociatedEntities",
+					JoinType.INNER
+			);
+			criteria.where( criteriaBuilder.equal( join.get( "name" ), "e2" ) );
+
+			assertEquals(1, session.createQuery( criteria ).list().size());
+
+//			final Criteria criteria = session.createCriteria( SimpleEntityWithAssociation.class );
+//			criteria.createCriteria( "manyToManyAssociatedEntities" ).add( Restrictions.eq( "name", "e2" ) );
+//			assertEquals( 1, criteria.list().size() );
 		} );
 	}
 

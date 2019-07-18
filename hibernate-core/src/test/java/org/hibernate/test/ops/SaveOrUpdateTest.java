@@ -8,6 +8,10 @@ package org.hibernate.test.ops;
 
 import java.util.Map;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -267,16 +271,13 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		assertEquals(
 				Long.valueOf( 2 ),
-				s.createCriteria( NumberedNode.class )
-						.setProjection( Projections.rowCount() )
-						.uniqueResult()
+				getRowCount( s, NumberedNode.class )
 		);
 		s.delete( root );
 		s.delete( child );
 		tx.commit();
 		s.close();
 	}
-
 
 	@Test
 	public void testSaveOrUpdateGot() {
@@ -306,7 +307,7 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		root = ( NumberedNode ) s.get( NumberedNode.class, new Long( root.getId() ) );
+		root = s.get( NumberedNode.class, new Long( root.getId() ) );
 		Hibernate.initialize( root.getChildren() );
 		tx.commit();
 		s.close();
@@ -326,10 +327,8 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		tx = s.beginTransaction();
 		assertEquals(
-				s.createCriteria( NumberedNode.class )
-						.setProjection( Projections.rowCount() )
-						.uniqueResult(),
-		        new Long( 2 )
+		        new Long( 2 ),
+				getRowCount( s, NumberedNode.class )
 		);
 		s.delete( root );
 		s.delete( child );
@@ -363,7 +362,7 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		root = ( Node ) s.get( Node.class, "root" );
+		root = s.get( Node.class, "root" );
 		Hibernate.initialize( root.getChildren() );
 		tx.commit();
 		s.close();
@@ -383,10 +382,8 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		tx = s.beginTransaction();
 		assertEquals(
-				s.createCriteria( Node.class )
-						.setProjection( Projections.rowCount() )
-						.uniqueResult(),
-		        new Long( 2 )
+				new Long( 2 ),
+				getRowCount(s, Node.class)
 		);
 		s.delete( root );
 		s.delete( child );
@@ -504,6 +501,14 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.delete( root );
 		tx.commit();
 		s.close();
+	}
+
+	private Long getRowCount(Session s, Class clazz){
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<Long> criteria = criteriaBuilder.createQuery( Long.class );
+		Root root = criteria.from( clazz );
+		criteria.select( criteriaBuilder.count( root ) );
+		return s.createQuery( criteria ).uniqueResult();
 	}
 
 	private void clearCounts() {

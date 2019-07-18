@@ -25,7 +25,6 @@ import org.hibernate.type.TextType;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.legacy.E;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -121,44 +120,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					s.delete( contract );
-					assertEquals(
-							getContractRowCount( s ),
-							new Long( 0 )
-					);
-					assertEquals(
-							getContractVariationRowCount( s ),
-							new Long( 0 )
-					);
+
+					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
-	}
-
-	private Long getContractRowCount(SessionImplementor s) {
-		//	s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult(),
-		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-		CriteriaQuery<Long> criteria = criteriaBuilder.createQuery( Long.class );
-		Root<Contract> contractRoot = criteria.from( Contract.class );
-		criteria.select( criteriaBuilder.count( contractRoot ) );
-		return s.createQuery( criteria ).uniqueResult();
-	}
-
-	private Long getContractVariationRowCount(SessionImplementor s) {
-		//	s.createCriteria( ContractVariation.class ).setProjection( Projections.rowCount() ).uniqueResult(),
-		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-		CriteriaQuery<Long> criteria = criteriaBuilder.createQuery( Long.class );
-		Root<ContractVariation> contractRoot = criteria.from( ContractVariation.class );
-		criteria.select( criteriaBuilder.count( contractRoot ) );
-		return s.createQuery( criteria ).uniqueResult();
-	}
-
-	private Contract getContract(SessionImplementor s) {
-		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-		CriteriaQuery<Contract> criteria = criteriaBuilder.createQuery( Contract.class );
-		criteria.from( Contract.class );
-		return s.createQuery( criteria ).uniqueResult();
 	}
 
 	@Test
@@ -218,8 +186,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					s.delete( contract );
-					assertEquals( getContractRowCount( s ), new Long( 0 ) );
-					assertEquals( getContractVariationRowCount( s ), new Long( 0 ) );
+
+					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
 
@@ -264,8 +232,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
-					assertEquals( getContractRowCount( s ), new Long( 0 ) );
-					assertEquals( getContractVariationRowCount( s ), new Long( 0 ) );
+
+					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
 		assertUpdateCount( 0 );
@@ -311,9 +279,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
-					assertEquals( getContractRowCount( s ), new Long( 0 ) );
-					assertEquals( getContractVariationRowCount( s ), new Long( 0 ) );
 
+					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
 
@@ -358,9 +325,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
-					assertEquals( getContractRowCount( s ), new Long( 0 ) );
-					assertEquals( getContractVariationRowCount( s ), new Long( 0 ) );
 
+					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
 
@@ -405,9 +371,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
-					assertEquals( getContractRowCount( s ), new Long( 0 ) );
-					assertEquals( getContractVariationRowCount( s ), new Long( 0 ) );
 
+					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
 
@@ -485,8 +450,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				s -> {
 					s.delete( contract );
-					assertEquals( getContractRowCount( s ), new Long( 0 ) );
-					assertEquals( getContractVariationRowCount( s ), new Long( 0 ) );
+
+					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
 
@@ -561,9 +526,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
-					assertEquals( getContractRowCount( s ), new Long( 0 ) );
-					assertEquals( getContractVariationRowCount( s ), new Long( 0 ) );
 
+					assertAllContractAndVariationsAreDeleted( s );
 				}
 		);
 
@@ -588,7 +552,6 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					assertTrue( s.isReadOnly( contractVariation1 ) );
 					assertTrue( s.isReadOnly( contractVariation2 ) );
 					contract.setCustomerName( "Sherman" );
-
 				}
 		);
 
@@ -639,8 +602,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 					assertTrue( s.isReadOnly( cv1 ) );
 					assertTrue( s.isReadOnly( cv2 ) );
 					s.delete( c );
-					assertEquals( getContractRowCount( s ), new Long( 0 ) );
-					assertEquals( getContractRowCount( s ), new Long( 0 ) );
+
+					assertAllContractAndVariationsAreDeleted( s );
 
 				}
 		);
@@ -651,47 +614,43 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testUpdateAndDeleteManagedImmutable() {
+		Contract contract = new Contract( null, "gavin", "phone" );
+		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
+		contractVariation1.setText( "expensive" );
+		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
+		contractVariation2.setText( "more expensive" );
+
 		clearCounts();
 
-		Contract c = new Contract( null, "gavin", "phone" );
-		ContractVariation cv1 = new ContractVariation( 1, c );
-		cv1.setText( "expensive" );
-		ContractVariation cv2 = new ContractVariation( 2, c );
-		cv2.setText( "more expensive" );
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.persist( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( contract );
+				}
+		);
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		s = openSession();
-		t = s.beginTransaction();
-		c = (Contract) s.createCriteria( Contract.class ).uniqueResult();
-		assertTrue( s.isReadOnly( c ) );
-		assertEquals( c.getCustomerName(), "gavin" );
-		assertEquals( c.getVariations().size(), 2 );
-		Iterator it = c.getVariations().iterator();
-		cv1 = (ContractVariation) it.next();
-		assertEquals( cv1.getText(), "expensive" );
-		cv2 = (ContractVariation) it.next();
-		assertEquals( cv2.getText(), "more expensive" );
-		assertTrue( s.isReadOnly( cv1 ) );
-		assertTrue( s.isReadOnly( cv2 ) );
-		c.setCustomerName( "Sherman" );
-		s.delete( c );
-		assertEquals(
-				s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult(),
-				new Long( 0 )
+		inTransaction(
+				s -> {
+					Contract c = getContract( s );
+					assertTrue( s.isReadOnly( c ) );
+					assertEquals( c.getCustomerName(), "gavin" );
+					assertEquals( c.getVariations().size(), 2 );
+					Iterator it = c.getVariations().iterator();
+					ContractVariation cv1 = (ContractVariation) it.next();
+					assertEquals( cv1.getText(), "expensive" );
+					ContractVariation cv2 = (ContractVariation) it.next();
+					assertEquals( cv2.getText(), "more expensive" );
+					assertTrue( s.isReadOnly( cv1 ) );
+					assertTrue( s.isReadOnly( cv2 ) );
+					c.setCustomerName( "Sherman" );
+					s.delete( c );
+
+					assertAllContractAndVariationsAreDeleted( s );
+				}
 		);
-		assertEquals( s.createCriteria( ContractVariation.class )
-							  .setProjection( Projections.rowCount() )
-							  .uniqueResult(), new Long( 0 ) );
-		t.commit();
-		s.close();
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
@@ -699,47 +658,44 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testGetAndDeleteManagedImmutable() {
+		Contract contract = new Contract( null, "gavin", "phone" );
+		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
+		contractVariation1.setText( "expensive" );
+		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
+		contractVariation2.setText( "more expensive" );
+
 		clearCounts();
 
-		Contract c = new Contract( null, "gavin", "phone" );
-		ContractVariation cv1 = new ContractVariation( 1, c );
-		cv1.setText( "expensive" );
-		ContractVariation cv2 = new ContractVariation( 2, c );
-		cv2.setText( "more expensive" );
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.persist( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( contract );
+				}
+		);
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		s = openSession();
-		t = s.beginTransaction();
-		c = (Contract) s.get( Contract.class, c.getId() );
-		assertTrue( s.isReadOnly( c ) );
-		assertEquals( c.getCustomerName(), "gavin" );
-		assertEquals( c.getVariations().size(), 2 );
-		Iterator it = c.getVariations().iterator();
-		cv1 = (ContractVariation) it.next();
-		assertEquals( cv1.getText(), "expensive" );
-		cv2 = (ContractVariation) it.next();
-		assertEquals( cv2.getText(), "more expensive" );
-		assertTrue( s.isReadOnly( cv1 ) );
-		assertTrue( s.isReadOnly( cv2 ) );
-		c.setCustomerName( "Sherman" );
-		s.delete( c );
-		assertEquals(
-				s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult(),
-				new Long( 0 )
+		inTransaction(
+				s -> {
+					Contract c = s.get( Contract.class, contract.getId() );
+					assertTrue( s.isReadOnly( c ) );
+					assertEquals( c.getCustomerName(), "gavin" );
+					assertEquals( c.getVariations().size(), 2 );
+					Iterator it = c.getVariations().iterator();
+					ContractVariation cv1 = (ContractVariation) it.next();
+					assertEquals( cv1.getText(), "expensive" );
+					ContractVariation cv2 = (ContractVariation) it.next();
+					assertEquals( cv2.getText(), "more expensive" );
+					assertTrue( s.isReadOnly( cv1 ) );
+					assertTrue( s.isReadOnly( cv2 ) );
+					c.setCustomerName( "Sherman" );
+					s.delete( c );
+
+					assertAllContractAndVariationsAreDeleted( s );
+
+				}
 		);
-		assertEquals( s.createCriteria( ContractVariation.class )
-							  .setProjection( Projections.rowCount() )
-							  .uniqueResult(), new Long( 0 ) );
-		t.commit();
-		s.close();
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
@@ -747,30 +703,31 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDeleteDetachedImmutable() {
+		Contract contract = new Contract( null, "gavin", "phone" );
+		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
+		contractVariation1.setText( "expensive" );
+		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
+		contractVariation2.setText( "more expensive" );
+
 		clearCounts();
 
-		Contract c = new Contract( null, "gavin", "phone" );
-		ContractVariation cv1 = new ContractVariation( 1, c );
-		cv1.setText( "expensive" );
-		ContractVariation cv2 = new ContractVariation( 2, c );
-		cv2.setText( "more expensive" );
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.persist( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( contract );
+				}
+		);
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		s = openSession();
-		t = s.beginTransaction();
-		s.delete( c );
-		c = (Contract) s.createCriteria( Contract.class ).uniqueResult();
-		assertNull( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.delete( contract );
+					Contract c = getContract( s );
+					assertNull( c );
+				}
+		);
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
@@ -778,29 +735,30 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDeleteDetachedModifiedImmutable() {
+		Contract contract = new Contract( null, "gavin", "phone" );
+		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
+		contractVariation1.setText( "expensive" );
+		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
+		contractVariation2.setText( "more expensive" );
+
 		clearCounts();
 
-		Contract c = new Contract( null, "gavin", "phone" );
-		ContractVariation cv1 = new ContractVariation( 1, c );
-		cv1.setText( "expensive" );
-		ContractVariation cv2 = new ContractVariation( 2, c );
-		cv2.setText( "more expensive" );
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.persist( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( contract );
+				}
+		);
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		s = openSession();
-		t = s.beginTransaction();
-		c.setCustomerName( "sherman" );
-		s.delete( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					contract.setCustomerName( "sherman" );
+					s.delete( contract );
+				}
+		);
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
@@ -809,62 +767,68 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testImmutableParentEntityWithUpdate() {
+		Contract contract = new Contract( null, "gavin", "phone" );
+		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
+		contractVariation1.setText( "expensive" );
+		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
+		contractVariation2.setText( "more expensive" );
+
 		clearCounts();
 
-		Contract c = new Contract( null, "gavin", "phone" );
-		ContractVariation cv1 = new ContractVariation( 1, c );
-		cv1.setText( "expensive" );
-		ContractVariation cv2 = new ContractVariation( 2, c );
-		cv2.setText( "more expensive" );
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.persist( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( contract );
+				}
+		);
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		s = openSession();
-		t = s.beginTransaction();
-		c.setCustomerName( "foo bar" );
-		s.update( c );
-		assertTrue( s.isReadOnly( c ) );
-		for ( Iterator it = c.getVariations().iterator(); it.hasNext(); ) {
-			assertTrue( s.contains( it.next() ) );
-		}
-		t.commit();
-		assertTrue( s.isReadOnly( c ) );
-		for ( Iterator it = c.getVariations().iterator(); it.hasNext(); ) {
-			ContractVariation cv = (ContractVariation) it.next();
-			assertTrue( s.contains( cv ) );
-			assertTrue( s.isReadOnly( cv ) );
-		}
-		s.close();
+		inSession(
+				s -> {
+					try {
+						s.beginTransaction();
+						contract.setCustomerName( "foo bar" );
+						s.update( contract );
+						assertTrue( s.isReadOnly( contract ) );
+						for ( Iterator it = contract.getVariations().iterator(); it.hasNext(); ) {
+							assertTrue( s.contains( it.next() ) );
+						}
+						s.getTransaction().commit();
+						assertTrue( s.isReadOnly( contract ) );
+						for ( Iterator it = contract.getVariations().iterator(); it.hasNext(); ) {
+							ContractVariation cv = (ContractVariation) it.next();
+							assertTrue( s.contains( cv ) );
+							assertTrue( s.isReadOnly( cv ) );
+						}
+					}
+					catch (Exception e) {
+						if ( s.getTransaction().isActive() ) {
+							s.getTransaction().rollback();
+						}
+						throw e;
+					}
+				}
+		);
 
 		assertUpdateCount( 0 );
 
-		s = openSession();
-		t = s.beginTransaction();
-		c = (Contract) s.createCriteria( Contract.class ).uniqueResult();
-		assertEquals( c.getCustomerName(), "gavin" );
-		assertEquals( c.getVariations().size(), 2 );
-		Iterator it = c.getVariations().iterator();
-		cv1 = (ContractVariation) it.next();
-		assertEquals( cv1.getText(), "expensive" );
-		cv2 = (ContractVariation) it.next();
-		assertEquals( cv2.getText(), "more expensive" );
-		s.delete( c );
-		assertEquals(
-				s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult(),
-				new Long( 0 )
+		inTransaction(
+				s -> {
+					Contract c = getContract( s );
+					assertEquals( c.getCustomerName(), "gavin" );
+					assertEquals( c.getVariations().size(), 2 );
+					Iterator it = c.getVariations().iterator();
+					ContractVariation cv1 = (ContractVariation) it.next();
+					assertEquals( cv1.getText(), "expensive" );
+					ContractVariation cv2 = (ContractVariation) it.next();
+					assertEquals( cv2.getText(), "more expensive" );
+					s.delete( c );
+					assertAllContractAndVariationsAreDeleted( s );
+
+				}
 		);
-		assertEquals( s.createCriteria( ContractVariation.class )
-							  .setProjection( Projections.rowCount() )
-							  .uniqueResult(), new Long( 0 ) );
-		t.commit();
-		s.close();
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
@@ -872,59 +836,65 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testImmutableChildEntityWithUpdate() {
+		Contract contract = new Contract( null, "gavin", "phone" );
+		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
+		contractVariation1.setText( "expensive" );
+		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
+		contractVariation2.setText( "more expensive" );
+
 		clearCounts();
 
-		Contract c = new Contract( null, "gavin", "phone" );
-		ContractVariation cv1 = new ContractVariation( 1, c );
-		cv1.setText( "expensive" );
-		ContractVariation cv2 = new ContractVariation( 2, c );
-		cv2.setText( "more expensive" );
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.persist( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( contract );
+				}
+		);
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		s = openSession();
-		t = s.beginTransaction();
-		cv1 = (ContractVariation) c.getVariations().iterator().next();
-		cv1.setText( "blah blah" );
-		s.update( c );
-		assertTrue( s.isReadOnly( c ) );
-		assertTrue( s.contains( cv1 ) );
-		assertTrue( s.contains( cv2 ) );
-		t.commit();
-		assertTrue( s.isReadOnly( c ) );
-		assertTrue( s.isReadOnly( cv1 ) );
-		assertTrue( s.isReadOnly( cv2 ) );
-		s.close();
+		inSession(
+				s -> {
+					try {
+						s.beginTransaction();
+						ContractVariation cv1 = (ContractVariation) contract.getVariations().iterator().next();
+						cv1.setText( "blah blah" );
+						s.update( contract );
+						assertTrue( s.isReadOnly( contract ) );
+						assertTrue( s.contains( cv1 ) );
+						assertTrue( s.contains( contractVariation2 ) );
+						s.getTransaction().commit();
+						assertTrue( s.isReadOnly( contract ) );
+						assertTrue( s.isReadOnly( cv1 ) );
+						assertTrue( s.isReadOnly( contractVariation2 ) );
+					}
+					catch (Exception e) {
+						if ( s.getTransaction().isActive() ) {
+							s.getTransaction().rollback();
+						}
+						throw e;
+					}
+				}
+		);
 
 		assertUpdateCount( 0 );
 
-		s = openSession();
-		t = s.beginTransaction();
-		c = (Contract) s.createCriteria( Contract.class ).uniqueResult();
-		assertEquals( c.getCustomerName(), "gavin" );
-		assertEquals( c.getVariations().size(), 2 );
-		Iterator it = c.getVariations().iterator();
-		cv1 = (ContractVariation) it.next();
-		assertEquals( cv1.getText(), "expensive" );
-		cv2 = (ContractVariation) it.next();
-		assertEquals( cv2.getText(), "more expensive" );
-		s.delete( c );
-		assertEquals(
-				s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult(),
-				new Long( 0 )
+		inTransaction(
+				s -> {
+					Contract c = getContract( s );
+					assertEquals( c.getCustomerName(), "gavin" );
+					assertEquals( c.getVariations().size(), 2 );
+					Iterator it = c.getVariations().iterator();
+					ContractVariation cv1 = (ContractVariation) it.next();
+					assertEquals( cv1.getText(), "expensive" );
+					ContractVariation cv2 = (ContractVariation) it.next();
+					assertEquals( cv2.getText(), "more expensive" );
+					s.delete( c );
+					assertAllContractAndVariationsAreDeleted( s );
+
+				}
 		);
-		assertEquals( s.createCriteria( ContractVariation.class )
-							  .setProjection( Projections.rowCount() )
-							  .uniqueResult(), new Long( 0 ) );
-		t.commit();
-		s.close();
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
@@ -932,60 +902,62 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testImmutableCollectionWithUpdate() {
+		Contract contract = new Contract( null, "gavin", "phone" );
+		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
+		contractVariation1.setText( "expensive" );
+		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
+		contractVariation2.setText( "more expensive" );
+
 		clearCounts();
 
-		Contract c = new Contract( null, "gavin", "phone" );
-		ContractVariation cv1 = new ContractVariation( 1, c );
-		cv1.setText( "expensive" );
-		ContractVariation cv2 = new ContractVariation( 2, c );
-		cv2.setText( "more expensive" );
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.persist( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( contract );
+				}
+		);
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 
-		s = openSession();
-		t = s.beginTransaction();
-		c.getVariations().add( new ContractVariation( 3, c ) );
-		s.update( c );
-		try {
-			t.commit();
-			fail( "should have failed because reassociated object has a dirty collection" );
-		}
-		catch (PersistenceException ex) {
-			// expected
-		}
-		finally {
-			t.rollback();
-			s.close();
-		}
+		inSession(
+				s -> {
+					s.beginTransaction();
+					contract.getVariations().add( new ContractVariation( 3, contract ) );
+					s.update( contract );
+					try {
+						s.getTransaction().commit();
+						fail( "should have failed because reassociated object has a dirty collection" );
+					}
+					catch (PersistenceException ex) {
+						// expected
+					}
+					finally {
+						if ( s.getTransaction().isActive() ) {
+							s.getTransaction().rollback();
+						}
+					}
+				}
+		);
+
 
 		assertUpdateCount( 0 );
 
-		s = openSession();
-		t = s.beginTransaction();
-		c = (Contract) s.createCriteria( Contract.class ).uniqueResult();
-		assertEquals( c.getCustomerName(), "gavin" );
-		assertEquals( c.getVariations().size(), 2 );
-		Iterator it = c.getVariations().iterator();
-		cv1 = (ContractVariation) it.next();
-		assertEquals( cv1.getText(), "expensive" );
-		cv2 = (ContractVariation) it.next();
-		assertEquals( cv2.getText(), "more expensive" );
-		s.delete( c );
-		assertEquals(
-				s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult(),
-				new Long( 0 )
+		inTransaction(
+				s -> {
+					Contract c = getContract( s );
+					assertEquals( c.getCustomerName(), "gavin" );
+					assertEquals( c.getVariations().size(), 2 );
+					Iterator it = c.getVariations().iterator();
+					ContractVariation cv1 = (ContractVariation) it.next();
+					assertEquals( cv1.getText(), "expensive" );
+					ContractVariation cv2 = (ContractVariation) it.next();
+					assertEquals( cv2.getText(), "more expensive" );
+					s.delete( c );
+
+					assertAllContractAndVariationsAreDeleted( s );
+
+				}
 		);
-		assertEquals( s.createCriteria( ContractVariation.class )
-							  .setProjection( Projections.rowCount() )
-							  .uniqueResult(), new Long( 0 ) );
-		t.commit();
-		s.close();
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
@@ -993,58 +965,54 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testUnmodifiedImmutableParentEntityWithMerge() {
+		Contract contract = new Contract( null, "gavin", "phone" );
+		ContractVariation contractVariation1 = new ContractVariation( 1, contract );
+		contractVariation1.setText( "expensive" );
+		ContractVariation contractVariation2 = new ContractVariation( 2, contract );
+		contractVariation2.setText( "more expensive" );
+
 		clearCounts();
 
-		Contract c = new Contract( null, "gavin", "phone" );
-		ContractVariation cv1 = new ContractVariation( 1, c );
-		cv1.setText( "expensive" );
-		ContractVariation cv2 = new ContractVariation( 2, c );
-		cv2.setText( "more expensive" );
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.persist( c );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( contract );
+				}
+		);
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		s = openSession();
-		t = s.beginTransaction();
-		c = (Contract) s.merge( c );
-		assertTrue( s.isReadOnly( c ) );
-		assertTrue( Hibernate.isInitialized( c.getVariations() ) );
-		Iterator it = c.getVariations().iterator();
-		cv1 = (ContractVariation) it.next();
-		cv2 = (ContractVariation) it.next();
-		assertTrue( s.isReadOnly( cv1 ) );
-		assertTrue( s.isReadOnly( cv2 ) );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					Contract c = (Contract) s.merge( contract );
+					assertTrue( s.isReadOnly( c ) );
+					assertTrue( Hibernate.isInitialized( c.getVariations() ) );
+					Iterator it = c.getVariations().iterator();
+					ContractVariation cv1 = (ContractVariation) it.next();
+					ContractVariation cv2 = (ContractVariation) it.next();
+					assertTrue( s.isReadOnly( cv1 ) );
+					assertTrue( s.isReadOnly( cv2 ) );
+				}
+		);
+
 
 		assertUpdateCount( 0 );
 
-		s = openSession();
-		t = s.beginTransaction();
-		c = (Contract) s.createCriteria( Contract.class ).uniqueResult();
-		assertEquals( c.getCustomerName(), "gavin" );
-		assertEquals( c.getVariations().size(), 2 );
-		it = c.getVariations().iterator();
-		cv1 = (ContractVariation) it.next();
-		assertEquals( cv1.getText(), "expensive" );
-		cv2 = (ContractVariation) it.next();
-		assertEquals( cv2.getText(), "more expensive" );
-		s.delete( c );
-		assertEquals(
-				s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult(),
-				new Long( 0 )
+		inTransaction(
+				s -> {
+					Contract c = getContract( s );
+					assertEquals( c.getCustomerName(), "gavin" );
+					assertEquals( c.getVariations().size(), 2 );
+					Iterator it = c.getVariations().iterator();
+					ContractVariation cv1 = (ContractVariation) it.next();
+					assertEquals( cv1.getText(), "expensive" );
+					ContractVariation cv2 = (ContractVariation) it.next();
+					assertEquals( cv2.getText(), "more expensive" );
+					s.delete( c );
+					assertAllContractAndVariationsAreDeleted( s );
+				}
 		);
-		assertEquals( s.createCriteria( ContractVariation.class )
-							  .setProjection( Projections.rowCount() )
-							  .uniqueResult(), new Long( 0 ) );
-		t.commit();
-		s.close();
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
@@ -1700,13 +1668,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "party1", party.getName() );
 		assertSame( c, party.getContract() );
 		s.delete( c );
-		assertEquals(
-				s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult(),
-				new Long( 0 )
-		);
-		assertEquals( s.createCriteria( ContractVariation.class )
-							  .setProjection( Projections.rowCount() )
-							  .uniqueResult(), new Long( 0 ) );
+		assertAllContractAndVariationsAreDeleted( s );
 		t.commit();
 		s.close();
 
@@ -1732,5 +1694,37 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		int deletes = (int) sessionFactory().getStatistics().getEntityDeleteCount();
 		assertEquals( "unexpected delete counts", expected, deletes );
 	}
+
+	private Long getContractRowCount(SessionImplementor s) {
+		//	s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult(),
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<Long> criteria = criteriaBuilder.createQuery( Long.class );
+		Root<Contract> contractRoot = criteria.from( Contract.class );
+		criteria.select( criteriaBuilder.count( contractRoot ) );
+		return s.createQuery( criteria ).uniqueResult();
+	}
+
+	private Long getContractVariationRowCount(SessionImplementor s) {
+		//	s.createCriteria( ContractVariation.class ).setProjection( Projections.rowCount() ).uniqueResult(),
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<Long> criteria = criteriaBuilder.createQuery( Long.class );
+		Root<ContractVariation> contractRoot = criteria.from( ContractVariation.class );
+		criteria.select( criteriaBuilder.count( contractRoot ) );
+		return s.createQuery( criteria ).uniqueResult();
+	}
+
+	private Contract getContract(SessionImplementor s) {
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<Contract> criteria = criteriaBuilder.createQuery( Contract.class );
+		criteria.from( Contract.class );
+		return s.createQuery( criteria ).uniqueResult();
+	}
+
+
+	private void assertAllContractAndVariationsAreDeleted(SessionImplementor s) {
+		assertEquals( getContractRowCount( s ), new Long( 0 ) );
+		assertEquals( getContractVariationRowCount( s ), new Long( 0 ) );
+	}
+
 }
 

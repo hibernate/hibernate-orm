@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -22,7 +21,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -39,10 +37,7 @@ import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.annotations.any.Property;
 import org.junit.Test;
-
-import org.apache.xpath.operations.Or;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

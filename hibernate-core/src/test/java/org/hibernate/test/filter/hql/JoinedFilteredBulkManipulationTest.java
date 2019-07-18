@@ -151,8 +151,8 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 		s.beginTransaction();
 		s.enableFilter( "sex" ).setParameter( "sexCode", Character.valueOf( 'M' ) );
 		int count = s.createQuery( "update User u set u.username = :un where u.name = :n" )
-				.setString( "un", "charlie" )
-				.setString( "n", "Wanda" )
+				.setParameter( "un", "charlie" )
+				.setParameter( "n", "Wanda" )
 				.executeUpdate();
 		assertEquals( 0, count );
 		s.getTransaction().commit();

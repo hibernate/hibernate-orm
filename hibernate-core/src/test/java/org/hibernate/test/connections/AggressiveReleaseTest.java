@@ -141,38 +141,6 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
-	public void testQueryIteration() throws Throwable {
-		prepare();
-		Session s = getSessionUnderTest();
-		Silly silly = new Silly( "silly" );
-		s.save( silly );
-		s.flush();
-
-		Iterator itr = s.createQuery( "from Silly" ).iterate();
-		assertTrue( itr.hasNext() );
-		Silly silly2 = ( Silly ) itr.next();
-		assertEquals( silly, silly2 );
-		Hibernate.close( itr );
-
-		itr = s.createQuery( "from Silly" ).iterate();
-		Iterator itr2 = s.createQuery( "from Silly where name = 'silly'" ).iterate();
-
-		assertTrue( itr.hasNext() );
-		assertEquals( silly, itr.next() );
-		assertTrue( itr2.hasNext() );
-		assertEquals( silly, itr2.next() );
-
-		Hibernate.close( itr );
-		Hibernate.close( itr2 );
-
-		s.delete( silly );
-		s.flush();
-
-		release( s );
-		done();
-	}
-
-	@Test
 	public void testQueryScrolling() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -182,7 +150,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 
 		ScrollableResults sr = s.createQuery( "from Silly" ).scroll();
 		assertTrue( sr.next() );
-		Silly silly2 = ( Silly ) sr.get( 0 );
+		Silly silly2 = ( Silly ) sr.get();
 		assertEquals( silly, silly2 );
 		sr.close();
 
@@ -190,9 +158,9 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		ScrollableResults sr2 = s.createQuery( "from Silly where name = 'silly'" ).scroll();
 
 		assertTrue( sr.next() );
-		assertEquals( silly, sr.get( 0 ) );
+		assertEquals( silly, sr.get() );
 		assertTrue( sr2.next() );
-		assertEquals( silly, sr2.get( 0 ) );
+		assertEquals( silly, sr2.get() );
 
 		sr.close();
 		sr2.close();

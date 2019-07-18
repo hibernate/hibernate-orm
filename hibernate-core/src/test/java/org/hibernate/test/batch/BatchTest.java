@@ -89,7 +89,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 		ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
 				.scroll( ScrollMode.FORWARD_ONLY );
 		while ( sr.next() ) {
-			DataPoint dp = ( DataPoint ) sr.get( 0 );
+			DataPoint dp = ( DataPoint ) sr.get();
 			dp.setDescription( "done!" );
 			if ( ++i % nBeforeFlush == 0 ) {
 				s.flush();
@@ -106,7 +106,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 		sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
 				.scroll( ScrollMode.FORWARD_ONLY );
 		while ( sr.next() ) {
-			DataPoint dp = ( DataPoint ) sr.get( 0 );
+			DataPoint dp = ( DataPoint ) sr.get();
 			s.delete( dp );
 			if ( ++i % nBeforeFlush == 0 ) {
 				s.flush();

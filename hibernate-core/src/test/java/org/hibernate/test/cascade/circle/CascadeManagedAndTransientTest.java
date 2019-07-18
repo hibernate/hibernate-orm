@@ -81,9 +81,9 @@ public class CascadeManagedAndTransientTest extends BaseCoreFunctionalTestCase  
         Session s = openSession();
         s.beginTransaction();
 
-        Route route = (Route) s.createQuery("FROM Route WHERE name = :name").setString("name", "Route 1").uniqueResult();
-        Node n2 = (Node) s.createQuery("FROM Node WHERE name = :name").setString("name", "Node 2").uniqueResult();
-        Node n3 = (Node) s.createQuery("FROM Node WHERE name = :name").setString("name", "Node 3").uniqueResult();
+        Route route = (Route) s.createQuery("FROM Route WHERE name = :name").setParameter("name", "Route 1").uniqueResult();
+        Node n2 = (Node) s.createQuery("FROM Node WHERE name = :name").setParameter("name", "Node 2").uniqueResult();
+        Node n3 = (Node) s.createQuery("FROM Node WHERE name = :name").setParameter("name", "Node 3").uniqueResult();
 
         Vehicle vehicle = new Vehicle();
         vehicle.setName("Bus");

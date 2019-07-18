@@ -103,7 +103,7 @@ public class BatchFetchTest extends BaseCoreFunctionalTestCase {
 
 		s.clear();
 
-		Iterator iter = s.createQuery( "from Model" ).iterate();
+		Iterator iter = s.createQuery( "from Model" ).list().iterator();
 		list = new ArrayList();
 		while ( iter.hasNext() ) {
 			list.add( iter.next() );

@@ -19,6 +19,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.type.DateType;
+
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -57,9 +59,9 @@ public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 		assertNull( e.getPerson().getCustomer() );
 		s.clear();
 
-		e = (Employee) s.createQuery("from Employee e where e.person.dob = :date")
-			.setDate("date", new Date() )
-			.uniqueResult();
+		e = (Employee) s.createQuery( "from Employee e where e.person.dob = :date" )
+				.setParameter( "date", new Date(), DateType.INSTANCE )
+				.uniqueResult();
 		assertEquals( e.getPerson().getName(), "Gavin King" );
 		assertFalse( Hibernate.isInitialized( e.getPerson() ) );
 		assertNull( e.getPerson().getCustomer() );

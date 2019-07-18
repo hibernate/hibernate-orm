@@ -82,7 +82,7 @@ public class NativeQueryScrollableResults extends BaseCoreFunctionalTestCase {
 					.setParameter( "bigValues", params );
 			try (ScrollableResults scroll = query.scroll()) {
 				while ( scroll.next() ) {
-					assertThat( scroll.get()[0], not( nullValue()) );
+					assertThat( scroll.get(), not( nullValue()) );
 				}
 			}
 		}

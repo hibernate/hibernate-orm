@@ -7,6 +7,9 @@
 package org.hibernate.test.ops;
 
 import javax.persistence.PersistenceException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -626,14 +629,20 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.beginTransaction();
 		assertEquals(
 				Long.valueOf( 2 ),
-				s.createCriteria( NumberedNode.class )
-						.setProjection( Projections.rowCount() )
-						.uniqueResult()
+				getNumneredNodeRowCount( s )
 		);
 		s.getTransaction().commit();
 		s.close();
 
 		cleanup();
+	}
+
+	private Long getNumneredNodeRowCount(Session s ){
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<Long> criteria = criteriaBuilder.createQuery( Long.class );
+		Root<NumberedNode> root = criteria.from( NumberedNode.class );
+		criteria.select( criteriaBuilder.count( root ) );
+		return s.createQuery( criteria ).uniqueResult();
 	}
 
 	@Test
@@ -669,9 +678,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		tx = s.beginTransaction();
 		assertEquals(
 				Long.valueOf( 2 ),
-				s.createCriteria( NumberedNode.class )
-						.setProjection( Projections.rowCount() )
-						.uniqueResult()
+				getNumneredNodeRowCount( s )
 		);
 		tx.commit();
 
@@ -714,9 +721,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		tx = s.beginTransaction();
 		assertEquals(
 				Long.valueOf( 2 ),
-				s.createCriteria(NumberedNode.class)
-						.setProjection( Projections.rowCount() )
-						.uniqueResult()
+				getNumneredNodeRowCount( s )
 		);
 		tx.commit();
 
@@ -749,7 +754,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	public void testDeleteAndMerge() throws Exception {
+	public void testDeleteAndMerge() {
 		Session s = openSession();
 		s.getTransaction().begin();
 		Employer jboss = new Employer();
@@ -759,7 +764,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		s.getTransaction().begin();
 		Employer otherJboss;
-		otherJboss = (Employer) s.get( Employer.class, jboss.getId() );
+		otherJboss = s.get( Employer.class, jboss.getId() );
 		s.delete( otherJboss );
 		s.getTransaction().commit();
 		s.clear();
@@ -775,7 +780,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	@SuppressWarnings( {"unchecked"})
 	@Test
 	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
-	public void testMergeManyToManyWithCollectionDeference() throws Exception {
+	public void testMergeManyToManyWithCollectionDeference() {
 		// setup base data...
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

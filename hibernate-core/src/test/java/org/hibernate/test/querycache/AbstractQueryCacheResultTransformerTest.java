@@ -14,6 +14,8 @@ import java.util.Map;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
@@ -24,6 +26,7 @@ import org.junit.Test;
 import org.hibernate.CacheMode;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -34,6 +37,8 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaFetch;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.ResultTransformer;
@@ -141,79 +146,77 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	}
 
 	protected void createData() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
+		inTransaction(
+				s -> {
+					courseExpected = new Course();
+					courseExpected.setCourseCode( "HIB" );
+					courseExpected.setDescription( "Hibernate Training" );
+					courseMeetingExpected1 = new CourseMeeting( courseExpected, "Monday", 1, "1313 Mockingbird Lane" );
+					courseMeetingExpected2 = new CourseMeeting( courseExpected, "Tuesday", 2, "1313 Mockingbird Lane" );
+					courseExpected.getCourseMeetings().add( courseMeetingExpected1 );
+					courseExpected.getCourseMeetings().add( courseMeetingExpected2 );
+					s.save( courseExpected );
 
-		courseExpected = new Course();
-		courseExpected.setCourseCode( "HIB" );
-		courseExpected.setDescription( "Hibernate Training" );
-		courseMeetingExpected1 = new CourseMeeting( courseExpected, "Monday", 1, "1313 Mockingbird Lane" );
-		courseMeetingExpected2 = new CourseMeeting( courseExpected, "Tuesday", 2, "1313 Mockingbird Lane" );
-		courseExpected.getCourseMeetings().add( courseMeetingExpected1 );
-		courseExpected.getCourseMeetings().add( courseMeetingExpected2 );
-		s.save( courseExpected );
+					yogiExpected = new Student();
+					yogiExpected.setName( new PersonName( "Yogi", "The", "Bear" ) );
+					yogiExpected.setStudentNumber( 111 );
+					yogiExpected.setPreferredCourse( courseExpected );
+					List yogiSecretCodes = new ArrayList();
+					yogiSecretCodes.add( Integer.valueOf( 0 ) );
+					yogiExpected.setSecretCodes( yogiSecretCodes );
+					s.save( yogiExpected );
 
-		yogiExpected = new Student();
-		yogiExpected.setName( new PersonName( "Yogi", "The", "Bear" ) );
-		yogiExpected.setStudentNumber( 111 );
-		yogiExpected.setPreferredCourse( courseExpected );
-		List yogiSecretCodes = new ArrayList();
-		yogiSecretCodes.add( Integer.valueOf( 0 ) );
-		yogiExpected.setSecretCodes( yogiSecretCodes );
-		s.save( yogiExpected );
+					Address address1 = new Address( yogiExpected, "home", "1 Main Street", "Podunk", "WA", "98000", "USA" );
+					Address address2 = new Address( yogiExpected, "work", "2 Main Street", "NotPodunk", "WA", "98001", "USA" );
+					yogiExpected.getAddresses().put( address1.getAddressType(), address1 );
+					yogiExpected.getAddresses().put( address2.getAddressType(), address2  );
+					s.save( address1 );
+					s.save( address2 );
 
-		Address address1 = new Address( yogiExpected, "home", "1 Main Street", "Podunk", "WA", "98000", "USA" );
-		Address address2 = new Address( yogiExpected, "work", "2 Main Street", "NotPodunk", "WA", "98001", "USA" );
-		yogiExpected.getAddresses().put( address1.getAddressType(), address1 );
-		yogiExpected.getAddresses().put( address2.getAddressType(), address2  );
-		s.save( address1 );
-		s.save( address2 );
+					shermanExpected = new Student();
+					shermanExpected.setName( new PersonName( "Sherman", null, "Grote" ) );
+					shermanExpected.setStudentNumber( 999 );
+					List shermanSecretCodes = new ArrayList();
+					shermanSecretCodes.add( Integer.valueOf( 1 ) );
+					shermanSecretCodes.add( Integer.valueOf( 2 ) );
+					shermanExpected.setSecretCodes( shermanSecretCodes );
+					s.save( shermanExpected );
 
-		shermanExpected = new Student();
-		shermanExpected.setName( new PersonName( "Sherman", null, "Grote" ) );
-		shermanExpected.setStudentNumber( 999 );
-		List shermanSecretCodes = new ArrayList();
-		shermanSecretCodes.add( Integer.valueOf( 1 ) );
-		shermanSecretCodes.add( Integer.valueOf( 2 ) );
-		shermanExpected.setSecretCodes( shermanSecretCodes );
-		s.save( shermanExpected );
+					shermanEnrolmentExpected = new Enrolment();
+					shermanEnrolmentExpected.setCourse( courseExpected );
+					shermanEnrolmentExpected.setCourseCode( courseExpected.getCourseCode() );
+					shermanEnrolmentExpected.setSemester( ( short ) 1 );
+					shermanEnrolmentExpected.setYear( ( short ) 1999 );
+					shermanEnrolmentExpected.setStudent( shermanExpected );
+					shermanEnrolmentExpected.setStudentNumber( shermanExpected.getStudentNumber() );
+					shermanExpected.getEnrolments().add( shermanEnrolmentExpected );
+					s.save( shermanEnrolmentExpected );
 
-		shermanEnrolmentExpected = new Enrolment();
-		shermanEnrolmentExpected.setCourse( courseExpected );
-		shermanEnrolmentExpected.setCourseCode( courseExpected.getCourseCode() );
-		shermanEnrolmentExpected.setSemester( ( short ) 1 );
-		shermanEnrolmentExpected.setYear( ( short ) 1999 );
-		shermanEnrolmentExpected.setStudent( shermanExpected );
-		shermanEnrolmentExpected.setStudentNumber( shermanExpected.getStudentNumber() );
-		shermanExpected.getEnrolments().add( shermanEnrolmentExpected );
-		s.save( shermanEnrolmentExpected );
-
-		yogiEnrolmentExpected = new Enrolment();
-		yogiEnrolmentExpected.setCourse( courseExpected );
-		yogiEnrolmentExpected.setCourseCode( courseExpected.getCourseCode() );
-		yogiEnrolmentExpected.setSemester( ( short ) 3 );
-		yogiEnrolmentExpected.setYear( ( short ) 1998 );
-		yogiEnrolmentExpected.setStudent( yogiExpected );
-		yogiEnrolmentExpected.setStudentNumber( yogiExpected.getStudentNumber() );
-		yogiExpected.getEnrolments().add( yogiEnrolmentExpected );
-		s.save( yogiEnrolmentExpected );
-
-		t.commit();
-		s.close();
+					yogiEnrolmentExpected = new Enrolment();
+					yogiEnrolmentExpected.setCourse( courseExpected );
+					yogiEnrolmentExpected.setCourseCode( courseExpected.getCourseCode() );
+					yogiEnrolmentExpected.setSemester( ( short ) 3 );
+					yogiEnrolmentExpected.setYear( ( short ) 1998 );
+					yogiEnrolmentExpected.setStudent( yogiExpected );
+					yogiEnrolmentExpected.setStudentNumber( yogiExpected.getStudentNumber() );
+					yogiExpected.getEnrolments().add( yogiEnrolmentExpected );
+					s.save( yogiEnrolmentExpected );
+				}
+		);
 	}
 
 	protected void deleteData() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.delete( yogiExpected );
-		s.delete( shermanExpected );
-		s.delete( yogiEnrolmentExpected );
-		s.delete( shermanEnrolmentExpected );
-		s.delete( courseMeetingExpected1 );
-		s.delete( courseMeetingExpected2 );
-		s.delete( courseExpected );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.delete( yogiExpected );
+					s.delete( shermanExpected );
+					s.delete( yogiEnrolmentExpected );
+					s.delete( shermanEnrolmentExpected );
+					s.delete( courseMeetingExpected1 );
+					s.delete( courseMeetingExpected2 );
+					s.delete( courseExpected );
+				}
+		);
 	}
 
 
@@ -242,23 +245,22 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 
-		ResultChecker checker = new ResultChecker() {
-			public void check(Object results) {
-				List resultList = ( List ) results;
-				assertEquals( 2, resultList.size() );
-				Map yogiMap = ( Map ) resultList.get( 0 );
-				assertEquals( 3, yogiMap.size() );
-				Map shermanMap = ( Map ) resultList.get( 1 );
-				assertEquals( 3, shermanMap.size() );
-				assertEquals( yogiExpected, yogiMap.get( "s" ) );
-				assertEquals( yogiEnrolmentExpected, yogiMap.get( "e" ) );
-				assertEquals( courseExpected, yogiMap.get( "c" ) );
-				assertEquals( shermanExpected, shermanMap.get( "s" ) );
-				assertEquals( shermanEnrolmentExpected, shermanMap.get( "e" ) );
-				assertEquals( courseExpected, shermanMap.get( "c" ) );
-				assertSame( ( ( Map ) resultList.get( 0 ) ).get( "c" ), shermanMap.get( "c" ) );
-			}
+		ResultChecker checker = results -> {
+			List resultList = ( List ) results;
+			assertEquals( 2, resultList.size() );
+			Map yogiMap = ( Map ) resultList.get( 0 );
+			assertEquals( 3, yogiMap.size() );
+			Map shermanMap = ( Map ) resultList.get( 1 );
+			assertEquals( 3, shermanMap.size() );
+			assertEquals( yogiExpected, yogiMap.get( "s" ) );
+			assertEquals( yogiEnrolmentExpected, yogiMap.get( "e" ) );
+			assertEquals( courseExpected, yogiMap.get( "c" ) );
+			assertEquals( shermanExpected, shermanMap.get( "s" ) );
+			assertEquals( shermanEnrolmentExpected, shermanMap.get( "e" ) );
+			assertEquals( courseExpected, shermanMap.get( "c" ) );
+			assertSame( ( ( Map ) resultList.get( 0 ) ).get( "c" ), shermanMap.get( "c" ) );
 		};
+
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
@@ -287,33 +289,31 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
-		ResultChecker checker = new ResultChecker() {
-			public void check(Object results) {
-				List resultList = ( List ) results;
-				assertEquals( 3, resultList.size() );
-				Map yogiMap1 = ( Map ) resultList.get( 0 );
-				assertEquals( 3, yogiMap1.size() );
-				Map yogiMap2 = ( Map ) resultList.get( 1 );
-				assertEquals( 3, yogiMap2.size() );
-				Map shermanMap = ( Map ) resultList.get( 2 );
-				assertEquals( 3, shermanMap.size() );
-				assertEquals( yogiExpected, yogiMap1.get( "s" ) );
-				assertEquals( courseExpected, yogiMap1.get( "p" ) );
-				Address yogiAddress1 = ( Address ) yogiMap1.get( "a" );
-				assertEquals( yogiExpected.getAddresses().get( yogiAddress1.getAddressType() ),
-						yogiMap1.get( "a" ));
-				assertEquals( yogiExpected, yogiMap2.get( "s" ) );
-				assertEquals( courseExpected, yogiMap2.get( "p" ) );
-				Address yogiAddress2 = ( Address ) yogiMap2.get( "a" );
-				assertEquals( yogiExpected.getAddresses().get( yogiAddress2.getAddressType() ),
-						yogiMap2.get( "a" ));
-				assertSame( yogiMap1.get( "s" ), yogiMap2.get( "s" ) );
-				assertSame( yogiMap1.get( "p" ), yogiMap2.get( "p" ) );
-				assertFalse( yogiAddress1.getAddressType().equals( yogiAddress2.getAddressType() ) );
-				assertEquals( shermanExpected, shermanMap.get( "s" ) );
-				assertEquals( shermanExpected.getPreferredCourse(), shermanMap.get( "p" ) );
-				assertNull( shermanMap.get( "a" ) );
-			}
+		ResultChecker checker = results -> {
+			List resultList = ( List ) results;
+			assertEquals( 3, resultList.size() );
+			Map yogiMap1 = ( Map ) resultList.get( 0 );
+			assertEquals( 3, yogiMap1.size() );
+			Map yogiMap2 = ( Map ) resultList.get( 1 );
+			assertEquals( 3, yogiMap2.size() );
+			Map shermanMap = ( Map ) resultList.get( 2 );
+			assertEquals( 3, shermanMap.size() );
+			assertEquals( yogiExpected, yogiMap1.get( "s" ) );
+			assertEquals( courseExpected, yogiMap1.get( "p" ) );
+			Address yogiAddress1 = ( Address ) yogiMap1.get( "a" );
+			assertEquals( yogiExpected.getAddresses().get( yogiAddress1.getAddressType() ),
+					yogiMap1.get( "a" ));
+			assertEquals( yogiExpected, yogiMap2.get( "s" ) );
+			assertEquals( courseExpected, yogiMap2.get( "p" ) );
+			Address yogiAddress2 = ( Address ) yogiMap2.get( "a" );
+			assertEquals( yogiExpected.getAddresses().get( yogiAddress2.getAddressType() ),
+					yogiMap2.get( "a" ));
+			assertSame( yogiMap1.get( "s" ), yogiMap2.get( "s" ) );
+			assertSame( yogiMap1.get( "p" ), yogiMap2.get( "p" ) );
+			assertFalse( yogiAddress1.getAddressType().equals( yogiAddress2.getAddressType() ) );
+			assertEquals( shermanExpected, shermanMap.get( "s" ) );
+			assertEquals( shermanExpected.getPreferredCourse(), shermanMap.get( "p" ) );
+			assertNull( shermanMap.get( "a" ) );
 		};
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
@@ -323,11 +323,12 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			@Override
             protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.addresses", "a", CriteriaSpecification.LEFT_JOIN )
-								.setResultTransformer( CriteriaSpecification.ALIAS_TO_ENTITY_MAP )
-						.createCriteria( "s.preferredCourse", CriteriaSpecification.INNER_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.addresses", "a", CriteriaSpecification.LEFT_JOIN )
+//								.setResultTransformer( CriteriaSpecification.ALIAS_TO_ENTITY_MAP )
+//						.createCriteria( "s.preferredCourse", CriteriaSpecification.INNER_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -365,7 +366,10 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Course.class );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Course> criteria = (JpaCriteriaQuery<Course>) builder.createQuery( Course.class );
+				criteria.from( Course.class );
+				return criteria;
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -388,9 +392,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testEntityWithNonLazyManyToOneList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<CourseMeeting> criteria = (JpaCriteriaQuery<CourseMeeting>) builder.createQuery( CourseMeeting.class );
+				JpaRoot<CourseMeeting> root = criteria.from( CourseMeeting.class );
+				criteria.orderBy( builder.asc( root.get( "id" ).get("day") ) );
+				return criteria;
 				// should use RootEntityTransformer by default
-				return s.createCriteria( CourseMeeting.class )
-						.addOrder( Order.asc( "id.day" ) );
+//				return s.createCriteria( CourseMeeting.class )
+//						.addOrder( Order.asc( "id.day" ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -418,25 +427,33 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.add( Restrictions.eq( "studentNumber", shermanExpected.getStudentNumber() ) );
-				}
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				Root<Student> root = criteria.from( Student.class );
+				criteria.where( builder.equal( root.get( "studentNumber" ), shermanExpected.getStudentNumber() ) );
+				return criteria;
+//				return s.createCriteria( Student.class, "s" )
+//						.add( Restrictions.eq( "studentNumber", shermanExpected.getStudentNumber() ) );
+			}
 		};
+
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s where s.studentNumber = :studentNumber" )
 						.setParameter( "studentNumber", shermanExpected.getStudentNumber() );
 			}
 		};
+
 		ResultChecker checker = new ResultChecker() {
 			public void check(Object results) {
 				assertTrue( results instanceof Student );
 				assertEquals( shermanExpected, results );
-				assertNotNull( ((Student) results).getEnrolments() );
-				assertFalse( Hibernate.isInitialized( ((Student) results).getEnrolments() ) );
-				assertNull( ((Student) results).getPreferredCourse() );
+				assertNotNull( ( (Student) results ).getEnrolments() );
+				assertFalse( Hibernate.isInitialized( ( (Student) results ).getEnrolments() ) );
+				assertNull( ( (Student) results ).getPreferredCourse() );
 			}
 		};
+
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
 	}
 
@@ -445,8 +462,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class )
-						.addOrder( Order.asc( "studentNumber" ) );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				JpaRoot<Student> root = criteria.from( Student.class );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Student.class )
+//						.addOrder( Order.asc( "studentNumber" ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -479,9 +501,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.setFetchMode( "enrolments", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber" ) );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				JpaRoot<Student> root = criteria.from( Student.class );
+				root.fetch( "enrolments", JoinType.LEFT );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Student.class, "s" )
+//						.setFetchMode( "enrolments", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber" ) );
 			}
 		};
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
@@ -514,10 +542,18 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testJoinWithFetchJoinListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
-						.setFetchMode( "enrolments", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				JpaRoot<Student> root = criteria.from( Student.class );
+				root.join( "preferredCourse", JoinType.LEFT );
+				root.fetch( "enrolments" , JoinType.LEFT);
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+
+				return criteria;
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
+//						.setFetchMode( "enrolments", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
@@ -731,9 +767,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.setFetchMode( "enrolments", FetchMode.SELECT )
-						.addOrder( Order.asc( "s.studentNumber" ) );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				JpaRoot<Student> root = criteria.from( Student.class );
+				root.join( "enrolments" );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Student.class, "s" )
+//						.setFetchMode( "enrolments", FetchMode.SELECT )
+//						.addOrder( Order.asc( "s.studentNumber" ) );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
@@ -758,9 +800,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.setFetchMode( "addresses", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				JpaRoot<Student> root = criteria.from( Student.class );
+				root.fetch( "addresses", JoinType.LEFT );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Student.class, "s" )
+//						.setFetchMode( "addresses", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
 			}
 		};
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
@@ -769,43 +817,47 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 
-		//aliased
-		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
-						.setFetchMode( "addresses", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
-						.setFetchMode( "a", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased3 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.addresses", "a", Criteria.LEFT_JOIN )
-						.setFetchMode( "addresses", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased4 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.addresses", "a", Criteria.LEFT_JOIN )
-						.setFetchMode( "a", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
+//		//aliased
+//		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				CriteriaBuilder builder = s.getCriteriaBuilder();
+//				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+//				JpaRoot<Student> root = criteria.from( Student.class );
+//
+////				return s.createCriteria( Student.class, "s" )
+////						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
+////						.setFetchMode( "addresses", FetchMode.JOIN )
+////						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
+//		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
+//						.setFetchMode( "a", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
+//		CriteriaExecutor criteriaExecutorAliased3 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.addresses", "a", Criteria.LEFT_JOIN )
+//						.setFetchMode( "addresses", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
+//		CriteriaExecutor criteriaExecutorAliased4 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.addresses", "a", Criteria.LEFT_JOIN )
+//						.setFetchMode( "a", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join fetch s.addresses a order by s.studentNumber" );
@@ -830,10 +882,10 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		runTest( hqlExecutorUnaliased, criteriaExecutorUnaliased, checker, false );
-		runTest( hqlExecutorAliased, criteriaExecutorAliased1, checker, false );
-		runTest( null, criteriaExecutorAliased2, checker, false );
-		runTest( null, criteriaExecutorAliased3, checker, false );
-		runTest( null, criteriaExecutorAliased4, checker, false );
+		runTest( hqlExecutorAliased, null, checker, false );
+//		runTest( null, criteriaExecutorAliased2, checker, false );
+//		runTest( null, criteriaExecutorAliased3, checker, false );
+//		runTest( null, criteriaExecutorAliased4, checker, false );
 	}
 
 	@Test
@@ -842,9 +894,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.setFetchMode( "preferredCourse", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				JpaRoot<Student> root = criteria.from( Student.class );
+				root.fetch( "preferredCourse", JoinType.LEFT );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Student.class, "s" )
+//						.setFetchMode( "preferredCourse", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
 			}
 		};
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
@@ -854,42 +912,42 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		};
 
 		// aliased
-		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
-						.setFetchMode( "preferredCourse", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
-						.setFetchMode( "pCourse", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased3 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
-						.setFetchMode( "preferredCourse", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased4 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
-						.setFetchMode( "pCourse", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
+//		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
+//						.setFetchMode( "preferredCourse", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
+//		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
+//						.setFetchMode( "pCourse", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
+//		CriteriaExecutor criteriaExecutorAliased3 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
+//						.setFetchMode( "preferredCourse", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
+//		CriteriaExecutor criteriaExecutorAliased4 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.preferredCourse", "pCourse", Criteria.LEFT_JOIN )
+//						.setFetchMode( "pCourse", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join fetch s.preferredCourse pCourse order by s.studentNumber" );
@@ -908,10 +966,10 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		runTest( hqlExecutorUnaliased, criteriaExecutorUnaliased, checker, false );
-		runTest( hqlExecutorAliased, criteriaExecutorAliased1, checker, false );
-		runTest( null, criteriaExecutorAliased2, checker, false );
-		runTest( null, criteriaExecutorAliased3, checker, false );
-		runTest( null, criteriaExecutorAliased4, checker, false );
+		runTest( hqlExecutorAliased, null, checker, false );
+//		runTest( null, criteriaExecutorAliased2, checker, false );
+//		runTest( null, criteriaExecutorAliased3, checker, false );
+//		runTest( null, criteriaExecutorAliased4, checker, false );
 	}
 
 	@Test
@@ -920,16 +978,24 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Enrolment.class, "e" )
-						.createAlias( "e.student", "s", Criteria.LEFT_JOIN )
-						.setFetchMode( "student", FetchMode.JOIN )
-						.setFetchMode( "student.preferredCourse", FetchMode.JOIN )
-						.setProjection(
-								Projections.projectionList()
-										.add( Projections.property( "s.name" ) )
-										.add( Projections.property( "e.student" ) )
-						)
-						.addOrder( Order.asc( "s.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Object> criteria = (JpaCriteriaQuery<Object>) builder.createQuery( Object.class );
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				Fetch<Object, Object> student = root.fetch( "student", JoinType.LEFT );
+				student.fetch( "preferredCourse", JoinType.LEFT );
+				criteria.orderBy( builder.asc( ((Join)student).get( "studentNumber" ) ) );
+				criteria.multiselect( ((Join)student).get( "name" ), root.get("student")  );
+				return criteria;
+//				return s.createCriteria( Enrolment.class, "e" )
+//						.createAlias( "e.student", "s", Criteria.LEFT_JOIN )
+//						.setFetchMode( "student", FetchMode.JOIN )
+//						.setFetchMode( "student.preferredCourse", FetchMode.JOIN )
+//						.setProjection(
+//								Projections.projectionList()
+//										.add( Projections.property( "s.name" ) )
+//										.add( Projections.property( "e.student" ) )
+//						)
+//						.addOrder( Order.asc( "s.studentNumber") );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -969,27 +1035,33 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.enrolments", Criteria.LEFT_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				Root<Student> root = criteria.from( Student.class );
+				root.join( "enrolments", JoinType.LEFT );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.enrolments", Criteria.LEFT_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
 			}
 		};
-		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.enrolments", "e", Criteria.LEFT_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.enrolments", "e", Criteria.LEFT_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
+//		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.enrolments", "e", Criteria.LEFT_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
+//		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.enrolments", "e", Criteria.LEFT_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
 		ResultChecker checker = new ResultChecker() {
 			public void check(Object results) {
 				List resultList = ( List ) results;
@@ -1007,8 +1079,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		runTest( null, criteriaExecutorUnaliased, checker, false );
-		runTest( null, criteriaExecutorAliased1, checker, false );
-		runTest( null, criteriaExecutorAliased2, checker, false );
+//		runTest( null, criteriaExecutorAliased1, checker, false );
+//		runTest( null, criteriaExecutorAliased2, checker, false );
 	}
 
 	@Test
@@ -1016,27 +1088,33 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.addresses", Criteria.LEFT_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				Root<Student> root = criteria.from( Student.class );
+				root.join( "addresses", JoinType.LEFT );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.addresses", Criteria.LEFT_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
 			}
 		};
-		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.addresses", "a", Criteria.LEFT_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
+//		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.addresses", "a", Criteria.LEFT_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
+//		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
 		ResultChecker checker = new ResultChecker() {
 			public void check(Object results) {
 				List resultList = ( List ) results;
@@ -1055,8 +1133,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		runTest( null, criteriaExecutorUnaliased, checker, false );
-		runTest( null, criteriaExecutorAliased1, checker, false );
-		runTest( null, criteriaExecutorAliased2, checker, false );
+//		runTest( null, criteriaExecutorAliased1, checker, false );
+//		runTest( null, criteriaExecutorAliased2, checker, false );
 	}
 
 	@Test
@@ -1064,27 +1142,33 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.preferredCourse", Criteria.LEFT_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery<Student> criteria = (JpaCriteriaQuery<Student>) builder.createQuery( Student.class );
+				Root<Student> root = criteria.from( Student.class );
+				root.join( "preferredCourse", JoinType.LEFT );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.preferredCourse", Criteria.LEFT_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
 			}
 		};
-		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.preferredCourse", "p", Criteria.LEFT_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.preferredCourse", "p", Criteria.LEFT_JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
+//		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createCriteria( "s.preferredCourse", "p", Criteria.LEFT_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
+//		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use RootEntityTransformer by default
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.preferredCourse", "p", Criteria.LEFT_JOIN )
+//						.addOrder( Order.asc( "s.studentNumber") );
+//			}
+//		};
 		ResultChecker checker = new ResultChecker() {
 			public void check(Object results) {
 				List resultList = ( List ) results;
@@ -1097,8 +1181,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		runTest( null, criteriaExecutorUnaliased, checker, false );
-		runTest( null, criteriaExecutorAliased1, checker, false );
-		runTest( null, criteriaExecutorAliased2, checker, false );
+//		runTest( null, criteriaExecutorAliased1, checker, false );
+//		runTest( null, criteriaExecutorAliased2, checker, false );
 	}
 
 	@Test
@@ -1200,10 +1284,11 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToEntityMapOneProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class, "e" )
-						.setProjection( Projections.property( "e.student" ).as( "student" ) )
-						.addOrder( Order.asc( "e.studentNumber") )
-						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Enrolment.class, "e" )
+//						.setProjection( Projections.property( "e.student" ).as( "student" ) )
+//						.addOrder( Order.asc( "e.studentNumber") )
+//						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1236,16 +1321,17 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToEntityMapMultiProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class, "e" )
-						.setProjection(
-								Projections.projectionList()
-										.add( Property.forName( "e.student" ), "student" )
-										.add( Property.forName( "e.semester" ), "semester" )
-										.add( Property.forName( "e.year" ), "year" )
-										.add( Property.forName( "e.course" ), "course" )
-						)
-						.addOrder( Order.asc( "studentNumber") )
-						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Enrolment.class, "e" )
+//						.setProjection(
+//								Projections.projectionList()
+//										.add( Property.forName( "e.student" ), "student" )
+//										.add( Property.forName( "e.semester" ), "semester" )
+//										.add( Property.forName( "e.year" ), "year" )
+//										.add( Property.forName( "e.course" ), "course" )
+//						)
+//						.addOrder( Order.asc( "studentNumber") )
+//						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1284,16 +1370,17 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToEntityMapMultiProjectionWithNullAliasList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class, "e" )
-						.setProjection(
-								Projections.projectionList()
-										.add( Property.forName( "e.student" ), "student" )
-										.add( Property.forName( "e.semester" ) )
-										.add( Property.forName( "e.year" ) )
-										.add( Property.forName( "e.course" ), "course" )
-						)
-						.addOrder( Order.asc( "e.studentNumber") )
-						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+				throw new NotYetImplementedFor6Exception(  );
+//				return s.createCriteria( Enrolment.class, "e" )
+//						.setProjection(
+//								Projections.projectionList()
+//										.add( Property.forName( "e.student" ), "student" )
+//										.add( Property.forName( "e.semester" ) )
+//										.add( Property.forName( "e.year" ) )
+//										.add( Property.forName( "e.course" ), "course" )
+//						)
+//						.addOrder( Order.asc( "e.studentNumber") )
+//						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1329,13 +1416,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToEntityMapMultiAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class )
-						.setProjection(
-								Projections.projectionList()
-									.add( Projections.min( "studentNumber" ).as( "minStudentNumber" ) )
-									.add( Projections.max( "studentNumber" ).as( "maxStudentNumber" ) )
-						)
-						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Enrolment.class )
+//						.setProjection(
+//								Projections.projectionList()
+//									.add( Projections.min( "studentNumber" ).as( "minStudentNumber" ) )
+//									.add( Projections.max( "studentNumber" ).as( "maxStudentNumber" ) )
+//						)
+//						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1362,9 +1450,16 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
-				return s.createCriteria( Enrolment.class, "e" )
-						.setProjection( Projections.property( "e.semester" ) )
-						.add( Restrictions.eq( "e.studentNumber", shermanEnrolmentExpected.getStudentNumber() ) );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery( );
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				criteria.select( root.get( "semester" ) );
+				criteria.where( builder.equal( root.get( "studentNumber" ), shermanEnrolmentExpected.getStudentNumber() ) );
+
+				return criteria;
+//				return s.createCriteria( Enrolment.class, "e" )
+//						.setProjection( Projections.property( "e.semester" ) )
+//						.add( Restrictions.eq( "e.studentNumber", shermanEnrolmentExpected.getStudentNumber() ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1387,9 +1482,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
-				return s.createCriteria( Enrolment.class, "e" )
-						.setProjection( Projections.property( "e.semester" ) )
-						.addOrder( Order.asc( "e.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery( );
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				criteria.select( root.get( "semester" ) );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Enrolment.class, "e" )
+//						.setProjection( Projections.property( "e.semester" ) )
+//						.addOrder( Order.asc( "e.studentNumber") );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1442,10 +1543,20 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testOneEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				criteria.select( root.get( "student" ) );
+				criteria.where( builder.equal(
+						root.get( "studentNumber" ),
+						Long.valueOf( yogiExpected.getStudentNumber() )
+				));
+				return criteria;
+
 				// should use PassThroughTransformer by default
-				return s.createCriteria( Enrolment.class )
-						.setProjection( Projections.property( "student" ) )
-						.add( Restrictions.eq( "studentNumber", Long.valueOf( yogiExpected.getStudentNumber() ) ) );
+//				return s.createCriteria( Enrolment.class )
+//						.setProjection( Projections.property( "student" ) )
+//						.add( Restrictions.eq( "studentNumber", Long.valueOf( yogiExpected.getStudentNumber() ) ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1471,9 +1582,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			// should use PassThroughTransformer by default
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class, "e" )
-						.setProjection( Projections.property( "e.student" ) )
-						.addOrder( Order.asc( "e.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				criteria.select( root.get( "student" ) );
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+//				return s.createCriteria( Enrolment.class, "e" )
+//						.setProjection( Projections.property( "e.student" ) )
+//						.addOrder( Order.asc( "e.studentNumber") );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1500,15 +1617,29 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
-				return s.createCriteria( Enrolment.class )
-						.setProjection(
-								Projections.projectionList()
-										.add( Property.forName( "student" ) )
-										.add( Property.forName( "semester" ) )
-										.add( Property.forName( "year" ) )
-										.add( Property.forName( "course" ) )
-						)
-						.add( Restrictions.eq( "studentNumber", Long.valueOf( shermanEnrolmentExpected.getStudentNumber() ) ) );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				criteria.multiselect(
+						root.get( "student" ),
+						root.get( "semester" ),
+						root.get( "year" ),
+						root.get( "course" )
+				);
+				criteria.where( builder.equal(
+						root.get( "studentNumber" ),
+						Long.valueOf( shermanEnrolmentExpected.getStudentNumber() )
+				));
+				return criteria;
+//				return s.createCriteria( Enrolment.class )
+//						.setProjection(
+//								Projections.projectionList()
+//										.add( Property.forName( "student" ) )
+//										.add( Property.forName( "semester" ) )
+//										.add( Property.forName( "year" ) )
+//										.add( Property.forName( "course" ) )
+//						)
+//						.add( Restrictions.eq( "studentNumber", Long.valueOf( shermanEnrolmentExpected.getStudentNumber() ) ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1542,15 +1673,29 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
 				// should use PassThroughTransformer by default
-				return s.createCriteria( Enrolment.class, "e" )
-						.setProjection(
-								Projections.projectionList()
-										.add( Property.forName( "e.student" ) )
-										.add( Property.forName( "e.semester" ) )
-										.add( Property.forName( "e.year" ) )
-										.add( Property.forName( "e.course" ) )
-						)
-						.addOrder( Order.asc( "e.studentNumber") );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				criteria.multiselect(
+						root.get( "student" ),
+						root.get( "semester" ),
+						root.get( "year" ),
+						root.get( "course" )
+				);
+				criteria.where( builder.equal(
+						root.get( "studentNumber" ),
+						Long.valueOf( shermanEnrolmentExpected.getStudentNumber() )
+				));
+				return criteria;
+//				return s.createCriteria( Enrolment.class, "e" )
+//						.setProjection(
+//								Projections.projectionList()
+//										.add( Property.forName( "e.student" ) )
+//										.add( Property.forName( "e.semester" ) )
+//										.add( Property.forName( "e.year" ) )
+//										.add( Property.forName( "e.course" ) )
+//						)
+//						.addOrder( Order.asc( "e.studentNumber") );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1584,20 +1729,20 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 
 	@Test
 	public void testMultiEntityProjectionAliasedList() throws Exception {
-		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected JpaCriteriaQuery getCriteria(Session s) {
-				// should use PassThroughTransformer by default
-				return s.createCriteria( Enrolment.class, "e" )
-						.setProjection(
-								Projections.projectionList()
-										.add( Property.forName( "e.student" ).as( "st" ) )
-										.add( Property.forName( "e.semester" ).as("sem" ) )
-										.add( Property.forName( "e.year" ).as( "yr" ) )
-										.add( Property.forName( "e.course" ).as( "c" ) )
-						)
-						.addOrder( Order.asc( "e.studentNumber") );
-			}
-		};
+//		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+//			protected JpaCriteriaQuery getCriteria(Session s) {
+//				// should use PassThroughTransformer by default
+//				return s.createCriteria( Enrolment.class, "e" )
+//						.setProjection(
+//								Projections.projectionList()
+//										.add( Property.forName( "e.student" ).as( "st" ) )
+//										.add( Property.forName( "e.semester" ).as("sem" ) )
+//										.add( Property.forName( "e.year" ).as( "yr" ) )
+//										.add( Property.forName( "e.course" ).as( "c" ) )
+//						)
+//						.addOrder( Order.asc( "e.studentNumber") );
+//			}
+//		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.student as st, e.semester as sem, e.year as yr, e.course as c from Enrolment e order by e.studentNumber" );
@@ -1624,15 +1769,21 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 				assertEquals( courseExpected, shermanObjects[ 3 ] );
 			}
 		};
-		runTest( hqlExecutor, criteriaExecutor, checker, false );
+		runTest( hqlExecutor, null, checker, false );
 	}
 
 	@Test
 	public void testSingleAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class )
-						.setProjection( Projections.min( "studentNumber" ) );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				criteria.select( root.get( "studentNumber" ) );
+				return criteria;
+
+//				return s.createCriteria( Enrolment.class )
+//						.setProjection( Projections.min( "studentNumber" ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1653,12 +1804,22 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testMultiAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class )
-						.setProjection(
-								Projections.projectionList()
-									.add( Projections.min( "studentNumber" ).as( "minStudentNumber" ) )
-									.add( Projections.max( "studentNumber" ).as( "maxStudentNumber" ) )
+
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				criteria.multiselect(
+						builder.min( root.get( "studentNumber" ) ).alias( "minStudentNumber" ),
+						builder.min( root.get( "studentNumber" ) ).alias( "maxStudentNumber" )
 						);
+				return criteria;
+
+//				return s.createCriteria( Enrolment.class )
+//						.setProjection(
+//								Projections.projectionList()
+//									.add( Projections.min( "studentNumber" ).as( "minStudentNumber" ) )
+//									.add( Projections.max( "studentNumber" ).as( "maxStudentNumber" ) )
+//						);
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1682,12 +1843,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToBeanDtoOneArgList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class, "e" )
-				.createAlias( "e.student", "st" )
-				.createAlias( "e.course", "co" )
-				.setProjection( Projections.property( "st.name" ).as( "studentName" ) )
-				.addOrder( Order.asc( "st.studentNumber" ) )
-				.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
+
+			throw new NotYetImplementedFor6Exception( getClass() );
+
+//				return s.createCriteria( Enrolment.class, "e" )
+//				.createAlias( "e.student", "st" )
+//				.createAlias( "e.course", "co" )
+//				.setProjection( Projections.property( "st.name" ).as( "studentName" ) )
+//				.addOrder( Order.asc( "st.studentNumber" ) )
+//				.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1715,16 +1879,18 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToBeanDtoMultiArgList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class, "e" )
-				.createAlias( "e.student", "st" )
-				.createAlias( "e.course", "co" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "st.name" ).as( "studentName" ) )
-								.add( Property.forName( "co.description" ).as( "courseDescription" ) )
-				)
-				.addOrder( Order.asc( "e.studentNumber" ) )
-				.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
+				throw new NotYetImplementedFor6Exception( getClass() );
+
+//				return s.createCriteria( Enrolment.class, "e" )
+//				.createAlias( "e.student", "st" )
+//				.createAlias( "e.course", "co" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "st.name" ).as( "studentName" ) )
+//								.add( Property.forName( "co.description" ).as( "courseDescription" ) )
+//				)
+//				.addOrder( Order.asc( "e.studentNumber" ) )
+//				.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1752,15 +1918,27 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testMultiProjectionListThenApplyAliasToBean() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class, "e" )
-				.createAlias( "e.student", "st" )
-				.createAlias( "e.course", "co" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "st.name" ) )
-								.add( Property.forName( "co.description" ) )
-				)
-				.addOrder( Order.asc( "e.studentNumber" ) );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
+				Root<Enrolment> root = criteria.from( Enrolment.class );
+				Join<Object, Object> student = root.join( "student",JoinType.INNER );
+				Join<Object, Object> course = root.join( "course", JoinType.INNER );
+				criteria.multiselect(
+						student.get( "name" ),
+						course.get( "description" )
+				);
+				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
+				return criteria;
+
+//				return s.createCriteria( Enrolment.class, "e" )
+//				.createAlias( "e.student", "st" )
+//				.createAlias( "e.course", "co" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "st.name" ) )
+//								.add( Property.forName( "co.description" ) )
+//				)
+//				.addOrder( Order.asc( "e.studentNumber" ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1796,21 +1974,22 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToBeanDtoLiteralArgList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class, "e" )
-				.createAlias( "e.student", "st" )
-				.createAlias( "e.course", "co" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "st.name" ).as( "studentName" ) )
-								.add( Projections.sqlProjection(
-										"'lame description' as courseDescription",
-										new String[] { "courseDescription" },
-										new Type[] { StandardBasicTypes.STRING }
-								)
-						)
-				)
-				.addOrder( Order.asc( "e.studentNumber" ) )
-				.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Enrolment.class, "e" )
+//				.createAlias( "e.student", "st" )
+//				.createAlias( "e.course", "co" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "st.name" ).as( "studentName" ) )
+//								.add( Projections.sqlProjection(
+//										"'lame description' as courseDescription",
+//										new String[] { "courseDescription" },
+//										new Type[] { StandardBasicTypes.STRING }
+//								)
+//						)
+//				)
+//				.addOrder( Order.asc( "e.studentNumber" ) )
+//				.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1838,17 +2017,18 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testAliasToBeanDtoWithNullAliasList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Enrolment.class, "e" )
-				.createAlias( "e.student", "st" )
-				.createAlias( "e.course", "co" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "st.name" ).as( "studentName" ) )
-								.add( Property.forName( "st.studentNumber" ) )
-								.add( Property.forName( "co.description" ).as( "courseDescription" ) )
-				)
-				.addOrder( Order.asc( "e.studentNumber" ) )
-				.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Enrolment.class, "e" )
+//				.createAlias( "e.student", "st" )
+//				.createAlias( "e.course", "co" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "st.name" ).as( "studentName" ) )
+//								.add( Property.forName( "st.studentNumber" ) )
+//								.add( Property.forName( "co.description" ).as( "courseDescription" ) )
+//				)
+//				.addOrder( Order.asc( "e.studentNumber" ) )
+//				.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -1876,10 +2056,11 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testOneSelectNewNoAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) throws Exception {
-				return s.createCriteria( Student.class, "s" )
-				.setProjection( Projections.property( "s.name" ) )
-				.addOrder( Order.asc( "s.studentNumber" ) )
-				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
+				throw new NotYetImplementedFor6Exception(  );
+//				return s.createCriteria( Student.class, "s" )
+//				.setProjection( Projections.property( "s.name" ) )
+//				.addOrder( Order.asc( "s.studentNumber" ) )
+//				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
 			}
 			private Constructor getConstructor() throws NoSuchMethodException {
 				return StudentDTO.class.getConstructor( PersonName.class );
@@ -1909,10 +2090,11 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testOneSelectNewAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) throws Exception {
-				return s.createCriteria( Student.class, "s" )
-				.setProjection( Projections.property( "s.name" ).as( "name" ))
-				.addOrder( Order.asc( "s.studentNumber" ) )
-				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Student.class, "s" )
+//				.setProjection( Projections.property( "s.name" ).as( "name" ))
+//				.addOrder( Order.asc( "s.studentNumber" ) )
+//				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
 			}
 			private Constructor getConstructor() throws NoSuchMethodException {
 				return StudentDTO.class.getConstructor( PersonName.class );
@@ -1942,14 +2124,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testMultiSelectNewList() throws Exception{
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) throws Exception {
-				return s.createCriteria( Student.class, "s" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "s.studentNumber" ).as( "studentNumber" ))
-								.add( Property.forName( "s.name" ).as( "name" ))
-				)
-				.addOrder( Order.asc( "s.studentNumber" ) )
-				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Student.class, "s" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "s.studentNumber" ).as( "studentNumber" ))
+//								.add( Property.forName( "s.name" ).as( "name" ))
+//				)
+//				.addOrder( Order.asc( "s.studentNumber" ) )
+//				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
 			}
 			private Constructor getConstructor() throws NoSuchMethodException {
 				return  Student.class.getConstructor( long.class, PersonName.class );
@@ -1979,14 +2162,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testMultiSelectNewWithLiteralList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) throws Exception {
-				return s.createCriteria( Student.class, "s" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Projections.sqlProjection( "555 as studentNumber", new String[]{ "studentNumber" }, new Type[] { StandardBasicTypes.LONG } ) )
-								.add( Property.forName( "s.name" ).as( "name" ) )
-				)
-				.addOrder( Order.asc( "s.studentNumber" ) )
-				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Student.class, "s" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Projections.sqlProjection( "555 as studentNumber", new String[]{ "studentNumber" }, new Type[] { StandardBasicTypes.LONG } ) )
+//								.add( Property.forName( "s.name" ).as( "name" ) )
+//				)
+//				.addOrder( Order.asc( "s.studentNumber" ) )
+//				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
 			}
 			private Constructor getConstructor() throws NoSuchMethodException {
 				return Student.class.getConstructor( long.class, PersonName.class );
@@ -2017,14 +2201,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testMultiSelectNewListList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "s.studentNumber" ).as( "studentNumber" ))
-								.add( Property.forName( "s.name" ).as( "name" ) )
-				)
-				.addOrder( Order.asc( "s.studentNumber" ) )
-				.setResultTransformer( Transformers.TO_LIST );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Student.class, "s" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "s.studentNumber" ).as( "studentNumber" ))
+//								.add( Property.forName( "s.name" ).as( "name" ) )
+//				)
+//				.addOrder( Order.asc( "s.studentNumber" ) )
+//				.setResultTransformer( Transformers.TO_LIST );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -2051,14 +2236,16 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testMultiSelectNewMapUsingAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "s.studentNumber" ).as( "sNumber" ) )
-								.add( Property.forName( "s.name" ).as( "sName" ) )
-				)
-				.addOrder( Order.asc( "s.studentNumber" ) )
-				.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+				throw new NotYetImplementedFor6Exception( getClass() );
+
+//				return s.createCriteria( Student.class, "s" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "s.studentNumber" ).as( "sNumber" ) )
+//								.add( Property.forName( "s.name" ).as( "sName" ) )
+//				)
+//				.addOrder( Order.asc( "s.studentNumber" ) )
+//				.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -2085,11 +2272,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testMultiSelectNewMapUsingAliasesWithFetchJoinList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
-						.setFetchMode( "enrolments", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber" ))
-						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+				throw new NotYetImplementedFor6Exception( getClass() );
+
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
+//						.setFetchMode( "enrolments", FetchMode.JOIN )
+//						.addOrder( Order.asc( "s.studentNumber" ))
+//						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
@@ -2122,10 +2311,12 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testMultiSelectAliasToEntityMapUsingAliasesWithFetchJoinList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
-						.setFetchMode( "enrolments", FetchMode.JOIN )
-						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+				throw new NotYetImplementedFor6Exception( getClass() );
+
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
+//						.setFetchMode( "enrolments", FetchMode.JOIN )
+//						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		HqlExecutor hqlAliasToEntityMapExecutor = new HqlExecutor() {
@@ -2190,14 +2381,16 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testSelectNewMapUsingAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "s.studentNumber" ).as( "sNumber" ) )
-								.add( Property.forName( "s.name" ).as( "sName" ) )
-				)
-				.addOrder( Order.asc( "s.studentNumber" ) )
-				.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+				throw new NotYetImplementedFor6Exception( getClass() );
+
+//				return s.createCriteria( Student.class, "s" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "s.studentNumber" ).as( "sNumber" ) )
+//								.add( Property.forName( "s.name" ).as( "sName" ) )
+//				)
+//				.addOrder( Order.asc( "s.studentNumber" ) )
+//				.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -2224,14 +2417,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testSelectNewEntityConstructorList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "s.studentNumber" ).as( "studentNumber" ) )
-								.add( Property.forName( "s.name" ).as( "name" ) )
-				)
-				.addOrder( Order.asc( "s.studentNumber" ) )
-				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
+				throw new NotYetImplementedFor6Exception( getClass() );
+//				return s.createCriteria( Student.class, "s" )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "s.studentNumber" ).as( "studentNumber" ) )
+//								.add( Property.forName( "s.name" ).as( "name" ) )
+//				)
+//				.addOrder( Order.asc( "s.studentNumber" ) )
+//				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
 			}
 			private Constructor getConstructor() {
 				Type studentNametype =
@@ -2265,9 +2459,16 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testMapKeyList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected JpaCriteriaQuery getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.addresses", "a" )
-				.setProjection( Projections.property( "a.addressType" ) );
+				CriteriaBuilder builder = s.getCriteriaBuilder();
+				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
+				Root<Student> root = criteria.from( Student.class );
+				Join<Object, Object> addresses = root.join( "addresses", JoinType.INNER );
+				criteria.select( addresses.get( "addressType" ) );
+				return criteria;
+
+//				return s.createCriteria( Student.class, "s" )
+//						.createAlias( "s.addresses", "a" )
+//				.setProjection( Projections.property( "a.addressType" ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -2444,43 +2645,43 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		clearStatistics();
 	}
 
-	private void multiPropProjectionNoTransformerDynNonLazy(CacheMode sessionCacheMode,
-																 boolean isCacheableQuery) {
-		Session s = openSession();
-		s.setCacheMode( sessionCacheMode );
-		Transaction t = s.beginTransaction();
-		List resultList = s.createCriteria( Enrolment.class )
-				.setCacheable( isCacheableQuery )
-				.setFetchMode( "student", FetchMode.JOIN )
-				.setProjection(
-						Projections.projectionList()
-								.add( Property.forName( "student" ), "student" )
-								.add( Property.forName( "semester" ), "semester" )
-								.add( Property.forName( "year" ), "year" )
-								.add( Property.forName( "course" ), "course" )
-				)
-				.addOrder( Order.asc( "studentNumber") )
-				.list();
-		t.commit();
-		s.close();
-
-		assertEquals( 2, resultList.size() );
-		Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
-		Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
-		assertEquals( 4, yogiObjects.length );
-		assertTrue( yogiObjects[ 0 ] instanceof Student );
-		assertTrue( Hibernate.isInitialized( yogiObjects[ 0 ] ) );
-		assertEquals( yogiEnrolmentExpected.getSemester(), ( (Short) yogiObjects[ 1 ] ).shortValue() );
-		assertEquals( yogiEnrolmentExpected.getYear(), ( (Short) yogiObjects[ 2 ] ).shortValue() );
-		assertEquals( courseExpected, yogiObjects[ 3 ] );
-		assertTrue( shermanObjects[ 0 ] instanceof Student );
-		assertTrue( Hibernate.isInitialized( shermanObjects[ 0 ] ) );
-		assertEquals( shermanEnrolmentExpected.getSemester(), ( (Short) shermanObjects[ 1 ] ).shortValue() );
-		assertEquals( shermanEnrolmentExpected.getYear(), ( (Short) shermanObjects[ 2 ] ).shortValue() );
-		assertTrue( ! ( shermanObjects[ 3 ] instanceof HibernateProxy ) );
-		assertTrue( shermanObjects[ 3 ] instanceof Course );
-		assertEquals( courseExpected, shermanObjects[ 3 ] );
-	}
+//	private void multiPropProjectionNoTransformerDynNonLazy(CacheMode sessionCacheMode,
+//																 boolean isCacheableQuery) {
+//		Session s = openSession();
+//		s.setCacheMode( sessionCacheMode );
+//		Transaction t = s.beginTransaction();
+//		List resultList = s.createCriteria( Enrolment.class )
+//				.setCacheable( isCacheableQuery )
+//				.setFetchMode( "student", FetchMode.JOIN )
+//				.setProjection(
+//						Projections.projectionList()
+//								.add( Property.forName( "student" ), "student" )
+//								.add( Property.forName( "semester" ), "semester" )
+//								.add( Property.forName( "year" ), "year" )
+//								.add( Property.forName( "course" ), "course" )
+//				)
+//				.addOrder( Order.asc( "studentNumber") )
+//				.list();
+//		t.commit();
+//		s.close();
+//
+//		assertEquals( 2, resultList.size() );
+//		Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
+//		Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
+//		assertEquals( 4, yogiObjects.length );
+//		assertTrue( yogiObjects[ 0 ] instanceof Student );
+//		assertTrue( Hibernate.isInitialized( yogiObjects[ 0 ] ) );
+//		assertEquals( yogiEnrolmentExpected.getSemester(), ( (Short) yogiObjects[ 1 ] ).shortValue() );
+//		assertEquals( yogiEnrolmentExpected.getYear(), ( (Short) yogiObjects[ 2 ] ).shortValue() );
+//		assertEquals( courseExpected, yogiObjects[ 3 ] );
+//		assertTrue( shermanObjects[ 0 ] instanceof Student );
+//		assertTrue( Hibernate.isInitialized( shermanObjects[ 0 ] ) );
+//		assertEquals( shermanEnrolmentExpected.getSemester(), ( (Short) shermanObjects[ 1 ] ).shortValue() );
+//		assertEquals( shermanEnrolmentExpected.getYear(), ( (Short) shermanObjects[ 2 ] ).shortValue() );
+//		assertTrue( ! ( shermanObjects[ 3 ] instanceof HibernateProxy ) );
+//		assertTrue( shermanObjects[ 3 ] instanceof Course );
+//		assertEquals( courseExpected, shermanObjects[ 3 ] );
+//	}
 
 /*
 	{

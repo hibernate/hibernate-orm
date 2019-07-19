@@ -6,10 +6,11 @@
  */
 package org.hibernate.test.manytomany;
 
-import org.hibernate.FetchMode;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
+
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -36,94 +37,105 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testManyToManyWithFormula() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		User gavin = new User("gavin", "jboss");
-		Group seam = new Group("seam", "jboss");
-		Group hb = new Group("hibernate", "jboss");
-		gavin.getGroups().add(seam);
-		gavin.getGroups().add(hb);
-		seam.getUsers().add(gavin);
-		hb.getUsers().add(gavin);
-		s.persist(gavin);
-		s.persist(seam);
-		s.persist(hb);
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = (User) s.get(User.class, gavin);
-		assertFalse( Hibernate.isInitialized( gavin.getGroups() ) );
-		assertEquals( 2, gavin.getGroups().size() );
-		hb = (Group) s.get(Group.class, hb);
-		assertFalse( Hibernate.isInitialized( hb.getUsers() ) );
-		assertEquals( 1, hb.getUsers().size() );
-		t.commit();
-		s.close();
+		User user = new User("gavin", "jboss");
+		Group seamGroup = new Group("seam", "jboss");
+		Group hbGroup = new Group("hibernate", "jboss");
+		inTransaction(
+				s -> {
+					user.getGroups().add(seamGroup);
+					user.getGroups().add(hbGroup);
+					seamGroup.getUsers().add(user);
+					hbGroup.getUsers().add(user);
+					s.persist(user);
+					s.persist(seamGroup);
+					s.persist(hbGroup);
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = (User) s.createCriteria(User.class)
-			.setFetchMode("groups", FetchMode.JOIN)
-			.uniqueResult();
-		assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
-		assertEquals( 2, gavin.getGroups().size() );
-		Group group = (Group) gavin.getGroups().iterator().next();
-		assertFalse( Hibernate.isInitialized( group.getUsers() ) );
-		assertEquals( 1, group.getUsers().size() );
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = (User) s.createCriteria(User.class)
-			.setFetchMode("groups", FetchMode.JOIN)
-			.setFetchMode("groups.users", FetchMode.JOIN)
-			.uniqueResult();
-		assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
-		assertEquals( 2, gavin.getGroups().size() );
-		group = (Group) gavin.getGroups().iterator().next();
-		assertTrue( Hibernate.isInitialized( group.getUsers() ) );
-		assertEquals( 1, group.getUsers().size() );
-		t.commit();
-		s.close();
-		
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = (User) s.createQuery("from User u join fetch u.groups g join fetch g.users").uniqueResult();
-		assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
-		assertEquals( 2, gavin.getGroups().size() );
-		group = (Group) gavin.getGroups().iterator().next();
-		assertTrue( Hibernate.isInitialized( group.getUsers() ) );
-		assertEquals( 1, group.getUsers().size() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					User gavin = s.get(User.class, user);
+					assertFalse( Hibernate.isInitialized( gavin.getGroups() ) );
+					assertEquals( 2, gavin.getGroups().size() );
+					Group hb = s.get(Group.class, hbGroup);
+					assertFalse( Hibernate.isInitialized( hb.getUsers() ) );
+					assertEquals( 1, hb.getUsers().size() );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = (User) s.get(User.class, gavin);
-		hb = (Group) s.get(Group.class, hb);
-		gavin.getGroups().remove(hb);
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
+					criteria.from( User.class ).fetch( "groups", JoinType.LEFT );
 
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = (User) s.get(User.class, gavin);
-		assertEquals( gavin.getGroups().size(), 1 );
-		hb = (Group) s.get(Group.class, hb);
-		assertEquals( hb.getUsers().size(), 0 );
-		t.commit();
-		s.close();
+					User gavin = s.createQuery( criteria ).uniqueResult();
+//					User gavin = (User) s.createCriteria(User.class)
+//							.setFetchMode("groups", FetchMode.JOIN)
+//							.uniqueResult();
+					assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
+					assertEquals( 2, gavin.getGroups().size() );
+					Group group = (Group) gavin.getGroups().iterator().next();
+					assertFalse( Hibernate.isInitialized( group.getUsers() ) );
+					assertEquals( 1, group.getUsers().size() );
 
-		s = openSession();
-		t = s.beginTransaction();
-		s.delete(gavin);
-		s.flush();
-		s.createQuery("delete from Group").executeUpdate();
-		t.commit();
-		s.close();
+				}
+		);
+
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
+					criteria.from( User.class ).fetch( "groups", JoinType.LEFT ).fetch( "users", JoinType.LEFT );
+
+					User gavin = s.createQuery( criteria ).uniqueResult();
+//					User gavin = (User) s.createCriteria(User.class)
+//							.setFetchMode("groups", FetchMode.JOIN)
+//							.setFetchMode("groups.users", FetchMode.JOIN)
+//							.uniqueResult();
+					assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
+					assertEquals( 2, gavin.getGroups().size() );
+					Group group = (Group) gavin.getGroups().iterator().next();
+					assertTrue( Hibernate.isInitialized( group.getUsers() ) );
+					assertEquals( 1, group.getUsers().size() );
+
+				}
+		);
+
+		inTransaction(
+				s -> {
+					User gavin = (User) s.createQuery("from User u join fetch u.groups g join fetch g.users").uniqueResult();
+					assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
+					assertEquals( 2, gavin.getGroups().size() );
+					Group group = (Group) gavin.getGroups().iterator().next();
+					assertTrue( Hibernate.isInitialized( group.getUsers() ) );
+					assertEquals( 1, group.getUsers().size() );
+				}
+		);
+
+		inTransaction(
+				s -> {
+					User gavin = s.get(User.class, user);
+					Group hb = s.get(Group.class, hbGroup);
+					gavin.getGroups().remove(hb);
+				}
+		);
+
+		inTransaction(
+				s -> {
+					User gavin = s.get(User.class, user);
+					assertEquals( gavin.getGroups().size(), 1 );
+					Group hb = s.get(Group.class, hbGroup);
+					assertEquals( hb.getUsers().size(), 0 );
+				}
+		);
+		inTransaction(
+				s -> {
+					s.delete(user);
+					s.flush();
+					s.createQuery("delete from Group").executeUpdate();
+				}
+		);
 	}
 }
 

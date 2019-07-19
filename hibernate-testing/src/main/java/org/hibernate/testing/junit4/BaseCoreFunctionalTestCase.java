@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
@@ -508,6 +509,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void inTransaction(Consumer<SessionImplementor> action) {
 		TransactionUtil2.inTransaction( sessionFactory(), action );
+	}
+
+	protected <R> R inTransactionReturn(Function<SessionImplementor, R> function) {
+		return TransactionUtil2.inTransactionReturn( sessionFactory(), function );
 	}
 
 	protected void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {

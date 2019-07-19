@@ -7,17 +7,18 @@
 package org.hibernate.test.subselectfetch;
 
 import java.util.List;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.Collection;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -39,55 +40,52 @@ public class SubselectFetchWithFormulaTransactSqlTest extends BaseNonConfigCoreF
 
 	@Before
 	public void before() {
-		Session session = openSession();
-		session.getTransaction().begin();
+		inTransaction(
+				session -> {
+					Name chris = new Name();
+					chris.setId( 1 );
+					chris.setName( "chris" );
+					Value cat = new Value();
+					cat.setId(1);
+					cat.setName( chris );
+					cat.setValue( "cat" );
+					Value canary = new Value();
+					canary.setId( 2 );
+					canary.setName( chris );
+					canary.setValue( "canary" );
 
-		Name chris = new Name();
-		chris.setId( 1 );
-		chris.setName( "chris" );
-		Value cat = new Value();
-		cat.setId(1);
-		cat.setName( chris );
-		cat.setValue( "cat" );
-		Value canary = new Value();
-		canary.setId( 2 );
-		canary.setName( chris );
-		canary.setValue( "canary" );
+					session.persist( chris );
+					session.persist( cat );
+					session.persist( canary );
 
-		session.persist( chris );
-		session.persist( cat );
-		session.persist( canary );
+					Name sam = new Name();
+					sam.setId(2);
+					sam.setName( "sam" );
+					Value seal = new Value();
+					seal.setId( 3 );
+					seal.setName( sam );
+					seal.setValue( "seal" );
+					Value snake = new Value();
+					snake.setId( 4 );
+					snake.setName( sam );
+					snake.setValue( "snake" );
 
-		Name sam = new Name();
-		sam.setId(2);
-		sam.setName( "sam" );
-		Value seal = new Value();
-		seal.setId( 3 );
-		seal.setName( sam );
-		seal.setValue( "seal" );
-		Value snake = new Value();
-		snake.setId( 4 );
-		snake.setName( sam );
-		snake.setValue( "snake" );
-
-		session.persist( sam );
-		session.persist(seal);
-		session.persist( snake );
-
-		session.getTransaction().commit();
-		session.close();
+					session.persist( sam );
+					session.persist(seal);
+					session.persist( snake );
+				}
+		);
 	}
 
 	@After
 	public void after() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "delete Value" ).executeUpdate();
-		session.createQuery( "delete Name" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					session.createQuery( "delete Value" ).executeUpdate();
+					session.createQuery( "delete Name" ).executeUpdate();
+				}
+		);
 	}
-
 
 	@Test
 	public void checkSubselectWithFormula() throws Exception {
@@ -96,15 +94,18 @@ public class SubselectFetchWithFormulaTransactSqlTest extends BaseNonConfigCoreF
 		assertThat( collectionBinding.isSubselectLoadable(), is( true ) );
 
 		// Now force the subselect fetch and make sure we do not get SQL errors
-		Session session = openSession();
-		session.getTransaction().begin();
-		List results = session.createCriteria(Name.class).list();
-		for (Object result : results) {
-			Name name = (Name) result;
-			name.getValues().size();
-		}
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<Name> criteria = criteriaBuilder.createQuery( Name.class );
+					criteria.from( Name.class );
+					List<Name> results = session.createQuery( criteria ).list();
+//					List results = session.createCriteria(Name.class).list();
+					for (Name name : results) {
+						name.getValues().size();
+					}
+				}
+		);
 	}
 
 }

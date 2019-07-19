@@ -6,6 +6,9 @@
  */
 package org.hibernate.test.version;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
@@ -37,7 +40,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		s.persist(gavin);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		Thing passp = (Thing) s.get(Thing.class, "Passport");
@@ -47,7 +50,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		s.createQuery("from Person").list();
 		t.commit();
 		s.close();
-		
+
 		assertEquals( passp.getVersion(), 1 );
 
 		s = openSession();
@@ -80,7 +83,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		
 		s = openSession();
 		t = s.beginTransaction();
-		gavin = (Person) s.createCriteria(Person.class).uniqueResult();
+		gavin = getPerson( s );
 		new Thing("Laptop", gavin);
 		t.commit();
 		s.close();
@@ -90,7 +93,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		gavin = (Person) s.createCriteria(Person.class).uniqueResult();
+		gavin = getPerson( s );
 		gavin.getThings().clear();
 		t.commit();
 		s.close();
@@ -119,7 +122,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		
 		s = openSession();
 		t = s.beginTransaction();
-		gavin = (Person) s.createCriteria(Person.class).uniqueResult();
+		gavin = getPerson( s );
 		new Task("Document", gavin);
 		t.commit();
 		s.close();
@@ -129,7 +132,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		gavin = (Person) s.createCriteria(Person.class).uniqueResult();
+		gavin = getPerson( s );
 		gavin.getTasks().clear();
 		t.commit();
 		s.close();
@@ -144,5 +147,10 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	private Person getPerson(Session s) {
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+		criteria.from( Person.class );
+		return s.createQuery( criteria ).uniqueResult();
+	}
 }
-

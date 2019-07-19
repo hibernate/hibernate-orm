@@ -6,15 +6,15 @@
  */
 package org.hibernate.test.orphan.manytomany;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class ManyToManyOrphanTest extends BaseCoreFunctionalTestCase {
 
@@ -26,56 +26,62 @@ public class ManyToManyOrphanTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8749")
 	public void testManyToManyWithCascadeDeleteOrphan() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		User bob = new User( "bob", "jboss" );
-		Group seam = new Group( "seam", "jboss" );
-		seam.setGroupType( 1 );
-		Group hb = new Group( "hibernate", "jboss" );
-		hb.setGroupType( 2 );
-		bob.getGroups().put( seam.getGroupType(), seam );
-		bob.getGroups().put( hb.getGroupType(), hb );
-		s.persist( bob );
-		s.persist( seam );
-		s.persist( hb );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					User bob = new User( "bob", "jboss" );
+					Group seam = new Group( "seam", "jboss" );
+					seam.setGroupType( 1 );
+					Group hb = new Group( "hibernate", "jboss" );
+					hb.setGroupType( 2 );
+					bob.getGroups().put( seam.getGroupType(), seam );
+					bob.getGroups().put( hb.getGroupType(), hb );
+					s.persist( bob );
+					s.persist( seam );
+					s.persist( hb );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		bob = (User) s.get( User.class, "bob" );
-		assertEquals( 2, bob.getGroups().size() );
-		seam = (Group) s.get( Group.class, "seam" );
-		assertEquals( (Integer) 1, seam.getGroupType() );
-		hb = (Group) s.get( Group.class, "hibernate" );
-		assertEquals( (Integer) 2, hb.getGroupType() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					User b = s.get( User.class, "bob" );
+					assertEquals( 2, b.getGroups().size() );
+					Group sG = s.get( Group.class, "seam" );
+					assertEquals( (Integer) 1, sG.getGroupType() );
+					Group hbG = s.get( Group.class, "hibernate" );
+					assertEquals( (Integer) 2, hbG.getGroupType() );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		bob = (User) s.get( User.class, "bob" );
-		assertEquals( 2, bob.getGroups().size() );
-		hb = (Group) s.get( Group.class, "hibernate" );
-		bob.getGroups().remove( hb.getGroupType() );
-		assertEquals( 1, bob.getGroups().size() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					User b = s.get( User.class, "bob" );
+					assertEquals( 2, b.getGroups().size() );
+					Group hG = s.get( Group.class, "hibernate" );
+					b.getGroups().remove( hG.getGroupType() );
+					assertEquals( 1, b.getGroups().size() );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		bob = (User) s.get( User.class, "bob" );
-		assertEquals( 1, bob.getGroups().size() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					User b = s.get( User.class, "bob" );
+					assertEquals( 1, b.getGroups().size() );
+				}
+		);
 
 		// Verify orphan group was deleted
-		s = openSession();
-		t = s.beginTransaction();
-		List<Group> groups = s.createCriteria( Group.class ).list();
-		assertEquals( 1, groups.size() );
-		assertEquals( "seam", groups.get( 0 ).getName() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<Group> criteria = criteriaBuilder.createQuery( Group.class );
+					criteria.from( Group.class );
+					List<Group> groups = s.createQuery( criteria ).list();
+
+//					List<Group> groups = s.createCriteria( Group.class ).list();
+					assertEquals( 1, groups.size() );
+					assertEquals( "seam", groups.get( 0 ).getName() );
+				}
+		);
+
 	}
 }

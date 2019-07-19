@@ -9,7 +9,10 @@ package org.hibernate.jpa.test.criteria.paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
@@ -22,6 +25,7 @@ import org.hibernate.jpa.test.metamodel.MapEntityLocal;
 import org.hibernate.jpa.test.metamodel.MapEntity_;
 import org.hibernate.jpa.test.metamodel.Translation;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaExpression;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
@@ -90,7 +94,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 			final Root<MapEntity> root = criteria.from( MapEntity.class);
 
 			criteria.select( root )
-					.where( cb.isMapEmpty( root.get( MapEntity_.localized ) ) );
+					.where( cb.isMapEmpty( (JpaExpression) root.get( MapEntity_.localized ) ) );
 
 			entityManager.createQuery( criteria ).getResultList();
 		});
@@ -164,7 +168,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 			final Root<MapEntity> root = criteria.from( MapEntity.class);
 
 			criteria.select( root )
-					.where( cb.gt( cb.mapSize( root.get( MapEntity_.localized ) ), 1 ) );
+					.where( cb.gt( cb.mapSize( (JpaExpression) root.get( MapEntity_.localized ) ), 1 ) );
 
 			entityManager.createQuery( criteria ).getResultList();
 		});
@@ -188,7 +192,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 			final Root<Article> root = criteria.from( Article.class);
 
 			criteria.select( root )
-					.where( cb.gt( cb.mapSize( root.get( Article_.translations ) ), 1 ) );
+					.where( cb.gt( cb.mapSize( (JpaExpression) root.get( Article_.translations ) ), 1 ) );
 
 			entityManager.createQuery( criteria ).getResultList();
 		});

@@ -17,6 +17,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
 import org.hibernate.query.NativeQuery;
@@ -594,11 +598,18 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		key.setSubstation( "foo4" );
 		entity.setPk( key );
 		s.persist( entity );
-		Criteria c = s.createCriteria(
-				EntityWithStringCompositeKey.class ).add( Restrictions.eq( 
-						"pk", key ) );
-		c.setCacheable( true );
-		assertEquals( 1, c.list().size() );
+		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		CriteriaQuery<EntityWithStringCompositeKey> criteria = criteriaBuilder.createQuery( EntityWithStringCompositeKey.class );
+		Root<EntityWithStringCompositeKey> root = criteria.from( EntityWithStringCompositeKey.class );
+		criteria.where( criteriaBuilder.equal( root.get( "pk" ), key ) );
+		s.createQuery( criteria ).setCacheable( true );
+
+		assertEquals( 1, s.createQuery( criteria ).list().size() );
+//		Criteria c = s.createCriteria(
+//				EntityWithStringCompositeKey.class ).add( Restrictions.eq(
+//						"pk", key ) );
+//		c.setCacheable( true );
+//		assertEquals( 1, c.list().size() );
 		s.getTransaction().rollback();
 		s.close();
 	}
@@ -720,15 +731,22 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 	protected Item findByDescription(SessionBuilder sessionBuilder, final String description) {
 		Session s = sessionBuilder.openSession();
 		try {
-         return (Item) s.createCriteria(Item.class)
-               .setCacheable(true)
-               .setReadOnly(true)
-               .add(Restrictions.eq("description", description))
-               .uniqueResult();
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Item> criteria = criteriaBuilder.createQuery( Item.class );
+			Root<Item> root = criteria.from( Item.class );
+			criteria.where( criteriaBuilder.equal( root.get( "description" ), description ) );
 
-      } finally {
-         s.close();
-      }
+			return s.createQuery( criteria ).setCacheable( true ).setReadOnly( true ).uniqueResult();
+//			return (Item) s.createCriteria(Item.class)
+//               .setCacheable(true)
+//               .setReadOnly(true)
+//               .add(Restrictions.eq("description", description))
+//               .uniqueResult();
+
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	public class DelayLoadOperations extends EmptyInterceptor {
@@ -771,4 +789,3 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 	}
 }
-

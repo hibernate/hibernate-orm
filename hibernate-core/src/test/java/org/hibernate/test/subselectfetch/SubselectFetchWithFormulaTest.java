@@ -8,7 +8,9 @@ package org.hibernate.test.subselectfetch;
 
 import java.util.List;
 
-import org.hibernate.Session;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.Collection;
@@ -83,12 +85,12 @@ public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTe
 
 	@After
 	public void after() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "delete Value" ).executeUpdate();
-		session.createQuery( "delete Name" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					session.createQuery( "delete Value" ).executeUpdate();
+					session.createQuery( "delete Name" ).executeUpdate();
+				}
+		);
 	}
 
 
@@ -99,15 +101,19 @@ public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTe
 		assertThat( collectionBinding.isSubselectLoadable(), is( true ) );
 
 		// Now force the subselect fetch and make sure we do not get SQL errors
-		Session session = openSession();
-		session.getTransaction().begin();
-		List results = session.createCriteria(Name.class).list();
-		for (Object result : results) {
-			Name name = (Name) result;
-			name.getValues().size();
-		}
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<Name> criteria = criteriaBuilder.createQuery( Name.class );
+					criteria.from( Name.class );
+					List<Name> results = session.createQuery( criteria ).list();
+//					List results = session.createCriteria(Name.class).list();
+					for (Name name : results) {
+						name.getValues().size();
+					}
+				}
+		);
+
 	}
 
 }

@@ -15,6 +15,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -41,7 +43,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Steve Ebersole
+ * @author Steve EbersolenPropertyRefTest
  */
 @RunWith( BytecodeEnhancerRunner.class )
 public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
@@ -99,7 +101,11 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
         sessionFactory().getStatistics().clear();
 
         doInHibernate( this::sessionFactory, s -> {
-            Document d = (Document) s.createCriteria( Document.class ).uniqueResult();
+            CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+            CriteriaQuery<Document> criteria = criteriaBuilder.createQuery( Document.class );
+            criteria.from( Document.class );
+            Document d = s.createQuery( criteria ).uniqueResult();
+//            Document d = (Document) s.createCriteria( Document.class ).uniqueResult();
             assertFalse( isPropertyInitialized( d, "text" ) );
             assertFalse( isPropertyInitialized( d, "summary" ) );
             assertEquals( "Hibernate is....", d.text );

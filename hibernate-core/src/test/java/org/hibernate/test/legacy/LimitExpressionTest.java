@@ -35,7 +35,8 @@ public class LimitExpressionTest extends BaseCoreFunctionalTestCase {
 		TransactionUtil.doInHibernate( this::sessionFactory, s -> {
 			Iterator iter = s.createQuery( "from Person p" )
 					.setMaxResults( 0 )
-					.iterate();
+					.list().iterator();
+
 			int count = 0;
 			while ( iter.hasNext() ) {
 				iter.next();

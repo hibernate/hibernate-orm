@@ -73,6 +73,7 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		assertEquals("Blahs", doc2.getName());
 		assertEquals(doc.getText(), doc2.getText());
 
+
 		doc2 = (Document) ss.createCriteria(Document.class).uniqueResult();
 		assertEquals("Blahs", doc2.getName());
 		assertEquals(doc.getText(), doc2.getText());

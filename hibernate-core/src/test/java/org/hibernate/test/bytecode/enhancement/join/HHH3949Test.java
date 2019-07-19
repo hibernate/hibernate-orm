@@ -20,6 +20,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
 import java.util.List;
 
 import static org.hibernate.Hibernate.isInitialized;
@@ -93,7 +96,11 @@ public class HHH3949Test extends BaseCoreFunctionalTestCase {
     @SuppressWarnings( "unchecked" )
     public void test3() {
         doInHibernate( this::sessionFactory, s -> {
-            List<Person> persons = (List<Person>) s.createCriteria( Person.class ).setFetchMode( "vehicle", FetchMode.JOIN ).list();
+            CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+            CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+            criteria.from( Person.class ).fetch( "vehicle", JoinType.LEFT );
+            List<Person> persons = s.createQuery( criteria ).list();
+//            List<Person> persons = (List<Person>) s.createCriteria( Person.class ).setFetchMode( "vehicle", FetchMode.JOIN ).list();
             for ( Person person : persons ) {
                 if ( shouldHaveVehicle( person ) ) {
                     assertNotNull( person.getVehicle() );
@@ -109,7 +116,11 @@ public class HHH3949Test extends BaseCoreFunctionalTestCase {
         List<Vehicle> vehicles;
 
         try ( Session s = openSession() ) {
-            vehicles = (List<Vehicle>) s.createCriteria( Vehicle.class ).setFetchMode( "driver", FetchMode.JOIN ).list();
+            CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+            CriteriaQuery<Vehicle> criteria = criteriaBuilder.createQuery( Vehicle.class );
+            criteria.from( Person.class ).fetch( "driver", JoinType.LEFT );
+            vehicles = s.createQuery( criteria ).list();
+//            vehicles = (List<Vehicle>) s.createCriteria( Vehicle.class ).setFetchMode( "driver", FetchMode.JOIN ).list();
         }
 
         for ( Vehicle vehicle : vehicles ) {

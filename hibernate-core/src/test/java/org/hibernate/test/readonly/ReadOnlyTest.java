@@ -107,7 +107,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 				.setReadOnly(true)
 				.scroll(ScrollMode.FORWARD_ONLY);
 		while ( sr.next() ) {
-			DataPoint dp = (DataPoint) sr.get(0);
+			DataPoint dp = (DataPoint) sr.get();
 			if (++i==50) {
 				s.setReadOnly(dp, false);
 			}
@@ -157,7 +157,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		clearCounts();
 
 		while ( sr.next() ) {
-			DataPoint dp = (DataPoint) sr.get(0);
+			DataPoint dp = (DataPoint) sr.get();
 			assertFalse( s.isReadOnly( dp ) );
 			s.delete( dp );
 		}
@@ -419,7 +419,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 				.scroll(ScrollMode.FORWARD_ONLY);
 		int nExpectedChanges = 0;
 		while ( sr.next() ) {
-			dp = (DataPoint) sr.get(0);
+			dp = (DataPoint) sr.get();
 			if ( dp.getId() == dpLast.getId() ) {
 				//dpLast existed in the session before executing the read-only query
 				assertFalse( s.isReadOnly( dp ) );
@@ -486,7 +486,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 				.scroll(ScrollMode.FORWARD_ONLY);
 		int nExpectedChanges = 0;
 		while ( sr.next() ) {
-			dp = (DataPoint) sr.get(0);
+			dp = (DataPoint) sr.get();
 			if ( dp.getId() == dpLast.getId() ) {
 				//dpLast existed in the session before executing the read-only query
 				assertTrue( s.isReadOnly( dp ) );

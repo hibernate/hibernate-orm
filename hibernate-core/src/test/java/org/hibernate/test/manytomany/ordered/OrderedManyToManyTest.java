@@ -7,11 +7,11 @@
 package org.hibernate.test.manytomany.ordered;
 
 import java.util.List;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
 
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -38,89 +38,102 @@ public class OrderedManyToManyTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testManyToManyOrdering() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
 		User gavin = new User( "gavin", "jboss" );
 		User steve = new User( "steve", "jboss" );
 		User max = new User( "max", "jboss" );
 		User emmanuel = new User( "emmanuel", "jboss" );
-		s.persist( gavin );
-		s.persist( steve );
-		s.persist( max );
-		s.persist( emmanuel );
 		Group hibernate = new Group( "hibernate", "jboss" );
-		hibernate.addUser( gavin );
-		hibernate.addUser( steve );
-		hibernate.addUser( max );
-		hibernate.addUser( emmanuel );
-		s.persist( hibernate );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.persist( gavin );
+					s.persist( steve );
+					s.persist( max );
+					s.persist( emmanuel );
+					hibernate.addUser( gavin );
+					hibernate.addUser( steve );
+					hibernate.addUser( max );
+					hibernate.addUser( emmanuel );
+					s.persist( hibernate );
+				}
+		);
 
 		// delayed collection load...
-		s = openSession();
-		t = s.beginTransaction();
-		hibernate = ( Group ) s.get( Group.class, hibernate.getId() );
-		assertFalse( Hibernate.isInitialized( hibernate.getUsers() ) );
-		assertEquals( 4, hibernate.getUsers().size() );
-		assertOrdering( hibernate.getUsers() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					Group h = s.get( Group.class, hibernate.getId() );
+					assertFalse( Hibernate.isInitialized( h.getUsers() ) );
+					assertEquals( 4, h.getUsers().size() );
+					assertOrdering( h.getUsers() );
+				}
+		);
 
 		// HQL (non eager)
-		s = openSession();
-		t = s.beginTransaction();
-		hibernate = ( Group ) s.createQuery( "from Group" ).uniqueResult();
-		assertFalse( Hibernate.isInitialized( hibernate.getUsers() ) );
-		assertEquals( 4, hibernate.getUsers().size() );
-		assertOrdering( hibernate.getUsers() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					Group h = (Group) s.createQuery( "from Group" ).uniqueResult();
+					assertFalse( Hibernate.isInitialized( h.getUsers() ) );
+					assertEquals( 4, h.getUsers().size() );
+					assertOrdering( h.getUsers() );
+				}
+		);
+
 
 		// HQL (eager)
-		s = openSession();
-		t = s.beginTransaction();
-		hibernate = ( Group ) s.createQuery( "from Group g inner join fetch g.users" ).uniqueResult();
-		assertTrue( Hibernate.isInitialized( hibernate.getUsers() ) );
-		assertEquals( 4, hibernate.getUsers().size() );
-		assertOrdering( hibernate.getUsers() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					Group h = ( Group ) s.createQuery( "from Group g inner join fetch g.users" ).uniqueResult();
+					assertTrue( Hibernate.isInitialized( h.getUsers() ) );
+					assertEquals( 4, h.getUsers().size() );
+					assertOrdering( h.getUsers() );
+				}
+		);
 
 		// criteria load (forced eager fetch)
-		s = openSession();
-		t = s.beginTransaction();
-		Criteria criteria = s.createCriteria( Group.class );
-		criteria.setFetchMode( "users", FetchMode.JOIN );
-		hibernate = ( Group ) criteria.uniqueResult();
-		assertTrue( Hibernate.isInitialized( hibernate.getUsers() ) );
-		assertEquals( 4, hibernate.getUsers().size() );
-		assertOrdering( hibernate.getUsers() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<Group> criteria = criteriaBuilder.createQuery( Group.class );
+					criteria.from( Group.class ).fetch( "users", JoinType.LEFT );
+
+					Group h = s.createQuery( criteria ).uniqueResult();
+//					Criteria criteria = s.createCriteria( Group.class );
+//					criteria.setFetchMode( "users", FetchMode.JOIN );
+//					hibernate = ( Group ) criteria.uniqueResult();
+					assertTrue( Hibernate.isInitialized( h.getUsers() ) );
+					assertEquals( 4, h.getUsers().size() );
+					assertOrdering( h.getUsers() );
+				}
+		);
+
 
 		// criteria load (forced non eager fetch)
-		s = openSession();
-		t = s.beginTransaction();
-		criteria = s.createCriteria( Group.class );
-		criteria.setFetchMode( "users", FetchMode.SELECT );
-		hibernate = ( Group ) criteria.uniqueResult();
-		assertFalse( Hibernate.isInitialized( hibernate.getUsers() ) );
-		assertEquals( 4, hibernate.getUsers().size() );
-		assertOrdering( hibernate.getUsers() );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<Group> criteria = criteriaBuilder.createQuery( Group.class );
+					criteria.from( Group.class ).join( "users", JoinType.LEFT );
+
+					Group h = s.createQuery( criteria ).uniqueResult();
+//					criteria = s.createCriteria( Group.class );
+//					criteria.setFetchMode( "users", FetchMode.SELECT );
+//					hibernate = ( Group ) criteria.uniqueResult();
+					assertFalse( Hibernate.isInitialized( h.getUsers() ) );
+					assertEquals( 4, h.getUsers().size() );
+					assertOrdering( h.getUsers() );
+				}
+		);
+
 
 		// clean up
-		s = openSession();
-		t = s.beginTransaction();
-		s.delete( gavin );
-		s.delete( steve );
-		s.delete( max );
-		s.delete( emmanuel );
-		s.delete( hibernate );
-		t.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					s.delete( gavin );
+					s.delete( steve );
+					s.delete( max );
+					s.delete( emmanuel );
+					s.delete( hibernate );
+				}
+		);
 	}
 
 	private void assertOrdering(List users) {

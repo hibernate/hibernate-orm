@@ -167,7 +167,7 @@ public class StatsTest extends BaseUnitTestCase {
 		assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
 //		assertEquals( continents, stats.getQueryExecutionMaxTimeQueryString() );
 
-		Iterator itr = s.createQuery( continents ).iterate();
+		Iterator itr = s.createQuery( continents ).list().iterator();
 		// iterate() should increment the execution count
 		assertEquals( "unexpected execution count", 2, continentStats.getExecutionCount() );
 		// but should not effect the cumulative row count

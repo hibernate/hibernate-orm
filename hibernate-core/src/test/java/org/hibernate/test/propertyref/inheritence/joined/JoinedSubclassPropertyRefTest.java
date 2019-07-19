@@ -6,13 +6,14 @@
  */
 package org.hibernate.test.propertyref.inheritence.joined;
 
-import org.junit.Test;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
 
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -27,43 +28,45 @@ public class JoinedSubclassPropertyRefTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testPropertyRefToJoinedSubclass() {
-		Session session = openSession();
-		Transaction tx = session.beginTransaction();
-		Person p = new Person();
-		p.setName("Gavin King");
-		BankAccount acc = new BankAccount();
-		acc.setBsb("0634");
-		acc.setType('B');
-		acc.setAccountNumber("xxx-123-abc");
-		p.setBankAccount(acc);
-		session.persist(p);
-		tx.commit();
-		session.close();
+		Person person = new Person();
+		inTransaction(
+				session -> {
+					person.setName( "Gavin King" );
+					BankAccount acc = new BankAccount();
+					acc.setBsb( "0634" );
+					acc.setType( 'B' );
+					acc.setAccountNumber( "xxx-123-abc" );
+					person.setBankAccount( acc );
+					session.persist( person );
+				}
+		);
 
-		session = openSession();
-		tx = session.beginTransaction();
-		p = (Person) session.get(Person.class, p.getId());
-		assertNotNull( p.getBankAccount() );
-		assertTrue( Hibernate.isInitialized( p.getBankAccount() ) );
-		tx.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					Person p = session.get( Person.class, person.getId() );
+					assertNotNull( p.getBankAccount() );
+					assertTrue( Hibernate.isInitialized( p.getBankAccount() ) );
+				}
+		);
 
-		session = openSession();
-		tx = session.beginTransaction();
-		p = (Person) session.createCriteria(Person.class)
-			.setFetchMode("bankAccount", FetchMode.JOIN)
-			.uniqueResult();
-		assertNotNull( p.getBankAccount() );
-		assertTrue( Hibernate.isInitialized( p.getBankAccount() ) );
-		tx.commit();
-		session.close();
+		inTransaction(
+				session -> {
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
+					criteria.from( Person.class ).fetch( "bankAccount", JoinType.LEFT );
 
-		session = openSession();
-		tx = session.beginTransaction();
-		session.delete(p);
-		tx.commit();
-		session.close();
+					Person p = session.createQuery( criteria ).uniqueResult();
+//					Person p = (Person) session.createCriteria(Person.class)
+//							.setFetchMode("bankAccount", FetchMode.JOIN)
+//							.uniqueResult();
+					assertNotNull( p.getBankAccount() );
+					assertTrue( Hibernate.isInitialized( p.getBankAccount() ) );
+				}
+		);
+
+		inTransaction(
+				session -> session.delete( person )
+		);
 	}
 
 }
-

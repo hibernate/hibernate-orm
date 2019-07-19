@@ -10,6 +10,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -46,20 +49,30 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		ParentWithCollection dummyParent = createParent( "dummyParent" );
 		dummyParent.setChildren( createCollection() );
 		Child dummyChild = dummyParent.addChild( "dummyChild" );
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		List children = s.createCriteria( dummyChild.getClass() ).list();
-		List parents = s.createCriteria( dummyParent.getClass() ).list();
-		for ( Iterator it = parents.iterator(); it.hasNext(); ) {
-			ParentWithCollection parent = ( ParentWithCollection ) it.next();
-			parent.clearChildren();
-			s.delete( parent );
-		}
-		for ( Iterator it = children.iterator(); it.hasNext(); ) {
-			s.delete( it.next() );
-		}
-		tx.commit();
-		s.close();
+		inTransaction(
+				s -> {
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<? extends Child> childrenCriteria = criteriaBuilder.createQuery( dummyChild.getClass() );
+					childrenCriteria.from( dummyChild.getClass() );
+					List children = s.createQuery( childrenCriteria ).list();
+//					List children = s.createCriteria( dummyChild.getClass() ).list();
+
+					CriteriaQuery<? extends ParentWithCollection> parentsCriteria = criteriaBuilder.createQuery( dummyParent.getClass() );
+					childrenCriteria.from( dummyParent.getClass() );
+					List parents = s.createQuery( parentsCriteria ).list();
+
+//					List children = s.createCriteria( dummyChild.getClass() ).list();
+//					List parents = s.createCriteria( dummyParent.getClass() ).list();
+					for ( Iterator it = parents.iterator(); it.hasNext(); ) {
+						ParentWithCollection parent = ( ParentWithCollection ) it.next();
+						parent.clearChildren();
+						s.delete( parent );
+					}
+					for ( Iterator it = children.iterator(); it.hasNext(); ) {
+						s.delete( it.next() );
+					}
+				}
+		);
 	}
 
 	public ParentWithCollection createParent(String name) {

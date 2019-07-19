@@ -65,7 +65,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 
 		doInHibernate(
 				this::sessionFactory, session -> {
-					Iterator<Person> iterator = session.createQuery( "from Person p", Person.class ).iterate();
+					Iterator<Person> iterator = session.createQuery( "from Person p", Person.class ).list().iterator();
 					assertTrue( iterator.hasNext() );
 					Person p = iterator.next();
 					checkResult( p );

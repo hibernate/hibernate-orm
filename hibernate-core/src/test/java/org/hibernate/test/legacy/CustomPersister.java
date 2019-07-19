@@ -31,6 +31,7 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -738,5 +739,20 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public boolean canUseReferenceCacheEntries() {
 		return false;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
+		return loadQueryInfluencers.getEffectiveEntityGraph().getGraph() != null;
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers loadQueryInfluencers) {
+		return false;
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
+		return false;
 	}
 }

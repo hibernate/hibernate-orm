@@ -7,19 +7,18 @@
 package org.hibernate.test.rowid;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.junit.Test;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jdbc.Work;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -42,18 +41,15 @@ public class RowIdTest extends BaseCoreFunctionalTestCase {
 		super.afterSessionFactoryBuilt();
 		final Session session = sessionFactory().openSession();
 		session.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						Statement st = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().createStatement();
-						try {
-							((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().execute( st, "drop table Point");
-						}
-						catch (Exception ignored) {
-						}
-						((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().execute( st, "create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
-						((SessionImplementor)session).getJdbcCoordinator().getResourceRegistry().release( st );
+				connection -> {
+					Statement st = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().createStatement();
+					try {
+						((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().execute( st, "drop table Point");
 					}
+					catch (Exception ignored) {
+					}
+					((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().execute( st, "create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
+					((SessionImplementor)session).getJdbcCoordinator().getResourceRegistry().release( st );
 				}
 		);
 		session.close();
@@ -61,31 +57,43 @@ public class RowIdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testRowId() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Point p = new Point( new BigDecimal(1.0), new BigDecimal(1.0) );
-		s.persist(p);
-		t.commit();
-		s.clear();
-		
-		t = s.beginTransaction();
-		p = (Point) s.createCriteria(Point.class).uniqueResult();
-		p.setDescription("new desc");
-		t.commit();
-		s.clear();
-		
-		t = s.beginTransaction();
-		p = (Point) s.createQuery("from Point").uniqueResult();
-		p.setDescription("new new desc");
-		t.commit();
-		s.clear();
-		
-		t = s.beginTransaction();
-		p = (Point) s.get(Point.class, p);
-		p.setDescription("new new new desc");
-		t.commit();
-		s.close();
+		inSession(
+				s -> {
+					try {
+						Transaction t = s.beginTransaction();
+						Point p = new Point( new BigDecimal( 1.0 ), new BigDecimal( 1.0 ) );
+						s.persist( p );
+						t.commit();
+						s.clear();
+
+						t = s.beginTransaction();
+						CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+						CriteriaQuery<Point> criteria = criteriaBuilder.createQuery( Point.class );
+						criteria.from( Point.class );
+						p = s.createQuery( criteria ).uniqueResult();
+//						p = (Point) s.createCriteria( Point.class ).uniqueResult();
+						p.setDescription( "new desc" );
+						t.commit();
+						s.clear();
+
+						t = s.beginTransaction();
+						p = (Point) s.createQuery( "from Point" ).uniqueResult();
+						p.setDescription( "new new desc" );
+						t.commit();
+						s.clear();
+
+						t = s.beginTransaction();
+						p = s.get( Point.class, p );
+						p.setDescription( "new new new desc" );
+						t.commit();
+					}
+					finally {
+						if ( s.getTransaction().isActive() ) {
+							s.getTransaction().rollback();
+						}
+					}
+				}
+		);
 	}
 
 }
-

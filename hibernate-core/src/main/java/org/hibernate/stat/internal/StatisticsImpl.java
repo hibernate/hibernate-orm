@@ -628,6 +628,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 					Region region = sessionFactory.getCache().getRegion( regionName );
 
 					if ( region == null ) {
+
+						if ( ! sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
+							return null;
+						}
+
 						// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
 						// NOTE that this method is deprecated
 						region = sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion();

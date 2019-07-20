@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -62,7 +61,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 */
 	@Deprecated
 	public PersistentBag(SessionImplementor session) {
-		this( ( SharedSessionContractImplementor) session );
+		this( (SharedSessionContractImplementor) session );
 	}
 	/**
 	 * Constructs a PersistentBag
@@ -144,20 +143,37 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 		// HHH-11032 - Group objects by Type.getHashCode() to reduce the complexity of the search
 		final Map<Integer, List<Object>> hashToInstancesBag = groupByEqualityHash( bag, elementType );
-		final Map<Integer, List<Object>> HashToInstancesSn = groupByEqualityHash( sn, elementType );
-		if ( hashToInstancesBag.size() != HashToInstancesSn.size() ) {
+		final Map<Integer, List<Object>> hashToInstancesSn = groupByEqualityHash( sn, elementType );
+		if ( hashToInstancesBag.size() != hashToInstancesSn.size() ) {
 			return false;
 		}
 
+		// First iterate over the hashToInstancesBag entries to see if the number
+		// of List values is different for any hash value.
 		for ( Map.Entry<Integer, List<Object>> hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
-			final int hash = hashToInstancesBagEntry.getKey();
+			final Integer hash = hashToInstancesBagEntry.getKey();
 			final List<Object> instancesBag = hashToInstancesBagEntry.getValue();
-			final List<Object> instancesSn = HashToInstancesSn.getOrDefault( hash, Collections.emptyList() );
-			if ( instancesBag.size() != instancesSn.size() ) {
+			final List<Object> instancesSn = hashToInstancesSn.get( hash );
+			if ( instancesSn == null || ( instancesBag.size() != instancesSn.size() ) ) {
 				return false;
 			}
+		}
+
+		// We already know that both hashToInstancesBag and hashToInstancesSn have:
+		// 1) the same hash values;
+		// 2) the same number of values with the same hash value.
+
+		// Now check if the number of occurrences of each element is the same.
+		for ( Map.Entry<Integer, List<Object>> hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
+			final Integer hash = hashToInstancesBagEntry.getKey();
+			final List<Object> instancesBag = hashToInstancesBagEntry.getValue();
+			final List<Object> instancesSn = hashToInstancesSn.get( hash );
 			for ( Object instance : instancesBag ) {
-				if ( countOccurrences( instance, instancesBag, elementType ) != countOccurrences( instance, instancesSn, elementType ) ) {
+				if ( !expectOccurrences(
+						instance,
+						instancesBag,
+						elementType,
+						countOccurrences( instance, instancesSn, elementType ) ) ) {
 					return false;
 				}
 			}
@@ -179,16 +195,26 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		return ( (Collection) snapshot ).isEmpty();
 	}
 
-	private int countOccurrences(Object element, List list, Type elementType)
-			throws HibernateException {
-		final Iterator iter = list.iterator();
+	private int countOccurrences(Object element, List<Object> list, Type elementType) {
 		int result = 0;
-		while ( iter.hasNext() ) {
-			if ( elementType.isSame( element, iter.next() ) ) {
+		for ( Object listElement : list ) {
+			if ( elementType.isSame( element, listElement ) ) {
 				result++;
 			}
 		}
 		return result;
+	}
+
+	private boolean expectOccurrences(Object element, List<Object> list, Type elementType, int expected) {
+		int result = 0;
+		for ( Object listElement : list ) {
+			if ( elementType.isSame( element, listElement ) ) {
+				if ( result++ > expected ) {
+					return false;
+				}
+			}
+		}
+		return result == expected;
 	}
 
 	@Override

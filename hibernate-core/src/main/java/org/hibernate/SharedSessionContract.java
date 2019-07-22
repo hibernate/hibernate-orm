@@ -8,6 +8,11 @@ package org.hibernate;
 
 import java.io.Serializable;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.QueryProducer;
 
@@ -139,4 +144,23 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */
 	void setJdbcBatchSize(Integer jdbcBatchSize);
+
+	/**
+	 * Return an instance of {@link CriteriaBuilder}
+	 *
+	 * @return an instance of CriteriaBuilder
+	 * @throws IllegalStateException if the StatelessSession has been closed
+	 */
+	CriteriaBuilder getCriteriaBuilder();
+
+	@Override
+	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
+
+	<T> org.hibernate.query.Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
+
+	org.hibernate.query.Query createQuery(CriteriaUpdate updateQuery);
+
+	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
+
+	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 }

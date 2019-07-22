@@ -66,6 +66,9 @@ public class GlobalConfiguration {
 	// Support reused identifiers of previously deleted entities
 	private final boolean allowIdentifierReuse;
 
+	// Forces audit reader find by revision methods to perform exact match
+	private final boolean findByRevisionExactMatch;
+
 	/*
 		 Which operator to use in correlated subqueries (when we want a property to be equal to the result of
 		 a correlated subquery, for example: e.p <operator> (select max(e2.p) where e2.p2 = e.p2 ...).
@@ -156,6 +159,10 @@ public class GlobalConfiguration {
 		allowIdentifierReuse = ConfigurationHelper.getBoolean(
 				EnversSettings.ALLOW_IDENTIFIER_REUSE, properties, false
 		);
+
+		findByRevisionExactMatch = ConfigurationHelper.getBoolean(
+				EnversSettings.FIND_BY_REVISION_EXACT_MATCH, properties, false
+		);
 	}
 
 	public EnversService getEnversService() {
@@ -220,5 +227,9 @@ public class GlobalConfiguration {
 
 	public boolean isAllowIdentifierReuse() {
 		return allowIdentifierReuse;
+	}
+
+	public boolean isAuditReaderFindAtRevisionExactMatch() {
+		return findByRevisionExactMatch;
 	}
 }

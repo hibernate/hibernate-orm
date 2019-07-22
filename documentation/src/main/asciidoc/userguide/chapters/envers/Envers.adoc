@@ -298,6 +298,15 @@ Guarantees proper validity audit strategy behavior when application reuses ident
 `*org.hibernate.envers.original_id_prop_name*` (default: `originalId` )::
 Specifies the composite-id key property name used by the audit table mappings.
 
+`*org.hibernate.envers.find_by_revision_exact_match*` (default: `false` )::
+Specifies whether or not `AuditReader#find` methods which accept a revision-number argument are to find results based on fuzzy-match or exact-match behavior.
++
+The old (legacy) behavior has always been to perform a fuzzy-match where these methods would return a match if any revision existed for the primary-key with a revision-number less-than or equal-to the revision method argument.
+This behavior is great when you want to find the snapshot of a non-related entity based on another entity's revision number.
++
+The new (optional) behavior when this option is enabled forces the query to perform an exact-match instead.
+In order for these methods to return a non-`null` value, a revision entry must exist for the entity with the specified primary key and revision number; otherwise the result will be `null`.
+
 [IMPORTANT]
 ====
 The following configuration options have been added recently and should be regarded as experimental:
@@ -306,6 +315,7 @@ The following configuration options have been added recently and should be regar
 .  `org.hibernate.envers.using_modified_flag`
 .  `org.hibernate.envers.modified_flag_suffix`
 .  `org.hibernate.envers.original_id_prop_name`
+.  `org.hibernate.envers.find_by_revision_exact_match`
 ====
 
 [[envers-additional-mappings]]

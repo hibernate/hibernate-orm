@@ -119,4 +119,18 @@ public interface EnversSettings {
 	 * Exactly one row with {@code null} end date exists for each identifier.
 	 */
 	String ALLOW_IDENTIFIER_REUSE = "org.hibernate.envers.allow_identifier_reuse";
+
+	/**
+	 * Forces {@code AuditReader#find} implementations that accept a revision-number argument to perform an exact
+	 * match against the supplied revision number rather than potentially returning hits that are less-than or
+	 * equal-to the supplied revision number.
+	 *
+	 * This option is meant to maintain backward compatibility while attempting to correct a bug in behavior without
+	 * impacting existing users who may use the current behavior.
+	 * 
+	 * Defaults to {@literal false}.
+	 *
+	 * @since 5.4.4
+	 */
+	String FIND_BY_REVISION_EXACT_MATCH = "org.hibernate.envers.find_by_revision_exact_match";
 }

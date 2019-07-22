@@ -71,16 +71,6 @@ public class AuditProperty<T> implements AuditProjection {
 
 	/**
 	 * Apply a "like" constraint
-	 *
-	 * @deprecated since 5.2, use {@link #like(String, MatchMode)}.
-	 */
-	@Deprecated
-	public AuditCriterion like(String value, org.hibernate.criterion.MatchMode matchMode) {
-		return new SimpleAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ), " like" );
-	}
-
-	/**
-	 * Apply a "like" constraint
 	 */
 	public AuditCriterion like(String value, MatchMode matchMode) {
 		return new SimpleAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ), " like " );
@@ -91,16 +81,6 @@ public class AuditProperty<T> implements AuditProjection {
      */
 	public AuditCriterion ilike(T value) {
 		return new IlikeAuditExpression( alias, propertyNameGetter, value.toString() );
-	}
-
-	/**
-	 * Apply an "ilike" constraint
-	 *
-	 * @deprecated since 5.2, use {@link #ilike(String, MatchMode)}.
-	 */
-	@Deprecated
-	public AuditCriterion ilike(String value, org.hibernate.criterion.MatchMode matchMode) {
-		return new IlikeAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ) );
 	}
 
 	/**

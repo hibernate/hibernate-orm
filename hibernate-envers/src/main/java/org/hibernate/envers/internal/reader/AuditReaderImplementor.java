@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.internal.reader;
 
+import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.AuditReader;
 
@@ -17,7 +18,7 @@ import org.hibernate.envers.AuditReader;
 public interface AuditReaderImplementor extends AuditReader {
 	SessionImplementor getSessionImplementor();
 
-	SessionImplementor getSession();
+	Session getSession();
 
 	FirstLevelCache getFirstLevelCache();
 }

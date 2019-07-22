@@ -80,7 +80,7 @@ public class EntityInstantiator {
 					.getFactory()
 					.getEntityPersister( entityName )
 					.getEntityTuplizer()
-					.instantiate( null, versionsReader.getSession() );
+					.instantiate( null, versionsReader.getSessionImplementor() );
 
 		// Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional
 		// relation is present (which is eagerly loaded).

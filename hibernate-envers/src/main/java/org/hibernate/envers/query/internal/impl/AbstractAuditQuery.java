@@ -303,7 +303,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 			query.setComment( comment );
 		}
 		if ( flushMode != null ) {
-			query.setFlushMode( flushMode );
+			query.setHibernateFlushMode( flushMode );
 		}
 		if ( cacheMode != null ) {
 			query.setCacheMode( cacheMode );

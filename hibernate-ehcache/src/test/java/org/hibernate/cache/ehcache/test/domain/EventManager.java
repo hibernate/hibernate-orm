@@ -12,7 +12,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.hibernate.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
@@ -104,17 +107,24 @@ public class EventManager {
 
 		Session session = sessionFactory.getCurrentSession();
 
-		session.beginTransaction();
+		try {
+			session.beginTransaction();
+			Query query = session.createQuery( "from Event ev where ev.organizer = :organizer" );
 
-		Query query = session.createQuery("from Event ev where ev.organizer = :organizer");
+			query.setCacheable( true );
+			query.setParameter( "organizer", organizer );
+			List result = query.list();
 
-		query.setCacheable(true);
-		query.setEntity("organizer", organizer);
-		List result = query.list();
+			session.getTransaction().commit();
 
-		session.getTransaction().commit();
-
-		return result;
+			return result;
+		}
+		catch (Exception e) {
+			if ( session.getTransaction().isActive() ) {
+				session.getTransaction().rollback();
+			}
+			throw e;
+		}
 	}
 
 	/**
@@ -123,15 +133,25 @@ public class EventManager {
 	public List listEventsWithCriteria() {
 		Session session = sessionFactory.getCurrentSession();
 
-		session.beginTransaction();
+		try {
+			session.beginTransaction();
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<Event> criteria = criteriaBuilder.createQuery( Event.class );
+			criteria.from( Event.class );
+			List<Event> result = session.createQuery( criteria ).setCacheable( true ).list();
+//		List result = session.createCriteria(Event.class)
+//			.setCacheable(true)
+//			.list();
 
-		List result = session.createCriteria(Event.class)
-			.setCacheable(true)
-			.list();
-
-		session.getTransaction().commit();
-
-		return result;
+			session.getTransaction().commit();
+			return result;
+		}
+		catch (Exception e) {
+			if ( session.getTransaction().isActive() ) {
+				session.getTransaction().rollback();
+			}
+			throw e;
+		}
 	}
 
 	public void addPersonToEvent(Long personId, Long eventId) {

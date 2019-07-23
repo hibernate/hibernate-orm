@@ -80,10 +80,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			values = (List<Object>) coll;
 		}
 		else {
-			values = new ArrayList<>();
-			for ( Object element : coll ) {
-				values.add( element );
-			}
+			values = new ArrayList<>( coll );
 		}
 		setInitialized();
 		setDirectlyAccessible( true );

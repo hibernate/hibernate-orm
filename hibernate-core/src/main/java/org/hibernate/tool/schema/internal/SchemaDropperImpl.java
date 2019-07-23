@@ -548,7 +548,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		}
 
-		private class JdbcContextDelayedDropImpl implements JdbcContext {
+		private static class JdbcContextDelayedDropImpl implements JdbcContext {
 			private final ServiceRegistry serviceRegistry;
 			private final JdbcServices jdbcServices;
 			private final JdbcConnectionAccess jdbcConnectionAccess;

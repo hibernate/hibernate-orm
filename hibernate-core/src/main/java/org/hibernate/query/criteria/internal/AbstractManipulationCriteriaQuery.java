@@ -17,6 +17,7 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
 import org.hibernate.query.criteria.internal.compile.CriteriaInterpretation;
@@ -38,7 +39,6 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 
 	private RootImpl<T> root;
 	private Predicate restriction;
-	private List<Subquery<?>> subQueries;
 
 	protected AbstractManipulationCriteriaQuery(CriteriaBuilderImpl criteriaBuilder) {
 		this.criteriaBuilder = criteriaBuilder;
@@ -105,7 +105,7 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 			@Override
 			@SuppressWarnings("unchecked")
 			public QueryImplementor buildCompiledQuery(
-					SessionImplementor entityManager,
+					SharedSessionContractImplementor entityManager,
 					final InterpretedParameterMetadata interpretedParameterMetadata) {
 
 				final Map<String,Class> implicitParameterTypes = extractTypeMap( interpretedParameterMetadata.implicitParameterBindings() );

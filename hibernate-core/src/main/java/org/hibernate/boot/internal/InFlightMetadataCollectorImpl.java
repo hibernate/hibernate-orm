@@ -1356,7 +1356,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		return xrefEntry == null ? null : xrefEntry.secondaryTableJoinMap;
 	}
 
-	private final class EntityTableXrefImpl implements EntityTableXref {
+	private static final class EntityTableXrefImpl implements EntityTableXref {
 		private final Identifier primaryTableLogicalName;
 		private final Table primaryTable;
 		private EntityTableXrefImpl superEntityTableXref;
@@ -1691,8 +1691,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		ArrayList<CopyIdentifierComponentSecondPass> sorted =
 				new ArrayList<>( copyIdentifierComponentSecondPasList.size() );
-		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<>();
-		toSort.addAll( copyIdentifierComponentSecondPasList );
+		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<>( copyIdentifierComponentSecondPasList );
 		topologicalSort( sorted, toSort );
 		copyIdentifierComponentSecondPasList = sorted;
 	}
@@ -2131,8 +2130,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return;
 		}
 
-		for ( Table table : jpaIndexHoldersByTable.keySet() ) {
-			final List<JPAIndexHolder> jpaIndexHolders = jpaIndexHoldersByTable.get( table );
+		for ( Map.Entry<Table, List<JPAIndexHolder>> entry : jpaIndexHoldersByTable.entrySet() ) {
+			final Table table = entry.getKey();
+			final List<JPAIndexHolder> jpaIndexHolders = entry.getValue();
 			for ( JPAIndexHolder holder : jpaIndexHolders ) {
 				buildUniqueKeyFromColumnNames(
 						table,

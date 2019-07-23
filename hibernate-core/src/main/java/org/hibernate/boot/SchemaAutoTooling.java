@@ -53,7 +53,11 @@ public enum SchemaAutoTooling {
 	}
 
 	public static SchemaAutoTooling interpret(String configurationValue) {
-		if ( StringHelper.isEmpty( configurationValue ) || NONE.externalForm.equals( configurationValue ) ) {
+		if ( configurationValue == null ) {
+			return null;
+		}
+		configurationValue = configurationValue.trim();
+		if ( configurationValue.isEmpty() || NONE.externalForm.equals( configurationValue ) ) {
 			return null;
 		}
 		else if ( VALIDATE.externalForm.equals( configurationValue ) ) {
@@ -76,8 +80,8 @@ public enum SchemaAutoTooling {
 		}
 		else {
 			throw new HibernateException(
-					"Unrecognized " + AvailableSettings.HBM2DDL_AUTO + " value: " + configurationValue
-							+ ".  Supported values include 'create', 'create-drop', 'create-only', 'drop', 'update', 'none' and 'validate'."
+					"Unrecognized " + AvailableSettings.HBM2DDL_AUTO + " value: '" + configurationValue
+							+ "'.  Supported values include 'create', 'create-drop', 'create-only', 'drop', 'update', 'none' and 'validate'."
 			);
 		}
 	}

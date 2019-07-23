@@ -48,7 +48,7 @@ public enum MissingCacheStrategy {
 			return (MissingCacheStrategy) value;
 		}
 
-		final String externalRepresentation = value == null ? null : value.toString();
+		final String externalRepresentation = value == null ? null : value.toString().trim();
 
 		if ( StringHelper.isEmpty( externalRepresentation ) ) {
 			// Use the default
@@ -61,6 +61,6 @@ public enum MissingCacheStrategy {
 			}
 		}
 
-		throw new IllegalArgumentException( "Unrecognized missing cache strategy value : " + value );
+		throw new IllegalArgumentException( "Unrecognized missing cache strategy value : `" + value + '`');
 	}
 }

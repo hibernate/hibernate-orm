@@ -17,6 +17,7 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
@@ -46,14 +47,15 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 	 */
 	public void onReplicate(ReplicateEvent event) {
 		final EventSource source = event.getSession();
-		if ( source.getPersistenceContext().reassociateIfUninitializedProxy( event.getObject() ) ) {
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		if ( persistenceContext.reassociateIfUninitializedProxy( event.getObject() ) ) {
 			LOG.trace( "Uninitialized proxy passed to replicate()" );
 			return;
 		}
 
-		Object entity = source.getPersistenceContext().unproxyAndReassociate( event.getObject() );
+		Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
 
-		if ( source.getPersistenceContext().isEntryFor( entity ) ) {
+		if ( persistenceContext.isEntryFor( entity ) ) {
 			LOG.trace( "Ignoring persistent instance passed to replicate()" );
 			//hum ... should we cascade anyway? throw an exception? fine like it is?
 			return;
@@ -82,9 +84,8 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			oldVersion = persister.getCurrentVersion( id, source );
 		}
 
-		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( oldVersion != null ) {
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Found existing row for {0}", MessageHelper.infoString(
 						persister,
@@ -109,7 +110,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			if ( canReplicate ) {
 				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
 			}
-			else if ( traceEnabled ) {
+			else if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "No need to replicate" );
 			}
 
@@ -117,7 +118,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		}
 		else {
 			// no existing row - do an insert
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"No existing row, replicating new instance {0}",
 						MessageHelper.infoString( persister, id, source.getFactory() )
@@ -182,7 +183,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 
 		new OnReplicateVisitor( source, id, entity, true ).process( entity, persister );
 
-		source.getPersistenceContext().addEntity(
+		source.getPersistenceContextInternal().addEntity(
 				entity,
 				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				null,
@@ -202,7 +203,8 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			EntityPersister persister,
 			ReplicationMode replicationMode,
 			EventSource source) {
-		source.getPersistenceContext().incrementCascadeLevel();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(
 					CascadingActions.REPLICATE,
@@ -214,7 +216,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			);
 		}
 		finally {
-			source.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 		}
 	}
 

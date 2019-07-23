@@ -6,8 +6,8 @@
  */
 
 plugins {
-  id "org.wildfly.build.provision"   version '0.0.9'
-  id "org.wildfly.build.featurepack" version '0.0.9'
+  id "org.wildfly.build.provision"   version '0.0.11'
+  id "org.wildfly.build.featurepack" version '0.0.11'
 }
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
@@ -60,7 +60,7 @@ repositories {
 	mavenCentral()
 	maven {
 		name 'jboss-public'
-		url 'http://repository.jboss.org/nexus/content/groups/public/'
+		url 'https://repository.jboss.org/nexus/content/groups/public/'
 	}
 }
 

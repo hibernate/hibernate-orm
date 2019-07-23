@@ -52,7 +52,7 @@ public class EntityReturnReader implements ReturnReader {
 		final Object entityInstance = context.getProcessingState( entityReturn ).getEntityInstance();
 
 		if ( context.shouldReturnProxies() ) {
-			final Object proxy = context.getSession().getPersistenceContext().proxyFor(
+			final Object proxy = context.getSession().getPersistenceContextInternal().proxyFor(
 					entityReturn.getEntityPersister(),
 					entityKey,
 					entityInstance

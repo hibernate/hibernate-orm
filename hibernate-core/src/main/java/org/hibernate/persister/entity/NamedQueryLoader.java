@@ -77,7 +77,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 
 		// now look up the object we are really interested in!
 		// (this lets us correctly handle proxies and multi-row or multi-column queries)
-		return session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
+		return session.getPersistenceContextInternal().getEntity( session.generateEntityKey( id, persister ) );
 
 	}
 }

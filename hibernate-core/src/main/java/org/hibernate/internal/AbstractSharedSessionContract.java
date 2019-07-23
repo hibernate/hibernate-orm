@@ -17,6 +17,10 @@ import java.util.UUID;
 import javax.persistence.FlushModeType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.Tuple;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Selection;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -63,6 +67,8 @@ import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.jpa.spi.CriteriaQueryTupleTransformer;
+import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.jpa.spi.TupleBuilderTransformer;
 import org.hibernate.persister.entity.EntityPersister;
@@ -71,6 +77,9 @@ import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
+import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
+import org.hibernate.query.criteria.internal.compile.CriteriaCompiler;
+import org.hibernate.query.criteria.internal.expression.CompoundSelectionImpl;
 import org.hibernate.query.internal.NativeQueryImpl;
 import org.hibernate.query.internal.QueryImpl;
 import org.hibernate.query.spi.NativeQueryImplementor;
@@ -139,6 +148,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private Integer jdbcBatchSize;
 
 	protected transient ExceptionConverter exceptionConverter;
+
+	private CriteriaCompiler criteriaCompiler;
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
@@ -494,7 +505,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean isConnected() {
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		return jdbcCoordinator.getLogicalConnection().isOpen();
 	}
 
@@ -618,7 +629,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public QueryImplementor getNamedQuery(String name) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		// look as HQL/JPQL first
@@ -711,7 +722,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public QueryImplementor createQuery(String queryString) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -730,6 +741,81 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	@SuppressWarnings("WeakerAccess")
+	protected CriteriaCompiler criteriaCompiler() {
+		if ( criteriaCompiler == null ) {
+			criteriaCompiler = new CriteriaCompiler( this );
+		}
+		return criteriaCompiler;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+		checkOpen();
+		try {
+			return (QueryImplementor<T>) criteriaCompiler().compile( (CompilableCriteria) criteriaQuery );
+		}
+		catch ( RuntimeException e ) {
+			throw exceptionConverter.convert( e );
+		}
+	}
+
+	@Override
+	public QueryImplementor createQuery(CriteriaUpdate criteriaUpdate) {
+		checkOpen();
+		try {
+			return criteriaCompiler().compile( (CompilableCriteria) criteriaUpdate );
+		}
+		catch ( RuntimeException e ) {
+			throw exceptionConverter.convert( e );
+		}
+	}
+
+	@Override
+	public QueryImplementor createQuery(CriteriaDelete criteriaDelete) {
+		checkOpen();
+		try {
+			return criteriaCompiler().compile( (CompilableCriteria) criteriaDelete );
+		}
+		catch ( RuntimeException e ) {
+			throw exceptionConverter.convert( e );
+		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> QueryImplementor<T> createQuery(
+			String jpaqlString,
+			Class<T> resultClass,
+			Selection selection,
+			HibernateEntityManagerImplementor.QueryOptions queryOptions) {
+		try {
+			final QueryImplementor query = createQuery( jpaqlString );
+
+			if ( queryOptions.getValueHandlers() == null ) {
+				if ( queryOptions.getResultMetadataValidator() != null ) {
+					queryOptions.getResultMetadataValidator().validate( query.getReturnTypes() );
+				}
+			}
+
+			// determine if we need a result transformer
+			List tupleElements = Tuple.class.equals( resultClass )
+					? ( (CompoundSelectionImpl<Tuple>) selection ).getCompoundSelectionItems()
+					: null;
+			if ( queryOptions.getValueHandlers() != null || tupleElements != null ) {
+				query.setResultTransformer(
+						new CriteriaQueryTupleTransformer( queryOptions.getValueHandlers(), tupleElements )
+				);
+			}
+
+			return query;
+		}
+		catch ( RuntimeException e ) {
+			throw exceptionConverter.convert( e );
+		}
+	}
+
 	protected void applyQuerySettingsAndHints(Query query) {
 	}
 
@@ -737,7 +823,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings("unchecked")
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultClass) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -810,7 +896,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected  <T> QueryImplementor<T> buildQueryFromName(String name, Class<T> resultType) {
 		checkOpen();
 		try {
-			checkTransactionSynchStatus();
+			pulseTransactionCoordinator();
 			delayedAfterCompletion();
 
 			// todo : apply stored setting at the JPA Query level too
@@ -934,7 +1020,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -959,7 +1045,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
@@ -975,7 +1061,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public NativeQueryImplementor getNamedNativeQuery(String name) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
@@ -995,7 +1081,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			String queryString,
 			boolean isOrdinalParameterZeroBased) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {

@@ -3,6 +3,23 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.3.Final (May 30, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31762/tab/release-report-done
+
+** Bug
+    * [HHH-13343] - Bytecode enhancement using ByteBuddy fails when the class is not available from the provided ClassLoader 
+    * [HHH-13364] - Query.getSingleResult and getResultList() throw PessimisticLockException when pessimistic lock fails with timeout
+    * [HHH-13418] - Revert log level caching in static fields
+
+** Task
+    * [HHH-13416] - Unguarded debug message being rendered in org.hibernate.engine.internal.Collections.processReachableCollection
+    * [HHH-13419] - Support building javadoc with JDK 11.0.3
+    * [HHH-13421] - Disable OSGi testing for JDK 11+
+
+
+
 Changes in 5.4.2.Final (March 21, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

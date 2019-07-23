@@ -38,8 +38,7 @@ public class NativeSQLQuerySpecification {
 			this.querySpaces = Collections.EMPTY_SET;
 		}
 		else {
-			Set tmp = new HashSet();
-			tmp.addAll( querySpaces );
+			Set tmp = new HashSet( querySpaces );
 			this.querySpaces = Collections.unmodifiableSet( tmp );
 		}
 

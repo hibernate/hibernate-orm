@@ -66,7 +66,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 			addAssociationsToTheSetForAllProperties(
 					componentType.getPropertyNames(),
 					componentType.getSubtypes(),
-					(prefix.equals( "" ) ? name : prefix + name) + ".",
+					( prefix.isEmpty() ? name : prefix + name) + '.',
 					factory);
 		}
 	}
@@ -75,7 +75,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 		StringBuilder path = new StringBuilder( );
 		for ( Path.Node node : pathToTraversableObject ) {
 			if (node.getName() != null) {
-				path.append( node.getName() ).append( "." );
+				path.append( node.getName() ).append( '.' );
 			}
 		}
 		if ( traversableProperty.getName() == null ) {

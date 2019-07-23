@@ -29,6 +29,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * Acts as a cache for compiled query plans, as well as query-parameter metadata.
@@ -124,12 +125,7 @@ public class QueryPlanCache implements Serializable {
 	 */
 	public ParameterMetadata getSQLParameterMetadata(final String query, boolean isOrdinalParameterZeroBased)  {
 		final ParameterMetadataKey key = new ParameterMetadataKey( query, isOrdinalParameterZeroBased );
-		ParameterMetadataImpl value = parameterMetadataCache.get( key );
-		if ( value == null ) {
-			value = nativeQueryInterpreter.getParameterMetadata( query );
-			parameterMetadataCache.putIfAbsent( key, value );
-		}
-		return value;
+		return parameterMetadataCache.computeIfAbsent( key, k -> nativeQueryInterpreter.getParameterMetadata( query ) );
 	}
 
 	/**
@@ -149,7 +145,8 @@ public class QueryPlanCache implements Serializable {
 			throws QueryException, MappingException {
 		final HQLQueryPlanKey key = new HQLQueryPlanKey( queryString, shallow, enabledFilters );
 		HQLQueryPlan value = (HQLQueryPlan) queryPlanCache.get( key );
-		boolean stats = factory.getStatistics().isStatisticsEnabled();
+		final StatisticsImplementor statistics = factory.getStatistics();
+		boolean stats = statistics.isStatisticsEnabled();
 
 		if ( value == null ) {
 			final long startTime = ( stats ) ? System.nanoTime() : 0L;
@@ -160,7 +157,7 @@ public class QueryPlanCache implements Serializable {
 			if ( stats ) {
 				final long endTime = System.nanoTime();
 				final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				factory.getStatistics().queryCompiled( queryString, microseconds );
+				statistics.queryCompiled( queryString, microseconds );
 			}
 
 			queryPlanCache.putIfAbsent( key, value );
@@ -169,7 +166,7 @@ public class QueryPlanCache implements Serializable {
 			LOG.tracev( "Located HQL query plan in cache ({0})", queryString );
 
 			if ( stats ) {
-				factory.getStatistics().queryPlanCacheHit( queryString );
+				statistics.queryPlanCacheHit( queryString );
 			}
 		}
 		return value;
@@ -348,15 +345,16 @@ public class QueryPlanCache implements Serializable {
 
 		private DynamicFilterKey(FilterImpl filter) {
 			this.filterName = filter.getName();
-			if ( filter.getParameters().isEmpty() ) {
+			final Map<String, ?> parameters = filter.getParameters();
+			if ( parameters.isEmpty() ) {
 				parameterMetadata = Collections.emptyMap();
 			}
 			else {
 				parameterMetadata = new HashMap<String,Integer>(
-						CollectionHelper.determineProperSizing( filter.getParameters() ),
+						CollectionHelper.determineProperSizing( parameters ),
 						CollectionHelper.LOAD_FACTOR
 				);
-				for ( Object o : filter.getParameters().entrySet() ) {
+				for ( Object o : parameters.entrySet() ) {
 					final Map.Entry entry = (Map.Entry) o;
 					final String key = (String) entry.getKey();
 					final Integer valueCount;
@@ -413,8 +411,7 @@ public class QueryPlanCache implements Serializable {
 				this.filterNames = Collections.emptySet();
 			}
 			else {
-				final Set<String> tmp = new HashSet<String>();
-				tmp.addAll( enabledFilters.keySet() );
+				final Set<String> tmp = new HashSet<String>( enabledFilters.keySet() );
 				this.filterNames = Collections.unmodifiableSet( tmp );
 
 			}

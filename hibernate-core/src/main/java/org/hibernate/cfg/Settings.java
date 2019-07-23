@@ -64,9 +64,7 @@ public final class Settings {
 		this.defaultCatalogName = defaultCatalogName;
 		this.defaultSchemaName = defaultSchemaName;
 
-		final boolean debugEnabled =  LOG.isDebugEnabled();
-
-		if ( debugEnabled ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "SessionFactory name : %s", sessionFactoryOptions.getSessionFactoryName() );
 			LOG.debugf( "Automatic flush during beforeCompletion(): %s", enabledDisabled( sessionFactoryOptions.isFlushBeforeCompletionEnabled() ) );
 			LOG.debugf( "Automatic session close at end of transaction: %s", enabledDisabled( sessionFactoryOptions.isAutoCloseSessionEnabled() ) );

@@ -19,6 +19,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.Collections;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
@@ -77,7 +78,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		EventSource session = event.getSession();
 
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		session.getInterceptor().preFlush( new LazyIterator( persistenceContext.getEntitiesByKey() ) );
 
 		prepareEntityFlushes( session, persistenceContext );
@@ -111,7 +112,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			return;
 		}
 		final EventSource session = event.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		LOG.debugf(
 				"Flushed: %s insertions, %s updates, %s deletions to %s objects",
 				session.getActionQueue().numberOfInsertions(),
@@ -154,12 +155,13 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, Object anything)
 	throws HibernateException {
-		session.getPersistenceContext().incrementCascadeLevel();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
 		}
 		finally {
-			session.getPersistenceContext().decrementCascadeLevel();
+			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
@@ -193,7 +195,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.debug( "Dirty checking collections" );
 
 		for ( Map.Entry<PersistentCollection,CollectionEntry> entry :
-				IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+				IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() ) ) {
 			entry.getValue().preFlush( entry.getKey() );
 		}
 	}
@@ -269,7 +271,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		ActionQueue actionQueue = session.getActionQueue();
 		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
-			IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+			IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() ) ) {
 			PersistentCollection coll = me.getKey();
 			CollectionEntry ce = me.getValue();
 
@@ -347,17 +349,20 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		//		during-flush callbacks more leniency in regards to initializing proxies and
 		//		lazy collections during their processing.
 		// For more information, see HHH-2763
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		try {
-			session.getJdbcCoordinator().flushBeginning();
-			session.getPersistenceContext().setFlushing( true );
+			jdbcCoordinator.flushBeginning();
+			persistenceContext.setFlushing( true );
 			// we need to lock the collection caches before executing entity inserts/updates in order to
 			// account for bi-directional associations
-			session.getActionQueue().prepareActions();
-			session.getActionQueue().executeActions();
+			final ActionQueue actionQueue = session.getActionQueue();
+			actionQueue.prepareActions();
+			actionQueue.executeActions();
 		}
 		finally {
-			session.getPersistenceContext().setFlushing( false );
-			session.getJdbcCoordinator().flushEnding();
+			persistenceContext.setFlushing( false );
+			jdbcCoordinator.flushEnding();
 		}
 	}
 
@@ -375,7 +380,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.trace( "Post flush" );
 
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.getCollectionsByKey().clear();
 		
 		// the database has changed now, so the subselect results need to be invalidated
@@ -406,6 +411,6 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	protected void postPostFlush(SessionImplementor session) {
-		session.getInterceptor().postFlush( new LazyIterator( session.getPersistenceContext().getEntitiesByKey() ) );
+		session.getInterceptor().postFlush( new LazyIterator( session.getPersistenceContextInternal().getEntitiesByKey() ) );
 	}
 }

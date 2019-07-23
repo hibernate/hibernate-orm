@@ -38,6 +38,9 @@ import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeDescriptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
@@ -61,6 +64,7 @@ import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -72,8 +76,10 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -123,6 +129,7 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
@@ -553,7 +560,7 @@ public abstract class AbstractEntityPersister
 			this.naturalIdRegionAccessStrategy = null;
 		}
 
-		this.entityMetamodel = new EntityMetamodel( persistentClass, this, factory );
+		this.entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
 
 		if ( entityMetamodel.isMutable() ) {
@@ -686,7 +693,20 @@ public abstract class AbstractEntityPersister
 			propertyColumnWriters[i] = colWriters;
 			propertyColumnAliases[i] = colAliases;
 
-			if ( lazyAvailable && prop.isLazy() ) {
+			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
+					prop,
+					entityMetamodel.isInstrumented(),
+					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled(),
+					associatedEntityName -> {
+						final PersistentClass bootEntityDescriptor = creationContext.getMetadata().getEntityBinding( associatedEntityName );
+						if ( bootEntityDescriptor == null ) {
+							return false;
+						}
+						return bootEntityDescriptor.hasSubclasses();
+					}
+			);
+
+			if ( lazy ) {
 				lazyNames.add( prop.getName() );
 				lazyNumbers.add( i );
 				lazyTypes.add( prop.getValue().getType() );
@@ -756,7 +776,18 @@ public abstract class AbstractEntityPersister
 			int[] colnos = new int[prop.getColumnSpan()];
 			int[] formnos = new int[prop.getColumnSpan()];
 			int l = 0;
-			Boolean lazy = Boolean.valueOf( prop.isLazy() && lazyAvailable );
+			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
+					prop,
+					entityMetamodel.isInstrumented(),
+					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled(),
+					associatedEntityName -> {
+						final PersistentClass bootEntityDescriptor = creationContext.getMetadata().getEntityBinding( associatedEntityName );
+						if ( bootEntityDescriptor == null ) {
+							return false;
+						}
+						return bootEntityDescriptor.hasSubclasses();
+					}
+			);
 			while ( colIter.hasNext() ) {
 				Selectable thing = (Selectable) colIter.next();
 				if ( thing.isFormula() ) {
@@ -1026,8 +1057,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {
-		final EntityEntry entry = session.getPersistenceContext().getEntry( entity );
-		final InterceptorImplementor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final EntityEntry entry = persistenceContext.getEntry( entity );
+		final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
 		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
 
 		if ( hasCollections() ) {
@@ -1047,26 +1079,26 @@ public abstract class AbstractEntityPersister
 				// see if there is already a collection instance associated with the session
 				// 		NOTE : can this ever happen?
 				final Serializable key = getCollectionKey( persister, entity, entry, session );
-				PersistentCollection collection = session.getPersistenceContext().getCollection( new CollectionKey( persister, key ) );
+				PersistentCollection collection = persistenceContext.getCollection( new CollectionKey( persister, key ) );
 				if ( collection == null ) {
 					collection = collectionType.instantiate( session, persister, key );
 					collection.setOwner( entity );
-					session.getPersistenceContext().addUninitializedCollection( persister, collection, key );
+					persistenceContext.addUninitializedCollection( persister, collection, key );
 				}
 
-				// HHH-11161 Initialize, if the collection is not extra lazy
-				if ( !persister.isExtraLazy() ) {
-					session.initializeCollection( collection, false );
-				}
+//				// HHH-11161 Initialize, if the collection is not extra lazy
+//				if ( !persister.isExtraLazy() ) {
+//					session.initializeCollection( collection, false );
+//				}
 				interceptor.attributeInitialized( fieldName );
 
 				if ( collectionType.isArrayType() ) {
-					session.getPersistenceContext().addCollectionHolder( collection );
+					persistenceContext.addCollectionHolder( collection );
 				}
 
 				// update the "state" of the entity's EntityEntry to over-write UNFETCHED_PROPERTY reference
 				// for the collection to the just loaded collection
-				final EntityEntry ownerEntry = session.getPersistenceContext().getEntry( entity );
+				final EntityEntry ownerEntry = persistenceContext.getEntry( entity );
 				if ( ownerEntry == null ) {
 					// not good
 					throw new AssertionFailure(
@@ -1148,10 +1180,10 @@ public abstract class AbstractEntityPersister
 			throw new AssertionFailure( "no lazy properties" );
 		}
 
-		final InterceptorImplementor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+		final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
 		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
 
-		LOG.trace( "Initializing lazy properties from datastore" );
+		LOG.tracef( "Initializing lazy properties from datastore (triggered for `%s`)", fieldName );
 
 		final String fetchGroup = getEntityMetamodel().getBytecodeEnhancementMetadata()
 				.getLazyAttributesMetadata()
@@ -2523,8 +2555,9 @@ public abstract class AbstractEntityPersister
 		}
 		catch (StaleStateException e) {
 			if ( !isNullableTable( tableNumber ) ) {
-				if ( getFactory().getStatistics().isStatisticsEnabled() ) {
-					getFactory().getStatistics().optimisticFailure( getEntityName() );
+				final StatisticsImplementor statistics = getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.optimisticFailure( getEntityName() );
 				}
 				throw new StaleObjectStateException( getEntityName(), id );
 			}
@@ -3423,8 +3456,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Deleting entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
 			if ( useVersion ) {
 				LOG.tracev( "Version: {0}", version );
@@ -3432,7 +3464,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( isTableCascadeDeleteEnabled( j ) ) {
-			if ( traceEnabled ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Delete handled by foreign key constraint: {0}", getTableName( j ) );
 			}
 			return; //EARLY EXIT!
@@ -3573,7 +3605,7 @@ public abstract class AbstractEntityPersister
 //					}
 //					// no dirty fields and no dirty collections so no update needed ???
 //				}
-				if ( fieldsPreUpdateNeeded.length != 0 && dirtyFields != null ) {
+				if ( dirtyFields != null ) {
 					dirtyFields = ArrayHelper.join( dirtyFields, ArrayHelper.trim( fieldsPreUpdateNeeded, count ) );
 				}
 			}
@@ -3587,7 +3619,7 @@ public abstract class AbstractEntityPersister
 
 		final boolean[] propsToUpdate;
 		final String[] updateStrings;
-		EntityEntry entry = session.getPersistenceContext().getEntry( object );
+		EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
 
 		// Ensure that an immutable or non-modifiable entity is not being updated unless it is
 		// in the process of being deleted.
@@ -3724,9 +3756,10 @@ public abstract class AbstractEntityPersister
 			//
 			// Note, it potentially could be a proxy, so doAfterTransactionCompletion the location the safe way...
 			final EntityKey key = session.generateEntityKey( id, this );
-			Object entity = session.getPersistenceContext().getEntity( key );
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			Object entity = persistenceContext.getEntity( key );
 			if ( entity != null ) {
-				EntityEntry entry = session.getPersistenceContext().getEntry( entity );
+				EntityEntry entry = persistenceContext.getEntry( entity );
 				loadedState = entry.getLoadedState();
 			}
 		}
@@ -4280,6 +4313,62 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public Object initializeEnhancedEntityUsedAsProxy(
+			Object entity,
+			String nameOfAttributeBeingAccessed,
+			SharedSessionContractImplementor session) {
+		final BytecodeEnhancementMetadata enhancementMetadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
+		final BytecodeLazyAttributeInterceptor currentInterceptor = enhancementMetadata.extractLazyInterceptor( entity );
+		if ( currentInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+			final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) currentInterceptor;
+
+			final EntityKey entityKey = proxyInterceptor.getEntityKey();
+			final Serializable identifier = entityKey.getIdentifier();
+			final Object loaded = readLockLoader.load(
+					identifier,
+					entity,
+					session,
+					LockOptions.READ
+			);
+
+			if ( loaded == null ) {
+				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				persistenceContext.removeEntry( entity );
+				persistenceContext.removeEntity( entityKey );
+				session.getFactory().getEntityNotFoundDelegate().handleEntityNotFound(
+						entityKey.getEntityName(),
+						identifier
+				);
+			}
+
+			final LazyAttributeLoadingInterceptor interceptor = enhancementMetadata.injectInterceptor(
+					entity,
+					identifier,
+					session
+			);
+
+			final Object value;
+			if ( nameOfAttributeBeingAccessed == null ) {
+				return null;
+			}
+			else if ( interceptor.isAttributeLoaded( nameOfAttributeBeingAccessed ) ) {
+				value = getEntityTuplizer().getPropertyValue( entity, nameOfAttributeBeingAccessed );
+			}
+			else {
+				value = ( (LazyPropertyInitializer) this ).initializeLazyProperty( nameOfAttributeBeingAccessed, entity, session );
+			}
+
+			return interceptor.readObject(
+					entity,
+					nameOfAttributeBeingAccessed,
+					value
+			);
+		}
+
+		throw new IllegalStateException(  );
+	}
+
+	@Override
 	public List multiLoad(Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
 		return DynamicBatchingEntityLoaderBuilder.INSTANCE.multiLoad(
 				this,
@@ -4587,9 +4676,14 @@ public abstract class AbstractEntityPersister
 
 	public void afterReassociate(Object entity, SharedSessionContractImplementor session) {
 		if ( getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
-			LazyAttributeLoadingInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractInterceptor( entity );
+			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
+					.extractLazyInterceptor( entity );
 			if ( interceptor == null ) {
-				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor( entity, session );
+				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(
+						entity,
+						getIdentifier( entity, session ),
+						session
+				);
 			}
 			else {
 				interceptor.setSession( session );
@@ -4610,13 +4704,14 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-		final NaturalIdHelper naturalIdHelper = session.getPersistenceContext().getNaturalIdHelper();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final NaturalIdHelper naturalIdHelper = persistenceContext.getNaturalIdHelper();
 		final Serializable id = getIdentifier( entity, session );
 
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 		// database, because we have no other way to know if the state changed while detached.
 		final Object[] naturalIdSnapshot;
-		final Object[] entitySnapshot = session.getPersistenceContext().getDatabaseSnapshot( id, this );
+		final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
 		if ( entitySnapshot == StatefulPersistenceContext.NO_ROW ) {
 			naturalIdSnapshot = null;
 		}
@@ -5213,20 +5308,20 @@ public abstract class AbstractEntityPersister
 
 		Object[] snapshot = new Object[naturalIdPropertyCount];
 		try {
-			PreparedStatement ps = session
-					.getJdbcCoordinator()
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			PreparedStatement ps = jdbcCoordinator
 					.getStatementPreparer()
 					.prepareStatement( sql );
 			try {
 				getIdentifierType().nullSafeSet( ps, id, 1, session );
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
+				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( ps );
 				try {
 					//if there is no resulting row, return null
 					if ( !rs.next() ) {
 						return null;
 					}
 					final EntityKey key = session.generateEntityKey( id, this );
-					Object owner = session.getPersistenceContext().getEntity( key );
+					Object owner = session.getPersistenceContextInternal().getEntity( key );
 					for ( int i = 0; i < naturalIdPropertyCount; i++ ) {
 						snapshot[i] = extractionTypes[i].hydrate(
 								rs, getPropertyAliases(
@@ -5241,12 +5336,12 @@ public abstract class AbstractEntityPersister
 					return snapshot;
 				}
 				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, ps );
+					jdbcCoordinator.getResourceRegistry().release( rs, ps );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( ps );
-				session.getJdbcCoordinator().afterStatementExecution();
+				jdbcCoordinator.getResourceRegistry().release( ps );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch (SQLException e) {
@@ -5266,7 +5361,7 @@ public abstract class AbstractEntityPersister
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Resolving natural-id [%s] to id : %s ",
-					naturalIdValues,
+					Arrays.asList( naturalIdValues ),
 					MessageHelper.infoString( this )
 			);
 		}
@@ -5314,7 +5409,7 @@ public abstract class AbstractEntityPersister
 					e,
 					String.format(
 							"could not resolve natural-id [%s] to id : %s",
-							naturalIdValues,
+							Arrays.asList( naturalIdValues ),
 							MessageHelper.infoString( this )
 					),
 					sqlEntityIdByNaturalIdString
@@ -5458,6 +5553,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
+		return getBytecodeEnhancementMetadata();
+	}
+
+	@Override
+	public BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return entityMetamodel.getBytecodeEnhancementMetadata();
 	}
 

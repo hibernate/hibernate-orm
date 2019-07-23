@@ -37,7 +37,7 @@ public class JarProtocolArchiveDescriptor implements ArchiveDescriptor {
 		}
 
 		final String urlFile = url.getFile();
-		final int subEntryIndex = urlFile.lastIndexOf( "!" );
+		final int subEntryIndex = urlFile.lastIndexOf( '!' );
 		if ( subEntryIndex == -1 ) {
 			throw new AssertionFailure( "JAR URL does not contain '!/' :" + url );
 		}

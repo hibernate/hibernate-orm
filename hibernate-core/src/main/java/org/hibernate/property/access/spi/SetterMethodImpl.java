@@ -119,7 +119,7 @@ public class SetterMethodImpl implements Setter {
 		return setterMethod;
 	}
 
-	private Object writeReplace() throws ObjectStreamException {
+	private Object writeReplace() {
 		return new SerialForm( containerClass, propertyName, setterMethod );
 	}
 

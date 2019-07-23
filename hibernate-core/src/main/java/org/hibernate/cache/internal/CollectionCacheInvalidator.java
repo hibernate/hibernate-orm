@@ -13,6 +13,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,9 +29,11 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.jboss.logging.Logger;
 
@@ -82,11 +86,12 @@ public class CollectionCacheInvalidator
 	}
 
 	private void integrate(SessionFactoryServiceRegistry serviceRegistry, SessionFactoryImplementor sessionFactory) {
-		if ( !sessionFactory.getSessionFactoryOptions().isAutoEvictCollectionCache() ) {
+		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+		if ( !sessionFactoryOptions.isAutoEvictCollectionCache() ) {
 			// feature is disabled
 			return;
 		}
-		if ( !sessionFactory.getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+		if ( !sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
 			// Nothing to do, if caching is disabled
 			return;
 		}
@@ -100,12 +105,14 @@ public class CollectionCacheInvalidator
 		try {
 			SessionFactoryImplementor factory = persister.getFactory();
 
-			Set<String> collectionRoles = factory.getMetamodel().getCollectionRolesByEntityParticipant( persister.getEntityName() );
+			final MetamodelImplementor metamodel = factory.getMetamodel();
+			Set<String> collectionRoles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( collectionRoles == null || collectionRoles.isEmpty() ) {
 				return;
 			}
+			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 			for ( String role : collectionRoles ) {
-				final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
+				final CollectionPersister collectionPersister = metamodel.collectionPersister( role );
 				if ( !collectionPersister.hasCache() ) {
 					// ignore collection if no caching is used
 					continue;
@@ -114,7 +121,7 @@ public class CollectionCacheInvalidator
 				String mappedBy = collectionPersister.getMappedByProperty();
 				if ( !collectionPersister.isManyToMany() &&
 						mappedBy != null && !mappedBy.isEmpty() ) {
-					int i = persister.getEntityMetamodel().getPropertyIndex( mappedBy );
+					int i = entityMetamodel.getPropertyIndex( mappedBy );
 					Serializable oldId = null;
 					if ( oldState != null ) {
 						// in case of updating an entity we perhaps have to decache 2 entity collections, this is the
@@ -136,9 +143,10 @@ public class CollectionCacheInvalidator
 				}
 				else {
 					LOG.debug( "Evict CollectionRegion " + role );
-					final SoftLock softLock = collectionPersister.getCacheAccessStrategy().lockRegion();
+					final CollectionDataAccess cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
+					final SoftLock softLock = cacheAccessStrategy.lockRegion();
 					session.getActionQueue().registerProcess( (success, session1) -> {
-						collectionPersister.getCacheAccessStrategy().unlockRegion( softLock );
+						cacheAccessStrategy.unlockRegion( softLock );
 					} );
 				}
 			}

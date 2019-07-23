@@ -8,6 +8,7 @@ package org.hibernate.boot.jaxb.internal.stax;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
@@ -39,7 +40,8 @@ import org.hibernate.boot.xsd.MappingXsdSupport;
  * @author Hardy Ferentschik
  */
 public class JpaOrmXmlEventReader extends EventReaderDelegate {
-	private static final List<String> NAMESPACE_URIS_TO_MAP = Arrays.asList(
+
+	private static final List<String> NAMESPACE_URIS_TO_MAP = Collections.singletonList(
 			// JPA 1.0 and 2.0 namespace uri
 			"http://java.sun.com/xml/ns/persistence/orm"
 	);

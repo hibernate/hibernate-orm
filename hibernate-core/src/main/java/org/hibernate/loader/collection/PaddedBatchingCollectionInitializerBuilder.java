@@ -70,7 +70,7 @@ public class PaddedBatchingCollectionInitializerBuilder extends BatchingCollecti
 
 		@Override
 		public void initialize(Serializable id, SharedSessionContractImplementor session)	throws HibernateException {
-			final Serializable[] batch = session.getPersistenceContext()
+			final Serializable[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.getCollectionBatch( collectionPersister(), id, batchSizes[0] );
 			final int numberOfIds = ArrayHelper.countNonNull( batch );

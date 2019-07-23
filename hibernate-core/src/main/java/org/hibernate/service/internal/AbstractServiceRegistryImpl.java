@@ -305,7 +305,8 @@ public abstract class AbstractServiceRegistryImpl
 
 	@SuppressWarnings({ "unchecked" })
 	private <T extends Service> void processInjection(T service, Method injectionMethod, InjectService injectService) {
-		if ( injectionMethod.getParameterTypes() == null || injectionMethod.getParameterCount() != 1 ) {
+		final Class<?>[] parameterTypes = injectionMethod.getParameterTypes();
+		if ( parameterTypes == null || injectionMethod.getParameterCount() != 1 ) {
 			throw new ServiceDependencyException(
 					"Encountered @InjectService on method with unexpected number of parameters"
 			);
@@ -313,7 +314,7 @@ public abstract class AbstractServiceRegistryImpl
 
 		Class dependentServiceRole = injectService.serviceRole();
 		if ( dependentServiceRole == null || dependentServiceRole.equals( Void.class ) ) {
-			dependentServiceRole = injectionMethod.getParameterTypes()[0];
+			dependentServiceRole = parameterTypes[0];
 		}
 
 		// todo : because of the use of proxies, this is no longer returning null here...

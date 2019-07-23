@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -59,7 +61,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 */
 	@Deprecated
 	public PersistentBag(SessionImplementor session) {
-		this( ( SharedSessionContractImplementor) session );
+		this( (SharedSessionContractImplementor) session );
 	}
 	/**
 	 * Constructs a PersistentBag
@@ -74,10 +76,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			bag = (List) coll;
 		}
 		else {
-			bag = new ArrayList();
-			for ( Object element : coll ) {
-				bag.add( element );
-			}
+			bag = new ArrayList( coll );
 		}
 		setInitialized();
 		setDirectlyAccessible( true );
@@ -131,19 +130,61 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
+	@SuppressWarnings( "unchecked" )
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
-		final List sn = (List) getSnapshot();
+		final List<Object> sn = (List<Object>) getSnapshot();
 		if ( sn.size() != bag.size() ) {
 			return false;
 		}
-		for ( Object elt : bag ) {
-			final boolean unequal = countOccurrences( elt, bag, elementType ) != countOccurrences( elt, sn, elementType );
-			if ( unequal ) {
+
+		// HHH-11032 - Group objects by Type.getHashCode() to reduce the complexity of the search
+		final Map<Integer, List<Object>> hashToInstancesBag = groupByEqualityHash( bag, elementType );
+		final Map<Integer, List<Object>> hashToInstancesSn = groupByEqualityHash( sn, elementType );
+		if ( hashToInstancesBag.size() != hashToInstancesSn.size() ) {
+			return false;
+		}
+
+		// First iterate over the hashToInstancesBag entries to see if the number
+		// of List values is different for any hash value.
+		for ( Map.Entry<Integer, List<Object>> hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
+			final Integer hash = hashToInstancesBagEntry.getKey();
+			final List<Object> instancesBag = hashToInstancesBagEntry.getValue();
+			final List<Object> instancesSn = hashToInstancesSn.get( hash );
+			if ( instancesSn == null || ( instancesBag.size() != instancesSn.size() ) ) {
 				return false;
 			}
 		}
+
+		// We already know that both hashToInstancesBag and hashToInstancesSn have:
+		// 1) the same hash values;
+		// 2) the same number of values with the same hash value.
+
+		// Now check if the number of occurrences of each element is the same.
+		for ( Map.Entry<Integer, List<Object>> hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
+			final Integer hash = hashToInstancesBagEntry.getKey();
+			final List<Object> instancesBag = hashToInstancesBagEntry.getValue();
+			final List<Object> instancesSn = hashToInstancesSn.get( hash );
+			for ( Object instance : instancesBag ) {
+				if ( !expectOccurrences(
+						instance,
+						instancesBag,
+						elementType,
+						countOccurrences( instance, instancesSn, elementType ) ) ) {
+					return false;
+				}
+			}
+		}
 		return true;
+	}
+
+	/**
+	 * Groups items in searchedBag according to persistence "equality" as defined in Type.isSame and Type.getHashCode
+	 *
+	 * @return Map of "equality" hashCode to List of objects
+	 */
+	private Map<Integer, List<Object>> groupByEqualityHash(List<Object> searchedBag, Type elementType) {
+		return searchedBag.stream().collect( Collectors.groupingBy( elementType::getHashCode ) );
 	}
 
 	@Override
@@ -151,16 +192,26 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		return ( (Collection) snapshot ).isEmpty();
 	}
 
-	private int countOccurrences(Object element, List list, Type elementType)
-			throws HibernateException {
-		final Iterator iter = list.iterator();
+	private int countOccurrences(Object element, List<Object> list, Type elementType) {
 		int result = 0;
-		while ( iter.hasNext() ) {
-			if ( elementType.isSame( element, iter.next() ) ) {
+		for ( Object listElement : list ) {
+			if ( elementType.isSame( element, listElement ) ) {
 				result++;
 			}
 		}
 		return result;
+	}
+
+	private boolean expectOccurrences(Object element, List<Object> list, Type elementType, int expected) {
+		int result = 0;
+		for ( Object listElement : list ) {
+			if ( elementType.isSame( element, listElement ) ) {
+				if ( result++ > expected ) {
+					return false;
+				}
+			}
+		}
+		return result == expected;
 	}
 
 	@Override

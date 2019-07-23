@@ -18,7 +18,9 @@ import org.hibernate.loader.Loader;
 import org.hibernate.loader.collection.BasicCollectionLoader;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.OneToManyLoader;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.type.Type;
 
 /**
  * LoadPlan-based implementation of the the legacy batch collection initializer.
@@ -72,20 +74,22 @@ public class LegacyBatchingCollectionInitializerBuilder extends AbstractBatching
 
 		@Override
 		public void initialize(Serializable id, SharedSessionContractImplementor session)	throws HibernateException {
+			final CollectionPersister collectionPersister = getCollectionPersister();
 			Serializable[] batch = session.getPersistenceContext().getBatchFetchQueue()
-					.getCollectionBatch( getCollectionPersister(), id, batchSizes[0] );
+					.getCollectionBatch( collectionPersister, id, batchSizes[0] );
 
-			for ( int i=0; i<batchSizes.length-1; i++) {
+			final Type keyType = collectionPersister.getKeyType();
+			for ( int i = 0; i < batchSizes.length - 1; i++ ) {
 				final int smallBatchSize = batchSizes[i];
-				if ( batch[smallBatchSize-1]!=null ) {
+				if ( batch[smallBatchSize-1] != null ) {
 					Serializable[] smallBatch = new Serializable[smallBatchSize];
 					System.arraycopy(batch, 0, smallBatch, 0, smallBatchSize);
-					loaders[i].loadCollectionBatch( session, smallBatch, getCollectionPersister().getKeyType() );
+					loaders[i].loadCollectionBatch( session, smallBatch, keyType );
 					return; //EARLY EXIT!
 				}
 			}
 
-			loaders[batchSizes.length-1].loadCollection( session, id, getCollectionPersister().getKeyType() );
+			loaders[batchSizes.length-1].loadCollection( session, id, keyType );
 		}
 	}
 }

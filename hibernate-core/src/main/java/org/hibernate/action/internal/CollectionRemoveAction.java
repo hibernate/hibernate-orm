@@ -19,6 +19,7 @@ import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for removing a collection
@@ -54,7 +55,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		// the loaded owner will be set to null after the collection is removed,
 		// so capture its value as the affected owner so it is accessible to
 		// both pre- and post- events
-		this.affectedOwner = session.getPersistenceContext().getLoadedCollectionOwnerOrNull( collection );
+		this.affectedOwner = session.getPersistenceContextInternal().getLoadedCollectionOwnerOrNull( collection );
 	}
 
 	/**
@@ -88,24 +89,27 @@ public final class CollectionRemoveAction extends CollectionAction {
 	public void execute() throws HibernateException {
 		preRemove();
 
+		final SharedSessionContractImplementor session = getSession();
+
 		if ( !emptySnapshot ) {
 			// an existing collection that was either non-empty or uninitialized
 			// is replaced by null or a different collection
 			// (if the collection is uninitialized, hibernate has no way of
 			// knowing if the collection is actually empty without querying the db)
-			getPersister().remove( getKey(), getSession() );
+			getPersister().remove( getKey(), session);
 		}
 		
 		final PersistentCollection collection = getCollection();
 		if ( collection != null ) {
-			getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
+			session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		}
 
 		evict();
 		postRemove();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatistics().removeCollection( getPersister().getRole() );
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.removeCollection( getPersister().getRole() );
 		}
 	}
 

@@ -160,7 +160,7 @@ public final class ForeignKeys {
 			if ( isDelete &&
 					value == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
 					type.isEntityType() &&
-					!session.getPersistenceContext().getNullifiableEntityKeys().isEmpty() ) {
+					!session.getPersistenceContextInternal().getNullifiableEntityKeys().isEmpty() ) {
 				// IMPLEMENTATION NOTE: If cascade-remove was mapped for the attribute,
 				// then value should have been initialized previously, when the remove operation was
 				// cascaded to the property (because CascadingAction.DELETE.performOnLazyProperty()
@@ -177,10 +177,7 @@ public final class ForeignKeys {
 				//       superclass or the same as the entity type of a nullifiable entity).
 				//       It is unclear if a more complicated check would impact performance
 				//       more than just initializing the associated entity.
-				return persister
-						.getInstrumentationMetadata()
-						.extractInterceptor( self )
-						.fetchAttribute( self, propertyName );
+				return ( (LazyPropertyInitializer) persister ).initializeLazyProperty( propertyName, self, session );
 			}
 			else {
 				return value;
@@ -228,7 +225,7 @@ public final class ForeignKeys {
 			// id is not "unsaved" (that is, we rely on foreign keys to keep
 			// database integrity)
 
-			final EntityEntry entityEntry = session.getPersistenceContext().getEntry( object );
+			final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( object );
 			if ( entityEntry == null ) {
 				return isTransient( entityName, object, null, session );
 			}
@@ -257,7 +254,7 @@ public final class ForeignKeys {
 			return true;
 		}
 
-		if ( session.getPersistenceContext().isEntryFor( entity ) ) {
+		if ( session.getPersistenceContextInternal().isEntryFor( entity ) ) {
 			return true;
 		}
 
@@ -306,7 +303,7 @@ public final class ForeignKeys {
 		}
 
 		// hit the database, after checking the session cache for a snapshot
-		final Object[] snapshot = session.getPersistenceContext().getDatabaseSnapshot(
+		final Object[] snapshot = session.getPersistenceContextInternal().getDatabaseSnapshot(
 				persister.getIdentifier( entity, session ),
 				persister
 		);

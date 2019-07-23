@@ -91,7 +91,7 @@ class PaddedBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuilder {
 
 		@Override
 		public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
-			final Serializable[] batch = session.getPersistenceContext()
+			final Serializable[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.getEntityBatch( persister(), id, batchSizes[0], persister().getEntityMode() );
 

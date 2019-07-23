@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
@@ -83,6 +84,7 @@ public final class Cascade {
 			if ( traceEnabled ) {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
+			final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
 
 			final Type[] types = persister.getPropertyTypes();
 			final String[] propertyNames = persister.getPropertyNames();
@@ -94,7 +96,7 @@ public final class Cascade {
 				final String propertyName = propertyNames[ i ];
 				final boolean isUninitializedProperty =
 						hasUninitializedLazyProperties &&
-						!persister.getInstrumentationMetadata().isAttributeLoaded( parent, propertyName );
+						!persister.getBytecodeEnhancementMetadata().isAttributeLoaded( parent, propertyName );
 
 				if ( style.doCascade( action ) ) {
 					final Object child;
@@ -105,7 +107,7 @@ public final class Cascade {
 						// If parent is a detached entity being merged,
 						// then parent will not be in the PersistencContext
 						// (so lazy attributes must not be initialized).
-						if ( eventSource.getPersistenceContext().getEntry( parent ) == null ) {
+						if ( persistenceContext.getEntry( parent ) == null ) {
 							// parent was not in the PersistenceContext
 							continue;
 						}
@@ -133,7 +135,7 @@ public final class Cascade {
 						else if ( action.performOnLazyProperty() && types[ i ].isEntityType() ) {
 							// Only need to initialize a lazy entity attribute when action.performOnLazyProperty()
 							// returns true.
-							LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata()
+							LazyAttributeLoadingInterceptor interceptor = persister.getBytecodeEnhancementMetadata()
 									.extractInterceptor( parent );
 							child = interceptor.fetchAttribute( parent, propertyName );
 
@@ -271,7 +273,8 @@ public final class Cascade {
 			if ( style.hasOrphanDelete() && action.deleteOrphans() ) {
 				// value is orphaned if loaded state for this property shows not null
 				// because it is currently null.
-				final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
+				final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
+				final EntityEntry entry = persistenceContext.getEntry( parent );
 				if ( entry != null && entry.getStatus() != Status.SAVING ) {
 					Object loadedValue;
 					if ( componentPathStackDepth == 0 ) {
@@ -299,15 +302,13 @@ public final class Cascade {
 					// orphaned if the association was nulled (child == null) or receives a new value while the
 					// entity is managed (without first nulling and manually flushing).
 					if ( child == null || ( loadedValue != null && child != loadedValue ) ) {
-						EntityEntry valueEntry = eventSource
-								.getPersistenceContext().getEntry(
-										loadedValue );
+						EntityEntry valueEntry = persistenceContext.getEntry( loadedValue );
 
 						if ( valueEntry == null && loadedValue instanceof HibernateProxy ) {
 							// un-proxy and re-associate for cascade operation
 							// useful for @OneToOne defined as FetchType.LAZY
-							loadedValue = eventSource.getPersistenceContext().unproxyAndReassociate( loadedValue );
-							valueEntry = eventSource.getPersistenceContext().getEntry( loadedValue );
+							loadedValue = persistenceContext.unproxyAndReassociate( loadedValue );
+							valueEntry = persistenceContext.getEntry( loadedValue );
 
 							// HHH-11965
 							// Should the unwrapped proxy value be equal via reference to the entity's property value
@@ -485,12 +486,13 @@ public final class Cascade {
 				: null;
 		if ( style.reallyDoCascade( action ) ) {
 			//not really necessary, but good for consistency...
-			eventSource.getPersistenceContext().addChildParent( child, parent );
+			final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
+			persistenceContext.addChildParent( child, parent );
 			try {
 				action.cascade( eventSource, child, entityName, anything, isCascadeDeleteEnabled );
 			}
 			finally {
-				eventSource.getPersistenceContext().removeChildParent( child );
+				persistenceContext.removeChildParent( child );
 			}
 		}
 	}
@@ -570,7 +572,7 @@ public final class Cascade {
 		//TODO: suck this logic into the collection!
 		final Collection orphans;
 		if ( pc.wasInitialized() ) {
-			final CollectionEntry ce = eventSource.getPersistenceContext().getCollectionEntry( pc );
+			final CollectionEntry ce = eventSource.getPersistenceContextInternal().getCollectionEntry( pc );
 			orphans = ce==null
 					? java.util.Collections.EMPTY_LIST
 					: ce.getOrphans( entityName, pc );

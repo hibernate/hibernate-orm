@@ -32,12 +32,23 @@ public class CustomCollectionType extends CollectionType {
 	private final UserCollectionType userType;
 	private final boolean customLogging;
 
+	/**
+	 * @deprecated Use the other contructor
+	 */
+	@Deprecated
 	public CustomCollectionType(
 			TypeFactory.TypeScope typeScope,
 			Class userTypeClass,
 			String role,
 			String foreignKeyPropertyName) {
-		super( typeScope, role, foreignKeyPropertyName );
+		this( userTypeClass, role, foreignKeyPropertyName );
+	}
+
+	public CustomCollectionType(
+			Class userTypeClass,
+			String role,
+			String foreignKeyPropertyName) {
+		super( role, foreignKeyPropertyName );
 		userType = createUserCollectionType( userTypeClass );
 		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
 	}

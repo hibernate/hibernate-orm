@@ -688,7 +688,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				getAssociatedEntityName(),
 				id,
 				eager,
-				isNullable()
+				isNullable(),
+				unwrapProxy
 		);
 
 		if ( proxyOrEntity instanceof HibernateProxy ) {
@@ -738,7 +739,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				session.getFactory()
 		);
 
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		Object result = persistenceContext.getEntity( euk );
 		if ( result == null ) {
 			result = persister.loadByUniqueKey( uniqueKeyPropertyName, key, session );

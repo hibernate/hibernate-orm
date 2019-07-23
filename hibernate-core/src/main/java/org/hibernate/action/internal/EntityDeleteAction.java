@@ -24,6 +24,7 @@ import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for performing an entity deletion.
@@ -61,7 +62,7 @@ public class EntityDeleteAction extends EntityAction {
 		this.state = state;
 
 		// before remove we need to remove the local (transactional) natural id cross-reference
-		naturalIdValues = session.getPersistenceContext().getNaturalIdHelper().removeLocalNaturalIdCrossReference(
+		naturalIdValues = session.getPersistenceContextInternal().getNaturalIdHelper().removeLocalNaturalIdCrossReference(
 				getPersister(),
 				getId(),
 				state
@@ -103,7 +104,7 @@ public class EntityDeleteAction extends EntityAction {
 		// After actually deleting a row, record the fact that the instance no longer 
 		// exists on the database (needed for identity-column key generation), and
 		// remove it from the session cache
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entry = persistenceContext.removeEntry( instance );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible nonthreadsafe access to session" );
@@ -121,8 +122,9 @@ public class EntityDeleteAction extends EntityAction {
 
 		postDelete();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() && !veto ) {
-			getSession().getFactory().getStatistics().deleteEntity( getPersister().getEntityName() );
+		final StatisticsImplementor statistics = getSession().getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() && !veto ) {
+			statistics.deleteEntity( getPersister().getEntityName() );
 		}
 	}
 

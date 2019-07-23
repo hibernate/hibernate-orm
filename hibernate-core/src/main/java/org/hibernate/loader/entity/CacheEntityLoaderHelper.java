@@ -40,6 +40,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -51,8 +52,6 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 	public static final CacheEntityLoaderHelper INSTANCE = new CacheEntityLoaderHelper();
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CacheEntityLoaderHelper.class );
-
-	private static final boolean traceEnabled = LOG.isTraceEnabled();
 
 	public enum EntityStatus {
 		MANAGED,
@@ -194,23 +193,25 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 			final EntityPersister persister,
 			SessionImplementor source) {
 		final EntityDataAccess cache = persister.getCacheAccessStrategy();
+		final SessionFactoryImplementor factory = source.getFactory();
 		final Object ck = cache.generateCacheKey(
 				event.getEntityId(),
 				persister,
-				source.getFactory(),
+				factory,
 				source.getTenantIdentifier()
 		);
 
 		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
-		if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
+		final StatisticsImplementor statistics = factory.getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
 			if ( ce == null ) {
-				source.getFactory().getStatistics().entityCacheMiss(
+				statistics.entityCacheMiss(
 						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
 			}
 			else {
-				source.getFactory().getStatistics().entityCacheHit(
+				statistics.entityCacheHit(
 						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
@@ -274,7 +275,7 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final EntityPersister subclassPersister;
 
-		if ( traceEnabled ) {
+		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Converting second-level cache entry [%s] into entity : %s",
 					entry,

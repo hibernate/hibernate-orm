@@ -32,7 +32,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private static final String SELECT_DISTINCT = SELECT + " " + DISTINCT;
 	private static final String SELECT_DISTINCT_SPACE = SELECT_DISTINCT + " ";
 
-	final String SELECT_SPACE = "select ";
+	private static final String SELECT_SPACE = "select ";
 
 	private static final Pattern SELECT_DISTINCT_PATTERN = buildShallowIndexPattern( SELECT_DISTINCT_SPACE, true );
 	private static final Pattern SELECT_PATTERN = buildShallowIndexPattern( SELECT + "(.*)", true );

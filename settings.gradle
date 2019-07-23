@@ -31,6 +31,13 @@ include 'hibernate-jipijapa'
 
 include 'hibernate-orm-modules'
 
+if ( JavaVersion.current().isJava11Compatible() ) {
+    include 'hibernate-integrationtest-java-modules'
+}
+else {
+    logger.warn( '[WARN] Skipping Java module path integration tests because the JDK does not support it' )
+}
+
 include 'documentation'
 include 'release'
 

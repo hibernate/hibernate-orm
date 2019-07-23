@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -62,12 +61,18 @@ public abstract class CollectionType extends AbstractType implements Association
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
 
-	private final TypeFactory.TypeScope typeScope;
 	private final String role;
 	private final String foreignKeyPropertyName;
 
+	/**
+	 * @deprecated Use the other contructor
+	 */
+	@Deprecated
 	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName) {
-		this.typeScope = typeScope;
+		this( role, foreignKeyPropertyName );
+	}
+
+	public CollectionType(String role, String foreignKeyPropertyName) {
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;
 	}
@@ -370,8 +375,9 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The collection owner's key
 	 */
 	public Serializable getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
+		final PersistenceContext pc = session.getPersistenceContextInternal();
 
-		EntityEntry entityEntry = session.getPersistenceContext().getEntry( owner );
+		EntityEntry entityEntry = pc.getEntry( owner );
 		if ( entityEntry == null ) {
 			// This just handles a particular case of component
 			// projection, perhaps get rid of it and throw an exception
@@ -638,7 +644,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		}
 
-		CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( result );
+		CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( result );
 		if ( ce != null ) {
 			ce.resetStoredSnapshot( result, targetSnapshot );
 		}
@@ -769,21 +775,22 @@ public abstract class CollectionType extends AbstractType implements Association
 	 */
 	public Object getCollection(Serializable key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
 
-		CollectionPersister persister = getPersister( session );
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final EntityMode entityMode = persister.getOwnerEntityPersister().getEntityMode();
+		final CollectionPersister persister = getPersister( session );
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
+		final CollectionKey collectionKey = new CollectionKey( persister, key );
 		// check if collection is currently being loaded
-		PersistentCollection collection = persistenceContext.getLoadContexts().locateLoadingCollection( persister, key );
+		PersistentCollection collection = persistenceContext.getLoadContexts()
+				.locateLoadingCollection( persister, collectionKey );
 
 		if ( collection == null ) {
 
 			// check if it is already completely loaded, but unowned
-			collection = persistenceContext.useUnownedCollection( new CollectionKey(persister, key, entityMode) );
+			collection = persistenceContext.useUnownedCollection( collectionKey );
 
 			if ( collection == null ) {
 
-				collection = persistenceContext.getCollection( new CollectionKey(persister, key, entityMode) );
+				collection = persistenceContext.getCollection( collectionKey );
 
 				if ( collection == null ) {
 					// create a new collection wrapper, to be initialized later
@@ -803,21 +810,21 @@ public abstract class CollectionType extends AbstractType implements Association
 					}
 
 					if ( hasHolder() ) {
-						session.getPersistenceContext().addCollectionHolder( collection );
+						persistenceContext.addCollectionHolder( collection );
 					}
+
+					if ( LOG.isTraceEnabled() ) {
+						LOG.tracef( "Created collection wrapper: %s",
+									MessageHelper.collectionInfoString( persister, collection,
+																		key, session ) );
+					}
+					// we have already set the owner so we can just return the value
+					return collection.getValue();
 				}
-
 			}
-
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Created collection wrapper: %s",
-						MessageHelper.collectionInfoString( persister, collection,
-								key, session ) );
-			}
-
 		}
 
-		collection.setOwner(owner);
+		collection.setOwner( owner );
 
 		return collection.getValue();
 	}

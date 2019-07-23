@@ -40,7 +40,6 @@ import org.hibernate.tuple.component.ComponentTuplizer;
  */
 public class ComponentType extends AbstractType implements CompositeType, ProcedureParameterExtractionAware {
 
-	private final TypeFactory.TypeScope typeScope;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
 	private final ValueGeneration[] propertyValueGenerationStrategies;
@@ -55,8 +54,16 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	protected final EntityMode entityMode;
 	protected final ComponentTuplizer componentTuplizer;
 
+
+	/**
+	 * @deprecated Use the other contructor
+	 */
+	@Deprecated
 	public ComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
-		this.typeScope = typeScope;
+		this( metamodel );
+	}
+
+	public ComponentType(ComponentMetamodel metamodel) {
 		// for now, just "re-flatten" the metamodel since this is temporary stuff anyway (HHH-1907)
 		this.isKey = metamodel.isKey();
 		this.propertySpan = metamodel.getPropertySpan();
@@ -588,7 +595,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( componentTuplizer.hasParentProperty() && parent != null ) {
 			componentTuplizer.setParent(
 					result,
-					session.getPersistenceContext().proxyFor( parent ),
+					session.getPersistenceContextInternal().proxyFor( parent ),
 					session.getFactory()
 			);
 		}

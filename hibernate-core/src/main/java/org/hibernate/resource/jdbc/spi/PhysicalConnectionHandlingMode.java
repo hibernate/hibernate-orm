@@ -74,8 +74,8 @@ public enum PhysicalConnectionHandlingMode {
 			return (PhysicalConnectionHandlingMode) setting;
 		}
 
-		final String value = setting.toString();
-		if ( StringHelper.isEmpty( value ) ) {
+		final String value = setting.toString().trim();
+		if ( value.isEmpty() ) {
 			return null;
 		}
 

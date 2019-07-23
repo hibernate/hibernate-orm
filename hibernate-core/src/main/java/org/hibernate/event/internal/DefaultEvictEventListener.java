@@ -50,7 +50,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		}
 
 		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContext();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
 		if ( object instanceof HibernateProxy ) {
 			final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
@@ -108,8 +108,9 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			LOG.tracev( "Evicting {0}", MessageHelper.infoString( persister ) );
 		}
 
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.hasNaturalIdentifier() ) {
-			session.getPersistenceContext().getNaturalIdHelper().handleEviction(
+			persistenceContext.getNaturalIdHelper().handleEviction(
 					object,
 					persister,
 					key.getIdentifier()
@@ -127,8 +128,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		// This is now handled by removeEntity()
 		//session.getPersistenceContext().removeDatabaseSnapshot(key);
 		
-		session.getPersistenceContext().removeEntity( key );
-		session.getPersistenceContext().removeEntry( object );
+		persistenceContext.removeEntity( key );
+		persistenceContext.removeEntry( object );
 
 		Cascade.cascade( CascadingActions.EVICT, CascadePoint.AFTER_EVICT, session, persister, object );
 	}

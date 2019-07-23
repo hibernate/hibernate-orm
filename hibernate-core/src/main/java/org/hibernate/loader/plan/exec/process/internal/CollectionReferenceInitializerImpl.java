@@ -45,7 +45,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 
 		try {
 			// read the collection key for this reference for the current row.
-			final PersistenceContext persistenceContext = context.getSession().getPersistenceContext();
+			final PersistenceContext persistenceContext = context.getSession().getPersistenceContextInternal();
 			final Serializable collectionRowKey = (Serializable) collectionReference.getCollectionPersister().readKey(
 					resultSet,
 					aliases.getCollectionColumnAliases().getSuffixedKeyAliases(),
@@ -121,7 +121,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 			Serializable collectionRowKey,
 			ResultSet resultSet,
 			ResultSetProcessingContextImpl context) {
-		final Object collectionOwner = context.getSession().getPersistenceContext().getCollectionOwner(
+		final Object collectionOwner = context.getSession().getPersistenceContextInternal().getCollectionOwner(
 				collectionRowKey,
 				collectionReference.getCollectionPersister()
 		);
@@ -148,7 +148,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 
 	@Override
 	public void endLoading(ResultSetProcessingContextImpl context) {
-		context.getSession().getPersistenceContext()
+		context.getSession().getPersistenceContextInternal()
 				.getLoadContexts()
 				.getCollectionLoadContext( context.getResultSet() )
 				.endLoadingCollections( collectionReference.getCollectionPersister() );

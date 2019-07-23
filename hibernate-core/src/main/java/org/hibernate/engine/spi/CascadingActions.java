@@ -294,7 +294,7 @@ public class CascadingActions {
 				Object anything,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			LOG.tracev( "Cascading to persist: {0}" + entityName );
+			LOG.tracev( "Cascading to persist: {0}", entityName );
 			session.persist( entityName, child, (Map) anything );
 		}
 
@@ -369,21 +369,20 @@ public class CascadingActions {
 				int propertyIndex) {
 			if ( propertyType.isEntityType() ) {
 				Object child = persister.getPropertyValue( parent, propertyIndex );
-				String childEntityName = ((EntityType) propertyType).getAssociatedEntityName( session.getFactory() );
-
 				if ( child != null
 						&& !isInManagedState( child, session )
-						&& !(child instanceof HibernateProxy) //a proxy cannot be transient and it breaks ForeignKeys.isTransient
-						&& ForeignKeys.isTransient( childEntityName, child, null, session ) ) {
-					String parentEntityName = persister.getEntityName();
-					String propertyName = persister.getPropertyNames()[propertyIndex];
-					throw new TransientPropertyValueException(
+						&& !(child instanceof HibernateProxy) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient
+					final String childEntityName = ((EntityType) propertyType).getAssociatedEntityName(session.getFactory());
+					if (ForeignKeys.isTransient(childEntityName, child, null, session)) {
+						String parentEntityName = persister.getEntityName();
+						String propertyName = persister.getPropertyNames()[propertyIndex];
+						throw new TransientPropertyValueException(
 							"object references an unsaved transient instance - save the transient instance before flushing",
 							childEntityName,
 							parentEntityName,
 							propertyName
-					);
-
+						);
+					}
 				}
 			}
 		}
@@ -394,7 +393,7 @@ public class CascadingActions {
 		}
 
 		private boolean isInManagedState(Object child, EventSource session) {
-			EntityEntry entry = session.getPersistenceContext().getEntry( child );
+			EntityEntry entry = session.getPersistenceContextInternal().getEntry( child );
 			return entry != null &&
 					(
 							entry.getStatus() == Status.MANAGED ||

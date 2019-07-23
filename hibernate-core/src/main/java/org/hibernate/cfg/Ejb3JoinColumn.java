@@ -144,7 +144,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		for (int i = 0; i < anns.length; i++) {
 			JoinColumnOrFormula join = anns[i];
 			JoinFormula formula = join.formula();
-			if (formula.value() != null && !formula.value().equals("")) {
+			if ( formula.value() != null && !formula.value().isEmpty() ) {
 				joinColumns[i] = buildJoinFormula(
 						formula, mappedBy, joins, propertyHolder, propertyName, buildingContext
 				);
@@ -360,7 +360,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 
 			final String sqlType;
-			if ( columnDefinition.equals( "" ) ) {
+			if ( columnDefinition.isEmpty() ) {
 				sqlType = null;
 			}
 			else {

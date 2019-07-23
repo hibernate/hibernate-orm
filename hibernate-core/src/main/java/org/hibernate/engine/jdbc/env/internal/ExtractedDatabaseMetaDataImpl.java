@@ -16,6 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
 import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -207,13 +208,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 
 		private Set<String> parseKeywords(String extraKeywordsString) {
-			if ( StringHelper.isEmpty(  extraKeywordsString ) ) {
-				return Collections.emptySet();
-			}
-
-			final Set<String> keywordSet = new HashSet<String>();
-			keywordSet.addAll( Arrays.asList( extraKeywordsString.split( "\\s*,\\s*" ) ) );
-			return keywordSet;
+			return CommaSeparatedStringHelper.split( extraKeywordsString );
 		}
 
 		public Builder setConnectionSchemaName(String connectionSchemaName) {

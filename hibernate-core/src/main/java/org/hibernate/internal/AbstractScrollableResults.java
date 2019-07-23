@@ -18,6 +18,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
@@ -101,10 +102,11 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 
 		// not absolutely necessary, but does help with aggressive release
 		//session.getJDBCContext().getConnectionManager().closeQueryStatement( ps, resultSet );
-		session.getJdbcCoordinator().getResourceRegistry().release( ps );
-		session.getJdbcCoordinator().afterStatementExecution();
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		jdbcCoordinator.getResourceRegistry().release( ps );
+		jdbcCoordinator.afterStatementExecution();
 		try {
-			session.getPersistenceContext().getLoadContexts().cleanup( resultSet );
+			session.getPersistenceContextInternal().getLoadContexts().cleanup( resultSet );
 		}
 		catch (Throwable ignore) {
 			// ignore this error for now

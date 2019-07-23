@@ -81,7 +81,6 @@ dependencies {
 	testRuntime( libraries.log4j )
 	testRuntime( libraries.javassist )
 	testRuntime( libraries.byteBuddy )
-	testRuntime( libraries.woodstox )
 
 	//Databases
 	testRuntime( libraries.h2 )
@@ -211,6 +210,16 @@ test {
 		//Set the -Dnet.bytebuddy.experimental=true property only when we need it:
 		if (majorJVMVersionInt >= 12) {
 			systemProperty 'net.bytebuddy.experimental', true
+		}
+	}
+}
+
+test {
+	if ( project.findProperty( 'log-test-progress' )?.toString()?.toBoolean() ) {
+		// Log a statement for each test.
+		// Used in the Travis build so that Travis doesn't end up panicking because there's no output for a long time.
+		testLogging {
+			events "passed", "skipped", "failed"
 		}
 	}
 }

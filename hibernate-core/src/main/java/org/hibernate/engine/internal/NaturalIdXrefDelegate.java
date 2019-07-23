@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -240,15 +241,20 @@ public class NaturalIdXrefDelegate {
 
 		// Try resolution from second-level cache
 		final NaturalIdDataAccess naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
-		final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session() );
+		final SharedSessionContractImplementor session = session();
+		final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister,
+																						session
+		);
 
-		pk = CacheHelper.fromSharedCache( session(), naturalIdCacheKey, naturalIdCacheAccessStrategy );
+		pk = CacheHelper.fromSharedCache( session, naturalIdCacheKey, naturalIdCacheAccessStrategy );
 
 		// Found in second-level cache, store in session cache
-		final SessionFactoryImplementor factory = session().getFactory();
+		final SessionFactoryImplementor factory = session.getFactory();
+		final StatisticsImplementor statistics = factory.getStatistics();
+		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
 		if ( pk != null ) {
-			if ( factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().naturalIdCacheHit(
+			if ( statisticsEnabled ) {
+				statistics.naturalIdCacheHit(
 						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						naturalIdCacheAccessStrategy.getRegion().getName()
 				);
@@ -275,8 +281,8 @@ public class NaturalIdXrefDelegate {
 			entityNaturalIdResolutionCache.pkToNaturalIdMap.put( pk, cachedNaturalId );
 			entityNaturalIdResolutionCache.naturalIdToPkMap.put( cachedNaturalId, pk );
 		}
-		else if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatistics().naturalIdCacheMiss(
+		else if ( statisticsEnabled ) {
+			statistics.naturalIdCacheMiss(
 					StatsHelper.INSTANCE.getRootEntityRole( persister ),
 					naturalIdCacheAccessStrategy.getRegion().getName()
 			);

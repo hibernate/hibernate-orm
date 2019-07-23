@@ -92,16 +92,20 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		determineKeySelectExpressions( collectionPersister, selections );
 		determineValueSelectExpressions( collectionPersister, selections );
 
-		String text = "";
-		String[] columns = new String[selections.size()];
-		for ( int i = 0; i < selections.size(); i++ ) {
+		final int columnNumber = selections.size();
+		StringBuilder text = new StringBuilder( columnNumber * 12 ); //Some guess
+		String[] columns = new String[columnNumber];
+		for ( int i = 0; i < columnNumber; i++ ) {
 			SelectExpression selectExpression = (SelectExpression) selections.get( i );
-			text += ( ", " + selectExpression.getExpression() + " as " + selectExpression.getAlias() );
+			if ( i != 0 ) {
+				text.append( ", " );
+			}
+			text.append( selectExpression.getExpression() );
+			text.append( " as " );
+			text.append( selectExpression.getAlias() );
 			columns[i] = selectExpression.getExpression();
 		}
-
-		text = text.substring( 2 ); //strip leading ", "
-		setText( text );
+		setText( text.toString() );
 		setResolved();
 		return columns;
 	}
@@ -206,7 +210,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 	}
 
 	@Override
-	public void setScalarColumn(int i) throws SemanticException {
+	public void setScalarColumn(int i) {
 		this.scalarColumnIndex = i;
 	}
 
@@ -216,7 +220,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 	}
 
 	@Override
-	public void setScalarColumnText(int i) throws SemanticException {
+	public void setScalarColumnText(int i) {
 	}
 
 	@Override

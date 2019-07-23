@@ -58,7 +58,7 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 				sql.length()
 						+ hints.length() + 12
 		);
-		final int pos = sql.indexOf( ";" );
+		final int pos = sql.indexOf( ';' );
 		if ( pos > -1 ) {
 			buffer.append( sql.substring( 0, pos ) );
 		}

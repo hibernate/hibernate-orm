@@ -63,10 +63,6 @@ public class IdentifierHelperBuilder {
 	}
 
 	private static List<String> parseKeywords(String extraKeywordsString) {
-		if ( StringHelper.isEmpty( extraKeywordsString ) ) {
-			return Collections.emptyList();
-		}
-
 		return StringHelper.parseCommaSeparatedString( extraKeywordsString );
 	}
 

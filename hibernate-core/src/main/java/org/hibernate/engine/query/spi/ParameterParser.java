@@ -171,7 +171,7 @@ public class ParameterParser {
 					final int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS_BITSET, indx + 1 );
 					final int chopLocation = right < 0 ? sqlString.length() : right;
 					final String param = sqlString.substring( indx + 1, chopLocation );
-					if ( StringHelper.isEmpty( param ) ) {
+					if ( param.isEmpty() ) {
 						throw new QueryException(
 								"Space is not allowed after parameter prefix ':' [" + sqlString + "]"
 						);
@@ -188,7 +188,7 @@ public class ParameterParser {
 						final String param = sqlString.substring( indx + 1, chopLocation );
 						// make sure this "name" is an integral
 						try {
-							recognizer.jpaPositionalParameter( Integer.valueOf( param ), indx );
+							recognizer.jpaPositionalParameter( Integer.parseInt( param ), indx );
 							indx = chopLocation - 1;
 						}
 						catch( NumberFormatException e ) {

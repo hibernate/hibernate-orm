@@ -9,10 +9,6 @@ package org.hibernate.type.descriptor.sql;
 import java.sql.Types;
 import java.util.Map;
 
-import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
-
-import org.jboss.logging.Logger;
-
 /**
  * Manages a mapping between nationalized and non-nationalized variants of JDBC types.
  *
@@ -20,35 +16,39 @@ import org.jboss.logging.Logger;
  * corresponding nationalized equivalent, so that's all we implement for now
  *
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
-public class NationalizedTypeMappings {
-	private static final Logger log = Logger.getLogger( NationalizedTypeMappings.class );
+public final class NationalizedTypeMappings {
 
 	/**
 	 * Singleton access
+	 * @deprecated use the static methods instead
 	 */
+	@Deprecated
 	public static final NationalizedTypeMappings INSTANCE = new NationalizedTypeMappings();
 
-	private final Map<Integer,Integer> nationalizedCodeByNonNationalized;
-
-	public NationalizedTypeMappings() {
-		this.nationalizedCodeByNonNationalized =  new BoundedConcurrentHashMap<Integer, Integer>();
-		map( Types.CHAR, Types.NCHAR );
-		map( Types.CLOB, Types.NCLOB );
-		map( Types.LONGVARCHAR, Types.LONGNVARCHAR );
-		map( Types.VARCHAR, Types.NVARCHAR );
+	private NationalizedTypeMappings() {
 	}
 
-	private void map(int nonNationalizedCode, int nationalizedCode) {
-		nationalizedCodeByNonNationalized.put( nonNationalizedCode, nationalizedCode );
-	}
-
-	public int getCorrespondingNationalizedCode(int jdbcCode) {
-		Integer nationalizedCode = nationalizedCodeByNonNationalized.get( jdbcCode );
-		if ( nationalizedCode == null ) {
-			log.debug( "Unable to locate nationalized jdbc-code equivalent for given jdbc code : " + jdbcCode );
-			return jdbcCode;
+	public static int toNationalizedTypeCode(final int jdbcCode) {
+		switch ( jdbcCode ) {
+			case Types.CHAR: return Types.NCHAR;
+			case Types.CLOB: return Types.NCLOB;
+			case Types.LONGVARCHAR: return Types.LONGNVARCHAR;
+			case Types.VARCHAR: return Types.NVARCHAR;
+			default:
+				throw new IllegalArgumentException( "Unable to locate nationalized jdbc-code equivalent for given jdbc code : " + jdbcCode );
 		}
-		return nationalizedCode;
 	}
+
+	/**
+	 * @deprecated use {@link #toNationalizedTypeCode(int)}
+	 * @param jdbcCode
+	 * @return
+	 */
+	@Deprecated
+	public int getCorrespondingNationalizedCode(int jdbcCode) {
+		return toNationalizedTypeCode( jdbcCode );
+	}
+
 }

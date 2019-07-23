@@ -40,7 +40,6 @@ public class BasicFormatterImpl implements Formatter {
 		END_CLAUSES.add( "where" );
 		END_CLAUSES.add( "set" );
 		END_CLAUSES.add( "having" );
-		END_CLAUSES.add( "join" );
 		END_CLAUSES.add( "from" );
 		END_CLAUSES.add( "by" );
 		END_CLAUSES.add( "join" );
@@ -79,7 +78,6 @@ public class BasicFormatterImpl implements Formatter {
 		boolean beginLine = true;
 		boolean afterBeginBeforeEnd;
 		boolean afterByOrSetOrFromOrSelect;
-		boolean afterValues;
 		boolean afterOn;
 		boolean afterBetween;
 		boolean afterInsert;
@@ -322,7 +320,6 @@ public class BasicFormatterImpl implements Formatter {
 			out();
 			indent++;
 			newline();
-			afterValues = true;
 		}
 
 		private void closeParen() {

@@ -542,7 +542,7 @@ public class Ejb3Column {
 					javax.persistence.Column col = actualCols[index];
 
 					final String sqlType;
-					if ( col.columnDefinition().equals( "" ) ) {
+					if ( col.columnDefinition().isEmpty() ) {
 						sqlType = null;
 					}
 					else {

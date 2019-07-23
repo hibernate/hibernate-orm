@@ -1164,12 +1164,15 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	@Override
 	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
 
+	// Override the JPA return type with the one exposed in QueryProducer
 	@Override
 	<T> org.hibernate.query.Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
 
+	// Override the JPA return type with the one exposed in QueryProducer
 	@Override
 	org.hibernate.query.Query createQuery(CriteriaUpdate updateQuery);
 
+	// Override the JPA return type with the one exposed in QueryProducer
 	@Override
 	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
 

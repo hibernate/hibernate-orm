@@ -459,6 +459,11 @@ public class EnhancerImpl implements Enhancer {
 			return getAnnotations().isAnnotationPresent( annotationType );
 		}
 
+		@Override
+		public String toString() {
+			return fieldDescription.toString();
+		}
+
 		<T extends Annotation> AnnotationDescription.Loadable<T> getAnnotation(Class<T> annotationType) {
 			return getAnnotations().ofType( annotationType );
 		}
@@ -536,7 +541,7 @@ public class EnhancerImpl implements Enhancer {
 		}
 	}
 
-	private class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
+	private static class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
 
 		// The name of the class to (possibly be) transformed.
 		private String className;

@@ -79,7 +79,7 @@ public class BatchFetchQueueHelper {
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
 		final EntityKey entityKey = session.generateEntityKey( id, persister );
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContext().getBatchFetchQueue();
+		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
 		batchFetchQueue.removeBatchLoadableEntityKey( entityKey );
 	}
 }

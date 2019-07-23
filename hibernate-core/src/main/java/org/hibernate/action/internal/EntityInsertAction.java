@@ -28,6 +28,7 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for performing an entity insertion, for entities not defined to use IDENTITY generation.
@@ -88,7 +89,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( !veto ) {
 			
 			persister.insert( id, getState(), instance, session );
-			PersistenceContext persistenceContext = session.getPersistenceContext();
+			PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final EntityEntry entry = persistenceContext.getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non-threadsafe access to session" );
@@ -109,6 +110,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 		final SessionFactoryImplementor factory = session.getFactory();
 
+		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( isCachePutEnabled( persister, session ) ) {
 			final CacheEntry ce = persister.buildCacheEntry(
 					instance,
@@ -122,8 +124,8 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 			final boolean put = cacheInsert( persister, ck );
 
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().entityCachePut(
+			if ( put && statistics.isStatisticsEnabled() ) {
+				statistics.entityCachePut(
 						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
@@ -134,8 +136,8 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 		postInsert();
 
-		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
-			factory.getStatistics().insertEntity( getPersister().getEntityName() );
+		if ( statistics.isStatisticsEnabled() && !veto ) {
+			statistics.insertEntity( getPersister().getEntityName() );
 		}
 
 		markExecuted();
@@ -220,8 +222,9 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			final Object ck = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheAfterInsert( cache, ck );
 
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatistics().entityCachePut(
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( put && statistics.isStatisticsEnabled() ) {
+				statistics.entityCachePut(
 						StatsHelper.INSTANCE.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);

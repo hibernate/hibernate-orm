@@ -2808,8 +2808,7 @@ public final class AnnotationBinder {
 					buildingContext.getMetadataCollector().addSecondPass( secondPass );
 				}
 				else {
-					Map<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>();
-					localGenerators.putAll( buildGenerators( property, buildingContext ) );
+					Map<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>( buildGenerators( property, buildingContext ) );
 					BinderHelper.makeIdGenerator(
 							(SimpleValue) comp.getProperty( property.getName() ).getValue(),
 							property,

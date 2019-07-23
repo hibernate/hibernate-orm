@@ -11,6 +11,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -45,26 +46,28 @@ public class EvictVisitor extends AbstractVisitor {
 	
 	public void evictCollection(Object value, CollectionType type) {
 		final PersistentCollection collection;
+		final EventSource session = getSession();
 		if ( type.hasHolder() ) {
-			collection = getSession().getPersistenceContext().removeCollectionHolder(value);
+			collection = session.getPersistenceContextInternal().removeCollectionHolder(value);
 		}
 		else if ( value instanceof PersistentCollection ) {
 			collection = (PersistentCollection) value;
 		}
 		else if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-			collection = (PersistentCollection) type.resolve( value, getSession(), this.owner );
+			collection = (PersistentCollection) type.resolve( value, session, this.owner );
 		}
 		else {
 			return; //EARLY EXIT!
 		}
 
-		if ( collection != null && collection.unsetSession( getSession() ) ) {
+		if ( collection != null && collection.unsetSession(session) ) {
 			evictCollection(collection);
 		}
 	}
 
 	private void evictCollection(PersistentCollection collection) {
-		CollectionEntry ce = (CollectionEntry) getSession().getPersistenceContext().getCollectionEntries().remove(collection);
+		final PersistenceContext persistenceContext = getSession().getPersistenceContextInternal();
+		CollectionEntry ce = (CollectionEntry) persistenceContext.getCollectionEntries().remove(collection);
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Evicting collection: %s",
@@ -74,11 +77,11 @@ public class EvictVisitor extends AbstractVisitor {
 							getSession() ) );
 		}
 		if (ce.getLoadedPersister() != null && ce.getLoadedPersister().getBatchSize() > 1) {
-			getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(ce);
+			persistenceContext.getBatchFetchQueue().removeBatchLoadableCollection(ce);
 		}
 		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
 			//TODO: is this 100% correct?
-			getSession().getPersistenceContext().getCollectionsByKey().remove(
+			persistenceContext.getCollectionsByKey().remove(
 					new CollectionKey( ce.getLoadedPersister(), ce.getLoadedKey() )
 			);
 		}

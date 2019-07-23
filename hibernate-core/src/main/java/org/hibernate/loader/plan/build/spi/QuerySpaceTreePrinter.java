@@ -35,6 +35,8 @@ public class QuerySpaceTreePrinter {
 	 */
 	public static final QuerySpaceTreePrinter INSTANCE = new QuerySpaceTreePrinter();
 
+	private static final int detailDepthOffset = 1;
+
 	private QuerySpaceTreePrinter() {
 	}
 
@@ -145,8 +147,6 @@ public class QuerySpaceTreePrinter {
 		generateDetailLines( querySpace, depth, aliasResolutionContext, printWriter );
 		writeJoins( querySpace.getJoins(), depth + 1, aliasResolutionContext, printWriter );
 	}
-
-	final int detailDepthOffset = 1;
 
 	private void generateDetailLines(
 			QuerySpace querySpace,

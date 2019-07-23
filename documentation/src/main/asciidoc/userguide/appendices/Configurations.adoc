@@ -869,11 +869,11 @@ If the fully-qualified name is given, the implementation must provide a no-arg c
 +
 The default value is https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/hbm2ddl/SingleLineSqlCommandExtractor.html[`SingleLineSqlCommandExtractor`].
 
-`*hibernate.hbm2dll.create_namespaces*` (e.g. `true` or `false` (default value))::
+`*hibernate.hbm2ddl.create_namespaces*` (e.g. `true` or `false` (default value))::
 Specifies whether to automatically create also the database schema/catalog.
 
 `*javax.persistence.create-database-schemas*` (e.g. `true` or `false` (default value))::
-The JPA variant of `hibernate.hbm2dll.create_namespaces`. Specifies whether the persistence provider is to create the database schema(s) in addition to creating database objects (tables, sequences, constraints, etc).
+The JPA variant of `hibernate.hbm2ddl.create_namespaces`. Specifies whether the persistence provider is to create the database schema(s) in addition to creating database objects (tables, sequences, constraints, etc).
 The value of this boolean property should be set to `true` if the persistence provider is to create schemas in the database or to generate DDL that contains "CREATE SCHEMA" commands.
 +
 If this property is not supplied (or is explicitly `false`), the provider should not attempt to create database schemas.
@@ -898,7 +898,7 @@ Used to specify the `SchemaManagementTool` to use for performing schema manageme
 `*hibernate.synonyms*` (e.g. `true` or `false` (default value))::
 If enabled, allows schema update and validation to support synonyms. Due to the possibility that this would return duplicate tables (especially in Oracle), this is disabled by default.
 
-`*hibernate.hbm2dll.extra_physical_table_types*` (e.g. `BASE TABLE`)::
+`*hibernate.hbm2ddl.extra_physical_table_types*` (e.g. `BASE TABLE`)::
 Identifies a comma-separated list of values to specify extra table types, other than the default `TABLE` value, to recognize as defining a physical table by schema update, creation and validation.
 
 `*hibernate.schema_update.unique_constraint_strategy*` (e.g. `DROP_RECREATE_QUIETLY`, `RECREATE_QUIETLY`, `SKIP`)::

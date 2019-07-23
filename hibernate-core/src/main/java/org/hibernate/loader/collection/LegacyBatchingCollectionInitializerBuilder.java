@@ -67,7 +67,7 @@ public class LegacyBatchingCollectionInitializerBuilder extends BatchingCollecti
 
 		@Override
 		public void initialize(Serializable id, SharedSessionContractImplementor session)	throws HibernateException {
-			Serializable[] batch = session.getPersistenceContext().getBatchFetchQueue()
+			Serializable[] batch = session.getPersistenceContextInternal().getBatchFetchQueue()
 					.getCollectionBatch( collectionPersister(), id, batchSizes[0] );
 
 			for ( int i=0; i<batchSizes.length-1; i++) {

@@ -53,7 +53,7 @@ public final class Collections {
 	}
 
 	private static void processDereferencedCollection(PersistentCollection coll, SessionImplementor session) {
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
 
@@ -111,7 +111,7 @@ public final class Collections {
 
 	private static void processNeverReferencedCollection(PersistentCollection coll, SessionImplementor session)
 			throws HibernateException {
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
 
 		if ( LOG.isDebugEnabled() ) {
@@ -147,7 +147,8 @@ public final class Collections {
 			Object entity,
 			SessionImplementor session) {
 		collection.setOwner( entity );
-		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( collection );
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
 
 		if ( ce == null ) {
 			// refer to comment in StatefulPersistenceContext.addCollection()
@@ -164,66 +165,70 @@ public final class Collections {
 		//TODO: better to pass the id in as an argument?
 		ce.setCurrentKey( type.getKeyOfOwner( entity, session ) );
 
-		final boolean isBytecodeEnhanced = persister.getOwnerEntityPersister().getInstrumentationMetadata().isEnhancedForLazyLoading();
+		final boolean isBytecodeEnhanced = persister.getOwnerEntityPersister().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
-			// skip it
-			LOG.debugf(
-					"Skipping uninitialized bytecode-lazy collection: %s",
-					MessageHelper.collectionInfoString( persister, collection, ce.getCurrentKey(), session )
-			);
-			ce.setReached( true );
-			ce.setProcessed( true );
-		}
-		else {
-			// The CollectionEntry.isReached() stuff is just to detect any silly users
-			// who set up circular or shared references between/to collections.
-			if ( ce.isReached() ) {
-				// We've been here before
-				throw new HibernateException(
-						"Found shared references to a collection: " + type.getRole()
+			// the class of the collection owner is enhanced for lazy loading and we found an un-initialized PersistentCollection
+			// 		- skip it
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf(
+						"Skipping uninitialized bytecode-lazy collection: %s",
+						MessageHelper.collectionInfoString(persister, collection, ce.getCurrentKey(), session)
 				);
 			}
 			ce.setReached( true );
-
-			if ( LOG.isDebugEnabled() ) {
-				if ( collection.wasInitialized() ) {
-					LOG.debugf(
-							"Collection found: %s, was: %s (initialized)",
-							MessageHelper.collectionInfoString(
-									persister,
-									collection,
-									ce.getCurrentKey(),
-									session
-							),
-							MessageHelper.collectionInfoString(
-									ce.getLoadedPersister(),
-									collection,
-									ce.getLoadedKey(),
-									session
-							)
-					);
-				}
-				else {
-					LOG.debugf(
-							"Collection found: %s, was: %s (uninitialized)",
-							MessageHelper.collectionInfoString(
-									persister,
-									collection,
-									ce.getCurrentKey(),
-									session
-							),
-							MessageHelper.collectionInfoString(
-									ce.getLoadedPersister(),
-									collection,
-									ce.getLoadedKey(),
-									session
-							)
-					);
-				}
-			}
-
-			prepareCollectionForUpdate( collection, ce, factory );
+			ce.setProcessed( true );
+			return;
 		}
+
+		// The CollectionEntry.isReached() stuff is just to detect any silly users
+		// who set up circular or shared references between/to collections.
+		if ( ce.isReached() ) {
+			// We've been here before
+			throw new HibernateException(
+					"Found shared references to a collection: " + type.getRole()
+			);
+		}
+
+		ce.setReached( true );
+
+		if ( LOG.isDebugEnabled() ) {
+			if ( collection.wasInitialized() ) {
+				LOG.debugf(
+						"Collection found: %s, was: %s (initialized)",
+						MessageHelper.collectionInfoString(
+								persister,
+								collection,
+								ce.getCurrentKey(),
+								session
+						),
+						MessageHelper.collectionInfoString(
+								ce.getLoadedPersister(),
+								collection,
+								ce.getLoadedKey(),
+								session
+						)
+				);
+			}
+			else {
+				LOG.debugf(
+						"Collection found: %s, was: %s (uninitialized)",
+						MessageHelper.collectionInfoString(
+								persister,
+								collection,
+								ce.getCurrentKey(),
+								session
+						),
+						MessageHelper.collectionInfoString(
+								ce.getLoadedPersister(),
+								collection,
+								ce.getLoadedKey(),
+								session
+						)
+				);
+			}
+		}
+
+		prepareCollectionForUpdate( collection, ce, factory );
 	}
 
 	/**

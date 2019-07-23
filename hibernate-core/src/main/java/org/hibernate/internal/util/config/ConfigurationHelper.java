@@ -293,7 +293,7 @@ public final class ConfigurationHelper {
 			return null;
 		}
 		value = value.trim();
-		if ( StringHelper.isEmpty( value ) ) {
+		if ( value.isEmpty() ) {
 			return null;
 		}
 		return value;
@@ -313,7 +313,7 @@ public final class ConfigurationHelper {
 			return null;
 		}
 		value = value.trim();
-		if ( StringHelper.isEmpty( value ) ) {
+		if ( value.isEmpty() ) {
 			return null;
 		}
 		return value;
@@ -466,7 +466,7 @@ public final class ConfigurationHelper {
 			buff.append( chars[pos] );
 		}
 		String rtn = buff.toString();
-		return StringHelper.isEmpty( rtn ) ? null : rtn;
+		return rtn.isEmpty() ? null : rtn;
 	}
 
 	private static String extractFromSystem(String systemPropertyName) {

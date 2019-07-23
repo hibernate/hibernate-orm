@@ -70,6 +70,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
@@ -461,8 +462,9 @@ public abstract class CollectionBinder {
 		}
 
 		// set explicit type information
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		if ( explicitType != null ) {
-			final TypeDefinition typeDef = buildingContext.getMetadataCollector().getTypeDefinition( explicitType );
+			final TypeDefinition typeDef = metadataCollector.getTypeDefinition( explicitType );
 			if ( typeDef == null ) {
 				collection.setTypeName( explicitType );
 				collection.setTypeParameters( explicitTypeParameters );
@@ -554,7 +556,7 @@ public abstract class CollectionBinder {
 
 		//many to many may need some second pass informations
 		if ( !oneToMany && isMappedBy ) {
-			buildingContext.getMetadataCollector().addMappedBy( getCollectionType().getName(), mappedBy, propertyName );
+			metadataCollector.addMappedBy( getCollectionType().getName(), mappedBy, propertyName );
 		}
 		//TODO reducce tableBinder != null and oneToMany
 		XClass collectionType = getCollectionType();
@@ -580,13 +582,13 @@ public abstract class CollectionBinder {
 			// do it right away, otherwise @ManyToOne on composite element call addSecondPass
 			// and raise a ConcurrentModificationException
 			//sp.doSecondPass( CollectionHelper.EMPTY_MAP );
-			buildingContext.getMetadataCollector().addSecondPass( sp, !isMappedBy );
+			metadataCollector.addSecondPass( sp, !isMappedBy );
 		}
 		else {
-			buildingContext.getMetadataCollector().addSecondPass( sp, !isMappedBy );
+			metadataCollector.addSecondPass( sp, !isMappedBy );
 		}
 
-		buildingContext.getMetadataCollector().addCollectionBinding( collection );
+		metadataCollector.addCollectionBinding( collection );
 
 		//property building
 		PropertyBinder binder = new PropertyBinder();
@@ -893,8 +895,7 @@ public abstract class CollectionBinder {
 			MetadataBuildingContext buildingContext,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 
-		final boolean debugEnabled = LOG.isDebugEnabled();
-		if ( debugEnabled ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding a OneToMany: %s.%s through a foreign key", propertyHolder.getEntityName(), propertyName );
 		}
 		if ( buildingContext == null ) {
@@ -932,7 +933,7 @@ public abstract class CollectionBinder {
 			column.setJoins( joins );
 			collection.setCollectionTable( column.getTable() );
 		}
-		if ( debugEnabled ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );
 		}
 		bindFilters( false );

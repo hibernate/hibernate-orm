@@ -7,6 +7,7 @@
 package org.hibernate.query.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.ResultSetMapping;
 
@@ -14,9 +15,15 @@ import org.hibernate.query.spi.ResultSetMapping;
  * @author Steve Ebersole
  */
 public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMemento {
+	private final String name;
+
+	public NamedResultSetMappingMementoImpl(String name, SessionFactoryImplementor factory) {
+		this.name = name;
+	}
+
 	@Override
 	public String getName() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return name;
 	}
 
 	@Override

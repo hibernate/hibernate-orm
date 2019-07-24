@@ -23,6 +23,8 @@ import org.hibernate.type.Type;
  *
  * @author David Channon
  * @author Steve Ebersole
+ *
+ * @deprecated Replaced by {@link org.hibernate.query.sqm.function.SqmFunction}
  */
 public interface SQLFunction {
 	/**

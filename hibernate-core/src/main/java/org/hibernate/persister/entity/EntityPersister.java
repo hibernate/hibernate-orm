@@ -33,7 +33,7 @@ import org.hibernate.loader.spi.Loadable;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.walking.spi.EntityDefinition;
-import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
@@ -134,7 +134,7 @@ public interface EntityPersister extends EntityDefinition, Loadable {
 	 * has multiple tables.  Returns {@code null} to indicate that the entity
 	 * does not define multiple tables
 	 */
-	default SqmMutationStrategy getSqmMultiTableMutationStrategy(){
+	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy(){
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

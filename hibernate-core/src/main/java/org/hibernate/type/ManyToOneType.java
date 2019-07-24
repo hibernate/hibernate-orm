@@ -19,6 +19,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A many-to-one association to an entity.
@@ -106,6 +107,10 @@ public class ManyToOneType extends EntityType {
 		this.propertyName = original.propertyName;
 		this.ignoreNotFound = original.ignoreNotFound;
 		this.isLogicalOneToOne = original.isLogicalOneToOne;
+	}
+
+	public ManyToOneType(String name, TypeConfiguration typeConfiguration) {
+		this( () -> typeConfiguration, name );
 	}
 
 	@Override

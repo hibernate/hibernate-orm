@@ -21,9 +21,8 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	public AnyMappingSqmPathSource(
 			String localPathName,
 			AnyMappingDomainType<J> domainType,
-			BindableType jpaBindableType,
-			NodeBuilder nodeBuilder) {
-		super( localPathName, domainType, jpaBindableType, nodeBuilder );
+			BindableType jpaBindableType) {
+		super( localPathName, domainType, jpaBindableType );
 	}
 
 	@Override

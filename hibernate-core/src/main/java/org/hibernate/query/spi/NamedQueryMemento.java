@@ -48,6 +48,8 @@ public interface NamedQueryMemento {
 
 	Map<String, Object> getHints();
 
+	void validate(QueryEngine queryEngine);
+
 	interface ParameterMemento {
 		QueryParameterImplementor resolve(SharedSessionContractImplementor session);
 	}

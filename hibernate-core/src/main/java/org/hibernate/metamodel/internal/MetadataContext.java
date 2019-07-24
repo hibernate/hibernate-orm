@@ -36,6 +36,7 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -45,8 +46,8 @@ import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
+import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -67,9 +68,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class MetadataContext {
 	private static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( MetadataContext.class );
 
+	private final JpaMetamodel jpaMetamodel;
 	private final RuntimeModelCreationContext runtimeModelCreationContext;
 
-	private final SqmCriteriaNodeBuilder criteriaBuilder;
 	private Set<MappedSuperclass> knownMappedSuperclasses;
 	private TypeConfiguration typeConfiguration;
 	private final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting;
@@ -91,17 +92,16 @@ public class MetadataContext {
 	 * Stack of PersistentClass being process. Last in the list is the highest in the stack.
 	 */
 	private List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
-	private InflightRuntimeMetamodel metamodel;
+	private DomainMetamodel metamodel;
 
 	public MetadataContext(
+			JpaMetamodel jpaMetamodel,
 			RuntimeModelCreationContext runtimeModelCreationContext,
-			InflightRuntimeMetamodel metamodel,
-			SqmCriteriaNodeBuilder criteriaBuilder,
 			Set<MappedSuperclass> mappedSuperclasses,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
+		this.jpaMetamodel = jpaMetamodel;
 		this.runtimeModelCreationContext = runtimeModelCreationContext;
-		this.metamodel = metamodel;
-		this.criteriaBuilder = criteriaBuilder;
+		this.metamodel = runtimeModelCreationContext.getSessionFactory().getMetamodel();
 		this.knownMappedSuperclasses = mappedSuperclasses;
 		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
 		this.jpaStaticMetaModelPopulationSetting = jpaStaticMetaModelPopulationSetting;
@@ -111,8 +111,8 @@ public class MetadataContext {
 		return runtimeModelCreationContext;
 	}
 
-	public SqmCriteriaNodeBuilder getCriteriaBuilder() {
-		return criteriaBuilder;
+	public JpaMetamodel getJpaMetamodel() {
+		return jpaMetamodel;
 	}
 
 	public TypeConfiguration getTypeConfiguration() {
@@ -123,7 +123,7 @@ public class MetadataContext {
 		return typeConfiguration.getJavaTypeDescriptorRegistry();
 	}
 
-	InflightRuntimeMetamodel getMetamodel() {
+	DomainMetamodel getMetamodel() {
 		return metamodel;
 	}
 

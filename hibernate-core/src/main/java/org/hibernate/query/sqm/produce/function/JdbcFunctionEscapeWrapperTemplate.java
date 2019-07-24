@@ -13,7 +13,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.function.SqmJdbcFunctionEscapeWrapper;
+import org.hibernate.query.sqm.function.SqmJdbcFunctionEscapeWrapper;
 
 /**
  * Acts as a wrapper to another SqmFunctionTemplate - upon rendering uses the

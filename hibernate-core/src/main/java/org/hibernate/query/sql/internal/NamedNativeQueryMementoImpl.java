@@ -11,8 +11,10 @@ import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
@@ -101,14 +103,25 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	}
 
 	@Override
+	public void validate(QueryEngine queryEngine) {
+		// todo (6.0) : add any validation we want here
+	}
+
+	@Override
+	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+		//noinspection unchecked
+		return toQuery( session, (Class) null );
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
 		return new NativeQueryImpl( this, resultType, session );
 	}
 
 	@Override
-	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
-		//noinspection unchecked
-		return toQuery( session, null );
+	@SuppressWarnings("unchecked")
+	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, String resultSetMappingName) {
+		return new NativeQueryImpl( this, resultSetMappingName, session );
 	}
 }

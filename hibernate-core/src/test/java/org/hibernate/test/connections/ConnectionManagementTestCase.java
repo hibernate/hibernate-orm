@@ -239,13 +239,6 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 		sessionUnderTest.save( silly );
 		sessionUnderTest.flush();
 
-		sessionUnderTest.createQuery( "from Silly" ).iterate();
-
-		disconnect( sessionUnderTest );
-		SerializationHelper.serialize( sessionUnderTest );
-		checkSerializedState( sessionUnderTest );
-
-		reconnect( sessionUnderTest );
 		sessionUnderTest.createQuery( "from Silly" ).scroll();
 
 		disconnect( sessionUnderTest );

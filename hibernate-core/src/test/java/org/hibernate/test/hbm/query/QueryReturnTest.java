@@ -2,11 +2,13 @@ package org.hibernate.test.hbm.query;
 
 import java.io.StringReader;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.spi.NamedNativeQueryDefinition;
 import org.hibernate.engine.jdbc.ReaderInputStream;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
@@ -50,15 +52,19 @@ public class QueryReturnTest extends BaseUnitTestCase {
 		try {
 			metadataSources.addInputStream(new ReaderInputStream(new StringReader(QUERY_RETURN_HBM_XML)));
 			Metadata metadata = metadataSources.buildMetadata();
-			NamedSQLQueryDefinition myQuery = metadata.getNamedNativeQueryMapping( "myQuery");
+			NamedNativeQueryDefinition myQuery = metadata.getNamedNativeQueryMapping( "myQuery");
 			Assert.assertNotNull(myQuery);
-			NativeSQLQueryReturn[] myQueryReturns = myQuery.getQueryReturns();
-			Assert.assertNotNull(myQueryReturns);
-			Assert.assertEquals(1, myQueryReturns.length);
-			Assert.assertTrue(NativeSQLQueryRootReturn.class.isInstance(myQueryReturns[0]));
-			NativeSQLQueryRootReturn myQueryRootReturn = (NativeSQLQueryRootReturn)myQueryReturns[0];
-			Assert.assertEquals("e", myQueryRootReturn.getAlias());
-			Assert.assertEquals("org.hibernate.test.hbm.query.QueryReturnTest$Bar", myQueryRootReturn.getReturnEntityName());
+
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// NYI
+//			NativeSQLQueryReturn[] myQueryReturns = myQuery.getQueryReturns();
+//			Assert.assertNotNull(myQueryReturns);
+//			Assert.assertEquals(1, myQueryReturns.length);
+//			Assert.assertTrue(NativeSQLQueryRootReturn.class.isInstance(myQueryReturns[0]));
+//			NativeSQLQueryRootReturn myQueryRootReturn = (NativeSQLQueryRootReturn)myQueryReturns[0];
+//			Assert.assertEquals("e", myQueryRootReturn.getAlias());
+//			Assert.assertEquals("org.hibernate.test.hbm.query.QueryReturnTest$Bar", myQueryRootReturn.getReturnEntityName());
+			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 		finally {
 			if ( standardServiceRegistry instanceof StandardServiceRegistryImpl ) {

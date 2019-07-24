@@ -27,6 +27,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.metamodel.internal.StandardManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 
 import org.jboss.jandex.IndexView;
@@ -55,7 +56,8 @@ public interface MetadataBuildingOptions {
 	MappingDefaults getMappingDefaults();
 
 	default ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		// for now always return the standard one
+		return StandardManagedTypeRepresentationResolver.INSTANCE;
 	}
 
 	default CollectionSemanticsResolver getPersistentCollectionRepresentationResolver() {

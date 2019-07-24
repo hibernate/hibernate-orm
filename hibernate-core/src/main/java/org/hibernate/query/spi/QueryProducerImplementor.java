@@ -56,4 +56,6 @@ public interface QueryProducerImplementor extends QueryProducer {
 
 	@Override
 	NativeQueryImplementor getNamedNativeQuery(String name);
+
+	NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping);
 }

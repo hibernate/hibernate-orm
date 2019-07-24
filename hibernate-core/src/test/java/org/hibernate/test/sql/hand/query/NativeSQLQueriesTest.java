@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.sql.hand.query;
 
-import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -16,10 +15,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.Hibernate;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -28,7 +26,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
@@ -247,14 +246,10 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.persist(gavin);
 		s.persist(emp);
 
-		List l = s.createNativeQuery( getOrgEmpRegionSQL() )
-				.setResultSetMapping( "org-emp-regionCode" )
-				.list();
+		List l = s.createNativeQuery( getOrgEmpRegionSQL(), "org-emp-regionCode" ).list();
 		assertEquals( l.size(), 2 );
 
-		l = s.createNativeQuery( getOrgEmpPersonSQL() )
-				.setResultSetMapping( "org-emp-person" )
-				.list();
+		l = s.createNativeQuery( getOrgEmpPersonSQL(), "org-emp-person" ).list();
 		assertEquals( l.size(), 1 );
 
 		s.delete(emp);
@@ -667,8 +662,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 				"    LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER";
 
 		// as a control, lets apply an existing rs mapping
-		NativeQuery sqlQuery = s.createNativeQuery( sql );
-		sqlQuery.setResultSetMapping( "org-description" );
+		NativeQuery sqlQuery = s.createNativeQuery( sql, "org-description" );
 		sqlQuery.list();
 
 		// next try a partial mapping def
@@ -728,9 +722,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List l = s.createNativeQuery( "select name, id, flength, name as scalarName from Speech" )
-				.setResultSetMapping( "speech" )
-				.list();
+		List l = s.createNativeQuery( "select name, id, flength, name as scalarName from Speech", "speech" ).list();
 		assertEquals( l.size(), 1 );
 
 		t.rollback();

@@ -25,12 +25,9 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.metamodel.internal.RuntimeModelCreationProcess;
 
-import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -94,12 +91,6 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 				.addAnnotatedClass( WithGenericCollection.class )
 				.buildMetadata();
 		SessionFactoryImplementor sfi = (SessionFactoryImplementor) metadata.buildSessionFactory();
-
-		new RuntimeModelCreationProcess(
-				BootstrapContextImpl.INSTANCE,
-				sfi,
-				( (MetadataImplementor) metadata ).getTypeConfiguration()
-		).create( (MetadataImplementor) metadata );
 		sfi.close();
 	}
 

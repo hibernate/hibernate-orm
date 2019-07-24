@@ -9,14 +9,19 @@ package org.hibernate.metamodel.spi;
 import org.hibernate.proxy.ProxyFactory;
 
 /**
- * Specialization of ManagedTypeRepresentationStrategy for entity types
- * adding the ability to generate a proxy factory
+ * Specialization of ManagedTypeRepresentationStrategy for an entity type
+ * adding the ability to generate an instantiator and a proxy factory
  *
  * @author Steve Ebersole
  */
 public interface EntityRepresentationStrategy extends ManagedTypeRepresentationStrategy {
 	/**
+	 * Create a delegate capable of instantiating instances of the represented type.
+	 */
+	<J> Instantiator<J> getInstantiator();
+
+	/**
 	 * Create the delegate capable of producing proxies for the given entity
 	 */
-	ProxyFactory generateProxyFactory();
+	ProxyFactory getProxyFactory();
 }

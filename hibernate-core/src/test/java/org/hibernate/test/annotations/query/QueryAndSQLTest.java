@@ -86,7 +86,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		s.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
-		s.createNativeQuery( sql2 ).setResultSetMapping( "all" ).list();
+		s.createNativeQuery( sql2, "all" ).list();
 		NativeQuery q = s.createNativeQuery( sql2 );
 		q.addRoot( "t", AllTables.class ).addProperty( "tableName", "t_name" ).addProperty( "daysOld", "t_time" );
 		q.list();

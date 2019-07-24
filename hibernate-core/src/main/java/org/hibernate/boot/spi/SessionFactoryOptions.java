@@ -33,7 +33,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.hql.SemanticQueryProducer;
-import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -144,7 +144,7 @@ public interface SessionFactoryOptions {
 
 	SemanticQueryProducer getHqlTranslator();
 
-	SqmMutationStrategy getSqmMutationStrategy();
+	SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy();
 
 	StatementInspector getStatementInspector();
 

@@ -7,7 +7,6 @@
 package org.hibernate.test.procedure;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -23,9 +22,9 @@ import javax.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.jdbc.Work;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.type.StringType;
@@ -263,8 +262,14 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 			Session session = entityManager.unwrap( Session.class );
 
 			ProcedureCall call = session.createStoredProcedureCall( "sp_count_phones" );
-			call.registerParameter( "personId", Long.class, ParameterMode.IN ).bindValue( 1L );
+			final ProcedureParameter<Long> inParam = call.registerParameter(
+					"personId",
+					Long.class,
+					ParameterMode.IN
+			);
 			call.registerParameter( "phoneCount", Long.class, ParameterMode.OUT );
+
+			call.setParameter( inParam, 1L );
 
 			Long phoneCount = (Long) call.getOutputs().getOutputParameterValue( "phoneCount" );
 			assertEquals( Long.valueOf( 2 ), phoneCount );
@@ -330,7 +335,13 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
 			Session session = entityManager.unwrap( Session.class );
 
 			ProcedureCall call = session.createStoredProcedureCall( "sp_phones" );
-			call.registerParameter( 1, Long.class, ParameterMode.IN ).bindValue( 1L );
+			final ProcedureParameter<Long> parameter = call.registerParameter(
+					1,
+					Long.class,
+					ParameterMode.IN
+			);
+
+			call.setParameter( parameter, 1L );
 
 			Output output = call.getOutputs().getCurrent();
 

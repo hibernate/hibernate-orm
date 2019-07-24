@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -18,21 +17,14 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	private final String localPathName;
 	private final DomainType<J> domainType;
 	private final BindableType jpaBindableType;
-	private final NodeBuilder nodeBuilder;
 
 	public AbstractSqmPathSource(
 			String localPathName,
 			DomainType<J> domainType,
-			BindableType jpaBindableType,
-			NodeBuilder nodeBuilder) {
+			BindableType jpaBindableType) {
 		this.localPathName = localPathName;
 		this.domainType = domainType;
 		this.jpaBindableType = jpaBindableType;
-		this.nodeBuilder = nodeBuilder;
-	}
-
-	protected NodeBuilder getNodeBuilder() {
-		return nodeBuilder;
 	}
 
 	@Override

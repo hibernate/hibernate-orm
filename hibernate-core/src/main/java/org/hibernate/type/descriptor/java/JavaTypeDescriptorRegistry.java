@@ -13,6 +13,7 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Remove;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -28,6 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @deprecated Use (5.3) Use {@link org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry} instead
  */
 @Deprecated
+@Remove
 public class JavaTypeDescriptorRegistry implements Serializable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( JavaTypeDescriptorRegistry.class );
 

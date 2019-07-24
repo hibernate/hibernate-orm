@@ -31,8 +31,7 @@ class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> imp
 				ValueClassification.BASIC,
 				getName(),
 				builder.getListIndexOrMapKeyType(),
-				BindableType.PLURAL_ATTRIBUTE,
-				builder.getNodeBuilder()
+				BindableType.PLURAL_ATTRIBUTE
 		);
 	}
 

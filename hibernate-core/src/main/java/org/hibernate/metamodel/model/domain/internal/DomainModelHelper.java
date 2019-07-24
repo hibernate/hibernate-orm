@@ -19,7 +19,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
@@ -84,39 +83,34 @@ public class DomainModelHelper {
 			ValueClassification classification,
 			String name,
 			DomainType<J> valueDomainType,
-			Bindable.BindableType jpaBindableType,
-			NodeBuilder nodeBuilder) {
+			Bindable.BindableType jpaBindableType) {
 		switch ( classification ) {
 			case BASIC: {
 				return new BasicSqmPathSource<>(
 						name,
 						(BasicDomainType<J>) valueDomainType,
-						jpaBindableType,
-						nodeBuilder
+						jpaBindableType
 				);
 			}
 			case ANY: {
 				return new AnyMappingSqmPathSource<>(
 						name,
 						(AnyMappingDomainType<J>) valueDomainType,
-						jpaBindableType,
-						nodeBuilder
+						jpaBindableType
 				);
 			}
 			case EMBEDDED: {
 				return new EmbeddedSqmPathSource<>(
 						name,
 						(EmbeddableDomainType<J>) valueDomainType,
-						jpaBindableType,
-						nodeBuilder
+						jpaBindableType
 				);
 			}
 			case ENTITY: {
 				return new EntitySqmPathSource<>(
 						name,
 						(EntityDomainType<J>) valueDomainType,
-						jpaBindableType,
-						nodeBuilder
+						jpaBindableType
 				);
 			}
 			default: {

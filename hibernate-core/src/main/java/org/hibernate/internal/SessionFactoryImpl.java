@@ -15,10 +15,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.naming.Reference;
@@ -53,7 +55,10 @@ import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
+import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
@@ -93,11 +98,15 @@ import org.hibernate.jpa.internal.AfterCompletionActionLegacyJpaImpl;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.ManagedFlushCheckerLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
+import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -132,8 +141,6 @@ import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
-
-import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 
 
 /**
@@ -178,8 +185,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
-	private final transient MetamodelImplementor metamodel;
-	private final transient NodeBuilder criteriaBuilder;
+	private final transient DomainMetamodel metamodel;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
 	private final transient QueryEngine queryEngine;
@@ -200,21 +206,19 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionBuilder temporarySessionOpenOptions;
 
 	public SessionFactoryImpl(
-			final MetadataImplementor metadata,
+			final MetadataImplementor bootMetamodel,
 			SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
 
 		this.sessionFactoryOptions = options;
-		this.settings = new Settings( options, metadata );
+		this.settings = new Settings( options, bootMetamodel );
 
 		this.serviceRegistry = options
 				.getServiceRegistry()
 				.getService( SessionFactoryServiceRegistryFactory.class )
 				.buildServiceRegistry( this, options );
 
-		prepareEventListeners( metadata );
-
-		this.queryEngine = QueryEngine.from( this, metadata );
+		prepareEventListeners( bootMetamodel );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
@@ -247,17 +251,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
-		this.criteriaBuilder = SqmCriteriaNodeBuilder.create( this );
 		this.jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
 		for ( SessionFactoryObserver sessionFactoryObserver : options.getSessionFactoryObservers() ) {
 			this.observer.addObserver( sessionFactoryObserver );
 		}
 
-		this.typeHelper = new TypeLocatorImpl( metadata.getTypeConfiguration().getTypeResolver() );
+		this.typeHelper = new TypeLocatorImpl( bootMetamodel.getTypeConfiguration().getTypeResolver() );
 
 		this.filters = new HashMap<>();
-		this.filters.putAll( metadata.getFilterDefinitions() );
+		this.filters.putAll( bootMetamodel.getFilterDefinitions() );
 
 		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
@@ -281,14 +284,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		this.observer.addObserver( integratorObserver );
 		try {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
-				integrator.integrate( metadata, this, this.serviceRegistry );
+				integrator.integrate( bootMetamodel, this, this.serviceRegistry );
 				integratorObserver.integrators.add( integrator );
 			}
 			//Generators:
 			this.identifierGenerators = new HashMap<>();
-			metadata.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
+			bootMetamodel.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
 				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
-						metadata.getIdentifierGeneratorFactory(),
+						bootMetamodel.getIdentifierGeneratorFactory(),
 						jdbcServices.getJdbcEnvironment().getDialect(),
 						settings.getDefaultCatalogName(),
 						settings.getDefaultSchemaName(),
@@ -299,7 +302,19 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			LOG.debug( "Instantiated session factory" );
 
-			this.metamodel = (MetamodelImplementor) metadata.getTypeConfiguration().scope( this ).create( metadata );
+			primeSecondLevelCacheRegions( bootMetamodel );
+
+			this.metamodel = bootMetamodel.getTypeConfiguration().scope( this );
+			( (DomainMetamodelImpl) metamodel ).finishInitialization(
+					bootMetamodel,
+					bootMetamodel.getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext(),
+					this
+			);
+
+			this.queryEngine = QueryEngine.from( this, bootMetamodel );
+			if ( options.isNamedQueryStartupCheckingEnabled() ) {
+				queryEngine.getNamedQueryRepository().checkNamedQueries( queryEngine );
+			}
 
 			// todo (6.0) : manage old getMultiTableBulkIdStrategy
 
@@ -311,7 +326,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 //			);
 
 			SchemaManagementToolCoordinator.process(
-					metadata,
+					bootMetamodel,
 					serviceRegistry,
 					properties,
 					action -> SessionFactoryImpl.this.delayedDropAction = action
@@ -321,14 +336,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			// this needs to happen after persisters are all ready to go...
 			this.fetchProfiles = new HashMap<>();
-			for ( org.hibernate.mapping.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
+			for ( org.hibernate.mapping.FetchProfile mappingProfile : bootMetamodel.getFetchProfiles() ) {
 				final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
 				for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 					// resolve the persister owning the fetch
-					final String entityName = metamodel.getImportedClassName( mappingFetch.getEntity() );
+					final String entityName = metamodel.getImportedName( mappingFetch.getEntity() );
 					final EntityPersister owner = entityName == null
 							? null
-							: metamodel.entityPersister( entityName );
+							: metamodel.getEntityDescriptor( entityName );
 					if ( owner == null ) {
 						throw new HibernateException(
 								"Unable to resolve entity reference [" + mappingFetch.getEntity()
@@ -377,6 +392,60 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			close();
 			throw e;
 		}
+	}
+
+	private void primeSecondLevelCacheRegions(MetadataImplementor mappingMetadata) {
+		final Map<String, DomainDataRegionConfigImpl.Builder> regionConfigBuilders = new ConcurrentHashMap<>();
+
+		// todo : ultimately this code can be made more efficient when we have a better intrinsic understanding of the hierarchy as a whole
+
+		for ( PersistentClass bootEntityDescriptor : mappingMetadata.getEntityBindings() ) {
+			final AccessType accessType = AccessType.fromExternalName( bootEntityDescriptor.getCacheConcurrencyStrategy() );
+
+			if ( accessType != null ) {
+				if ( bootEntityDescriptor.isCached() ) {
+					regionConfigBuilders.computeIfAbsent(
+							bootEntityDescriptor.getRootClass().getCacheRegionName(),
+							DomainDataRegionConfigImpl.Builder::new
+					)
+							.addEntityConfig( bootEntityDescriptor, accessType );
+				}
+
+				if ( bootEntityDescriptor instanceof RootClass
+						&& bootEntityDescriptor.hasNaturalId()
+						&& bootEntityDescriptor.getNaturalIdCacheRegionName() != null ) {
+					regionConfigBuilders.computeIfAbsent(
+							bootEntityDescriptor.getNaturalIdCacheRegionName(),
+							DomainDataRegionConfigImpl.Builder::new
+					)
+							.addNaturalIdConfig( (RootClass) bootEntityDescriptor, accessType );
+				}
+			}
+		}
+
+		for ( Collection collection : mappingMetadata.getCollectionBindings() ) {
+			final AccessType accessType = AccessType.fromExternalName( collection.getCacheConcurrencyStrategy() );
+			if ( accessType != null ) {
+				regionConfigBuilders.computeIfAbsent(
+						collection.getCacheRegionName(),
+						DomainDataRegionConfigImpl.Builder::new
+				)
+						.addCollectionConfig( collection, accessType );
+			}
+		}
+
+		final Set<DomainDataRegionConfig> regionConfigs;
+		if ( regionConfigBuilders.isEmpty() ) {
+			regionConfigs = Collections.emptySet();
+		}
+		else {
+			regionConfigs = new HashSet<>();
+			for ( DomainDataRegionConfigImpl.Builder builder : regionConfigBuilders.values() ) {
+				regionConfigs.add( builder.build() );
+			}
+		}
+
+		getCache().prime( regionConfigs );
 	}
 
 	private void prepareEventListeners(MetadataImplementor metadata) {
@@ -521,7 +590,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public QueryEngine getQueryEngine() {
-		return null;
+		return queryEngine;
 	}
 
 	@Override
@@ -639,13 +708,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public NodeBuilder getCriteriaBuilder() {
 		validateNotClosed();
-		return criteriaBuilder;
+		return queryEngine.getCriteriaBuilder();
 	}
 
 	@Override
 	public MetamodelImplementor getMetamodel() {
 		validateNotClosed();
-		return metamodel;
+		return (MetamodelImplementor) metamodel;
 	}
 
 	@Override
@@ -757,10 +826,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		if ( metamodel != null ) {
-			metamodel.close();
+			( (DomainMetamodelImpl) metamodel ).close();
 		}
 
-		queryEngine.close();
+		if ( queryEngine != null ) {
+			queryEngine.close();
+		}
 
 		if ( delayedDropAction != null ) {
 			delayedDropAction.perform( serviceRegistry );

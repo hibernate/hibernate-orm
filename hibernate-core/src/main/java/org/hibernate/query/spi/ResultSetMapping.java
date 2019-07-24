@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
@@ -24,5 +25,6 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface ResultSetMapping extends DomainResultProducer {
 }

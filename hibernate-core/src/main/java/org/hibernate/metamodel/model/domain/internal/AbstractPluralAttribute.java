@@ -19,7 +19,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -42,9 +41,8 @@ public abstract class AbstractPluralAttribute<D,C,E>
 			AbstractManagedType<X> ownerType,
 			SimpleDomainType<E> attrType,
 			JavaTypeDescriptor<C> collectionClass,
-			SimpleDomainType<K> listIndexOrMapKeyType,
-			NodeBuilder nodeBuilder) {
-		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, listIndexOrMapKeyType, nodeBuilder );
+			SimpleDomainType<K> listIndexOrMapKeyType) {
+		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, listIndexOrMapKeyType );
 	}
 
 	private final CollectionClassification classification;
@@ -67,8 +65,7 @@ public abstract class AbstractPluralAttribute<D,C,E>
 				interpretValueClassification( builder.getValueType() ),
 				getName(),
 				builder.getValueType(),
-				BindableType.PLURAL_ATTRIBUTE,
-				builder.getNodeBuilder()
+				BindableType.PLURAL_ATTRIBUTE
 		);
 	}
 

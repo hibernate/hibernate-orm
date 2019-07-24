@@ -10,12 +10,14 @@ import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
  * Pluggable strategy for defining how mutation (`UPDATE` or `DELETE`)
- * queries should be handled.
+ * queries should be handled when the target entity is mapped to multiple
+ * tables (generally via secondary tables or joined-inheritance).
  *
  * {@link #prepare} and {@link #release} allow the strategy to perform
  * any one time preparation and cleanup.
@@ -31,14 +33,11 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
  *
  * @author Steve Ebersole
  */
-public interface SqmMutationStrategy {
+public interface SqmMultiTableMutationStrategy {
 
 	/**
 	 * Prepare the strategy for use.  Called one time as the SessionFactory
 	 * is being built.
-	 *
-	 * @param runtimeMetadata Access to the runtime mappings
-	 * @param connectionAccess Access to a JDBC Connection if needed
 	 */
 	default void prepare(
 			Metamodel runtimeMetadata,

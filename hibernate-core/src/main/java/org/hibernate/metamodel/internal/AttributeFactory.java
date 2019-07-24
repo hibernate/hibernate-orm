@@ -110,8 +110,7 @@ public class AttributeFactory {
 				attributeMetadata.getMember(),
 				false,
 				false,
-				property.isOptional(),
-				context.getCriteriaBuilder()
+				property.isOptional()
 		);
 	}
 
@@ -153,8 +152,7 @@ public class AttributeFactory {
 				property.getName(),
 				determineSimpleType( attributeMetadata.getValueContext() ),
 				attributeMetadata.getMember(),
-				attributeMetadata.getAttributeClassification(),
-				context.getCriteriaBuilder()
+				attributeMetadata.getAttributeClassification()
 		);
 	}
 
@@ -184,8 +182,7 @@ public class AttributeFactory {
 				property.getName(),
 				attributeMetadata.getAttributeClassification(),
 				determineSimpleType( attributeMetadata.getValueContext() ),
-				attributeMetadata.getMember(),
-				context.getCriteriaBuilder()
+				attributeMetadata.getMember()
 		);
 	}
 
@@ -200,8 +197,7 @@ public class AttributeFactory {
 				attributeMetadata.getOwnerType(),
 				determineSimpleType( attributeMetadata.getElementValueContext() ),
 				javaTypeDescriptor,
-				determineListIndexOrMapKeyType( attributeMetadata ),
-				context.getCriteriaBuilder()
+				determineListIndexOrMapKeyType( attributeMetadata )
 		);
 
 		return info
@@ -271,7 +267,7 @@ public class AttributeFactory {
 					embeddableType = new EmbeddableTypeImpl<Y>(
 							javaTypeDescriptor,
 							representationStrategy,
-							context.getCriteriaBuilder().getDomainModel()
+							context.getJpaMetamodel()
 					);
 
 					context.registerEmbeddableType( embeddableType );
@@ -281,7 +277,7 @@ public class AttributeFactory {
 				else {
 					embeddableType = new EmbeddableTypeImpl(
 							component.getRoleName(),
-							context.getCriteriaBuilder().getDomainModel()
+							context.getJpaMetamodel()
 					);
 				}
 
@@ -1000,7 +996,7 @@ public class AttributeFactory {
 		}
 		else {
 			return ownerType.getRepresentationStrategy()
-					.generatePropertyAccess( attributeContext.getPropertyMapping() )
+					.resolvePropertyAccess( attributeContext.getPropertyMapping() )
 					.getGetter()
 					.getMember();
 		}

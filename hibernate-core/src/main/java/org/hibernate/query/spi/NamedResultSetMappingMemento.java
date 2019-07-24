@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.spi;
 
+import org.hibernate.Incubating;
+
 /**
  * Used to keep information about named result mappings defined by the
  * application which can then be applied to native-sql and stored-procedure
@@ -20,6 +22,7 @@ package org.hibernate.query.spi;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
+@Incubating
 public interface NamedResultSetMappingMemento {
 	String getName();
 

@@ -119,7 +119,6 @@ public class NativeQueryImpl<R>
 	 */
 	public NativeQueryImpl(
 			NamedNativeQueryMemento memento,
-			Class<R> resultJavaType,
 			SharedSessionContractImplementor session) {
 		super( session );
 
@@ -132,8 +131,28 @@ public class NativeQueryImpl<R>
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
 		applyOptions( memento );
+	}
+
+	/**
+	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
+	 */
+	public NativeQueryImpl(
+			NamedNativeQueryMemento memento,
+			Class<R> resultJavaType,
+			SharedSessionContractImplementor session) {
+		this( memento, session );
 
 		// todo (6.0) : validate `resultJavaType` against specified result-set mapping
+	}
+
+	/**
+	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
+	 */
+	public NativeQueryImpl(
+			NamedNativeQueryMemento memento,
+			String resultSetMappingName,
+			SharedSessionContractImplementor session) {
+		this( memento, session );
 	}
 
 	private ParameterInterpretation resolveParameterInterpretation(SharedSessionContractImplementor session) {

@@ -10,8 +10,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Parameter object (pattern) for contextual information for
- * {@link SqmMutationStrategy#buildUpdateHandler} and
- * {@link SqmMutationStrategy#buildDeleteHandler}
+ * {@link SqmMultiTableMutationStrategy#buildUpdateHandler} and
+ * {@link SqmMultiTableMutationStrategy#buildDeleteHandler}
  */
 public interface HandlerCreationContext {
 	/**

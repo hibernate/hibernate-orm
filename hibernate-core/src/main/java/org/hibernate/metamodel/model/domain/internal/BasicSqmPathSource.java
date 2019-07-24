@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.IllegalPathUsageException;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
@@ -23,9 +22,8 @@ public class BasicSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	public BasicSqmPathSource(
 			String localPathName,
 			BasicDomainType<J> domainType,
-			BindableType jpaBindableType,
-			NodeBuilder nodeBuilder) {
-		super( localPathName, domainType, jpaBindableType, nodeBuilder );
+			BindableType jpaBindableType) {
+		super( localPathName, domainType, jpaBindableType );
 	}
 
 	@Override
@@ -46,7 +44,7 @@ public class BasicSqmPathSource<J> extends AbstractSqmPathSource<J> {
 				navigablePath,
 				this,
 				lhs,
-				getNodeBuilder()
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 }

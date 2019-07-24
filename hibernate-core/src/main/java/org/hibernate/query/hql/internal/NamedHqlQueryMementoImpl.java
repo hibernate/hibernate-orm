@@ -11,12 +11,19 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.hql.SemanticQueryProducer;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.AbstractNamedQueryMemento;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.tree.SqmStatement;
+
+import org.jboss.logging.Logger;
 
 /**
  * Definition of a named query, defined in the mapping metadata.
@@ -28,6 +35,8 @@ import org.hibernate.query.sqm.internal.QuerySqmImpl;
  * @author Steve Ebersole
  */
 public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implements NamedHqlQueryMemento, Serializable {
+	private static final Logger log = Logger.getLogger( NamedHqlQueryMementoImpl.class );
+
 	private final String hqlString;
 
 	private final Integer firstResult;
@@ -115,6 +124,11 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 				parameterTypes,
 				getHints()
 		);
+	}
+
+	@Override
+	public void validate(QueryEngine queryEngine) {
+		queryEngine.getSemanticQueryProducer().interpret( getHqlString() );
 	}
 
 	@Override

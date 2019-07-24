@@ -81,9 +81,9 @@ public class QueryEngine {
 				.getJdbcEnvironment()
 				.getDialect()
 				.initializeFunctionRegistry( this );
-		runtimeOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
-
-		getNamedQueryRepository().checkNamedQueries( this );
+		if ( runtimeOptions.getSqmFunctionRegistry() != null ) {
+			runtimeOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
+		}
 	}
 
 	private static QueryInterpretationCache buildQueryPlanCache(Map properties) {

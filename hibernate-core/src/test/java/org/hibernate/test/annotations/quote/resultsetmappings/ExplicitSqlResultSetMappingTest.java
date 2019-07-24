@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.annotations.quote.resultsetmappings;
 
-import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -58,9 +57,7 @@ public class ExplicitSqlResultSetMappingTest extends BaseCoreFunctionalTestCase 
 		prepareTestData();
 
 		inTransaction(
-				s -> s.createNativeQuery( queryString )
-						.setResultSetMapping( "explicitScalarResultSetMapping" )
-						.list()
+				s -> s.createNativeQuery( queryString, "explicitScalarResultSetMapping" ).list()
 		);
 	}
 }

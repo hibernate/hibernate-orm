@@ -27,27 +27,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class CustomTypeConverterTest extends BaseUnitTestCase {
 	@Test
-	public void testConverterAppliedStaticRegistration() {
-		// this is how we told users to do it previously using the static reference -
-		//		make sure it still works for now
-		org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( MyCustomJavaTypeDescriptor.INSTANCE );
-		org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( MyCustomSqlTypeDescriptor.INSTANCE );
-
-		try ( final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
-				.build() ) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( MyCustomConverter.class )
-					.addAnnotatedClass( MyEntity.class );
-			final MetadataBuilderImplementor metadataBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder();
-
-			final TypeConfiguration bootTypeConfiguration = metadataBuilder.getBootstrapContext().getTypeConfiguration();
-			performAssertions( metadataBuilder, bootTypeConfiguration );
-
-		}
-	}
-
-	@Test
 	public void testConverterAppliedScopedRegistration() {
 
 		try ( final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()

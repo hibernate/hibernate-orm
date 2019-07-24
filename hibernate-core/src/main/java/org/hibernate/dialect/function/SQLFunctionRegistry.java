@@ -15,7 +15,10 @@ import org.hibernate.dialect.Dialect;
  * Defines a registry for SQLFunction instances
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Replaced by {@link org.hibernate.query.sqm.function.SqmFunction}
  */
+@Deprecated
 public class SQLFunctionRegistry {
 	private final Map<String,SQLFunction> functionMap = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
 

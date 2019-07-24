@@ -24,8 +24,10 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.QuerySecondPass;
+import org.hibernate.query.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
@@ -57,6 +59,19 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 
 	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
+		if ( ann == null ) {
+			return;
+		}
+
+		final SqlResultSetMappingDefinition mappingDefinition = SqlResultSetMappingDefinition.from( ann, context );
+
+		if ( isDefault ) {
+			context.getMetadataCollector().addDefaultResultSetMapping( mappingDefinition );
+		}
+		else {
+			context.getMetadataCollector().addResultSetMapping( mappingDefinition );
+		}
+
 		//TODO add parameters checkings
 //		if ( ann == null ) return;
 //		ResultSetMappingDescriptor definition = new ResultSetMappingDescriptor( ann.name() );
@@ -197,7 +212,6 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 //		else {
 //			context.getMetadataCollector().addResultSetMapping( definition );
 //		}
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	private String normalizeColumnQuoting(String name) {

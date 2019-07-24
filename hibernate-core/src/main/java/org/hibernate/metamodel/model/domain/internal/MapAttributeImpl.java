@@ -28,13 +28,11 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder) {
 		super( xceBuilder );
 
-		//noinspection unchecked
-		this.keyPathSource = (SqmPathSource) DomainModelHelper.resolveSqmPathSource(
+		this.keyPathSource = DomainModelHelper.resolveSqmPathSource(
 				ValueClassification.BASIC,
 				getName(),
 				xceBuilder.getListIndexOrMapKeyType(),
-				BindableType.PLURAL_ATTRIBUTE,
-				xceBuilder.getNodeBuilder()
+				BindableType.PLURAL_ATTRIBUTE
 		);
 	}
 

@@ -9,7 +9,9 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,18 +22,27 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.EntityNameResolver;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.internal.InflightRuntimeMetamodel;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -39,10 +50,16 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 
 /**
  * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
@@ -65,23 +82,21 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 
 	private final JpaMetamodel jpaMetamodel;
 
-	private final Map<Class, String> entityProxyInterfaceMap;
+	private final Map<Class, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// RuntimeModel
 
-	private final Map<String, EntityPersister> entityPersisterMap;
-	private final Map<String, CollectionPersister> collectionPersisterMap;
-	private final Map<String, Set<String>> collectionRolesByEntityParticipant;
+	private final Map<String, EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String, CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String, Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainMetamodel
 
-	private final Set<EntityNameResolver> entityNameResolvers;
-
-	private final Map<String,String> imports;
+	private final Set<EntityNameResolver> entityNameResolvers = new HashSet<>();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,19 +135,186 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
 
-	public DomainMetamodelImpl(
-			SessionFactoryImplementor sessionFactory,
-			InflightRuntimeMetamodel runtimeMetamodel,
-			JpaMetamodel jpaMetamodel) {
+	public DomainMetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
-		this.jpaMetamodel = jpaMetamodel;
-		this.typeConfiguration = runtimeMetamodel.getTypeConfiguration();
-		this.entityPersisterMap = runtimeMetamodel.getEntityPersisterMap();
-		this.collectionPersisterMap = runtimeMetamodel.getCollectionPersisterMap();
-		this.collectionRolesByEntityParticipant = runtimeMetamodel.getCollectionRolesByEntityParticipant();
-		this.entityNameResolvers = runtimeMetamodel.getEntityNameResolvers();
-		this.entityProxyInterfaceMap = runtimeMetamodel.getEntityProxyInterfaceMap();
-		this.imports = runtimeMetamodel.getImports();
+		this.typeConfiguration = typeConfiguration;
+		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration );
+	}
+
+	public void finishInitialization(
+			MetadataImplementor bootModel,
+			BootstrapContext bootstrapContext,
+			SessionFactoryImplementor sessionFactory) {
+
+		final RuntimeModelCreationContext runtimeModelCreationContext = new RuntimeModelCreationContext() {
+			@Override
+			public BootstrapContext getBootstrapContext() {
+				return bootstrapContext;
+			}
+
+			@Override
+			public SessionFactoryImplementor getSessionFactory() {
+				return sessionFactory;
+			}
+
+			@Override
+			public MetadataImplementor getMetadata() {
+				return bootModel;
+			}
+		};
+
+		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
+
+		final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( sessionFactory.getProperties() );
+
+		processBootEntities(
+				bootModel.getEntityBindings(),
+				sessionFactory.getCache(),
+				persisterFactory,
+				runtimeModelCreationContext
+		);
+
+		processBootCollections(
+				bootModel.getCollectionBindings(),
+				sessionFactory.getCache(),
+				persisterFactory,
+				runtimeModelCreationContext
+		);
+
+		// after *all* persisters and named queries are registered
+		entityPersisterMap.values().forEach( EntityPersister::generateEntityDefinition );
+
+		for ( EntityPersister persister : entityPersisterMap.values() ) {
+			persister.postInstantiate();
+			registerEntityNameResolvers( persister, entityNameResolvers );
+		}
+
+		collectionPersisterMap.values().forEach( CollectionPersister::postInstantiate );
+
+
+		( (JpaMetamodelImpl) this.jpaMetamodel ).processJpa(
+				bootModel,
+				entityProxyInterfaceMap,
+				jpaStaticMetaModelPopulationSetting,
+				bootModel.getNamedEntityGraphs().values(),
+				runtimeModelCreationContext
+		);
+	}
+
+	private void processBootEntities(
+			java.util.Collection<PersistentClass> entityBindings,
+			CacheImplementor cacheImplementor,
+			PersisterFactory persisterFactory,
+			RuntimeModelCreationContext modelCreationContext) {
+		for ( final PersistentClass model : entityBindings ) {
+			final NavigableRole rootEntityRole = new NavigableRole( model.getRootClass().getEntityName() );
+			final EntityDataAccess accessStrategy = cacheImplementor.getEntityRegionAccess( rootEntityRole );
+			final NaturalIdDataAccess naturalIdAccessStrategy = cacheImplementor
+					.getNaturalIdCacheRegionAccessStrategy( rootEntityRole );
+
+			final EntityPersister cp = persisterFactory.createEntityPersister(
+					model,
+					accessStrategy,
+					naturalIdAccessStrategy,
+					modelCreationContext
+			);
+			entityPersisterMap.put( model.getEntityName(), cp );
+
+			if ( cp.getConcreteProxyClass() != null
+					&& cp.getConcreteProxyClass().isInterface()
+					&& !Map.class.isAssignableFrom( cp.getConcreteProxyClass() )
+					&& cp.getMappedClass() != cp.getConcreteProxyClass() ) {
+				// IMPL NOTE : we exclude Map based proxy interfaces here because that should
+				//		indicate MAP entity mode.0
+
+				if ( cp.getMappedClass().equals( cp.getConcreteProxyClass() ) ) {
+					// this part handles an odd case in the Hibernate test suite where we map an interface
+					// as the class and the proxy.  I cannot think of a real life use case for that
+					// specific test, but..
+					log.debugf(
+							"Entity [%s] mapped same interface [%s] as class and proxy",
+							cp.getEntityName(),
+							cp.getMappedClass()
+					);
+				}
+				else {
+					final String old = entityProxyInterfaceMap.put( cp.getConcreteProxyClass(), cp.getEntityName() );
+					if ( old != null ) {
+						throw new HibernateException(
+								String.format(
+										Locale.ENGLISH,
+										"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
+										old,
+										cp.getEntityName(),
+										cp.getConcreteProxyClass().getName()
+								)
+						);
+					}
+				}
+			}
+		}
+	}
+
+	private void processBootCollections(
+			java.util.Collection<Collection> collectionBindings,
+			CacheImplementor cacheImplementor,
+			PersisterFactory persisterFactory,
+			RuntimeModelCreationContext modelCreationContext) {
+		for ( final Collection model : collectionBindings ) {
+			final NavigableRole navigableRole = new NavigableRole( model.getRole() );
+
+			final CollectionDataAccess accessStrategy = cacheImplementor.getCollectionRegionAccess(
+					navigableRole );
+
+			final CollectionPersister persister = persisterFactory.createCollectionPersister(
+					model,
+					accessStrategy,
+					modelCreationContext
+			);
+			collectionPersisterMap.put( model.getRole(), persister );
+			Type indexType = persister.getIndexType();
+			if ( indexType != null && indexType.isEntityType() && !indexType.isAnyType() ) {
+				String entityName = ( (org.hibernate.type.EntityType) indexType ).getAssociatedEntityName();
+				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
+				if ( roles == null ) {
+					roles = new HashSet<>();
+					collectionRolesByEntityParticipant.put( entityName, roles );
+				}
+				roles.add( persister.getRole() );
+			}
+			Type elementType = persister.getElementType();
+			if ( elementType.isEntityType() && !elementType.isAnyType() ) {
+				String entityName = ( (org.hibernate.type.EntityType) elementType ).getAssociatedEntityName();
+				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
+				if ( roles == null ) {
+					roles = new HashSet<>();
+					collectionRolesByEntityParticipant.put( entityName, roles );
+				}
+				roles.add( persister.getRole() );
+			}
+		}
+	}
+
+	private static void registerEntityNameResolvers(
+			EntityPersister persister,
+			Set<EntityNameResolver> entityNameResolvers) {
+		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
+			return;
+		}
+		registerEntityNameResolvers( persister.getEntityMetamodel().getTuplizer(), entityNameResolvers );
+	}
+
+	private static void registerEntityNameResolvers(
+			EntityTuplizer tuplizer,
+			Set<EntityNameResolver> entityNameResolvers) {
+		EntityNameResolver[] resolvers = tuplizer.getEntityNameResolvers();
+		if ( resolvers == null ) {
+			return;
+		}
+
+		for ( EntityNameResolver resolver : resolvers ) {
+			entityNameResolvers.add( resolver );
+		}
 	}
 
 	@Override
@@ -270,24 +452,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 
 	@Override
 	public String getImportedClassName(String className) {
-		String result = imports.get( className );
-		if ( result == null ) {
-			try {
-				sessionFactory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
-				imports.put( className, className );
-				return className;
-			}
-			catch ( ClassLoadingException cnfe ) {
-				imports.put( className, INVALID_IMPORT );
-				return null;
-			}
-		}
-		else if ( result == INVALID_IMPORT ) {
-			return null;
-		}
-		else {
-			return result;
-		}
+		throw new UnsupportedOperationException(  );
 	}
 
 

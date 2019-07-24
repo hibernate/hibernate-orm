@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
 public class StrategySelectorImpl implements StrategySelector {
 	private static final Logger log = Logger.getLogger( StrategySelectorImpl.class );
 
-
+	@SuppressWarnings("WeakerAccess")
 	public static final StrategyCreator STANDARD_STRATEGY_CREATOR = strategyClass -> {
 		try {
 			return strategyClass.newInstance();
@@ -58,11 +58,10 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	@Override
 	public <T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation) {
-		Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
-		if ( namedStrategyImplementorMap == null ) {
-			namedStrategyImplementorMap = new ConcurrentHashMap<>();
-			namedStrategyImplementorByStrategyMap.put( strategy, namedStrategyImplementorMap );
-		}
+		final Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.computeIfAbsent(
+				strategy,
+				aClass -> new ConcurrentHashMap<>()
+		);
 
 		final Class old = namedStrategyImplementorMap.put( name, implementation );
 		if ( old == null ) {
@@ -142,7 +141,6 @@ public class StrategySelectorImpl implements StrategySelector {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, final T defaultValue) {
 		return resolveDefaultableStrategy(
 				strategy,
@@ -205,7 +203,7 @@ public class StrategySelectorImpl implements StrategySelector {
 		}
 
 		final Class<? extends T> implementationClass;
-		if ( Class.class.isInstance( strategyReference ) ) {
+		if ( strategyReference instanceof Class ) {
 			implementationClass = (Class<T>) strategyReference;
 		}
 		else {

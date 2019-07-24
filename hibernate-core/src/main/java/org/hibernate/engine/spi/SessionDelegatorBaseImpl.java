@@ -479,6 +479,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
+		return delegate.getNamedNativeQuery( name, resultSetMapping );
+	}
+
+	@Override
 	public QueryImplementor createQuery(String queryString) {
 		return delegate.createQuery( queryString );
 	}

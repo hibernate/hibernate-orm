@@ -29,12 +29,7 @@ public interface ManagedTypeRepresentationStrategy {
 	RepresentationMode getMode();
 
 	/**
-	 * Create a delegate capable of instantiating instances of the represented type.
-	 */
-	<J> Instantiator<J> generateInstantiator();
-
-	/**
 	 * Create the property accessor object for the specified attribute
 	 */
-	PropertyAccess generatePropertyAccess(Property bootAttributeDescriptor);
+	PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor);
 }

@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,6 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -69,16 +69,13 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	private final Map<Class, SqmPolymorphicRootDescriptor<?>> polymorphicEntityReferenceMap = new ConcurrentHashMap<>();
 
-	private final Map<Class, String> entityProxyInterfaceMap;
+	private final Map<Class, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 
-	private final Map<String, String> nameToImportNameMap;
+	private final Map<String, String> nameToImportNameMap = new ConcurrentHashMap<>();
 
 
-	public JpaMetamodelImpl(InflightRuntimeMetamodel runtimeMetamodel) {
-		this.typeConfiguration = runtimeMetamodel.getTypeConfiguration();
-
-		nameToImportNameMap = runtimeMetamodel.getNameToImportNameMap();
-		entityProxyInterfaceMap = runtimeMetamodel.getEntityProxyInterfaceMap();
+	public JpaMetamodelImpl(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	@Override
@@ -94,6 +91,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
+		// todo (6.0) : currently we lookup the Class reference here twice potentially - fix that
 		final String rename = resolveImportedName( entityName );
 		if ( rename != null ) {
 			entityName = rename;
@@ -442,35 +440,36 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			RuntimeModelCreationContext runtimeModelCreationContext,
 			MetadataImplementor bootMetamodel,
 			InflightRuntimeMetamodel inflightRuntimeMetamodel,
-			SqmCriteriaNodeBuilder criteriaBuilder,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
 			java.util.Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions) {
-		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( inflightRuntimeMetamodel );
+		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( inflightRuntimeMetamodel.getTypeConfiguration() );
 
 		jpaMetamodel.processJpa(
-				runtimeModelCreationContext,
 				bootMetamodel,
-				inflightRuntimeMetamodel,
-				criteriaBuilder,
+				inflightRuntimeMetamodel.getEntityProxyInterfaceMap(),
 				jpaStaticMetaModelPopulationSetting,
-				namedEntityGraphDefinitions
+				namedEntityGraphDefinitions,
+				runtimeModelCreationContext
 		);
 
 		return jpaMetamodel;
 	}
 
-	private void processJpa(
-			RuntimeModelCreationContext runtimeModelCreationContext,
+	public void processJpa(
 			MetadataImplementor bootMetamodel,
-			InflightRuntimeMetamodel inflightRuntimeMetamodel,
-			SqmCriteriaNodeBuilder criteriaBuilder,
+			Map<Class, String> entityProxyInterfaceMap,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
-			java.util.Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions) {
+			Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		this.nameToImportNameMap.putAll( bootMetamodel.getImports() );
+		this.entityProxyInterfaceMap.putAll( entityProxyInterfaceMap);
+
+		// todo (6.0) : I believe there should be a distinction here between building the JPA metamodel and pushing that metamodel to the `X_` model
+		//		- JpaStaticMetaModelPopulationSetting is meant to control the latter part - populating the `X_` model
 		if ( jpaStaticMetaModelPopulationSetting != JpaStaticMetaModelPopulationSetting.DISABLED ) {
 			MetadataContext context = new MetadataContext(
+					this,
 					runtimeModelCreationContext,
-					inflightRuntimeMetamodel,
-					criteriaBuilder,
 					bootMetamodel.getMappedSuperclassMappingsCopy(),
 					jpaStaticMetaModelPopulationSetting
 			);

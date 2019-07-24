@@ -138,15 +138,12 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 		// Check named HQL queries
 		log.debugf( "Checking %s named HQL queries", hqlMementoMap.size() );
 		for ( NamedHqlQueryMemento hqlMemento : hqlMementoMap.values() ) {
-			// this will throw an error if there's something wrong.
 			try {
-				log.debugf( "Checking named query: %s", hqlMemento.getRegistrationName() );
-				final SqmStatement sqmStatement = sqmProducer.interpret( hqlMemento.getHqlString() );
+				log.debugf( "Checking named HQL query: %s", hqlMemento.getRegistrationName() );
+				hqlMemento.validate( queryEngine );
 
-				if ( cachingEnabled ) {
-					// todo (6.0) : need to cache these; however atm that requires producing a SqmQueryImpl
-					// queryEngine.getQueryInterpretationCache().getHQLQueryPlan( hqlMemento.getQueryString(), false, Collections.EMPTY_MAP );
-				}
+				// todo (6.0) : need to cache these; however atm that requires producing a SqmQueryImpl
+				// queryEngine.getQueryInterpretationCache().getHQLQueryPlan( hqlMemento.getQueryString(), false, Collections.EMPTY_MAP );
 			}
 			catch ( HibernateException e ) {
 				errors.put( hqlMemento.getRegistrationName(), e );
@@ -156,6 +153,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 		// Check native-sql queries
 		log.debugf( "Checking %s named SQL queries", sqlMementoMap.size() );
 		for ( NamedNativeQueryMemento memento : sqlMementoMap.values() ) {
+			memento.validate( queryEngine );
 //			// this will throw an error if there's something wrong.
 //			try {
 //				log.debugf( "Checking named SQL query: %s", memento.getRegistrationName() );
@@ -185,7 +183,6 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 //			catch ( HibernateException e ) {
 //				errors.put( namedSQLQueryDefinition.getName(), e );
 //			}
-		throw new NotYetImplementedFor6Exception( getClass() );
 		}
 
 		return errors;

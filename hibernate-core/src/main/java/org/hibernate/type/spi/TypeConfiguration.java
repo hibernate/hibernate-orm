@@ -11,7 +11,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,15 +25,13 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.metamodel.internal.RuntimeModelCreationProcess;
 import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -85,8 +82,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final transient JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
 	private final transient SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final transient BasicTypeRegistry basicTypeRegistry;
-
-	private final transient Map<String,String> importMap = new ConcurrentHashMap<>();
 
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
 
@@ -139,10 +134,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return sqlTypeDescriptorRegistry;
 	}
 
-	public Map<String, String> getImportMap() {
-		return Collections.unmodifiableMap( importMap );
-	}
-
 	public SqlTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
 		return scope.getCurrentBaseSqlTypeIndicators();
 	}
@@ -173,25 +164,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
-	public RuntimeModelCreationProcess scope(SessionFactoryImplementor sessionFactory) {
-		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImpl [%s]", this, sessionFactory );
+	public DomainMetamodel scope(SessionFactoryImplementor sessionFactory) {
+		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImplementor [%s]", this, sessionFactory );
 
 		if ( scope.getMetadataBuildingContext() == null ) {
 			throw new IllegalStateException( "MetadataBuildingContext not known" );
 		}
-		final BootstrapContext bootstrapContext = scope.getMetadataBuildingContext().getBootstrapContext();
-
-		for ( Map.Entry<String, String> importEntry : scope.metadataBuildingContext.getMetadataCollector().getImports().entrySet() ) {
-			if ( importMap.containsKey( importEntry.getKey() ) ) {
-				continue;
-			}
-
-			importMap.put( importEntry.getKey(), importEntry.getValue() );
-		}
 
 		scope.setSessionFactory( sessionFactory );
 		sessionFactory.addObserver( this );
-		return new RuntimeModelCreationProcess( bootstrapContext, sessionFactory, this );
+		return new DomainMetamodelImpl( sessionFactory, this );
 	}
 
 	/**

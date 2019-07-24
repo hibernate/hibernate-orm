@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
+import org.hibernate.query.sqm.function.SqmFunction;
 
 /**
  * @author Steve Ebersole

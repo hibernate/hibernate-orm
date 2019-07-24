@@ -603,15 +603,16 @@ public abstract class AbstractManagedType<J>
 		@SuppressWarnings("unchecked")
 		public void addAttribute(PersistentAttribute<J,?> attribute) {
 			if ( attribute instanceof SingularPersistentAttribute ) {
-				declaredSingularAttributes.put( attribute.getName(), (SingularPersistentAttribute<J,?>) attribute );
+				declaredSingularAttributes.put( attribute.getName(), (SingularPersistentAttribute) attribute );
 			}
 			else if ( attribute instanceof PluralPersistentAttribute ) {
-				declaredPluralAttributes.put(attribute.getName(), (PluralPersistentAttribute<J,?,?>) attribute );
+				declaredPluralAttributes.put(attribute.getName(), (PluralPersistentAttribute) attribute );
 			}
-
-			throw new IllegalArgumentException(
-					"Unable to classify attribute as singular or plural [" + attribute + "] for `" + this + '`'
-			);
+			else {
+				throw new IllegalArgumentException(
+						"Unable to classify attribute as singular or plural [" + attribute + "] for `" + this + '`'
+				);
+			}
 		}
 
 		@Override

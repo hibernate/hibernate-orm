@@ -16,7 +16,6 @@ import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -50,8 +49,7 @@ public class SingularAttributeImpl<D,J>
 			Member member,
 			boolean isIdentifier,
 			boolean isVersion,
-			boolean isOptional,
-			NodeBuilder nodeBuilder) {
+			boolean isOptional) {
 		super( declaringType, name, attributeType.getExpressableJavaTypeDescriptor(), attributeClassification, attributeType, member );
 		this.isIdentifier = isIdentifier;
 		this.isVersion = isVersion;
@@ -62,8 +60,7 @@ public class SingularAttributeImpl<D,J>
 				determineValueClassification( attributeClassification ),
 				name,
 				attributeType,
-				BindableType.SINGULAR_ATTRIBUTE,
-				nodeBuilder
+				BindableType.SINGULAR_ATTRIBUTE
 		);
 	}
 
@@ -158,8 +155,7 @@ public class SingularAttributeImpl<D,J>
 				String name,
 				SimpleDomainType<J> attributeType,
 				Member member,
-				AttributeClassification attributeClassification,
-				NodeBuilder nodeBuilder) {
+				AttributeClassification attributeClassification) {
 			super(
 					declaringType,
 					name,
@@ -168,8 +164,7 @@ public class SingularAttributeImpl<D,J>
 					member,
 					true,
 					false,
-					false,
-					nodeBuilder
+					false
 			);
 		}
 	}
@@ -184,8 +179,7 @@ public class SingularAttributeImpl<D,J>
 				String name,
 				AttributeClassification attributeClassification,
 				SimpleDomainType<Y> attributeType,
-				Member member,
-				NodeBuilder nodeBuilder) {
+				Member member) {
 			super(
 					declaringType,
 					name,
@@ -194,8 +188,7 @@ public class SingularAttributeImpl<D,J>
 					member,
 					false,
 					true,
-					false,
-					nodeBuilder
+					false
 			);
 		}
 	}

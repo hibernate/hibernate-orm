@@ -801,7 +801,11 @@ public abstract class AbstractCollectionPersister
 //		return hasOrdering()
 //				? orderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
 //				: "";
-		throw new NotYetImplementedFor6Exception( getClass() );
+		if ( hasOrdering() ) {
+			throw new NotYetImplementedFor6Exception( getClass() );
+		}
+
+		return "";
 	}
 
 	@Override
@@ -809,7 +813,11 @@ public abstract class AbstractCollectionPersister
 //		return hasManyToManyOrdering()
 //				? manyToManyOrderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
 //				: "";
-		throw new NotYetImplementedFor6Exception( getClass() );
+		if ( hasManyToManyOrdering() ) {
+			throw new NotYetImplementedFor6Exception( getClass() );
+		}
+
+		return "";
 	}
 
 	@Override

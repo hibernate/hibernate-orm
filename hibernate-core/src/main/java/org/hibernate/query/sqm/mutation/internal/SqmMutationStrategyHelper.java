@@ -13,11 +13,10 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
 import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
-import org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -29,12 +28,9 @@ import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmJunctivePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
  * @author Steve Ebersole
@@ -52,15 +48,15 @@ public class SqmMutationStrategyHelper {
 	 * Standard resolution of SqmMutationStrategy to use for a given
 	 * entity hierarchy.
 	 */
-	public static SqmMutationStrategy resolveStrategy(
+	public static SqmMultiTableMutationStrategy resolveStrategy(
 			RootClass bootRootEntityDescriptor,
 			EntityPersister runtimeRootEntityDescriptor,
 			SessionFactoryOptions options,
 			ServiceRegistry serviceRegistry) {
 		// todo (6.0) : Planned support for per-entity config
 
-		if ( options.getSqmMutationStrategy() != null ) {
-			return options.getSqmMutationStrategy();
+		if ( options.getSqmMultiTableMutationStrategy() != null ) {
+			return options.getSqmMultiTableMutationStrategy();
 		}
 
 		return serviceRegistry.getService( JdbcServices.class )

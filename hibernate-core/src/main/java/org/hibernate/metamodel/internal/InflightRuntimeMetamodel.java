@@ -31,7 +31,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -84,8 +83,6 @@ public class InflightRuntimeMetamodel {
 				persisterFactory,
 				modelCreationContext
 		);
-
-		finishDomainMetamodelInitialization();
 
 	}
 
@@ -230,39 +227,6 @@ public class InflightRuntimeMetamodel {
 				}
 				roles.add( persister.getRole() );
 			}
-		}
-	}
-
-	private void finishDomainMetamodelInitialization() {
-		// after *all* persisters and named queries are registered
-		entityPersisterMap.values().forEach( EntityPersister::generateEntityDefinition );
-
-		for ( EntityPersister persister : entityPersisterMap.values() ) {
-			persister.postInstantiate();
-			registerEntityNameResolvers( persister, entityNameResolvers );
-		}
-		collectionPersisterMap.values().forEach( CollectionPersister::postInstantiate );
-	}
-
-	private static void registerEntityNameResolvers(
-			EntityPersister persister,
-			Set<EntityNameResolver> entityNameResolvers) {
-		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
-			return;
-		}
-		registerEntityNameResolvers( persister.getEntityMetamodel().getTuplizer(), entityNameResolvers );
-	}
-
-	private static void registerEntityNameResolvers(
-			EntityTuplizer tuplizer,
-			Set<EntityNameResolver> entityNameResolvers) {
-		EntityNameResolver[] resolvers = tuplizer.getEntityNameResolvers();
-		if ( resolvers == null ) {
-			return;
-		}
-
-		for ( EntityNameResolver resolver : resolvers ) {
-			entityNameResolvers.add( resolver );
 		}
 	}
 

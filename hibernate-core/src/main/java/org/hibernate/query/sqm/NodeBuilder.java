@@ -33,7 +33,6 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
@@ -62,7 +61,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
+import org.hibernate.query.sqm.function.SqmFunction;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

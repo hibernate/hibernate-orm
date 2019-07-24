@@ -17,7 +17,6 @@ import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -26,8 +25,6 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class PluralAttributeBuilder<D, C, E, K> {
 	private final ManagedDomainType<D> declaringType;
 	private final SimpleDomainType<E> valueType;
-
-	private final NodeBuilder nodeBuilder;
 
 	private SimpleDomainType<K> listIndexOrMapKeyType;
 
@@ -42,17 +39,11 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			ManagedDomainType<D> ownerType,
 			SimpleDomainType<E> elementType,
 			JavaTypeDescriptor<C> collectionJavaTypeDescriptor,
-			SimpleDomainType<K> listIndexOrMapKeyType,
-			NodeBuilder nodeBuilder) {
+			SimpleDomainType<K> listIndexOrMapKeyType) {
 		this.declaringType = ownerType;
 		this.valueType = elementType;
 		this.collectionJavaTypeDescriptor = collectionJavaTypeDescriptor;
 		this.listIndexOrMapKeyType = listIndexOrMapKeyType;
-		this.nodeBuilder = nodeBuilder;
-	}
-
-	public NodeBuilder getNodeBuilder() {
-		return nodeBuilder;
 	}
 
 	public ManagedDomainType<D> getDeclaringType() {

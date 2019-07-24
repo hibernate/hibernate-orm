@@ -33,14 +33,19 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	Set<String> getQuerySpaces();
 
 	/**
+	 * Convert the memento into an untyped executable query
+	 */
+	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session);
+
+	/**
 	 * Convert the memento into a typed executable query
 	 */
 	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
 
 	/**
-	 * Convert the memento into an untyped executable query
+	 * Convert the memento into a typed executable query
 	 */
-	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session);
+	<T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, String resultSetMapping);
 
 	@Override
 	NamedNativeQueryMemento makeCopy(String name);

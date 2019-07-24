@@ -6,17 +6,11 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
@@ -25,9 +19,8 @@ public class EmbeddedSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	public EmbeddedSqmPathSource(
 			String localPathName,
 			EmbeddableDomainType<J> domainType,
-			BindableType jpaBindableType,
-			NodeBuilder nodeBuilder) {
-		super( localPathName, domainType, jpaBindableType, nodeBuilder );
+			BindableType jpaBindableType) {
+		super( localPathName, domainType, jpaBindableType );
 	}
 
 	@Override
@@ -47,7 +40,7 @@ public class EmbeddedSqmPathSource<J> extends AbstractSqmPathSource<J> {
 				lhs.getNavigablePath().append( getPathName() ),
 				this,
 				lhs,
-				getNodeBuilder()
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 }

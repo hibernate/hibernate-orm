@@ -15,11 +15,11 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.spi.QueryInterpretationCache;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -943,7 +943,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	/**
 	 * Defines the "global" strategy to use for handling HQL and Criteria mutation queries.
 	 *
-	 * Names the {@link org.hibernate.query.sqm.mutation.spi.SqmMutationStrategy} to use.
+	 * Names the {@link SqmMultiTableMutationStrategy} to use.
 	 */
 	String QUERY_MULTI_TABLE_MUTATION_STRATEGY = "hibernate.query.mutation_strategy";
 

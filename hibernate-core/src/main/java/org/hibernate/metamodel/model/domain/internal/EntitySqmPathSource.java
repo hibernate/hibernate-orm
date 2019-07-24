@@ -20,9 +20,8 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> {
 	public EntitySqmPathSource(
 			String localPathName,
 			EntityDomainType<J> domainType,
-			BindableType jpaBindableType,
-			NodeBuilder nodeBuilder) {
-		super( localPathName, domainType, jpaBindableType, nodeBuilder );
+			BindableType jpaBindableType) {
+		super( localPathName, domainType, jpaBindableType );
 	}
 
 	@Override
@@ -42,7 +41,7 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> {
 				lhs.getNavigablePath().append( getPathName() ),
 				this,
 				lhs,
-				getNodeBuilder()
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 }

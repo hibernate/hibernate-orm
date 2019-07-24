@@ -111,8 +111,8 @@ public class DefaultEntityAliases implements EntityAliases {
 	}
 
 	private String getUserProvidedAlias(String propertyPath, String defaultAlias) {
-		String[] columns = (String[]) userProvidedAliases.get(propertyPath);
-		if (columns==null) {
+		String[] columns = (String[]) userProvidedAliases.get( propertyPath );
+		if ( columns == null ) {
 			return defaultAlias;
 		}
 		else {

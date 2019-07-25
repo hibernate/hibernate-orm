@@ -32,7 +32,6 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -95,7 +94,6 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-2225")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
 		String sql = "select TABLE_NAME , sysdate() from all_tables  where TABLE_NAME = 'AUDIT_ACTIONS' ";
 		Session s = openSession();

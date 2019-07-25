@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.SemanticQueryProducer;

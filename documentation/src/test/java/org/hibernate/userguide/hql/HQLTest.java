@@ -868,7 +868,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 					.scroll()
 			) {
 				while(scrollableResults.next()) {
-					Person person = (Person) scrollableResults.get()[0];
+					Person person = (Person) scrollableResults.get();
 					process(person);
 				}
 			}

@@ -14,6 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.userguide.model.AddressType;
@@ -205,7 +206,8 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
             Session session = entityManager.unwrap(Session.class);
             
             ProcedureCall call = session.createStoredProcedureCall( "sp_person_phones");
-            call.registerParameter(1, Long.class, ParameterMode.IN).bindValue(1L);
+            ProcedureParameter<Long> parameter = call.registerParameter( 1, Long.class, ParameterMode.IN );
+            call.setParameter( parameter, 1L );
             call.registerParameter(2, Class.class, ParameterMode.REF_CURSOR);
 
             Output output = call.getOutputs().getCurrent();

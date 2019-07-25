@@ -7,11 +7,9 @@
 package org.hibernate.metamodel.model.domain;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.mapping.spi.Writeable;
 import org.hibernate.query.Query;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**

@@ -12,7 +12,8 @@ include 'hibernate-core'
 include 'hibernate-entitymanager'
 include 'hibernate-testing'
 include 'hibernate-envers'
-include 'hibernate-spatial'
+// todo (6.0): re-enable hibernate-spatial
+//include 'hibernate-spatial'
 
 include 'hibernate-java8'
 

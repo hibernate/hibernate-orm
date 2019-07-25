@@ -247,7 +247,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 
 			int count = 0;
 			while ( scrollableResults.next() ) {
-				Person Person = (Person) scrollableResults.get( 0 );
+				Person Person = (Person) scrollableResults.get( );
 				processPerson(Person);
 				if ( ++count % batchSize == 0 ) {
 					//flush a batch of updates and release memory:
@@ -290,7 +290,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 				.scroll(ScrollMode.FORWARD_ONLY);
 
 			while ( scrollableResults.next() ) {
-				Person Person = (Person) scrollableResults.get( 0 );
+				Person Person = (Person) scrollableResults.get();
 				processPerson(Person);
 				statelessSession.update( Person );
 			}

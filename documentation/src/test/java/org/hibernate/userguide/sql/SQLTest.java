@@ -19,6 +19,8 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.custom.NonUniqueDiscoveredSqlAliasException;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.RootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
@@ -382,7 +384,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 				"JOIN Person pr ON ph.person_id = pr.id" )
 			.addEntity("phone", Phone.class )
 			.addJoin( "pr", "phone.person")
-			.setResultTransformer( Criteria.ROOT_ENTITY )
+			.setResultTransformer( RootEntityResultTransformer.INSTANCE )
 			.list();
 
 			for(Person person : persons) {
@@ -425,7 +427,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 					"JOIN phone_call c ON c.phone_id = ph.id" )
 				.addEntity("phone", Phone.class )
 				.addJoin( "c", "phone.calls")
-				.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
+				.setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE)
 				.list();
 
 				for(Phone phone : phones) {

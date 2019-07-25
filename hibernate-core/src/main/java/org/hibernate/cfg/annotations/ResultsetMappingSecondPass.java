@@ -22,7 +22,6 @@ import javax.persistence.SqlResultSetMapping;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.cfg.BinderHelper;

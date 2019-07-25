@@ -9,7 +9,6 @@ package org.hibernate.envers.test.integration.basic;
 import java.util.Map;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 
 import org.hibernate.testing.TestForIssue;
 

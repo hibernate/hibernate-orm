@@ -109,14 +109,15 @@ distributions {
 //                from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
 //            }
 
-            into( 'lib/spatial' ) {
-                from(
-                        ( parent.project( 'hibernate-spatial' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-spatial' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-            }
+            // todo (6.0) - add back spatial
+//            into( 'lib/spatial' ) {
+//                from(
+//                        ( parent.project( 'hibernate-spatial' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+//                                + parent.project( 'hibernate-spatial' ).configurations.runtime )
+//                                - parent.project( 'hibernate-core' ).configurations.runtime
+//                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+//                )
+//            }
 
             into( 'lib/jpa-metamodel-generator' ) {
                 from parent.project( 'hibernate-jpamodelgen' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }

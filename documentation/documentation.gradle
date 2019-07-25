@@ -46,7 +46,8 @@ dependencies {
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
 	testCompile( project(':hibernate-envers') )
-	testCompile( project(':hibernate-spatial') )
+	// todo (6.0) - add back hibernate-spatial dependency
+//	testCompile( project(':hibernate-spatial') )
 	testCompile( project(path: ':hibernate-core', configuration: 'tests') )
 
 	testCompile( project(':hibernate-testing') )

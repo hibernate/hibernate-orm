@@ -717,6 +717,11 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 					return (SqmExpression) selectableNode;
 				}
 			}
+
+			final SqmFrom sqmFrom = getCurrentProcessingState().getPathRegistry().findFromByAlias( ctx.identifier().getText() );
+			if ( sqmFrom != null ) {
+				return sqmFrom;
+			}
 		}
 
 		return (SqmExpression) ctx.expression().accept( this );

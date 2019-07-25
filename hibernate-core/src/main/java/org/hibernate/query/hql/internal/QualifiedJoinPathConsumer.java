@@ -81,6 +81,10 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			return createJoin( pathRootByExposedNavigable, identifier, isTerminal, creationState );
 		}
 
+		// todo (6.0) : another alternative here is an entity-join (entity name as rhs rather than attribute path)
+		//		- need to account for that here, which may need delayed resolution in the case of a
+		//			qualified entity reference (FQN)
+
 		throw new SemanticException( "Could not determine how to resolve qualified join base : " + identifier );
 	}
 

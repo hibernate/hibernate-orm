@@ -159,7 +159,7 @@ public class QueryLoader extends BasicLoader {
 			entityAliases[i] = element.getClassAlias();
 			sqlAliasByEntityAlias.put( entityAliases[i], sqlAliases[i] );
 			// TODO should we just collect these like with the collections above?
-			sqlAliasSuffixes[i] = ( size == 1 ) ? "" : (Integer.toString( i ) + "_").intern();
+			sqlAliasSuffixes[i] = ( size == 1 ) ? "" : (Integer.toString( i ) + '_');
 //			sqlAliasSuffixes[i] = element.getColumnAliasSuffix();
 			includeInSelect[i] = !element.isFetch();
 			if ( includeInSelect[i] ) {

@@ -1004,7 +1004,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			}
 
 			if ( parserJoin.qualifiedJoinPredicate() != null ) {
-				dotIdentifierConsumerStack.push( new QualifiedJoinPredicatePathConsumer( sqmRoot, join, this ) );
+				dotIdentifierConsumerStack.push( new QualifiedJoinPredicatePathConsumer( join, this ) );
 				try {
 					join.setJoinPredicate( (SqmPredicate) parserJoin.qualifiedJoinPredicate().predicate().accept( this ) );
 				}

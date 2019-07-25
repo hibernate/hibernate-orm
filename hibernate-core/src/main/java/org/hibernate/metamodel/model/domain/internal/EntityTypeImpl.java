@@ -13,10 +13,11 @@ import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -66,13 +67,41 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public DomainType<?> getSqmPathType() {
+	public EntityDomainType<J> getSqmPathType() {
 		return this;
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return (SqmPathSource<?>) findAttribute( name );
+		final PersistentAttribute<?,?> attribute = findAttribute( name );
+		if ( attribute != null ) {
+			return (SqmPathSource<?>) attribute;
+		}
+
+		if ( "id".equalsIgnoreCase( name ) ) {
+			// todo (6.0) : probably need special handling here for non-aggregated composite ids
+		}
+
+		return null;
+	}
+
+	@Override
+	public PersistentAttribute<? super J, ?> findAttribute(String name) {
+		final PersistentAttribute<? super J, ?> attribute = super.findAttribute( name );
+		if ( attribute != null ) {
+			return attribute;
+		}
+
+		if ( "id".equalsIgnoreCase( name ) ) {
+			//noinspection unchecked
+			final SingularPersistentAttribute<J, ?> idAttribute = findIdAttribute();
+			//noinspection RedundantIfStatement
+			if ( idAttribute != null ) {
+				return idAttribute;
+			}
+		}
+
+		return null;
 	}
 
 	@Override

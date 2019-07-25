@@ -7,6 +7,7 @@
 package org.hibernate.query.hql.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -33,6 +34,9 @@ public class DomainPathPart implements SemanticPathPart {
 			SqmCreationState creationState) {
 		final SqmPath<?> lhs = currentPath;
 		final SqmPathSource subPathSource = lhs.getReferencedPathSource().findSubPathSource( name );
+		if ( subPathSource == null ) {
+			throw new SemanticException( "Cannot resolve path (`" + name + "`) relative to `"  + lhs.getNavigablePath() + "`" );
+		}
 		//noinspection unchecked
 		currentPath = subPathSource.createSqmPath( lhs, creationState );
 		if ( isTerminal ) {

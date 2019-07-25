@@ -23,7 +23,7 @@ import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.hql.SemanticQueryProducer;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
+import org.hibernate.query.hql.internal.SemanticQueryProducerImpl ;
 import org.hibernate.query.sqm.produce.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
 import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;

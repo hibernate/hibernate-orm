@@ -7,6 +7,9 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -32,7 +35,17 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> {
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return (SqmPathSource<?>) getSqmPathType().findAttribute( name );
+		final PersistentAttribute<?,?> attribute = getSqmPathType().findAttribute( name );
+		if ( attribute != null ) {
+			return (SqmPathSource<?>) attribute;
+		}
+
+		final SingularPersistentAttribute<J, ?> idAttribute = getSqmPathType().findIdAttribute();
+		if ( idAttribute != null && idAttribute.getName().equals( name ) ) {
+			return idAttribute;
+		}
+
+		throw new SemanticException( "Unknown sub-path name : " + name );
 	}
 
 	@Override

@@ -22,15 +22,12 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  * @author Steve Ebersole
  */
 public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsumer {
-	private final SqmRoot sqmRoot;
 	private final SqmQualifiedJoin sqmJoin;
 
 	public QualifiedJoinPredicatePathConsumer(
-			SqmRoot<?> sqmRoot,
 			SqmQualifiedJoin sqmJoin,
 			SqmCreationState creationState) {
 		super( creationState );
-		this.sqmRoot = sqmRoot;
 		this.sqmJoin = sqmJoin;
 	}
 

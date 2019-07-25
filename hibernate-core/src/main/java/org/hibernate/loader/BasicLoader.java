@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.BagType;
@@ -100,7 +101,7 @@ public abstract class BasicLoader extends Loader {
 
 		String[] suffixes = new String[length];
 		for ( int i = 0; i < length; i++ ) {
-			suffixes[i] = Integer.toString( i + seed ) + '_';
+			suffixes[i] = AliasConstantsHelper.get( i + seed );
 		}
 		return suffixes;
 	}

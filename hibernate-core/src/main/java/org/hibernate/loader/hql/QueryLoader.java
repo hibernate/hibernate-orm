@@ -37,6 +37,7 @@ import org.hibernate.hql.spi.ParameterInformation;
 import org.hibernate.internal.IteratorImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.BasicLoader;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -159,7 +160,7 @@ public class QueryLoader extends BasicLoader {
 			entityAliases[i] = element.getClassAlias();
 			sqlAliasByEntityAlias.put( entityAliases[i], sqlAliases[i] );
 			// TODO should we just collect these like with the collections above?
-			sqlAliasSuffixes[i] = ( size == 1 ) ? "" : (Integer.toString( i ) + '_');
+			sqlAliasSuffixes[i] = ( size == 1 ) ? "" : AliasConstantsHelper.get( i );
 //			sqlAliasSuffixes[i] = element.getColumnAliasSuffix();
 			includeInSelect[i] = !element.isFetch();
 			if ( includeInSelect[i] ) {

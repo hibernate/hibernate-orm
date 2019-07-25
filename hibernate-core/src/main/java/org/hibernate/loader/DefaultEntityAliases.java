@@ -68,9 +68,7 @@ public class DefaultEntityAliases implements EntityAliases {
 		else {
 			aliases = keyColumnsCandidates;
 		}
-		final String[] rtn = StringHelper.unquote( aliases, persister.getFactory().getDialect() );
-		intern( rtn );
-		return rtn;
+		return StringHelper.unquote( aliases, persister.getFactory().getDialect() );
 	}
 
 	private String[][] determinePropertyAliases(Loadable persister) {
@@ -132,7 +130,6 @@ public class DefaultEntityAliases implements EntityAliases {
 						getPropertyAliases( persister, j )
 				);
 				suffixedPropertyAliases[j] = StringHelper.unquote( suffixedPropertyAliases[j], persister.getFactory().getDialect() );
-				intern( suffixedPropertyAliases[j] );
 			}
 		}
 		else {
@@ -171,9 +168,4 @@ public class DefaultEntityAliases implements EntityAliases {
 		return suffix;
 	}
 
-	private static void intern(String[] strings) {
-		for ( int i = 0; i < strings.length; i++ ) {
-			strings[i] = strings[i].intern();
-		}
-	}
 }

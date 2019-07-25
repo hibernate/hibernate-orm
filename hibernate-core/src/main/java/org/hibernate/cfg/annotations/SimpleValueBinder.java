@@ -176,38 +176,46 @@ public class SimpleValueBinder {
 		else if ( ( !key && property.isAnnotationPresent( Temporal.class ) )
 				|| ( key && property.isAnnotationPresent( MapKeyTemporal.class ) ) ) {
 
-			boolean isDate;
-			if ( buildingContext.getBootstrapContext().getReflectionManager().equals( returnedClassOrElement, Date.class ) ) {
-				isDate = true;
-			}
-			else if ( buildingContext.getBootstrapContext().getReflectionManager().equals( returnedClassOrElement, Calendar.class ) ) {
-				isDate = false;
-			}
-			else {
-				throw new AnnotationException(
-						"@Temporal should only be set on a java.util.Date or java.util.Calendar property: "
-								+ StringHelper.qualify( persistentClassName, propertyName )
-				);
-			}
+			// we should be able to handle this using the Java type because it should denote a basic value
+			final Class<?> valueJavaType = buildingContext.getBootstrapContext().getReflectionManager().toClass(returnedClassOrElement );
+
 			final TemporalType temporalType = getTemporalType( property );
-			switch ( temporalType ) {
-				case DATE:
-					type = isDate ? "date" : "calendar_date";
-					break;
-				case TIME:
-					type = "time";
-					if ( !isDate ) {
+
+			if ( Date.class.isAssignableFrom( valueJavaType ) ) {
+				switch ( temporalType ) {
+					case DATE: {
+						type = "date";
+						break;
+					}
+					case TIME: {
+						type = "time";
+						break;
+					}
+					default: {
+						type = "timestamp";
+						break;
+					}
+				}
+			}
+			else if ( Calendar.class.isAssignableFrom( valueJavaType ) ) {
+				switch ( temporalType ) {
+					case DATE: {
+						type = "calendar_date";
+						break;
+					}
+					case TIME: {
 						throw new NotYetImplementedException(
-								"Calendar cannot persist TIME only"
-										+ StringHelper.qualify( persistentClassName, propertyName )
+								"Calendar cannot persist TIME only" + StringHelper.qualify( persistentClassName, propertyName )
 						);
 					}
-					break;
-				case TIMESTAMP:
-					type = isDate ? "timestamp" : "calendar";
-					break;
-				default:
-					throw new AssertionFailure( "Unknown temporal type: " + temporalType );
+					default: {
+						type = "calendar";
+						break;
+					}
+				}
+			}
+			else if ( java.time.temporal.Temporal.class.isAssignableFrom( valueJavaType ) ) {
+				type = valueJavaType.getName();
 			}
 			explicitType = type;
 		}

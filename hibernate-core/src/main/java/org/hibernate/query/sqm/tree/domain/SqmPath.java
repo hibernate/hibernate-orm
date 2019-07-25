@@ -6,6 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
@@ -58,6 +62,16 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 * root, cross-join or entity-join
 	 */
 	SqmPath<?> getLhs();
+
+	/**
+	 * Visit each implicit-join path relative to this path
+	 */
+	void visitImplicitJoinPaths(Consumer<SqmPath<?>> consumer);
+
+	/**
+	 * Register an implicit-join path relative to this path
+	 */
+	void registerImplicitJoinPath(SqmPath<?> path);
 
 	/**
 	 * This node's type is its "referenced path source"

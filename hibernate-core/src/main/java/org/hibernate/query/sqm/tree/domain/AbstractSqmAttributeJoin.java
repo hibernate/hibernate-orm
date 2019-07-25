@@ -18,7 +18,6 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.SqmCreationHelper;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -37,7 +36,6 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		implements SqmAttributeJoin<O,T> {
 	private static final Logger log = Logger.getLogger( AbstractSqmAttributeJoin.class );
 
-	private final SqmFrom<?,O> lhs;
 	private final boolean fetched;
 
 	private SqmPredicate onClausePredicate;
@@ -59,13 +57,13 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 				joinType,
 				nodeBuilder
 		);
-		this.lhs = lhs;
 		this.fetched = fetched;
 	}
 
 	@Override
 	public SqmFrom<?,O> getLhs() {
-		return lhs;
+		//noinspection unchecked
+		return (SqmFrom) super.getLhs();
 	}
 
 	@Override

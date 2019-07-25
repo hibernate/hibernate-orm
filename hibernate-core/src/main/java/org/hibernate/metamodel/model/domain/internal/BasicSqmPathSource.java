@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.IllegalPathUsageException;
@@ -17,7 +18,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 /**
  * @author Steve Ebersole
  */
-public class BasicSqmPathSource<J> extends AbstractSqmPathSource<J> {
+public class BasicSqmPathSource<J> extends AbstractSqmPathSource<J> implements AllowableParameterType<J> {
 	@SuppressWarnings("WeakerAccess")
 	public BasicSqmPathSource(
 			String localPathName,

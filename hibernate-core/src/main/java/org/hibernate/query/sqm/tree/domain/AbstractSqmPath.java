@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
@@ -35,7 +36,21 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	private final NavigablePath navigablePath;
 	private final SqmPath lhs;
 
+	/**
+	 * Note that this field is only really used to support Criteria building.
+	 * For HQL processing the {@link org.hibernate.query.hql.spi.SqmPathRegistry}
+	 * serves the same purpose.
+	 */
 	private Map<String, SqmPath> attributePathRegistry;
+
+	/**
+	 * For HQL processing - used to track implicit-join paths relative to this
+	 * path.  E.g., given `p.mate.mate` the SqmRoot identified by `p` would
+	 * have an implicit-join for the `p.mate` path.  Note however that the SqmPath
+	 * for `p.mate` would not have one for `p.mate.mate` *unless* `p.mate.mate` were
+	 * de-referenced somewhere else in the query.
+	 */
+	private Map<String,SqmPath<?>> implicitJoinPaths;
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqmPath(
@@ -78,6 +93,32 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@Override
 	public SqmPath<?> getLhs() {
 		return lhs;
+	}
+
+	@Override
+	public void visitImplicitJoinPaths(Consumer<SqmPath<?>> consumer) {
+		if ( implicitJoinPaths != null ) {
+			implicitJoinPaths.values().forEach( consumer );
+		}
+	}
+
+	@Override
+	public void registerImplicitJoinPath(SqmPath<?> path) {
+		assert path.getLhs() == this;
+
+		if ( implicitJoinPaths == null ) {
+			implicitJoinPaths = new HashMap<>();
+		}
+
+		final String relativeName = path.getNavigablePath().getLocalName();
+
+		final SqmPath<?> previous = implicitJoinPaths.put( relativeName, path );
+		if ( previous != null && previous != path ) {
+			log.debugf(
+					"Implicit-join path registration unexpectedly overrode previous registration - `%s`",
+					relativeName
+			);
+		}
 	}
 
 	@Override

@@ -42,18 +42,31 @@ public class DefaultEntityAliases implements EntityAliases {
 			Map userProvidedAliases,
 			Loadable persister,
 			String suffix) {
-		this.suffix = suffix.intern();
-		this.userProvidedAliases = userProvidedAliases;
+		this( userProvidedAliases, persister, suffix, false );
+	}
 
+	public DefaultEntityAliases(Loadable persister, String suffix) {
+		this( Collections.EMPTY_MAP, persister, suffix, true );
+	}
+
+	private DefaultEntityAliases(
+			Map userProvidedAliases,
+			Loadable persister,
+			String suffix,
+			boolean interns) {
+		if ( interns ) {
+			this.suffix = suffix.intern();
+			this.rowIdAlias = (Loadable.ROWID_ALIAS + suffix).intern(); // TODO: not visible to the user!
+		}
+		else {
+			this.suffix = suffix;
+			this.rowIdAlias = (Loadable.ROWID_ALIAS + suffix);
+		}
+		this.userProvidedAliases = userProvidedAliases;
 		suffixedKeyColumns = determineKeyAlias( persister, suffix );
 		suffixedPropertyColumns = determinePropertyAliases( persister );
 		suffixedDiscriminatorColumn = determineDiscriminatorAlias( persister, suffix );
 		suffixedVersionColumn = determineVersionAlias( persister );
-		rowIdAlias = (Loadable.ROWID_ALIAS + suffix).intern(); // TODO: not visible to the user!
-	}
-
-	public DefaultEntityAliases(Loadable persister, String suffix) {
-		this( Collections.EMPTY_MAP, persister, suffix );
 	}
 
 	private String[] determineKeyAlias(Loadable persister, String suffix) {

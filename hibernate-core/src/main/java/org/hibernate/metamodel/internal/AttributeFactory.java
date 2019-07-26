@@ -247,7 +247,7 @@ public class AttributeFactory {
 							context.getJpaMetamodel()
 					);
 
-					context.registerEmbeddableType( embeddableType );
+					context.registerEmbeddableType( embeddableType, component );
 
 					return embeddableType;
 				}

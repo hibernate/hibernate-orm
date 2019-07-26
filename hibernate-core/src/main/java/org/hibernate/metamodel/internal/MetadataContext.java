@@ -81,6 +81,8 @@ public class MetadataContext {
 	private Map<PersistentClass, EntityDomainType<?>> entityTypesByPersistentClass = new HashMap<>();
 
 	private Map<Class, EmbeddableDomainType<?>> embeddables = new HashMap<>();
+	private Map<Class, EmbeddableDomainType<?>> embeddablesToProcess = new HashMap<>();
+	private Map<EmbeddableDomainType<?>,Component> componentByEmbeddable = new HashMap<>();
 
 	private Map<MappedSuperclass, MappedSuperclassDomainType<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
 	private Map<MappedSuperclassDomainType<?>, PersistentClass> mappedSuperClassTypeToPersistentClass = new HashMap<>();
@@ -166,11 +168,14 @@ public class MetadataContext {
 		orderedMappings.add( persistentClass );
 	}
 
-	public void registerEmbeddableType(EmbeddableDomainType<?> embeddableType) {
+	public void registerEmbeddableType(
+			EmbeddableDomainType<?> embeddableType,
+			Component bootDescriptor) {
 		assert embeddableType.getJavaType() != null;
 		assert ! Map.class.isAssignableFrom( embeddableType.getJavaType() );
 
-		embeddables.put( embeddableType.getJavaType(), embeddableType );
+		embeddablesToProcess.put( embeddableType.getJavaType(), embeddableType );
+		componentByEmbeddable.put( embeddableType, bootDescriptor );
 	}
 
 	public void registerMappedSuperclassType(
@@ -318,9 +323,27 @@ public class MetadataContext {
 			}
 		}
 
-		if ( staticMetamodelScanEnabled ) {
-			for ( EmbeddableDomainType embeddable : embeddables.values() ) {
-				populateStaticMetamodel( embeddable );
+
+		while ( ! embeddablesToProcess.isEmpty() ) {
+			final ArrayList<EmbeddableDomainType<?>> processingEmbeddables = new ArrayList<>( embeddablesToProcess.values() );
+			embeddablesToProcess.clear();
+
+			for ( EmbeddableDomainType<?> embeddable : processingEmbeddables ) {
+				final Component component = componentByEmbeddable.get( embeddable );
+				final Iterator<Property> propertyItr = component.getPropertyIterator();
+				while ( propertyItr.hasNext() ) {
+					final Property property = propertyItr.next();
+					final PersistentAttribute attribute = attributeFactory.buildAttribute( embeddable, property );
+					if ( attribute != null ) {
+						( ( AttributeContainer) embeddable ).getInFlightAccess().addAttribute( attribute );
+					}
+				}
+
+				( ( AttributeContainer) embeddable ).getInFlightAccess().finishUp();
+
+				if ( staticMetamodelScanEnabled ) {
+					populateStaticMetamodel( embeddable );
+				}
 			}
 		}
 	}
@@ -591,6 +614,11 @@ public class MetadataContext {
 
 	public <J> EmbeddableDomainType<J> locateEmbeddable(Class<J> embeddableClass) {
 		//noinspection unchecked
-		return (EmbeddableDomainType<J>) embeddables.get( embeddableClass );
+		EmbeddableDomainType<J> domainType = (EmbeddableDomainType<J>) embeddables.get( embeddableClass );
+		if ( domainType == null ) {
+			//noinspection unchecked
+			domainType = (EmbeddableDomainType) embeddablesToProcess.get( embeddableClass );
+		}
+		return domainType;
 	}
 }

@@ -11,23 +11,22 @@ import org.hibernate.tool.ant.test.util.ProjectUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class HibernateToolTest {
-	
-	private static final String BUILD_XML = 
-			"<project name='HibernateToolTest'>                           " +
-	        "  <taskdef                                                   " +
-			"      name='hibernatetool'                                   " +
-	        "      classname='org.hibernate.tool.ant.HibernateToolTask' />" +
-			"  <hibernatetool/>                                           " +
-	        "</project>                                                   " ;
+public class HibernateToolTaskTest {	
 	
 	@TempDir
 	Path tempDir;
 	
 	@Test
-	public void testHibernateTool() throws Exception {
+	public void testHibernateToolTask() throws Exception {
+		String buildXmlString = 
+				"<project name='HibernateToolTest'>                           " +
+		        "  <taskdef                                                   " +
+				"      name='hibernatetool'                                   " +
+		        "      classname='org.hibernate.tool.ant.HibernateToolTask' />" +
+				"  <hibernatetool/>                                           " +
+		        "</project>                                                   " ;
 		File buildXml = new File(tempDir.toFile(), "build.xml");
-		Files.write(buildXml.toPath(), BUILD_XML.getBytes());
+		Files.write(buildXml.toPath(), buildXmlString.getBytes());
 		Project project = ProjectUtil.createProject(buildXml);
 		assertNotNull(project);
 	}

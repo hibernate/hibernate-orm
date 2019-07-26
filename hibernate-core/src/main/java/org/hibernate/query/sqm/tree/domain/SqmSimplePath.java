@@ -12,5 +12,5 @@ package org.hibernate.query.sqm.tree.domain;
  *
  * @author Steve Ebersole
  */
-public interface SqmNavigableReference<T> extends SqmPath<T> {
+public interface SqmSimplePath<T> extends SqmPath<T> {
 }

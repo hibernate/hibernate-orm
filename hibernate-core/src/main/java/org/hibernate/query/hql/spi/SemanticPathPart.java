@@ -9,7 +9,7 @@ package org.hibernate.query.hql.spi;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 
 /**
  * @asciidoc
@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
  * 		* class name
  * 		* field name
  * 		* enum name
- * 		* {@link SqmNavigableReference}
+ * 		* {@link SqmSimplePath}
  *
  * @author Steve Ebersole
  */

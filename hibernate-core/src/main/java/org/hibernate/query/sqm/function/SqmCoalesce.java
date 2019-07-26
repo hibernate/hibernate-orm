@@ -21,6 +21,8 @@ import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
+ * Specialized CASE statement for resolving the first non-null value in a list of values
+ *
  * @author Steve Ebersole
  * @author Gavin King
  */

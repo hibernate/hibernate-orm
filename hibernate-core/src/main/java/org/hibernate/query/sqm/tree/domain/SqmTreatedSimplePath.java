@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
  */
 public class SqmTreatedSimplePath<T, S extends T>
 		extends SqmEntityValuedSimplePath<S>
-		implements SqmNavigableReference<S>, SqmTreatedPath<T,S> {
+		implements SqmSimplePath<S>, SqmTreatedPath<T,S> {
 
 	private final EntityDomainType<S> treatTarget;
 	private final SqmPath<T> wrappedPath;

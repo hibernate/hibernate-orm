@@ -10,7 +10,6 @@ import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -80,42 +79,44 @@ public class DomainModelHelper {
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmPathSource(
-			ValueClassification classification,
 			String name,
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType) {
-		switch ( classification ) {
-			case BASIC: {
-				return new BasicSqmPathSource<>(
-						name,
-						(BasicDomainType<J>) valueDomainType,
-						jpaBindableType
-				);
-			}
-			case ANY: {
-				return new AnyMappingSqmPathSource<>(
-						name,
-						(AnyMappingDomainType<J>) valueDomainType,
-						jpaBindableType
-				);
-			}
-			case EMBEDDED: {
-				return new EmbeddedSqmPathSource<>(
-						name,
-						(EmbeddableDomainType<J>) valueDomainType,
-						jpaBindableType
-				);
-			}
-			case ENTITY: {
-				return new EntitySqmPathSource<>(
-						name,
-						(EntityDomainType<J>) valueDomainType,
-						jpaBindableType
-				);
-			}
-			default: {
-				throw new IllegalArgumentException( "Unrecognized ValueClassification : " + classification );
-			}
+
+		if ( valueDomainType instanceof BasicDomainType ) {
+			return new BasicSqmPathSource<>(
+					name,
+					(BasicDomainType<J>) valueDomainType,
+					jpaBindableType
+			);
 		}
+
+		if ( valueDomainType instanceof AnyMappingDomainType ) {
+			return new AnyMappingSqmPathSource<>(
+					name,
+					(AnyMappingDomainType<J>) valueDomainType,
+					jpaBindableType
+			);
+		}
+
+		if ( valueDomainType instanceof EmbeddableDomainType ) {
+			return new EmbeddedSqmPathSource<>(
+					name,
+					(EmbeddableDomainType<J>) valueDomainType,
+					jpaBindableType
+			);
+		}
+
+		if ( valueDomainType instanceof EntityDomainType ) {
+			return new EntitySqmPathSource<>(
+					name,
+					(EntityDomainType<J>) valueDomainType,
+					jpaBindableType
+			);
+		}
+
+		throw new IllegalArgumentException(
+				"Unrecognized value type Java-type [" + valueDomainType.getTypeName() + "] for plural attribute value"
+		);
 	}
 }

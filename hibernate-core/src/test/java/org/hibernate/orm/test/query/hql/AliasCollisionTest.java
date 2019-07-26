@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
-import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
@@ -143,12 +143,12 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 		);
 
 		final SqmComparisonPredicate correlation = (SqmComparisonPredicate) subQuerySpec.getWhereClause().getPredicate();
-		final SqmNavigableReference leftHandExpression = (SqmNavigableReference) correlation.getLeftHandExpression();
+		final SqmSimplePath leftHandExpression = (SqmSimplePath) correlation.getLeftHandExpression();
 		assertThat(
 				leftHandExpression.getLhs().getExplicitAlias(),
 				is( "a" )
 		);
-		final SqmNavigableReference rightHandExpression = (SqmNavigableReference) correlation.getRightHandExpression();
+		final SqmSimplePath rightHandExpression = (SqmSimplePath) correlation.getRightHandExpression();
 		assertThat(
 				rightHandExpression.getLhs().getExplicitAlias(),
 				is( "b" )

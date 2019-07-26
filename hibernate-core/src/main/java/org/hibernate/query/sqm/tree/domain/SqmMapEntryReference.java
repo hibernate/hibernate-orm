@@ -57,6 +57,10 @@ public class SqmMapEntryReference<K,V> implements SqmSelectableNode<Map.Entry<K,
 		return explicitAlias;
 	}
 
+	public SqmPath<?> getMapPath() {
+		return mapPath;
+	}
+
 	@Override
 	public JpaSelection<Map.Entry<K, V>> alias(String name) {
 		this.explicitAlias = name;

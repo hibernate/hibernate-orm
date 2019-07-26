@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
-import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
@@ -28,7 +27,6 @@ class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> imp
 
 		//noinspection unchecked
 		this.indexPathSource = (SqmPathSource) DomainModelHelper.resolveSqmPathSource(
-				ValueClassification.BASIC,
 				getName(),
 				builder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE

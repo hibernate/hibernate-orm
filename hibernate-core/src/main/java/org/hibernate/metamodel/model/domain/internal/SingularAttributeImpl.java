@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
@@ -57,34 +56,10 @@ public class SingularAttributeImpl<D,J>
 
 
 		this.sqmPathSource = DomainModelHelper.resolveSqmPathSource(
-				determineValueClassification( attributeClassification ),
 				name,
 				attributeType,
 				BindableType.SINGULAR_ATTRIBUTE
 		);
-	}
-
-	private static ValueClassification determineValueClassification(AttributeClassification attributeClassification) {
-		switch ( attributeClassification ) {
-			case BASIC: {
-				return ValueClassification.BASIC;
-			}
-			case ANY: {
-				return ValueClassification.ANY;
-			}
-			case EMBEDDED: {
-				return ValueClassification.EMBEDDED;
-			}
-			case ONE_TO_ONE:
-			case MANY_TO_ONE: {
-				return ValueClassification.ENTITY;
-			}
-			default: {
-				throw new IllegalArgumentException(
-						"Unrecognized AttributeClassification (for singular attribute): " + attributeClassification
-				);
-			}
-		}
 	}
 
 	@Override

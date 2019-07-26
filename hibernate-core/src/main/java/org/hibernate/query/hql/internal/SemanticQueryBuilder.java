@@ -1879,7 +1879,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	private SqmFunctionTemplate getFunctionTemplate(String name) {
-		return creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate(name);
+		return creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionTemplate( name );
 	}
 
 	@Override
@@ -2752,12 +2752,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmPath<?> visitCollectionElementNavigablePath(HqlParser.CollectionElementNavigablePathContext ctx) {
-		final SqmPath<?> sqmPath = consumeManagedTypeReference( ctx.path() );
-		final SqmPathSource<?> referencedPathSource = sqmPath.getReferencedPathSource();
+		final SqmPath<?> pluralAttributePath = consumeDomainPath( ctx.path() );
+		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
 
 		if ( !(referencedPathSource instanceof PluralPersistentAttribute ) ) {
 			throw new PathException(
-					"Illegal attempt to treat non-plural path as a plural path : " + sqmPath.getNavigablePath()
+					"Illegal attempt to treat non-plural path as a plural path : " + pluralAttributePath.getNavigablePath()
 			);
 		}
 
@@ -2770,7 +2770,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 
 		SqmPath result = attribute.getElementPathSource().createSqmPath(
-				sqmPath,
+				pluralAttributePath,
 				this
 		);
 

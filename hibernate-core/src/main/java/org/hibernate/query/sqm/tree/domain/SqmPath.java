@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -62,6 +63,11 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 * root, cross-join or entity-join
 	 */
 	SqmPath<?> getLhs();
+
+	/**
+	 * Returns an immutable List of implicit-join paths
+	 */
+	List<SqmPath<?>> getImplicitJoinPaths();
 
 	/**
 	 * Visit each implicit-join path relative to this path

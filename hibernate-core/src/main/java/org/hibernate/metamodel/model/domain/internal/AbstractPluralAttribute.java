@@ -10,12 +10,6 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.ValueClassification;
-import org.hibernate.metamodel.model.domain.AbstractManagedType;
-import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.NavigablePath;
@@ -37,14 +31,6 @@ public abstract class AbstractPluralAttribute<D,C,E>
 		extends AbstractAttribute<D,C,E>
 		implements PluralPersistentAttribute<D,C,E>, Serializable {
 
-	public static <X,C,E,K> PluralAttributeBuilder<X,C,E,K> create(
-			AbstractManagedType<X> ownerType,
-			SimpleDomainType<E> attrType,
-			JavaTypeDescriptor<C> collectionClass,
-			SimpleDomainType<K> listIndexOrMapKeyType) {
-		return new PluralAttributeBuilder<>( ownerType, attrType, collectionClass, listIndexOrMapKeyType );
-	}
-
 	private final CollectionClassification classification;
 	private final SqmPathSource<E> elementPathSource;
 
@@ -62,32 +48,9 @@ public abstract class AbstractPluralAttribute<D,C,E>
 		this.classification = builder.getCollectionClassification();
 
 		this.elementPathSource = DomainModelHelper.resolveSqmPathSource(
-				interpretValueClassification( builder.getValueType() ),
 				getName(),
 				builder.getValueType(),
 				BindableType.PLURAL_ATTRIBUTE
-		);
-	}
-
-	private ValueClassification interpretValueClassification(SimpleDomainType<E> valueType) {
-		if ( valueType instanceof BasicDomainType ) {
-			return ValueClassification.BASIC;
-		}
-
-		if ( valueType instanceof AnyMappingDomainType ) {
-			return ValueClassification.ANY;
-		}
-
-		if ( valueType instanceof EmbeddableDomainType ) {
-			return ValueClassification.EMBEDDED;
-		}
-
-		if ( valueType instanceof EntityDomainType ) {
-			return ValueClassification.ENTITY;
-		}
-
-		throw new IllegalArgumentException(
-				"Unrecognized value type Java-type [" + valueType.getTypeName() + "] for plural attribute value"
 		);
 	}
 

@@ -6,7 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -93,6 +96,15 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@Override
 	public SqmPath<?> getLhs() {
 		return lhs;
+	}
+
+	@Override
+	public List<SqmPath<?>> getImplicitJoinPaths() {
+		if ( implicitJoinPaths == null ) {
+			return Collections.emptyList();
+		}
+
+		return new ArrayList<>( implicitJoinPaths.values() );
 	}
 
 	@Override

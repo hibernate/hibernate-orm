@@ -12,6 +12,6 @@ package org.hibernate.metamodel;
 public enum ValueClassification {
 	BASIC,
 	ANY,
-	EMBEDDED,
+	EMBEDDABLE,
 	ENTITY
 }

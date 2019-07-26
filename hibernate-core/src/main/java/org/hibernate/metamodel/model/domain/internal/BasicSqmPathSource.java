@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.NavigablePath;
@@ -18,7 +19,9 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 /**
  * @author Steve Ebersole
  */
-public class BasicSqmPathSource<J> extends AbstractSqmPathSource<J> implements AllowableParameterType<J> {
+public class BasicSqmPathSource<J>
+		extends AbstractSqmPathSource<J>
+		implements AllowableParameterType<J>, AllowableFunctionReturnType<J> {
 	@SuppressWarnings("WeakerAccess")
 	public BasicSqmPathSource(
 			String localPathName,
@@ -47,5 +50,15 @@ public class BasicSqmPathSource<J> extends AbstractSqmPathSource<J> implements A
 				lhs,
 				creationState.getCreationContext().getNodeBuilder()
 		);
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public Class<J> getJavaType() {
+		return getExpressableJavaTypeDescriptor().getJavaType();
 	}
 }

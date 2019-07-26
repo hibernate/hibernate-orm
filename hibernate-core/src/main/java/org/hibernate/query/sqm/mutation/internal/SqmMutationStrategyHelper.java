@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
@@ -197,7 +197,7 @@ public class SqmMutationStrategyHelper {
 	 * Is the given `expression` a `SqmNavigableReference` that is also a reference
 	 * to a non-`EntityIdentifier` `Navigable`?
 	 *
-	 * @see SqmNavigableReference
+	 * @see SqmSimplePath
 	 */
 	@SuppressWarnings("WeakerAccess")
 	public static boolean isNonIdentifierReference(SqmExpression expression) {

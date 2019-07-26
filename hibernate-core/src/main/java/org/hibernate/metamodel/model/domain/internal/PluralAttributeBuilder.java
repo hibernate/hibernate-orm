@@ -15,35 +15,130 @@ import java.util.Set;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.internal.AttributeFactory;
+import org.hibernate.metamodel.internal.MetadataContext;
+import org.hibernate.metamodel.internal.PluralAttributeMetadata;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
+import static org.hibernate.metamodel.internal.AttributeFactory.determineSimpleType;
 
 /**
  * A "parameter object" for creating a plural attribute
  */
 public class PluralAttributeBuilder<D, C, E, K> {
+	private final JavaTypeDescriptor<C> collectionJtd;
+
+	private final AttributeClassification attributeClassification;
+	private final CollectionClassification collectionClassification;
+
+	private final SimpleDomainType<E> elementType;
+	private final SimpleDomainType<K> listIndexOrMapKeyType;
+
 	private final ManagedDomainType<D> declaringType;
-	private final SimpleDomainType<E> valueType;
 
-	private SimpleDomainType<K> listIndexOrMapKeyType;
-
-	private AttributeClassification attributeClassification;
-	private CollectionClassification collectionClassification;
-	private JavaTypeDescriptor<C> collectionJavaTypeDescriptor;
-
-	private Property property;
-	private Member member;
+	private final Property property;
+	private final Member member;
 
 	public PluralAttributeBuilder(
-			ManagedDomainType<D> ownerType,
+			JavaTypeDescriptor<C> collectionJtd,
+			AttributeClassification attributeClassification,
+			CollectionClassification collectionClassification,
 			SimpleDomainType<E> elementType,
-			JavaTypeDescriptor<C> collectionJavaTypeDescriptor,
-			SimpleDomainType<K> listIndexOrMapKeyType) {
-		this.declaringType = ownerType;
-		this.valueType = elementType;
-		this.collectionJavaTypeDescriptor = collectionJavaTypeDescriptor;
+			SimpleDomainType<K> listIndexOrMapKeyType,
+			ManagedDomainType<D> declaringType,
+			Property property,
+			Member member) {
+		this.collectionJtd = collectionJtd;
+		this.attributeClassification = attributeClassification;
+		this.collectionClassification = collectionClassification;
+		this.elementType = elementType;
 		this.listIndexOrMapKeyType = listIndexOrMapKeyType;
+		this.declaringType = declaringType;
+		this.property = property;
+		this.member = member;
+	}
+
+	public static <Y, X> PersistentAttribute<X, Y> build(
+			PluralAttributeMetadata<?,Y,?> attributeMetadata,
+			MetadataContext metadataContext) {
+
+		final JavaTypeDescriptor<Y> attributeJtd = metadataContext.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( attributeMetadata.getJavaType() );
+
+		//noinspection unchecked
+		final PluralAttributeBuilder builder = new PluralAttributeBuilder(
+				attributeJtd,
+				attributeMetadata.getAttributeClassification(),
+				attributeMetadata.getCollectionClassification(),
+				AttributeFactory.determineSimpleType(
+						attributeMetadata.getElementValueContext(),
+						metadataContext
+				),
+				determineListIndexOrMapKeyType( attributeMetadata, metadataContext ),
+				attributeMetadata.getOwnerType(),
+				attributeMetadata.getPropertyMapping(),
+				attributeMetadata.getMember()
+		);
+
+		if ( Map.class.equals( attributeJtd.getJavaType() ) ) {
+			//noinspection unchecked
+			return new MapAttributeImpl<>( builder );
+		}
+		else if ( Set.class.equals( attributeJtd.getJavaType() ) ) {
+			//noinspection unchecked
+			return new SetAttributeImpl<>( builder );
+		}
+		else if ( List.class.equals( attributeJtd.getJavaType() ) ) {
+			//noinspection unchecked
+			return new ListAttributeImpl<>( builder );
+		}
+		else if ( Collection.class.equals( attributeJtd.getJavaType() ) ) {
+			//noinspection unchecked
+			return new BagAttributeImpl<>( builder );
+		}
+
+		//apply loose rules
+		if ( attributeJtd.getJavaType().isArray() ) {
+			//noinspection unchecked
+			return new ListAttributeImpl<>( builder );
+		}
+
+		if ( Map.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
+			//noinspection unchecked
+			return new MapAttributeImpl<>( builder );
+		}
+		else if ( Set.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
+			//noinspection unchecked
+			return new SetAttributeImpl<>( builder );
+		}
+		else if ( List.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
+			//noinspection unchecked
+			return new ListAttributeImpl<>( builder );
+		}
+		else if ( Collection.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
+			//noinspection unchecked
+			return new BagAttributeImpl<>( builder );
+		}
+
+		throw new UnsupportedOperationException( "Unknown collection: " + attributeJtd.getJavaType() );
+	}
+
+	private static SimpleDomainType<?> determineListIndexOrMapKeyType(
+			PluralAttributeMetadata<?,?,?> attributeMetadata,
+			MetadataContext metadataContext) {
+		if ( java.util.Map.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
+			return determineSimpleType( attributeMetadata.getMapKeyValueContext(), metadataContext );
+		}
+
+		if ( java.util.List.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
+			return metadataContext.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( Integer.class );
+		}
+
+		return null;
 	}
 
 	public ManagedDomainType<D> getDeclaringType() {
@@ -63,11 +158,11 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	}
 
 	public JavaTypeDescriptor<C> getCollectionJavaTypeDescriptor() {
-		return collectionJavaTypeDescriptor;
+		return collectionJtd;
 	}
 
 	public SimpleDomainType<E> getValueType() {
-		return valueType;
+		return elementType;
 	}
 
 	public Property getProperty() {
@@ -76,83 +171,5 @@ public class PluralAttributeBuilder<D, C, E, K> {
 
 	public Member getMember() {
 		return member;
-	}
-
-	public PluralAttributeBuilder<D,C,E,K> member(Member member) {
-		this.member = member;
-		return this;
-	}
-
-	public PluralAttributeBuilder<D,C,E,K> property(Property property) {
-		this.property = property;
-		return this;
-	}
-
-	public PluralAttributeBuilder<D,C,E,K> persistentAttributeClassification(AttributeClassification classification) {
-		this.attributeClassification = classification;
-		return this;
-	}
-
-	@SuppressWarnings( "unchecked" )
-	public AbstractPluralAttribute<D,C,E> build() {
-		//apply strict spec rules first
-		if ( Map.class.equals( collectionJavaTypeDescriptor.getJavaType() ) ) {
-			final PluralAttributeBuilder<D,Map<K,E>,E,K> builder = (PluralAttributeBuilder<D,Map<K,E>,E,K>) this;
-			return (AbstractPluralAttribute<D, C, E>) new MapAttributeImpl<>(
-					builder
-			);
-		}
-		else if ( Set.class.equals( collectionJavaTypeDescriptor.getJavaType() ) ) {
-			final PluralAttributeBuilder<D,Set<E>, E,?> builder = (PluralAttributeBuilder<D, Set<E>, E,?>) this;
-			return (AbstractPluralAttribute<D, C, E>) new SetAttributeImpl<>(
-					builder
-			);
-		}
-		else if ( List.class.equals( collectionJavaTypeDescriptor.getJavaType() ) ) {
-			final PluralAttributeBuilder<D, List<E>, E,?> builder = (PluralAttributeBuilder<D, List<E>, E,?>) this;
-			return (AbstractPluralAttribute<D, C, E>) new ListAttributeImpl<>(
-					builder
-			);
-		}
-		else if ( Collection.class.equals( collectionJavaTypeDescriptor.getJavaType() ) ) {
-			final PluralAttributeBuilder<D, Collection<E>,E,?> builder = (PluralAttributeBuilder<D, Collection<E>, E,?>) this;
-			return (AbstractPluralAttribute<D, C, E>) new BagAttributeImpl<>(
-					builder
-			);
-		}
-
-		//apply loose rules
-		if ( collectionJavaTypeDescriptor.getJavaType().isArray() ) {
-			final PluralAttributeBuilder<D, List<E>, E,?> builder = (PluralAttributeBuilder<D, List<E>, E,?>) this;
-			return (AbstractPluralAttribute<D, C, E>) new ListAttributeImpl<>(
-					builder
-			);
-		}
-
-		if ( Map.class.isAssignableFrom( collectionJavaTypeDescriptor.getJavaType() ) ) {
-			final PluralAttributeBuilder<D,Map<K,E>,E,K> builder = (PluralAttributeBuilder<D,Map<K,E>,E,K>) this;
-			return (AbstractPluralAttribute<D, C, E>) new MapAttributeImpl<>(
-					builder
-			);
-		}
-		else if ( Set.class.isAssignableFrom( collectionJavaTypeDescriptor.getJavaType() ) ) {
-			final PluralAttributeBuilder<D,Set<E>, E,?> builder = (PluralAttributeBuilder<D, Set<E>, E,?>) this;
-			return (AbstractPluralAttribute<D, C, E>) new SetAttributeImpl<>(
-					builder
-			);
-		}
-		else if ( List.class.isAssignableFrom( collectionJavaTypeDescriptor.getJavaType() ) ) {
-			final PluralAttributeBuilder<D, List<E>, E,?> builder = (PluralAttributeBuilder<D, List<E>, E,?>) this;
-			return (AbstractPluralAttribute<D, C, E>) new ListAttributeImpl<>(
-					builder
-			);
-		}
-		else if ( Collection.class.isAssignableFrom( collectionJavaTypeDescriptor.getJavaType() ) ) {
-			final PluralAttributeBuilder<D, Collection<E>,E,?> builder = (PluralAttributeBuilder<D, Collection<E>, E,?>) this;
-			return (AbstractPluralAttribute<D, C, E>) new BagAttributeImpl<>(
-					builder
-			);
-		}
-		throw new UnsupportedOperationException( "Unknown collection: " + collectionJavaTypeDescriptor.getJavaType() );
 	}
 }

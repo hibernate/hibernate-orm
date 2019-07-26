@@ -243,6 +243,8 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 		private final List<Class<? extends AbstractRemappingH2Dialect>> remappingDialectClasses = new ArrayList<>();
 
+		private ZoneId forcedJdbcTimeZone = null;
+
 		protected AbstractParametersBuilder() {
 			dialect = determineDialect();
 			remappingDialectClasses.add( null ); // Always test without remapping
@@ -257,6 +259,18 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 			}
 			if ( !skip ) {
 				skippedIfDialectMatchesClasses.accept( thisAsS() );
+			}
+			return thisAsS();
+		}
+
+		public S withForcedJdbcTimezone(String zoneIdString, Consumer<S> contributor) {
+			ZoneId zoneId = ZoneId.of( zoneIdString );
+			this.forcedJdbcTimeZone = zoneId;
+			try {
+				contributor.accept( thisAsS() );
+			}
+			finally {
+				this.forcedJdbcTimeZone = null;
 			}
 			return thisAsS();
 		}
@@ -281,24 +295,26 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 				parameters.add(
 						new EnvironmentParameters(
 								defaultJvmTimeZone,
-								null,
+								forcedJdbcTimeZone,
 								remappingDialectClass
 						)
 				);
 				Collections.addAll( parameters, subClassParameters );
 				result.add( parameters.toArray() );
 			}
-			for ( ZoneId hibernateJdbcTimeZone : getHibernateJdbcTimeZonesToTest() ) {
-				List<Object> parameters = new ArrayList<>();
-				parameters.add(
-						new EnvironmentParameters(
-								defaultJvmTimeZone,
-								hibernateJdbcTimeZone,
-								null
-						)
-				);
-				Collections.addAll( parameters, subClassParameters );
-				result.add( parameters.toArray() );
+			if ( forcedJdbcTimeZone == null ) {
+				for ( ZoneId hibernateJdbcTimeZone : getHibernateJdbcTimeZonesToTest() ) {
+					List<Object> parameters = new ArrayList<>();
+					parameters.add(
+							new EnvironmentParameters(
+									defaultJvmTimeZone,
+									hibernateJdbcTimeZone,
+									null
+							)
+					);
+					Collections.addAll( parameters, subClassParameters );
+					result.add( parameters.toArray() );
+				}
 			}
 			return thisAsS();
 		}

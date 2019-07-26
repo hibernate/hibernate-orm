@@ -70,6 +70,8 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 	protected static final ZoneId ZONE_GMT = ZoneId.of( "GMT" );
 	protected static final ZoneId ZONE_OSLO = ZoneId.of( "Europe/Oslo" );
 	protected static final ZoneId ZONE_AMSTERDAM = ZoneId.of( "Europe/Amsterdam" );
+	protected static final ZoneId ZONE_AUCKLAND = ZoneId.of( "Pacific/Auckland" );
+	protected static final ZoneId ZONE_SANTIAGO = ZoneId.of( "America/Santiago" );
 
 	private final EnvironmentParameters env;
 

@@ -18,6 +18,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
@@ -37,7 +38,6 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class PersistentIdentifierBag extends AbstractPersistentCollection implements List {
-	// TODO: why are values and identifiers protected? Can they be changed to private?
 	protected List<Object> values;
 	protected Map<Integer, Object> identifiers;
 
@@ -126,11 +126,25 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	public boolean isWrapper(Object collection) {
-		if ( providedValues == null || providedValues == values ) {
-			return values == collection;
+		return values == collection;
+	}
+
+	@Override
+	public boolean isDirectlyProvidedCollection(Object collection) {
+		return isDirectlyAccessible() && providedValues == collection;
+	}
+
+	@Override
+	public boolean isDirectlyProvidedCollectionEquivalentToWrappedCollection(String actualRole) {
+		if ( !isDirectlyAccessible() ) {
+			// a collection was not directly provided to this PersistentCollection.
+			return false;
+		}
+		else if ( values == providedValues ) {
+			return true;
 		}
 		else {
-			return providedValues == collection;
+			throw new NotYetImplementedException( "Comparison of values and providedValues is not implemented yet." );
 		}
 	}
 

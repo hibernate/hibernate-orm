@@ -34,7 +34,6 @@ import org.hibernate.type.Type;
  */
 public class PersistentBag extends AbstractPersistentCollection implements List {
 
-	// TODO: Why is this.bag protected? Can it be changed to private?
 	protected List bag;
 
 	// The Collection provided to a PersistentBag constructor,
@@ -103,12 +102,27 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	public boolean isWrapper(Object collection) {
-		if ( providedCollection == null || providedCollection == bag ) {
-			return bag == collection;
+		return bag == collection;
+	}
+
+	@Override
+	public boolean isDirectlyProvidedCollection(Object collection) {
+		return isDirectlyAccessible() && providedCollection == collection;
+	}
+
+	@Override
+	public boolean isDirectlyProvidedCollectionEquivalentToWrappedCollection(String actualRole) {
+		if ( !isDirectlyAccessible() ) {
+			// a collection was not directly provided to this PersistentCollection.
+			return false;
 		}
-		else {
-			return providedCollection == collection;
+		else if ( bag == providedCollection ) {
+			return true;
 		}
+		return isEquivalentCollection(
+				getSession().getFactory().getMetamodel().collectionPersister( actualRole ),
+				providedCollection
+		);
 	}
 
 	@Override
@@ -142,16 +156,20 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
+		return isEquivalentCollection( persister, (Collection) getSnapshot() );
+	}
+
+	public boolean isEquivalentCollection(CollectionPersister persister, Collection otherCollection) {
 		final Type elementType = persister.getElementType();
-		final List<Object> sn = (List<Object>) getSnapshot();
-		if ( sn.size() != bag.size() ) {
+
+		if ( otherCollection.size() != bag.size() ) {
 			return false;
 		}
 
 		// HHH-11032 - Group objects by Type.getHashCode() to reduce the complexity of the search
 		final Map<Integer, List<Object>> hashToInstancesBag = groupByEqualityHash( bag, elementType );
-		final Map<Integer, List<Object>> hashToInstancesSn = groupByEqualityHash( sn, elementType );
-		if ( hashToInstancesBag.size() != hashToInstancesSn.size() ) {
+		final Map<Integer, List<Object>> hashToInstancesOther = groupByEqualityHash( otherCollection, elementType );
+		if ( hashToInstancesBag.size() != hashToInstancesOther.size() ) {
 			return false;
 		}
 
@@ -160,13 +178,13 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		for ( Map.Entry<Integer, List<Object>> hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
 			final Integer hash = hashToInstancesBagEntry.getKey();
 			final List<Object> instancesBag = hashToInstancesBagEntry.getValue();
-			final List<Object> instancesSn = hashToInstancesSn.get( hash );
-			if ( instancesSn == null || ( instancesBag.size() != instancesSn.size() ) ) {
+			final List<Object> instancesOther = hashToInstancesOther.get( hash );
+			if ( instancesOther == null || ( instancesBag.size() != instancesOther.size() ) ) {
 				return false;
 			}
 		}
 
-		// We already know that both hashToInstancesBag and hashToInstancesSn have:
+		// We already know that both hashToInstancesBag and hashToInstancesOther have:
 		// 1) the same hash values;
 		// 2) the same number of values with the same hash value.
 
@@ -174,13 +192,13 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		for ( Map.Entry<Integer, List<Object>> hashToInstancesBagEntry : hashToInstancesBag.entrySet() ) {
 			final Integer hash = hashToInstancesBagEntry.getKey();
 			final List<Object> instancesBag = hashToInstancesBagEntry.getValue();
-			final List<Object> instancesSn = hashToInstancesSn.get( hash );
+			final List<Object> instancesOther = hashToInstancesOther.get( hash );
 			for ( Object instance : instancesBag ) {
 				if ( !expectOccurrences(
 						instance,
 						instancesBag,
 						elementType,
-						countOccurrences( instance, instancesSn, elementType ) ) ) {
+						countOccurrences( instance, instancesOther, elementType ) ) ) {
 					return false;
 				}
 			}
@@ -193,7 +211,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 *
 	 * @return Map of "equality" hashCode to List of objects
 	 */
-	private Map<Integer, List<Object>> groupByEqualityHash(List<Object> searchedBag, Type elementType) {
+	private Map<Integer, List<Object>> groupByEqualityHash(Collection<Object> searchedBag, Type elementType) {
 		return searchedBag.stream().collect( Collectors.groupingBy( elementType::getHashCode ) );
 	}
 

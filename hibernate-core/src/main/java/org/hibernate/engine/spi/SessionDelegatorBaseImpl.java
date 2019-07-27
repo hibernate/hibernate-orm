@@ -628,7 +628,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
-		return delegate.createNamedStoredProcedureQuery( procedureName );
+		return delegate.createStoredProcedureQuery( procedureName );
 	}
 
 	@Override

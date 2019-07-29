@@ -4,8 +4,12 @@ public class HibernateToolTask {
 	
 	boolean hasConfiguration = false;
 	
+	public ConfigurationTask createConfiguration() {
+		return new ConfigurationTask();
+	}
+	
 	public void execute() {
-		// Do nothing for now
+		// do nothing for now
 	}
 	
 }

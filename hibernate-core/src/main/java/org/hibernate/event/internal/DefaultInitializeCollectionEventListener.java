@@ -103,7 +103,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			PersistentCollection collection,
 			SessionImplementor source) {
 
-		if ( !source.getLoadQueryInfluencers().getEnabledFilters().isEmpty()
+		if ( source.getLoadQueryInfluencers().hasEnabledFilters()
 				&& persister.isAffectedByEnabledFilters( source ) ) {
 			LOG.trace( "Disregarding cached version (if any) of collection due to enabled filters" );
 			return false;

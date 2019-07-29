@@ -57,4 +57,11 @@ public class HibernateToolTaskTest {
 		assertNotNull(edt);
 	}
 
+	@Test
+	public void testCreateExportCfg() {
+		HibernateToolTask htt = new HibernateToolTask();
+		ExportCfgTask ect = htt.createExportCfg();
+		assertNotNull(ect);
+	}
+
 }

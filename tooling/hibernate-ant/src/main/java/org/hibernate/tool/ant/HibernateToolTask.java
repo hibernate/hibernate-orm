@@ -6,6 +6,10 @@ public class HibernateToolTask {
 		return new MetadataTask();
 	}
 	
+	public ExportCfgTask createExportCfg() {
+		return new ExportCfgTask();
+	}
+	
 	public ExportDdlTask createExportDdl() {
 		return new ExportDdlTask();
 	}

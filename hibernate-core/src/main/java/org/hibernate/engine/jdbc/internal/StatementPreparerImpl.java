@@ -18,6 +18,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
+import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 /**
@@ -28,15 +29,17 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
  * @author Brett Meyer
 */
 class StatementPreparerImpl implements StatementPreparer {
-	private JdbcCoordinatorImpl jdbcCoordinator;
+	private final JdbcCoordinatorImpl jdbcCoordinator;
+	private final JdbcServices jdbcServices;
 
 	/**
 	 * Construct a StatementPreparerImpl
 	 *
 	 * @param jdbcCoordinator The JdbcCoordinatorImpl
 	 */
-	StatementPreparerImpl(JdbcCoordinatorImpl jdbcCoordinator) {
+	StatementPreparerImpl(JdbcCoordinatorImpl jdbcCoordinator, JdbcServices jdbcServices) {
 		this.jdbcCoordinator = jdbcCoordinator;
+		this.jdbcServices = jdbcServices;
 	}
 
 	protected final SessionFactoryOptions settings() {
@@ -52,7 +55,7 @@ class StatementPreparerImpl implements StatementPreparer {
 	}
 
 	protected final SqlExceptionHelper sqlExceptionHelper() {
-		return getJdbcService().getSqlExceptionHelper();
+		return jdbcServices.getSqlExceptionHelper();
 	}
 	
 	@Override
@@ -164,16 +167,17 @@ class StatementPreparerImpl implements StatementPreparer {
 
 		public PreparedStatement prepareStatement() {
 			try {
-				getJdbcService().getSqlStatementLogger().logStatement( sql );
+				jdbcServices.getSqlStatementLogger().logStatement( sql );
 
 				final PreparedStatement preparedStatement;
+				final JdbcObserver observer = jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver();
 				try {
-					jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcPrepareStatementStart();
+					observer.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
-					jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcPrepareStatementEnd();
+					observer.jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );
 				return preparedStatement;
@@ -196,14 +200,6 @@ class StatementPreparerImpl implements StatementPreparer {
 				preparedStatement.setQueryTimeout( remainingTransactionTimeOutPeriod );
 			}
 		}
-	}
-
-	private JdbcServices getJdbcService() {
-		return jdbcCoordinator
-				.getJdbcSessionOwner()
-				.getJdbcSessionContext()
-				.getServiceRegistry()
-				.getService( JdbcServices.class );
 	}
 
 	private abstract class QueryStatementPreparationTemplate extends StatementPreparationTemplate {

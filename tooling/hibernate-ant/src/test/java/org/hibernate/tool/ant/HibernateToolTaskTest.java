@@ -1,6 +1,7 @@
 package org.hibernate.tool.ant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -67,6 +68,13 @@ public class HibernateToolTaskTest {
 		assertEquals(1, children.size());
 		UnknownElement configurationTask = children.get(0);
 		assertEquals("configuration", configurationTask.getTag());
+	}
+	
+	@Test
+	public void testCreateMetadata() {
+		HibernateToolTask htt = new HibernateToolTask();
+		MetadataTask mdt = htt.createMetadata();
+		assertNotNull(mdt);
 	}
 
 }

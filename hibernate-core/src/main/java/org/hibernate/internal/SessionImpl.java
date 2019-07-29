@@ -1814,6 +1814,8 @@ public final class SessionImpl
 		final CollectionPersister roleBeforeFlush = ( entry == null ) ? null : entry.getLoadedPersister();
 
 		FilterQueryPlan plan = null;
+		final Map<String, Filter> enabledFilters = getLoadQueryInfluencers().getEnabledFilters();
+		final SessionFactoryImplementor factory = getFactory();
 		if ( roleBeforeFlush == null ) {
 			// if it was previously unreferenced, we need to flush in order to
 			// get its state into the database in order to execute query
@@ -1823,21 +1825,21 @@ public final class SessionImpl
 			if ( roleAfterFlush == null ) {
 				throw new QueryException( "The collection was unreferenced" );
 			}
-			plan = getFactory().getQueryPlanCache().getFilterQueryPlan(
+			plan = factory.getQueryPlanCache().getFilterQueryPlan(
 					filter,
 					roleAfterFlush.getRole(),
 					shallow,
-					getLoadQueryInfluencers().getEnabledFilters()
+					enabledFilters
 			);
 		}
 		else {
 			// otherwise, we only need to flush if there are in-memory changes
 			// to the queried tables
-			plan = getFactory().getQueryPlanCache().getFilterQueryPlan(
+			plan = factory.getQueryPlanCache().getFilterQueryPlan(
 					filter,
 					roleBeforeFlush.getRole(),
 					shallow,
-					getLoadQueryInfluencers().getEnabledFilters()
+					enabledFilters
 			);
 			if ( autoFlushIfRequired( plan.getQuerySpaces() ) ) {
 				// might need to run a different filter entirely after the flush
@@ -1848,11 +1850,11 @@ public final class SessionImpl
 					if ( roleAfterFlush == null ) {
 						throw new QueryException( "The collection was dereferenced" );
 					}
-					plan = getFactory().getQueryPlanCache().getFilterQueryPlan(
+					plan = factory.getQueryPlanCache().getFilterQueryPlan(
 							filter,
 							roleAfterFlush.getRole(),
 							shallow,
-							getLoadQueryInfluencers().getEnabledFilters()
+							enabledFilters
 					);
 				}
 			}

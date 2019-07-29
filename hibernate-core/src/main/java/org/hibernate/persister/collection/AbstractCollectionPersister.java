@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -716,7 +717,7 @@ public abstract class AbstractCollectionPersister
 		if ( subselectInitializer != null ) {
 			return subselectInitializer;
 		}
-		else if ( session.getLoadQueryInfluencers().getEnabledFilters().isEmpty() ) {
+		else if ( ! session.getLoadQueryInfluencers().hasEnabledFilters() ) {
 			return initializer;
 		}
 		else {
@@ -1891,8 +1892,9 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
-		return filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() ) ||
-				( isManyToMany() && manyToManyFilterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() ) );
+		final Map<String, Filter> enabledFilters = session.getLoadQueryInfluencers().getEnabledFilters();
+		return filterHelper.isAffectedBy( enabledFilters ) ||
+				( isManyToMany() && manyToManyFilterHelper.isAffectedBy( enabledFilters ) );
 	}
 
 	public boolean isSubselectLoadable() {

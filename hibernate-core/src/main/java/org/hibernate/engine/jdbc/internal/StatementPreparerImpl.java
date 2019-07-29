@@ -28,7 +28,8 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
  * @author Brett Meyer
 */
 class StatementPreparerImpl implements StatementPreparer {
-	private JdbcCoordinatorImpl jdbcCoordinator;
+	private final JdbcCoordinatorImpl jdbcCoordinator;
+	private final JdbcServices jdbcServices;
 
 	/**
 	 * Construct a StatementPreparerImpl
@@ -37,6 +38,11 @@ class StatementPreparerImpl implements StatementPreparer {
 	 */
 	StatementPreparerImpl(JdbcCoordinatorImpl jdbcCoordinator) {
 		this.jdbcCoordinator = jdbcCoordinator;
+		this.jdbcServices = jdbcCoordinator
+				.getJdbcSessionOwner()
+				.getJdbcSessionContext()
+				.getServiceRegistry()
+				.getService( JdbcServices.class );
 	}
 
 	protected final SessionFactoryOptions settings() {
@@ -199,11 +205,7 @@ class StatementPreparerImpl implements StatementPreparer {
 	}
 
 	private JdbcServices getJdbcService() {
-		return jdbcCoordinator
-				.getJdbcSessionOwner()
-				.getJdbcSessionContext()
-				.getServiceRegistry()
-				.getService( JdbcServices.class );
+		return jdbcServices;
 	}
 
 	private abstract class QueryStatementPreparationTemplate extends StatementPreparationTemplate {

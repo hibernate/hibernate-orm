@@ -326,7 +326,7 @@ public class CollectionLoadContext {
 			LOG.debugf( "Caching collection: %s", MessageHelper.collectionInfoString( persister, lce.getCollection(), lce.getKey(), session ) );
 		}
 
-		if ( !session.getLoadQueryInfluencers().getEnabledFilters().isEmpty() && persister.isAffectedByEnabledFilters( session ) ) {
+		if ( session.getLoadQueryInfluencers().hasEnabledFilters() && persister.isAffectedByEnabledFilters( session ) ) {
 			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debug( "Refusing to add to cache due to enabled filters" );

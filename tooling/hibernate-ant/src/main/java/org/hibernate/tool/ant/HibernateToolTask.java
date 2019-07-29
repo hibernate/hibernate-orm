@@ -6,6 +6,10 @@ public class HibernateToolTask {
 		return new MetadataTask();
 	}
 	
+	public ExportDdlTask createExportDdl() {
+		return new ExportDdlTask();
+	}
+	
 	public void execute() {
 		// do nothing for now
 	}

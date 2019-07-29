@@ -50,4 +50,11 @@ public class HibernateToolTaskTest {
 		assertNotNull(mdt);
 	}
 
+	@Test
+	public void testCreateExportDdl() {
+		HibernateToolTask htt = new HibernateToolTask();
+		ExportDdlTask edt = htt.createExportDdl();
+		assertNotNull(edt);
+	}
+
 }

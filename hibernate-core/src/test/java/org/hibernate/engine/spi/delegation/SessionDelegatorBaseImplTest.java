@@ -29,6 +29,7 @@ public class SessionDelegatorBaseImplTest extends BaseCoreFunctionalTestCase {
 		inTransaction( session -> {
 			session.doWork( connection -> {
 				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP ALIAS findOneUser IF EXISTS" );
 					statement.executeUpdate(
 							"CREATE ALIAS findOneUser AS $$\n" +
 									"import org.h2.tools.SimpleResultSet;\n" +
@@ -55,7 +56,9 @@ public class SessionDelegatorBaseImplTest extends BaseCoreFunctionalTestCase {
 				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( "DROP ALIAS findOneUser IF EXISTS" );
 				}
-				catch (SQLException ignore) {
+				catch (SQLException e) {
+					//Do not ignore as failure to cleanup might lead to other tests to fail:
+					throw new RuntimeException( e );
 				}
 			} );
 		} );

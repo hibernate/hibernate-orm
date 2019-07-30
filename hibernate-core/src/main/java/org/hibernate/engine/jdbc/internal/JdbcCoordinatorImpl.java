@@ -61,17 +61,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private transient LogicalConnectionImplementor logicalConnection;
 	private transient JdbcSessionOwner owner;
 
+	private transient JdbcServices jdbcServices;
+
 	private transient Batch currentBatch;
 
 	private transient long transactionTimeOutInstant = -1;
-
-	/**
-	 * This is a marker value to insert instead of null values for when a Statement gets registered in xref
-	 * but has no associated ResultSets registered. This is useful to efficiently check against duplicate
-	 * registration but you'll have to check against instance equality rather than null before attempting
-	 * to add elements to this set.
-	 */
-	private static final Set<ResultSet> EMPTY_RESULTSET = Collections.emptySet();
 
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<>();
@@ -110,9 +104,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			);
 		}
 		this.owner = owner;
-		this.exceptionHelper = owner.getJdbcSessionContext()
+		this.jdbcServices = owner.getJdbcSessionContext()
 				.getServiceRegistry()
-				.getService( JdbcServices.class )
+				.getService( JdbcServices.class );
+		this.exceptionHelper = jdbcServices
 				.getSqlExceptionHelper();
 	}
 
@@ -123,9 +118,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.logicalConnection = logicalConnection;
 		this.isUserSuppliedConnection = isUserSuppliedConnection;
 		this.owner = owner;
-		this.exceptionHelper = owner.getJdbcSessionContext()
+		this.jdbcServices = owner.getJdbcSessionContext()
 				.getServiceRegistry()
-				.getService( JdbcServices.class )
+				.getService( JdbcServices.class );
+		this.exceptionHelper = jdbcServices
 				.getSqlExceptionHelper();
 	}
 
@@ -227,7 +223,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public StatementPreparer getStatementPreparer() {
 		if ( statementPreparer == null ) {
-			statementPreparer = new StatementPreparerImpl( this );
+			statementPreparer = new StatementPreparerImpl( this, jdbcServices );
 		}
 		return statementPreparer;
 	}

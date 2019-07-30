@@ -7,7 +7,7 @@ public class HibernateToolTask {
 	}
 	
 	public ExportCfgTask createExportCfg() {
-		return new ExportCfgTask();
+		return new ExportCfgTask(this);
 	}
 	
 	public ExportDdlTask createExportDdl() {

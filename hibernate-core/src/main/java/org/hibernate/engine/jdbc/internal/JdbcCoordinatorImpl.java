@@ -67,12 +67,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	private transient long transactionTimeOutInstant = -1;
 
-	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<>();
-	private final Set<ResultSet> unassociatedResultSets = new HashSet<>();
-
 	private Statement lastQuery;
 	private final boolean isUserSuppliedConnection;
-
 
 	/**
 	 * If true, manually (and temporarily) circumvent aggressive release processing.
@@ -174,7 +170,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				LOG.closingUnreleasedBatch();
 				currentBatch.release();
 			}
-			cleanup();
 		}
 		finally {
 			connection = logicalConnection.close();
@@ -364,23 +359,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void disableReleases() {
 		releasesEnabled = false;
-	}
-
-	private void cleanup() {
-		for ( Map.Entry<Statement,Set<ResultSet>> entry : xref.entrySet() ) {
-			closeAll( entry.getValue() );
-			close( entry.getKey() );
-		}
-		xref.clear();
-
-		closeAll( unassociatedResultSets );
-	}
-
-	protected void closeAll(Set<ResultSet> resultSets) {
-		for ( ResultSet resultSet : resultSets ) {
-			close( resultSet );
-		}
-		resultSets.clear();
 	}
 
 	@SuppressWarnings({ "unchecked" })

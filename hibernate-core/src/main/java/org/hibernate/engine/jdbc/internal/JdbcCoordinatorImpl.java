@@ -69,7 +69,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<>();
-	private transient SqlExceptionHelper exceptionHelper;
 
 	private Statement lastQuery;
 	private final boolean isUserSuppliedConnection;
@@ -107,8 +106,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.jdbcServices = owner.getJdbcSessionContext()
 				.getServiceRegistry()
 				.getService( JdbcServices.class );
-		this.exceptionHelper = jdbcServices
-				.getSqlExceptionHelper();
 	}
 
 	private JdbcCoordinatorImpl(
@@ -121,8 +118,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.jdbcServices = owner.getJdbcSessionContext()
 				.getServiceRegistry()
 				.getService( JdbcServices.class );
-		this.exceptionHelper = jdbcServices
-				.getSqlExceptionHelper();
 	}
 
 	@Override
@@ -144,7 +139,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * @return The SqlExceptionHelper
 	 */
 	public SqlExceptionHelper sqlExceptionHelper() {
-		return exceptionHelper;
+		return jdbcServices.getSqlExceptionHelper();
 	}
 
 	private int flushDepth;
@@ -344,12 +339,17 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void cancelLastQuery() {
 		try {
-			if (lastQuery != null) {
+			if ( lastQuery != null ) {
 				lastQuery.cancel();
 			}
 		}
 		catch (SQLException sqle) {
-			throw exceptionHelper.convert( sqle, "Cannot cancel query" );
+			SqlExceptionHelper sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
+			//Should always be non-null, but to make sure as the implementation is lazy:
+			if ( sqlExceptionHelper != null ) {
+				sqlExceptionHelper = new SqlExceptionHelper( false );
+			}
+			throw sqlExceptionHelper.convert( sqle, "Cannot cancel query" );
 		}
 		finally {
 			lastQuery = null;

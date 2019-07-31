@@ -141,10 +141,6 @@ public abstract class AbstractLoadPlanBasedLoader {
 				if ( wrapper != null ) {
 					final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 					final ResourceRegistry resourceRegistry = jdbcCoordinator.getResourceRegistry();
-					resourceRegistry.release(
-							wrapper.getResultSet(),
-							wrapper.getStatement()
-					);
 					resourceRegistry.release( wrapper.getStatement() );
 					jdbcCoordinator.afterStatementExecution();
 				}

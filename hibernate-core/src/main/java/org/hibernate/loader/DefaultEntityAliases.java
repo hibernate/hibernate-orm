@@ -9,6 +9,7 @@ package org.hibernate.loader;
 import java.util.Collections;
 import java.util.Map;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Loadable;
 
@@ -133,16 +134,18 @@ public class DefaultEntityAliases implements EntityAliases {
 
 	@Override
 	public String[][] getSuffixedPropertyAliases(Loadable persister) {
-		final int size = persister.getPropertyNames().length;
+		final String[] propertyNames = persister.getPropertyNames();
+		final int size = propertyNames.length;
 		final String[][] suffixedPropertyAliases;
-		if (size > 0) {
+		if ( size > 0 ) {
 			suffixedPropertyAliases = new String[size][];
+			final Dialect dialect = persister.getFactory().getDialect();
 			for ( int j = 0; j < size; j++ ) {
 				suffixedPropertyAliases[j] = getUserProvidedAliases(
-						persister.getPropertyNames()[j],
+						propertyNames[j],
 						getPropertyAliases( persister, j )
 				);
-				suffixedPropertyAliases[j] = StringHelper.unquote( suffixedPropertyAliases[j], persister.getFactory().getDialect() );
+				suffixedPropertyAliases[j] = StringHelper.unquote( suffixedPropertyAliases[j], dialect );
 			}
 		}
 		else {

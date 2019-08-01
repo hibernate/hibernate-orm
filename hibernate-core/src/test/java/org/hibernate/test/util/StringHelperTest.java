@@ -6,18 +6,24 @@
  */
 package org.hibernate.test.util;
 
+import java.util.Arrays;
+
+import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
 public class StringHelperTest extends BaseUnitTestCase {
+
 	private static final String BASE_PACKAGE = "org.hibernate";
 	private static final String STRING_HELPER_FQN = "org.hibernate.internal.util.StringHelper";
 	private static final String STRING_HELPER_NAME = StringHelper.unqualify( STRING_HELPER_FQN );
@@ -54,4 +60,27 @@ public class StringHelperTest extends BaseUnitTestCase {
 		assertEquals( StringHelper.indexOfIdentifierWord( "no identifier here", "?1" ), -1 );
 		assertEquals( StringHelper.indexOfIdentifierWord( "some text ?", "?" ), 10 );
 	}
+
+	private static H2Dialect DIALECT = new H2Dialect();
+	@Test
+	public void testArrayUnquoting() {
+		assertNull( StringHelper.unquote( (String[]) null, DIALECT ) );
+		//This to verify that the string array isn't being copied unnecessarily:
+		unchanged( new String [0] );
+		unchanged( new String[] { "a" } );
+		unchanged( new String[] { "a", "b" } );
+		helperEquals( new String[] { "a", "b", "c" }, new String[] { "a", "b", "`c`" } );
+		helperEquals( new String[] { "a", "b", "c" }, new String[] { "a", "\"b\"", "c" } );
+	}
+
+	private static void unchanged(String[] input) {
+		final String[] output = StringHelper.unquote( input, DIALECT );
+		assertTrue( input == output );
+	}
+
+	private static void helperEquals(String[] expectation, String[] input) {
+		final String[] output = StringHelper.unquote( input, DIALECT );
+		assertTrue( Arrays.equals( expectation, output ) );
+	}
+
 }

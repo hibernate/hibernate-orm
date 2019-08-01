@@ -708,12 +708,15 @@ public final class StringHelper {
 	 *
 	 * @return True if quoted, false otherwise
 	 */
-	public static boolean isQuoted(String name, Dialect dialect) {
-		return name != null && name.length() != 0
-				&& ( ( name.charAt( 0 ) == '`' && name.charAt( name.length() - 1 ) == '`' )
-				|| ( name.charAt( 0 ) == '"' && name.charAt( name.length() - 1 ) == '"' )
-				|| ( name.charAt( 0 ) == dialect.openQuote()
-				&& name.charAt( name.length() - 1 ) == dialect.closeQuote() ) );
+	public static boolean isQuoted(final String name, final Dialect dialect) {
+		if ( name == null || name.isEmpty() ) {
+			return false;
+		}
+		final char first = name.charAt( 0 );
+		final char last = name.charAt( name.length() - 1 );
+
+		return ( ( first == last ) &&
+				( first == '`' || first == '"' || first == dialect.closeQuote() ) );
 	}
 
 	/**

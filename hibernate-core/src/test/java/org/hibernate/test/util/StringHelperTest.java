@@ -11,7 +11,9 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -81,6 +83,21 @@ public class StringHelperTest extends BaseUnitTestCase {
 	private static void helperEquals(String[] expectation, String[] input) {
 		final String[] output = StringHelper.unquote( input, DIALECT );
 		assertTrue( Arrays.equals( expectation, output ) );
+	}
+
+	@Test
+	public void testIsQuotedWithDialect() {
+		Assert.assertFalse( StringHelper.isQuoted( "a", DIALECT ) );
+		Assert.assertTrue( StringHelper.isQuoted( "`a`", DIALECT ) );
+
+		//This dialect has a different "open" than "close" quoting symbol:
+		final SQLServerDialect sqlServerDialect = new SQLServerDialect();
+		Assert.assertTrue( StringHelper.isQuoted( "[a]", sqlServerDialect ) );
+		Assert.assertFalse( StringHelper.isQuoted( "`a]", sqlServerDialect ) );
+		Assert.assertFalse( StringHelper.isQuoted( "[a`", sqlServerDialect ) );
+		Assert.assertFalse( StringHelper.isQuoted( "\"a`", sqlServerDialect ) );
+		Assert.assertFalse( StringHelper.isQuoted( "`a\"", sqlServerDialect ) );
+		Assert.assertFalse( StringHelper.isQuoted( "a", sqlServerDialect ) );
 	}
 
 }

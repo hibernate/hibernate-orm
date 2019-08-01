@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -84,24 +85,6 @@ public abstract class AbstractLoadPlanBasedLoader {
 			LoadQueryDetails loadQueryDetails,
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer) throws SQLException {
-		final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
-		return executeLoad(
-				session,
-				queryParameters,
-				loadQueryDetails,
-				returnProxies,
-				forcedResultTransformer,
-				afterLoadActions
-		);
-	}
-
-	protected List executeLoad(
-			SharedSessionContractImplementor session,
-			QueryParameters queryParameters,
-			LoadQueryDetails loadQueryDetails,
-			boolean returnProxies,
-			ResultTransformer forcedResultTransformer,
-			List<AfterLoadAction> afterLoadActions) throws SQLException {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
 		if ( queryParameters.isReadOnlyInitialized() ) {
@@ -116,11 +99,11 @@ public abstract class AbstractLoadPlanBasedLoader {
 		}
 		persistenceContext.beforeLoad();
 		try {
-			List results = null;
+			final List results;
 			final String sql = loadQueryDetails.getSqlStatement();
 			SqlStatementWrapper wrapper = null;
 			try {
-				wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
+				wrapper = executeQueryStatement( sql, queryParameters, false, session );
 				results = loadQueryDetails.getResultSetProcessor().extractResults(
 						wrapper.getResultSet(),
 						session,
@@ -134,7 +117,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 						returnProxies,
 						queryParameters.isReadOnly(),
 						forcedResultTransformer,
-						afterLoadActions
+						Collections.EMPTY_LIST
 				);
 			}
 			finally {
@@ -158,16 +141,14 @@ public abstract class AbstractLoadPlanBasedLoader {
 	protected SqlStatementWrapper executeQueryStatement(
 			final QueryParameters queryParameters,
 			final boolean scroll,
-			List<AfterLoadAction> afterLoadActions,
 			final SharedSessionContractImplementor session) throws SQLException {
-		return executeQueryStatement( getStaticLoadQuery().getSqlStatement(), queryParameters, scroll, afterLoadActions, session );
+		return executeQueryStatement( getStaticLoadQuery().getSqlStatement(), queryParameters, scroll, session );
 	}
 
 	protected SqlStatementWrapper executeQueryStatement(
 			String sqlStatement,
 			QueryParameters queryParameters,
 			boolean scroll,
-			List<AfterLoadAction> afterLoadActions,
 			SharedSessionContractImplementor session) throws SQLException {
 
 		// Processing query filters.

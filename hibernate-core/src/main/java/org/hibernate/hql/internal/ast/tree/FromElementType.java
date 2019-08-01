@@ -22,6 +22,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
@@ -191,7 +192,7 @@ class FromElementType {
 	}
 
 	private static String generateSuffix(int size, int k) {
-		return size == 1 ? "" : Integer.toString( k ) + '_';
+		return size == 1 ? "" : AliasConstantsHelper.get( k );
 	}
 
 	private void checkInitialized() {

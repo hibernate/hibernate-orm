@@ -19,6 +19,7 @@ import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.DefaultEntityAliases;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.GeneratedCollectionAliases;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.loader.plan.build.spi.QuerySpaceTreePrinter;
 import org.hibernate.loader.plan.build.spi.TreePrinterHelper;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
@@ -142,7 +143,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	}
 
 	private String createSuffix() {
-		return Integer.toString( currentAliasSuffix++ ) + '_';
+		return AliasConstantsHelper.get( currentAliasSuffix++ );
 	}
 
 	/**

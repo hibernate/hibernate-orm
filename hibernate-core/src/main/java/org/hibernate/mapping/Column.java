@@ -15,6 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.sql.Template;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
@@ -110,7 +111,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	@Override
 	public String getAlias(Dialect dialect) {
 		final int lastLetter = StringHelper.lastIndexOfLetter( name );
-		final String suffix = Integer.toString( uniqueInteger ) + '_';
+		final String suffix = AliasConstantsHelper.get( uniqueInteger );
 
 		String alias = name;
 		if ( lastLetter == -1 ) {
@@ -143,7 +144,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	 */
 	@Override
 	public String getAlias(Dialect dialect, Table table) {
-		return safeInterning( getAlias( dialect ) + table.getUniqueInteger() + '_' );
+		return safeInterning( getAlias( dialect ) + AliasConstantsHelper.get( table.getUniqueInteger() ) );
 	}
 
 	public boolean isNullable() {

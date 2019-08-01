@@ -718,8 +718,8 @@ public final class StringHelper {
 		final char first = name.charAt( 0 );
 		final char last = name.charAt( name.length() - 1 );
 
-		return ( ( first == last ) &&
-				( first == '`' || first == '"' || first == dialect.closeQuote() ) );
+		return ( ( first == last ) && ( first == '`' || first == '"' ) )
+				|| ( first == dialect.openQuote() && last == dialect.closeQuote() );
 	}
 
 	/**

@@ -736,15 +736,32 @@ public final class StringHelper {
 	 *
 	 * @return The unquoted versions.
 	 */
-	public static String[] unquote(String[] names, Dialect dialect) {
+	public static String[] unquote(final String[] names, final Dialect dialect) {
 		if ( names == null ) {
 			return null;
 		}
-		String[] unquoted = new String[names.length];
-		for ( int i = 0; i < names.length; i++ ) {
-			unquoted[i] = unquote( names[i], dialect );
+		int failedIndex = -1;
+		final int length = names.length;
+		for ( int i = 0; i < length; i++ ) {
+			if ( isQuoted( names[i], dialect ) ) {
+				failedIndex = i;
+				break;
+			}
 		}
-		return unquoted;
+		if ( failedIndex == -1 ) {
+			//In this case all strings are already unquoted, so return the same array as the input:
+			//this is a good optimisation to skip an array copy as typically either all names are consistently quoted, or none are;
+			//yet for safety we need to deal with mixed scenarios as well.
+			return names;
+		}
+		else {
+			String[] unquoted = new String[length];
+			System.arraycopy( names, 0, unquoted, 0, failedIndex );
+			for ( int i = failedIndex; i < length; i++ ) {
+				unquoted[i] = unquote( names[i], dialect );
+			}
+			return unquoted;
+		}
 	}
 
 

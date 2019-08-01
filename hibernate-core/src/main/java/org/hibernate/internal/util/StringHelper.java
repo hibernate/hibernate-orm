@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 
 public final class StringHelper {
 
@@ -585,8 +586,7 @@ public final class StringHelper {
 	 */
 	public static String generateAlias(String description, int unique) {
 		return generateAliasRoot( description )
-				+ Integer.toString( unique )
-				+ '_';
+				+ AliasConstantsHelper.get( unique );
 	}
 
 	/**

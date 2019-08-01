@@ -83,4 +83,10 @@ public class StringHelperTest extends BaseUnitTestCase {
 		assertTrue( Arrays.equals( expectation, output ) );
 	}
 
+	@Test
+	public void testIsQuotedWithDialect() {
+		Assert.assertFalse( StringHelper.isQuoted( "a", DIALECT ) );
+		Assert.assertTrue( StringHelper.isQuoted( "`a`", DIALECT ) );
+	}
+
 }

@@ -16,6 +16,10 @@ public class ExportCfgTask {
 		this.destinationFolder = destinationFolder;
 	}
 	
+	public File getDestinationFolder() {
+		return this.destinationFolder;
+	}
+	
 	public void execute() {
 		executed = true;
 	}

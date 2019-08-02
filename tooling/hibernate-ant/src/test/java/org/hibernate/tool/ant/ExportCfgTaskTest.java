@@ -33,5 +33,14 @@ public class ExportCfgTaskTest {
 		ect.setDestinationFolder(file);
 		assertSame(file, ect.destinationFolder);
 	}
+	
+	@Test
+	public void testGetDestinationFolder() {
+		ExportCfgTask ect = new ExportCfgTask(null);
+		assertNull(ect.getDestinationFolder());
+		File file = new File("/");
+		ect.destinationFolder = file;
+		assertSame(file, ect.getDestinationFolder());
+	}
 
 }

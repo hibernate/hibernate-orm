@@ -65,7 +65,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement.toString(), executeStart );
+				sqlStatementLogger.logSlowQuery( statement, executeStart );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -98,7 +98,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( callableStatement.toString(), executeStart );
+				sqlStatementLogger.logSlowQuery( callableStatement, executeStart );
 			}
 			postExtract( rs, callableStatement );
 			return rs;
@@ -123,7 +123,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( sql.toString(), executeStart );
+				sqlStatementLogger.logSlowQuery( sql, executeStart );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -153,7 +153,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement.toString(), executeStart );
+				sqlStatementLogger.logSlowQuery( statement, executeStart );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -183,7 +183,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement.toString(), executeStart );
+				sqlStatementLogger.logSlowQuery( statement, executeStart );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -208,7 +208,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement.toString(), executeStart );
+			sqlStatementLogger.logSlowQuery( statement, executeStart );
 		}
 	}
 
@@ -228,7 +228,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement.toString(), executeStart );
+			sqlStatementLogger.logSlowQuery( statement, executeStart );
 		}
 	}
 

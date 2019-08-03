@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.sql.Statement;
+
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
@@ -28,7 +30,7 @@ public class SqlStatementLogger {
 	/**
 	 * Configuration value that indicates slow query. (In milliseconds) 0 - disabled.
 	 */
-	private long logSlowQuery;
+	private final long logSlowQuery;
 
 	/**
 	 * Constructs a new SqlStatementLogger instance.
@@ -44,8 +46,20 @@ public class SqlStatementLogger {
 	 * @param format Should we format the statements prior to logging
 	 */
 	public SqlStatementLogger(boolean logToStdout, boolean format) {
+		this(logToStdout, format, 0);
+	}
+
+	/**
+	 * Constructs a new SqlStatementLogger instance.
+	 *
+	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
+	 * @param format Should we format the statements prior to logging
+	 * @param logSlowQuery Should we logs query which executed slower than specified milliseconds. 0 - disabled.
+	 */
+	public SqlStatementLogger(boolean logToStdout, boolean format, long logSlowQuery) {
 		this.logToStdout = logToStdout;
 		this.format = format;
+		this.logSlowQuery = logSlowQuery;
 	}
 
 	/**
@@ -87,10 +101,6 @@ public class SqlStatementLogger {
 		return logSlowQuery;
 	}
 
-	public void setLogSlowQuery(long logSlowQuery) {
-		this.logSlowQuery = logSlowQuery;
-	}
-
 	/**
 	 * Log a SQL statement string.
 	 *
@@ -123,6 +133,20 @@ public class SqlStatementLogger {
 	/**
 	 * Log a slow SQL query
 	 *
+	 * @param statement SQL statement.
+	 * @param startTime Start time in milliseconds.
+	 */
+	@AllowSysOut
+	public void logSlowQuery(Statement statement, long startTime) {
+		if ( logSlowQuery < 1 ) {
+			return;
+		}
+		logSlowQuery( statement.toString(), startTime );
+	}
+
+	/**
+	 * Log a slow SQL query
+	 *
 	 * @param sql The SQL query.
 	 * @param startTime Start time in milliseconds.
 	 */
@@ -138,7 +162,7 @@ public class SqlStatementLogger {
 		assert spent >= 0 : "startTime is invalid!";
 
 		if ( spent > logSlowQuery ) {
-			String logData = "SlowQuery: " + spent + " milliseconds. " + sql;
+			String logData = "SlowQuery: " + spent + " milliseconds. SQL: '" + sql + "'";
 			LOG_SLOW.info( logData );
 			if ( logToStdout ) {
 				System.out.println( logData );

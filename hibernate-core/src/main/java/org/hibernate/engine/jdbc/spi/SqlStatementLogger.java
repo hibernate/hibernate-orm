@@ -20,9 +20,15 @@ import org.jboss.logging.Logger;
  */
 public class SqlStatementLogger {
 	private static final Logger LOG = CoreLogging.logger( "org.hibernate.SQL" );
+	private static final Logger LOG_SLOW = CoreLogging.logger( "org.hibernate.SQL_SLOW" );
 
 	private boolean logToStdout;
 	private boolean format;
+	
+	/**
+	 * Configuration value that indicates slow query. (In milliseconds) 0 - disabled.
+	 */
+	private long logSlowQuery;
 
 	/**
 	 * Constructs a new SqlStatementLogger instance.
@@ -77,6 +83,14 @@ public class SqlStatementLogger {
 		this.format = format;
 	}
 
+	public long getLogSlowQuery() {
+		return logSlowQuery;
+	}
+
+	public void setLogSlowQuery(long logSlowQuery) {
+		this.logSlowQuery = logSlowQuery;
+	}
+
 	/**
 	 * Log a SQL statement string.
 	 *
@@ -103,6 +117,32 @@ public class SqlStatementLogger {
 		LOG.debug( statement );
 		if ( logToStdout ) {
 			System.out.println( "Hibernate: " + statement );
+		}
+	}
+
+	/**
+	 * Log a slow SQL query
+	 *
+	 * @param sql The SQL query.
+	 * @param startTime Start time in milliseconds.
+	 */
+	@AllowSysOut
+	public void logSlowQuery(String sql, long startTime) {
+		if ( logSlowQuery < 1 ) {
+			return;
+		}
+		assert startTime > 0 : "startTime is invalid!";
+
+		long spent = System.currentTimeMillis() - startTime;
+
+		assert spent >= 0 : "startTime is invalid!";
+
+		if ( spent > logSlowQuery ) {
+			String logData = "SlowQuery: " + spent + " milliseconds. " + sql;
+			LOG_SLOW.info( logData );
+			if ( logToStdout ) {
+				System.out.println( logData );
+			}
 		}
 	}
 }

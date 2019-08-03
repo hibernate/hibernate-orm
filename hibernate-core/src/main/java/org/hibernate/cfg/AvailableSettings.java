@@ -1725,6 +1725,11 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * is enabled logging of Session metrics is enabled by default too.
 	 */
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
+	
+	/**
+	 * Setting that logs query which executed slower than specified milliseconds. Default is 0 (disabled).
+	 */
+	String LOG_SLOW_QUERY = "hibernate.session.events.log.slow_query";
 
 	/**
 	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to opened Sessions.

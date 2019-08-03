@@ -55,8 +55,9 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 		final boolean showSQL = ConfigurationHelper.getBoolean( Environment.SHOW_SQL, configValues, false );
 		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );
+		final long logSlowQuery = ConfigurationHelper.getLong( Environment.LOG_SLOW_QUERY, configValues, 0 );
 
-		this.sqlStatementLogger =  new SqlStatementLogger( showSQL, formatSQL );
+		this.sqlStatementLogger = new SqlStatementLogger( showSQL, formatSQL, logSlowQuery );
 
 		resultSetWrapper = new ResultSetWrapperImpl( serviceRegistry );
 	}

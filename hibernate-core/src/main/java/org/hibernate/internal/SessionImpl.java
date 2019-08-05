@@ -370,7 +370,7 @@ public final class SessionImpl
 			internalClear();
 		}
 		catch (RuntimeException e) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -472,7 +472,7 @@ public final class SessionImpl
 			return !isClosed();
 		}
 		catch (HibernateException he) {
-			throw exceptionConverter.convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 	}
 
@@ -789,17 +789,17 @@ public final class SessionImpl
 			}
 		}
 		catch (MappingException e) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage() ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) );
 		}
 		catch (RuntimeException e) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			try {
 				checkNoUnresolvedActionsAfterOperation();
 			}
 			catch (RuntimeException e) {
-				throw exceptionConverter.convert( e );
+				throw getExceptionConverter().convert( e );
 			}
 		}
 	}
@@ -813,10 +813,10 @@ public final class SessionImpl
 			}
 		}
 		catch ( MappingException e ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage() ) ) ;
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) ) ;
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -891,14 +891,14 @@ public final class SessionImpl
 			checkNoUnresolvedActionsAfterOperation();
 		}
 		catch ( ObjectDeletedException sse ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( sse ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
 		}
 		catch ( MappingException e ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
 			//including HibernateException
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 
 		return event.getResult();
@@ -912,14 +912,14 @@ public final class SessionImpl
 			}
 		}
 		catch ( ObjectDeletedException sse ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( sse ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
 		}
 		catch ( MappingException e ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
 			//including HibernateException
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1000,14 +1000,14 @@ public final class SessionImpl
 		}
 		}
 		catch ( ObjectDeletedException sse ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( sse ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
 		}
 		catch ( MappingException e ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
 			//including HibernateException
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1022,14 +1022,14 @@ public final class SessionImpl
 			}
 		}
 		catch ( ObjectDeletedException sse ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( sse ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
 		}
 		catch ( MappingException e ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
 			//including HibernateException
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1373,7 +1373,7 @@ public final class SessionImpl
 				}
 			}
 			//including HibernateException
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1388,7 +1388,7 @@ public final class SessionImpl
 			}
 		}
 		catch (RuntimeException e) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			delayedAfterCompletion();
@@ -1496,7 +1496,7 @@ public final class SessionImpl
 			delayedAfterCompletion();
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -2152,7 +2152,7 @@ public final class SessionImpl
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (RuntimeException e) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -2206,7 +2206,7 @@ public final class SessionImpl
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (RuntimeException e) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -3491,11 +3491,11 @@ public final class SessionImpl
 			delete( entity );
 		}
 		catch (MappingException e) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
 			//including HibernateException
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -3555,7 +3555,7 @@ public final class SessionImpl
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( JDBCException e ) {
 			if ( accessTransaction().getRollbackOnly() ) {
@@ -3563,11 +3563,11 @@ public final class SessionImpl
 				return null;
 			}
 			else {
-				throw exceptionConverter.convert( e, lockOptions );
+				throw getExceptionConverter().convert( e, lockOptions );
 			}
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e, lockOptions );
+			throw getExceptionConverter().convert( e, lockOptions );
 		}
 		finally {
 			getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
@@ -3612,10 +3612,10 @@ public final class SessionImpl
 			return byId( entityClass ).getReference( (Serializable) primaryKey );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -3638,7 +3638,7 @@ public final class SessionImpl
 			buildLockRequest( lockOptions ).lock( entity );
 		}
 		catch (RuntimeException e) {
-			throw exceptionConverter.convert( e, lockOptions );
+			throw getExceptionConverter().convert( e, lockOptions );
 		}
 	}
 
@@ -3664,7 +3664,7 @@ public final class SessionImpl
 			setCacheMode( refreshCacheMode );
 
 			if ( !contains( entity ) ) {
-				throw exceptionConverter.convert( new IllegalArgumentException( "Entity not managed" ) );
+				throw getExceptionConverter().convert( new IllegalArgumentException( "Entity not managed" ) );
 			}
 
 			if ( lockModeType != null ) {
@@ -3680,10 +3680,10 @@ public final class SessionImpl
 			}
 		}
 		catch (MappingException e) {
-			throw exceptionConverter.convert( new IllegalArgumentException( e.getMessage(), e ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch (RuntimeException e) {
-			throw exceptionConverter.convert( e, lockOptions );
+			throw getExceptionConverter().convert( e, lockOptions );
 		}
 		finally {
 			setCacheMode( previousCacheMode );
@@ -3697,7 +3697,7 @@ public final class SessionImpl
 			evict( entity );
 		}
 		catch (RuntimeException e) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -3710,7 +3710,7 @@ public final class SessionImpl
 		}
 
 		if ( !contains( entity ) ) {
-			throw exceptionConverter.convert( new IllegalArgumentException( "entity not in the persistence context" ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( "entity not in the persistence context" ) );
 		}
 
 		return LockModeTypeHelper.getLockModeType( getCurrentLockMode( entity ) );
@@ -3759,7 +3759,7 @@ public final class SessionImpl
 			return memento.makeProcedureCall( this );
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -3769,7 +3769,7 @@ public final class SessionImpl
 			return createStoredProcedureCall( procedureName );
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -3779,7 +3779,7 @@ public final class SessionImpl
 			return createStoredProcedureCall( procedureName, resultClasses );
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -3795,7 +3795,7 @@ public final class SessionImpl
 			}
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -3820,7 +3820,7 @@ public final class SessionImpl
 			throw new TransactionRequiredException( e.getMessage() );
 		}
 		catch (HibernateException he) {
-			throw exceptionConverter.convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 	}
 

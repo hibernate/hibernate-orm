@@ -473,6 +473,12 @@ public interface SharedSessionContractImplementor
 	 */
 	LoadQueryInfluencers getLoadQueryInfluencers();
 
+	/**
+	 * The converter associated to a Session might be lazily initialized: only invoke
+	 * this getter when there is actual need to use it.
+	 *
+	 * @return the ExceptionConverter for this Session.
+	 */
 	ExceptionConverter getExceptionConverter();
 
 	/**

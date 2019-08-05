@@ -147,7 +147,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private Integer jdbcBatchSize;
 
-	protected transient ExceptionConverter exceptionConverter;
+	//Lazily initialized
+	private transient ExceptionConverter exceptionConverter;
 
 	private CriteriaCompiler criteriaCompiler;
 
@@ -217,7 +218,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					.getService( TransactionCoordinatorBuilder.class )
 					.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
-		exceptionConverter = new ExceptionConverterImpl( this );
 	}
 
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
@@ -314,7 +314,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 		catch ( HibernateException e ) {
 			if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw this.exceptionConverter.convert( e );
+				throw getExceptionConverter().convert( e );
 			}
 			else {
 				throw e;
@@ -436,7 +436,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( this.currentHibernateTransaction == null ) {
 			this.currentHibernateTransaction = new TransactionImpl(
 					getTransactionCoordinator(),
-					getExceptionConverter(),
 					this
 			);
 		}
@@ -557,7 +556,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 						return callback.executeOnConnection( connection );
 					}
 					catch (SQLException e) {
-						throw exceptionConverter.convert(
+						throw getExceptionConverter().convert(
 								e,
 								"Error creating contextual LOB : " + e.getMessage()
 						);
@@ -644,7 +643,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return createNativeQuery( nativeQueryDefinition, true );
 		}
 
-		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
 	protected QueryImplementor createQuery(NamedQueryDefinition queryDefinition) {
@@ -737,7 +736,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 		catch (RuntimeException e) {
 			markForRollbackOnly();
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -757,7 +756,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return (QueryImplementor<T>) criteriaCompiler().compile( (CompilableCriteria) criteriaQuery );
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -768,7 +767,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return criteriaCompiler().compile( (CompilableCriteria) criteriaUpdate );
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -779,7 +778,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return criteriaCompiler().compile( (CompilableCriteria) criteriaDelete );
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -812,7 +811,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -833,7 +832,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -911,7 +910,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				return (QueryImplementor<T>) createNativeQuery( nativeQueryDefinition, resultType );
 			}
 
-			throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 		}
 		catch (RuntimeException e) {
 			throw !( e instanceof IllegalArgumentException ) ? new IllegalArgumentException( e ) : e;
@@ -1029,7 +1028,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException he ) {
-			throw exceptionConverter.convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 	}
 
@@ -1054,7 +1053,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException he ) {
-			throw exceptionConverter.convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 	}
 
@@ -1069,7 +1068,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return createNativeQuery( nativeQueryDefinition, true );
 		}
 
-		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
 	@Override
@@ -1095,7 +1094,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return query;
 		}
 		catch ( RuntimeException he ) {
-			throw exceptionConverter.convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 	}
 
@@ -1161,7 +1160,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public ExceptionConverter getExceptionConverter(){
+	public ExceptionConverter getExceptionConverter() {
+		if ( exceptionConverter == null ) {
+			exceptionConverter = new ExceptionConverterImpl( this );
+		}
 		return exceptionConverter;
 	}
 
@@ -1234,8 +1236,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
-		exceptionConverter = new ExceptionConverterImpl( this );
 		this.disallowOutOfTransactionUpdateOperations = !getFactory().getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
-
 	}
+
 }

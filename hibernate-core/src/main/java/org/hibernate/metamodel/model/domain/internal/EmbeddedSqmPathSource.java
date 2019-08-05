@@ -6,17 +6,17 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.produce.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
  * @author Steve Ebersole
  */
-public class EmbeddedSqmPathSource<J> extends AbstractSqmPathSource<J> {
+public class EmbeddedSqmPathSource<J> extends AbstractSqmPathSource<J> implements AllowableParameterType<J> {
 	public EmbeddedSqmPathSource(
 			String localPathName,
 			EmbeddableDomainType<J> domainType,
@@ -28,6 +28,16 @@ public class EmbeddedSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	public EmbeddableDomainType<J> getSqmPathType() {
 		//noinspection unchecked
 		return (EmbeddableDomainType<J>) super.getSqmPathType();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public Class<J> getJavaType() {
+		return getBindableJavaType();
 	}
 
 	@Override

@@ -8,6 +8,7 @@ package org.hibernate.orm.test.query.sqm;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -51,7 +52,11 @@ public abstract class BaseSqmUnitTest
 	}
 
 	protected SqmSelectStatement interpretSelect(String hql) {
-		return (SqmSelectStatement) sessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( hql );
+		return interpretSelect( hql, sessionFactory() );
+	}
+
+	public static SqmSelectStatement interpretSelect(String hql, SessionFactoryImplementor sessionFactory) {
+		return (SqmSelectStatement) sessionFactory.getQueryEngine().getSemanticQueryProducer().interpret( hql );
 	}
 
 	@Override

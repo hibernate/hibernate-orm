@@ -28,7 +28,7 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	@SuppressWarnings("WeakerAccess")
 	public static final String TIME_FORMAT = "HH:mm:ss.SSS";
 
-	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( TIME_FORMAT );
+	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 
 	/**
 	 * Alias for {@link java.time.format.DateTimeFormatter#ISO_LOCAL_TIME}.

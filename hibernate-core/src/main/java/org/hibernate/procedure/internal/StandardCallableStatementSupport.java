@@ -73,14 +73,15 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 							sep = ",";
 						}
 						else {
-							parameter.getHibernateType().visitJdbcTypes(
-									sqlExpressableType -> {
-										buffer.append( sep ).append( "?" );
-										sep = ",";
-									},
-									Clause.IRRELEVANT,
-									session.getFactory().getTypeConfiguration()
-							);
+							throw new NotYetImplementedFor6Exception( getClass() );
+//							parameter.getHibernateType().visitJdbcTypes(
+//									sqlExpressableType -> {
+//										buffer.append( sep ).append( "?" );
+//										sep = ",";
+//									},
+//									Clause.IRRELEVANT,
+//									session.getFactory().getTypeConfiguration()
+//							);
 						}
 					}
 				}

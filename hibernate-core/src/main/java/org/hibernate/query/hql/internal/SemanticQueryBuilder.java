@@ -104,6 +104,7 @@ import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
@@ -165,9 +166,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	private final SqmCreationOptions creationOptions;
 	private final SqmCreationContext creationContext;
 
-	private final ImplicitAliasGenerator implicitAliasGenerator;
-	private final UniqueIdGenerator uidGenerator;
-
 	private final Stack<DotIdentifierConsumer> dotIdentifierConsumerStack;
 
 	private final Stack<TreatHandler> treatHandlerStack = new StandardStack<>( new TreatHandlerNormal() );
@@ -186,11 +184,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
 
-		this.implicitAliasGenerator = new ImplicitAliasGenerator();
-		this.uidGenerator = new UniqueIdGenerator();
-
 		this.dotIdentifierConsumerStack = new StandardStack<>( new BasicDotIdentifierConsumer( this ) );
-
 	}
 
 	@Override
@@ -1093,6 +1087,18 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public SqmBetweenPredicate visitBetweenPredicate(HqlParser.BetweenPredicateContext ctx) {
+		return new SqmBetweenPredicate(
+				(SqmExpression) ctx.expression( 0 ).accept( this ),
+				(SqmExpression) ctx.expression( 1 ).accept( this ),
+				(SqmExpression) ctx.expression( 2 ).accept( this ),
+				ctx.NOT() != null,
+				creationContext.getNodeBuilder()
+		);
+	}
+
+
+	@Override
 	public SqmNullnessPredicate visitIsNullPredicate(HqlParser.IsNullPredicateContext ctx) {
 		return new SqmNullnessPredicate(
 				(SqmExpression) ctx.expression().accept( this ),
@@ -1187,7 +1193,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		else {
 			throw new SemanticException( "Path argument to MEMBER OF must be a plural attribute" );
 		}
-
 	}
 
 	@Override

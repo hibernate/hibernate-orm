@@ -7,24 +7,19 @@
 package org.hibernate.metamodel.model.domain;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.mapping.spi.Writeable;
+import org.hibernate.metamodel.model.mapping.spi.ModelPart;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.query.Query;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Specialization of DomainType for types that can be used as {@link Query} parameter bind values
+ * Specialization of DomainType for types that can be used as {@link Query} parameter bind values.
  *
- * todo (6.0) : extend Writeable?  or expose Writeable as "component"?
- * 		i.e.
- * 			````
- * 				Writeable getWriteable();
- * 			````
+ * todo (6.0) : Need a resolution between AllowableParameterType and {@link ValueMapping} / {@link ModelPart}
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface AllowableParameterType<J> extends Writeable, SqmExpressable<J> {
-
+public interface AllowableParameterType<J> extends SimpleDomainType<J> {
 	JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor();
 }

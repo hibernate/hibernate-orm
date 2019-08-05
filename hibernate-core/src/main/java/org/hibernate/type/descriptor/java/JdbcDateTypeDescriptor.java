@@ -33,7 +33,7 @@ public class JdbcDateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	 * @see #DATE_FORMAT
 	 */
 	@SuppressWarnings("unused")
-	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( DATE_FORMAT );
+	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
 	/**
 	 * Alias for {@link java.time.format.DateTimeFormatter#ISO_LOCAL_DATE}.

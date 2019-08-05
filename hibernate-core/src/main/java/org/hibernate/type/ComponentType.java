@@ -861,4 +861,14 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getReturnedClass();
+	}
 }

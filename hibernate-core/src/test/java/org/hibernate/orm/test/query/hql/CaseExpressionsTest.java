@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.jupiter.api.Test;
 
@@ -86,6 +87,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 	}
 
 	@Test
+	@FailureExpected( "Support for functions not yet defined" )
 	public void testBasicCoalesceExpression() {
 		SqmSelectStatement select = interpretSelect(
 				"select coalesce(p.nickName, p.mate.nickName) from Person p"
@@ -103,6 +105,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 	}
 
 	@Test
+	@FailureExpected( "Support for functions not yet defined" )
 	public void testBasicNullifExpression() {
 		SqmSelectStatement select = interpretSelect(
 				"select nullif(p.nickName, p.mate.nickName) from Person p"

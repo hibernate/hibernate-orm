@@ -17,5 +17,14 @@ public class MetadataTaskTest {
 		mdt.setPropertyFile(f);
 		assertSame(f, mdt.propertyFile);
 	}
+	
+	@Test
+	public void testSetConfigFile() {
+		MetadataTask mdt = new MetadataTask();
+		assertNull(mdt.configFile);
+		File f = new File(".");
+		mdt.setConfigFile(f);
+		assertSame(f, mdt.configFile);
+	}
 
 }

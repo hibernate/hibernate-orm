@@ -1,5 +1,6 @@
 package org.hibernate.tool.ant;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -7,11 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 
+import org.apache.tools.ant.types.Environment.Variable;
 import org.junit.jupiter.api.Test;
 
 public class ExportCfgTaskTest {
 	
-	@Test void testExportCfgTask() {
+	@Test 
+	public void testExportCfgTask() {
 		HibernateToolTask htt = new HibernateToolTask();
 		ExportCfgTask ect = new ExportCfgTask(htt);
 		assertSame(htt, ect.parent);
@@ -42,5 +45,17 @@ public class ExportCfgTaskTest {
 		ect.destinationFolder = file;
 		assertSame(file, ect.getDestinationFolder());
 	}
+	
+	@Test
+	public void testAddConfiguredProperty() {
+		ExportCfgTask ect = new ExportCfgTask(null);
+		assertNull(ect.properties.get("foo"));
+		Variable v = new Variable();
+		v.setKey("foo");
+		v.setValue("bar");
+		ect.addConfiguredProperty(v);
+		assertEquals("bar", ect.properties.get("foo"));
+	}
+	
 
 }

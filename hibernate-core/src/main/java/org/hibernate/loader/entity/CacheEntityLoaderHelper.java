@@ -131,11 +131,11 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 			final EntityKey entityKey) {
 
 		final SessionImplementor source = event.getSession();
-		final boolean useCache = persister.canReadFromCache()
-				&& source.getCacheMode().isGetEnabled()
-				&& event.getLockMode().lessThan( LockMode.READ );
+		final boolean skipCache = ( ! persister.canReadFromCache() )
+				|| ( ! source.getCacheMode().isGetEnabled() )
+				|| ( ! event.getLockMode().lessThan( LockMode.READ ) );
 
-		if ( !useCache ) {
+		if ( skipCache ) {
 			// we can't use cache here
 			return null;
 		}

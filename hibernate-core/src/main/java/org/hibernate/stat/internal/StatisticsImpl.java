@@ -6,8 +6,6 @@
  */
 package org.hibernate.stat.internal;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -16,8 +14,6 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
@@ -31,6 +27,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * Implementation of {@link org.hibernate.stat.Statistics} based on the {@link java.util.concurrent} package.
  *
  * @author Alex Snaps
+ * @author Sanne Grinovero
  */
 @SuppressWarnings({ "unchecked" })
 public class StatisticsImpl implements StatisticsImplementor, Service, Manageable {
@@ -91,21 +88,21 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	private final LongAdder optimisticFailureCount = new LongAdder();
 
-	private final ConcurrentMap<String,EntityStatisticsImpl> entityStatsMap = new ConcurrentHashMap();
-	private final ConcurrentMap<String,NaturalIdStatisticsImpl> naturalIdQueryStatsMap = new ConcurrentHashMap();
-	private final ConcurrentMap<String,CollectionStatisticsImpl> collectionStatsMap = new ConcurrentHashMap();
+	private final StatsNamedContainer<EntityStatisticsImpl> entityStatsMap = new StatsNamedContainer();
+	private final StatsNamedContainer<NaturalIdStatisticsImpl> naturalIdQueryStatsMap = new StatsNamedContainer();
+	private final StatsNamedContainer<CollectionStatisticsImpl> collectionStatsMap = new StatsNamedContainer();
 
 	/**
 	 * Keyed by query string
 	 */
-	private final BoundedConcurrentHashMap<String, QueryStatisticsImpl> queryStatsMap;
+	private final StatsNamedContainer<QueryStatisticsImpl> queryStatsMap;
 
 	/**
 	 * Keyed by region name
 	 */
-	private final ConcurrentMap<String,CacheRegionStatisticsImpl> l2CacheStatsMap = new ConcurrentHashMap<>();
+	private final StatsNamedContainer<CacheRegionStatisticsImpl> l2CacheStatsMap = new StatsNamedContainer<>();
 
-	private final ConcurrentMap<String,DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new ConcurrentHashMap();
+	private final StatsNamedContainer<DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new StatsNamedContainer();
 
 
 	@SuppressWarnings({ "UnusedDeclaration" })
@@ -115,12 +112,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
-		this.queryStatsMap = new BoundedConcurrentHashMap(
+		this.queryStatsMap = new StatsNamedContainer(
 				sessionFactory != null ?
 					sessionFactory.getSessionFactoryOptions().getQueryStatisticsMaxSize() :
 					Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE,
-				20,
-				BoundedConcurrentHashMap.Eviction.LRU
+				20
 		);
 		clear();
 	}
@@ -213,7 +209,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	@Override
 	public String[] getEntityNames() {
 		if ( sessionFactory == null ) {
-			return ArrayHelper.toStringArray( entityStatsMap.keySet() );
+			return entityStatsMap.keysAsArray();
 		}
 		else {
 			return sessionFactory.getMetamodel().getAllEntityNames();
@@ -226,7 +222,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			return null;
 		}
 
-		return entityStatsMap.computeIfAbsent(
+		return entityStatsMap.getOrCompute(
 				entityName,
 				s -> new EntityStatisticsImpl( sessionFactory.getMetamodel().entityPersister( entityName ) )
 		);
@@ -326,7 +322,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	@Override
 	public String[] getCollectionRoleNames() {
 		if ( sessionFactory == null ) {
-			return ArrayHelper.toStringArray( collectionStatsMap.keySet() );
+			return collectionStatsMap.keysAsArray();
 		}
 		else {
 			return sessionFactory.getMetamodel().getAllCollectionRoles();
@@ -339,7 +335,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			return null;
 		}
 
-		return collectionStatsMap.computeIfAbsent(
+		return collectionStatsMap.getOrCompute(
 				role,
 				s -> new CollectionStatisticsImpl( sessionFactory.getMetamodel().collectionPersister( role ) )
 		);
@@ -431,7 +427,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			return null;
 		}
 
-		return naturalIdQueryStatsMap.computeIfAbsent(
+		return naturalIdQueryStatsMap.getOrCompute(
 				rootEntityName,
 				s -> {
 					final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( rootEntityName );
@@ -445,8 +441,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public DeprecatedNaturalIdCacheStatisticsImpl getNaturalIdCacheStatistics(String regionName) {
-		return deprecatedNaturalIdStatsMap.computeIfAbsent(
-				sessionFactory.getCache().unqualifyRegionName( regionName ),
+		final String key = sessionFactory.getCache().unqualifyRegionName( regionName );
+		return deprecatedNaturalIdStatsMap.getOrCompute(
+				key,
 				unqualifiedRegionName -> new DeprecatedNaturalIdCacheStatisticsImpl(
 						unqualifiedRegionName,
 						sessionFactory.getCache().getNaturalIdAccessesInRegion( unqualifiedRegionName )
@@ -585,7 +582,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			return null;
 		}
 
-		return l2CacheStatsMap.computeIfAbsent(
+		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
 					final Region region = sessionFactory.getCache().getRegion( regionName );
@@ -622,7 +619,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			return null;
 		}
 
-		return l2CacheStatsMap.computeIfAbsent(
+		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> new CacheRegionStatisticsImpl( regionAccess.getRegion() )
 		);
@@ -638,7 +635,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			return null;
 		}
 
-		return l2CacheStatsMap.computeIfAbsent(
+		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
 					Region region = sessionFactory.getCache().getRegion( regionName );
@@ -718,12 +715,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getQueries() {
-		return ArrayHelper.toStringArray( queryStatsMap.keySet() );
+		return queryStatsMap.keysAsArray();
 	}
 
 	@Override
 	public QueryStatisticsImpl getQueryStatistics(String queryString) {
-		return queryStatsMap.computeIfAbsent(
+		return queryStatsMap.getOrCompute(
 				queryString,
 				s -> new QueryStatisticsImpl( queryString )
 		);
@@ -850,7 +847,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	private CacheRegionStatisticsImpl getQueryRegionStats(String regionName) {
-		return l2CacheStatsMap.computeIfAbsent(
+		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> new CacheRegionStatisticsImpl( sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion() )
 		);

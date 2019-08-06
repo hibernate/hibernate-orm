@@ -16,14 +16,14 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -32,7 +32,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class SqmMapJoin<O,K,V> extends AbstractSqmPluralJoin<O,Map<K,V>,V> implements JpaMapJoin<O,K,V> {
+public class SqmMapJoin<O,K,V>
+		extends AbstractSqmPluralJoin<O,Map<K,V>,V>
+		implements JpaMapJoin<O,K,V> {
 	public SqmMapJoin(
 			SqmFrom<?,O> lhs,
 			MapPersistentAttribute<O,K,V> pluralValuedNavigable,

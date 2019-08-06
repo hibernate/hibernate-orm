@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.consume.spi;
+package org.hibernate.query.sqm.spi;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -78,6 +78,8 @@ import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
+ * Support for walking a Semantic Query Model (SQM) tree
+ *
  * @author Steve Ebersole
  */
 public interface SemanticQueryWalker<T> {

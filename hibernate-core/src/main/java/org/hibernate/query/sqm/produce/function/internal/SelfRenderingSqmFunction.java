@@ -10,15 +10,17 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.function.SqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
-import org.hibernate.query.sqm.function.SqmFunction;
 
 /**
  * @author Steve Ebersole
  */
-public class SelfRenderingSqmFunction<T> extends AbstractSqmExpression<T> implements SqmFunction<T> {
+public class SelfRenderingSqmFunction<T>
+		extends AbstractSqmExpression<T>
+		implements SqmFunction<T> {
 	private final String name;
 	private final SelfRenderingFunctionSupport renderingSupport;
 	private final List<SqmTypedNode<?>> arguments;

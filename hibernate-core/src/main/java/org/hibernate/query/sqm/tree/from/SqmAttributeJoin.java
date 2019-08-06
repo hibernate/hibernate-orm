@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.query.criteria.JpaFetch;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 

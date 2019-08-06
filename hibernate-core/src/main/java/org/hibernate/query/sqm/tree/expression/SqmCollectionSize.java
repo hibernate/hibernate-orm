@@ -6,13 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -22,11 +19,10 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements DomainResultProducer {
+public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements DomainResultProducer<Integer> {
 	private final SqmPath pluralPath;
 
 	public SqmCollectionSize(SqmPath<?> pluralPath, NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		this( pluralPath, StandardBasicTypes.INTEGER, nodeBuilder );
 	}
 
@@ -47,6 +43,11 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements
 	@Override
 	public String asLoggableText() {
 		return "SIZE(" + pluralPath.asLoggableText() + ")";
+	}
+
+	@Override
+	public DomainResultProducer<Integer> getDomainResultProducer() {
+		return this;
 	}
 
 //	@Override

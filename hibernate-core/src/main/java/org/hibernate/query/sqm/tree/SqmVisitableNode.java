@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 
 /**
  * Optional contract for SqmNode implementations that can be visited

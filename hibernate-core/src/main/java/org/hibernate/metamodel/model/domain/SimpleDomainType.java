@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.metamodel.model.mapping.spi.Writeable;
+
 /**
  * Describes any non-collection type
  *

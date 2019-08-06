@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.select;
 
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 

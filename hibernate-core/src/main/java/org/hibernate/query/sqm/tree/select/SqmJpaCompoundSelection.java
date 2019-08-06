@@ -10,12 +10,14 @@ import java.util.List;
 
 import javax.persistence.criteria.Selection;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -36,7 +38,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class SqmJpaCompoundSelection<T>
 		extends AbstractSqmExpression<T>
-		implements JpaCompoundSelection<T>, SqmExpressable<T> {
+		implements JpaCompoundSelection<T>, SqmExpressable<T>, DomainResultProducer<T> {
 
 	// todo (6.0) : should this really be SqmExpressable?
 	//		- seems like it ought to be limited to just `SqmSelectableNode`.
@@ -106,5 +108,11 @@ public class SqmJpaCompoundSelection<T>
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitJpaCompoundSelection( this );
+	}
+
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		// could technically return an array I guess.  See `SqmTuple`
+		throw new UnsupportedOperationException(  );
 	}
 }

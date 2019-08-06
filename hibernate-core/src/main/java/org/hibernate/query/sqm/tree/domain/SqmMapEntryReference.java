@@ -18,8 +18,9 @@ import javax.persistence.criteria.Predicate;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 
@@ -30,7 +31,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Gunnar Morling
  * @author Steve Ebersole
  */
-public class SqmMapEntryReference<K,V> implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>> {
+public class SqmMapEntryReference<K,V>
+		implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>>, DomainResultProducer<Map.Entry<K,V>> {
 	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	private final SqmPath<?> mapPath;
 	private final NodeBuilder nodeBuilder;
@@ -80,6 +82,11 @@ public class SqmMapEntryReference<K,V> implements SqmSelectableNode<Map.Entry<K,
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMapEntryFunction( this );
+	}
+
+	@Override
+	public DomainResultProducer<Map.Entry<K, V>> getDomainResultProducer() {
+		return this;
 	}
 
 	@Override

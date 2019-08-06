@@ -15,12 +15,15 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmCaseSimple<T,R> extends AbstractSqmExpression<R> implements JpaSimpleCase<T,R> {
+public class SqmCaseSimple<T,R>
+		extends AbstractSqmExpression<R>
+		implements JpaSimpleCase<T,R>, DomainResultProducer<R> {
 	private final SqmExpression<T> fixture;
 	private List<WhenFragment<T,R>> whenFragments = new ArrayList<>();
 	private SqmExpression<R> otherwise;
@@ -133,6 +136,11 @@ public class SqmCaseSimple<T,R> extends AbstractSqmExpression<R> implements JpaS
 	public JpaSimpleCase<T, R> otherwise(Expression<? extends R> result) {
 		//noinspection unchecked
 		otherwise( (SqmExpression) result );
+		return this;
+	}
+
+	@Override
+	public DomainResultProducer<R> getDomainResultProducer() {
 		return this;
 	}
 }

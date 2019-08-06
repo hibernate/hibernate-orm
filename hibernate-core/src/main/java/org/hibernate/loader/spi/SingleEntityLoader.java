@@ -15,9 +15,8 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Steve Ebersole
  */
-public interface SingleEntityLoader<T> extends Loader<T> {
+public interface SingleEntityLoader<T> extends Loader {
 	@Override
-	@SuppressWarnings("unchecked")
 	EntityPersister getLoadable();
 
 	/**

@@ -4,15 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce.internal;
 
 /**
- * @author Steve Ebersole
+ * SPI-level SQM contracts
  */
-public class UniqueIdGenerator {
-	private long uidSequence = 0;
-
-	public String generateUniqueId() {
-		return "<uid:" + ++uidSequence + ">";
-	}
-}
+package org.hibernate.query.sqm.spi;

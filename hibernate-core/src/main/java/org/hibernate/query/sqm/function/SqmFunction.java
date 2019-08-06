@@ -7,8 +7,9 @@
 package org.hibernate.query.sqm.function;
 
 import org.hibernate.query.criteria.JpaFunction;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Contract for functions impls that would like to control the
@@ -20,7 +21,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  *
  * @author Steve Ebersole
  */
-public interface SqmFunction<T> extends SqmExpression<T>, JpaFunction<T> {
+public interface SqmFunction<T> extends SqmExpression<T>, JpaFunction<T>, DomainResultProducer<T> {
 //	/**
 //	 * Generate the SQL AST form of the function as an expression.
 //	 *
@@ -34,5 +35,10 @@ public interface SqmFunction<T> extends SqmExpression<T>, JpaFunction<T> {
 	@Override
 	default <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitFunction( this );
+	}
+
+	@Override
+	default DomainResultProducer<T> getDomainResultProducer() {
+		return this;
 	}
 }

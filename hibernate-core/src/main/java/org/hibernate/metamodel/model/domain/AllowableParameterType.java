@@ -7,19 +7,22 @@
 package org.hibernate.metamodel.model.domain;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.mapping.spi.ModelPart;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.mapping.spi.Writeable;
 import org.hibernate.query.Query;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Specialization of DomainType for types that can be used as {@link Query} parameter bind values.
- *
- * todo (6.0) : Need a resolution between AllowableParameterType and {@link ValueMapping} / {@link ModelPart}
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface AllowableParameterType<J> extends SimpleDomainType<J> {
 	JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor();
+
+	default Writeable resolveWriteable(TypeConfiguration typeConfiguration) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 }

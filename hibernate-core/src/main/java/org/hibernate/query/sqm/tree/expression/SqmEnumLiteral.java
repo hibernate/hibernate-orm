@@ -18,10 +18,11 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -31,7 +32,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>, SemanticPathPart {
+public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>, DomainResultProducer<Enum>, SemanticPathPart {
 	private final Enum enumValue;
 	private final EnumJavaTypeDescriptor<Enum> referencedEnumTypeDescriptor;
 	private final String enumValueName;
@@ -214,5 +215,10 @@ public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>
 	@Override
 	public String getAlias() {
 		return null;
+	}
+
+	@Override
+	public DomainResultProducer<Enum> getDomainResultProducer() {
+		return this;
 	}
 }

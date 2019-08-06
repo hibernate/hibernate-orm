@@ -17,13 +17,13 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.produce.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -32,7 +32,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class SqmListJoin<O,E> extends AbstractSqmPluralJoin<O,List<E>, E> implements JpaListJoin<O, E> {
+public class SqmListJoin<O,E>
+		extends AbstractSqmPluralJoin<O,List<E>, E>
+		implements JpaListJoin<O, E> {
 	public SqmListJoin(
 			SqmFrom<?,O> lhs,
 			ListPersistentAttribute<O, E> listAttribute,
@@ -141,6 +143,7 @@ public class SqmListJoin<O,E> extends AbstractSqmPluralJoin<O,List<E>, E> implem
 
 	@Override
 	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		//noinspection unchecked
 		return new SqmListJoin(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),

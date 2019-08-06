@@ -16,13 +16,13 @@ import javax.persistence.metamodel.SingularAttribute;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.produce.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -134,6 +134,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
+		//noinspection unchecked
 		return new SqmBagJoin(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),

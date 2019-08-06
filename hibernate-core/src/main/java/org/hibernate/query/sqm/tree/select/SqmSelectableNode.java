@@ -10,10 +10,8 @@ import java.util.function.Consumer;
 import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
@@ -24,14 +22,9 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  */
 public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T>, SqmVisitableNode {
 	/**
-	 * The expectation is that the walking method for SqmSelectableNode
-	 * will return some reference to a
-	 * {@link DomainResultProducer} which can be
-	 * used to generate a {@link DomainResult}
-	 * for this selection in the SQM query
+	 * Get the DomainResultProducer for this SqmSelectableNode
 	 */
-	@Override
-	<X> X accept(SemanticQueryWalker<X> walker);
+	DomainResultProducer<T> getDomainResultProducer();
 
 	/**
 	 * Visit each of this selectable's direct sub-selectables - used to

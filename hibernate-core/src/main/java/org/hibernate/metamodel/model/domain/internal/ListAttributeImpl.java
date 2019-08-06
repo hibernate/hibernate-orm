@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;

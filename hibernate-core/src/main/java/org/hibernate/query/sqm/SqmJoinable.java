@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm;
 
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;

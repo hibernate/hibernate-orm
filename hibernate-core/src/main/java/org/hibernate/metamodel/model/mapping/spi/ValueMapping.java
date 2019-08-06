@@ -21,7 +21,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface ValueMapping<D> extends ModelPart<D> {
+public interface ValueMapping extends ModelPart {
 
 	/**
 	 * Get the Type associated with this mapping

@@ -9,14 +9,11 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.hql.HqlInterpretationException;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -31,7 +28,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class SqmLiteralEntityType<T>
 		extends AbstractSqmExpression<T>
-		implements DomainResultProducer, SemanticPathPart {
+		implements DomainResultProducer<T>, SemanticPathPart {
 	private final EntityDomainType<T> entityType;
 
 	public SqmLiteralEntityType(EntityDomainType<T> entityType, NodeBuilder nodeBuilder) {
@@ -86,5 +83,11 @@ public class SqmLiteralEntityType<T>
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new HqlInterpretationException( "Cannot dereference an entity name" );
+	}
+
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		// technically `T` should be `Class<T>` here
+		return this;
 	}
 }

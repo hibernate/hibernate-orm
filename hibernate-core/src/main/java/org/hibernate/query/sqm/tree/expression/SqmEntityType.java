@@ -9,10 +9,8 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
@@ -20,7 +18,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public class SqmEntityType<T> extends AbstractSqmExpression<T> implements DomainResultProducer {
+public class SqmEntityType<T> extends AbstractSqmExpression<T> implements DomainResultProducer<T> {
 	private final SqmExpression discriminatorSource;
 
 	public SqmEntityType(SqmParameter<T> parameterExpression, NodeBuilder nodeBuilder) {
@@ -47,12 +45,10 @@ public class SqmEntityType<T> extends AbstractSqmExpression<T> implements Domain
 		return walker.visitParameterizedEntityTypeExpression( this );
 	}
 
-//	@Override
-//	public DomainResult createDomainResult(
-//			String resultVariable,
-//			DomainResultCreationState creationState) {
-//		throw new UnsupportedOperationException( "At the moment, selection of an entity's type as a QueryResult is not supported" );
-//		// todo (6.0) : but could be ^^ - consider adding support for this (returning Class)
-//	}
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		// technically `T` should be `Class<T>` here
+		return this;
+	}
 
 }

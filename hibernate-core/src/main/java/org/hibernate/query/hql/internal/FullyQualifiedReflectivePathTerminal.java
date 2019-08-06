@@ -12,7 +12,6 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
-
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -22,13 +21,14 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -238,5 +238,10 @@ public class FullyQualifiedReflectivePathTerminal
 	@Override
 	public NodeBuilder nodeBuilder() {
 		return null;
+	}
+
+	@Override
+	public DomainResultProducer getDomainResultProducer() {
+		throw new UnsupportedOperationException(  );
 	}
 }

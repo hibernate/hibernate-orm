@@ -15,10 +15,11 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Specialized CASE statement for resolving the first non-null value in a list of values
@@ -26,7 +27,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoalesce<T> {
+public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoalesce<T>, DomainResultProducer<T> {
 
 	private List<SqmExpression<? extends T>> arguments = new ArrayList<>();
 	private SqmFunctionTemplate coalesceFunction;
@@ -102,4 +103,8 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		return this;
 	}
 
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		return this;
+	}
 }

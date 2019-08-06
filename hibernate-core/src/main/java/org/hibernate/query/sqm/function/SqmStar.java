@@ -7,8 +7,9 @@
 package org.hibernate.query.sqm.function;
 
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * @author Gavin King
@@ -22,5 +23,10 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitStar(this);
+	}
+
+	@Override
+	public DomainResultProducer<Object> getDomainResultProducer() {
+		throw new UnsupportedOperationException(  );
 	}
 }

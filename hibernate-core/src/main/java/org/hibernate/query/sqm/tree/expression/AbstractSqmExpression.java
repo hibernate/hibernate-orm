@@ -14,7 +14,7 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.produce.SqmTreeCreationLogger;
+import org.hibernate.query.sqm.spi.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.StandardBasicTypes;

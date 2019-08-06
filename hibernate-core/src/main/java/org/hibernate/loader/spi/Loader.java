@@ -11,9 +11,9 @@ package org.hibernate.loader.spi;
  *
  * @author Steve Ebersole
  */
-public interface Loader<T> {
+public interface Loader {
 	/**
 	 * The value-mapping loaded by this loader
 	 */
-	Loadable<T> getLoadable();
+	Loadable getLoadable();
 }

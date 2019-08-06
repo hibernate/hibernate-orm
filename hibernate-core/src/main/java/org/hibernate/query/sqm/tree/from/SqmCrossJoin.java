@@ -8,14 +8,14 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
-import static org.hibernate.query.sqm.produce.SqmCreationHelper.buildRootNavigablePath;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
 /**
  * @author Steve Ebersole

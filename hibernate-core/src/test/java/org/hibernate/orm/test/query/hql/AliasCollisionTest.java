@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.sqm.AliasCollisionException;
-import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -25,11 +24,11 @@ import org.hibernate.testing.orm.junit.ExpectedException;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test of all alias collision scenarios
@@ -96,7 +95,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 
 		final List<SqmSelection> selections = querySpec.getSelectClause().getSelections();
 		assertThat( selections, hasSize( 1 ) );
-		assertTrue( ImplicitAliasGenerator.isImplicitAlias( selections.get( 0 ).getAlias() ) );
+		assertThat( selections.get( 0 ).getAlias(), nullValue() );
 
 		final List<SqmRoot> roots = querySpec.getFromClause().getRoots();
 		assertThat( roots, hasSize( 1 ) );
@@ -125,7 +124,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 
 		final List<SqmSelection> selections = querySpec.getSelectClause().getSelections();
 		assertThat( selections, hasSize( 1 ) );
-		assertTrue( ImplicitAliasGenerator.isImplicitAlias( selections.get( 0 ).getAlias() ) );
+		assertThat( selections.get( 0 ).getAlias(), nullValue() );
 
 		final List<SqmRoot> roots = querySpec.getFromClause().getRoots();
 		assertThat( roots, hasSize( 1 ) );

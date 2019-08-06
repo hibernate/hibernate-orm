@@ -17,9 +17,8 @@ import org.hibernate.persister.entity.MultiLoadOptions;
  *
  * @author Steve Ebersole
  */
-public interface MultiIdEntityLoader<T> extends Loader<T> {
+public interface MultiIdEntityLoader<T> extends Loader {
 	@Override
-	@SuppressWarnings("unchecked")
 	EntityPersister getLoadable();
 
 	List<T> load(Object[] ids, MultiLoadOptions options, SharedSessionContractImplementor session);

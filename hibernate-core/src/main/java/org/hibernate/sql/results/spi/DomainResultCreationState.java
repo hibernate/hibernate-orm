@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 public interface DomainResultCreationState {
 	SqlAstCreationState getSqlAstCreationState();
 
-	default SqlAliasBaseManager getSAliasBaseManager() {
+	default SqlAliasBaseManager getSqlAliasBaseManager() {
 		return getSqlAstCreationState().getSqlAliasBaseManager();
 	}
 

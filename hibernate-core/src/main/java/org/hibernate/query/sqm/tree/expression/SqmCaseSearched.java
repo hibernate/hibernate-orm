@@ -8,20 +8,22 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmCaseSearched<R> extends AbstractSqmExpression<R> implements JpaSearchedCase<R> {
+public class SqmCaseSearched<R>
+		extends AbstractSqmExpression<R>
+		implements JpaSearchedCase<R>, DomainResultProducer<R> {
 	private List<WhenFragment<R>> whenFragments = new ArrayList<>();
 	private SqmExpression<R> otherwise;
 
@@ -121,6 +123,11 @@ public class SqmCaseSearched<R> extends AbstractSqmExpression<R> implements JpaS
 	public JpaExpression<R> otherwise(Expression<? extends R> result) {
 		//noinspection unchecked
 		otherwise( (SqmExpression) result );
+		return this;
+	}
+
+	@Override
+	public DomainResultProducer<R> getDomainResultProducer() {
 		return this;
 	}
 }

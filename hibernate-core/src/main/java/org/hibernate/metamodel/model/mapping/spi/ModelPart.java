@@ -21,11 +21,12 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface ModelPart<T> extends Readable, Writeable {
+public interface ModelPart {
+
 	/**
 	 * Create a DomainResult for a specific reference to this ModelPart.
 	 */
-	default DomainResult<T> createDomainResult(
+	default <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			int valuesArrayPosition,
 			String resultVariable,
@@ -39,6 +40,11 @@ public interface ModelPart<T> extends Readable, Writeable {
 	default void applySqlSelections(
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	default Writeable getWriteable() {
+		// todo (6.0) : or in-line
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

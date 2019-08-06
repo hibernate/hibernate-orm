@@ -9,13 +9,15 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmPredicate extends SqmVisitableNode, JpaPredicate, SqmExpression<Boolean> {
+public interface SqmPredicate
+		extends SqmVisitableNode, JpaPredicate, SqmExpression<Boolean>, DomainResultProducer<Boolean> {
 	@Override
 	default JavaTypeDescriptor<Boolean> getJavaTypeDescriptor(){
 		return BooleanTypeDescriptor.INSTANCE;
@@ -24,5 +26,8 @@ public interface SqmPredicate extends SqmVisitableNode, JpaPredicate, SqmExpress
 	@Override
 	SqmPredicate not();
 
-
+	@Override
+	default DomainResultProducer<Boolean> getDomainResultProducer() {
+		return this;
+	}
 }

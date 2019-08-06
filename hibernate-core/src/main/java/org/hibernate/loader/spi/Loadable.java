@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.mapping.spi.ModelPart;
  *
  * @author Steve Ebersole
  */
-public interface Loadable<T> extends ModelPart<T> {
+public interface Loadable extends ModelPart {
 	boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers);
 	boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers);
 	boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers);

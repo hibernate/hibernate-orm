@@ -15,18 +15,18 @@ import org.hibernate.NotYetImplementedFor6Exception;
  *
  * @author Steve Ebersole
  */
-public interface ValueMappingContainer<D> extends ModelPart<D> {
+public interface ValueMappingContainer extends ModelPart {
 	/**
 	 * Find a sub-ValueMapping by name
 	 */
-	default <X> ValueMapping<X> findValueMapping(String name){
+	default ValueMapping findValueMapping(String name){
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	/**
 	 * Visit all of this container's sub-ValueMappings
 	 */
-	default void visitValueMappings(Consumer<ValueMapping<?>> consumer){
+	default void visitValueMappings(Consumer<ValueMapping> consumer){
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

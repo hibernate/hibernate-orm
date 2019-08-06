@@ -8,7 +8,8 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Represents a literal value in the sqm, e.g.<ul>
@@ -20,7 +21,9 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
  * </ul>
  * @author Steve Ebersole
  */
-public class SqmLiteral<T> extends AbstractSqmExpression<T> implements SqmExpression<T> {
+public class SqmLiteral<T>
+		extends AbstractSqmExpression<T>
+		implements SqmExpression<T>, DomainResultProducer<T> {
 	private T value;
 
 	public SqmLiteral(T value, SqmExpressable<T> inherentType, NodeBuilder nodeBuilder) {
@@ -40,5 +43,10 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> implements SqmExpres
 	@Override
 	public String asLoggableText() {
 		return "Literal( " + value + ")";
+	}
+
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		return this;
 	}
 }

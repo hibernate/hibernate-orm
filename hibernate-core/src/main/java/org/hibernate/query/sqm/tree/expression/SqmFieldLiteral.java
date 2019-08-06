@@ -20,16 +20,17 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, SemanticPathPart {
+public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, DomainResultProducer<T>, SemanticPathPart {
 	private final T value;
 	private final JavaTypeDescriptor<T> fieldJavaTypeDescriptor;
 	private final String fieldName;
@@ -249,5 +250,10 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	@Override
 	public String getAlias() {
 		return null;
+	}
+
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		return this;
 	}
 }

@@ -22,7 +22,6 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public EntityPersister getLoadable() {
 		return entityDescriptor;
 	}

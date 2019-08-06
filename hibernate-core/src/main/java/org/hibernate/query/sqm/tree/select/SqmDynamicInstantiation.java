@@ -15,9 +15,10 @@ import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -33,7 +34,10 @@ import static org.hibernate.query.DynamicInstantiationNature.MAP;
  */
 public class SqmDynamicInstantiation<T>
 		extends AbstractJpaSelection<T>
-		implements SqmSelectableNode<T>, SqmAliasedExpressionContainer<SqmDynamicInstantiationArgument>, JpaCompoundSelection<T> {
+		implements SqmSelectableNode<T>,
+		SqmAliasedExpressionContainer<SqmDynamicInstantiationArgument>,
+		JpaCompoundSelection<T>,
+		DomainResultProducer<T> {
 
 	private static final Logger log = Logger.getLogger( SqmDynamicInstantiation.class );
 
@@ -112,6 +116,11 @@ public class SqmDynamicInstantiation<T>
 	@Override
 	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getInstantiationTarget().getTargetTypeDescriptor();
+	}
+
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		return this;
 	}
 
 	@Override

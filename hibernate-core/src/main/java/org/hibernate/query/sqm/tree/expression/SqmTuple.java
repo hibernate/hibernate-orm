@@ -14,8 +14,9 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -96,26 +97,9 @@ public class SqmTuple<T> extends AbstractSqmExpression<T> implements JpaCompound
 		return groupedExpressions;
 	}
 
-	//	@Override
-//	public QueryResult createDomainResult(
-//			SemanticQueryWalker walker,
-//			String resultVariable,
-//			QueryResultCreationContext creationContext) {
-//		return null;
-//	}
-//
-//	@Override
-//	public QueryResult createDomainResult(
-//			Expression expression,
-//			String resultVariable,
-//			QueryResultCreationContext creationContext) {
-//		// todo (6.0) : pretty sure this is not correct.
-//		//		should return a result over all the expressions, not just the first -
-//		//		a "composite" result.
-//		//
-//		// todo (6.0) : ultimately the problem here is expecting the "resolved" SQL AST node to be passed in.
-//		//		really resolving these SQL AST nodes should be done here.
-//		return groupedExpressions.get( 0 ).createDomainResult( expression, resultVariable, creationContext );
-//	}
-
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		// could technically return an array I guess
+		throw new UnsupportedOperationException();
+	}
 }

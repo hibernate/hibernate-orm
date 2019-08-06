@@ -10,12 +10,13 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
+public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements DomainResultProducer<T> {
 	private final SqmExpression<?> lhsOperand;
 	private final BinaryArithmeticOperator operator;
 	private final SqmExpression<?> rhsOperand;
@@ -105,4 +106,8 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> {
 		return getOperator().toLoggableText( lhsOperand.asLoggableText(), rhsOperand.asLoggableText() );
 	}
 
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		return this;
+	}
 }

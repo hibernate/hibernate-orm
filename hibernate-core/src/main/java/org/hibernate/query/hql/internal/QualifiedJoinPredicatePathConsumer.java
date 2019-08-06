@@ -10,10 +10,9 @@ import java.util.Locale;
 
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
-import org.hibernate.query.sqm.produce.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
  * Specialized consumer for processing domain model paths occurring as part

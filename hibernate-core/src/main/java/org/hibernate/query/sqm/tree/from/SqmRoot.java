@@ -6,16 +6,24 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import java.util.function.Consumer;
+
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -87,5 +95,49 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	@Override
 	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		return new SqmTreatedRoot<>( this, treatTarget, nodeBuilder() );
+	}
+
+	@Override
+	public void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration) {
+		final String entityName = getReferencedPathSource().getHibernateEntityName();
+		final EntityPersister entityDescriptor = typeConfiguration.getSessionFactory()
+				.getMetamodel()
+				.getEntityDescriptor( entityName );
+		entityDescriptor.visitValueMappings(
+				valueMapping -> valueMapping.getWriteable().visitJdbcTypes(
+						action,
+						Clause.IRRELEVANT,
+						typeConfiguration
+				)
+		);
+	}
+
+	@Override
+	public DomainResult<E> createDomainResult(
+			int valuesArrayPosition,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final String entityName = getReferencedPathSource().getHibernateEntityName();
+		final EntityPersister entityDescriptor = creationState.getSqlAstCreationState()
+				.getCreationContext()
+				.getDomainModel()
+				.getEntityDescriptor( entityName );
+		return entityDescriptor.createDomainResult(
+				getNavigablePath(),
+				valuesArrayPosition,
+				resultVariable,
+				creationState
+		);
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		final String entityName = getReferencedPathSource().getHibernateEntityName();
+		final EntityPersister entityDescriptor = creationState.getSqlAstCreationState()
+				.getCreationContext()
+				.getDomainModel()
+				.getEntityDescriptor( entityName );
+		entityDescriptor.applySqlSelections( getNavigablePath(), creationState );
+
 	}
 }

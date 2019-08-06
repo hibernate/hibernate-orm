@@ -13,7 +13,8 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * SqmParameter created via JPA {@link javax.persistence.criteria.CriteriaBuilder}
@@ -25,7 +26,7 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
  */
 public class SqmCriteriaParameter<T>
 		extends AbstractSqmExpression<T>
-		implements SqmParameter<T>, QueryParameterImplementor<T> {
+		implements SqmParameter<T>, QueryParameterImplementor<T>, DomainResultProducer<T> {
 	private final String name;
 	private boolean allowMultiValuedBinding;
 
@@ -119,5 +120,10 @@ public class SqmCriteriaParameter<T>
 	@Override
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		throw new UnsupportedOperationException( "ParameterMemento cannot be extracted from Criteria query parameter" );
+	}
+
+	@Override
+	public DomainResultProducer<T> getDomainResultProducer() {
+		return this;
 	}
 }

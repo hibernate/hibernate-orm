@@ -9,9 +9,9 @@ package org.hibernate.query.hql.internal;
 import org.hibernate.QueryException;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.hql.SemanticQueryProducer;
-import org.hibernate.query.sqm.produce.internal.SqmTreePrinter;
-import org.hibernate.query.sqm.produce.spi.SqmCreationContext;
-import org.hibernate.query.sqm.produce.spi.SqmCreationOptions;
+import org.hibernate.query.sqm.internal.SqmTreePrinter;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
+import org.hibernate.query.sqm.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**

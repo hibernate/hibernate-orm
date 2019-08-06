@@ -6,7 +6,11 @@
  */
 package org.hibernate.sql.results.spi;
 
+import java.util.function.Consumer;
+
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Represents something that can produce a {@link DomainResult}
@@ -16,6 +20,16 @@ import org.hibernate.NotYetImplementedFor6Exception;
  * @author Steve Ebersole
  */
 public interface DomainResultProducer<T> {
+
+	/**
+	 * Visit all of the SqlExpressableTypes associated with this this Readable.
+	 *
+	 * Used during cacheable SQL AST creation.
+	 */
+	default void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
 	/**
 	 * Produce the domain query
 	 */

@@ -12,9 +12,8 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.type.BasicType;
 
 /**
  * Represents an expression whose type is boolean, and can therefore be used as a predicate.

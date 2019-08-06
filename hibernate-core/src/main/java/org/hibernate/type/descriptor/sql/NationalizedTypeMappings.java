@@ -7,7 +7,8 @@
 package org.hibernate.type.descriptor.sql;
 
 import java.sql.Types;
-import java.util.Map;
+
+import org.jboss.logging.Logger;
 
 /**
  * Manages a mapping between nationalized and non-nationalized variants of JDBC types.
@@ -19,6 +20,8 @@ import java.util.Map;
  * @author Sanne Grinovero
  */
 public final class NationalizedTypeMappings {
+
+	private static final Logger log = Logger.getLogger( NationalizedTypeMappings.class );
 
 	/**
 	 * Singleton access
@@ -37,7 +40,10 @@ public final class NationalizedTypeMappings {
 			case Types.LONGVARCHAR: return Types.LONGNVARCHAR;
 			case Types.VARCHAR: return Types.NVARCHAR;
 			default:
-				throw new IllegalArgumentException( "Unable to locate nationalized jdbc-code equivalent for given jdbc code : " + jdbcCode );
+				if ( log.isDebugEnabled() ) {
+					log.debug( "Unable to locate nationalized jdbc-code equivalent for given jdbc code : " + jdbcCode );
+				}
+				return jdbcCode;
 		}
 	}
 

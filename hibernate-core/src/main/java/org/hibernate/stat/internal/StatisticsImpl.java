@@ -224,7 +224,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 		return entityStatsMap.getOrCompute(
 				entityName,
-				s -> new EntityStatisticsImpl( sessionFactory.getMetamodel().entityPersister( entityName ) )
+				s -> new EntityStatisticsImpl( sessionFactory.getMetamodel().entityPersister( s ) )
 		);
 	}
 
@@ -337,7 +337,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 		return collectionStatsMap.getOrCompute(
 				role,
-				s -> new CollectionStatisticsImpl( sessionFactory.getMetamodel().collectionPersister( role ) )
+				s -> new CollectionStatisticsImpl( sessionFactory.getMetamodel().collectionPersister( s ) )
 		);
 	}
 
@@ -430,9 +430,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		return naturalIdQueryStatsMap.getOrCompute(
 				rootEntityName,
 				s -> {
-					final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( rootEntityName );
+					final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( s );
 					if ( !entityDescriptor.hasNaturalIdentifier() ) {
-						throw new IllegalArgumentException( "Given entity [" + rootEntityName + "] does not define natural-id" );
+						throw new IllegalArgumentException( "Given entity [" + s + "] does not define natural-id" );
 					}
 					return new NaturalIdStatisticsImpl( entityDescriptor );
 				}
@@ -585,15 +585,15 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
-					final Region region = sessionFactory.getCache().getRegion( regionName );
+					final Region region = sessionFactory.getCache().getRegion( s );
 
 					if ( region == null ) {
-						throw new IllegalArgumentException( "Unknown cache region : " + regionName );
+						throw new IllegalArgumentException( "Unknown cache region : " + s );
 					}
 
 					if ( region instanceof QueryResultsRegion ) {
 						throw new IllegalArgumentException(
-								"Region name [" + regionName + "] referred to a query result region, not a domain data region"
+								"Region name [" + s + "] referred to a query result region, not a domain data region"
 						);
 					}
 
@@ -638,7 +638,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
-					Region region = sessionFactory.getCache().getRegion( regionName );
+					Region region = sessionFactory.getCache().getRegion( s );
 
 					if ( region == null ) {
 
@@ -648,7 +648,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 						// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
 						// NOTE that this method is deprecated
-						region = sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion();
+						region = sessionFactory.getCache().getQueryResultsCache( s ).getRegion();
 					}
 
 					return new CacheRegionStatisticsImpl( region );
@@ -722,7 +722,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	public QueryStatisticsImpl getQueryStatistics(String queryString) {
 		return queryStatsMap.getOrCompute(
 				queryString,
-				s -> new QueryStatisticsImpl( queryString )
+				s -> new QueryStatisticsImpl( s )
 		);
 	}
 
@@ -790,7 +790,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			getQueryStatistics( hql ).incrementCacheHitCount();
 		}
 	}
-
 
 	@Override
 	public void queryCacheMiss(String hql, String regionName) {

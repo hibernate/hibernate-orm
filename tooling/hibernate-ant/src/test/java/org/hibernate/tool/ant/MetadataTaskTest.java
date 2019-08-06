@@ -1,16 +1,26 @@
 package org.hibernate.tool.ant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 
 import org.apache.tools.ant.types.FileSet;
+import org.apache.tools.ant.types.selectors.FilenameSelector;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class MetadataTaskTest {
+	
+	@TempDir
+	Path tempDir;
 	
 	@Test
 	public void testSetPropertyFile() {
@@ -38,6 +48,42 @@ public class MetadataTaskTest {
 		mdt.addConfiguredFileSet(fs);
 		assertEquals(1, mdt.fileSets.size());
 		assertSame(fs, mdt.fileSets.get(0));
+	}
+	
+	@Test
+	public void testCreateMetadataDescriptor() throws Exception {
+		String propertiesString = "hibernate.dialect=H2";
+		File propertiesFile = new File(tempDir.toFile(), "hibernate.properties");
+		Files.write(propertiesFile.toPath(), propertiesString.getBytes());
+		String cfgXmlString = 
+				"<hibernate-configuration>                " +
+				"  <session-factory>                      " +
+				"    <property name='foo2'>bar2</property>" +
+				"  </session-factory>                     " +
+				"</hibernate-configuration>               " ;
+		File cfgXmlFile = new File(tempDir.toFile(), "hibernate.cfg.xml");
+		Files.write(cfgXmlFile.toPath(), cfgXmlString.getBytes());
+		String hbmXmlString = 
+				"<hibernate-mapping>     " +
+				"  <class name='foobar'/>" +
+				"</hibernate-mapping>    " ;
+		File hbmFolder = new File(tempDir.toFile(), "hbm");
+		hbmFolder.mkdirs();
+		File hbmXmlFile = new File(hbmFolder, "foobar.hbm.xml");
+		Files.write(hbmXmlFile.toPath(), hbmXmlString.getBytes());
+		ArrayList<FileSet> fileSets = new ArrayList<FileSet>();
+		FileSet fileSet = new FileSet();
+		fileSet.setDir(hbmFolder);
+		FilenameSelector filenameSelector = new FilenameSelector();
+		filenameSelector.setName("*.hbm.xml");
+		fileSet.addFilename(filenameSelector);
+		MetadataTask mdt = new MetadataTask();
+		mdt.propertyFile = propertiesFile;
+		mdt.configFile = cfgXmlFile;
+		mdt.fileSets = fileSets;
+		MetadataDescriptor metadataDescriptor = mdt.createMetadataDescriptor();
+		assertNotNull(metadataDescriptor);
+		assertEquals("H2", metadataDescriptor.getProperties().get("hibernate.dialect"));
 	}
 
 }

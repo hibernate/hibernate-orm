@@ -2,8 +2,11 @@ package org.hibernate.tool.ant;
 
 public class HibernateToolTask {
 	
+	MetadataTask metadataTask;
+	
 	public MetadataTask createMetadata() {
-		return new MetadataTask();
+		this.metadataTask = new MetadataTask();
+		return this.metadataTask;
 	}
 	
 	public ExportCfgTask createExportCfg() {

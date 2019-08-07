@@ -399,10 +399,10 @@ public final class StringHelper {
 		return buf.append( array[len - 1] ).toString();
 	}
 
-	public static String[] multiply(String string, Iterator placeholders, Iterator replacements) {
+	public static String[] multiply(String string, Iterator<String> placeholders, Iterator<String[]> replacements) {
 		String[] result = new String[] {string};
 		while ( placeholders.hasNext() ) {
-			result = multiply( result, (String) placeholders.next(), (String[]) replacements.next() );
+			result = multiply( result, placeholders.next(), replacements.next() );
 		}
 		return result;
 	}

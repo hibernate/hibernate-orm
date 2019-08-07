@@ -7,7 +7,6 @@
 package org.hibernate.internal.util;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -15,11 +14,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 
 import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 
 public final class StringHelper {
@@ -390,11 +387,6 @@ public final class StringHelper {
 		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( loc + 1, qualifiedName.length() );
 	}
 
-	public static boolean booleanValue(String tfString) {
-		String trimmed = tfString.trim().toLowerCase( Locale.ROOT );
-		return trimmed.equals( "true" ) || trimmed.equals( "t" );
-	}
-
 	public static String toString(Object[] array) {
 		int len = array.length;
 		if ( len == 0 ) {
@@ -456,38 +448,6 @@ public final class StringHelper {
 		return count;
 	}
 
-	public static int[] locateUnquoted(String string, char character) {
-		if ( '\'' == character ) {
-			throw new IllegalArgumentException( "Unquoted count of quotes is invalid" );
-		}
-		if ( string == null ) {
-			return new int[0];
-		}
-
-		ArrayList locations = new ArrayList( 20 );
-
-		// Impl note: takes advantage of the fact that an escpaed single quote
-		// embedded within a quote-block can really be handled as two seperate
-		// quote-blocks for the purposes of this method...
-		int stringLength = string.length();
-		boolean inQuote = false;
-		for ( int indx = 0; indx < stringLength; indx++ ) {
-			char c = string.charAt( indx );
-			if ( inQuote ) {
-				if ( '\'' == c ) {
-					inQuote = false;
-				}
-			}
-			else if ( '\'' == c ) {
-				inQuote = true;
-			}
-			else if ( c == character ) {
-				locations.add( indx );
-			}
-		}
-		return ArrayHelper.toIntArray( locations );
-	}
-
 	public static boolean isNotEmpty(String string) {
 		return string != null && string.length() > 0;
 	}
@@ -522,23 +482,6 @@ public final class StringHelper {
 		String[] qualified = new String[len];
 		for ( int i = 0; i < len; i++ ) {
 			qualified[i] = qualify( prefix, names[i] );
-		}
-		return qualified;
-	}
-
-	public static String[] qualifyIfNot(String prefix, String[] names) {
-		if ( prefix == null ) {
-			return names;
-		}
-		int len = names.length;
-		String[] qualified = new String[len];
-		for ( int i = 0; i < len; i++ ) {
-			if ( names[i].indexOf( '.' ) < 0 ) {
-				qualified[i] = qualify( prefix, names[i] );
-			}
-			else {
-				qualified[i] = names[i];
-			}
 		}
 		return qualified;
 	}
@@ -665,26 +608,6 @@ public final class StringHelper {
 		return name != null && name.length() != 0
 				&& ( ( name.charAt( 0 ) == '`' && name.charAt( name.length() - 1 ) == '`' )
 				|| ( name.charAt( 0 ) == '"' && name.charAt( name.length() - 1 ) == '"' ) );
-	}
-
-	/**
-	 * Return a representation of the given name ensuring quoting (wrapped with '`' characters).  If already wrapped
-	 * return name.
-	 *
-	 * @param name The name to quote.
-	 *
-	 * @return The quoted version.
-	 */
-	public static String quote(String name) {
-		if ( isEmpty( name ) || isQuoted( name ) ) {
-			return name;
-		}
-		// Convert the JPA2 specific quoting character (double quote) to Hibernate's (back tick)
-		else if ( name.startsWith( "\"" ) && name.endsWith( "\"" ) ) {
-			name = name.substring( 1, name.length() - 1 );
-		}
-
-		return "`" + name + '`';
 	}
 
 	/**
@@ -840,18 +763,6 @@ public final class StringHelper {
 		}
 	}
 
-	/**
-	 * Takes a String s and returns a new String[1] with s as the only element.
-	 * If s is null or "", return String[0].
-	 *
-	 * @param s
-	 *
-	 * @return String[]
-	 */
-	public static String[] toArrayElement(String s) {
-		return ( s == null || s.length() == 0 ) ? new String[0] : new String[] {s};
-	}
-
 	public static String nullIfEmpty(String value) {
 		return isEmpty( value ) ? null : value;
 	}
@@ -866,10 +777,6 @@ public final class StringHelper {
 			buffer.append( String.join(", ", renderer.render( value )) );
 		}
 		return buffer.toString();
-	}
-
-	public static <T> String join(T[] values, Renderer<T> renderer) {
-		return join( Arrays.asList( values ), renderer );
 	}
 
 	public interface Renderer<T> {

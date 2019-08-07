@@ -98,7 +98,6 @@ public final class StringHelper {
 		return new String( buffer );
 	}
 
-
 	public static String replace(String template, String placeholder, String replacement) {
 		return replace( template, placeholder, replacement, false );
 	}
@@ -141,7 +140,6 @@ public final class StringHelper {
 			);
 		}
 	}
-
 
 	public static String replace(
 			String beforePlaceholder,
@@ -493,7 +491,6 @@ public final class StringHelper {
 			}
 		}
 		return -1;
-
 	}
 
 	public static int firstIndexOfChar(String sqlString, String string, int startindex) {
@@ -502,7 +499,6 @@ public final class StringHelper {
 			keys.set( string.charAt( i ) );
 		}
 		return firstIndexOfChar( sqlString, keys, startindex );
-
 	}
 
 	public static String truncate(String string, int length) {
@@ -709,14 +705,14 @@ public final class StringHelper {
 		if ( columnNames.length == 1 ) {
 			// non-composite key
 			return new StringBuilder( StringHelper.qualify( alias, columnNames[0] ) )
-					.append( " in (" ).append( BATCH_ID_PLACEHOLDER ).append( ")" );
+					.append( " in (" ).append( BATCH_ID_PLACEHOLDER ).append( ')' );
 		}
 		else {
 			// composite key - the form to use here depends on what the dialect supports.
 			if ( dialect.supportsRowValueConstructorSyntaxInInList() ) {
 				// use : (col1, col2) in ( (?,?), (?,?), ... )
 				StringBuilder builder = new StringBuilder();
-				builder.append( "(" );
+				builder.append( '(' );
 				boolean firstPass = true;
 				String deliminator = "";
 				for ( String columnName : columnNames ) {
@@ -728,14 +724,18 @@ public final class StringHelper {
 				}
 				builder.append( ") in (" );
 				builder.append( BATCH_ID_PLACEHOLDER );
-				builder.append( ")" );
+				builder.append( ')' );
 				return builder;
 			}
 			else {
 				// use : ( (col1 = ? and col2 = ?) or (col1 = ? and col2 = ?) or ... )
 				//		unfortunately most of this building needs to be held off until we know
 				//		the exact number of ids :(
-				return new StringBuilder( "(" ).append( BATCH_ID_PLACEHOLDER ).append( ")" );
+				final StringBuilder stringBuilder = new StringBuilder();
+				stringBuilder.append( '(' )
+						.append( BATCH_ID_PLACEHOLDER )
+						.append( ')' );
+				return stringBuilder;
 			}
 		}
 	}
@@ -753,16 +753,16 @@ public final class StringHelper {
 		else {
 			// composite
 			if ( dialect.supportsRowValueConstructorSyntaxInInList() ) {
-				final String tuple = "(" + StringHelper.repeat( "?", keyColumnNames.length, "," ) + ")";
+				final String tuple = '(' + StringHelper.repeat( "?", keyColumnNames.length, "," ) + ')';
 				return StringHelper.replace( sql, BATCH_ID_PLACEHOLDER, repeat( tuple, ids.length, "," ) );
 			}
 			else {
-				final String keyCheck = "(" + joinWithQualifierAndSuffix(
+				final String keyCheck = '(' + joinWithQualifierAndSuffix(
 						keyColumnNames,
 						alias,
 						" = ?",
 						" and "
-				) + ")";
+				) + ')';
 				return replace( sql, BATCH_ID_PLACEHOLDER, repeat( keyCheck, ids.length, " or " ) );
 			}
 		}
@@ -779,7 +779,7 @@ public final class StringHelper {
 	public static <T> String join(Collection<T> values, Renderer<T> renderer) {
 		final StringBuilder buffer = new StringBuilder();
 		for ( T value : values ) {
-			buffer.append( String.join(", ", renderer.render( value )) );
+			buffer.append( String.join(", ", renderer.render( value ) ) );
 		}
 		return buffer.toString();
 	}

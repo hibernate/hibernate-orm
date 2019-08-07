@@ -604,10 +604,15 @@ public final class StringHelper {
 	 *
 	 * @return True if the given string starts and ends with '`'; false otherwise.
 	 */
-	public static boolean isQuoted(String name) {
-		return name != null && name.length() != 0
-				&& ( ( name.charAt( 0 ) == '`' && name.charAt( name.length() - 1 ) == '`' )
-				|| ( name.charAt( 0 ) == '"' && name.charAt( name.length() - 1 ) == '"' ) );
+	public static boolean isQuoted(final String name) {
+		if ( name == null || name.isEmpty() ) {
+			return false;
+		}
+
+		final char first = name.charAt( 0 );
+		final char last = name.charAt( name.length() - 1 );
+
+		return ( ( first == last ) && ( first == '`' || first == '"' ) );
 	}
 
 	/**

@@ -56,13 +56,13 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
-	public static String join(String seperator, Iterator<?> objects) {
+	public static String join(String separator, Iterator<?> objects) {
 		StringBuilder buf = new StringBuilder();
 		if ( objects.hasNext() ) {
 			buf.append( objects.next() );
 		}
 		while ( objects.hasNext() ) {
-			buf.append( seperator ).append( objects.next() );
+			buf.append( separator ).append( objects.next() );
 		}
 		return buf.toString();
 	}
@@ -239,7 +239,7 @@ public final class StringHelper {
 
 	public static String replaceOnce(String template, String placeholder, String replacement) {
 		if ( template == null ) {
-			return null;  // returnign null!
+			return null;  // returning null!
 		}
 		int loc = template.indexOf( placeholder );
 		if ( loc < 0 ) {

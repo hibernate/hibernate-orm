@@ -2,6 +2,7 @@ package org.hibernate.tool.api.export;
 
 public enum ExporterType {
 	
+	CFG ("org.hibernate.tool.internal.export.cfg.HibernateConfigurationExporter"),
 	POJO ("org.hibernate.tool.internal.export.pojo.POJOExporter");
 	
 	private String className;

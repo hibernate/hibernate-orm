@@ -11,6 +11,9 @@ public class ExporterTypeTest {
 		Assert.assertEquals(
 				"org.hibernate.tool.internal.export.pojo.POJOExporter",
 				ExporterType.POJO.className());
+		Assert.assertEquals(
+				"org.hibernate.tool.internal.export.cfg.HibernateConfigurationExporter", 
+				ExporterType.CFG.className());
 	}
 
 }

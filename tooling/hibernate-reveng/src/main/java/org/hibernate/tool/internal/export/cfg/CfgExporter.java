@@ -26,7 +26,7 @@ import org.hibernate.tool.internal.export.common.AbstractExporter;
  * @author max
  *
  */
-public class HibernateConfigurationExporter extends AbstractExporter {
+public class CfgExporter extends AbstractExporter {
 
 	private Writer output;
     private Properties customProperties = new Properties();

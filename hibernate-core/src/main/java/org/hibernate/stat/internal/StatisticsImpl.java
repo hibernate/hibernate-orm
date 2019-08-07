@@ -6,6 +6,7 @@
  */
 package org.hibernate.stat.internal;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -31,6 +32,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 @SuppressWarnings({ "unchecked" })
 public class StatisticsImpl implements StatisticsImplementor, Service, Manageable {
+
 	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -104,14 +106,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	private final StatsNamedContainer<DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new StatsNamedContainer();
 
-
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public StatisticsImpl() {
-		this( null );
-	}
-
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+		this.sessionFactory = Objects.requireNonNull( sessionFactory );
 		this.queryStatsMap = new StatsNamedContainer(
 				sessionFactory != null ?
 					sessionFactory.getSessionFactoryOptions().getQueryStatisticsMaxSize() :
@@ -208,20 +204,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getEntityNames() {
-		if ( sessionFactory == null ) {
-			return entityStatsMap.keysAsArray();
-		}
-		else {
-			return sessionFactory.getMetamodel().getAllEntityNames();
-		}
+		return sessionFactory.getMetamodel().getAllEntityNames();
 	}
 
 	@Override
 	public EntityStatisticsImpl getEntityStatistics(String entityName) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
 		return entityStatsMap.getOrCompute(
 				entityName,
 				s -> new EntityStatisticsImpl( sessionFactory.getMetamodel().entityPersister( s ) )
@@ -321,20 +308,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getCollectionRoleNames() {
-		if ( sessionFactory == null ) {
-			return collectionStatsMap.keysAsArray();
-		}
-		else {
-			return sessionFactory.getMetamodel().getAllCollectionRoles();
-		}
+		return sessionFactory.getMetamodel().getAllCollectionRoles();
 	}
 
 	@Override
 	public CollectionStatisticsImpl getCollectionStatistics(String role) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
 		return collectionStatsMap.getOrCompute(
 				role,
 				s -> new CollectionStatisticsImpl( sessionFactory.getMetamodel().collectionPersister( s ) )
@@ -423,10 +401,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public NaturalIdStatisticsImpl getNaturalIdStatistics(String rootEntityName) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
 		return naturalIdQueryStatsMap.getOrCompute(
 				rootEntityName,
 				s -> {
@@ -569,19 +543,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getSecondLevelCacheRegionNames() {
-		if ( sessionFactory == null ) {
-			throw new IllegalStateException( "Statistics no longer associated with SessionFactory - cannot get (legacy) region names" );
-		}
-
 		return sessionFactory.getCache().getSecondLevelCacheRegionNames();
 	}
 
 	@Override
 	public CacheRegionStatisticsImpl getDomainDataRegionStatistics(String regionName) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
@@ -609,10 +575,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			return existing;
 		}
 
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
 		final QueryResultsCache regionAccess = sessionFactory.getCache()
 				.getQueryResultsCacheStrictly( regionName );
 		if ( regionAccess == null ) {
@@ -627,10 +589,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public CacheRegionStatisticsImpl getCacheRegionStatistics(String regionName) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
 		if ( ! sessionFactory.getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
 			return null;
 		}
@@ -658,9 +616,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public CacheRegionStatisticsImpl getSecondLevelCacheStatistics(String regionName) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
 		return getCacheRegionStatistics( sessionFactory.getCache().unqualifyRegionName( regionName ) );
 	}
 

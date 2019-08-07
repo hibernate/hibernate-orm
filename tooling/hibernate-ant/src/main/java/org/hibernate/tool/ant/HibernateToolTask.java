@@ -3,6 +3,7 @@ package org.hibernate.tool.ant;
 public class HibernateToolTask {
 	
 	MetadataTask metadataTask;
+	ExportCfgTask exportCfgTask;
 	
 	public MetadataTask createMetadata() {
 		this.metadataTask = new MetadataTask();
@@ -10,7 +11,8 @@ public class HibernateToolTask {
 	}
 	
 	public ExportCfgTask createExportCfg() {
-		return new ExportCfgTask(this);
+		this.exportCfgTask = new ExportCfgTask(this);
+		return this.exportCfgTask;
 	}
 	
 	public ExportDdlTask createExportDdl() {

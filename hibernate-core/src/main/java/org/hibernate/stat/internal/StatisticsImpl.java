@@ -10,12 +10,15 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Manageable;
@@ -35,7 +38,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 
-	private final SessionFactoryImplementor sessionFactory;
+	private final MetamodelImplementor metamodel;
+	private final CacheImplementor cache;
+	private final String cacheRegionPrefix;
+	private final boolean secondLevelCacheEnabled;
+	private final boolean queryCacheEnabled;
 
 	private volatile boolean isStatisticsEnabled;
 	private volatile long startTime;
@@ -107,14 +114,20 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	private final StatsNamedContainer<DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new StatsNamedContainer();
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = Objects.requireNonNull( sessionFactory );
+		Objects.requireNonNull( sessionFactory );
+		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 		this.queryStatsMap = new StatsNamedContainer(
 				sessionFactory != null ?
-					sessionFactory.getSessionFactoryOptions().getQueryStatisticsMaxSize() :
+					sessionFactoryOptions.getQueryStatisticsMaxSize() :
 					Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE,
 				20
 		);
 		clear();
+		metamodel = sessionFactory.getMetamodel();
+		cache = sessionFactory.getCache();
+		cacheRegionPrefix = sessionFactoryOptions.getCacheRegionPrefix();
+		secondLevelCacheEnabled = sessionFactoryOptions.isSecondLevelCacheEnabled();
+		queryCacheEnabled = sessionFactoryOptions.isQueryCacheEnabled();
 	}
 
 	/**
@@ -204,14 +217,14 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getEntityNames() {
-		return sessionFactory.getMetamodel().getAllEntityNames();
+		return metamodel.getAllEntityNames();
 	}
 
 	@Override
 	public EntityStatisticsImpl getEntityStatistics(String entityName) {
 		return entityStatsMap.getOrCompute(
 				entityName,
-				s -> new EntityStatisticsImpl( sessionFactory.getMetamodel().entityPersister( s ) )
+				s -> new EntityStatisticsImpl( metamodel.entityPersister( s ) )
 		);
 	}
 
@@ -308,14 +321,14 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getCollectionRoleNames() {
-		return sessionFactory.getMetamodel().getAllCollectionRoles();
+		return metamodel.getAllCollectionRoles();
 	}
 
 	@Override
 	public CollectionStatisticsImpl getCollectionStatistics(String role) {
 		return collectionStatsMap.getOrCompute(
 				role,
-				s -> new CollectionStatisticsImpl( sessionFactory.getMetamodel().collectionPersister( s ) )
+				s -> new CollectionStatisticsImpl( metamodel.collectionPersister( s ) )
 		);
 	}
 
@@ -404,7 +417,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		return naturalIdQueryStatsMap.getOrCompute(
 				rootEntityName,
 				s -> {
-					final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( s );
+					final EntityPersister entityDescriptor = metamodel.entityPersister( s );
 					if ( !entityDescriptor.hasNaturalIdentifier() ) {
 						throw new IllegalArgumentException( "Given entity [" + s + "] does not define natural-id" );
 					}
@@ -415,12 +428,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public DeprecatedNaturalIdCacheStatisticsImpl getNaturalIdCacheStatistics(String regionName) {
-		final String key = sessionFactory.getCache().unqualifyRegionName( regionName );
+		final String key = cache.unqualifyRegionName( regionName );
 		return deprecatedNaturalIdStatsMap.getOrCompute(
 				key,
 				unqualifiedRegionName -> new DeprecatedNaturalIdCacheStatisticsImpl(
 						unqualifiedRegionName,
-						sessionFactory.getCache().getNaturalIdAccessesInRegion( unqualifiedRegionName )
+						cache.getNaturalIdAccessesInRegion( unqualifiedRegionName )
 				)
 		);
 	}
@@ -499,10 +512,10 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementMissCount();
 	}
 
-	protected String qualify(String regionName) {
-		return sessionFactory.getSessionFactoryOptions().getCacheRegionPrefix() == null
+	private String qualify(final String regionName) {
+		return cacheRegionPrefix == null
 					? regionName
-					: sessionFactory.getSessionFactoryOptions().getCacheRegionPrefix() + '.' + regionName;
+					: cacheRegionPrefix + '.' + regionName;
 	}
 
 	@Override
@@ -521,7 +534,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			naturalIdQueryExecutionMaxTimeEntity = rootEntityName;
 		}
 
-		final EntityPersister rootEntityPersister = sessionFactory.getMetamodel().entityPersister( rootEntityName );
+		final EntityPersister rootEntityPersister = metamodel.entityPersister( rootEntityName );
 
 		getNaturalIdStatistics( rootEntityName ).queryExecuted( time );
 
@@ -543,7 +556,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getSecondLevelCacheRegionNames() {
-		return sessionFactory.getCache().getSecondLevelCacheRegionNames();
+		return cache.getSecondLevelCacheRegionNames();
 	}
 
 	@Override
@@ -551,7 +564,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
-					final Region region = sessionFactory.getCache().getRegion( s );
+					final Region region = cache.getRegion( s );
 
 					if ( region == null ) {
 						throw new IllegalArgumentException( "Unknown cache region : " + s );
@@ -575,7 +588,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			return existing;
 		}
 
-		final QueryResultsCache regionAccess = sessionFactory.getCache()
+		final QueryResultsCache regionAccess = cache
 				.getQueryResultsCacheStrictly( regionName );
 		if ( regionAccess == null ) {
 			return null;
@@ -589,24 +602,24 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public CacheRegionStatisticsImpl getCacheRegionStatistics(String regionName) {
-		if ( ! sessionFactory.getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
+		if ( ! secondLevelCacheEnabled ) {
 			return null;
 		}
 
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
-					Region region = sessionFactory.getCache().getRegion( s );
+					Region region = cache.getRegion( s );
 
 					if ( region == null ) {
 
-						if ( ! sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
+						if ( ! queryCacheEnabled ) {
 							return null;
 						}
 
 						// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
 						// NOTE that this method is deprecated
-						region = sessionFactory.getCache().getQueryResultsCache( s ).getRegion();
+						region = cache.getQueryResultsCache( s ).getRegion();
 					}
 
 					return new CacheRegionStatisticsImpl( region );
@@ -616,7 +629,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public CacheRegionStatisticsImpl getSecondLevelCacheStatistics(String regionName) {
-		return getCacheRegionStatistics( sessionFactory.getCache().unqualifyRegionName( regionName ) );
+		return getCacheRegionStatistics( cache.unqualifyRegionName( regionName ) );
 	}
 
 	@Override
@@ -713,13 +726,13 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public void queryExecuted(String hql, int rows, long time) {
-		LOG.hql(hql, time, (long) rows );
+		LOG.hql( hql, time, (long) rows );
 		queryExecutionCount.increment();
 
 		boolean isLongestQuery;
 		//noinspection StatementWithEmptyBody
 		for ( long old = queryExecutionMaxTime.get();
-				( isLongestQuery = time > old ) && ( !queryExecutionMaxTime.compareAndSet( old, time ) );
+				( isLongestQuery = time > old ) && ( ! queryExecutionMaxTime.compareAndSet( old, time ) );
 				old = queryExecutionMaxTime.get() ) {
 			// nothing to do here given the odd loop structure...
 		}
@@ -803,7 +816,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	private CacheRegionStatisticsImpl getQueryRegionStats(String regionName) {
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
-				s -> new CacheRegionStatisticsImpl( sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion() )
+				s -> new CacheRegionStatisticsImpl( cache.getQueryResultsCache( regionName ).getRegion() )
 		);
 	}
 

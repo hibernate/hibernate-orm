@@ -51,7 +51,7 @@ public interface SessionCreationOptions {
 	/**
 	 * Access to the SessionOwner, which defines the contract for things that can wrap a Session
 	 *
-	 * @return The SessionOwner
+	 * @return Always returns null.
 	 *
 	 * @deprecated (since 5,2) SessionOwner is no longer pertinent due to the
 	 * hibernate-entitymanager -> hibernate-core consolidation

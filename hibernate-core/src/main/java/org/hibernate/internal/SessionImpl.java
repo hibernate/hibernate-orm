@@ -91,7 +91,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.TypedValue;
@@ -172,7 +171,6 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -215,8 +213,6 @@ public final class SessionImpl
 			QueryHints.SPEC_HINT_TIMEOUT
 	};
 
-	private transient SessionOwner sessionOwner;
-
 	private Map<String, Object> properties = new HashMap<>();
 
 	private transient ActionQueue actionQueue;
@@ -233,8 +229,6 @@ public final class SessionImpl
 
 	private transient int dontFlushFromFind;
 
-	private transient ExceptionMapper exceptionMapper;
-
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
 	private transient boolean discardOnClose;
@@ -247,9 +241,6 @@ public final class SessionImpl
 
 		this.actionQueue = new ActionQueue( this );
 		this.persistenceContext = new StatefulPersistenceContext( this );
-
-		this.sessionOwner = options.getSessionOwner();
-		initializeFromSessionOwner( sessionOwner );
 
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
@@ -336,21 +327,6 @@ public final class SessionImpl
 
 	private CacheStoreMode currentCacheStoreMode() {
 		return determineCacheStoreMode( properties );
-	}
-
-
-	private void initializeFromSessionOwner(SessionOwner sessionOwner) {
-		if ( sessionOwner != null ) {
-			if ( sessionOwner.getExceptionMapper() != null ) {
-				exceptionMapper = sessionOwner.getExceptionMapper();
-			}
-			else {
-				exceptionMapper = ExceptionMapperStandardImpl.INSTANCE;
-			}
-		}
-		else {
-			exceptionMapper = ExceptionMapperStandardImpl.INSTANCE;
-		}
 	}
 
 	@Override
@@ -503,9 +479,6 @@ public final class SessionImpl
 		}
 		else if ( isClosed() ) {
 			return false;
-		}
-		else if ( sessionOwner != null ) {
-			return sessionOwner.shouldAutoCloseSession();
 		}
 		else {
 			// JPA technically requires that this be a PersistentUnityTransactionType#JTA to work,
@@ -2639,7 +2612,6 @@ public final class SessionImpl
 		private SharedSessionBuilderImpl(SessionImpl session) {
 			super( (SessionFactoryImpl) session.getFactory() );
 			this.session = session;
-			super.owner( session.sessionOwner );
 			super.tenantIdentifier( session.getTenantIdentifier() );
 		}
 
@@ -3374,7 +3346,7 @@ public final class SessionImpl
 			}
 		}
 		catch (RuntimeException re) {
-			throw exceptionMapper.mapManagedFlushFailure( "error during managed flush", re, this );
+			throw ExceptionMapperStandardImpl.INSTANCE.mapManagedFlushFailure( "error during managed flush", re, this );
 		}
 	}
 
@@ -3954,8 +3926,6 @@ public final class SessionImpl
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );
 		}
-
-		initializeFromSessionOwner( null );
 
 		this.discardOnClose = getFactory().getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 	}

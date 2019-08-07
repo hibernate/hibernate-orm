@@ -1154,7 +1154,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
 
 		private final SessionFactoryImpl sessionFactory;
-		private SessionOwner sessionOwner;
 		private Interceptor interceptor;
 		private StatementInspector statementInspector;
 		private Connection connection;
@@ -1175,7 +1174,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
-			this.sessionOwner = null;
 
 			// set up default builder values...
 			final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
@@ -1202,26 +1200,18 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public SessionOwner getSessionOwner() {
-			return sessionOwner;
+			return null;
 		}
 
 		@Override
 		public ExceptionMapper getExceptionMapper() {
-			if ( sessionOwner != null ) {
-				return sessionOwner.getExceptionMapper();
-			}
-			else {
-				return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
-						? ExceptionMapperLegacyJpaImpl.INSTANCE
-						: null;
-			}
+			return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
+					? ExceptionMapperLegacyJpaImpl.INSTANCE
+					: null;
 		}
 
 		@Override
 		public AfterCompletionAction getAfterCompletionAction() {
-			if ( sessionOwner != null ) {
-				return sessionOwner.getAfterCompletionAction();
-			}
 			return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
 					? AfterCompletionActionLegacyJpaImpl.INSTANCE
 					: null;
@@ -1229,9 +1219,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public ManagedFlushChecker getManagedFlushChecker() {
-			if ( sessionOwner != null ) {
-				return sessionOwner.getManagedFlushChecker();
-			}
 			return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
 					? ManagedFlushCheckerLegacyJpaImpl.INSTANCE
 					: null;
@@ -1297,7 +1284,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public Session openSession() {
-			log.tracef( "Opening Hibernate Session.  tenant=%s, owner=%s", tenantIdentifier, sessionOwner );
+			log.tracef( "Opening Hibernate Session.  tenant=%s", tenantIdentifier );
 			final SessionImpl session = new SessionImpl( sessionFactory, this );
 
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
@@ -1311,8 +1298,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		@SuppressWarnings("unchecked")
 		public T owner(SessionOwner sessionOwner) {
-			this.sessionOwner = sessionOwner;
-			return (T) this;
+			throw new UnsupportedOperationException( "SessionOwner was long deprecated and this method should no longer be invoked" );
 		}
 
 		@Override

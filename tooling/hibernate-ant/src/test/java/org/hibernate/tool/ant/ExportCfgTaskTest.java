@@ -7,12 +7,20 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.util.Properties;
 
 import org.apache.tools.ant.types.Environment.Variable;
 import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class ExportCfgTaskTest {
+	
+	@TempDir 
+	Path tempdir;
 	
 	@Test 
 	public void testExportCfgTask() {
@@ -24,9 +32,19 @@ public class ExportCfgTaskTest {
 	@Test
 	public void testExecute() {
 		ExportCfgTask ect = new ExportCfgTask(null);
-		assertFalse(ect.executed);
+		Properties properties = new Properties();
+		properties.put("hibernate.dialect", "H2");
+		MetadataDescriptor mdd = MetadataDescriptorFactory.createNativeDescriptor(
+				null, 
+				new File[] {}, 
+				properties);
+		ect.properties.put(ExporterConstants.METADATA_DESCRIPTOR, mdd);
+		File destinationFolder = tempdir.toFile();
+		ect.properties.put(ExporterConstants.OUTPUT_FOLDER, destinationFolder);
+		File cfgFile = new File(destinationFolder, "hibernate.cfg.xml");
+		assertFalse(cfgFile.exists());
 		ect.execute();
-		assertTrue(ect.executed);
+		assertTrue(cfgFile.exists());
 	}
 	
 	@Test

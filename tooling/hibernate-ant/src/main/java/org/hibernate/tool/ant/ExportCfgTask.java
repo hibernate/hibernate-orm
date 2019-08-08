@@ -4,11 +4,13 @@ import java.io.File;
 import java.util.Properties;
 
 import org.apache.tools.ant.types.Environment.Variable;
+import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 
 public class ExportCfgTask {
 	
-	boolean executed = false;
 	HibernateToolTask parent = null;
 	Properties properties = new Properties();
 	
@@ -25,7 +27,9 @@ public class ExportCfgTask {
 	}
 	
 	public void execute() {
-		executed = true;
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.CFG);
+		exporter.getProperties().putAll(this.properties);
+		exporter.start();
 	}
 
 }

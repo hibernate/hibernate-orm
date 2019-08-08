@@ -25,7 +25,6 @@ public abstract class ExporterTask {
 	// refactor out so not dependent on Ant ?
 	protected HibernateToolTask parent;
 	Properties properties;
-	File destdir;
 	private Path templatePath;
 	
 	public ExporterTask(HibernateToolTask parent) {
@@ -44,6 +43,7 @@ public abstract class ExporterTask {
 	protected abstract Exporter createExporter();
 
 	public File getDestdir() {
+		File destdir = (File)this.properties.get(ExporterConstants.OUTPUT_FOLDER);
 		if(destdir==null) {
 			return parent.getDestDir();
 		} 
@@ -52,7 +52,7 @@ public abstract class ExporterTask {
 		}
 	}
 	public void setDestdir(File destdir) {
-		this.destdir = destdir;
+		this.properties.put(ExporterConstants.OUTPUT_FOLDER, destdir);
 	}
 	
 	public void setTemplatePath(Path path) {

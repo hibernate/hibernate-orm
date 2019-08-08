@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 
 import org.apache.tools.ant.types.Environment.Variable;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.junit.jupiter.api.Test;
 
 public class ExportCfgTaskTest {
@@ -31,10 +32,10 @@ public class ExportCfgTaskTest {
 	@Test
 	public void testSetDestinationFolder() {
 		ExportCfgTask ect = new ExportCfgTask(null);
-		assertNull(ect.destinationFolder);
+		assertNull(ect.properties.get(ExporterConstants.OUTPUT_FOLDER));
 		File file = new File("/");
 		ect.setDestinationFolder(file);
-		assertSame(file, ect.destinationFolder);
+		assertSame(file, ect.properties.get(ExporterConstants.OUTPUT_FOLDER));
 	}
 	
 	@Test
@@ -42,7 +43,7 @@ public class ExportCfgTaskTest {
 		ExportCfgTask ect = new ExportCfgTask(null);
 		assertNull(ect.getDestinationFolder());
 		File file = new File("/");
-		ect.destinationFolder = file;
+		ect.properties.put(ExporterConstants.OUTPUT_FOLDER, file);
 		assertSame(file, ect.getDestinationFolder());
 	}
 	

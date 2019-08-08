@@ -39,15 +39,6 @@ public class ExportCfgTaskTest {
 	}
 	
 	@Test
-	public void testGetDestinationFolder() {
-		ExportCfgTask ect = new ExportCfgTask(null);
-		assertNull(ect.getDestinationFolder());
-		File file = new File("/");
-		ect.properties.put(ExporterConstants.OUTPUT_FOLDER, file);
-		assertSame(file, ect.getDestinationFolder());
-	}
-	
-	@Test
 	public void testAddConfiguredProperty() {
 		ExportCfgTask ect = new ExportCfgTask(null);
 		assertNull(ect.properties.get("foo"));

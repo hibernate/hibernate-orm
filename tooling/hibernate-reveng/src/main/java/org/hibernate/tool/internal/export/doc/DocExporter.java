@@ -162,7 +162,7 @@ public class DocExporter extends AbstractExporter {
 				exporter.getProperties().putAll( getProperties() );
 				exporter.getProperties().put(ARTIFACT_COLLECTOR, getArtifactCollector());
 				exporter.getProperties().put(METADATA_DESCRIPTOR, getMetadataDescriptor());
-				exporter.getProperties().put(OUTPUT_FOLDER, getOutputDirectory());
+				exporter.getProperties().put(DESTINATION_FOLDER, getOutputDirectory());
 				String[] tp = (String[])exporter.getProperties().get(TEMPLATE_PATH);
 				if (tp != null) {
 					exporter.getProperties().put(TEMPLATE_PATH, tp);

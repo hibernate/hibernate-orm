@@ -19,7 +19,7 @@ public class ExportCfgTask {
 	}
 	
 	public void setDestinationFolder(File destinationFolder) {
-		this.properties.put(ExporterConstants.OUTPUT_FOLDER, destinationFolder);
+		this.properties.put(ExporterConstants.DESTINATION_FOLDER, destinationFolder);
 	}
 	
 	public void addConfiguredProperty(Variable variable) {

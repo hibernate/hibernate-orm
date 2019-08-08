@@ -43,7 +43,7 @@ public abstract class ExporterTask {
 	protected abstract Exporter createExporter();
 
 	public File getDestdir() {
-		File destdir = (File)this.properties.get(ExporterConstants.OUTPUT_FOLDER);
+		File destdir = (File)this.properties.get(ExporterConstants.DESTINATION_FOLDER);
 		if(destdir==null) {
 			return parent.getDestDir();
 		} 
@@ -52,7 +52,7 @@ public abstract class ExporterTask {
 		}
 	}
 	public void setDestdir(File destdir) {
-		this.properties.put(ExporterConstants.OUTPUT_FOLDER, destdir);
+		this.properties.put(ExporterConstants.DESTINATION_FOLDER, destdir);
 	}
 	
 	public void setTemplatePath(Path path) {
@@ -94,7 +94,7 @@ public abstract class ExporterTask {
 		prop.putAll(properties);
 		exporter.getProperties().putAll(prop);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, parent.getMetadataDescriptor());
-		exporter.getProperties().put(ExporterConstants.OUTPUT_FOLDER, getDestdir());
+		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, getDestdir());
 		exporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, getTemplatePath().list());
 		return exporter;
 	}

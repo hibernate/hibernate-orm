@@ -40,7 +40,7 @@ public class ExportCfgTaskTest {
 				properties);
 		ect.properties.put(ExporterConstants.METADATA_DESCRIPTOR, mdd);
 		File destinationFolder = tempdir.toFile();
-		ect.properties.put(ExporterConstants.OUTPUT_FOLDER, destinationFolder);
+		ect.properties.put(ExporterConstants.DESTINATION_FOLDER, destinationFolder);
 		File cfgFile = new File(destinationFolder, "hibernate.cfg.xml");
 		assertFalse(cfgFile.exists());
 		ect.execute();
@@ -50,10 +50,10 @@ public class ExportCfgTaskTest {
 	@Test
 	public void testSetDestinationFolder() {
 		ExportCfgTask ect = new ExportCfgTask(null);
-		assertNull(ect.properties.get(ExporterConstants.OUTPUT_FOLDER));
+		assertNull(ect.properties.get(ExporterConstants.DESTINATION_FOLDER));
 		File file = new File("/");
 		ect.setDestinationFolder(file);
-		assertSame(file, ect.properties.get(ExporterConstants.OUTPUT_FOLDER));
+		assertSame(file, ect.properties.get(ExporterConstants.DESTINATION_FOLDER));
 	}
 	
 	@Test

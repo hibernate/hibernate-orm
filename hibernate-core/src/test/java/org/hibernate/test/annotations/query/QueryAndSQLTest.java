@@ -22,6 +22,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
@@ -31,7 +32,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
-
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -94,6 +95,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "invalid name of function or procedure: SYSDATE")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
 		String sql = "select TABLE_NAME , sysdate() from all_tables  where TABLE_NAME = 'AUDIT_ACTIONS' ";
 		Session s = openSession();

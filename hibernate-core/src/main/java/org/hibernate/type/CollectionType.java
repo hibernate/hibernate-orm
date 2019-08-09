@@ -462,8 +462,9 @@ public abstract class CollectionType extends AbstractType implements Association
 			ownerId = key;
 		}
 		else {
-			Type keyType = getPersister( session ).getKeyType();
-			EntityPersister ownerPersister = getPersister( session ).getOwnerEntityPersister();
+			final CollectionPersister persister = getPersister( session );
+			Type keyType = persister.getKeyType();
+			EntityPersister ownerPersister = persister.getOwnerEntityPersister();
 			// TODO: Fix this so it will work for non-POJO entity mode
 			Class ownerMappedClass = ownerPersister.getMappedClass();
 			if ( ownerMappedClass.isAssignableFrom( keyType.getReturnedClass() ) &&

@@ -31,7 +31,6 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
-
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -95,7 +94,16 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
-		String sql = "select TABLE_NAME , sysdate() from all_tables  where TABLE_NAME = 'AUDIT_ACTIONS' ";
+		SQLFunction dateFunction = getDialect().getFunctions().get( "current_date" );
+		String dateFunctionRendered = dateFunction.render(
+				null,
+				java.util.Collections.EMPTY_LIST,
+				sessionFactory()
+		);
+		String sql = String.format(
+				"select TABLE_NAME , %s from all_tables  where TABLE_NAME = 'AUDIT_ACTIONS' ",
+				dateFunctionRendered
+		);
 		Session s = openSession();
 		s.beginTransaction();
 		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();

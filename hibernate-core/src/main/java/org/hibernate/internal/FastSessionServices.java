@@ -6,8 +6,11 @@
  */
 package org.hibernate.internal;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -26,6 +29,7 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -77,7 +81,13 @@ final class FastSessionServices {
 	//Intentionally Package private:
 	final boolean disallowOutOfTransactionUpdateOperations;
 	final boolean useStreamForLobBinding;
+	final boolean requiresMultiTenantConnectionProvider;
+	final ConnectionProvider connectionProvider;
+	final MultiTenantConnectionProvider multiTenantConnectionProvider;
+	final ClassLoaderService classLoaderService;
+	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
 
+	//Private fields:
 	private final Dialect dialect;
 
 	FastSessionServices(SessionFactoryImpl sf) {
@@ -111,6 +121,13 @@ final class FastSessionServices {
 		this.disallowOutOfTransactionUpdateOperations = !sf.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
 		this.useStreamForLobBinding = Environment.useStreamsForBinary()
 				|| dialect.useInputStreamToInsertBlob();
+		this.requiresMultiTenantConnectionProvider =  sf.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider();
+
+		//Some "hot" services:
+		this.connectionProvider = requiresMultiTenantConnectionProvider ? null : sr.getService( ConnectionProvider.class );
+		this.multiTenantConnectionProvider = requiresMultiTenantConnectionProvider ? sr.getService( MultiTenantConnectionProvider.class ) : null;
+		this.classLoaderService = sr.getService( ClassLoaderService.class );
+		this.transactionCoordinatorBuilder = sr.getService( TransactionCoordinatorBuilder.class );
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {

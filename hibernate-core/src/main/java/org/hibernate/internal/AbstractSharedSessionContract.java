@@ -210,11 +210,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		else {
 			this.isTransactionCoordinatorShared = false;
 			this.autoJoinTransactions = options.shouldAutoJoinTransactions();
-
 			this.jdbcCoordinator = new JdbcCoordinatorImpl( options.getConnection(), this );
-			this.transactionCoordinator = factory.getServiceRegistry()
-					.getService( TransactionCoordinatorBuilder.class )
-					.buildTransactionCoordinator( jdbcCoordinator, this );
+			this.transactionCoordinator = fastSessionServices.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
 	}
 
@@ -510,17 +507,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		// See class-level JavaDocs for a discussion of the concurrent-access safety of this method
 		if ( jdbcConnectionAccess == null ) {
-			if ( !factory.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider() ) {
+			if ( ! fastSessionServices.requiresMultiTenantConnectionProvider ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						getEventListenerManager(),
-						factory.getServiceRegistry().getService( ConnectionProvider.class )
+						fastSessionServices.connectionProvider
 				);
 			}
 			else {
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
 						getTenantIdentifier(),
 						getEventListenerManager(),
-						factory.getServiceRegistry().getService( MultiTenantConnectionProvider.class )
+						fastSessionServices.multiTenantConnectionProvider
 				);
 			}
 		}
@@ -964,7 +961,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			final Class<?> actualReturnedClass;
 			final String entityClassName = ( (NativeSQLQueryRootReturn) nativeSQLQueryReturn ).getReturnEntityName();
 			try {
-				actualReturnedClass = getFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityClassName );
+				actualReturnedClass = fastSessionServices.classLoaderService.classForName( entityClassName );
 			}
 			catch ( ClassLoadingException e ) {
 				throw new AssertionFailure(

@@ -49,11 +49,12 @@ public class JoinedTableNullNonOptionalSecondaryTableTest extends AbstractNonOpt
 					assertNotNull( anEntity );
 					assertNull( anEntity.aDetail );
 					// assert that a row was inserted into Details when its property is null
+					final Number id = (Number) entityManager.createNativeQuery(
+							"select id from Details where aDetail is null"
+					).getSingleResult();
 					assertEquals(
 							1,
-							entityManager.createNativeQuery(
-									"select id from Details where aDetail is null"
-							).getSingleResult()
+							id.intValue()
 					);
 				}
 		);
@@ -73,18 +74,16 @@ public class JoinedTableNullNonOptionalSecondaryTableTest extends AbstractNonOpt
 					assertNotNull( anEntity );
 					assertNull( anEntity.aDetail );
 					// assert that a row was inserted into Details when its property is null
-					assertEquals(
-							1,
-							entityManager.createNativeQuery(
-									"select id from Details where aDetail is null"
-							).getSingleResult()
-					);
+					Number id = (Number) entityManager.createNativeQuery(
+							"select id from Details where aDetail is null"
+					).getSingleResult();
+
+					assertEquals( 1, id.intValue() );
 					// assert that a row was inserted into MoreDetails when its property is null
-					assertEquals( 1,
-								  entityManager.createNativeQuery(
-										  "select id from MoreDetails where anotherDetail is null"
-								  ).getSingleResult()
-					);
+					id = (Number) entityManager.createNativeQuery(
+							"select id from MoreDetails where anotherDetail is null"
+					).getSingleResult();
+					assertEquals( 1,id.intValue() );
 				}
 		);
 	}

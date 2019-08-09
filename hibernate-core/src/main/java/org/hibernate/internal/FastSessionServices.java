@@ -49,6 +49,8 @@ import java.util.Objects;
  */
 final class FastSessionServices {
 
+	// All session events need to be iterated frequently:
+
 	private final Iterable<ClearEventListener> clearEventListeners;
 	private final Iterable<SaveOrUpdateEventListener> saveUpdateEventListeners;
 	private final Iterable<EvictEventListener> evictEventListeners;
@@ -68,9 +70,14 @@ final class FastSessionServices {
 	private final Iterable<InitializeCollectionEventListener> initCollectionEventListeners;
 	private final Iterable<ResolveNaturalIdEventListener> resolveNaturalIdEventListeners;
 
+	//Intentionally Package private:
+	final boolean disallowOutOfTransactionUpdateOperations;
+
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );
 		final ServiceRegistryImplementor sr = sf.getServiceRegistry();
+
+		// Pre-compute all iterators on Event listeners:
 		final EventListenerRegistry eventListenerRegistry = sr.getService( EventListenerRegistry.class );
 		this.clearEventListeners = listeners( eventListenerRegistry, EventType.CLEAR );
 		this.saveUpdateEventListeners = listeners( eventListenerRegistry, EventType.SAVE_UPDATE );
@@ -90,6 +97,9 @@ final class FastSessionServices {
 		this.flushEventListeners = listeners( eventListenerRegistry, EventType.FLUSH );
 		this.initCollectionEventListeners = listeners( eventListenerRegistry, EventType.INIT_COLLECTION );
 		this.resolveNaturalIdEventListeners = listeners( eventListenerRegistry, EventType.RESOLVE_NATURAL_ID );
+
+		//Other highly useful constants:
+		this.disallowOutOfTransactionUpdateOperations = !sf.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {

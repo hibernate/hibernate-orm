@@ -139,7 +139,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected boolean closed;
 	protected boolean waitingForAutoClose;
-	private transient boolean disallowOutOfTransactionUpdateOperations;
 
 	// transient & non-final for Serialization purposes - ugh
 	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
@@ -157,7 +156,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.factory = factory;
 		this.fastSessionServices = factory.getFastSessionServices();
 		this.cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
-		this.disallowOutOfTransactionUpdateOperations = !factory.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
+
 
 		this.flushMode = options.getInitialSessionFlushMode();
 
@@ -407,7 +406,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
-		if ( disallowOutOfTransactionUpdateOperations && !isTransactionInProgress() ) {
+		if ( fastSessionServices.disallowOutOfTransactionUpdateOperations && !isTransactionInProgress() ) {
 			throw new TransactionRequiredException( exceptionMessage );
 		}
 	}
@@ -1239,7 +1238,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
-		this.disallowOutOfTransactionUpdateOperations = !getFactory().getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
 	}
 
 }

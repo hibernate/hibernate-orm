@@ -7,6 +7,7 @@
 package org.hibernate.internal;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -26,6 +27,7 @@ import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import java.util.Objects;
 
@@ -76,6 +78,8 @@ final class FastSessionServices {
 	final boolean disallowOutOfTransactionUpdateOperations;
 	final boolean useStreamForLobBinding;
 
+	private final Dialect dialect;
+
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );
 		final ServiceRegistryImplementor sr = sf.getServiceRegistry();
@@ -103,9 +107,10 @@ final class FastSessionServices {
 		this.resolveNaturalIdEventListeners = listeners( eventListenerRegistry, EventType.RESOLVE_NATURAL_ID );
 
 		//Other highly useful constants:
+		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
 		this.disallowOutOfTransactionUpdateOperations = !sf.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
 		this.useStreamForLobBinding = Environment.useStreamsForBinary()
-				|| jdbcServices.getJdbcEnvironment().getDialect().useInputStreamToInsertBlob();
+				|| dialect.useInputStreamToInsertBlob();
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {
@@ -182,6 +187,15 @@ final class FastSessionServices {
 
 	private static <T> Iterable<T> listeners(EventListenerRegistry elr, EventType<T> type) {
 		return elr.getEventListenerGroup( type ).listeners();
+	}
+
+	SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		if ( !sqlTypeDescriptor.canBeRemapped() ) {
+			return sqlTypeDescriptor;
+		}
+
+		final SqlTypeDescriptor remapped = dialect.remapSqlTypeDescriptor( sqlTypeDescriptor );
+		return remapped == null ? sqlTypeDescriptor : remapped;
 	}
 
 }

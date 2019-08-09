@@ -37,7 +37,6 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -562,13 +561,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( !sqlTypeDescriptor.canBeRemapped() ) {
-			return sqlTypeDescriptor;
-		}
-
-		final Dialect dialect = getJdbcServices().getJdbcEnvironment().getDialect();
-		final SqlTypeDescriptor remapped = dialect.remapSqlTypeDescriptor( sqlTypeDescriptor );
-		return remapped == null ? sqlTypeDescriptor : remapped;
+		return fastSessionServices.remapSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 
 	@Override

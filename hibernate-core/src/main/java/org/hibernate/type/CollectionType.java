@@ -63,6 +63,10 @@ public abstract class CollectionType extends AbstractType implements Association
 	private final String role;
 	private final String foreignKeyPropertyName;
 
+	// the need for the persister if very hot in many use cases: cache it in a field
+	// TODO initialize it at constructor time
+	private volatile CollectionPersister persister;
+
 	/**
 	 * @deprecated Use the other contructor
 	 */
@@ -319,11 +323,33 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The underlying collection persister
 	 */
 	private CollectionPersister getPersister(SharedSessionContractImplementor session) {
-		return getPersister( session.getFactory() );
+		CollectionPersister p = this.persister;
+		if ( p != null ) {
+			return p;
+		}
+		else {
+			return getPersister( session.getFactory() );
+		}
 	}
 
 	private CollectionPersister getPersister(SessionFactoryImplementor factory) {
-		return factory.getMetamodel().collectionPersister( role );
+		CollectionPersister p = this.persister;
+		if ( p != null ) {
+			return p;
+		}
+		else {
+			synchronized ( this ) {
+				p  = this.persister;
+				if ( p != null ) {
+					return p;
+				}
+				else {
+					p = factory.getMetamodel().collectionPersister( role );
+					this.persister = p;
+					return p;
+				}
+			}
+		}
 	}
 
 	@Override

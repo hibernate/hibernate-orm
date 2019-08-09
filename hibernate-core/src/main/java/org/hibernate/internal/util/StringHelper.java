@@ -6,21 +6,13 @@
  */
 package org.hibernate.internal.util;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.StringTokenizer;
-import java.util.regex.Pattern;
-
 import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
+
+import java.io.Serializable;
+import java.util.*;
 
 public final class StringHelper {
 
@@ -127,8 +119,8 @@ public final class StringHelper {
 		if ( template == null ) {
 			return null;
 		}
-		int loc = template.indexOf( placeholder );
-		if ( loc < 0 ) {
+		int loc = indexOfPlaceHolder(template, placeholder, wholeWords);
+		if ( loc < 0) {
 			return template;
 		}
 		else {
@@ -192,6 +184,23 @@ public final class StringHelper {
 				)
 		);
 		return buf.toString();
+	}
+
+	private static int indexOfPlaceHolder(String template, String placeholder, boolean wholeWords) {
+		if (wholeWords) {
+			int placeholderIndex = -1;
+			boolean isPartialPlaceholderMatch;
+			do {
+				placeholderIndex = template.indexOf(placeholder, placeholderIndex+1);
+				isPartialPlaceholderMatch = placeholderIndex != -1 &&
+						template.length() > placeholderIndex + placeholder.length() &&
+						Character.isJavaIdentifierPart(template.charAt(placeholderIndex + placeholder.length()));
+			} while (placeholderIndex != -1 && isPartialPlaceholderMatch);
+
+			return placeholderIndex;
+		} else {
+			return template.indexOf(placeholder);
+		}
 	}
 
 	/**

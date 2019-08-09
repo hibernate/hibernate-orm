@@ -123,7 +123,7 @@ public final class StringHelper {
 		if ( template == null ) {
 			return null;
 		}
-		int loc = template.indexOf( placeholder );
+		int loc = indexOfPlaceHolder( template, placeholder, wholeWords );
 		if ( loc < 0 ) {
 			return template;
 		}
@@ -187,6 +187,24 @@ public final class StringHelper {
 				)
 		);
 		return buf.toString();
+	}
+
+	private static int indexOfPlaceHolder(String template, String placeholder, boolean wholeWords) {
+		if ( wholeWords ) {
+			int placeholderIndex = -1;
+			boolean isPartialPlaceholderMatch;
+			do {
+				placeholderIndex = template.indexOf( placeholder, placeholderIndex + 1 );
+				isPartialPlaceholderMatch = placeholderIndex != -1 &&
+						template.length() > placeholderIndex + placeholder.length() &&
+						Character.isJavaIdentifierPart( template.charAt( placeholderIndex + placeholder.length() ) );
+			} while ( placeholderIndex != -1 && isPartialPlaceholderMatch );
+
+			return placeholderIndex;
+		}
+		else {
+			return template.indexOf( placeholder );
+		}
 	}
 
 	/**

@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal;
 
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEventListener;
@@ -72,10 +74,12 @@ final class FastSessionServices {
 
 	//Intentionally Package private:
 	final boolean disallowOutOfTransactionUpdateOperations;
+	final boolean useStreamForLobBinding;
 
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );
 		final ServiceRegistryImplementor sr = sf.getServiceRegistry();
+		final JdbcServices jdbcServices = sf.getJdbcServices();
 
 		// Pre-compute all iterators on Event listeners:
 		final EventListenerRegistry eventListenerRegistry = sr.getService( EventListenerRegistry.class );
@@ -100,6 +104,8 @@ final class FastSessionServices {
 
 		//Other highly useful constants:
 		this.disallowOutOfTransactionUpdateOperations = !sf.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
+		this.useStreamForLobBinding = Environment.useStreamsForBinary()
+				|| jdbcServices.getJdbcEnvironment().getDialect().useInputStreamToInsertBlob();
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {

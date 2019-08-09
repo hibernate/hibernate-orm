@@ -37,7 +37,6 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
@@ -143,7 +142,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// transient & non-final for Serialization purposes - ugh
 	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
 	private transient EntityNameResolver entityNameResolver;
-	private transient Boolean useStreamForLobBinding;
 
 	private Integer jdbcBatchSize;
 
@@ -537,11 +535,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean useStreamForLobBinding() {
-		if ( useStreamForLobBinding == null ) {
-			useStreamForLobBinding = Environment.useStreamsForBinary()
-					|| getJdbcServices().getJdbcEnvironment().getDialect().useInputStreamToInsertBlob();
-		}
-		return useStreamForLobBinding;
+		return fastSessionServices.useStreamForLobBinding;
 	}
 
 	@Override

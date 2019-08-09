@@ -15,18 +15,23 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A service loader bound to an {@link AggregatedClassLoader}.
  * @param <S> The type of the service contract.
  */
 abstract class AggregatedServiceLoader<S> {
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( AggregatedServiceLoader.class );
 
 	private static final Method SERVICE_LOADER_STREAM_METHOD;
 	private static final Method PROVIDER_TYPE_METHOD;
@@ -145,12 +150,14 @@ abstract class AggregatedServiceLoader<S> {
 	 * @param <S> The type of loaded services.
 	 */
 	private static class ClassPathAndModulePathAggregatedServiceLoader<S> extends AggregatedServiceLoader<S> {
+		private final Class<S> serviceContract;
 		private final ServiceLoader<S> aggregatedClassLoaderServiceLoader;
 		private final List<ServiceLoader<S>> delegates;
 		private Collection<S> cache = null;
 
 		private ClassPathAndModulePathAggregatedServiceLoader(AggregatedClassLoader aggregatedClassLoader,
 				Class<S> serviceContract) {
+			this.serviceContract = serviceContract;
 			this.delegates = new ArrayList<>();
 			this.aggregatedClassLoaderServiceLoader = ServiceLoader.load( serviceContract, aggregatedClassLoader );
 			final Iterator<ClassLoader> clIterator = aggregatedClassLoader.newClassLoaderIterator();
@@ -187,16 +194,32 @@ abstract class AggregatedServiceLoader<S> {
 			Set<S> result = new LinkedHashSet<>();
 
 			// Always try the aggregated class loader first
-			providerStream( aggregatedClassLoaderServiceLoader )
-					.forEach( provider -> collectServiceIfNotDuplicate( result, alreadyEncountered, provider ) );
+			Iterator<? extends Supplier<S>> providerIterator = providerStream( aggregatedClassLoaderServiceLoader )
+					.iterator();
+			while ( providerIterator.hasNext() ) {
+				Supplier<S> provider = providerIterator.next();
+				collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
+			}
 
 			/*
 			 * Then also try the individual class loaders,
 			 * because only them can instantiate services provided by jars in the module path.
 			 */
 			for ( ServiceLoader<S> delegate : delegates ) {
-				providerStream( delegate )
-						.forEach( provider -> collectServiceIfNotDuplicate( result, alreadyEncountered, provider ) );
+				providerIterator = providerStream( delegate ).iterator();
+				/*
+				 * Note that advancing the stream itself can lead to (arguably) "legitimate" errors,
+				 * where we fail to load the service,
+				 * but only because individual classloader has its own definition of the service contract class,
+				 * which is different from ours.
+				 * In that case (still arguably), the error should be ignored.
+				 * That's why we wrap the call to hasNext in a method that catches an logs errors.
+				 * See https://hibernate.atlassian.net/browse/HHH-13551.
+				 */
+				while ( hasNextIgnoringServiceConfigurationError( providerIterator ) ) {
+					Supplier<S> provider = providerIterator.next();
+					collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
+				}
 			}
 
 			return result;
@@ -209,6 +232,17 @@ abstract class AggregatedServiceLoader<S> {
 			}
 			catch (RuntimeException | IllegalAccessException | InvocationTargetException e) {
 				throw new AssertionFailure( "Error calling ServiceLoader.stream()", e );
+			}
+		}
+
+		private boolean hasNextIgnoringServiceConfigurationError(Iterator<?> iterator) {
+			while ( true ) {
+				try {
+					return iterator.hasNext();
+				}
+				catch (ServiceConfigurationError e) {
+					log.ignoringServiceConfigurationError( serviceContract, e );
+				}
 			}
 		}
 

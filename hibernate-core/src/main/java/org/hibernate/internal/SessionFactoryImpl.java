@@ -197,6 +197,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient TypeHelper typeHelper;
 
+	private final transient FastSessionServices fastSessionServices;
+
 	public SessionFactoryImpl(
 			final MetadataImplementor metadata,
 			SessionFactoryOptions options) {
@@ -374,6 +376,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				}
 				fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 			}
+
+			this.fastSessionServices = new FastSessionServices( this );
 
 			this.observer.sessionFactoryCreated( this );
 
@@ -1645,4 +1649,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			LOG.emptyCompositesEnabled();
 		}
 	}
+
+	/**
+	 * @return the FastSessionServices for this SessionFactory.
+	 */
+	FastSessionServices getFastSessionServices() {
+		return this.fastSessionServices;
+	}
+
 }

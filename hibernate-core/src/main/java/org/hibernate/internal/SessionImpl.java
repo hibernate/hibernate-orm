@@ -96,8 +96,6 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
@@ -107,7 +105,6 @@ import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.EvictEvent;
 import org.hibernate.event.spi.EvictEventListener;
 import org.hibernate.event.spi.FlushEvent;
@@ -234,7 +231,6 @@ public final class SessionImpl
 	private transient boolean discardOnClose;
 
 	private transient TransactionObserver transactionObserver;
-	private transient EventListenerRegistry eventListenerRegistry;
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
@@ -355,7 +351,7 @@ public final class SessionImpl
 		actionQueue.clear();
 
 		final ClearEvent event = new ClearEvent( this );
-		for ( ClearEventListener listener : listeners( EventType.CLEAR ) ) {
+		for ( ClearEventListener listener : fastSessionServices.getClearEventListeners() ) {
 			listener.onClear( event );
 		}
 	}
@@ -633,23 +629,11 @@ public final class SessionImpl
 		checkOpen();
 		checkTransactionSynchStatus();
 		checkNoUnresolvedActionsBeforeOperation();
-		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE_UPDATE ) ) {
+		for ( SaveOrUpdateEventListener listener : fastSessionServices.getSaveUpdateEventListeners() ) {
 			listener.onSaveOrUpdate( event );
 		}
 		checkNoUnresolvedActionsAfterOperation();
 	}
-
-	private <T> Iterable<T> listeners(EventType<T> type) {
-		return eventListenerGroup( type ).listeners();
-	}
-
-	private <T> EventListenerGroup<T> eventListenerGroup(EventType<T> type) {
-		if ( this.eventListenerRegistry == null ) {
-			this.eventListenerRegistry = getFactory().getServiceRegistry().getService( EventListenerRegistry.class );
-		}
-		return eventListenerRegistry.getEventListenerGroup( type );
-	}
-
 
 	// save() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -667,7 +651,7 @@ public final class SessionImpl
 		checkOpen();
 		checkTransactionSynchStatus();
 		checkNoUnresolvedActionsBeforeOperation();
-		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE ) ) {
+		for ( SaveOrUpdateEventListener listener : fastSessionServices.getSaveEventListeners() ) {
 			listener.onSaveOrUpdate( event );
 		}
 		checkNoUnresolvedActionsAfterOperation();
@@ -691,7 +675,7 @@ public final class SessionImpl
 		checkOpen();
 		checkTransactionSynchStatus();
 		checkNoUnresolvedActionsBeforeOperation();
-		for ( SaveOrUpdateEventListener listener : listeners( EventType.UPDATE ) ) {
+		for ( SaveOrUpdateEventListener listener : fastSessionServices.getUpdateEventListeners() ) {
 			listener.onSaveOrUpdate( event );
 		}
 		checkNoUnresolvedActionsAfterOperation();
@@ -726,7 +710,7 @@ public final class SessionImpl
 	private void fireLock(LockEvent event) {
 		checkOpen();
 		pulseTransactionCoordinator();
-		for ( LockEventListener listener : listeners( EventType.LOCK ) ) {
+		for ( LockEventListener listener : fastSessionServices.getLockEventListeners() ) {
 			listener.onLock( event );
 		}
 		delayedAfterCompletion();
@@ -758,7 +742,7 @@ public final class SessionImpl
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
 
-			for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
+			for ( PersistEventListener listener : fastSessionServices.getPersistEventListeners() ) {
 				listener.onPersist( event );
 			}
 		}
@@ -782,7 +766,7 @@ public final class SessionImpl
 		pulseTransactionCoordinator();
 
 		try {
-			for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
+			for ( PersistEventListener listener : fastSessionServices.getPersistEventListeners() ) {
 				listener.onPersist( event, copiedAlready );
 			}
 		}
@@ -818,7 +802,7 @@ public final class SessionImpl
 	private void firePersistOnFlush(Map copiedAlready, PersistEvent event) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
+		for ( PersistEventListener listener : fastSessionServices.getPersistOnFlushEventListeners() ) {
 			listener.onPersist( event, copiedAlready );
 		}
 		delayedAfterCompletion();
@@ -828,7 +812,7 @@ public final class SessionImpl
 		checkOpen();
 		checkTransactionSynchStatus();
 		checkNoUnresolvedActionsBeforeOperation();
-		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
+		for ( PersistEventListener listener : fastSessionServices.getPersistOnFlushEventListeners() ) {
 			listener.onPersist( event );
 		}
 		checkNoUnresolvedActionsAfterOperation();
@@ -859,7 +843,7 @@ public final class SessionImpl
 		try {
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
-			for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
+			for ( MergeEventListener listener : fastSessionServices.getMergeEventListeners() ) {
 				listener.onMerge( event );
 			}
 			checkNoUnresolvedActionsAfterOperation();
@@ -881,7 +865,7 @@ public final class SessionImpl
 	private void fireMerge(Map copiedAlready, MergeEvent event) {
 		try {
 			pulseTransactionCoordinator();
-			for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
+			for ( MergeEventListener listener : fastSessionServices.getMergeEventListeners() ) {
 				listener.onMerge( event, copiedAlready );
 			}
 		}
@@ -971,7 +955,7 @@ public final class SessionImpl
 	private void fireDelete(DeleteEvent event) {
 		try{
 			pulseTransactionCoordinator();
-		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
+		for ( DeleteEventListener listener : fastSessionServices.getDeleteEventListeners() ) {
 			listener.onDelete( event );
 		}
 		}
@@ -993,7 +977,7 @@ public final class SessionImpl
 	private void fireDelete(DeleteEvent event, Set transientEntities) {
 		try{
 			pulseTransactionCoordinator();
-			for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
+			for ( DeleteEventListener listener : fastSessionServices.getDeleteEventListeners() ) {
 				listener.onDelete( event, transientEntities );
 			}
 		}
@@ -1270,7 +1254,7 @@ public final class SessionImpl
 	// it seems they prevent these hot methods from being inlined.
 	private void fireLoadNoChecks(LoadEvent event, LoadType loadType) {
 		pulseTransactionCoordinator();
-		for ( LoadEventListener listener : listeners( EventType.LOAD ) ) {
+		for ( LoadEventListener listener : fastSessionServices.getLoadEventListeners() ) {
 			listener.onLoad( event, loadType );
 		}
 	}
@@ -1278,7 +1262,7 @@ public final class SessionImpl
 	private void fireResolveNaturalId(ResolveNaturalIdEvent event) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		for ( ResolveNaturalIdEventListener listener : listeners( EventType.RESOLVE_NATURAL_ID ) ) {
+		for ( ResolveNaturalIdEventListener listener : fastSessionServices.getResolveNaturalIdEventListeners() ) {
 			listener.onResolveNaturalId( event );
 		}
 		delayedAfterCompletion();
@@ -1338,7 +1322,7 @@ public final class SessionImpl
 				}
 			}
 			pulseTransactionCoordinator();
-			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
+			for ( RefreshEventListener listener : fastSessionServices.getRefreshEventListeners() ) {
 				listener.onRefresh( event );
 			}
 		}
@@ -1359,7 +1343,7 @@ public final class SessionImpl
 	private void fireRefresh(Map refreshedAlready, RefreshEvent event) {
 		try {
 			pulseTransactionCoordinator();
-			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
+			for ( RefreshEventListener listener : fastSessionServices.getRefreshEventListeners() ) {
 				listener.onRefresh( event, refreshedAlready );
 			}
 		}
@@ -1388,7 +1372,7 @@ public final class SessionImpl
 	private void fireReplicate(ReplicateEvent event) {
 		checkOpen();
 		pulseTransactionCoordinator();
-		for ( ReplicateEventListener listener : listeners( EventType.REPLICATE ) ) {
+		for ( ReplicateEventListener listener : fastSessionServices.getReplicateEventListeners() ) {
 			listener.onReplicate( event );
 		}
 		delayedAfterCompletion();
@@ -1409,7 +1393,7 @@ public final class SessionImpl
 	private void fireEvict(EvictEvent event) {
 		checkOpen();
 		pulseTransactionCoordinator();
-		for ( EvictEventListener listener : listeners( EventType.EVICT ) ) {
+		for ( EvictEventListener listener : fastSessionServices.getEvictEventListeners() ) {
 			listener.onEvict( event );
 		}
 		delayedAfterCompletion();
@@ -1426,7 +1410,7 @@ public final class SessionImpl
 			return false;
 		}
 		AutoFlushEvent event = new AutoFlushEvent( querySpaces, this );
-		for ( AutoFlushEventListener listener : listeners( EventType.AUTO_FLUSH ) ) {
+		for ( AutoFlushEventListener listener : fastSessionServices.getAutoFlushEventListeners() ) {
 			listener.onAutoFlush( event );
 		}
 		return event.isFlushRequired();
@@ -1442,7 +1426,7 @@ public final class SessionImpl
 			return true;
 		}
 		DirtyCheckEvent event = new DirtyCheckEvent( this );
-		for ( DirtyCheckEventListener listener : listeners( EventType.DIRTY_CHECK ) ) {
+		for ( DirtyCheckEventListener listener : fastSessionServices.getDirtyCheckEventListeners() ) {
 			listener.onDirtyCheck( event );
 		}
 		delayedAfterCompletion();
@@ -1465,7 +1449,7 @@ public final class SessionImpl
 			}
 
 			FlushEvent flushEvent = new FlushEvent( this );
-			for ( FlushEventListener listener : listeners( EventType.FLUSH ) ) {
+			for ( FlushEventListener listener :  fastSessionServices.getFlushEventListeners() ) {
 				listener.onFlush( flushEvent );
 			}
 
@@ -2269,7 +2253,7 @@ public final class SessionImpl
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );
-		for ( InitializeCollectionEventListener listener : listeners( EventType.INIT_COLLECTION ) ) {
+		for ( InitializeCollectionEventListener listener : fastSessionServices.getInitCollectionEventListeners() ) {
 			listener.onInitializeCollection( event );
 		}
 		delayedAfterCompletion();

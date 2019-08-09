@@ -8,6 +8,7 @@ import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 
 public class ExportCfgTask {
 	
@@ -20,6 +21,10 @@ public class ExportCfgTask {
 	
 	public void setDestinationFolder(File destinationFolder) {
 		this.properties.put(ExporterConstants.DESTINATION_FOLDER, destinationFolder);
+	}
+	
+	public void setMetadataDescriptor(MetadataDescriptor metadataDescriptor) {
+		this.properties.put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 	}
 	
 	public void addConfiguredProperty(Variable variable) {

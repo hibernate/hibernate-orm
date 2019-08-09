@@ -67,5 +67,13 @@ public class ExportCfgTaskTest {
 		assertEquals("bar", ect.properties.get("foo"));
 	}
 	
+	@Test
+	public void testSetMetadataDescriptor() {
+		ExportCfgTask ect = new ExportCfgTask(null);
+		MetadataDescriptor mdd = MetadataDescriptorFactory.createNativeDescriptor(null, null, null);
+		assertNull(ect.properties.get(ExporterConstants.METADATA_DESCRIPTOR));
+		ect.setMetadataDescriptor(mdd);
+		assertSame(mdd, ect.properties.get(ExporterConstants.METADATA_DESCRIPTOR));
+	}
 
 }

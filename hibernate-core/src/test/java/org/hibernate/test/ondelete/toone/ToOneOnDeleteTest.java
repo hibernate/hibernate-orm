@@ -8,7 +8,9 @@ import javax.persistence.OneToOne;
 import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.dialect.SybaseDialect;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -18,6 +20,11 @@ import org.junit.Test;
 public class ToOneOnDeleteTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
+	@SkipForDialect(
+			value = SybaseDialect.class,
+			jiraKey = "HHH-13559",
+			comment = "on-delete=\"cascade\" is not supported for unidirectional to-one associations using Sybase"
+	)
 	public void testManyToOne() throws Exception {
 		Session session = openSession();
 		session.getTransaction().begin();

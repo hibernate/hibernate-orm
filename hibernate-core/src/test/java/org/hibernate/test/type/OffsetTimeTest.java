@@ -204,7 +204,7 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
-		return resultSet.getTime( columnIndex );
+		return resultSet.getTimestamp( columnIndex );
 	}
 
 	@Override

@@ -19,6 +19,10 @@ public class ExportCfgTask {
 		this.parent = parent;
 	}
 	
+	public Properties getProperties() {
+		return this.properties;
+	}
+	
 	public void setDestinationFolder(File destinationFolder) {
 		this.properties.put(ExporterConstants.DESTINATION_FOLDER, destinationFolder);
 	}

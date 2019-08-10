@@ -75,5 +75,11 @@ public class ExportCfgTaskTest {
 		ect.setMetadataDescriptor(mdd);
 		assertSame(mdd, ect.properties.get(ExporterConstants.METADATA_DESCRIPTOR));
 	}
+	
+	@Test
+	public void testGetProperties() {
+		ExportCfgTask ect = new ExportCfgTask(null);
+		assertSame(ect.properties, ect.getProperties());
+	}
 
 }

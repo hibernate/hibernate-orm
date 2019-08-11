@@ -223,7 +223,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public ResultSetReturn getResultSetReturn() {
 		if ( resultSetExtractor == null ) {
-			resultSetExtractor = new ResultSetReturnImpl( this );
+			resultSetExtractor = new ResultSetReturnImpl( this, jdbcServices );
 		}
 		return resultSetExtractor;
 	}

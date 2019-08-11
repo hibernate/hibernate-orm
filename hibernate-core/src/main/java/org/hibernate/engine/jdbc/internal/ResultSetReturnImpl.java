@@ -36,16 +36,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	 *
 	 * @param jdbcCoordinator The JdbcCoordinator
 	 */
-	public ResultSetReturnImpl(JdbcCoordinator jdbcCoordinator) {
+	public ResultSetReturnImpl(JdbcCoordinator jdbcCoordinator, JdbcServices jdbcServices) {
 		this.jdbcCoordinator = jdbcCoordinator;
-
-		final JdbcServices jdbcServices = jdbcCoordinator.getJdbcSessionOwner()
-				.getJdbcSessionContext()
-				.getServiceRegistry()
-				.getService( JdbcServices.class );
-
 		this.dialect = jdbcServices.getDialect();
-
 		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 	}

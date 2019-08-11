@@ -20,15 +20,18 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
+import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -239,20 +242,23 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	private void evictCachedCollections(Type[] types, Serializable id, EventSource source)
 			throws HibernateException {
+		final ActionQueue actionQueue = source.getActionQueue();
+		final SessionFactoryImplementor factory = source.getFactory();
+		final MetamodelImplementor metamodel = factory.getMetamodel();
 		for ( Type type : types ) {
 			if ( type.isCollectionType() ) {
-				CollectionPersister collectionPersister = source.getFactory().getMetamodel().collectionPersister( ( (CollectionType) type ).getRole() );
+				CollectionPersister collectionPersister = metamodel.collectionPersister( ( (CollectionType) type ).getRole() );
 				if ( collectionPersister.hasCache() ) {
 					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(
 						id,
 						collectionPersister,
-						source.getFactory(),
+						factory,
 						source.getTenantIdentifier()
 					);
 					final SoftLock lock = cache.lockItem( source, ck, null );
 					cache.remove( source, ck );
-					source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
+					actionQueue.registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
 				}
 			}
 			else if ( type.isComponentType() ) {

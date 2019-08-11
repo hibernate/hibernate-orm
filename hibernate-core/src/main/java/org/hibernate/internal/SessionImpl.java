@@ -422,7 +422,8 @@ public final class SessionImpl
 			return super.shouldCloseJdbcCoordinatorOnClose( isTransactionCoordinatorShared );
 		}
 
-		if ( getActionQueue().hasBeforeTransactionActions() || getActionQueue().hasAfterTransactionActions() ) {
+		final ActionQueue actionQueue = getActionQueue();
+		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
 			log.warn(
 					"On close, shared Session had before/after transaction actions that have not yet been processed"
 			);

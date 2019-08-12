@@ -407,23 +407,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public Transaction getTransaction() throws HibernateException {
-		if ( !isTransactionAccessible() ) {
+		if ( ! fastSessionServices.isJtaTransactionAccessible ) {
 			throw new IllegalStateException(
 					"Transaction is not accessible when using JTA with JPA-compliant transaction access enabled"
 			);
 		}
 		return accessTransaction();
-	}
-
-	protected boolean isTransactionAccessible() {
-		// JPA requires that access not be provided to the transaction when using JTA.
-		// This is overridden when SessionFactoryOptions isJtaTransactionAccessEnabled() is true.
-		if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() &&
-				getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() &&
-				!getFactory().getSessionFactoryOptions().isJtaTransactionAccessEnabled() ) {
-			return false;
-		}
-		return true;
 	}
 
 	@Override

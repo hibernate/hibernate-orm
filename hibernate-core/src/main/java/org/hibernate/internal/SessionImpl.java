@@ -2493,7 +2493,7 @@ public final class SessionImpl
 		// We do not want an exception to be thrown if the transaction
 		// is not accessible. If the transaction is not accessible,
 		// then return null.
-		return isTransactionAccessible() ? accessTransaction() : null;
+		return fastSessionServices.isJtaTransactionAccessible ? accessTransaction() : null;
 	}
 
 	@Override

@@ -87,6 +87,7 @@ final class FastSessionServices {
 	final ClassLoaderService classLoaderService;
 	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
 	final JdbcServices jdbcServices;
+	final boolean isJtaTransactionAccessible;
 
 	//Private fields:
 	private final Dialect dialect;
@@ -120,9 +121,8 @@ final class FastSessionServices {
 		//Other highly useful constants:
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
 		this.disallowOutOfTransactionUpdateOperations = !sf.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
-		this.useStreamForLobBinding = Environment.useStreamsForBinary()
-				|| dialect.useInputStreamToInsertBlob();
-		this.requiresMultiTenantConnectionProvider =  sf.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider();
+		this.useStreamForLobBinding = Environment.useStreamsForBinary() || dialect.useInputStreamToInsertBlob();
+		this.requiresMultiTenantConnectionProvider = sf.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider();
 
 		//Some "hot" services:
 		this.connectionProvider = requiresMultiTenantConnectionProvider ? null : sr.getService( ConnectionProvider.class );
@@ -130,6 +130,8 @@ final class FastSessionServices {
 		this.classLoaderService = sr.getService( ClassLoaderService.class );
 		this.transactionCoordinatorBuilder = sr.getService( TransactionCoordinatorBuilder.class );
 		this.jdbcServices = sr.getService( JdbcServices.class );
+
+		this.isJtaTransactionAccessible = isTransactionAccessible( sf, transactionCoordinatorBuilder );
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {
@@ -215,6 +217,17 @@ final class FastSessionServices {
 
 		final SqlTypeDescriptor remapped = dialect.remapSqlTypeDescriptor( sqlTypeDescriptor );
 		return remapped == null ? sqlTypeDescriptor : remapped;
+	}
+
+	private static boolean isTransactionAccessible(SessionFactoryImpl sf, TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
+		// JPA requires that access not be provided to the transaction when using JTA.
+		// This is overridden when SessionFactoryOptions isJtaTransactionAccessEnabled() is true.
+		if ( sf.getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() &&
+				transactionCoordinatorBuilder.isJta() &&
+				!sf.getSessionFactoryOptions().isJtaTransactionAccessEnabled() ) {
+			return false;
+		}
+		return true;
 	}
 
 }

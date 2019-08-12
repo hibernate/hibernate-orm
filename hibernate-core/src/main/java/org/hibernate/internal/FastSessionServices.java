@@ -86,6 +86,7 @@ final class FastSessionServices {
 	final MultiTenantConnectionProvider multiTenantConnectionProvider;
 	final ClassLoaderService classLoaderService;
 	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
+	final JdbcServices jdbcServices;
 
 	//Private fields:
 	private final Dialect dialect;
@@ -128,6 +129,7 @@ final class FastSessionServices {
 		this.multiTenantConnectionProvider = requiresMultiTenantConnectionProvider ? sr.getService( MultiTenantConnectionProvider.class ) : null;
 		this.classLoaderService = sr.getService( ClassLoaderService.class );
 		this.transactionCoordinatorBuilder = sr.getService( TransactionCoordinatorBuilder.class );
+		this.jdbcServices = sr.getService( JdbcServices.class );
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {

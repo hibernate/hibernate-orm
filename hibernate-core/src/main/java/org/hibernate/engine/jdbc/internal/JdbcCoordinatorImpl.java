@@ -82,7 +82,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 */
 	public JdbcCoordinatorImpl(
 			Connection userSuppliedConnection,
-			JdbcSessionOwner owner) {
+			JdbcSessionOwner owner,
+			JdbcServices jdbcServices) {
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
 
 		final ResourceRegistry resourceRegistry = new ResourceRegistryStandardImpl(
@@ -95,13 +96,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			this.logicalConnection = new LogicalConnectionManagedImpl(
 					owner.getJdbcConnectionAccess(),
 					owner.getJdbcSessionContext(),
-					resourceRegistry
+					resourceRegistry,
+					jdbcServices
 			);
 		}
 		this.owner = owner;
-		this.jdbcServices = owner.getJdbcSessionContext()
-				.getServiceRegistry()
-				.getService( JdbcServices.class );
+		this.jdbcServices = jdbcServices;
 	}
 
 	private JdbcCoordinatorImpl(

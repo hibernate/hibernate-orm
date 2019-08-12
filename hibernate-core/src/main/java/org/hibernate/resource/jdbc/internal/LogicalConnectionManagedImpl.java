@@ -48,20 +48,17 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public LogicalConnectionManagedImpl(
 			JdbcConnectionAccess jdbcConnectionAccess,
 			JdbcSessionContext jdbcSessionContext,
-			ResourceRegistry resourceRegistry) {
+			ResourceRegistry resourceRegistry,
+			JdbcServices jdbcServices) {
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
 		this.observer = jdbcSessionContext.getObserver();
 		this.resourceRegistry = resourceRegistry;
 
 		this.connectionHandlingMode = determineConnectionHandlingMode(
 				jdbcSessionContext.getPhysicalConnectionHandlingMode(),
-				jdbcConnectionAccess
+				jdbcConnectionAccess );
 
-		);
-
-		this.sqlExceptionHelper = jdbcSessionContext.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getSqlExceptionHelper();
+		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 
 		if ( connectionHandlingMode.getAcquisitionMode() == ConnectionAcquisitionMode.IMMEDIATELY ) {
 			acquireConnectionIfNeeded();
@@ -94,7 +91,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			JdbcConnectionAccess jdbcConnectionAccess,
 			JdbcSessionContext jdbcSessionContext,
 			boolean closed) {
-		this( jdbcConnectionAccess, jdbcSessionContext, new ResourceRegistryStandardImpl() );
+		this( jdbcConnectionAccess, jdbcSessionContext, new ResourceRegistryStandardImpl(),
+				jdbcSessionContext.getServiceRegistry().getService( JdbcServices.class )
+		);
 		this.closed = closed;
 	}
 
@@ -221,7 +220,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public static LogicalConnectionManagedImpl deserialize(
 			ObjectInputStream ois,
 			JdbcConnectionAccess jdbcConnectionAccess,
-			JdbcSessionContext jdbcSessionContext) throws IOException, ClassNotFoundException {
+			JdbcSessionContext jdbcSessionContext) throws IOException {
 		final boolean isClosed = ois.readBoolean();
 		return new LogicalConnectionManagedImpl( jdbcConnectionAccess, jdbcSessionContext, isClosed );
 	}

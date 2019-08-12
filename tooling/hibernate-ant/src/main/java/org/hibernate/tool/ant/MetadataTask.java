@@ -17,9 +17,12 @@ import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 
 public class MetadataTask {
 	
+	enum Type { JDBC, JPA, NATIVE }
+	
 	File propertyFile = null;
 	File configFile = null;
 	List<FileSet> fileSets = new ArrayList<FileSet>();	
+	Type type = Type.NATIVE;
 	
 	public void setPropertyFile(File file) {
 		this.propertyFile = file;
@@ -27,6 +30,10 @@ public class MetadataTask {
 	
 	public void setConfigFile(File file) {
 		this.configFile = file;
+	}
+	
+	public void setType(Type type) {
+		this.type = type;
 	}
 	
 	public void addConfiguredFileSet(FileSet fileSet) {

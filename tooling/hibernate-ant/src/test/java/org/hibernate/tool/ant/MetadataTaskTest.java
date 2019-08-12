@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.selectors.FilenameSelector;
+import org.hibernate.tool.ant.MetadataTask.Type;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -38,6 +39,14 @@ public class MetadataTaskTest {
 		File f = new File(".");
 		mdt.setConfigFile(f);
 		assertSame(f, mdt.configFile);
+	}
+	
+	@Test
+	public void testSetType() {
+		MetadataTask mdt = new MetadataTask();
+		assertSame(Type.NATIVE, mdt.type);
+		mdt.setType(Type.JDBC);
+		assertSame(Type.JDBC, mdt.type);
 	}
 	
 	@Test

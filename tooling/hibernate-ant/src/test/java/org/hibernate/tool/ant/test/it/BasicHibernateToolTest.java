@@ -15,7 +15,7 @@ import org.hibernate.tool.ant.test.util.ProjectUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class HibernateToolTest {
+public class BasicHibernateToolTest {
 
 	@TempDir
 	Path tempDir;

@@ -192,23 +192,15 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  * @author Steve Ebersole
  * @author Brett Meyer
  * @author Chris Cranford
+ * @author Sanne Grinovero
  */
 public final class SessionImpl
 		extends AbstractSessionImpl
 		implements EventSource, SessionImplementor, HibernateEntityManagerImplementor {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 
-
-	private static final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
-			JPA_LOCK_SCOPE,
-			JPA_LOCK_TIMEOUT,
-			AvailableSettings.FLUSH_MODE,
-			JPA_SHARED_CACHE_RETRIEVE_MODE,
-			JPA_SHARED_CACHE_STORE_MODE,
-			QueryHints.SPEC_HINT_TIMEOUT
-	};
-
-	private Map<String, Object> properties = new HashMap<>();
+	// Defaults to null which means the properties are the default - as defined in FastSessionServices#defaultSessionProperties
+	private Map<String, Object> properties;
 
 	private transient ActionQueue actionQueue;
 	private transient StatefulPersistenceContext persistenceContext;
@@ -260,44 +252,14 @@ public final class SessionImpl
 			statistics.openSession();
 		}
 
+		setLockOptions( this.properties == null ? fastSessionServices.defaultSessionProperties : this.properties, this.lockOptions );
+		getSession().setCacheMode( fastSessionServices.initialSessionCacheMode );
+
 		// NOTE : pulse() already handles auto-join-ability correctly
 		getTransactionCoordinator().pulse();
 
-		setDefaultProperties();
-		applyProperties();
-
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );
-		}
-	}
-
-	private void setDefaultProperties() {
-		properties.putIfAbsent( AvailableSettings.FLUSH_MODE, getHibernateFlushMode().name() );
-		properties.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
-		properties.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
-		properties.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
-		properties.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
-	}
-
-
-	private void applyProperties() {
-		applyEntityManagerSpecificProperties();
-		setHibernateFlushMode( ConfigurationHelper.getFlushMode( properties.get( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO ) );
-		setLockOptions( this.properties, this.lockOptions );
-		getSession().setCacheMode(
-				CacheModeHelper.interpretCacheMode(
-						currentCacheStoreMode(),
-						currentCacheRetrieveMode()
-				)
-		);
-	}
-
-	private void applyEntityManagerSpecificProperties() {
-		final Map<String, Object> properties = getFactory().getProperties();
-		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
-			if ( properties.containsKey( key ) ) {
-				this.properties.put( key, properties.get( key ) );
-			}
 		}
 	}
 
@@ -306,21 +268,22 @@ public final class SessionImpl
 			query.setLockMode( getLockMode( lockOptions.getLockMode() ) );
 		}
 		final Object queryTimeout;
-		if ( ( queryTimeout = properties.get( QueryHints.SPEC_HINT_TIMEOUT ) ) != null ) {
+		if ( ( queryTimeout = getSessionProperty( QueryHints.SPEC_HINT_TIMEOUT )  ) != null ) {
 			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
 		}
 		final Object lockTimeout;
-		if ( ( lockTimeout = properties.get( JPA_LOCK_TIMEOUT ) ) != null ) {
+		if ( ( lockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT ) ) != null ) {
 			query.setHint( JPA_LOCK_TIMEOUT, lockTimeout );
 		}
 	}
 
-	private CacheRetrieveMode currentCacheRetrieveMode() {
-		return determineCacheRetrieveMode( properties );
-	}
-
-	private CacheStoreMode currentCacheStoreMode() {
-		return determineCacheStoreMode( properties );
+	private Object getSessionProperty(final String name) {
+		if ( properties == null ) {
+			return fastSessionServices.defaultSessionProperties.get( name );
+		}
+		else {
+			return properties.get( name );
+		}
 	}
 
 	@Override
@@ -3519,20 +3482,20 @@ public final class SessionImpl
 		}
 		if ( retrieveMode == null ) {
 			// use the EM setting
-			retrieveMode = determineCacheRetrieveMode( this.properties );
+			retrieveMode = fastSessionServices.getCacheRetrieveMode( this.properties );
 		}
 		if ( storeMode == null ) {
 			// use the EM setting
-			storeMode = determineCacheStoreMode( this.properties );
+			storeMode = fastSessionServices.getCacheStoreMode( this.properties );
 		}
 		return CacheModeHelper.interpretCacheMode( storeMode, retrieveMode );
 	}
 
-	private CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
+	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
 		return ( CacheRetrieveMode ) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
 	}
 
-	private CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
+	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
 		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 	}
 
@@ -3662,12 +3625,48 @@ public final class SessionImpl
 			return;
 		}
 
+		if ( propertyName == null ) {
+			log.warnf( "Property having key null is illegal; value won't be set." );
+			return;
+		}
+
+		//Store property for future reference:
+
+		if ( properties == null ) {
+			properties = computeCurrentSessionProperties();
+		}
 		properties.put( propertyName, value );
-		applyProperties();
+
+		//now actually update settings, if it's any of these which have a direct impact on this Session state:
+
+		if ( AvailableSettings.FLUSH_MODE.equals( propertyName ) ) {
+			setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
+		}
+		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals(  propertyName ) ) {
+			setLockOptions( properties, this.lockOptions );
+		}
+		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName ) || JPA_SHARED_CACHE_STORE_MODE.equals(  propertyName ) ) {
+			getSession().setCacheMode(
+					CacheModeHelper.interpretCacheMode(
+							determineCacheStoreMode( properties ),
+							determineCacheRetrieveMode( properties )
+					)
+			);
+		}
+	}
+
+	private Map<String, Object> computeCurrentSessionProperties() {
+		final HashMap<String, Object> map = new HashMap<>( fastSessionServices.defaultSessionProperties );
+		//The FLUSH_MODE is always set at Session creation time, so it needs special treatment to not eagerly initialize this Map:
+		map.put( AvailableSettings.FLUSH_MODE, getHibernateFlushMode().name() );
+		return map;
 	}
 
 	@Override
 	public Map<String, Object> getProperties() {
+		if ( properties == null ) {
+			properties = computeCurrentSessionProperties();
+		}
 		return Collections.unmodifiableMap( properties );
 	}
 

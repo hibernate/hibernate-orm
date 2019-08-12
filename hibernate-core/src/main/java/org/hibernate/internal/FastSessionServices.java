@@ -6,6 +6,9 @@
  */
 package org.hibernate.internal;
 
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -29,11 +32,26 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.QueryHints;
+import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
+import javax.persistence.PessimisticLockScope;
+
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 
 /**
  * Internal component.
@@ -56,6 +74,11 @@ import java.util.Objects;
  * @author Sanne Grinovero
  */
 final class FastSessionServices {
+
+	/**
+	 * Default session properties
+	 */
+	final Map<String, Object> defaultSessionProperties;
 
 	// All session events need to be iterated frequently:
 
@@ -88,9 +111,12 @@ final class FastSessionServices {
 	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
 	final JdbcServices jdbcServices;
 	final boolean isJtaTransactionAccessible;
+	final CacheMode initialSessionCacheMode;
 
 	//Private fields:
 	private final Dialect dialect;
+	private final CacheStoreMode defaultCacheStoreMode;
+	private final CacheRetrieveMode defaultCacheRetrieveMode;
 
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );
@@ -132,6 +158,11 @@ final class FastSessionServices {
 		this.jdbcServices = sr.getService( JdbcServices.class );
 
 		this.isJtaTransactionAccessible = isTransactionAccessible( sf, transactionCoordinatorBuilder );
+
+		this.defaultSessionProperties = initializeDefaultSessionProperties( sf );
+		this.defaultCacheStoreMode = determineCacheStoreMode( defaultSessionProperties );
+		this.defaultCacheRetrieveMode = determineCacheRetrieveMode( defaultSessionProperties );
+		this.initialSessionCacheMode = CacheModeHelper.interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {
@@ -230,4 +261,67 @@ final class FastSessionServices {
 		return true;
 	}
 
+	private static Map<String, Object> initializeDefaultSessionProperties(SessionFactoryImpl sf) {
+		HashMap<String,Object> p = new HashMap<>();
+
+		//Static defaults:
+		p.putIfAbsent( AvailableSettings.FLUSH_MODE, FlushMode.AUTO.name() );
+		p.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
+		p.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
+		p.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		p.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+
+		//Defaults defined by SessionFactory configuration:
+		final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
+				JPA_LOCK_SCOPE,
+				JPA_LOCK_TIMEOUT,
+				AvailableSettings.FLUSH_MODE,
+				JPA_SHARED_CACHE_RETRIEVE_MODE,
+				JPA_SHARED_CACHE_STORE_MODE,
+				QueryHints.SPEC_HINT_TIMEOUT
+		};
+		final Map<String, Object> properties = sf.getProperties();
+		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
+			if ( properties.containsKey( key ) ) {
+				p.put( key, properties.get( key ) );
+			}
+		}
+		return Collections.unmodifiableMap( p );
+	}
+
+	/**
+	 * @param properties the Session properties
+	 * @return either the CacheStoreMode as defined in the Session specific properties, or as defined in the
+	 *  properties shared across all sessions (the defaults).
+	 */
+	CacheStoreMode getCacheStoreMode(final Map<String, Object> properties) {
+		if ( properties == null ) {
+			return this.defaultCacheStoreMode;
+		}
+		else {
+			return determineCacheStoreMode( properties );
+		}
+	}
+
+	/**
+	 * @param properties the Session properties
+	 * @return either the CacheRetrieveMode as defined in the Session specific properties, or as defined in the
+	 *  properties shared across all sessions (the defaults).
+	 */
+	CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties) {
+		if ( properties == null ) {
+			return this.defaultCacheRetrieveMode;
+		}
+		else {
+			return determineCacheRetrieveMode( properties );
+		}
+	}
+
+	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
+		return ( CacheRetrieveMode ) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+	}
+
+	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
+		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+	}
 }

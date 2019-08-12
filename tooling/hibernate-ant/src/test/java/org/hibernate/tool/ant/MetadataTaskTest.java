@@ -45,7 +45,7 @@ public class MetadataTaskTest {
 	public void testSetType() {
 		MetadataTask mdt = new MetadataTask();
 		assertSame(Type.NATIVE, mdt.type);
-		mdt.setType(Type.JDBC);
+		mdt.setType("jdbc");
 		assertSame(Type.JDBC, mdt.type);
 	}
 	

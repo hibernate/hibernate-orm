@@ -63,10 +63,6 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 		this.hadSubselectFetches = hadSubselectFetches;
 	}
 
-	public RowReader getRowReader() {
-		return rowReader;
-	}
-
 	@Override
 	public ScrollableResultSetProcessor toOnDemandForm() {
 		// todo : implement

@@ -11,7 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +37,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
-import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
@@ -136,13 +134,6 @@ public abstract class AbstractLoadPlanBasedLoader {
 			// Restore the original default
 			persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
 		}
-	}
-
-	protected SqlStatementWrapper executeQueryStatement(
-			final QueryParameters queryParameters,
-			final boolean scroll,
-			final SharedSessionContractImplementor session) throws SQLException {
-		return executeQueryStatement( getStaticLoadQuery().getSqlStatement(), queryParameters, scroll, session );
 	}
 
 	protected SqlStatementWrapper executeQueryStatement(

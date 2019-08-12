@@ -167,8 +167,6 @@ import org.hibernate.query.internal.CollectionFilterImpl;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
@@ -454,10 +452,6 @@ public final class SessionImpl
 			log.debug( "Forcing Session/EntityManager closed as SessionFactory/EntityManagerFactory has been closed" );
 			setClosed();
 		}
-	}
-
-	private boolean isFlushModeNever() {
-		return FlushMode.isManualFlushMode( getHibernateFlushMode() );
 	}
 
 	private void managedFlush() {
@@ -3352,25 +3346,6 @@ public final class SessionImpl
 	public boolean isFlushBeforeCompletionEnabled() {
 		return getHibernateFlushMode() != FlushMode.MANUAL;
 	}
-
-	private static final AfterCompletionAction STANDARD_AFTER_COMPLETION_ACTION = (AfterCompletionAction) (successful, session) -> {
-		// nothing to do by default.
-	};
-
-
-	public static class ManagedFlushCheckerStandardImpl implements ManagedFlushChecker {
-		@Override
-		public boolean shouldDoManagedFlush(SessionImplementor session) {
-			if ( session.isClosed() ) {
-				return false;
-			}
-			return session.getHibernateFlushMode() != FlushMode.MANUAL;
-		}
-	}
-
-	private static final ManagedFlushCheckerStandardImpl STANDARD_MANAGED_FLUSH_CHECKER = new ManagedFlushCheckerStandardImpl() {
-	};
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// HibernateEntityManager impl

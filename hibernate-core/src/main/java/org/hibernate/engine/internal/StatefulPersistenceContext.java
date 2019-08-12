@@ -101,7 +101,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private Map<EntityUniqueKey, Object> entitiesByUniqueKey;
 
 	private EntityEntryContext entityEntryContext;
-//	private Map<Object,EntityEntry> entityEntries;
 
 	// Entity proxies, by EntityKey
 	private ConcurrentMap<EntityKey, Object> proxiesByKey;
@@ -295,11 +294,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void afterTransactionCompletion() {
 		cleanUpInsertedKeysAfterTransaction();
+		// Downgrade locks
 		entityEntryContext.downgradeLocks();
-//		// Downgrade locks
-//		for ( EntityEntry o : entityEntries.values() ) {
-//			o.setLockMode( LockMode.NONE );
-//		}
 	}
 
 	/**

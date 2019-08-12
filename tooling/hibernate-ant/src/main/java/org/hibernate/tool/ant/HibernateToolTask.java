@@ -1,5 +1,7 @@
 package org.hibernate.tool.ant;
 
+import org.hibernate.tool.api.export.ExporterConstants;
+
 public class HibernateToolTask {
 	
 	MetadataTask metadataTask;
@@ -20,7 +22,10 @@ public class HibernateToolTask {
 	}
 	
 	public void execute() {
-		// do nothing for now
+		exportCfgTask.getProperties().put(
+				ExporterConstants.METADATA_DESCRIPTOR, 
+				metadataTask.createMetadataDescriptor());
+		exportCfgTask.execute();
 	}
 	
 }

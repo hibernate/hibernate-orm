@@ -37,6 +37,9 @@ public class ExportCfgTask {
 	
 	public void execute() {
 		Exporter exporter = ExporterFactory.createExporter(ExporterType.CFG);
+		MetadataDescriptor metadataDescriptor = 
+				(MetadataDescriptor)this.properties.get(ExporterConstants.METADATA_DESCRIPTOR);
+		exporter.getProperties().putAll(metadataDescriptor.getProperties());
 		exporter.getProperties().putAll(this.properties);
 		exporter.start();
 	}

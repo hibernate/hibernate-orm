@@ -28,6 +28,8 @@ public class NativeMetadataCfgTest {
 		assertFalse(generatedFile.exists());
 		project.executeTarget("testNativeMetadataExportCfg");
 		assertTrue(generatedFile.exists());
+		String cfgXmlString = new String(Files.readAllBytes(generatedFile.toPath()));
+		assertTrue(cfgXmlString.contains("hibernate.dialect"));
 	}
 	
 	private String getDestinationFolder() {

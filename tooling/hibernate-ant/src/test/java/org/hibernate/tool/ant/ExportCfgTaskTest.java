@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
@@ -30,7 +31,7 @@ public class ExportCfgTaskTest {
 	}
 	
 	@Test
-	public void testExecute() {
+	public void testExecute() throws Exception {
 		ExportCfgTask ect = new ExportCfgTask(null);
 		Properties properties = new Properties();
 		properties.put("hibernate.dialect", "H2");
@@ -45,6 +46,8 @@ public class ExportCfgTaskTest {
 		assertFalse(cfgFile.exists());
 		ect.execute();
 		assertTrue(cfgFile.exists());
+		String cfgXmlString = new String(Files.readAllBytes(cfgFile.toPath()));
+		assertTrue(cfgXmlString.contains("hibernate.dialect"));
 	}
 	
 	@Test

@@ -103,7 +103,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 				sessionFactory()
 		);
 		String sql = String.format(
-				"select TABLE_NAME , %s from all_tables  where TABLE_NAME = 'AUDIT_ACTIONS' ",
+				"select TABLE_NAME , %s from ALL_TABLES  where TABLE_NAME = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 		Session s = openSession();

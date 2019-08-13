@@ -218,8 +218,6 @@ public final class SessionImpl
 
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
-	private transient boolean discardOnClose;
-
 	private transient TransactionObserver transactionObserver;
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
@@ -231,8 +229,6 @@ public final class SessionImpl
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
 		this.queryParametersValidationEnabled = options.isQueryParametersValidationEnabled();
-
-		this.discardOnClose = factory.getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 
 		if ( options instanceof SharedSessionCreationOptions ) {
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
@@ -345,7 +341,7 @@ public final class SessionImpl
 			// Original hibernate-entitymanager EM#close behavior
 			checkSessionFactoryOpen();
 			checkOpenOrWaitingForAutoClose();
-			if ( discardOnClose || !isTransactionInProgress( false ) ) {
+			if ( fastSessionServices.discardOnClose || !isTransactionInProgress( false ) ) {
 				super.close();
 			}
 			else {
@@ -3889,7 +3885,5 @@ public final class SessionImpl
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );
 		}
-
-		this.discardOnClose = getFactory().getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 	}
 }

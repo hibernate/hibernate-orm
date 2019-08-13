@@ -112,6 +112,7 @@ final class FastSessionServices {
 	final JdbcServices jdbcServices;
 	final boolean isJtaTransactionAccessible;
 	final CacheMode initialSessionCacheMode;
+	final boolean discardOnClose;
 
 	//Private fields:
 	private final Dialect dialect;
@@ -163,6 +164,7 @@ final class FastSessionServices {
 		this.defaultCacheStoreMode = determineCacheStoreMode( defaultSessionProperties );
 		this.defaultCacheRetrieveMode = determineCacheRetrieveMode( defaultSessionProperties );
 		this.initialSessionCacheMode = CacheModeHelper.interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
+		this.discardOnClose = sf.getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {

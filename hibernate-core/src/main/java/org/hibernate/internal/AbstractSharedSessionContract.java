@@ -34,16 +34,13 @@ import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -173,7 +170,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.jdbcTimeZone = options.getJdbcTimeZone();
 
 		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
-		this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector );
+		this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector, fastSessionServices );
 
 		this.entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
@@ -1201,7 +1198,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		factory = SessionFactoryImpl.deserialize( ois );
 		fastSessionServices = factory.getFastSessionServices();
-		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject() );
+		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject(), fastSessionServices );
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );

@@ -7,8 +7,6 @@
 package org.hibernate.internal;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -18,13 +16,13 @@ import org.hibernate.resource.jdbc.spi.JdbcObserver;
  * @author Steve Ebersole
  */
 public class JdbcObserverImpl implements JdbcObserver {
-	private final SharedSessionContractImplementor session;
-	private final transient List<ConnectionObserver> observers;
 
-	public JdbcObserverImpl(SharedSessionContractImplementor session) {
+	private final SharedSessionContractImplementor session;
+	private final Iterable<ConnectionObserver> observers;
+
+	public JdbcObserverImpl(SharedSessionContractImplementor session, FastSessionServices fastSessionServices) {
 		this.session = session;
-		this.observers = new ArrayList<>();
-		this.observers.add( new ConnectionObserverStatsBridge( session.getFactory() ) );
+		this.observers = fastSessionServices.getDefaultJdbcObservers();
 	}
 
 	@Override

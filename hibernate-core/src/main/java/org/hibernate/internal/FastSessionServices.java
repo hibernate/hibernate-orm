@@ -14,6 +14,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -41,6 +42,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -118,6 +120,7 @@ final class FastSessionServices {
 	private final Dialect dialect;
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
+	private List<ConnectionObserver> defaultJdbcObservers;
 
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );
@@ -165,6 +168,7 @@ final class FastSessionServices {
 		this.defaultCacheRetrieveMode = determineCacheRetrieveMode( defaultSessionProperties );
 		this.initialSessionCacheMode = CacheModeHelper.interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
 		this.discardOnClose = sf.getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
+		this.defaultJdbcObservers = Collections.singletonList( new ConnectionObserverStatsBridge( sf ) );
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {
@@ -326,4 +330,9 @@ final class FastSessionServices {
 	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
 		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 	}
+
+	public Iterable<ConnectionObserver> getDefaultJdbcObservers() {
+		return defaultJdbcObservers;
+	}
+
 }

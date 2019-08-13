@@ -24,6 +24,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -73,7 +74,17 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 
 		try {
 			final Query query = statelessSession.createQuery( "select p from Producer p join fetch p.products" );
-			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
+			if ( getDialect() instanceof DB2Dialect ) {
+				/*
+					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
+					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
+					set type of TYPE_FORWARD_ONLY and db2 does not support it.
+			 	*/
+				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
+			}
+			else {
+				scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
+			}
 			while ( scrollableResults.next() ) {
 				Producer producer = (Producer) scrollableResults.get( 0 );
 				assertTrue( Hibernate.isInitialized( producer ) );

@@ -24,6 +24,7 @@ import javax.persistence.Id;
 
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SybaseDialect;
 
 import org.junit.runners.Parameterized;
 
@@ -64,6 +65,11 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 								.add( 1892, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
 								.add( 1899, 12, 31, 23, 59, 59, 999_999_999, ZONE_PARIS )
 								.add( 1899, 12, 31, 23, 59, 59, 999_999_999, ZONE_AMSTERDAM )
+				)
+				.skippedForDialects(
+						// MySQL/Mariadb/Sybase cannot store dates in 1600 in a timestamp.
+						Arrays.asList( MySQLDialect.class, MariaDBDialect.class, SybaseDialect.class ),
+						b -> b
 								.add( 1600, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
 				)
 				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)

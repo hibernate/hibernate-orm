@@ -11,7 +11,7 @@ import java.util.Collection;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;

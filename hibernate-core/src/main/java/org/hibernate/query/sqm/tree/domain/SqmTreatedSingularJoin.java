@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.query.sqm.spi.SqmCreationProcessingState;
+import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 

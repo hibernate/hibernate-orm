@@ -13,7 +13,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;

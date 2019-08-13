@@ -34,10 +34,12 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -129,6 +131,8 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -139,6 +143,21 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
@@ -169,6 +188,16 @@ public abstract class AbstractEntityPersister
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
 	public static final String ENTITY_CLASS = "class";
+
+
+
+	private final String sqlAliasStem;
+
+
+
+
+
+
 
 	private final NavigableRole navigableRole;
 
@@ -558,8 +587,8 @@ public abstract class AbstractEntityPersister
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final PersisterCreationContext creationContext) throws HibernateException {
 
-		// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		this.factory = creationContext.getSessionFactory();
+		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( persistentClass.getEntityName() );
 
 		this.navigableRole = new NavigableRole( persistentClass.getEntityName() );
 
@@ -1073,6 +1102,99 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public String getSqlAliasStem() {
+		return sqlAliasStem;
+	}
+
+	@Override
+	public TableGroup createRootTableGroup(
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			org.hibernate.sql.ast.JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlAstCreationContext creationContext) {
+		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+
+		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase );
+
+		final List<TableReferenceJoin> joins = new ArrayList<>(  );
+		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableReferenceJoinType, joins::add );
+
+		return new StandardTableGroup(
+				navigablePath,
+				this,
+				lockMode,
+				primaryTableReference,
+				joins
+		);
+	}
+
+	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
+		return new TableReference( getRootTableName(), sqlAliasBase.generateNewAlias(), false );
+	}
+
+	private void resolveTableReferenceJoins(
+			TableReference rootTableReference,
+			SqlAliasBase sqlAliasBase,
+			org.hibernate.sql.ast.JoinType joinType,
+			Consumer<TableReferenceJoin> collector) {
+
+		for ( int i = 0; i < getSubclassTableSpan(); i++ ) {
+			collector.accept(
+					createTableReferenceJoin( i, rootTableReference, joinType, sqlAliasBase )
+			);
+		}
+	}
+
+	protected TableReferenceJoin createTableReferenceJoin(
+			int subClassTablePosition,
+			TableReference rootTableReference,
+			org.hibernate.sql.ast.JoinType joinType,
+			SqlAliasBase sqlAliasBase) {
+		final boolean nullable = isNullableSubclassTable( subClassTablePosition );
+
+		final TableReference joinedTableReference = new TableReference(
+				getSubclassTableName( subClassTablePosition ),
+				sqlAliasBase.generateNewAlias(),
+				nullable
+		);
+
+		return new TableReferenceJoin(
+				nullable ? org.hibernate.sql.ast.JoinType.LEFT : joinType,
+				joinedTableReference,
+				generateJoinPredicate( rootTableReference, joinedTableReference, subClassTablePosition )
+		);
+	}
+
+	private Predicate generateJoinPredicate(
+			TableReference rootTableReference,
+			TableReference joinedTableReference,
+			int subClassTablePosition) {
+		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
+
+		final String[] rootPkColumnNames = getKeyColumnNames();
+		final String[] fkColumnNames = getSubclassTableKeyColumns( subClassTablePosition );
+
+		assert rootPkColumnNames.length == fkColumnNames.length;
+
+		for ( int i = 0; i < rootPkColumnNames.length; i++ ) {
+			final String rootPkColumnName = rootPkColumnNames[i];
+			final String fkColumnName = fkColumnNames[i];
+
+			conjunction.add(
+					new ComparisonPredicate(
+							new ColumnReference( Identifier.toIdentifier( rootPkColumnName ), rootTableReference, null, getFactory() ),
+							ComparisonOperator.EQUAL,
+							new ColumnReference( Identifier.toIdentifier( fkColumnName ), joinedTableReference, null, getFactory() )
+					)
+			);
+		}
+
+		return conjunction;
+	}
+
+	@Override
 	public ValueMapping findValueMapping(String name) {
 		for ( AttributeDefinition attributeDefinition : attributeDefinitions ) {
 			if ( attributeDefinition.getName().equals( name ) ) {
@@ -1084,7 +1206,12 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitValueMappings(Consumer consumer) {
+	public void visitValueMappings(Consumer<ValueMapping> consumer) {
+		consumer.accept( entityIdentifierDefinition );
+
+		for ( AttributeDefinition attributeDefinition : attributeDefinitions ) {
+			consumer.accept( attributeDefinition );
+		}
 
 	}
 

@@ -15,7 +15,7 @@ import org.hibernate.SynchronizeableQuery;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.procedure.ProcedureParameter;
-import org.hibernate.query.spi.NameableQuery;
+import org.hibernate.query.named.NameableQuery;
 
 /**
  * Defines support for executing database stored procedures and functions.

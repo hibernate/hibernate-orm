@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.function;
 
 import org.hibernate.query.criteria.JpaFunction;
-import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 

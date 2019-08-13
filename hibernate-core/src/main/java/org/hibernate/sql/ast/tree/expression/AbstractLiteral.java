@@ -10,19 +10,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * We classify literals different based on their source so that we can handle then differently
@@ -33,12 +29,12 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public abstract class AbstractLiteral
-		implements JdbcParameterBinder, Expression, SqlExpressable, DomainResultProducer {
+		implements JdbcParameterBinder, Expression, ValueMappingExpressable, DomainResultProducer {
 	private final Object value;
-	private final SqlExpressableType type;
+	private final ValueMappingExpressable type;
 	private final Clause clause;
 
-	public AbstractLiteral(Object value, SqlExpressableType type, Clause clause) {
+	public AbstractLiteral(Object value, ValueMappingExpressable type, Clause clause) {
 		this.value = value;
 		this.type = type;
 		this.clause = clause;
@@ -49,8 +45,8 @@ public abstract class AbstractLiteral
 	}
 
 	@Override
-	public SqlExpressableType getExpressableType() {
-		return type;
+	public ValueMapping getExpressableValueMapping() {
+		return type.getExpressableValueMapping();
 	}
 
 	public boolean isInSelect() {
@@ -58,27 +54,7 @@ public abstract class AbstractLiteral
 	}
 
 	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		// todo (6.0) : for literals and parameters consider simply pushing these values directly into the "current JDBC values" array
-		//		rather than reading them (the same value over and over) from the ResultSet.
-		//
-		//		see `org.hibernate.sql.ast.tree.expression.AbstractParameter.createSqlSelection`
-
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				getType()
-		);
-	}
-
-	@Override
 	public DomainResult createDomainResult(
-			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
@@ -96,7 +72,7 @@ public abstract class AbstractLiteral
 	}
 
 	@Override
-	public SqlExpressableType getType() {
+	public ValueMappingExpressable getExpressionType() {
 		return type;
 	}
 }

@@ -27,7 +27,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;

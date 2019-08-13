@@ -11,27 +11,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class CaseSimpleExpression implements Expression, /*Selectable,*/ SqlExpressable, DomainResultProducer {
-	private final SqlExpressableType type;
+public class CaseSimpleExpression implements Expression, ValueMappingExpressable, DomainResultProducer {
+	private final ValueMappingExpressable type;
 	private final Expression fixture;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
 
-	public CaseSimpleExpression(SqlExpressableType type, Expression fixture) {
+	public CaseSimpleExpression(ValueMappingExpressable type, Expression fixture) {
 		this.type = type;
 		this.fixture = fixture;
 	}
@@ -41,27 +38,13 @@ public class CaseSimpleExpression implements Expression, /*Selectable,*/ SqlExpr
 	}
 
 	@Override
-	public SqlExpressableType getExpressableType() {
+	public ValueMappingExpressable getExpressionType() {
 		return type;
 	}
 
 	@Override
-	public SqlExpressableType getType() {
-		return type;
-	}
-
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				getExpressableType()
-		);
+	public ValueMapping getExpressableValueMapping() {
+		return type.getExpressableValueMapping();
 	}
 
 	@Override
@@ -71,7 +54,6 @@ public class CaseSimpleExpression implements Expression, /*Selectable,*/ SqlExpr
 
 	@Override
 	public DomainResult createDomainResult(
-			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );

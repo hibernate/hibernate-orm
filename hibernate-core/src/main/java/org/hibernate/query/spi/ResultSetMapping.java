@@ -7,6 +7,7 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**

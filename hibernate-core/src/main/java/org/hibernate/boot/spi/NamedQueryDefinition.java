@@ -7,7 +7,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.NamedQueryMemento;
+import org.hibernate.query.named.NamedQueryMemento;
 
 /**
  * Common attributes shared across the mapping of named HQL, native

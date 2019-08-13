@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
-import org.hibernate.query.sqm.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 

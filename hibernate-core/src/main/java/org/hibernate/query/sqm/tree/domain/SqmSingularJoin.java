@@ -15,16 +15,15 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.spi.SqmCreationProcessingState;
+import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -100,7 +99,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 					.getMetamodel()
 					.getEntityDescriptor( entityName );
 			entityDescriptor.visitValueMappings(
-					valueMapping -> valueMapping.getWriteable().visitJdbcTypes(
+					valueMapping -> valueMapping.getBindable().visitJdbcTypes(
 							action,
 							Clause.IRRELEVANT,
 							typeConfiguration

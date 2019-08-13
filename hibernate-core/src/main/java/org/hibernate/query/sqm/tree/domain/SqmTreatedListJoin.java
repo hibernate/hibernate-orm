@@ -8,8 +8,8 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
-import org.hibernate.query.sqm.spi.SqmCreationProcessingState;
-import org.hibernate.query.sqm.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 

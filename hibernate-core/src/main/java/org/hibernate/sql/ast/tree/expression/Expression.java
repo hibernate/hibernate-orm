@@ -6,19 +6,31 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.spi.SqlSelectionProducer;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Models an expression at the SQL-level.
+ * Models an expression at the SQL AST level.
  *
  * @author Steve Ebersole
  */
 public interface Expression extends SqlAstNode, SqlSelectionProducer {
-	//
 	/**
-	 * Access the type for this expression.
+	 * The type for this expression
 	 */
-	SqlExpressableType getType();
+	ValueMappingExpressable getExpressionType();
+
+	@Override
+	default SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 }

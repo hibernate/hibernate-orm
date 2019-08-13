@@ -15,6 +15,8 @@ import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
  * @author Steve Ebersole
  */
 public interface Fetchable extends ValueMapping {
+	String getFetchableName();
+
 	FetchStrategy getMappedFetchStrategy();
 
 	// todo (6.0) : all we need here is (1) FetchTiming and (2) whether the values are available in the current JdbcValuesSource

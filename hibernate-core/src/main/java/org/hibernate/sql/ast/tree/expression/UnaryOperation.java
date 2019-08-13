@@ -8,28 +8,25 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class UnaryOperation implements Expression, SqlExpressable, DomainResultProducer {
+public class UnaryOperation implements Expression, ValueMappingExpressable, DomainResultProducer {
 
 	private final UnaryArithmeticOperator operator;
 
 	private final Expression operand;
-	private final SqlExpressableType type;
+	private final ValueMappingExpressable type;
 
-	public UnaryOperation(UnaryArithmeticOperator operator, Expression operand, SqlExpressableType type) {
+	public UnaryOperation(UnaryArithmeticOperator operator, Expression operand, ValueMappingExpressable type) {
 		this.operator = operator;
 		this.operand = operand;
 		this.type = type;
@@ -44,22 +41,14 @@ public class UnaryOperation implements Expression, SqlExpressable, DomainResultP
 	}
 
 	@Override
-	public SqlExpressableType getExpressableType() {
+	public ValueMappingExpressable getExpressionType() {
 		return type;
 	}
 
 	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				getExpressableType()
-		);
+	public ValueMapping getExpressableValueMapping() {
+		// calling type#getExpressableValueMapping could be recursive
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -69,7 +58,6 @@ public class UnaryOperation implements Expression, SqlExpressable, DomainResultP
 
 	@Override
 	public DomainResult createDomainResult(
-			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
@@ -80,8 +68,4 @@ public class UnaryOperation implements Expression, SqlExpressable, DomainResultP
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
-	@Override
-	public SqlExpressableType getType() {
-		return type;
-	}
 }

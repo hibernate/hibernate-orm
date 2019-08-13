@@ -11,7 +11,7 @@ import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.hql.SemanticQueryProducer;
 import org.hibernate.query.sqm.internal.SqmTreePrinter;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
-import org.hibernate.query.sqm.spi.SqmCreationOptions;
+import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**

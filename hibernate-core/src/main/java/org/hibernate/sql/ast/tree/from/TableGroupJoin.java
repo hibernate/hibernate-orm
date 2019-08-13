@@ -58,9 +58,8 @@ public class TableGroupJoin implements SqlAstNode, DomainResultProducer {
 
 	@Override
 	public DomainResult createDomainResult(
-			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return getJoinedGroup().createDomainResult( valuesArrayPosition, resultVariable, creationState );
+		return getJoinedGroup().createDomainResult( resultVariable, creationState );
 	}
 }

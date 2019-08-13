@@ -7,7 +7,6 @@
 package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,15 +20,10 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.NamedProcedureCallDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.QueryHintDefinition;
-import org.hibernate.query.spi.NamedQueryMemento;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
-import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.ParameterStrategy;
 
 import static org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMemento;

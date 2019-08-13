@@ -7,11 +7,8 @@
 package org.hibernate.metamodel.model.domain;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.spi.Writeable;
 import org.hibernate.query.Query;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Specialization of DomainType for types that can be used as {@link Query} parameter bind values.
@@ -21,8 +18,4 @@ import org.hibernate.type.spi.TypeConfiguration;
 @Incubating
 public interface AllowableParameterType<J> extends SimpleDomainType<J> {
 	JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor();
-
-	default Writeable resolveWriteable(TypeConfiguration typeConfiguration) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 }

@@ -6,8 +6,11 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+
 /**
  * @author Steve Ebersole
  */
 public interface AssemblerCreationState {
+	SqlAstCreationContext getSqlAstCreationContext();
 }

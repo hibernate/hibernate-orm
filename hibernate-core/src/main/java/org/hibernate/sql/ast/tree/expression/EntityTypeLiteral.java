@@ -6,14 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -32,18 +30,23 @@ public class EntityTypeLiteral implements Expression {
 	}
 
 	@Override
-	public SqlExpressableType getType() {
-		return (SqlExpressableType) discriminatorType;
+	public ValueMappingExpressable getExpressionType() {
+		return () -> new ValueMapping() {
+			@Override
+			public Type getValueType() {
+				return discriminatorType;
+			}
+		};
 	}
 
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		throw new UnsupportedOperationException( "Entity-type literal not supported in select-clause" );
-	}
+//	@Override
+//	public SqlSelection createSqlSelection(
+//			int jdbcPosition,
+//			int valuesArrayPosition,
+//			JavaTypeDescriptor javaTypeDescriptor,
+//			TypeConfiguration typeConfiguration) {
+//		throw new UnsupportedOperationException( "Entity-type literal not supported in select-clause" );
+//	}
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {

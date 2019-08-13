@@ -34,6 +34,8 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
+import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
@@ -70,7 +72,7 @@ import org.hibernate.type.VersionType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends EntityDefinition, Loadable {
+public interface EntityPersister extends EntityDefinition, Loadable, RootTableGroupProducer {
 
 	/**
 	 * The property name of the "special" identifier property in HQL
@@ -102,6 +104,11 @@ public interface EntityPersister extends EntityDefinition, Loadable {
 	SessionFactoryImplementor getFactory();
 
 	NavigableRole getNavigableRole();
+
+	@Override
+	default String getSqlAliasStem() {
+		return SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( getEntityName() );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // stuff that is persister-centric and/or EntityInfo-centric ~~~~~~~~~~~~~~

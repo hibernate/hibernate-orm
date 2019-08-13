@@ -12,8 +12,8 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.NamedNativeQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.AbstractNamedQueryMemento;
-import org.hibernate.query.spi.NamedQueryMemento;
+import org.hibernate.query.named.AbstractNamedQueryMemento;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 
 /**

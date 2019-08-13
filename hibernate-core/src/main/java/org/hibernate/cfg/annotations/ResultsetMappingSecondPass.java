@@ -7,33 +7,16 @@
 package org.hibernate.cfg.annotations;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import javax.persistence.ColumnResult;
-import javax.persistence.ConstructorResult;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
 import javax.persistence.SqlResultSetMapping;
 
-import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
-import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.QuerySecondPass;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;

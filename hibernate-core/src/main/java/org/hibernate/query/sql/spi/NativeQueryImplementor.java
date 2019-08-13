@@ -32,7 +32,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.spi.NameableQuery;
+import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.spi.QueryImplementor;
 
 /**

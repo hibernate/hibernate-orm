@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**

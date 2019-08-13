@@ -13,9 +13,9 @@ import org.hibernate.LockOptions;
 import org.hibernate.boot.spi.NamedHqlQueryDefinition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.query.spi.AbstractNamedQueryMemento;
-import org.hibernate.query.spi.NameableQuery;
-import org.hibernate.query.spi.NamedQueryMemento;
+import org.hibernate.query.named.AbstractNamedQueryMemento;
+import org.hibernate.query.named.NameableQuery;
+import org.hibernate.query.named.NamedQueryMemento;
 
 /**
  * NamedQueryMemento for HQL queries

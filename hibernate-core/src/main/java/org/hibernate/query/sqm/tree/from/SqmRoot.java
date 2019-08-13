@@ -9,12 +9,12 @@ package org.hibernate.query.sqm.tree.from;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -104,7 +104,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 				.getMetamodel()
 				.getEntityDescriptor( entityName );
 		entityDescriptor.visitValueMappings(
-				valueMapping -> valueMapping.getWriteable().visitJdbcTypes(
+				valueMapping -> valueMapping.getBindable().visitJdbcTypes(
 						action,
 						Clause.IRRELEVANT,
 						typeConfiguration
@@ -114,7 +114,6 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	@Override
 	public DomainResult<E> createDomainResult(
-			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final String entityName = getReferencedPathSource().getHibernateEntityName();
@@ -124,7 +123,6 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 				.getEntityDescriptor( entityName );
 		return entityDescriptor.createDomainResult(
 				getNavigablePath(),
-				valuesArrayPosition,
 				resultVariable,
 				creationState
 		);

@@ -9,8 +9,8 @@ package org.hibernate.sql.results.spi;
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.query.sqm.sql.SqlAliasBaseManager;
+import org.hibernate.query.sqm.sql.SqlAstCreationState;
 
 /**
  * @author Steve Ebersole
@@ -19,7 +19,7 @@ public interface DomainResultCreationState {
 	SqlAstCreationState getSqlAstCreationState();
 
 	default SqlAliasBaseManager getSqlAliasBaseManager() {
-		return getSqlAstCreationState().getSqlAliasBaseManager();
+		return (SqlAliasBaseManager) getSqlAstCreationState().getSqlAliasBaseGenerator();
 	}
 
 	/**

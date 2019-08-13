@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.spi.SqmCreationOptions;
+import org.hibernate.query.hql.spi.SqmCreationOptions;
 
 /**
  * @author Steve Ebersole

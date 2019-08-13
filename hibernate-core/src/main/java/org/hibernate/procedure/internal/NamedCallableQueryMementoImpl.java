@@ -20,8 +20,8 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.spi.AbstractNamedQueryMemento;
-import org.hibernate.query.spi.NamedQueryMemento;
+import org.hibernate.query.named.AbstractNamedQueryMemento;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 
 /**

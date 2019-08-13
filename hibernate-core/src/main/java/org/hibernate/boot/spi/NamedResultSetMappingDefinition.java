@@ -7,7 +7,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.named.NamedResultSetMappingMemento;
 
 /**
  * @author Steve Ebersole

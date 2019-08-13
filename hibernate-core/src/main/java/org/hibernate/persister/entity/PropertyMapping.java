@@ -8,9 +8,6 @@ package org.hibernate.persister.entity;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
-import org.hibernate.annotations.Remove;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.persister.SqlExpressableType;
 import org.hibernate.type.Type;
 
 /**

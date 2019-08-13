@@ -6,8 +6,16 @@
  */
 package org.hibernate.loader.spi;
 
+import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.model.mapping.spi.ModelPart;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * Contract for things that can be loaded by a Loader.
@@ -18,8 +26,19 @@ import org.hibernate.metamodel.model.mapping.spi.ModelPart;
  *
  * @author Steve Ebersole
  */
-public interface Loadable extends ModelPart {
+public interface Loadable extends ModelPart, RootTableGroupProducer {
 	boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers);
 	boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers);
 	boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers);
+
+	@Override
+	default TableGroup createRootTableGroup(
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlAstCreationContext creationContext) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 }

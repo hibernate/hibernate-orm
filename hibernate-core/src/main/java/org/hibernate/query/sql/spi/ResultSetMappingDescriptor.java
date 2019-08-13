@@ -7,7 +7,7 @@
 package org.hibernate.query.sql.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryResultBuilder;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 

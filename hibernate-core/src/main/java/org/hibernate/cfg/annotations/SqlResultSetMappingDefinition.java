@@ -12,7 +12,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.named.NamedResultSetMappingMemento;
 
 /**
  * @author Steve Ebersole

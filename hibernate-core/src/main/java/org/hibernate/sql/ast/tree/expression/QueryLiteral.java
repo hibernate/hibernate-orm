@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.persister.SqlExpressableType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 
 /**
@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.spi.SqlAstWalker;
  * @author Steve Ebersole
  */
 public class QueryLiteral extends AbstractLiteral {
-	public QueryLiteral(Object value, SqlExpressableType expressableType, Clause clause) {
+	public QueryLiteral(Object value, ValueMappingExpressable expressableType, Clause clause) {
 		super( value, expressableType, clause );
 	}
 

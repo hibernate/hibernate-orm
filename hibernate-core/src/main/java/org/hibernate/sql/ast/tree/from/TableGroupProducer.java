@@ -6,13 +6,16 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import org.hibernate.metamodel.model.mapping.spi.ValueMappingContainer;
+import org.hibernate.query.sqm.sql.SqlAliasBaseManager;
+
 /**
  * Marker interface for anything which produces a TableGroup
  *
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public interface TableGroupProducer {
+public interface TableGroupProducer extends ValueMappingContainer {
 	/**
 	 * Get the "stem" used as the base for generating SQL table aliases for table
 	 * references that are part of the TableGroup being generated
@@ -20,7 +23,7 @@ public interface TableGroupProducer {
 	 * Note that this is a metadata-ive value.  It is only ever used internal to
 	 * the producer producing its TableGroup.
 	 *
-	 * @see org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager#createSqlAliasBase
+	 * @see SqlAliasBaseManager#createSqlAliasBase
 	 */
 	String getSqlAliasStem();
 }

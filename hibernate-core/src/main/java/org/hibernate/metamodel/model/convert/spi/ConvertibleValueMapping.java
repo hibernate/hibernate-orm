@@ -6,14 +6,14 @@
  */
 package org.hibernate.metamodel.model.convert.spi;
 
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 
 /**
  * Describes a part of the domain model to which a value converter can be applied
  *
  * @author Steve Ebersole
  */
-public interface ConvertibleValueMapping<O> extends SqmExpressable<O> {
+public interface ConvertibleValueMapping<O> extends ValueMapping {
 	/**
 	 * Get the value converter associated with this value mapping.  May
 	 * return {@code null}

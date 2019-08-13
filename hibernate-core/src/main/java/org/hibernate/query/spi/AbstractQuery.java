@@ -63,8 +63,8 @@ import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.internal.ScrollableResultsIterator;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.LockOptions.WAIT_FOREVER;

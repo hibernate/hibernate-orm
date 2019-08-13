@@ -6,11 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.persister.SqlExpressableType;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 
 /**
  * Represents a selection that is "re-used" in certain parts of the query
@@ -45,16 +43,7 @@ public class SqlSelectionExpression implements Expression {
 	}
 
 	@Override
-	public SqlExpressableType getType() {
-		return theExpression.getType();
-	}
-
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return theSelection;
+	public ValueMappingExpressable getExpressionType() {
+		return theExpression.getExpressionType();
 	}
 }

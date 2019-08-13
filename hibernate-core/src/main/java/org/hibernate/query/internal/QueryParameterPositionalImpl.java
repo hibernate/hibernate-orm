@@ -11,7 +11,7 @@ import java.util.Objects;
 
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.AbstractQueryParameter;
-import org.hibernate.query.spi.NamedQueryMemento;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 /**

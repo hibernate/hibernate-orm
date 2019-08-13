@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**

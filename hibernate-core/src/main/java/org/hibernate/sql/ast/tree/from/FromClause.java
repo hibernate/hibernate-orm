@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
@@ -14,7 +17,17 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Steve Ebersole
  */
 public class FromClause implements SqlAstNode {
+	private final List<TableGroup> roots = new ArrayList<>();
+
 	public FromClause() {
+	}
+
+	public List<TableGroup> getRoots() {
+		return roots;
+	}
+
+	public void addRoot(TableGroup tableGroup) {
+		roots.add( tableGroup );
 	}
 
 	@Override

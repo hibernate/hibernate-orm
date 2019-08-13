@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
-import org.hibernate.query.sqm.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;

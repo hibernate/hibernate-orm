@@ -184,6 +184,10 @@ public class QuerySqmImpl<R>
 		return hqlString;
 	}
 
+	public DomainParameterXref getDomainParameterXref() {
+		return domainParameterXref;
+	}
+
 	@Override
 	public Query<R> applyGraph(RootGraph graph, GraphSemantic semantic) {
 		queryOptions.applyGraph( (RootGraphImplementor<?>) graph, semantic );
@@ -197,6 +201,7 @@ public class QuerySqmImpl<R>
 		applyGraph( entityGraph, graphSemantic );
 	}
 
+	@Override
 	public SqmStatement getSqmStatement() {
 		return sqmStatement;
 	}

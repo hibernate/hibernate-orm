@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.mapping.spi;
 import java.util.Locale;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.type.Type;
 
 /**
@@ -21,7 +22,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface ValueMapping extends ModelPart {
+public interface ValueMapping extends ValueMappingExpressable {
 
 	/**
 	 * Get the Type associated with this mapping
@@ -30,14 +31,27 @@ public interface ValueMapping extends ModelPart {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
+	default Bindable getBindable() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	default ValueMapping getExpressableValueMapping() {
+		return this;
+	}
+
 	/**
 	 * Treat operation.  Asks the ValueMapping to treat itself as the
 	 * given `targetType`, if it can.
 	 *
 	 * @apiNote This is not necessarily limited to things the ValueMapping
 	 * itself implements.
+	 *
+	 * @implNote This default implementation is however limited to just
+	 * things the ValueMapping itself implements.
+	 *
 	 */
-	default <X> X as(Class<X> targetType) {
+	default <X> X treatAs(Class<X> targetType) {
 		if ( targetType.isInstance( this ) ) {
 			//noinspection unchecked
 			return (X) this;

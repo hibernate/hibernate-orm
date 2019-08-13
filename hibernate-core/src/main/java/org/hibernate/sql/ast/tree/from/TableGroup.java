@@ -53,12 +53,10 @@ public interface TableGroup extends SqlAstNode, DomainResultProducer {
 
 	@Override
 	default DomainResult createDomainResult(
-			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return getModelPart().createDomainResult(
 				getNavigablePath(),
-				valuesArrayPosition,
 				resultVariable,
 				creationState
 		);

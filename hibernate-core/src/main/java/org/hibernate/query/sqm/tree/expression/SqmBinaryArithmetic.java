@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**

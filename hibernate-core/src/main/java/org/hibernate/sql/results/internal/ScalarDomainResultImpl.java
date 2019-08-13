@@ -25,13 +25,13 @@ public class ScalarDomainResultImpl<T> implements ScalarDomainResult<T> {
 	private final DomainResultAssembler<T> assembler;
 
 	public ScalarDomainResultImpl(
-			int valuesArrayPosition,
+			int jdbcValuesArrayPosition,
 			String resultVariable,
 			JavaTypeDescriptor<T> javaTypeDescriptor) {
 		this.resultVariable = resultVariable;
 		this.javaTypeDescriptor = javaTypeDescriptor;
 
-		this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaTypeDescriptor );
+		this.assembler = new BasicResultAssembler<>( jdbcValuesArrayPosition, javaTypeDescriptor );
 	}
 
 	public ScalarDomainResultImpl(

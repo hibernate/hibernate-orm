@@ -12,8 +12,8 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.spi.DomainMetamodel;
-import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.ResultSetMapping;
 import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.BasicType;
@@ -72,19 +72,19 @@ public class Util {
 			Consumer<DomainResultProducer> resultProducerConsumer,
 			Consumer<String> querySpaceConsumer,
 			SessionFactoryImplementor sessionFactory) {
+		throw new NotYetImplementedFor6Exception( Util.class );
 
-		final DomainMetamodel domainModel = sessionFactory.getDomainModel();
-		final TypeConfiguration typeConfiguration = domainModel.getTypeConfiguration();
-
-		for ( Class resultSetMappingClass : resultSetMappingClasses ) {
-			final BasicType basicType = typeConfiguration.getBasicTypeForJavaType( resultSetMappingClass );
-			if ( basicType != null ) {
-				//noinspection unchecked
-				resultProducerConsumer.accept( new ScalarDomainResultProducer<>( basicType ) );
-				continue;
-			}
-
-			throw new NotYetImplementedFor6Exception();
+//		final DomainMetamodel domainModel = sessionFactory.getDomainModel();
+//		final TypeConfiguration typeConfiguration = domainModel.getTypeConfiguration();
+//
+//		for ( Class resultSetMappingClass : resultSetMappingClasses ) {
+//			final BasicType basicType = typeConfiguration.getBasicTypeForJavaType( resultSetMappingClass );
+//			if ( basicType != null ) {
+//				//noinspection unchecked
+//				resultProducerConsumer.accept( new ScalarDomainResultProducer<>( basicType ) );
+//				continue;
+//			}
+//
 //			final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( resultSetMappingClass );
 //			if ( entityDescriptor != null ) {
 //				resultProducerConsumer.accept( new Entity );
@@ -92,6 +92,6 @@ public class Util {
 //					querySpaceConsumer.accept( querySpace );
 //				}
 //			}
-		}
+//		}
 	}
 }

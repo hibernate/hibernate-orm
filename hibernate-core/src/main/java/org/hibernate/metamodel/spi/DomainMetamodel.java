@@ -10,14 +10,17 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -41,6 +44,16 @@ public interface DomainMetamodel {
 	 */
 	default TypeConfiguration getTypeConfiguration() {
 		return getJpaMetamodel().getTypeConfiguration();
+	}
+
+	/**
+	 * todo (6.0) : POC!!!  Intended for use in SQM -> SQL translation
+	 *
+	 * @param sqmExpressable
+	 * @return
+	 */
+	default ValueMapping resolveValueMapping(SqmExpressable<?> sqmExpressable) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	/**

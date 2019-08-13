@@ -8,7 +8,6 @@ package org.hibernate.sql.results.spi;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.mapping.spi.ValueMappingContainer;
 import org.hibernate.query.NavigablePath;
 
 /**
@@ -17,7 +16,7 @@ import org.hibernate.query.NavigablePath;
  * @author Steve Ebersole
  */
 public interface FetchParent {
-	ValueMappingContainer getReferencedMappingContainer();
+	FetchableContainer getReferencedMappingContainer();
 
 	/**
 	 * Get the property path to this parent

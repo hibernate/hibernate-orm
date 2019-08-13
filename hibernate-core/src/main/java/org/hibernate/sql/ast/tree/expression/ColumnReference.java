@@ -10,11 +10,13 @@ package org.hibernate.sql.ast.tree.expression;
 import java.util.Locale;
 import java.util.Objects;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -29,49 +31,41 @@ public class ColumnReference implements Expression {
 	private final Identifier columnName;
 	private final SqlExpressableType sqlExpressableType;
 
-	private String sqlFragment;
+	private final TableReference tableReference;
 
-//	public ColumnReference(ColumnReferenceQualifier qualifier, Identifier columnName, SqlExpressableType sqlExpressableType) {
-//		// the assumption with this assertion is that callers are expecting there
-//		// to be a qualifier; otherwise, they would call the overload ctor form
-//		// not accepting a qualifier
-//		assert qualifier != null : "ColumnReferenceQualifier is null";
-//
-//		this.columnName = columnName;
-//		this.sqlExpressableType = sqlExpressableType;
-//		this.sqlFragment = renderSqlFragment( qualifier, columnName );
-//	}
+	private final String sqlFragment;
 
-//	private static String renderSqlFragment(ColumnReferenceQualifier qualifier, Identifier columnName) {
-//		if ( qualifier == null ) {
-//			return columnName.render();
-//		}
-//		else {
-//			final TableReference tableReference = qualifier.locateTableReference( column.getSourceTable() );
-//			return columnName.render( tableReference.getIdentificationVariable() );
-//		}
-//	}
+	public ColumnReference(
+			Identifier columnName,
+			TableReference tableReference,
+			SqlExpressableType sqlExpressableType,
+			SessionFactoryImplementor sessionFactory) {
+		this.columnName = columnName;
+		this.tableReference = tableReference;
+		this.sqlExpressableType = sqlExpressableType;
 
-	public ColumnReference(Identifier columnName, SqlExpressableType sqlExpressableType) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		this.columnName = columnName;
-//		this.sqlExpressableType = sqlExpressableType;
-//		this.sqlFragment = renderSqlFragment( null, columnName );
+		final String renderedColumnRef = columnName.render(
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect()
+		);
+
+		this.sqlFragment = tableReference.getIdentificationVariable() == null
+				? renderedColumnRef
+				: tableReference.getIdentificationVariable() + '.' + renderedColumnRef;
 	}
 
 	@Override
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaTypeDescriptor<?> javaTypeDescriptor,
+			JavaTypeDescriptor javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
+
+		// todo (6.0) : potential use for runtime database model - interpretation of table and column references
+		//		into metadata info such as java/sql type, binder, extractor
+
 		final ValueExtractor jdbcValueExtractor = sqlExpressableType.getJdbcValueExtractor();
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				jdbcValueExtractor
-		);
+
+		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, this, jdbcValueExtractor );
 	}
 
 	public Identifier getColumnName() {
@@ -84,8 +78,8 @@ public class ColumnReference implements Expression {
 	}
 
 	@Override
-	public SqlExpressableType getType() {
-		return sqlExpressableType;
+	public ValueMappingExpressable getExpressionType() {
+		return (ValueMappingExpressable) sqlExpressableType;
 	}
 
 	public String renderSqlFragment() {

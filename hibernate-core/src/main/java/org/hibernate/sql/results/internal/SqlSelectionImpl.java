@@ -8,8 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Objects;
 
-import org.hibernate.persister.SqlExpressableType;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -34,6 +33,10 @@ public class SqlSelectionImpl implements SqlSelection {
 		this.jdbcValueExtractor = jdbcValueExtractor;
 	}
 
+	public Expression getWrappedSqlExpression() {
+		return sqlExpression;
+	}
+
 	@Override
 	public ValueExtractor getJdbcValueExtractor() {
 		return jdbcValueExtractor;
@@ -49,10 +52,10 @@ public class SqlSelectionImpl implements SqlSelection {
 		return valuesArrayPosition;
 	}
 
-	@Override
-	public void accept(SqlAstWalker interpreter) {
-		sqlExpression.accept( interpreter );
-	}
+//	@Override
+//	public void accept(SqlAstWalker interpreter) {
+//		sqlExpression.accept( interpreter );
+//	}
 
 	@Override
 	public boolean equals(Object o) {

@@ -6,6 +6,7 @@
  */
 package org.hibernate.procedure.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.sql.results.internal.ScalarDomainResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -18,17 +19,16 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
 public class ScalarDomainResultProducer<T> implements DomainResultProducer<T> {
 	private final SqmExpressable<T> expressableType;
 
-	@SuppressWarnings("WeakerAccess")
 	public ScalarDomainResultProducer(SqmExpressable<T> expressableType) {
 		this.expressableType = expressableType;
 	}
 
 	@Override
 	public DomainResult<T> createDomainResult(
-			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		//noinspection unchecked
-		return new ScalarDomainResultImpl( valuesArrayPosition, resultVariable, expressableType.getExpressableJavaTypeDescriptor() );
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		//noinspection unchecked
+//		return new ScalarDomainResultImpl( resultVariable, expressableType.getExpressableJavaTypeDescriptor() );
 	}
 }

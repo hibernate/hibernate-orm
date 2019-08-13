@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.spi;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.function.SqmCastTarget;
 import org.hibernate.query.sqm.function.SqmDistinct;
 import org.hibernate.query.sqm.function.SqmExtractUnit;

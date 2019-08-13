@@ -10,7 +10,7 @@ import java.util.Locale;
 import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.sqm.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**

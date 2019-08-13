@@ -20,13 +20,14 @@ import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.QueryLogger;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
+import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.hql.SemanticQueryProducer;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.hql.internal.SemanticQueryProducerImpl ;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
-import org.hibernate.query.sqm.spi.SqmCreationOptions;
+import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.service.ServiceRegistry;
 
 /**

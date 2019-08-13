@@ -6,9 +6,10 @@
  */
 package org.hibernate.query.hql.spi;
 
-import org.hibernate.query.spi.NameableQuery;
+import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
  * @author Steve Ebersole
@@ -19,4 +20,6 @@ public interface HqlQueryImplementor<R> extends QueryImplementor<R>, NameableQue
 
 	@Override
 	ParameterMetadataImplementor getParameterMetadata();
+
+	SqmStatement getSqmStatement();
 }

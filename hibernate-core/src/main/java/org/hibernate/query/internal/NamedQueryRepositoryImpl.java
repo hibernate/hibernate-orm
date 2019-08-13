@@ -11,17 +11,14 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.SemanticQueryProducer;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
-import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
-import org.hibernate.query.sqm.tree.SqmStatement;
 
 import org.jboss.logging.Logger;
 

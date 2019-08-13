@@ -7,35 +7,29 @@
 
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.results.internal.ScalarDomainResultImpl;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class BinaryArithmeticExpression
-		implements Expression, SqlExpressable, DomainResultProducer {
+		implements Expression, ValueMappingExpressable, DomainResultProducer {
 
 	private final Expression lhsOperand;
 	private final BinaryArithmeticOperator operator;
 	private final Expression rhsOperand;
 
-	private final SqlExpressableType resultType;
+	private final ValueMappingExpressable resultType;
 
 	public BinaryArithmeticExpression(
 			Expression lhsOperand,
 			BinaryArithmeticOperator operator,
 			Expression rhsOperand,
-			SqlExpressableType resultType) {
+			ValueMappingExpressable resultType) {
 		this.operator = operator;
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
@@ -43,27 +37,13 @@ public class BinaryArithmeticExpression
 	}
 
 	@Override
-	public SqlExpressableType getExpressableType() {
+	public ValueMapping getExpressableValueMapping() {
+		return resultType.getExpressableValueMapping();
+	}
+
+	@Override
+	public ValueMappingExpressable getExpressionType() {
 		return resultType;
-	}
-
-	@Override
-	public SqlExpressableType getType() {
-		return getExpressableType();
-	}
-
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				getExpressableType()
-		);
 	}
 
 	@Override

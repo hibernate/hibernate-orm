@@ -8,6 +8,7 @@ package org.hibernate.query.spi;
 
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.named.NamedQueryMemento;
 
 /**
  * @author Steve Ebersole

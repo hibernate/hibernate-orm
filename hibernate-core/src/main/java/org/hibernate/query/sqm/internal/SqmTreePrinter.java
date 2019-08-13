@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.QueryLogger;
-import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;

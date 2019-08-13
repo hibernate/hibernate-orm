@@ -6,40 +6,34 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.persister.SqlExpressableType;
-import org.hibernate.sql.ast.SqlTreeCreationException;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class SqlTuple implements Expression {
-	private final List<Expression> expressions;
+	private final List<? extends Expression> expressions;
+	private final ValueMappingExpressable expressable;
 
-	public SqlTuple(List<Expression> expressions) {
+	public SqlTuple(List<? extends Expression> expressions, ValueMappingExpressable expressable) {
 		this.expressions = expressions;
+		this.expressable = expressable;
+	}
+
+	public SqlTuple(Expression expression, ValueMappingExpressable expressable) {
+		this( Collections.singletonList( expression ), expressable );
 	}
 
 	@Override
-	public SqlExpressableType getType() {
-		return null;
+	public ValueMappingExpressable getExpressionType() {
+		return expressable;
 	}
 
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		throw new SqlTreeCreationException( "SqlTuple cannot be used to create a SqlSelection" );
-	}
-
-	public List<Expression> getExpressions(){
+	public List<? extends Expression> getExpressions(){
 		return expressions;
 	}
 

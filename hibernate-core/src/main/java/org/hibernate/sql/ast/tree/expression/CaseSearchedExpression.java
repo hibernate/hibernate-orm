@@ -11,27 +11,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class CaseSearchedExpression implements Expression, SqlExpressable, DomainResultProducer {
-	private final SqlExpressableType type;
+public class CaseSearchedExpression implements Expression, ValueMappingExpressable, DomainResultProducer {
+	private final ValueMappingExpressable type;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
 
-	public CaseSearchedExpression(SqlExpressableType type) {
+	public CaseSearchedExpression(ValueMappingExpressable type) {
 		this.type = type;
 	}
 
@@ -53,32 +50,7 @@ public class CaseSearchedExpression implements Expression, SqlExpressable, Domai
 	}
 
 	@Override
-	public SqlExpressableType getExpressableType() {
-		return type;
-	}
-
-	@Override
-	public SqlExpressableType getType() {
-		return type;
-	}
-
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				getExpressableType()
-		);
-	}
-
-	@Override
 	public DomainResult createDomainResult(
-			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
@@ -97,6 +69,19 @@ public class CaseSearchedExpression implements Expression, SqlExpressable, Domai
 	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitCaseSearchedExpression( this );
+	}
+
+	@Override
+	public ValueMapping getExpressableValueMapping() {
+		return null;
+	}
+
+	@Override
+	public ValueMappingExpressable getExpressionType() {
+		if ( type == null ) {
+			return this;
+		}
+		return type;
 	}
 
 	public static class WhenFragment {

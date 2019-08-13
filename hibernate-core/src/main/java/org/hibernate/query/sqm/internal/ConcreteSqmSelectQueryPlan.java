@@ -20,6 +20,8 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
+import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -143,7 +145,15 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		if ( jdbcSelect == null ) {
-//			final SqmSelectToSqlAstConverter sqmConverter = getSqmSelectToSqlAstConverter( executionContext );
+//			// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
+//			//		- this is similar to the plan for loaders
+//			final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
+//					executionContext.getQueryOptions(),
+//					domainParameterXref,
+//					executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+//					executionContext.getLoadQueryInfluencers(),
+//					executionContext.getSession().getFactory()
+//			);
 //			final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqm );
 //			jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
 //					interpretation,
@@ -152,6 +162,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 //
 //			this.jdbcParamsXref = SqmConsumeHelper.generateJdbcParamsXref( domainParameterXref, interpretation );
 //		}
+
 //
 //		final JdbcParameterBindings jdbcParameterBindings = QueryHelper.createJdbcParameterBindings(
 //				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),

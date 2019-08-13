@@ -9,7 +9,7 @@ package org.hibernate.sql.results.spi;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.persister.SqlExpressableType;
+import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -34,7 +34,6 @@ public interface DomainResultProducer<T> {
 	 * Produce the domain query
 	 */
 	default DomainResult<T> createDomainResult(
-			int valuesArrayPosition,
 			String resultVariable,
 			DomainResultCreationState creationState){
 		throw new NotYetImplementedFor6Exception( getClass() );

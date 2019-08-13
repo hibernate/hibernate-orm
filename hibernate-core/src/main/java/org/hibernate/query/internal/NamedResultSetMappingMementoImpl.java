@@ -8,7 +8,7 @@ package org.hibernate.query.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.ResultSetMapping;
 
 /**

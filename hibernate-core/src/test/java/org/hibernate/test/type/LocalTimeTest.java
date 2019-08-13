@@ -175,7 +175,12 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTest<LocalTime, LocalTime
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
-		return resultSet.getTimestamp( columnIndex );
+		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
+			return resultSet.getTimestamp( columnIndex );
+		}
+		else {
+			return resultSet.getTime( columnIndex );
+		}
 	}
 
 	@Override

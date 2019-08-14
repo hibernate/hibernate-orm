@@ -559,7 +559,6 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(HSQLDialect.class)
 	// ASE15.5 will generate select...holdlock and fail at this test, but ASE15.7 passes it. Skip it for ASE15.5
 	// only.
-	@SkipForDialect(value = { SybaseASE15Dialect.class }, strictMatching = true, jiraKey = "HHH-6820")
 	@SkipForDialect(value = { SQLServerDialect.class })
 	public void testContendedPessimisticLock() throws Exception {
 		final CountDownLatch latch = new CountDownLatch( 1 );

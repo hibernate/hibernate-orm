@@ -958,12 +958,14 @@ public final class SessionImpl
 	}
 
 	private void logRemoveOrphanBeforeUpdates(String timing, String entityName, Object entity) {
-		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
-		log.tracef(
-				"%s remove orphan before updates: [%s]",
-				timing,
-				entityEntry == null ? entityName : MessageHelper.infoString( entityName, entityEntry.getId() )
-		);
+		if ( log.isTraceEnabled() ) {
+			final EntityEntry entityEntry = persistenceContext.getEntry( entity );
+			log.tracef(
+					"%s remove orphan before updates: [%s]",
+					timing,
+					entityEntry == null ? entityName : MessageHelper.infoString( entityName, entityEntry.getId() )
+			);
+		}
 	}
 
 	private void fireDelete(DeleteEvent event) {
@@ -2526,7 +2528,9 @@ public final class SessionImpl
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
+		}
 
 		if ( !isClosed() || waitingForAutoClose ) {
 			if ( autoClear ||!successful ) {

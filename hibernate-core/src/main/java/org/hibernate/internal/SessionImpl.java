@@ -1109,7 +1109,7 @@ public final class SessionImpl
 		boolean clearedEffectiveGraph = false;
 		if ( semantic != null ) {
 			if ( ! graph.appliesTo( entityName ) ) {
-				log.debugf( "Clearing effective entity graph for subsequent-select" );
+				log.debug( "Clearing effective entity graph for subsequent-select" );
 				clearedEffectiveGraph = true;
 				effectiveEntityGraph.clear();
 			}
@@ -2512,7 +2512,7 @@ public final class SessionImpl
 
 	@Override
 	public void beforeTransactionCompletion() {
-		log.tracef( "SessionImpl#beforeTransactionCompletion()" );
+		log.trace( "SessionImpl#beforeTransactionCompletion()" );
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
 		try {

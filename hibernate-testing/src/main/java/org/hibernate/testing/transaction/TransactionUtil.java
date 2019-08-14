@@ -28,6 +28,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 
 import org.jboss.logging.Logger;
 
@@ -566,6 +567,12 @@ public class TransactionUtil {
 				try (Statement st = connection.createStatement()) {
 					//Prepared Statements fail for SET commands
 					st.execute(String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ));
+				}
+			}
+			else if( Dialect.getDialect() instanceof SybaseASE15Dialect) {
+				try (Statement st = connection.createStatement()) {
+					//Prepared Statements fail for SET commands
+					st.execute(String.format( "SET LOCK WAIT %d", millis/1000 ));
 				}
 			}
 			else {

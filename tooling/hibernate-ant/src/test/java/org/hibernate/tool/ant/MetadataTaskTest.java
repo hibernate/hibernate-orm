@@ -24,6 +24,14 @@ public class MetadataTaskTest {
 	Path tempDir;
 	
 	@Test
+	public void testSetPersistenceUnit() {
+		MetadataTask mdt = new MetadataTask();
+		assertNull(mdt.persistenceUnit);
+		mdt.setPersistenceUnit("foobar");
+		assertEquals("foobar", mdt.persistenceUnit);
+	}
+	
+	@Test
 	public void testSetPropertyFile() {
 		MetadataTask mdt = new MetadataTask();
 		assertNull(mdt.propertyFile);

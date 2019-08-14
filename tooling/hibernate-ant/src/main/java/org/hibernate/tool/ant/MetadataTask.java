@@ -19,10 +19,15 @@ public class MetadataTask {
 	
 	enum Type { JDBC, JPA, NATIVE }
 	
+	String persistenceUnit = null;
 	File propertyFile = null;
 	File configFile = null;
 	List<FileSet> fileSets = new ArrayList<FileSet>();	
 	Type type = Type.NATIVE;
+	
+	public void setPersistenceUnit(String pU) {
+		this.persistenceUnit = pU;
+	}
 	
 	public void setPropertyFile(File file) {
 		this.propertyFile = file;

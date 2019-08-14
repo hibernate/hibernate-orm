@@ -300,7 +300,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 					// entities with subclasses that define a ProxyFactory can create
 					// a HibernateProxy so long as NO_PROXY was not specified.
 					if ( event.getShouldUnwrapProxy() != null && event.getShouldUnwrapProxy() ) {
-						LOG.debugf( "Ignoring NO_PROXY for to-one association with subclasses to honor laziness" );
+						LOG.debug( "Ignoring NO_PROXY for to-one association with subclasses to honor laziness" );
 					}
 					return createProxy( event, persister, keyToLoad, persistenceContext );
 				}

@@ -4,6 +4,82 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.11.Final (August 15th, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31770/tab/release-report-all-issues
+
+** Bug
+    * [HHH-13357] - OffsetTimeTest fails using TimeAsTimestampRemappingH2Dialect in non-GMT European time zones
+    * [HHH-13379] - Regression of Instant serialization
+    * [HHH-13424] - Table nullability should not depend on JpaCompliance.isJpaCacheComplianceEnabled()
+    * [HHH-13455] - Enabling Enhancement as a Proxy causes IllegalStateException when using Javassist
+    * [HHH-13459] - Unit test lock up when they run on PostgreSQL
+    * [HHH-13460] - FetchGraphTest is failing on MariaDB
+    * [HHH-13466] - ClassCastException when changing a Collection association to a Set if @PreUpdate listener exists
+    * [HHH-13492] - OptimisticLockException after locking, refreshing, and updating an entity
+    * [HHH-13505] - NullPointerException thrown by StatisticsImpl#getCacheRegionStatistics
+    * [HHH-13514] - Calling the wrong method inside SessionDelegatorBaseImpl#createStoredProcedureQuery
+    * [HHH-13544] - Restore logged warning on jdbc code mapping issue in NationalizedTypeMappings
+    * [HHH-13550] - Fix Oracle failure for test added by HHH-13424
+    * [HHH-13554] - QueryAndSQLTest.testNativeQueryWithFormulaAttributeWithoutAlias() fails on Oracle, MSSQL, Sybase, DB2, MariaDB
+    * [HHH-13555] - FetchGraphTest, MergeProxyTest and ProxyDeletionTest fail due to ConstraintViolationException
+    * [HHH-13556] - Tests doing dynamic fetch scrolling a collection fail on DB2
+    * [HHH-13557] - LocalTimeTest#writeThenNativeRead and OffsetTimeTest#writeThenNativeRead tests are failing on SQL Server
+    * [HHH-13558] - InstantTest, LocalDateTimeTest, OffsetDateTimeTest, ZonedDateTimeTest failing on Sybase for year 1600
+    * [HHH-13569] - org.hibernate.test.annotations.embedded.EmbeddedTest failures on Sybase
+    * [HHH-13570] - Test failures due to Sybase not supporting UPDATE statement with WITH(NOWAIT)
+    * [HHH-13571] - Test failures due to cross joined table out of scope of a subsequent JOIN on Sybase
+    * [HHH-13573] - Test failure due to Sybase not supporting cascade delete on foreign key definitions
+    * [HHH-13574] - SybaseASE does not support PARTITION BY
+    * [HHH-13577] - LockTest.testContendedPessimisticLock and StatementIsClosedAfterALockExceptionTest.testStatementIsClosed tests fail on Sybase
+
+** New Feature
+    * [HHH-11147] - Allow enhanced entities to be returned in a completely uninitialized state
+
+** Task
+    * [HHH-13026] - Documentation: fixing link to Infinispan documentation section regarding Hibernate 2LC
+    * [HHH-13416] - Unguarded debug message being rendered in org.hibernate.engine.internal.Collections.processReachableCollection
+    * [HHH-13513] - Partial revert of string interning introduced by HHH-3924
+    * [HHH-13520] - Deprecate mutators on SqlStatementLogger
+    * [HHH-13525] - Make test SessionDelegatorBaseImplTest more resilient to previously existing alias definition
+    * [HHH-13526] - Optimise ResourceRegistryStandardImpl#release
+    * [HHH-13527] - Performance regression in org.hibernate.stat.internal.StatisticsImpl
+    * [HHH-13528] - Invoke afterStatements only at the end of releasing all statements for a batch
+    * [HHH-13529] - Performance regression in org.hibernate.engine.spi.SessionFactoryImplementor#getDialect
+    * [HHH-13531] - Some more opportunities to reuse the constants pool in AliasConstantsHelper
+    * [HHH-13534] - AbstractLoadPlanBasedLoader never needs a List of AfterLoadAction
+
+** Improvement
+    * [HHH-11032] - Improve performance of PersistentBag.equalsSnapshot
+    * [HHH-13442] - CollectionType#getCollection() method improvements
+    * [HHH-13444] - Remove ignored EntityMode field from CollectionKey
+    * [HHH-13447] - Minimize number of EventListenerRegistry lookups within a Session use
+    * [HHH-13448] - Avoid retrieving PRE_LOAD and POST_LOAD Event listeners within the inner loops of TwoPhaseLoad
+    * [HHH-13450] - Do not compute the full role name of a collection unless necessary
+    * [HHH-13451] - Logging typo in CascadingActions causing significant allocations
+    * [HHH-13452] - Missing log level guard on formatting in DefaultPersistEventListener#entityIsDeleted
+    * [HHH-13453] - Optimise CascadingActions for the most likely case
+    * [HHH-13458] - Update Hibernate's custom IdentityMap to better match its use
+    * [HHH-13462] - Introduce a fastpath for SessionImpl#fireLoad to be used by internal loops
+    * [HHH-13467] - Make average BatchFetchQueue consume less memory
+    * [HHH-13471] - Avoid invoking delayedAfterCompletion() multiple times from the same SessionImpl method
+    * [HHH-13475] - SessionImpl#applyQuerySettingsAndHints should not rely on defensive copies to just read properties
+    * [HHH-13476] - Micro-optimisations of TwoPhaseLoad#getOverridingEager
+    * [HHH-13477] - Make heavily invoked method final: EventListenerGroupImpl#listeners()
+    * [HHH-13478] - Various low hanging fruits identified by CPU flame graphs
+    * [HHH-13494] - LobTypeMappings should not use a Bounded ConcurrentHashmap
+    * [HHH-13495] - NationalizedTypeMappings should not use a Bounded ConcurrentHashmap
+    * [HHH-13508] - Reuse alias names generated by BasicLoader#generateSuffixes
+    * [HHH-13511] - Remove old org.hibernate.loader.DefaultEntityAliases#intern
+    * [HHH-13512] - Avoid allocating an array in org.hibernate.internal.util.StringHelper#unquote(String[], Dialect) if there are no changes to be applied
+    * [HHH-13521] - Avoid excessive validation of enabled filters
+    * [HHH-13522] - Optimise LoadQueryInfluencers by making maps lazily initialized
+    * [HHH-13523] - StatementPreparerImpl should not need to retrieve the JDBCService as often
+    * [HHH-13524] - Remove unused fields xref,unassociatedResultSets from JdbcCoordinatorImpl
+
+
+
 Changes in 5.3.10.final (April 19th, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

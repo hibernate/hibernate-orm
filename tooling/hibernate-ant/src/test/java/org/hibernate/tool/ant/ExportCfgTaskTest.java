@@ -80,6 +80,14 @@ public class ExportCfgTaskTest {
 	}
 	
 	@Test
+	public void testSetTemplatePath() {
+		ExportCfgTask ect = new ExportCfgTask(null);
+		assertNull(ect.properties.get(ExporterConstants.TEMPLATE_PATH));
+		ect.setTemplatePath(tempdir);
+		assertSame(tempdir, ect.properties.get(ExporterConstants.TEMPLATE_PATH));
+	}
+	
+	@Test
 	public void testGetProperties() {
 		ExportCfgTask ect = new ExportCfgTask(null);
 		assertSame(ect.properties, ect.getProperties());

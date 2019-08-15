@@ -1,6 +1,7 @@
 package org.hibernate.tool.ant;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Properties;
 
 import org.apache.tools.ant.types.Environment.Variable;
@@ -29,6 +30,10 @@ public class ExportCfgTask {
 	
 	public void setMetadataDescriptor(MetadataDescriptor metadataDescriptor) {
 		this.properties.put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
+	}
+	
+	public void setTemplatePath(Path path) {
+		this.properties.put(ExporterConstants.TEMPLATE_PATH, path);
 	}
 	
 	public void addConfiguredProperty(Variable variable) {

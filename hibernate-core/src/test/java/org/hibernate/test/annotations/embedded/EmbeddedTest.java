@@ -615,7 +615,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testDefaultCollectionTable() throws Exception {
 		//are the tables correct?
 		assertTrue( SchemaUtil.isTablePresent( "WealthyPerson_vacationHomes", metadata() ) );
-		assertTrue( SchemaUtil.isTablePresent( "WealthyPerson_legacyVacationHomes", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent( "WelPers_LegacyVacHomes", metadata() ) );
 		assertTrue( SchemaUtil.isTablePresent( "WelPers_VacHomes", metadata() ) );
 
 		//just to make sure, use the mapping

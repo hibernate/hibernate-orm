@@ -68,6 +68,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.profile.Association;
@@ -458,29 +459,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	private JdbcConnectionAccess buildLocalConnectionAccess() {
-		return new JdbcConnectionAccess() {
-			@Override
-			public Connection obtainConnection() throws SQLException {
-				return !settings.getMultiTenancyStrategy().requiresMultiTenantConnectionProvider()
-						? serviceRegistry.getService( ConnectionProvider.class ).getConnection()
-						: serviceRegistry.getService( MultiTenantConnectionProvider.class ).getAnyConnection();
-			}
-
-			@Override
-			public void releaseConnection(Connection connection) throws SQLException {
-				if ( !settings.getMultiTenancyStrategy().requiresMultiTenantConnectionProvider() ) {
-					serviceRegistry.getService( ConnectionProvider.class ).closeConnection( connection );
-				}
-				else {
-					serviceRegistry.getService( MultiTenantConnectionProvider.class ).releaseAnyConnection( connection );
-				}
-			}
-
-			@Override
-			public boolean supportsAggressiveRelease() {
-				return false;
-			}
-		};
+		if ( settings.getMultiTenancyStrategy().requiresMultiTenantConnectionProvider() ) {
+			final MultiTenantConnectionProvider mTenantConnectionProvider = serviceRegistry.getService( MultiTenantConnectionProvider.class );
+			return new JdbcEnvironmentInitiator.MultiTenantConnectionProviderJdbcConnectionAccess( mTenantConnectionProvider );
+		}
+		else {
+			final ConnectionProvider connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
+			return new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess( connectionProvider );
+		}
 	}
 
 	public Session openSession() throws HibernateException {

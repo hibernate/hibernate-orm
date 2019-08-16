@@ -11,24 +11,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
-import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * @author Steve Ebersole
  */
-public class CaseSearchedExpression implements Expression, ValueMappingExpressable, DomainResultProducer {
-	private final ValueMappingExpressable type;
+public class CaseSearchedExpression implements Expression, DomainResultProducer {
+	private final MappingModelExpressable type;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
 
-	public CaseSearchedExpression(ValueMappingExpressable type) {
+	public CaseSearchedExpression(MappingModelExpressable type) {
 		this.type = type;
 	}
 
@@ -72,15 +71,7 @@ public class CaseSearchedExpression implements Expression, ValueMappingExpressab
 	}
 
 	@Override
-	public ValueMapping getExpressableValueMapping() {
-		return null;
-	}
-
-	@Override
-	public ValueMappingExpressable getExpressionType() {
-		if ( type == null ) {
-			return this;
-		}
+	public MappingModelExpressable getExpressionType() {
 		return type;
 	}
 

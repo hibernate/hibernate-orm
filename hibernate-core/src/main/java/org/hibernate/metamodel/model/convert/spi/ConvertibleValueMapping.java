@@ -6,14 +6,14 @@
  */
 package org.hibernate.metamodel.model.convert.spi;
 
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 
 /**
  * Describes a part of the domain model to which a value converter can be applied
  *
  * @author Steve Ebersole
  */
-public interface ConvertibleValueMapping<O> extends ValueMapping {
+public interface ConvertibleValueMapping<O> extends ModelPart {
 	/**
 	 * Get the value converter associated with this value mapping.  May
 	 * return {@code null}

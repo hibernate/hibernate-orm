@@ -15,14 +15,17 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	private final String localPathName;
+	private final String roleName;
 	private final DomainType<J> domainType;
 	private final BindableType jpaBindableType;
 
 	public AbstractSqmPathSource(
 			String localPathName,
+			String roleName,
 			DomainType<J> domainType,
 			BindableType jpaBindableType) {
 		this.localPathName = localPathName;
+		this.roleName = roleName;
 		this.domainType = domainType;
 		this.jpaBindableType = jpaBindableType;
 	}
@@ -30,6 +33,11 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	@Override
 	public String getPathName() {
 		return localPathName;
+	}
+
+	@Override
+	public String getMappingRole() {
+		return roleName;
 	}
 
 	@Override

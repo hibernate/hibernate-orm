@@ -7,10 +7,9 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
-import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier appplied to a subquery as
@@ -61,10 +60,5 @@ public class SqmRestrictedSubQueryExpression<T> extends AbstractSqmExpression<T>
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitRestrictedSubQueryExpression( this );
-	}
-
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		return subQuery.getDomainResultProducer();
 	}
 }

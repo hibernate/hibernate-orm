@@ -7,6 +7,7 @@
 package org.hibernate.persister.walking.internal;
 
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStrategy;
@@ -35,6 +36,8 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A helper for getting attributes from a composition that is known
@@ -137,6 +140,18 @@ public final class CompositionSingularSubAttributesHelper {
 						if ( type.isAssociationType() ) {
 							final AssociationType aType = (AssociationType) type;
 							return new AssociationAttributeDefinition() {
+								@Override
+								public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+									return ;
+								}
+
+								@Override
+								public void visitJdbcTypes(
+										Consumer action,
+										TypeConfiguration typeConfiguration) {
+
+								}
+
 								@Override
 								public AssociationKey getAssociationKey() {
 									return new AssociationKey( lhsTableName, subAttributeLhsColumns );

@@ -10,15 +10,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * We classify literals different based on their source so that we can handle then differently
@@ -29,12 +28,12 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  * @author Steve Ebersole
  */
 public abstract class AbstractLiteral
-		implements JdbcParameterBinder, Expression, ValueMappingExpressable, DomainResultProducer {
+		implements JdbcParameterBinder, Expression, DomainResultProducer {
 	private final Object value;
-	private final ValueMappingExpressable type;
+	private final MappingModelExpressable type;
 	private final Clause clause;
 
-	public AbstractLiteral(Object value, ValueMappingExpressable type, Clause clause) {
+	public AbstractLiteral(Object value, MappingModelExpressable type, Clause clause) {
 		this.value = value;
 		this.type = type;
 		this.clause = clause;
@@ -44,13 +43,13 @@ public abstract class AbstractLiteral
 		return value;
 	}
 
-	@Override
-	public ValueMapping getExpressableValueMapping() {
-		return type.getExpressableValueMapping();
-	}
-
 	public boolean isInSelect() {
 		return clause == Clause.SELECT;
+	}
+
+	@Override
+	public MappingModelExpressable getExpressionType() {
+		return type;
 	}
 
 	@Override
@@ -61,7 +60,6 @@ public abstract class AbstractLiteral
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
@@ -69,10 +67,5 @@ public abstract class AbstractLiteral
 			ExecutionContext executionContext) throws SQLException {
 		throw new NotYetImplementedFor6Exception( getClass() );
 //		getType().getJdbcValueBinder().bind( statement, startPosition, value, executionContext );
-	}
-
-	@Override
-	public ValueMappingExpressable getExpressionType() {
-		return type;
 	}
 }

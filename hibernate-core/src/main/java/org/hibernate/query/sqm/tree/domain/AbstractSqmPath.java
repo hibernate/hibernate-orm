@@ -159,6 +159,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 			final DomainType sqmNodeType = getReferencedPathSource().getSqmPathType();
 
+			final String mappingRoleName = getReferencedPathSource().getMappingRole() + '.' + discriminatorPathName;
+
 			if ( sqmNodeType instanceof EntityDomainType ) {
 				final SqmPathSource discriminatorPathSource = new SqmPathSource() {
 					@Override
@@ -167,7 +169,13 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 					}
 
 					@Override
+					public String getMappingRole() {
+						return mappingRoleName;
+					}
+
+					@Override
 					public DomainType<?> getSqmPathType() {
+						// the BasicType for Class?
 						return null;
 					}
 

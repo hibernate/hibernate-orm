@@ -16,7 +16,7 @@ import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
  * @author Steve Ebersole
@@ -139,8 +139,4 @@ public class SqmCaseSimple<T,R>
 		return this;
 	}
 
-	@Override
-	public DomainResultProducer<R> getDomainResultProducer() {
-		return this;
-	}
 }

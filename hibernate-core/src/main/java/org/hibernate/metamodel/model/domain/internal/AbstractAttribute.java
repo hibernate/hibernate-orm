@@ -16,6 +16,7 @@ import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.AttributeClassification;
+import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -39,6 +40,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	private final SimpleDomainType<B> valueType;
 	private transient Member member;
 
+	private final String mappingRole;
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractAttribute(
@@ -47,18 +49,25 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 			JavaTypeDescriptor<J> attributeType,
 			AttributeClassification attributeClassification,
 			SimpleDomainType<B> valueType,
-			Member member) {
+			Member member,
+			MetadataContext metadataContext) {
 		this.declaringType = declaringType;
 		this.name = name;
 		this.attributeType = attributeType;
 		this.attributeClassification = attributeClassification;
 		this.valueType = valueType;
 		this.member = member;
+
+		this.mappingRole = metadataContext.getContainerRoleStack().getCurrent() + '.' + name;
 	}
 
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	public String getMappingRole() {
+		return mappingRole;
 	}
 
 	@Override

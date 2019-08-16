@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import org.hibernate.metamodel.model.mapping.spi.ValueMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.sqm.sql.SqlAliasBaseManager;
 
 /**
@@ -15,7 +15,7 @@ import org.hibernate.query.sqm.sql.SqlAliasBaseManager;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public interface TableGroupProducer extends ValueMappingContainer {
+public interface TableGroupProducer extends ModelPartContainer {
 	/**
 	 * Get the "stem" used as the base for generating SQL table aliases for table
 	 * references that are part of the TableGroup being generated

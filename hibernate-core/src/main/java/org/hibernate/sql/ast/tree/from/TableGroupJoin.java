@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
  * @author Steve Ebersole

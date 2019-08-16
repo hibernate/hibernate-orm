@@ -6,11 +6,11 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.metamodel.model.mapping.spi.ValueMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 
 /**
 * @author Steve Ebersole
 */
-public interface AttributeSource extends ValueMappingContainer {
+public interface AttributeSource extends ModelPartContainer {
 	Iterable<AttributeDefinition> getAttributes();
 }

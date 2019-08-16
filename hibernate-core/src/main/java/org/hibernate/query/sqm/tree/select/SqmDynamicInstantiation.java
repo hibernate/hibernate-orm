@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -116,11 +116,6 @@ public class SqmDynamicInstantiation<T>
 	@Override
 	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
 		return getInstantiationTarget().getTargetTypeDescriptor();
-	}
-
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		return this;
 	}
 
 	@Override

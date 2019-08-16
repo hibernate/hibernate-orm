@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain;
 
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 
@@ -17,7 +18,7 @@ import org.hibernate.query.sqm.SqmPathSource;
  * @author Steve Ebersole
  */
 public interface SingularPersistentAttribute<D,J>
-		extends SingularAttribute<D,J>, PersistentAttribute<D,J>, SqmPathSource<J>, SqmJoinable {
+		extends SingularAttribute<D,J>, PersistentAttribute<D,J>, ModelPart, SqmPathSource<J>, SqmJoinable {
 	@Override
 	SimpleDomainType<J> getType();
 

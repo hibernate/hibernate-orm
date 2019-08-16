@@ -114,25 +114,6 @@ public abstract class AbstractTableGroup implements TableGroup {
 
 	@Override
 	public String toString() {
-		final StringBuilder buffer = new StringBuilder( "(" );
-
-		buffer.append( "path=(" ).append( getNavigablePath() ).append( "), " );
-		buffer.append( "root=(" ).append( getPrimaryTableReference() ).append( "), " );
-		buffer.append( "joins=[" );
-		if ( getTableReferenceJoins() != null ) {
-			boolean firstPass = true;
-			for ( TableReferenceJoin tableReferenceJoin : getTableReferenceJoins() ) {
-				if ( firstPass ) {
-					firstPass = false;
-				}
-				else {
-					buffer.append( ',' );
-				}
-
-				buffer.append( tableReferenceJoin );
-			}
-		}
-
-		return buffer.append( "])" ).toString();
+		return getClass().getSimpleName() + '(' + getNavigablePath() + ')';
 	}
 }

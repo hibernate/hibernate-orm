@@ -6,8 +6,6 @@
  */
 package org.hibernate.procedure.internal;
 
-import java.sql.CallableStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -16,7 +14,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
@@ -62,8 +59,7 @@ import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.results.NoMoreOutputsException;
-import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.Type;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 import org.jboss.logging.Logger;
 

@@ -4,32 +4,29 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.BinaryArithmeticOperator;
-import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * @author Steve Ebersole
  */
-public class BinaryArithmeticExpression
-		implements Expression, ValueMappingExpressable, DomainResultProducer {
+public class BinaryArithmeticExpression implements Expression, DomainResultProducer {
 
 	private final Expression lhsOperand;
 	private final BinaryArithmeticOperator operator;
 	private final Expression rhsOperand;
 
-	private final ValueMappingExpressable resultType;
+	private final MappingModelExpressable resultType;
 
 	public BinaryArithmeticExpression(
 			Expression lhsOperand,
 			BinaryArithmeticOperator operator,
 			Expression rhsOperand,
-			ValueMappingExpressable resultType) {
+			MappingModelExpressable resultType) {
 		this.operator = operator;
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
@@ -37,12 +34,7 @@ public class BinaryArithmeticExpression
 	}
 
 	@Override
-	public ValueMapping getExpressableValueMapping() {
-		return resultType.getExpressableValueMapping();
-	}
-
-	@Override
-	public ValueMappingExpressable getExpressionType() {
+	public MappingModelExpressable getExpressionType() {
 		return resultType;
 	}
 

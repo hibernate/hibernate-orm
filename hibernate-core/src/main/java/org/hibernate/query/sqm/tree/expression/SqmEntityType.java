@@ -8,17 +8,17 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
  * Entity type expression based on a parameter - `TYPE( :someParam )`
  *
  * @author Steve Ebersole
  */
-public class SqmEntityType<T> extends AbstractSqmExpression<T> implements DomainResultProducer<T> {
+public class SqmEntityType<T> extends AbstractSqmExpression<T> implements SqmSelectableNode<T> {
 	private final SqmExpression discriminatorSource;
 
 	public SqmEntityType(SqmParameter<T> parameterExpression, NodeBuilder nodeBuilder) {
@@ -43,12 +43,6 @@ public class SqmEntityType<T> extends AbstractSqmExpression<T> implements Domain
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitParameterizedEntityTypeExpression( this );
-	}
-
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		// technically `T` should be `Class<T>` here
-		return this;
 	}
 
 }

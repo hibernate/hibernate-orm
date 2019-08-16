@@ -28,7 +28,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -240,8 +239,4 @@ public class FullyQualifiedReflectivePathTerminal
 		return null;
 	}
 
-	@Override
-	public DomainResultProducer getDomainResultProducer() {
-		throw new UnsupportedOperationException(  );
-	}
 }

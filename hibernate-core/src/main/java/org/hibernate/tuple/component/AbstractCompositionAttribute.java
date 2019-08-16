@@ -7,11 +7,9 @@
 package org.hibernate.tuple.component;
 
 import java.util.Iterator;
-import java.util.function.Consumer;
 
 import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;

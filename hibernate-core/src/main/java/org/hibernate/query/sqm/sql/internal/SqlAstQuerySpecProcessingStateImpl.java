@@ -17,7 +17,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.results.spi.DomainResult;
 
 /**
  * @author Steve Ebersole
@@ -28,7 +27,6 @@ public class SqlAstQuerySpecProcessingStateImpl
 
 	private final QuerySpec querySpec;
 
-	private final Supplier<Consumer<DomainResult>> domainResultConsumerSupplier;
 	private final Supplier<Consumer<SqlSelection>> sqlSelectionConsumerSupplier;
 
 	public SqlAstQuerySpecProcessingStateImpl(
@@ -37,11 +35,9 @@ public class SqlAstQuerySpecProcessingStateImpl
 			SqlAstCreationState creationState,
 			Supplier<Clause> currentClauseAccess,
 			Supplier<Consumer<Expression>> resolvedExpressionConsumerAccess,
-			Supplier<Consumer<DomainResult>> domainResultConsumerSupplier,
 			Supplier<Consumer<SqlSelection>> sqlSelectionConsumerSupplier) {
 		super( parent, creationState, currentClauseAccess, resolvedExpressionConsumerAccess );
 		this.querySpec = querySpec;
-		this.domainResultConsumerSupplier = domainResultConsumerSupplier;
 		this.sqlSelectionConsumerSupplier = sqlSelectionConsumerSupplier;
 	}
 

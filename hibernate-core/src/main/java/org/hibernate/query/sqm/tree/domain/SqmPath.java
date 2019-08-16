@@ -15,13 +15,12 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -31,7 +30,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<T>, DomainResultProducer<T> {
+public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<T> {
 
 	/**
 	 * Returns the NavigablePath.
@@ -45,11 +44,6 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 * @see SqmPathSource#createSqmPath
 	 */
 	SqmPathSource<?> getReferencedPathSource();
-
-	@Override
-	default DomainResultProducer<T> getDomainResultProducer() {
-		return this;
-	}
 
 	/**
 	 * Retrieve the explicit alias, if one.  May return null

@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
  * @author Steve Ebersole
@@ -126,8 +126,4 @@ public class SqmCaseSearched<R>
 		return this;
 	}
 
-	@Override
-	public DomainResultProducer<R> getDomainResultProducer() {
-		return this;
-	}
 }

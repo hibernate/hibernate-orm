@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * @author Steve Ebersole

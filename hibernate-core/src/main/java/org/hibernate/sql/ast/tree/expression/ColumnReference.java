@@ -12,8 +12,8 @@ import java.util.Objects;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
-import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressableType;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -78,8 +78,8 @@ public class ColumnReference implements Expression {
 	}
 
 	@Override
-	public ValueMappingExpressable getExpressionType() {
-		return (ValueMappingExpressable) sqlExpressableType;
+	public MappingModelExpressable getExpressionType() {
+		return (MappingModelExpressable) sqlExpressableType;
 	}
 
 	public String renderSqlFragment() {

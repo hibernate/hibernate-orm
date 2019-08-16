@@ -9,11 +9,9 @@ package org.hibernate.orm.test.sql.ast;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;

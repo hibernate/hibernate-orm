@@ -26,6 +26,8 @@ import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -96,6 +98,8 @@ public class MetadataContext {
 	private List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
 	private DomainMetamodel metamodel;
 
+	private Stack<String> containerRoleStack = new StandardStack<>();
+
 	public MetadataContext(
 			JpaMetamodel jpaMetamodel,
 			RuntimeModelCreationContext runtimeModelCreationContext,
@@ -127,6 +131,10 @@ public class MetadataContext {
 
 	DomainMetamodel getMetamodel() {
 		return metamodel;
+	}
+
+	public Stack<String> getContainerRoleStack() {
+		return containerRoleStack;
 	}
 
 	/**
@@ -249,29 +257,39 @@ public class MetadataContext {
 				try {
 					final EntityDomainType<?> jpaMapping = entityTypesByPersistentClass.get( safeMapping );
 
-					applyIdMetadata( safeMapping, jpaMapping );
-					applyVersionAttribute( safeMapping, jpaMapping );
+					containerRoleStack.push( jpaMapping.getMappingRole() );
 
-					Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
-					while ( properties.hasNext() ) {
-						final Property property = properties.next();
-						if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
-							// property represents special handling for id-class mappings but we have already
-							// accounted for the embedded property mappings in #applyIdMetadata &&
-							// #buildIdClassAttributes
-							continue;
+					try {
+						applyIdMetadata( safeMapping, jpaMapping );
+						applyVersionAttribute( safeMapping, jpaMapping );
+
+						Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
+						while ( properties.hasNext() ) {
+							final Property property = properties.next();
+							if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
+								// property represents special handling for id-class mappings but we have already
+								// accounted for the embedded property mappings in #applyIdMetadata &&
+								// #buildIdClassAttributes
+								continue;
+							}
+							if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+								// skip the version property, it was already handled previously.
+								continue;
+							}
+							final PersistentAttribute attribute = attributeFactory.buildAttribute(
+									jpaMapping,
+									property
+							);
+							if ( attribute != null ) {
+								( (AttributeContainer) jpaMapping ).getInFlightAccess().addAttribute( attribute );
+							}
 						}
-						if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
-							// skip the version property, it was already handled previously.
-							continue;
-						}
-						final PersistentAttribute attribute = attributeFactory.buildAttribute( jpaMapping, property );
-						if ( attribute != null ) {
-							( (AttributeContainer) jpaMapping ).getInFlightAccess().addAttribute( attribute );
-						}
+
+						( (AttributeContainer) jpaMapping ).getInFlightAccess().finishUp();
 					}
-
-					( ( AttributeContainer) jpaMapping ).getInFlightAccess().finishUp();
+					finally {
+						containerRoleStack.pop();
+					}
 
 					if ( staticMetamodelScanEnabled ) {
 						populateStaticMetamodel( jpaMapping );
@@ -291,22 +309,31 @@ public class MetadataContext {
 				try {
 					final MappedSuperclassDomainType<?> jpaType = mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
 
-					applyIdMetadata( safeMapping, jpaType );
-					applyVersionAttribute( safeMapping, jpaType );
+					containerRoleStack.push( jpaType.getTypeName() );
 
-					Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
-					while ( properties.hasNext() ) {
-						final Property property = properties.next();
-						if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
-							// skip the version property, it was already handled previously.
-							continue;
+					try {
+
+						applyIdMetadata( safeMapping, jpaType );
+						applyVersionAttribute( safeMapping, jpaType );
+
+						Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
+						while ( properties.hasNext() ) {
+							final Property property = properties.next();
+							if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+								// skip the version property, it was already handled previously.
+								continue;
+							}
+							final PersistentAttribute attribute = attributeFactory.buildAttribute( jpaType, property );
+							if ( attribute != null ) {
+								( (AttributeContainer) jpaType ).getInFlightAccess().addAttribute( attribute );
+							}
 						}
-						final PersistentAttribute attribute = attributeFactory.buildAttribute( jpaType, property );
-						if ( attribute != null ) {
-							( ( AttributeContainer) jpaType ).getInFlightAccess().addAttribute( attribute );
-						}
+
+						( (AttributeContainer) jpaType ).getInFlightAccess().finishUp();
 					}
-					( ( AttributeContainer) jpaType ).getInFlightAccess().finishUp();
+					finally {
+						containerRoleStack.pop();
+					}
 
 					if ( staticMetamodelScanEnabled ) {
 						populateStaticMetamodel( jpaType );

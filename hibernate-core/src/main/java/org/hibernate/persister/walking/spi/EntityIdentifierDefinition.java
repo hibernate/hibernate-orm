@@ -6,14 +6,14 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 
 /**
  * Describes aspects of the identifier for an entity
  *
  * @author Steve Ebersole
  */
-public interface EntityIdentifierDefinition extends ValueMapping {
+public interface EntityIdentifierDefinition extends ModelPart {
 	/**
 	 * Is the entity identifier encapsulated?  Meaning, is it represented by a single attribute?
 	 *

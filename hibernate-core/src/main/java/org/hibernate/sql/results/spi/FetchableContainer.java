@@ -8,14 +8,14 @@ package org.hibernate.sql.results.spi;
 
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.mapping.spi.ValueMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 
 /**
  * @author Steve Ebersole
  */
-public interface FetchableContainer extends ValueMappingContainer {
+public interface FetchableContainer extends ModelPartContainer {
 	default Fetchable findFetchable(String name) {
-		return (Fetchable) findValueMapping( name );
+		return (Fetchable) findSubPart( name );
 	}
 
 	default void visitKeyFetchables(Consumer<Fetchable> fetchableConsumer) {

@@ -37,7 +37,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -71,6 +70,11 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 			NodeBuilder builder) {
 		super( (Class<T>) null, builder );
 		this.parent = parent;
+	}
+
+	@Override
+	public SqmExpressable<T> getExpressableType() {
+		return expressableType;
 	}
 
 	@Override
@@ -313,8 +317,4 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		return walker.visitSubQueryExpression( this );
 	}
 
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 }

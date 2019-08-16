@@ -15,6 +15,7 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
@@ -268,6 +269,18 @@ public abstract class AbstractIdentifiableType<J>
 		}
 	}
 
+	@Override
+	public void visitJdbcTypes(Consumer action, TypeConfiguration typeConfiguration) {
+		id.visitJdbcTypes( action, typeConfiguration );
+
+		if ( versionAttribute != null ) {
+			versionAttribute.visitJdbcTypes( action, typeConfiguration );
+		}
+
+		visitAttributes(
+				attribute -> attribute.visitJdbcTypes( action, typeConfiguration )
+		);
+	}
 
 	/**
 	 * For used to retrieve the declared version when populating the static metamodel.

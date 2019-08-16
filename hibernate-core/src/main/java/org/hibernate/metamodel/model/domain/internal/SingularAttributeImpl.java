@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.metamodel.AttributeClassification;
+import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
@@ -48,8 +49,17 @@ public class SingularAttributeImpl<D,J>
 			Member member,
 			boolean isIdentifier,
 			boolean isVersion,
-			boolean isOptional) {
-		super( declaringType, name, attributeType.getExpressableJavaTypeDescriptor(), attributeClassification, attributeType, member );
+			boolean isOptional,
+			MetadataContext metadataContext) {
+		super(
+				declaringType,
+				name,
+				attributeType.getExpressableJavaTypeDescriptor(),
+				attributeClassification,
+				attributeType,
+				member,
+				metadataContext
+		);
 		this.isIdentifier = isIdentifier;
 		this.isVersion = isVersion;
 		this.isOptional = isOptional;
@@ -65,6 +75,15 @@ public class SingularAttributeImpl<D,J>
 	@Override
 	public String getPathName() {
 		return getName();
+	}
+
+	@Override
+	public String getMappingRole() {
+		return super.getMappingRole();
+	}
+
+	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
+		return sqmPathSource.getExpressableJavaTypeDescriptor();
 	}
 
 	@Override
@@ -86,10 +105,6 @@ public class SingularAttributeImpl<D,J>
 	@Override
 	public SimpleDomainType<J> getType() {
 		return getSqmPathType();
-	}
-
-	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
-		return sqmPathSource.getExpressableJavaTypeDescriptor();
 	}
 
 	@Override
@@ -130,7 +145,8 @@ public class SingularAttributeImpl<D,J>
 				String name,
 				SimpleDomainType<J> attributeType,
 				Member member,
-				AttributeClassification attributeClassification) {
+				AttributeClassification attributeClassification,
+				MetadataContext metadataContext) {
 			super(
 					declaringType,
 					name,
@@ -139,7 +155,8 @@ public class SingularAttributeImpl<D,J>
 					member,
 					true,
 					false,
-					false
+					false,
+					metadataContext
 			);
 		}
 	}
@@ -154,7 +171,8 @@ public class SingularAttributeImpl<D,J>
 				String name,
 				AttributeClassification attributeClassification,
 				SimpleDomainType<Y> attributeType,
-				Member member) {
+				Member member,
+				MetadataContext metadataContext) {
 			super(
 					declaringType,
 					name,
@@ -163,7 +181,8 @@ public class SingularAttributeImpl<D,J>
 					member,
 					false,
 					true,
-					false
+					false,
+					metadataContext
 			);
 		}
 	}

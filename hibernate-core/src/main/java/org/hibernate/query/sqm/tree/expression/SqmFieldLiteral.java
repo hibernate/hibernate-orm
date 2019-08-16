@@ -18,19 +18,19 @@ import org.hibernate.QueryException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.spi.SemanticPathPart;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, DomainResultProducer<T>, SemanticPathPart {
+public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, SqmSelectableNode<T>, SemanticPathPart {
 	private final T value;
 	private final JavaTypeDescriptor<T> fieldJavaTypeDescriptor;
 	private final String fieldName;
@@ -75,6 +75,11 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 
 	public T getValue() {
 		return value;
+	}
+
+	@Override
+	public SqmExpressable<T> getExpressableType() {
+		return expressable;
 	}
 
 	public JavaTypeDescriptor<T> getFieldJavaTypeDescriptor() {
@@ -252,8 +257,4 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 		return null;
 	}
 
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		return this;
-	}
 }

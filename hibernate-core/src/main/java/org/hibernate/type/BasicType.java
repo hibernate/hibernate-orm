@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 
 /**
@@ -13,11 +14,13 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
  *
  * @author Steve Ebersole
  */
-public interface BasicType<T> extends Type, BasicDomainType<T> {
+public interface BasicType<T> extends Type, BasicDomainType<T>, MappingModelExpressable {
 	/**
 	 * Get the names under which this type should be registered in the type registry.
 	 *
 	 * @return The keys under which to register this type.
 	 */
 	String[] getRegistrationKeys();
+
+	
 }

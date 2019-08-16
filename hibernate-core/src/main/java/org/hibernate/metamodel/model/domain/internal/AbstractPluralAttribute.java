@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.NavigablePath;
@@ -35,14 +36,17 @@ public abstract class AbstractPluralAttribute<D,C,E>
 	private final SqmPathSource<E> elementPathSource;
 
 	@SuppressWarnings("WeakerAccess")
-	protected AbstractPluralAttribute(PluralAttributeBuilder<D,C,E,?> builder) {
+	protected AbstractPluralAttribute(
+			PluralAttributeBuilder<D,C,E,?> builder,
+			MetadataContext metadataContext) {
 		super(
 				builder.getDeclaringType(),
 				builder.getProperty().getName(),
 				builder.getCollectionJavaTypeDescriptor(),
 				builder.getAttributeClassification(),
 				builder.getValueType(),
-				builder.getMember()
+				builder.getMember(),
+				metadataContext
 		);
 
 		this.classification = builder.getCollectionClassification();
@@ -57,6 +61,11 @@ public abstract class AbstractPluralAttribute<D,C,E>
 	@Override
 	public String getPathName() {
 		return getName();
+	}
+
+	@Override
+	public String getMappingRole() {
+		return super.getMappingRole();
 	}
 
 	@Override

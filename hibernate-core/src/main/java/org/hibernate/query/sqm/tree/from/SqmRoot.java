@@ -8,18 +8,24 @@ package org.hibernate.query.sqm.tree.from;
 
 import java.util.function.Consumer;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.mapping.SqlExpressableType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -28,7 +34,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
+public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, DomainResultProducer<E> {
 	public SqmRoot(
 			EntityDomainType<E> entityType,
 			String alias,
@@ -98,12 +104,26 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Override
+	public DomainResultProducer<E> getDomainResultProducer(
+			SqmToSqlAstConverter walker,
+			SqlAstCreationState sqlAstCreationState) {
+		return this;
+	}
+
+	@Override
+	public Expression toSqlExpression(
+			SqmToSqlAstConverter walker,
+			SqlAstCreationState sqlAstCreationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
 	public void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration) {
 		final String entityName = getReferencedPathSource().getHibernateEntityName();
 		final EntityPersister entityDescriptor = typeConfiguration.getSessionFactory()
 				.getMetamodel()
 				.getEntityDescriptor( entityName );
-		entityDescriptor.visitValueMappings(
+		entityDescriptor.visitSubParts(
 				valueMapping -> valueMapping.getBindable().visitJdbcTypes(
 						action,
 						Clause.IRRELEVANT,
@@ -111,6 +131,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 				)
 		);
 	}
+
 
 	@Override
 	public DomainResult<E> createDomainResult(
@@ -123,6 +144,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 				.getEntityDescriptor( entityName );
 		return entityDescriptor.createDomainResult(
 				getNavigablePath(),
+				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( getNavigablePath() ),
 				resultVariable,
 				creationState
 		);
@@ -135,7 +157,11 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 				.getCreationContext()
 				.getDomainModel()
 				.getEntityDescriptor( entityName );
-		entityDescriptor.applySqlSelections( getNavigablePath(), creationState );
+		entityDescriptor.applySqlSelections(
+				getNavigablePath(),
+				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( getNavigablePath() ),
+				creationState
+		);
 
 	}
 }

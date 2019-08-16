@@ -1,0 +1,53 @@
+= Domain type system (JPA/SQM)
+
+The JPA type system is an "unmapped" model, meaning that it has no mapping information -
+no references to tables, columns, etc.  The base contract for Hibernate's extension to the
+JPA model is `org.hibernate.metamodel.model.domain.DomainType`.
+
+Hibernate's Semantic Query Model (SQM) is defined in terms of these JPA type extensions,
+through the `org.hibernate.query.sqm.SqmExpressable` contract allowing parts of the application's
+domain model to be used as part of an SQM tree.
+
+
+[plantuml,SqmTypeSystem,png]
+.Domain (JPA/SQM) type system
+....
+@startuml
+skinparam handwritten true
+
+interface DomainType
+interface SimpleDomainType
+interface BasicDomainType
+interface AnyMappingDomainType
+interface ManagedDomainType
+interface EmbeddableDomainType
+interface IdentifiableDomainType
+interface EntityDomainType
+interface MappedSuperclassDomainType
+
+interface SqmExpressable
+interface SqmPathSource
+interface PersistentAttribute
+interface SingularPersistentAttribute
+interface PluralPersistentAttribute
+
+DomainType <|-- SimpleDomainType
+SimpleDomainType <|-- BasicDomainType
+SimpleDomainType <|-- AnyMappingDomainType
+SimpleDomainType <|-- ManagedDomainType
+ManagedDomainType <|-- EmbeddableDomainType
+ManagedDomainType <|-- IdentifiableDomainType
+IdentifiableDomainType <|-- MappedSuperclassDomainType
+IdentifiableDomainType <|-- EntityDomainType
+
+SqmExpressable <|-- DomainType
+SqmExpressable <|-- SqmPathSource
+
+SqmPathSource <|-- EntityDomainType
+SqmPathSource <|-- PersistentAttribute
+
+PersistentAttribute <|-- SingularPersistentAttribute
+PersistentAttribute <|-- PluralPersistentAttribute
+
+@enduml
+....

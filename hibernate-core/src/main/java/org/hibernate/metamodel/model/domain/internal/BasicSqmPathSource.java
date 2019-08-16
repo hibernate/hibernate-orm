@@ -25,9 +25,10 @@ public class BasicSqmPathSource<J>
 	@SuppressWarnings("WeakerAccess")
 	public BasicSqmPathSource(
 			String localPathName,
+			String roleName,
 			BasicDomainType<J> domainType,
 			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
+		super( localPathName, roleName, domainType, jpaBindableType );
 	}
 
 	@Override

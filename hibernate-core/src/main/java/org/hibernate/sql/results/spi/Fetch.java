@@ -8,7 +8,7 @@ package org.hibernate.sql.results.spi;
 
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 
 /**
@@ -40,7 +40,7 @@ public interface Fetch {
 	/**
 	 * The value mapping being fetched
 	 */
-	ValueMapping getFetchedValueMapping();
+	ModelPart getFetchedMapping();
 
 	/**
 	 * Get the property path to this fetch

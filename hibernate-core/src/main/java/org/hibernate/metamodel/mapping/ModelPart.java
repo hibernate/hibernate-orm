@@ -4,13 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.model.mapping.spi;
+package org.hibernate.metamodel.mapping;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
  * Describes a mapping of related to any part of the app's domain model - e.g.
@@ -21,13 +22,14 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface ModelPart extends ValueMapping {
+public interface ModelPart extends MappingModelExpressable {
 
 	/**
 	 * Create a DomainResult for a specific reference to this ModelPart.
 	 */
 	default <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
+			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
@@ -38,6 +40,7 @@ public interface ModelPart extends ValueMapping {
 	 */
 	default void applySqlSelections(
 			NavigablePath navigablePath,
+			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

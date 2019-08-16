@@ -9,12 +9,12 @@ package org.hibernate.sql.results.spi;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 
 /**
  * @author Steve Ebersole
  */
-public interface Fetchable extends ValueMapping {
+public interface Fetchable extends ModelPart {
 	String getFetchableName();
 
 	FetchStrategy getMappedFetchStrategy();

@@ -19,9 +19,10 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 public class EmbeddedSqmPathSource<J> extends AbstractSqmPathSource<J> implements AllowableParameterType<J> {
 	public EmbeddedSqmPathSource(
 			String localPathName,
+			String roleName,
 			EmbeddableDomainType<J> domainType,
 			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
+		super( localPathName, roleName, domainType, jpaBindableType );
 	}
 
 	@Override

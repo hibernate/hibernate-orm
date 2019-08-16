@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.spi.SqlSelectionProducer;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -23,7 +23,7 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 	/**
 	 * The type for this expression
 	 */
-	ValueMappingExpressable getExpressionType();
+	MappingModelExpressable getExpressionType();
 
 	@Override
 	default SqlSelection createSqlSelection(

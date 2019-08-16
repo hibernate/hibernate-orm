@@ -6,13 +6,14 @@
  */
 package org.hibernate.sql.results.spi;
 
-import org.hibernate.metamodel.model.mapping.spi.ValueMappingContainer;
+
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 
 /**
  * @author Steve Ebersole
  */
 public interface CompositeInitializer extends Initializer, FetchParentAccess {
-	ValueMappingContainer getInitializingEmbeddedDescriptor();
+	ModelPartContainer getInitializingEmbeddedDescriptor();
 
 	Object getCompositeInstance();
 

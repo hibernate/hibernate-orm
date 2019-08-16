@@ -11,13 +11,10 @@ import java.util.function.Consumer;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.ResultSetMapping;
-import org.hibernate.sql.results.spi.DomainResultProducer;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 import org.jboss.logging.Logger;
 

@@ -9,7 +9,7 @@ package org.hibernate.loader.spi;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.metamodel.model.mapping.spi.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;

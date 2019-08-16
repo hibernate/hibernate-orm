@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Models a positional parameter expression
@@ -55,8 +54,4 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 		return "?" + getPosition();
 	}
 
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		throw new UnsupportedOperationException(  );
-	}
 }

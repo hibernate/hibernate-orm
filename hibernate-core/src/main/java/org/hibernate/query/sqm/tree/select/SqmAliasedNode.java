@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.select;
 
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
  * Models any aliased expression.  E.g. `select exp as e ...`

@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
  * Specialized CASE statement for resolving the first non-null value in a list of values
@@ -103,8 +103,4 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		return this;
 	}
 
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		return this;
-	}
 }

@@ -6,8 +6,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
-
-import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
+import org.hibernate.metamodel.mapping.SqlExpressableType;
 
 /**
  * @author Steve Ebersole

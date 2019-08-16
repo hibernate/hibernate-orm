@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -26,8 +26,4 @@ public interface SqmPredicate
 	@Override
 	SqmPredicate not();
 
-	@Override
-	default DomainResultProducer<Boolean> getDomainResultProducer() {
-		return this;
-	}
 }

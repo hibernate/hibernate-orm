@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.model.mapping.spi;
+package org.hibernate.metamodel.mapping;
 
 import java.util.function.Consumer;
 
@@ -15,18 +15,18 @@ import org.hibernate.NotYetImplementedFor6Exception;
  *
  * @author Steve Ebersole
  */
-public interface ValueMappingContainer extends ModelPart {
+public interface ModelPartContainer extends ModelPart {
 	/**
 	 * Find a sub-ValueMapping by name
 	 */
-	default ValueMapping findValueMapping(String name){
+	default ModelPart findSubPart(String name){
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	/**
 	 * Visit all of this container's sub-ValueMappings
 	 */
-	default void visitValueMappings(Consumer<ValueMapping> consumer){
+	default void visitSubParts(Consumer<ModelPart> consumer){
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

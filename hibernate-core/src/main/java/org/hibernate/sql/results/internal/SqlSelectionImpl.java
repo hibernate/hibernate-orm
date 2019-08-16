@@ -8,7 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Objects;
 
-import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
+import org.hibernate.metamodel.mapping.SqlExpressableType;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;

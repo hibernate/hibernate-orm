@@ -7,14 +7,14 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.UnaryArithmeticOperator;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements DomainResultProducer<T> {
+public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements SqmSelectableNode<T> {
 	private final UnaryArithmeticOperator operation;
 	private final SqmExpression operand;
 
@@ -39,11 +39,6 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Do
 
 	public UnaryArithmeticOperator getOperation() {
 		return operation;
-	}
-
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		return this;
 	}
 
 	@Override

@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Represents a named query parameter in the SQM tree.
@@ -35,11 +34,6 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitNamedParameterExpression( this );
-	}
-
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		throw new UnsupportedOperationException(  );
 	}
 
 	@Override

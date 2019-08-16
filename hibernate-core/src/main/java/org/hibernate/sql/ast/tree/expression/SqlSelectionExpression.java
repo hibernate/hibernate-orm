@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 
 /**
@@ -43,7 +43,7 @@ public class SqlSelectionExpression implements Expression {
 	}
 
 	@Override
-	public ValueMappingExpressable getExpressionType() {
+	public MappingModelExpressable getExpressionType() {
 		return theExpression.getExpressionType();
 	}
 }

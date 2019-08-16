@@ -48,12 +48,18 @@ public class EntityTypeImpl<J>
 				persistentClass.isVersioned(),
 				jpaMetamodel
 		);
+
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 	}
 
 	@Override
 	public String getName() {
 		return jpaEntityName;
+	}
+
+	@Override
+	public String getMappingRole() {
+		return getHibernateEntityName();
 	}
 
 	@Override

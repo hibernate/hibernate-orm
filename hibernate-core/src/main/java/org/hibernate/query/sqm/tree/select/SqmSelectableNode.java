@@ -9,10 +9,14 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.function.Consumer;
 import javax.persistence.criteria.Selection;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.SqmSelectableInterpretation;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 
 /**
  * Defines a SQM AST node that can be used as a selection in the query,
@@ -20,12 +24,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  *
  * @author Steve Ebersole
  */
-public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T>, SqmVisitableNode {
-	/**
-	 * Get the DomainResultProducer for this SqmSelectableNode
-	 */
-	DomainResultProducer<T> getDomainResultProducer();
-
+public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T>, SqmVisitableNode, SqmSelectableInterpretation<T> {
 	/**
 	 * Visit each of this selectable's direct sub-selectables - used to
 	 * support JPA's {@link Selection} model (which is really a "selectable",
@@ -35,4 +34,8 @@ public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T>, 
 	 * @see Selection#getCompoundSelectionItems()
 	 */
 	void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer);
+
+	default DomainResultProducer<T> getDomainResultProducer(SqmToSqlAstConverter walker, SqlAstCreationState sqlAstCreationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 }

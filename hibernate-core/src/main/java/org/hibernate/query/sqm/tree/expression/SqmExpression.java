@@ -16,6 +16,7 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.sql.internal.SqmExpressionInterpretation;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
@@ -28,7 +29,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
  *
  * @author Steve Ebersole
  */
-public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T> {
+public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>, SqmExpressionInterpretation<T> {
 	/**
 	 * The expression's type.
 	 *

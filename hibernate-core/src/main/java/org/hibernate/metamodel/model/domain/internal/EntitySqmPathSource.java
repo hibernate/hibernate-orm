@@ -21,9 +21,10 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> {
 	public EntitySqmPathSource(
 			String localPathName,
+			String roleName,
 			EntityDomainType<J> domainType,
 			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
+		super( localPathName, roleName, domainType, jpaBindableType );
 	}
 
 	@Override

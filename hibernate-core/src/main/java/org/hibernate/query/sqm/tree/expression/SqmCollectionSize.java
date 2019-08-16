@@ -10,7 +10,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -45,12 +45,7 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements
 		return "SIZE(" + pluralPath.asLoggableText() + ")";
 	}
 
-	@Override
-	public DomainResultProducer<Integer> getDomainResultProducer() {
-		return this;
-	}
-
-//	@Override
+	//	@Override
 //	public DomainResult createDomainResult(
 //			String resultVariable,
 //			DomainResultCreationState creationState) {

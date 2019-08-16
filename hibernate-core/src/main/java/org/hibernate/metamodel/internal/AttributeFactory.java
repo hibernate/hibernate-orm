@@ -117,7 +117,8 @@ public class AttributeFactory {
 				attributeMetadata.getMember(),
 				false,
 				false,
-				property.isOptional()
+				property.isOptional(),
+				metadataContext
 		);
 	}
 
@@ -159,7 +160,8 @@ public class AttributeFactory {
 				property.getName(),
 				determineSimpleType( attributeMetadata.getValueContext() ),
 				attributeMetadata.getMember(),
-				attributeMetadata.getAttributeClassification()
+				attributeMetadata.getAttributeClassification(),
+				context
 		);
 	}
 
@@ -189,7 +191,8 @@ public class AttributeFactory {
 				property.getName(),
 				attributeMetadata.getAttributeClassification(),
 				determineSimpleType( attributeMetadata.getValueContext() ),
-				attributeMetadata.getMember()
+				attributeMetadata.getMember(),
+				context
 		);
 	}
 

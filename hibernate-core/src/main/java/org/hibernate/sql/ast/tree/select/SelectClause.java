@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
  * The SELECT CLAUSE in the SQL AST.  Each selection here is a
@@ -24,7 +24,7 @@ import org.hibernate.sql.results.spi.DomainResultProducer;
  */
 public class SelectClause implements SqlAstNode {
 	private boolean distinct;
-	private final List<DomainResult> domainResults = new ArrayList<>();
+
 	private final List<SqlSelection> sqlSelections = new ArrayList<>();
 
 	public void makeDistinct(boolean distinct) {
@@ -33,14 +33,6 @@ public class SelectClause implements SqlAstNode {
 
 	public boolean isDistinct() {
 		return distinct;
-	}
-
-	public List<DomainResult> getSelections() {
-		return Collections.unmodifiableList( domainResults );
-	}
-
-	public void addSelection(DomainResult domainResultProducer) {
-		domainResults.add( domainResultProducer );
 	}
 
 	public void addSqlSelection(SqlSelection sqlSelection) {

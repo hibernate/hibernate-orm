@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.function;
 import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
  * Contract for functions impls that would like to control the
@@ -37,8 +37,4 @@ public interface SqmFunction<T> extends SqmExpression<T>, JpaFunction<T>, Domain
 		return walker.visitFunction( this );
 	}
 
-	@Override
-	default DomainResultProducer<T> getDomainResultProducer() {
-		return this;
-	}
 }

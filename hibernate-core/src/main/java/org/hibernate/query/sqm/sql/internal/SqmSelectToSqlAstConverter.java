@@ -31,7 +31,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.SqlAstQuerySpecProcessingState;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
@@ -51,12 +50,10 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.Fetchable;
@@ -73,6 +70,8 @@ public class SqmSelectToSqlAstConverter
 		extends BaseSqmToSqlAstConverter
 		implements DomainResultCreationState {
 	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
+
+	private final List<DomainResult> domainResults = new ArrayList<>();
 
 	public SqmSelectToSqlAstConverter(
 			QueryOptions queryOptions,
@@ -111,40 +110,35 @@ public class SqmSelectToSqlAstConverter
 	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
 		final QuerySpec querySpec = visitQuerySpec( statement.getQuerySpec() );
 
-		return new SelectStatement( querySpec );
+		return new SelectStatement( querySpec, domainResults );
 	}
 
 
 	@Override
 	public Void visitSelection(SqmSelection sqmSelection) {
-		// todo (6.0) : this should actually be able to generate multiple SqlSelections
-		final DomainResultProducer resultProducer = (DomainResultProducer) sqmSelection.getSelectableNode().accept( this );
+		final DomainResultProducer resultProducer = resolveDomainResultProducer( sqmSelection );
 
 		if ( getProcessingStateStack().depth() > 1 ) {
 			resultProducer.applySqlSelections( this );
 		}
 		else {
 
-			final SelectClause selectClause = ( (SqlAstQuerySpecProcessingState) getCurrentProcessingState() )
-					.getInflightQuerySpec()
-					.getSelectClause();
 			final DomainResult domainResult = resultProducer.createDomainResult(
 					sqmSelection.getAlias(),
 					this
 			);
 
-			selectClause
-					.addSelection( domainResult );
+			domainResults.add( domainResult );
 		}
 
 		return null;
 	}
 
-	private int fetchDepth = 0;
-
-	private int currentFetchDepth() {
-		return fetchDepth;
+	private DomainResultProducer resolveDomainResultProducer(SqmSelection sqmSelection) {
+		return ( (SqmExpressionInterpretation) sqmSelection.getSelectableNode() ).getDomainResultProducer( this, this );
 	}
+
+	private int fetchDepth = 0;
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
@@ -392,24 +386,6 @@ public class SqmSelectToSqlAstConverter
 //		final JavaTypeDescriptor jtd = typeConfiguration
 //				.getJavaTypeDescriptorRegistry()
 //				.getOrMakeJavaDescriptor( namedClass );
-	}
-
-	@Override
-	public Object visitEnumLiteral(SqmEnumLiteral sqmEnumLiteral) {
-		return new QueryLiteral(
-				sqmEnumLiteral.getEnumValue(),
-				determineValueMapping( sqmEnumLiteral ),
-				getCurrentClauseStack().getCurrent()
-		);
-	}
-
-	@Override
-	public Object visitFieldLiteral(SqmFieldLiteral sqmFieldLiteral) {
-		return new QueryLiteral(
-				sqmFieldLiteral.getValue(),
-				determineValueMapping( sqmFieldLiteral ),
-				getCurrentClauseStack().getCurrent()
-		);
 	}
 
 

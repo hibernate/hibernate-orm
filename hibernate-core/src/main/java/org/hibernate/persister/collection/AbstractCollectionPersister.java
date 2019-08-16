@@ -33,7 +33,6 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StructuredCollectionCacheEntry;
 import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -66,10 +65,10 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -95,6 +94,8 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -2180,6 +2181,16 @@ public abstract class AbstractCollectionPersister
 				}
 				return new CompositeCollectionElementDefinition() {
 					@Override
+					public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+						return ( (EmbeddableDomainType) getType() ).getExpressableJavaTypeDescriptor();
+					}
+
+					@Override
+					public void visitJdbcTypes(Consumer action, TypeConfiguration typeConfiguration) {
+						throw new NotYetImplementedFor6Exception( getClass() );
+					}
+
+					@Override
 					public String getName() {
 						return "index";
 					}
@@ -2262,13 +2273,23 @@ public abstract class AbstractCollectionPersister
 
 				return new CompositeCollectionElementDefinition() {
 					@Override
-					public void visitValueMappings(Consumer consumer) {
+					public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+						return ( (EmbeddableDomainType) getType() ).getExpressableJavaTypeDescriptor();
+					}
+
+					@Override
+					public void visitJdbcTypes(Consumer action, TypeConfiguration typeConfiguration) {
+						throw new NotYetImplementedFor6Exception( getClass() );
+					}
+
+					@Override
+					public void visitSubParts(Consumer<ModelPart> consumer) {
 						throw new NotYetImplementedFor6Exception( getClass() );
 
 					}
 
 					@Override
-					public ValueMapping findValueMapping(String name) {
+					public ModelPart findSubPart(String name) {
 						throw new NotYetImplementedFor6Exception( getClass() );
 					}
 

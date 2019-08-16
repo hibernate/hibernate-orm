@@ -20,9 +20,9 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.UnaryArithmeticOperator;
@@ -37,16 +37,21 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
+import org.hibernate.query.sqm.sql.internal.SqmExpressionInterpretation;
+import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -55,6 +60,7 @@ import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -78,7 +84,6 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -86,6 +91,7 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -265,7 +271,6 @@ public abstract class BaseSqmToSqlAstConverter
 						this,
 						currentClauseStack::getCurrent,
 						() -> (expression) -> {},
-						() -> sqlQuerySpec.getSelectClause()::addSelection,
 						() -> sqlQuerySpec.getSelectClause()::addSqlSelection
 				)
 		);
@@ -384,18 +389,10 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			sqmFromClause.visitRoots(
 					sqmRoot -> {
-						final EntityPersister entityDescriptor = resolveEntityPersister( sqmRoot.getReferencedPathSource() );
-
-						final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
-								sqmRoot.getNavigablePath(),
-								sqmRoot.getExplicitAlias(),
-								null,
-								determineLockMode( sqmRoot.getExplicitAlias() ),
-								sqlAliasBaseManager,
-								creationContext
-						);
+						final TableGroup rootTableGroup = visitRootPath( sqmRoot );
 
 						currentQuerySpec().getFromClause().addRoot( rootTableGroup );
+						getFromClauseIndex().register( sqmRoot, rootTableGroup );
 					}
 			);
 		}
@@ -407,17 +404,15 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 
-
 	@Override
 	public TableGroup visitRootPath(SqmRoot<?> sqmRoot) {
 		log.tracef( "Starting resolution of SqmRoot [%s] to TableGroup", sqmRoot );
 
-		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
-			final TableGroup resolvedTableGroup = fromClauseIndex.findTableGroup( sqmRoot.getNavigablePath() );
+		final TableGroup resolvedTableGroup = fromClauseIndex.findTableGroup( sqmRoot.getNavigablePath() );
+		if ( resolvedTableGroup != null ) {
 			log.tracef( "SqmRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolvedTableGroup );
 			return resolvedTableGroup;
 		}
-
 
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmRoot.getReferencedPathSource() );
 
@@ -435,20 +430,38 @@ public abstract class BaseSqmToSqlAstConverter
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
 
-		sqmRoot.visitSqmJoins(
-				sqmJoin -> {
-					final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoin.accept( this );
-					if ( tableGroupJoin != null ) {
-						tableGroup.addTableGroupJoin( tableGroupJoin );
-					}
-				}
-		);
+		visitExplicitJoins( sqmRoot, tableGroup );
+		visitImplicitJoins( sqmRoot, tableGroup );
 
 		return tableGroup;
 	}
 
 	private EntityPersister resolveEntityPersister(EntityDomainType<?> entityDomainType) {
 		return creationContext.getDomainModel().getEntityDescriptor( entityDomainType.getHibernateEntityName() );
+	}
+
+	private void visitExplicitJoins(SqmFrom<?,?> sqmFrom, TableGroup tableGroup) {
+		log.tracef( "Visiting explicit joins for `%s`", sqmFrom.getNavigablePath() );
+
+		sqmFrom.visitSqmJoins(
+				sqmJoin -> {
+					final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoin.accept( this );
+					if ( tableGroupJoin != null ) {
+						tableGroup.addTableGroupJoin( tableGroupJoin );
+						getFromClauseIndex().register( sqmFrom, tableGroup );
+					}
+				}
+		);
+	}
+
+	private void visitImplicitJoins(SqmPath<?> sqmPath, TableGroup tableGroup) {
+		log.tracef( "Visiting implicit joins for `%s`", sqmPath.getNavigablePath() );
+
+		sqmPath.visitImplicitJoinPaths(
+				joinedPath -> {
+					log.tracef( "Starting implicit join handling for `%s`", joinedPath.getNavigablePath() );
+				}
+		);
 	}
 
 	@Override
@@ -554,23 +567,32 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitBasicValuedPath(SqmBasicValuedSimplePath path) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public SqmPathInterpretation visitBasicValuedPath(SqmBasicValuedSimplePath sqmPath) {
+		final SqmPath<?> lhs = sqmPath.getLhs();
+		assert lhs != null;
+
+		return (SqmPathInterpretation) sqmPath;
 	}
 
 	@Override
-	public Object visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath path) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public SqmPathInterpretation visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath sqmPath) {
+		final SqmPath<?> lhs = sqmPath.getLhs();
+		assert lhs != null;
+
+		return (SqmPathInterpretation) sqmPath;
 	}
 
 	@Override
-	public Object visitEntityValuedPath(SqmEntityValuedSimplePath path) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public SqmPathInterpretation visitEntityValuedPath(SqmEntityValuedSimplePath sqmPath) {
+		final SqmPath<?> lhs = sqmPath.getLhs();
+		assert lhs != null;
+
+		return (SqmPathInterpretation) sqmPath;
 	}
 
 	@Override
-	public Object visitPluralValuedPath(SqmPluralValuedSimplePath path) {
-		throw new NotYetImplementedFor6Exception();
+	public SqmPathInterpretation visitPluralValuedPath(SqmPluralValuedSimplePath sqmPath) {
+		return (SqmPathInterpretation) sqmPath;
 	}
 
 
@@ -578,7 +600,7 @@ public abstract class BaseSqmToSqlAstConverter
 	// Expressions
 
 	@Override
-	public Object visitLiteral(SqmLiteral literal) {
+	public SqmExpressionInterpretation visitLiteral(SqmLiteral literal) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 //		final ExpressableType<?> expressableType = determineExpressableType( literal );
 //		if ( expressableType instanceof BasicValuedExpressableType<?> ) {
@@ -612,7 +634,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	private Expression consumeSqmParameter(SqmParameter sqmParameter) {
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
-		final ValueMapping valueMapping = determineValueMapping( sqmParameter );
+		final MappingModelExpressable valueMapping = determineValueMapping( sqmParameter );
 
 		resolveSqmParameter( sqmParameter, valueMapping, jdbcParametersForSqm::add );
 
@@ -620,25 +642,25 @@ public abstract class BaseSqmToSqlAstConverter
 		jdbcParamsBySqmParam.put( sqmParameter, jdbcParametersForSqm );
 
 		if ( jdbcParametersForSqm.size() > 1 ) {
-			return new SqlTuple( jdbcParametersForSqm, () -> valueMapping );
+			return new SqlTuple( jdbcParametersForSqm, valueMapping );
 		}
 		else {
 			return jdbcParametersForSqm.get( 0 );
 		}
 	}
 
-	protected ValueMapping determineValueMapping(SqmExpression<?> sqmExpression) {
+	protected MappingModelExpressable<?> determineValueMapping(SqmExpression<?> sqmExpression) {
 		final SqmExpressable<?> nodeType = sqmExpression.getNodeType();
 
-		ValueMapping valueMapping = getCreationContext().getDomainModel().resolveValueMapping( nodeType );
+		MappingModelExpressable valueMapping = getCreationContext().getDomainModel().resolveMappingExpressable( nodeType );
 		// alternative
-		// sqmExpression.resolveValueMapping( getCreationContext(), "inferableTypeAccessStack" );
+		// sqmExpression.resolveMappingExpressable( getCreationContext(), "inferableTypeAccessStack" );
 
 
 		if ( valueMapping == null ) {
-			final Supplier<ValueMappingExpressable> currentExpressableSupplier = inferableTypeAccessStack.getCurrent();
+			final Supplier<MappingModelExpressable> currentExpressableSupplier = inferableTypeAccessStack.getCurrent();
 			if ( currentExpressableSupplier != null ) {
-				valueMapping = currentExpressableSupplier.get().getExpressableValueMapping();
+				valueMapping = currentExpressableSupplier.get();
 			}
 		}
 
@@ -650,11 +672,11 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 
-	private final Stack<Supplier<ValueMappingExpressable>> inferableTypeAccessStack = new StandardStack<>(
+	private final Stack<Supplier<MappingModelExpressable>> inferableTypeAccessStack = new StandardStack<>(
 			() -> () -> null
 	);
 
-	private void resolveSqmParameter(SqmParameter expression, ValueMapping valueMapping, Consumer<JdbcParameter> jdbcParameterConsumer) {
+	private void resolveSqmParameter(SqmParameter expression, MappingModelExpressable valueMapping, Consumer<JdbcParameter> jdbcParameterConsumer) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 //		if ( valueMapping == null ) {
 //			final StandardJdbcParameterImpl jdbcParameter = new StandardJdbcParameterImpl(
@@ -1118,7 +1140,7 @@ public abstract class BaseSqmToSqlAstConverter
 			return new UnaryOperation(
 					interpret( expression.getOperation() ),
 					(Expression) expression.getOperand().accept( this ),
-					() -> determineValueMapping( expression )
+					determineValueMapping( expression )
 
 			);
 		}
@@ -1148,7 +1170,7 @@ public abstract class BaseSqmToSqlAstConverter
 			return new BinaryArithmeticExpression(
 					(Expression) expression.getLeftHandOperand().accept( this ), interpret( expression.getOperator() ),
 					(Expression) expression.getRightHandOperand().accept( this ),
-					() -> determineValueMapping( expression )
+					determineValueMapping( expression )
 			);
 		}
 		finally {
@@ -1198,7 +1220,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public CaseSimpleExpression visitSimpleCaseExpression(SqmCaseSimple<?,?> expression) {
 		final CaseSimpleExpression result = new CaseSimpleExpression(
-				() -> determineValueMapping( expression ),
+				determineValueMapping( expression ),
 				(Expression) expression.getFixture().accept( this )
 		);
 
@@ -1217,7 +1239,7 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public CaseSearchedExpression visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
 		final CaseSearchedExpression result = new CaseSearchedExpression(
-				() -> determineValueMapping( expression )
+				determineValueMapping( expression )
 		);
 
 		for ( SqmCaseSearched.WhenFragment whenFragment : expression.getWhenFragments() ) {
@@ -1230,6 +1252,24 @@ public abstract class BaseSqmToSqlAstConverter
 		result.otherwise( (Expression) expression.getOtherwise().accept( this ) );
 
 		return result;
+	}
+
+	@Override
+	public Object visitEnumLiteral(SqmEnumLiteral sqmEnumLiteral) {
+		return new QueryLiteral(
+				sqmEnumLiteral.getEnumValue(),
+				determineValueMapping( sqmEnumLiteral ),
+				getCurrentClauseStack().getCurrent()
+		);
+	}
+
+	@Override
+	public Object visitFieldLiteral(SqmFieldLiteral sqmFieldLiteral) {
+		return new QueryLiteral(
+				sqmFieldLiteral.getValue(),
+				determineValueMapping( sqmFieldLiteral ),
+				getCurrentClauseStack().getCurrent()
+		);
 	}
 
 
@@ -1294,7 +1334,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public ComparisonPredicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
-		inferableTypeAccessStack.push( () -> () -> determineValueMapping( predicate.getRightHandExpression() ) );
+		inferableTypeAccessStack.push( () -> determineValueMapping( predicate.getRightHandExpression() ) );
 
 		final Expression lhs;
 		try {
@@ -1304,7 +1344,7 @@ public abstract class BaseSqmToSqlAstConverter
 			inferableTypeAccessStack.pop();
 		}
 
-		inferableTypeAccessStack.push( () -> () -> determineValueMapping( predicate.getLeftHandExpression() ) );
+		inferableTypeAccessStack.push( () -> determineValueMapping( predicate.getLeftHandExpression() ) );
 
 		final Expression rhs;
 		try {
@@ -1335,7 +1375,7 @@ public abstract class BaseSqmToSqlAstConverter
 		final Expression upperBound;
 
 		inferableTypeAccessStack.push(
-				() -> () -> coalesce(
+				() -> coalesce(
 						determineValueMapping( predicate.getLowerBound() ),
 						determineValueMapping( predicate.getUpperBound() )
 				)
@@ -1349,7 +1389,7 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 
 		inferableTypeAccessStack.push(
-				() -> () -> coalesce(
+				() -> coalesce(
 						determineValueMapping( predicate.getExpression() ),
 						determineValueMapping( predicate.getUpperBound() )
 				)
@@ -1362,7 +1402,7 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 
 		inferableTypeAccessStack.push(
-				() -> () -> coalesce(
+				() -> coalesce(
 						determineValueMapping( predicate.getExpression() ),
 						determineValueMapping( predicate.getLowerBound() )
 				)
@@ -1423,7 +1463,7 @@ public abstract class BaseSqmToSqlAstConverter
 					);
 
 					inferableTypeAccessStack.push(
-							() -> () -> determineValueMapping( predicate.getTestExpression() ) );
+							() -> determineValueMapping( predicate.getTestExpression() ) );
 
 					try {
 						boolean first = true;

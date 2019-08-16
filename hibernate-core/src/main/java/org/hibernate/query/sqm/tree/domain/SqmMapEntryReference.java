@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 
@@ -82,11 +82,6 @@ public class SqmMapEntryReference<K,V>
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMapEntryFunction( this );
-	}
-
-	@Override
-	public DomainResultProducer<Map.Entry<K, V>> getDomainResultProducer() {
-		return this;
 	}
 
 	@Override

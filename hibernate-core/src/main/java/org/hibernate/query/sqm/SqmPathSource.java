@@ -24,6 +24,12 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  */
 public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J> {
 	/**
+	 * A sort-of unique key for a part of the model as a compound (dot-separated) name.
+	 * Will end with {@link #getPathName}
+	 */
+	String getMappingRole();
+
+	/**
 	 * The name of this thing.  Mainly used in logging and when creating a
 	 * {@link org.hibernate.query.NavigablePath}
 	 */

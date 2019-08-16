@@ -6,10 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 
 /**
@@ -17,20 +16,16 @@ import org.hibernate.sql.ast.spi.SqlAstWalker;
  */
 public class SqlTuple implements Expression {
 	private final List<? extends Expression> expressions;
-	private final ValueMappingExpressable expressable;
+	private final MappingModelExpressable valueMapping;
 
-	public SqlTuple(List<? extends Expression> expressions, ValueMappingExpressable expressable) {
+	public SqlTuple(List<? extends Expression> expressions, MappingModelExpressable valueMapping) {
 		this.expressions = expressions;
-		this.expressable = expressable;
-	}
-
-	public SqlTuple(Expression expression, ValueMappingExpressable expressable) {
-		this( Collections.singletonList( expression ), expressable );
+		this.valueMapping = valueMapping;
 	}
 
 	@Override
-	public ValueMappingExpressable getExpressionType() {
-		return expressable;
+	public MappingModelExpressable getExpressionType() {
+		return valueMapping;
 	}
 
 	public List<? extends Expression> getExpressions(){

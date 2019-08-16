@@ -1,0 +1,95 @@
+= Mapping model
+
+[plantuml,SqmTypeSystem,png]
+.Mapping type system
+....
+@startuml
+skinparam handwritten true
+
+interface MappingType
+
+interface ValueMapping
+interface BasicType
+interface ModelPart
+interface ModelPartContainer
+
+MappingType <|--
+
+ValueMapping <|-- BasicType
+ValueMapping <|-- ModelPart
+ModelPartContainer <|-- EntityMapping
+ModelPartContainer <|-- EmbeddableMapping
+ModelPart <|-- EmbeddableMapping
+ModelPart <|-- AttributeMapping
+ModelPart <|-- EntityIdentifierMapping
+ModelPart <|-- EntityVersionMapping
+ModelPart <|-- EntityDiscriminatorMapping
+
+
+@enduml
+....
+
+[source,JAVA]
+----
+interface ValueMapping {
+	Type getMappingType();
+	<X> X getCapability(Class<X> capabilityType);
+	...
+}
+
+interface ModelPart extends ValueMapping {
+	<T> DomainResult<T> createDomainResult(...);
+	void applySqlSelections(...);
+	...
+}
+
+interface ModelPartContainer extends ValueMapping {
+    void visitSubMappings(Consumer<ModelPart> action);
+    ModelPart findSubPart(String name);
+    ModelPart resolveSubPart(String path);
+}
+
+interface EntityMapping extends ModelPartContainer {
+    default EntityPersister getEntityPersister() {
+    	return getCapability( EntityPersister.class );
+    }
+
+    default EntityIdentifierMapping getIdentifierMapping() {
+    	return getCapability( EntityIdentifierMapping.class );
+    }
+
+    default EntityVersionMapping getVersionMapping() {
+    	return getCapability( EntityVersionMapping.class );
+    }
+
+    default EntityDiscriminatorMapping getDiscriminatorMapping() {
+    	return getCapability( EntityDiscriminatorMapping.class );
+    }
+
+    ...
+}
+
+interface EmbeddableMapping extends ModelPart, ModelPartContainer {
+	...
+}
+----
+
+
+== Relationship with legacy "persister walking" SPI
+
+`org.hibernate.metamodel.model.mapping` contract corollaries in `org.hibernate.persister.walking`:
+
+EntityMapping::EntityDefinition
+EmbeddableMapping::CompositionDefinition
+AttributeMapping::AttributeDefinition
+EntityIdentifierMapping::EntityIdentifierDefinition
+
+
+== AllowableParameterType
+
+`AllowableParameterType` is a contract that defines types that are valid for parameter binding in terms of an SQM query.
+
+AT some point this needs to be "resolved" to a ValueMapping/Type/Bindable when generating the SQL AST and executing.
+
+One option is to have the `AllowableParameterType` be resolved first to a `SqmExpressable`
+`SqmExpressableAllowableParameterType#resolveSqmExpressable`

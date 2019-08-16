@@ -11,15 +11,17 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.mapping.SqlExpressableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.mapping.spi.SqlExpressableType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -30,7 +32,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
+public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implements DomainResultProducer<T> {
 	public SqmSingularJoin(
 			SqmFrom<?,O> lhs,
 			SingularPersistentAttribute<O, T> joinedNavigable,
@@ -98,7 +100,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 			final EntityPersister entityDescriptor = typeConfiguration.getSessionFactory()
 					.getMetamodel()
 					.getEntityDescriptor( entityName );
-			entityDescriptor.visitValueMappings(
+			entityDescriptor.visitSubParts(
 					valueMapping -> valueMapping.getBindable().visitJdbcTypes(
 							action,
 							Clause.IRRELEVANT,

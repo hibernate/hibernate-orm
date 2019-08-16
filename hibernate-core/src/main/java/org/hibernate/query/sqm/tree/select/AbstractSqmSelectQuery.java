@@ -48,6 +48,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		this.resultType = sqmQuerySpec.getSelectClause().getJavaType();
 	}
 
+
 	@Override
 	public Class getResultType() {
 		return resultType;

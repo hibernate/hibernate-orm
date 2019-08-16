@@ -11,24 +11,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
-import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class CaseSimpleExpression implements Expression, ValueMappingExpressable, DomainResultProducer {
-	private final ValueMappingExpressable type;
+public class CaseSimpleExpression implements Expression, DomainResultProducer {
+	private final MappingModelExpressable type;
 	private final Expression fixture;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
 
-	public CaseSimpleExpression(ValueMappingExpressable type, Expression fixture) {
+	public CaseSimpleExpression(MappingModelExpressable type, Expression fixture) {
 		this.type = type;
 		this.fixture = fixture;
 	}
@@ -38,13 +38,8 @@ public class CaseSimpleExpression implements Expression, ValueMappingExpressable
 	}
 
 	@Override
-	public ValueMappingExpressable getExpressionType() {
+	public MappingModelExpressable getExpressionType() {
 		return type;
-	}
-
-	@Override
-	public ValueMapping getExpressableValueMapping() {
-		return type.getExpressableValueMapping();
 	}
 
 	@Override

@@ -9,7 +9,6 @@
  * Hibernate's run-time mapping model
  *
  * @implNote At the moment, most of this mapping model is defined in the
- * {@link org.hibernate.persister} package.  The intention is to move
- * all run-time mapping model contracts here.
+ * {@link org.hibernate.persister} package.
  */
-package org.hibernate.metamodel.model.mapping;
+package org.hibernate.metamodel.mapping;

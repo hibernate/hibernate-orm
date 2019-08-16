@@ -8,25 +8,25 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.UnaryArithmeticOperator;
-import org.hibernate.sql.ast.ValueMappingExpressable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class UnaryOperation implements Expression, ValueMappingExpressable, DomainResultProducer {
+public class UnaryOperation implements Expression, DomainResultProducer {
 
 	private final UnaryArithmeticOperator operator;
 
 	private final Expression operand;
-	private final ValueMappingExpressable type;
+	private final MappingModelExpressable type;
 
-	public UnaryOperation(UnaryArithmeticOperator operator, Expression operand, ValueMappingExpressable type) {
+	public UnaryOperation(UnaryArithmeticOperator operator, Expression operand, MappingModelExpressable type) {
 		this.operator = operator;
 		this.operand = operand;
 		this.type = type;
@@ -41,14 +41,8 @@ public class UnaryOperation implements Expression, ValueMappingExpressable, Doma
 	}
 
 	@Override
-	public ValueMappingExpressable getExpressionType() {
+	public MappingModelExpressable getExpressionType() {
 		return type;
-	}
-
-	@Override
-	public ValueMapping getExpressableValueMapping() {
-		// calling type#getExpressableValueMapping could be recursive
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

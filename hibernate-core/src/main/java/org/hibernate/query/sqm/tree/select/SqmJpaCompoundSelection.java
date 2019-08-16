@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -109,9 +109,4 @@ public class SqmJpaCompoundSelection<T>
 		return walker.visitJpaCompoundSelection( this );
 	}
 
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		// could technically return an array I guess.  See `SqmTuple`
-		throw new UnsupportedOperationException(  );
-	}
 }

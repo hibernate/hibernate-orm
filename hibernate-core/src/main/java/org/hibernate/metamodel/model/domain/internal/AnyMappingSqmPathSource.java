@@ -25,6 +25,11 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	}
 
 	@Override
+	public String getMappingRole() {
+		return null;
+	}
+
+	@Override
 	public AnyMappingDomainType<J> getSqmPathType() {
 		//noinspection unchecked
 		return (AnyMappingDomainType<J>) super.getSqmPathType();

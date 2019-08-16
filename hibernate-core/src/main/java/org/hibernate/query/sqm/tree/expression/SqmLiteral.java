@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.sql.results.spi.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
  * Represents a literal value in the sqm, e.g.<ul>
@@ -45,8 +45,4 @@ public class SqmLiteral<T>
 		return "Literal( " + value + ")";
 	}
 
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer() {
-		return this;
-	}
 }

@@ -34,7 +34,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
@@ -122,8 +121,8 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.mapping.spi.ValueMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
@@ -143,14 +142,11 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
-import org.hibernate.sql.ast.ValueMappingExpressable;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -1195,7 +1191,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public ValueMapping findValueMapping(String name) {
+	public ModelPart findSubPart(String name) {
 		for ( AttributeDefinition attributeDefinition : attributeDefinitions ) {
 			if ( attributeDefinition.getName().equals( name ) ) {
 				return attributeDefinition;
@@ -1206,7 +1202,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitValueMappings(Consumer<ValueMapping> consumer) {
+	public void visitSubParts(Consumer<ModelPart> consumer) {
 		consumer.accept( entityIdentifierDefinition );
 
 		for ( AttributeDefinition attributeDefinition : attributeDefinitions ) {

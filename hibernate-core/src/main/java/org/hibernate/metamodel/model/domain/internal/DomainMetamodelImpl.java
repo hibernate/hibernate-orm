@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -43,6 +44,8 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -55,7 +58,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -97,6 +103,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	// DomainMetamodel
 
 	private final Set<EntityNameResolver> entityNameResolvers = new HashSet<>();
+	private final Map<String, ModelPart> modelPartRoleMap = new HashMap<>();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -219,6 +226,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 					modelCreationContext
 			);
 			entityPersisterMap.put( model.getEntityName(), cp );
+			modelPartRoleMap.put( model.getEntityName(), cp );
 
 			if ( cp.getConcreteProxyClass() != null
 					&& cp.getConcreteProxyClass().isInterface()
@@ -684,5 +692,27 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 		}
 
 		return results.toArray( new String[results.size()] );
+	}
+
+	@Override
+	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable) {
+
+		if ( sqmExpressable instanceof BasicType<?> ) {
+			return (BasicType) sqmExpressable;
+		}
+		else if ( sqmExpressable instanceof SqmPathSource ) {
+			final SqmPathSource pathSource = (SqmPathSource) sqmExpressable;
+			final String role = pathSource.getMappingRole();
+
+			return modelPartRoleMap.get( role );
+
+			/*
+			"org...Person" -> EntityPersister(Person)
+			"org...Person.name" -> AttributeDescriptor(..)
+			"org...Person.name.first" -> AttributeDescriptor(..)
+			 */
+		}
+
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

@@ -28,7 +28,7 @@ public class SessionStatisticsImpl implements SessionStatistics {
 	}
 	
 	public int getCollectionCount() {
-		return session.getPersistenceContextInternal().getCollectionEntries().size();
+		return session.getPersistenceContextInternal().getCollectionEntriesSize();
 	}
 	
 	public Set getEntityKeys() {

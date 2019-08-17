@@ -1768,6 +1768,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return ( nullifiableEntityKeys == null || nullifiableEntityKeys.size() == 0 );
 	}
 
+	@Override
+	public int getCollectionEntriesSize() {
+		return collectionEntries == null ? 0 : collectionEntries.size();
+	}
+
 	private void cleanUpInsertedKeysAfterTransaction() {
 		if ( insertedKeysMap != null ) {
 			insertedKeysMap.clear();

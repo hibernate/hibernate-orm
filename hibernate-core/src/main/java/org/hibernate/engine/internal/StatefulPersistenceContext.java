@@ -162,7 +162,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entityEntryContext = new EntityEntryContext( this );
 //		entityEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
 		collectionEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
-		parentsByChild = new IdentityHashMap<>( INIT_COLL_SIZE );
 
 		collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
 		arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
@@ -250,8 +249,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entitiesByKey.clear();
 		entitiesByUniqueKey.clear();
 		entityEntryContext.clear();
-//		entityEntries.clear();
-		parentsByChild.clear();
+		parentsByChild = null;
 		entitySnapshotsByKey.clear();
 		collectionsByKey.clear();
 		collectionEntries.clear();
@@ -417,7 +415,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 		}
 		// Clear all parent cache
-		parentsByChild.clear();
+		parentsByChild = null;
 		entitySnapshotsByKey.remove( key );
 		if ( nullifiableEntityKeys != null ) {
 			nullifiableEntityKeys.remove( key );
@@ -1173,7 +1171,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( collectionRole );
 
 	    // try cache lookup first
-		final Object parent = parentsByChild.get( childEntity );
+		final Object parent = getParentsByChild( childEntity );
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
 			//there maybe more than one parent, filter by type
@@ -1183,7 +1181,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 			else {
 				// remove wrong entry
-				parentsByChild.remove( childEntity );
+				removeChildParent( childEntity );
 			}
 		}
 
@@ -1274,6 +1272,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return null;
 	}
 
+	private Object getParentsByChild(Object childEntity) {
+		if ( parentsByChild != null ) {
+			parentsByChild.get( childEntity );
+		}
+		return null;
+	}
+
 	private boolean isFoundInParent(
 			String property,
 			Object childEntity,
@@ -1293,7 +1298,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final CollectionPersister cp = metamodel.collectionPersister( entity + '.' + property );
 
 	    // try cache lookup first
-		final Object parent = parentsByChild.get( childEntity );
+		final Object parent = getParentsByChild( childEntity );
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
 			//there maybe more than one parent, filter by type
@@ -1317,7 +1322,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 			else {
 				// remove wrong entry
-				parentsByChild.remove( childEntity );
+				removeChildParent( childEntity );
 			}
 		}
 
@@ -1450,7 +1455,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId) {
 		final Object entity = entitiesByKey.remove( oldKey );
 		final EntityEntry oldEntry = entityEntryContext.removeEntityEntry( entity );
-		parentsByChild.clear();
+		this.parentsByChild = null;
 
 		final EntityKey newKey = session.generateEntityKey( generatedId, oldEntry.getPersister() );
 		addEntity( newKey, entity );
@@ -1691,14 +1696,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void addChildParent(Object child, Object parent) {
+		if ( parentsByChild == null ) {
+			parentsByChild = new IdentityHashMap<>( INIT_COLL_SIZE );
+		}
 		parentsByChild.put( child, parent );
 	}
 
 	@Override
 	public void removeChildParent(Object child) {
-		parentsByChild.remove( child );
+		if ( parentsByChild != null ) {
+			parentsByChild.remove( child );
+		}
 	}
-
 
 	// INSERTED KEYS HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

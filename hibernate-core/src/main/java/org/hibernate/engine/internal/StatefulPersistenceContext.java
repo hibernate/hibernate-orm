@@ -13,6 +13,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -157,7 +158,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		this.session = session;
 
 		entitiesByKey = new HashMap<>( INIT_COLL_SIZE );
-		entitiesByUniqueKey = new HashMap<>( INIT_COLL_SIZE );
 		entitySnapshotsByKey = new HashMap<>( INIT_COLL_SIZE );
 
 		entityEntryContext = new EntityEntryContext( this );
@@ -244,7 +244,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		arrayHolders = null;
 		entitiesByKey.clear();
-		entitiesByUniqueKey.clear();
+		entitiesByUniqueKey = null;
 		entityEntryContext.clear();
 		parentsByChild = null;
 		entitySnapshotsByKey.clear();
@@ -406,12 +406,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object removeEntity(EntityKey key) {
 		final Object entity = entitiesByKey.remove( key );
-		final Iterator itr = entitiesByUniqueKey.values().iterator();
-		while ( itr.hasNext() ) {
-			if ( itr.next() == entity ) {
-				itr.remove();
+		if ( entitiesByUniqueKey != null ) {
+			final Iterator itr = entitiesByUniqueKey.values().iterator();
+			while ( itr.hasNext() ) {
+				if ( itr.next() == entity ) {
+					itr.remove();
+				}
 			}
 		}
+
 		// Clear all parent cache
 		parentsByChild = null;
 		entitySnapshotsByKey.remove( key );
@@ -427,11 +430,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object getEntity(EntityUniqueKey euk) {
-		return entitiesByUniqueKey.get( euk );
+		return entitiesByUniqueKey == null ? null : entitiesByUniqueKey.get( euk );
 	}
 
 	@Override
 	public void addEntity(EntityUniqueKey euk, Object entity) {
+		if ( entitiesByUniqueKey == null ) {
+			entitiesByUniqueKey = new HashMap<>( INIT_COLL_SIZE );
+		}
 		entitiesByUniqueKey.put( euk, entity );
 	}
 
@@ -1528,13 +1534,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			oos.writeObject( entry.getValue() );
 		}
 
-		oos.writeInt( entitiesByUniqueKey.size() );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Starting serialization of [" + entitiesByUniqueKey.size() + "] entitiesByUniqueKey entries" );
+		if ( entitiesByUniqueKey == null ) {
+			oos.writeInt( 0 );
 		}
-		for ( Map.Entry<EntityUniqueKey,Object> entry : entitiesByUniqueKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
+		else {
+			oos.writeInt( entitiesByUniqueKey.size() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Starting serialization of [" + entitiesByUniqueKey.size() + "] entitiesByUniqueKey entries" );
+			}
+			for ( Map.Entry<EntityUniqueKey,Object> entry : entitiesByUniqueKey.entrySet() ) {
+				entry.getKey().serialize( oos );
+				oos.writeObject( entry.getValue() );
+			}
 		}
 
 		if ( proxiesByKey == null ) {
@@ -1655,9 +1666,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
 			}
-			rtn.entitiesByUniqueKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
-			for ( int i = 0; i < count; i++ ) {
-				rtn.entitiesByUniqueKey.put( EntityUniqueKey.deserialize( ois, session ), ois.readObject() );
+			if ( count != 0 ) {
+				rtn.entitiesByUniqueKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+				for ( int i = 0; i < count; i++ ) {
+					rtn.entitiesByUniqueKey.put( EntityUniqueKey.deserialize( ois, session ), ois.readObject() );
+				}
 			}
 
 			count = ois.readInt();

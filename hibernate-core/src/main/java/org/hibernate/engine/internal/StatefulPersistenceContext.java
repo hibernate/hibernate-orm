@@ -162,7 +162,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		entityEntryContext = new EntityEntryContext( this );
 		collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
-		arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
 	}
 
 	private ConcurrentMap<EntityKey, Object> getOrInitializeProxiesByKey() {
@@ -243,7 +242,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			IdentityMap.onEachKey( collectionEntries, k -> k.unsetSession( session ) );
 		}
 
-		arrayHolders.clear();
+		arrayHolders = null;
 		entitiesByKey.clear();
 		entitiesByUniqueKey.clear();
 		entityEntryContext.clear();
@@ -981,18 +980,21 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public PersistentCollection getCollectionHolder(Object array) {
-		return arrayHolders.get( array );
+		return arrayHolders == null ? null : arrayHolders.get( array );
 	}
 
 	@Override
 	public void addCollectionHolder(PersistentCollection holder) {
 		//TODO:refactor + make this method private
+		if ( arrayHolders == null ) {
+			arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
+		}
 		arrayHolders.put( holder.getValue(), holder );
 	}
 
 	@Override
 	public PersistentCollection removeCollectionHolder(Object array) {
-		return arrayHolders.remove( array );
+		return arrayHolders != null ? arrayHolders.remove( array ) : null;
 	}
 
 	@Override
@@ -1583,13 +1585,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 		}
 
-		oos.writeInt( arrayHolders.size() );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Starting serialization of [" + arrayHolders.size() + "] arrayHolders entries" );
+		if ( arrayHolders == null ) {
+			oos.writeInt( 0 );
 		}
-		for ( Map.Entry<Object,PersistentCollection> entry : arrayHolders.entrySet() ) {
-			oos.writeObject( entry.getKey() );
-			oos.writeObject( entry.getValue() );
+		else {
+			oos.writeInt( arrayHolders.size() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Starting serialization of [" + arrayHolders.size() + "] arrayHolders entries" );
+			}
+			for ( Map.Entry<Object,PersistentCollection> entry : arrayHolders.entrySet() ) {
+				oos.writeObject( entry.getKey() );
+				oos.writeObject( entry.getValue() );
+			}
 		}
 
 		if ( nullifiableEntityKeys == null ) {
@@ -1707,9 +1714,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] arrayHolders entries" );
 			}
-			rtn.arrayHolders = new IdentityHashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
-			for ( int i = 0; i < count; i++ ) {
-				rtn.arrayHolders.put( ois.readObject(), (PersistentCollection) ois.readObject() );
+			if ( count != 0 ) {
+				rtn.arrayHolders = new IdentityHashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+				for ( int i = 0; i < count; i++ ) {
+					rtn.arrayHolders.put( ois.readObject(), (PersistentCollection) ois.readObject() );
+				}
 			}
 
 			count = ois.readInt();

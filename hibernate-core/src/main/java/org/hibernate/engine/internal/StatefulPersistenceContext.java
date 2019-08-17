@@ -176,7 +176,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
 		arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
 
-		nullAssociations = new HashSet<>( INIT_COLL_SIZE );
 		nonlazyCollections = new ArrayList<>( INIT_COLL_SIZE );
 	}
 
@@ -1359,16 +1358,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void addNullProperty(EntityKey ownerKey, String propertyName) {
+		if ( nullAssociations == null ) {
+			nullAssociations = new HashSet<>( INIT_COLL_SIZE );
+		}
 		nullAssociations.add( new AssociationKey( ownerKey, propertyName ) );
 	}
 
 	@Override
 	public boolean isPropertyNull(EntityKey ownerKey, String propertyName) {
-		return nullAssociations.contains( new AssociationKey( ownerKey, propertyName ) );
+		return nullAssociations != null && nullAssociations.contains( new AssociationKey( ownerKey, propertyName ) );
 	}
 
 	private void clearNullProperties() {
-		nullAssociations.clear();
+		nullAssociations = null;
 	}
 
 	@Override

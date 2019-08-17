@@ -86,7 +86,7 @@ public class NamingHelper {
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
 		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort( alphabeticalColumns, comparing(Identifier::getCanonicalName) );
+		Arrays.sort( alphabeticalColumns );
 
 		for ( Identifier columnName : alphabeticalColumns ) {
 			sb.append( "column`" ).append( columnName ).append( '`' );
@@ -111,7 +111,7 @@ public class NamingHelper {
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
 		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort( alphabeticalColumns, comparing(Identifier::getCanonicalName) );
+		Arrays.sort( alphabeticalColumns );
 		for ( Identifier columnName : alphabeticalColumns ) {
 			sb.append( "column`" ).append( columnName ).append( '`' );
 		}

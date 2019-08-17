@@ -142,13 +142,9 @@ public class NamingHelper {
 	private String generateColumnsHash(String prefix, StringBuilder sb, Identifier[] columnNames) {
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
-		// Clone the list, as sometimes a set of order-dependent Column
-		// bindings are given.
-		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort( alphabeticalColumns );
-		for ( Identifier columnName : alphabeticalColumns ) {
-			sb.append( "column`" ).append( columnName ).append( '`' );
-		}
+		Arrays.stream( columnNames )
+				.sorted()
+				.forEachOrdered( columnName -> sb.append( "column`" ).append( columnName ).append( '`' ) );
 		return prefix + hashedName( sb.toString() );
 	}
 }

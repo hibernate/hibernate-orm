@@ -81,17 +81,7 @@ public class NamingHelper {
 				.append( "table`" ).append( tableName ).append( '`' )
 				.append( "references`" ).append( referencedTableName ).append( '`' );
 
-		// Ensure a consistent ordering of columns, regardless of the order
-		// they were bound.
-		// Clone the list, as sometimes a set of order-dependent Column
-		// bindings are given.
-		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort( alphabeticalColumns );
-
-		for ( Identifier columnName : alphabeticalColumns ) {
-			sb.append( "column`" ).append( columnName ).append( '`' );
-		}
-		return prefix + hashedName( sb.toString() );
+		return generateColumnsHash( prefix, sb, columnNames );
 	}
 
 	/**
@@ -105,17 +95,7 @@ public class NamingHelper {
 		// exist between all table and column identifiers.
 
 		StringBuilder sb = new StringBuilder(64).append( "table`" ).append( tableName ).append( '`' );
-
-		// Ensure a consistent ordering of columns, regardless of the order
-		// they were bound.
-		// Clone the list, as sometimes a set of order-dependent Column
-		// bindings are given.
-		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort( alphabeticalColumns );
-		for ( Identifier columnName : alphabeticalColumns ) {
-			sb.append( "column`" ).append( columnName ).append( '`' );
-		}
-		return prefix + hashedName( sb.toString() );
+		return generateColumnsHash( prefix, sb, columnNames );
 	}
 
 	/**
@@ -157,5 +137,18 @@ public class NamingHelper {
 		catch ( NoSuchAlgorithmException|UnsupportedEncodingException e ) {
 			throw new HibernateException( "Unable to generate a hashed name!", e );
 		}
+	}
+
+	private String generateColumnsHash(String prefix, StringBuilder sb, Identifier[] columnNames) {
+		// Ensure a consistent ordering of columns, regardless of the order
+		// they were bound.
+		// Clone the list, as sometimes a set of order-dependent Column
+		// bindings are given.
+		Identifier[] alphabeticalColumns = columnNames.clone();
+		Arrays.sort( alphabeticalColumns );
+		for ( Identifier columnName : alphabeticalColumns ) {
+			sb.append( "column`" ).append( columnName ).append( '`' );
+		}
+		return prefix + hashedName( sb.toString() );
 	}
 }

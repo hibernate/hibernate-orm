@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -60,6 +61,15 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	public static <K,V> void onEachKey(Map<K,V> map, Consumer<K> consumer) {
 		final IdentityMap<K, V> identityMap = (IdentityMap<K, V>) map;
 		identityMap.map.forEach( (kIdentityKey, v) -> consumer.accept( kIdentityKey.key ) );
+	}
+
+	/**
+	 * Override Map{@link #forEach(BiConsumer)} to provide a more efficient implementation
+	 * @param action the operation to apply to each element
+	 */
+	@Override
+	public void forEach(BiConsumer<? super K, ? super V> action) {
+		map.forEach( (k,v) -> action.accept( k.key, v ) );
 	}
 
 	public Iterator<K> keyIterator() {

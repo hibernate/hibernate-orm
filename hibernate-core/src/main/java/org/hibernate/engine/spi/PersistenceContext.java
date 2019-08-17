@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
@@ -510,8 +511,17 @@ public interface PersistenceContext {
 
 	/**
 	 * Get the mapping from collection instance to collection entry
+	 * @deprecated use {@link #removeCollectionEntry(PersistentCollection)} or {@link #getCollectionEntriesSize()}, {@link #forEachCollectionEntry(BiConsumer,boolean)}.
 	 */
+	@Deprecated
 	Map getCollectionEntries();
+
+	/**
+	 * Execute some action on each entry of the collectionEntries map, optionally iterating on a defensive copy.
+	 * @param action the lambda to apply on each PersistentCollection,CollectionEntry map entry of the PersistenceContext.
+	 * @param concurrent set this to false for improved efficiency, but that would make it illegal to make changes to the underlying collectionEntries map.
+	 */
+	void forEachCollectionEntry(BiConsumer<PersistentCollection,CollectionEntry> action, boolean concurrent);
 
 	/**
 	 * Get the mapping from collection key to collection instance
@@ -751,6 +761,13 @@ public interface PersistenceContext {
 	 * @return the size
 	 */
 	int getCollectionEntriesSize();
+
+	/**
+	 * Remove a {@link PersistentCollection} from the {@link PersistenceContext}.
+	 * @param collection the collection to remove
+	 * @return the matching {@link CollectionEntry}, if any was removed.
+	 */
+	CollectionEntry removeCollectionEntry(PersistentCollection collection);
 
 	/**
 	 * Provides centralized access to natural-id-related functionality.

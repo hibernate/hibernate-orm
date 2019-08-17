@@ -6,18 +6,14 @@
  */
 package org.hibernate.mapping;
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-
-import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
@@ -89,20 +85,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The hased name.
 	 */
 	public static String hashedName(String s) {
-		try {
-			MessageDigest md = MessageDigest.getInstance( "MD5" );
-			md.reset();
-			md.update( s.getBytes() );
-			byte[] digest = md.digest();
-			BigInteger bigInt = new BigInteger( 1, digest );
-			// By converting to base 35 (full alphanumeric), we guarantee
-			// that the length of the name will always be smaller than the 30
-			// character identifier restriction enforced by a few dialects.
-			return bigInt.toString( 35 );
-		}
-		catch ( NoSuchAlgorithmException e ) {
-			throw new HibernateException( "Unable to generate a hashed Constraint name!", e );
-		}
+		return NamingHelper.INSTANCE.hashedName(s);
 	}
 
 	private static class ColumnComparator implements Comparator<Column> {

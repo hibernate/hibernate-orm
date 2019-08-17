@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
@@ -47,23 +48,13 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, Column... columns) {
-		String tableName = table.getName();
-		// Use a concatenation that guarantees uniqueness, even if identical names
-		// exist between all table and column identifiers.
-
-		StringBuilder sb = new StringBuilder(64).append( "table`" ).append( tableName ).append( '`' );
-
-		// Ensure a consistent ordering of columns, regardless of the order
-		// they were bound.
-		// Clone the list, as sometimes a set of order-dependent Column
-		// bindings are given.
-		Column[] alphabeticalColumns = columns.clone();
-		Arrays.sort( alphabeticalColumns, comparing(Column::getName) );
-		for ( Column column : alphabeticalColumns ) {
-			String columnName = column.getName();
-			sb.append( "column`" ).append( columnName ).append( '`');
+		Identifier tableName = table.getNameIdentifier();
+		Identifier[] columnNames = new Identifier[columns.length];
+		for (int i = 0; i < columns.length; i++) {
+			Column column = columns[i];
+			columnNames[i] = Identifier.toIdentifier(column.getName());
 		}
-		return prefix + hashedName( sb.toString() );
+		return NamingHelper.INSTANCE.generateHashedConstraintName(prefix, tableName, columnNames);
 	}
 
 	/**
@@ -72,7 +63,13 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, List<Column> columns) {
-		return generateName( prefix, table, columns.toArray( new Column[columns.size()] ) );
+		Identifier tableName = table.getNameIdentifier();
+		Identifier[] columnNames = new Identifier[columns.size()];
+		for (int i = 0; i < columns.size(); i++) {
+			Column column = columns.get(i);
+			columnNames[i] = Identifier.toIdentifier(column.getName());
+		}
+		return NamingHelper.INSTANCE.generateHashedConstraintName(prefix, tableName, columnNames);
 	}
 
 	/**

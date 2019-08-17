@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -160,9 +161,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entitySnapshotsByKey = new HashMap<>( INIT_COLL_SIZE );
 
 		entityEntryContext = new EntityEntryContext( this );
-//		entityEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
-		collectionEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
-
 		collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
 		arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
 
@@ -243,7 +241,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		final SharedSessionContractImplementor session = getSession();
-		IdentityMap.onEachKey( collectionEntries, k -> k.unsetSession( session ) );
+		if ( collectionEntries != null ) {
+			IdentityMap.onEachKey( collectionEntries, k -> k.unsetSession( session ) );
+		}
 
 		arrayHolders.clear();
 		entitiesByKey.clear();
@@ -252,7 +252,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		parentsByChild = null;
 		entitySnapshotsByKey.clear();
 		collectionsByKey.clear();
-		collectionEntries.clear();
+		collectionEntries = null;
 		unownedCollections = null;
 		proxiesByKey = null;
 		nullifiableEntityKeys = null;
@@ -454,7 +454,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public CollectionEntry getCollectionEntry(PersistentCollection coll) {
-		return collectionEntries.get( coll );
+		return collectionEntries == null ? null : collectionEntries.get( coll );
 	}
 
 	@Override
@@ -563,7 +563,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean containsCollection(PersistentCollection collection) {
-		return collectionEntries.containsKey( collection );
+		return collectionEntries != null && collectionEntries.containsKey( collection );
 	}
 
 	@Override
@@ -888,7 +888,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @param key The key of the collection's entry.
 	 */
 	private void addCollection(PersistentCollection coll, CollectionEntry entry, Serializable key) {
-		collectionEntries.put( coll, entry );
+		getOrInitializeCollectionEntries().put( coll, entry );
 		final CollectionKey collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
 		final PersistentCollection old = collectionsByKey.put( collectionKey, coll );
 		if ( old != null ) {
@@ -897,10 +897,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 			// or should it actually throw an exception?
 			old.unsetSession( session );
-			collectionEntries.remove( old );
+			if ( collectionEntries != null ) {
+				collectionEntries.remove( old );
+			}
 			// watch out for a case where old is still referenced
 			// somewhere in the object graph! (which is a user error)
 		}
+	}
+
+	private IdentityMap<PersistentCollection, CollectionEntry> getOrInitializeCollectionEntries() {
+		if ( this.collectionEntries == null ) {
+			this.collectionEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
+		}
+		return this.collectionEntries;
 	}
 
 	/**
@@ -911,7 +920,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	private void addCollection(PersistentCollection collection, CollectionPersister persister) {
 		final CollectionEntry ce = new CollectionEntry( persister, collection );
-		collectionEntries.put( collection, ce );
+		getOrInitializeCollectionEntries().put( collection, ce );
 	}
 
 	@Override
@@ -998,7 +1007,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 		else {
 			coll = getCollectionHolder( collection );
-			if ( coll == null ) {
+			if ( coll == null && collectionEntries != null ) {
 				//it might be an unwrapped collection reference!
 				//try to find a wrapper (slowish)
 				final Iterator<PersistentCollection> wrappers = collectionEntries.keyIterator();
@@ -1057,9 +1066,29 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return null;
 	}
 
+	/**
+	 * @deprecated We should not expose this directly: the other accessors that have been created as a replacement
+	 * have better chances of skipping initializing this map, which is a good performance improvement.
+	 * @return the map of managed collection entries.
+	 */
 	@Override
+	@Deprecated
 	public Map getCollectionEntries() {
-		return collectionEntries;
+		return getOrInitializeCollectionEntries();
+	}
+
+	@Override
+	public void forEachCollectionEntry(BiConsumer<PersistentCollection, CollectionEntry> action, boolean concurrent) {
+		if ( collectionEntries != null ) {
+			if ( concurrent ) {
+				for ( Map.Entry<PersistentCollection,CollectionEntry> entry : IdentityMap.concurrentEntries( collectionEntries ) ) {
+					action.accept( entry.getKey(), entry.getValue() );
+				}
+			}
+			else {
+				collectionEntries.forEach( action );
+			}
+		}
 	}
 
 	@Override
@@ -1538,13 +1567,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			oos.writeObject( entry.getValue() );
 		}
 
-		oos.writeInt( collectionEntries.size() );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Starting serialization of [" + collectionEntries.size() + "] collectionEntries entries" );
+		if ( collectionEntries == null ) {
+			oos.writeInt( 0 );
 		}
-		for ( Map.Entry<PersistentCollection,CollectionEntry> entry : collectionEntries.entrySet() ) {
-			oos.writeObject( entry.getKey() );
-			entry.getValue().serialize( oos );
+		else {
+			oos.writeInt( collectionEntries.size() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Starting serialization of [" + collectionEntries.size() + "] collectionEntries entries" );
+			}
+			for ( Map.Entry<PersistentCollection,CollectionEntry> entry : collectionEntries.entrySet() ) {
+				oos.writeObject( entry.getKey() );
+				entry.getValue().serialize( oos );
+			}
 		}
 
 		oos.writeInt( arrayHolders.size() );
@@ -1660,12 +1694,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionEntries entries" );
 			}
-			rtn.collectionEntries = IdentityMap.instantiateSequenced( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				final PersistentCollection pc = (PersistentCollection) ois.readObject();
 				final CollectionEntry ce = CollectionEntry.deserialize( ois, session );
 				pc.setCurrentSession( session );
-				rtn.collectionEntries.put( pc, ce );
+				rtn.getOrInitializeCollectionEntries().put( pc, ce );
 			}
 
 			count = ois.readInt();
@@ -1771,6 +1804,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public int getCollectionEntriesSize() {
 		return collectionEntries == null ? 0 : collectionEntries.size();
+	}
+
+	@Override
+	public CollectionEntry removeCollectionEntry(PersistentCollection collection) {
+		if ( collectionEntries == null ) {
+			return null;
+		}
+		else {
+			return collectionEntries.remove( collection );
+		}
 	}
 
 	private void cleanUpInsertedKeysAfterTransaction() {

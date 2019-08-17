@@ -13,7 +13,6 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -87,15 +86,7 @@ public class NamingHelper {
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
 		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort(
-				alphabeticalColumns,
-				new Comparator<Identifier>() {
-					@Override
-					public int compare(Identifier o1, Identifier o2) {
-						return o1.getCanonicalName().compareTo( o2.getCanonicalName() );
-					}
-				}
-		);
+		Arrays.sort( alphabeticalColumns, comparing(Identifier::getCanonicalName) );
 
 		for ( Identifier columnName : alphabeticalColumns ) {
 			sb.append( "column`" ).append( columnName ).append( "`" );

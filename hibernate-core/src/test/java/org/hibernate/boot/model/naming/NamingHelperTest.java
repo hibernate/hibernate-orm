@@ -63,6 +63,25 @@ public class NamingHelperTest extends BaseUnitTestCase {
 		assertEquals( "FKdgopp1hqnm8c1o6sfbb3tbeh", fkNameUtf8 );
 	}
 
+	@Test
+	public void generateHashedConstraintName() {
+		Identifier booksDe = new Identifier( "Bücher", false );
+		Identifier authorsDe = new Identifier( "Autoren", false );
+		Identifier authorId = new Identifier( "autor_id", false );
+
+		defaultCharset.set( StandardCharsets.ISO_8859_1 );
+
+		String fkNameLatin1 = NamingHelper.INSTANCE.generateHashedConstraintName( "FK", booksDe, authorsDe, authorId );
+
+		assertEquals( "FKd6orrc2532pa8rwprvo2cck63", fkNameLatin1 );
+
+		defaultCharset.set( StandardCharsets.UTF_8 );
+
+		String fkNameUtf8 = NamingHelper.INSTANCE.generateHashedConstraintName( "FK", booksDe, authorsDe, authorId );
+
+		assertEquals( "FK608iqfbuucbi84fp6fe3ypqbi", fkNameUtf8 );
+	}
+
 	public static class DefaultCharset extends ExternalResource {
 
 		private Charset prev;

@@ -77,9 +77,9 @@ public class NamingHelper {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
-		StringBuilder sb = new StringBuilder()
-				.append( "table`" ).append( tableName ).append( "`" )
-				.append( "references`" ).append( referencedTableName ).append( "`" );
+		StringBuilder sb = new StringBuilder(64)
+				.append( "table`" ).append( tableName ).append( '`' )
+				.append( "references`" ).append( referencedTableName ).append( '`' );
 
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
@@ -89,7 +89,7 @@ public class NamingHelper {
 		Arrays.sort( alphabeticalColumns, comparing(Identifier::getCanonicalName) );
 
 		for ( Identifier columnName : alphabeticalColumns ) {
-			sb.append( "column`" ).append( columnName ).append( "`" );
+			sb.append( "column`" ).append( columnName ).append( '`' );
 		}
 		return prefix + hashedName( sb.toString() );
 	}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.naming;
 
+import static java.util.Comparator.comparing;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -119,15 +120,7 @@ public class NamingHelper {
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
 		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort(
-				alphabeticalColumns,
-				new Comparator<Identifier>() {
-					@Override
-					public int compare(Identifier o1, Identifier o2) {
-						return o1.getCanonicalName().compareTo( o2.getCanonicalName() );
-					}
-				}
-		);
+		Arrays.sort( alphabeticalColumns, comparing(Identifier::getCanonicalName) );
 		for ( Identifier columnName : alphabeticalColumns ) {
 			sb.append( "column`" ).append( columnName ).append( '`' );
 		}

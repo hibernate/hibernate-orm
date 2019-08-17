@@ -5,10 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+import static java.util.Comparator.comparing;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -57,7 +57,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
 		Column[] alphabeticalColumns = columns.clone();
-		Arrays.sort( alphabeticalColumns, ColumnComparator.INSTANCE );
+		Arrays.sort( alphabeticalColumns, comparing(Column::getName) );
 		for ( Column column : alphabeticalColumns ) {
 			String columnName = column == null ? "" : column.getName();
 			sb.append( "column`" ).append( columnName ).append( "`" );
@@ -86,14 +86,6 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 */
 	public static String hashedName(String s) {
 		return NamingHelper.INSTANCE.hashedName(s);
-	}
-
-	private static class ColumnComparator implements Comparator<Column> {
-		public static ColumnComparator INSTANCE = new ColumnComparator();
-
-		public int compare(Column col1, Column col2) {
-			return col1.getName().compareTo( col2.getName() );
-		}
 	}
 
 	public void addColumn(Column column) {

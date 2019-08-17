@@ -255,9 +255,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entitySnapshotsByKey.clear();
 		collectionsByKey.clear();
 		collectionEntries.clear();
-		if ( unownedCollections != null ) {
-			unownedCollections.clear();
-		}
+		unownedCollections = null;
 		proxiesByKey = null;
 		nullifiableEntityKeys = null;
 		if ( batchFetchQueue != null ) {

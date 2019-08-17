@@ -157,15 +157,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		entitiesByKey = new HashMap<>( INIT_COLL_SIZE );
 		entitiesByUniqueKey = new HashMap<>( INIT_COLL_SIZE );
-		//noinspection unchecked
-		proxiesByKey = new ConcurrentReferenceHashMap<>(
-				INIT_COLL_SIZE,
-				.75f,
-				1,
-				ConcurrentReferenceHashMap.ReferenceType.STRONG,
-				ConcurrentReferenceHashMap.ReferenceType.WEAK,
-				null
-		);
 		entitySnapshotsByKey = new HashMap<>( INIT_COLL_SIZE );
 
 		entityEntryContext = new EntityEntryContext( this );
@@ -177,6 +168,21 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
 
 		nonlazyCollections = new ArrayList<>( INIT_COLL_SIZE );
+	}
+
+	private ConcurrentMap<EntityKey, Object> getOrInitializeProxiesByKey() {
+		if ( proxiesByKey == null ) {
+			//noinspection unchecked
+			proxiesByKey = new ConcurrentReferenceHashMap<>(
+					INIT_COLL_SIZE,
+					.75f,
+					1,
+					ConcurrentReferenceHashMap.ReferenceType.STRONG,
+					ConcurrentReferenceHashMap.ReferenceType.WEAK,
+					null
+			);
+		}
+		return proxiesByKey;
 	}
 
 	@Override
@@ -220,12 +226,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void clear() {
-		for ( Object o : proxiesByKey.values() ) {
-			if ( o == null ) {
-				//entry may be GCd
-				continue;
-			}
-			((HibernateProxy) o).getHibernateLazyInitializer().unsetSession();
+		if ( proxiesByKey != null ) {
+			proxiesByKey.forEach( (k,o) -> {
+				if ( o != null) {
+					((HibernateProxy) o).getHibernateLazyInitializer().unsetSession();
+				}
+			} );
 		}
 
 		for ( Entry<Object, EntityEntry> objectEntityEntryEntry : entityEntryContext.reentrantSafeEntityEntries() ) {
@@ -252,7 +258,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( unownedCollections != null ) {
 			unownedCollections.clear();
 		}
-		proxiesByKey.clear();
+		proxiesByKey = null;
 		nullifiableEntityKeys = null;
 		if ( batchFetchQueue != null ) {
 			batchFetchQueue.clear();
@@ -566,7 +572,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean containsProxy(Object entity) {
-		return proxiesByKey.containsValue( entity );
+		return proxiesByKey != null && proxiesByKey.containsValue( entity );
 	}
 
 	@Override
@@ -618,7 +624,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( li.getEntityName() );
 			final EntityKey key = session.generateEntityKey( li.getIdentifier(), persister );
 		  	// any earlier proxy takes precedence
-			proxiesByKey.putIfAbsent( key, proxy );
+			getOrInitializeProxiesByKey().putIfAbsent( key, proxy );
 			proxy.getHibernateLazyInitializer().setSession( session );
 		}
 	}
@@ -688,7 +694,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			// If an impl is passed, there is really no point in creating a proxy.
 			// It would just be extra processing.  Just return the impl
 			if ( object != null ) {
-				proxiesByKey.remove( key );
+				removeProxyByKey( key );
 				return object;
 			}
 
@@ -699,7 +705,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				final Object impl = originalHibernateProxy.getHibernateLazyInitializer().getImplementation();
 				// can we return it?
 				if ( concreteProxyClass.isInstance( impl ) ) {
-					proxiesByKey.remove( key );
+					removeProxyByKey( key );
 					return impl;
 				}
 			}
@@ -724,12 +730,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 	}
 
+	private Object removeProxyByKey(final EntityKey key) {
+		if ( proxiesByKey != null ) {
+			return proxiesByKey.remove( key );
+		}
+		return null;
+	}
+
 	@Override
 	public Object proxyFor(EntityPersister persister, EntityKey key, Object impl) throws HibernateException {
 		if ( !persister.hasProxy() ) {
 			return impl;
 		}
-		final Object proxy = proxiesByKey.get( key );
+		final Object proxy = getProxy( key );
 		return ( proxy != null ) ? narrowProxy( proxy, persister, key, impl ) : impl;
 	}
 
@@ -1008,12 +1021,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object getProxy(EntityKey key) {
-		return proxiesByKey.get( key );
+		return proxiesByKey == null ? null : proxiesByKey.get( key );
 	}
 
 	@Override
 	public void addProxy(EntityKey key, Object proxy) {
-		proxiesByKey.put( key, proxy );
+		getOrInitializeProxiesByKey().put( key, proxy );
 	}
 
 	@Override
@@ -1022,7 +1035,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			batchFetchQueue.removeBatchLoadableEntityKey( key );
 			batchFetchQueue.removeSubselect( key );
 		}
-		return proxiesByKey.remove( key );
+		return removeProxyByKey( key );
 	}
 
 	@Override
@@ -1036,10 +1049,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Map getEntitiesByKey() {
 		return entitiesByKey;
-	}
-
-	public Map getProxiesByKey() {
-		return proxiesByKey;
 	}
 
 	@Override
@@ -1492,13 +1501,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			oos.writeObject( entry.getValue() );
 		}
 
-		oos.writeInt( proxiesByKey.size() );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Starting serialization of [" + proxiesByKey.size() + "] proxiesByKey entries" );
+		if ( proxiesByKey == null ) {
+			oos.writeInt( 0 );
 		}
-		for ( Map.Entry<EntityKey,Object> entry : proxiesByKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
+		else {
+			oos.writeInt( proxiesByKey.size() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Starting serialization of [" + proxiesByKey.size() + "] proxiesByKey entries" );
+			}
+			for ( Map.Entry<EntityKey,Object> entry : proxiesByKey.entrySet() ) {
+				entry.getKey().serialize( oos );
+				oos.writeObject( entry.getValue() );
+			}
 		}
 
 		oos.writeInt( entitySnapshotsByKey.size() );
@@ -1604,21 +1618,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] proxiesByKey entries" );
 			}
-			//noinspection unchecked
-			rtn.proxiesByKey = new ConcurrentReferenceHashMap<>(
-					count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count,
-					.75f,
-					1,
-					ConcurrentReferenceHashMap.ReferenceType.STRONG,
-					ConcurrentReferenceHashMap.ReferenceType.WEAK,
-					null
-			);
 			for ( int i = 0; i < count; i++ ) {
 				final EntityKey ek = EntityKey.deserialize( ois, sfi );
 				final Object proxy = ois.readObject();
 				if ( proxy instanceof HibernateProxy ) {
 					( (HibernateProxy) proxy ).getHibernateLazyInitializer().setSession( session );
-					rtn.proxiesByKey.put( ek, proxy );
+					rtn.getOrInitializeProxiesByKey().put( ek, proxy );
 				}
 				else {
 					// otherwise, the proxy was pruned during the serialization process

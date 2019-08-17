@@ -163,8 +163,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entityEntryContext = new EntityEntryContext( this );
 		collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
 		arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
-
-		nonlazyCollections = new ArrayList<>( INIT_COLL_SIZE );
 	}
 
 	private ConcurrentMap<EntityKey, Object> getOrInitializeProxiesByKey() {
@@ -252,6 +250,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		parentsByChild = null;
 		entitySnapshotsByKey.clear();
 		collectionsByKey.clear();
+		nonlazyCollections = null;
 		collectionEntries = null;
 		unownedCollections = null;
 		proxiesByKey = null;
@@ -952,6 +951,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void addNonLazyCollection(PersistentCollection collection) {
+		if ( nonlazyCollections == null ) {
+			nonlazyCollections = new ArrayList<>( INIT_COLL_SIZE );
+		}
 		nonlazyCollections.add( collection );
 	}
 
@@ -965,7 +967,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			loadCounter++;
 			try {
 				int size;
-				while ( ( size = nonlazyCollections.size() ) > 0 ) {
+				while ( nonlazyCollections != null && ( size = nonlazyCollections.size() ) > 0 ) {
 					//note that each iteration of the loop may add new elements
 					nonlazyCollections.remove( size - 1 ).forceInitialization();
 				}

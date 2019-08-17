@@ -68,7 +68,7 @@ public class MetadataTaskTest {
 	}
 	
 	@Test
-	public void testCreateMetadataDescriptor() throws Exception {
+	public void testCreateNativeMetadataDescriptor() throws Exception {
 		String propertiesString = "hibernate.dialect=H2";
 		File propertiesFile = new File(tempDir.toFile(), "hibernate.properties");
 		Files.write(propertiesFile.toPath(), propertiesString.getBytes());

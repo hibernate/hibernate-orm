@@ -58,6 +58,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -78,6 +79,7 @@ import org.jboss.logging.Logger;
  * their processing.
  *
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
 public class StatefulPersistenceContext implements PersistenceContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
@@ -199,7 +201,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void addUnownedCollection(CollectionKey key, PersistentCollection collection) {
-		if (unownedCollections==null) {
+		if ( unownedCollections == null ) {
 			unownedCollections = new HashMap<>( INIT_COLL_SIZE );
 		}
 		unownedCollections.put( key, collection );
@@ -212,8 +214,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public BatchFetchQueue getBatchFetchQueue() {
-		if (batchFetchQueue==null) {
-			batchFetchQueue = new BatchFetchQueue(this);
+		if ( batchFetchQueue == null ) {
+			batchFetchQueue = new BatchFetchQueue( this );
 		}
 		return batchFetchQueue;
 	}
@@ -417,8 +419,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entitySnapshotsByKey.remove( key );
 		nullifiableEntityKeys.remove( key );
 		if( batchFetchQueue != null ) {
-			getBatchFetchQueue().removeBatchLoadableEntityKey(key);
-			getBatchFetchQueue().removeSubselect(key);
+			getBatchFetchQueue().removeBatchLoadableEntityKey( key );
+			getBatchFetchQueue().removeSubselect( key );
 		}
 		return entity;
 	}
@@ -938,9 +940,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void initializeNonLazyCollections() throws HibernateException {
 		if ( loadCounter == 0 ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Initializing non-lazy collections" );
-			}
+			LOG.trace( "Initializing non-lazy collections" );
 
 			//do this work only at the very highest level of the load
 			//don't let this method be called recursively
@@ -1278,8 +1278,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object getIndexInOwner(String entity, String property, Object childEntity, Map mergeMap) {
-		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entity );
-		final CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( entity + '.' + property );
+		final MetamodelImplementor metamodel = session.getFactory().getMetamodel();
+		final EntityPersister persister = metamodel.entityPersister( entity );
+		final CollectionPersister cp = metamodel.collectionPersister( entity + '.' + property );
 
 	    // try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
@@ -1289,7 +1290,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
 				Object index = getIndexInParent( property, childEntity, persister, cp, parent );
 
-				if (index==null && mergeMap!=null) {
+				if ( index == null && mergeMap != null ) {
 					final Object unMergedInstance = mergeMap.get( parent );
 					final Object unMergedChild = mergeMap.get( childEntity );
 					if ( unMergedInstance != null && unMergedChild != null ) {
@@ -1378,7 +1379,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		else {
 			final EntityEntry ee =  getEntry( entityOrProxy );
 			if ( ee == null ) {
-				throw new TransientObjectException("Instance was not associated with this persistence context" );
+				throw new TransientObjectException( "Instance was not associated with this persistence context" );
 			}
 			isReadOnly = ee.isReadOnly();
 		}
@@ -1415,11 +1416,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private void setProxyReadOnly(HibernateProxy proxy, boolean readOnly) {
-		if ( proxy.getHibernateLazyInitializer().getSession() != getSession() ) {
+		final LazyInitializer hibernateLazyInitializer = proxy.getHibernateLazyInitializer();
+		if ( hibernateLazyInitializer.getSession() != getSession() ) {
 			throw new AssertionFailure(
 					"Attempt to set a proxy to read-only that is associated with a different session" );
 		}
-		proxy.getHibernateLazyInitializer().setReadOnly( readOnly );
+		hibernateLazyInitializer.setReadOnly( readOnly );
 	}
 
 	private void setEntityReadOnly(Object entity, boolean readOnly) {
@@ -1461,9 +1463,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @throws IOException serialization errors.
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Serializing persistence-context" );
-		}
+		LOG.trace( "Serializing persistence-context" );
 
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
@@ -1556,9 +1556,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public static StatefulPersistenceContext deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Deserializing persistence-context" );
-		}
+		LOG.trace( "Deserializing persistence-context" );
 		final StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
 		SessionFactoryImplementor sfi = session.getFactory();
 
@@ -1848,7 +1846,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 							new AfterTransactionCompletionProcess() {
 								@Override
 								public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-									if (success) {
+									if ( success ) {
 										final boolean put = naturalIdCacheAccessStrategy.afterInsert( session, naturalIdCacheKey, id );
 										if ( put && statistics.isStatisticsEnabled() ) {
 											statistics.naturalIdCachePut(
@@ -1914,7 +1912,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					break;
 				}
 				default: {
-					LOG.debug( "Unexpected CachedNaturalIdValueSource [" + source + "]" );
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debug( "Unexpected CachedNaturalIdValueSource [" + source + "]" );
+					}
 				}
 			}
 		}

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
@@ -175,8 +176,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
 		arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
 
-		nullifiableEntityKeys = new HashSet<>();
-
 		nullAssociations = new HashSet<>( INIT_COLL_SIZE );
 		nonlazyCollections = new ArrayList<>( INIT_COLL_SIZE );
 	}
@@ -255,7 +254,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			unownedCollections.clear();
 		}
 		proxiesByKey.clear();
-		nullifiableEntityKeys.clear();
+		nullifiableEntityKeys = null;
 		if ( batchFetchQueue != null ) {
 			batchFetchQueue.clear();
 		}
@@ -417,7 +416,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// Clear all parent cache
 		parentsByChild.clear();
 		entitySnapshotsByKey.remove( key );
-		nullifiableEntityKeys.remove( key );
+		if ( nullifiableEntityKeys != null ) {
+			nullifiableEntityKeys.remove( key );
+		}
 		if( batchFetchQueue != null ) {
 			getBatchFetchQueue().removeBatchLoadableEntityKey( key );
 			getBatchFetchQueue().removeSubselect( key );
@@ -1027,6 +1028,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public HashSet getNullifiableEntityKeys() {
+		if ( nullifiableEntityKeys == null ) {
+			nullifiableEntityKeys = new HashSet<>();
+		}
 		return nullifiableEntityKeys;
 	}
 
@@ -1533,12 +1537,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			oos.writeObject( entry.getValue() );
 		}
 
-		oos.writeInt( nullifiableEntityKeys.size() );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Starting serialization of [" + nullifiableEntityKeys.size() + "] nullifiableEntityKey entries" );
+		if ( nullifiableEntityKeys == null ) {
+			oos.writeInt( 0 );
 		}
-		for ( EntityKey entry : nullifiableEntityKeys ) {
-			entry.serialize( oos );
+		else {
+			final int size = nullifiableEntityKeys.size();
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Starting serialization of [" + size + "] nullifiableEntityKey entries" );
+			}
+			oos.writeInt( size );
+			for ( EntityKey entry : nullifiableEntityKeys ) {
+				entry.serialize( oos );
+			}
 		}
 	}
 
@@ -1718,6 +1728,30 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public boolean containsNullifiableEntityKey(Supplier<EntityKey> sek) {
+		if ( nullifiableEntityKeys == null || nullifiableEntityKeys.size() == 0 ) {
+			return false;
+		}
+		else {
+			final EntityKey entityKey = sek.get();
+			return nullifiableEntityKeys.contains( entityKey );
+		}
+	}
+
+	@Override
+	public void registerNullifiableEntityKey(EntityKey key) {
+		if ( nullifiableEntityKeys == null ) {
+			nullifiableEntityKeys = new HashSet<>();
+		}
+		this.nullifiableEntityKeys.add( key );
+	}
+
+	@Override
+	public boolean isNullifiableEntityKeysEmpty() {
+		return ( nullifiableEntityKeys == null || nullifiableEntityKeys.size() == 0 );
 	}
 
 	private void cleanUpInsertedKeysAfterTransaction() {

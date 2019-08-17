@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -477,7 +478,9 @@ public interface PersistenceContext {
 
 	/** 
 	 * Retrieve the set of EntityKeys representing nullifiable references
+	 * @deprecated Use {@link #containsNullifiableEntityKey(Supplier)} or {@link #registerNullifiableEntityKey(EntityKey)} or {@link #isNullifiableEntityKeysEmpty()}
 	 */
+	@Deprecated
 	HashSet getNullifiableEntityKeys();
 
 	/**
@@ -719,6 +722,28 @@ public interface PersistenceContext {
 	 * @return True if inserted during this transaction, false otherwise.
 	 */
 	boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
+
+	/**
+	 * Checks if a certain {@link EntityKey} was registered as nullifiable on this {@link PersistenceContext}.
+	 *
+	 * @param sek a supplier for the EntityKey; this allows to not always needing to create the key;
+	 * for example is the map is known to be empty there is no need to create one to check.
+	 * @return true if the EntityKey had been registered before using {@link #registerNullifiableEntityKey(EntityKey)}
+	 * @see #registerNullifiableEntityKey(EntityKey)
+	 */
+	boolean containsNullifiableEntityKey(Supplier<EntityKey> sek);
+
+	/**
+	 * Registers an {@link EntityKey} as nullifiable on this {@link PersistenceContext}.
+	 * @param key
+	 */
+	void registerNullifiableEntityKey(EntityKey key);
+
+	/**
+	 * @return true if no {@link EntityKey} was registered as nullifiable on this {@link PersistenceContext}.
+	 * @see #registerNullifiableEntityKey(EntityKey)
+	 */
+	boolean isNullifiableEntityKeysEmpty();
 
 	/**
 	 * Provides centralized access to natural-id-related functionality.

@@ -9,6 +9,7 @@ package org.hibernate.engine.internal;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -309,7 +310,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return !isExistsInDatabase();
 		}
 		else {
-			return session.getPersistenceContextInternal().getNullifiableEntityKeys().contains( getEntityKey() );
+			return session.getPersistenceContextInternal().containsNullifiableEntityKey( this::getEntityKey );
 		}
 	}
 

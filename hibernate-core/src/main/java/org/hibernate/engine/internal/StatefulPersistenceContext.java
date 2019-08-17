@@ -262,7 +262,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( loadContexts != null ) {
 			loadContexts.cleanup();
 		}
-		naturalIdXrefDelegate.clear();
+		naturalIdXrefDelegate = null;
 	}
 
 	@Override
@@ -1762,11 +1762,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 	}
 
-
-
 	// NATURAL ID RESOLUTION HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private final NaturalIdXrefDelegate naturalIdXrefDelegate = new NaturalIdXrefDelegate( this );
+	private NaturalIdXrefDelegate naturalIdXrefDelegate;
+
+	private NaturalIdXrefDelegate getNaturalIdXrefDelegate() {
+		if ( naturalIdXrefDelegate == null ) {
+			this.naturalIdXrefDelegate = new NaturalIdXrefDelegate( this );
+		}
+		return naturalIdXrefDelegate;
+	}
 
 	private final NaturalIdHelper naturalIdHelper = new NaturalIdHelper() {
 		@Override
@@ -1785,7 +1790,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			//	from a single load event.  The first put journal would come from the natural id resolution;
 			// the second comes from the entity loading.  In this condition, we want to avoid the multiple
 			// 'put' stats incrementing.
-			final boolean justAddedLocally = naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, id, naturalIdValues );
+			final boolean justAddedLocally = getNaturalIdXrefDelegate().cacheNaturalIdCrossReference( persister, id, naturalIdValues );
 
 			if ( justAddedLocally && persister.hasNaturalIdCache() ) {
 				managedSharedCacheEntries( persister, id, naturalIdValues, null, CachedNaturalIdValueSource.LOAD );
@@ -1808,7 +1813,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Object[] naturalIdValues = extractNaturalIdValues( state, persister );
 
 			// cache
-			naturalIdXrefDelegate.cacheNaturalIdCrossReference( persister, id, naturalIdValues );
+			getNaturalIdXrefDelegate().cacheNaturalIdCrossReference( persister, id, naturalIdValues );
 		}
 
 		@Override
@@ -1965,7 +1970,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			persister = locateProperPersister( persister );
 			final Object[] naturalIdValues = getNaturalIdValues( state, persister );
 
-			final Object[] localNaturalIdValues = naturalIdXrefDelegate.removeNaturalIdCrossReference( 
+			final Object[] localNaturalIdValues = getNaturalIdXrefDelegate().removeNaturalIdCrossReference(
 					persister, 
 					id, 
 					naturalIdValues 
@@ -2004,12 +2009,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		@Override
 		public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk) {
-			return naturalIdXrefDelegate.findCachedNaturalId( locateProperPersister( persister ), pk );
+			return getNaturalIdXrefDelegate().findCachedNaturalId( locateProperPersister( persister ), pk );
 		}
 
 		@Override
 		public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
-			return naturalIdXrefDelegate.findCachedNaturalIdResolution( locateProperPersister( persister ), naturalIdValues );
+			return getNaturalIdXrefDelegate().findCachedNaturalIdResolution( locateProperPersister( persister ), naturalIdValues );
 		}
 
 		@Override
@@ -2047,7 +2052,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		@Override
 		public Collection<Serializable> getCachedPkResolutions(EntityPersister entityPersister) {
-			return naturalIdXrefDelegate.getCachedPkResolutions( entityPersister );
+			return getNaturalIdXrefDelegate().getCachedPkResolutions( entityPersister );
 		}
 
 		@Override
@@ -2060,6 +2065,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			persister = locateProperPersister( persister );
 
 			final Object[] naturalIdValuesFromCurrentObjectState = extractNaturalIdValues( entity, persister );
+			final NaturalIdXrefDelegate naturalIdXrefDelegate = getNaturalIdXrefDelegate();
 			final boolean changed = ! naturalIdXrefDelegate.sameAsCached(
 					persister,
 					pk,
@@ -2081,12 +2087,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		@Override
 		public void cleanupFromSynchronizations() {
-			naturalIdXrefDelegate.unStashInvalidNaturalIdReferences();
+			getNaturalIdXrefDelegate().unStashInvalidNaturalIdReferences();
 		}
 
 		@Override
 		public void handleEviction(Object object, EntityPersister persister, Serializable identifier) {
-			naturalIdXrefDelegate.removeNaturalIdCrossReference(
+			getNaturalIdXrefDelegate().removeNaturalIdCrossReference(
 					persister,
 					identifier,
 					findCachedNaturalId( persister, identifier )

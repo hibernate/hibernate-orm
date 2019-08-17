@@ -47,10 +47,11 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, Column... columns) {
+		String tableName = table.getName();
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
-		StringBuilder sb = new StringBuilder( "table`" + table.getName() + "`" );
+		StringBuilder sb = new StringBuilder( "table`" + tableName + "`" );
 
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
@@ -59,7 +60,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		Column[] alphabeticalColumns = columns.clone();
 		Arrays.sort( alphabeticalColumns, comparing(Column::getName) );
 		for ( Column column : alphabeticalColumns ) {
-			String columnName = column == null ? "" : column.getName();
+			String columnName = column.getName();
 			sb.append( "column`" ).append( columnName ).append( "`" );
 		}
 		return prefix + hashedName( sb.toString() );

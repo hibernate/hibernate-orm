@@ -746,6 +746,13 @@ public interface PersistenceContext {
 	boolean isNullifiableEntityKeysEmpty();
 
 	/**
+	 * The size of the internal map storing all collection entries.
+	 * (The map is not exposed directly, but the size is often useful)
+	 * @return the size
+	 */
+	int getCollectionEntriesSize();
+
+	/**
 	 * Provides centralized access to natural-id-related functionality.
 	 */
 	interface NaturalIdHelper {

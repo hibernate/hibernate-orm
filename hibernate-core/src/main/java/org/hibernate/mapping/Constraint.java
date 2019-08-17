@@ -51,7 +51,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
-		StringBuilder sb = new StringBuilder( "table`" + tableName + "`" );
+		StringBuilder sb = new StringBuilder(64).append( "table`" ).append( tableName ).append( '`' );
 
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
@@ -61,7 +61,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		Arrays.sort( alphabeticalColumns, comparing(Column::getName) );
 		for ( Column column : alphabeticalColumns ) {
 			String columnName = column.getName();
-			sb.append( "column`" ).append( columnName ).append( "`" );
+			sb.append( "column`" ).append( columnName ).append( '`');
 		}
 		return prefix + hashedName( sb.toString() );
 	}

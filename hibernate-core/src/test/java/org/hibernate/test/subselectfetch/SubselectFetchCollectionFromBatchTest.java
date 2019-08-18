@@ -102,15 +102,15 @@ public class SubselectFetchCollectionFromBatchTest  extends BaseCoreFunctionalTe
 		assertEquals( 0, sessionFactory().getStatistics().getPrepareStatementCount() );
 
 
-		for (int i = 0 ; i < groups.length; i++ ) {
+		for (EmployeeGroup group : groups) {
 			// Both groups get initialized  and are added to the PersistenceContext when i == 0;
 			// Still need to call Hibernate.initialize( groups[i] ) for i > 0 so that the entity
 			// in the PersistenceContext gets assigned to its respective proxy target (is this a
 			// bug???)
-			Hibernate.initialize( groups[ i ] );
-			assertTrue( Hibernate.isInitialized( groups[i] ) );
+			Hibernate.initialize(group);
+			assertTrue(Hibernate.isInitialized(group));
 			// the collections should be uninitialized
-			assertFalse( Hibernate.isInitialized( groups[i].getEmployees() ) );
+			assertFalse(Hibernate.isInitialized(group.getEmployees()));
 		}
 
 		// both Group proxies should have been loaded in the same batch;
@@ -250,19 +250,19 @@ public class SubselectFetchCollectionFromBatchTest  extends BaseCoreFunctionalTe
 		assertEquals( 0, sessionFactory().getStatistics().getPrepareStatementCount() );
 
 
-		for (int i = 0 ; i < groups.length; i++ ) {
+		for (EmployeeGroup group : groups) {
 			// Both groups get initialized  and are added to the PersistenceContext when i == 0;
 			// Still need to call Hibernate.initialize( groups[i] ) for i > 0 so that the entity
 			// in the PersistenceContext gets assigned to its respective proxy target (is this a
 			// bug???)
-			Hibernate.initialize( groups[ i ] );
-			assertTrue( Hibernate.isInitialized( groups[i] ) );
-			assertTrue( Hibernate.isInitialized( groups[i].getLead() ) );
-			assertFalse( Hibernate.isInitialized( groups[i].getLead().getCollaborators() ) );
-			assertTrue( Hibernate.isInitialized( groups[i].getManager() ) );
-			assertFalse( Hibernate.isInitialized( groups[i].getManager().getCollaborators() ) );
+			Hibernate.initialize(group);
+			assertTrue(Hibernate.isInitialized(group));
+			assertTrue(Hibernate.isInitialized(group.getLead()));
+			assertFalse(Hibernate.isInitialized(group.getLead().getCollaborators()));
+			assertTrue(Hibernate.isInitialized(group.getManager()));
+			assertFalse(Hibernate.isInitialized(group.getManager().getCollaborators()));
 			// the collections should be uninitialized
-			assertFalse( Hibernate.isInitialized( groups[i].getEmployees() ) );
+			assertFalse(Hibernate.isInitialized(group.getEmployees()));
 		}
 
 		// both Group proxies should have been loaded in the same batch;

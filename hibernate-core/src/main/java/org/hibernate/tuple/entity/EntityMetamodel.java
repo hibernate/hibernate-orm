@@ -832,8 +832,8 @@ public class EntityMetamodel implements Serializable {
 		}
 		else if ( type.isComponentType() ) {
 			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
-			for ( int i = 0; i < subtypes.length; i++ ) {
-				if ( indicatesCollection( subtypes[i] ) ) {
+			for (Type subtype : subtypes) {
+				if (indicatesCollection(subtype)) {
 					return true;
 				}
 			}

@@ -229,12 +229,12 @@ public class ActionQueue {
 	}
 
 	public void clear() {
-		for ( ListProvider listProvider : EXECUTABLE_LISTS_MAP.values() ) {
+		EXECUTABLE_LISTS_MAP.forEach( (k,listProvider) -> {
 			ExecutableList<?> l = listProvider.get( this );
 			if ( l != null ) {
 				l.clear();
 			}
-		}
+		} );
 		if ( unresolvedInsertions != null ) {
 			unresolvedInsertions.clear();
 		}
@@ -472,12 +472,12 @@ public class ActionQueue {
 			throw new IllegalStateException( "About to execute actions, but there are unresolved entity insert actions." );
 		}
 
-		for ( ListProvider listProvider : EXECUTABLE_LISTS_MAP.values() ) {
+		EXECUTABLE_LISTS_MAP.forEach( (k,listProvider) -> {
 			ExecutableList<?> l = listProvider.get( this );
 			if ( l != null && !l.isEmpty() ) {
 				executeActions( l );
 			}
-		}
+		} );
 	}
 
 	/**

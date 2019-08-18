@@ -50,6 +50,7 @@ public class EntityUniqueKey implements EntityKeyCommon, Serializable {
 		this.hashCode = generateHashCode();
 	}
 
+	@Override
 	public String getEntityName() {
 		return entityName;
 	}

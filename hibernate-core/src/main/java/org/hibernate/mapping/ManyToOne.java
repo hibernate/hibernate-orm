@@ -82,6 +82,7 @@ public class ManyToOne extends ToOne {
 		return foreignKey;
 	}
 
+	@Override
 	public ForeignKey createForeignKey() throws MappingException {
 		if ( foreignKey == null ) {
 			// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
@@ -144,6 +145,7 @@ public class ManyToOne extends ToOne {
 		return foreignKey;
 	}
 	
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

@@ -25,6 +25,7 @@ public class LocaleJavaDescriptor extends AbstractBasicJavaDescriptor<Locale> {
 	public static class LocaleComparator implements Comparator<Locale> {
 		public static final LocaleComparator INSTANCE = new LocaleComparator();
 
+		@Override
 		public int compare(Locale o1, Locale o2) {
 			return o1.toString().compareTo( o2.toString() );
 		}
@@ -44,10 +45,12 @@ public class LocaleJavaDescriptor extends AbstractBasicJavaDescriptor<Locale> {
 		return LocaleComparator.INSTANCE;
 	}
 
+	@Override
 	public String toString(Locale value) {
 		return value.toString();
 	}
 
+	@Override
 	public Locale fromString(String string) {
 		// TODO : Ultimately switch to Locale.Builder for this. However, Locale.Builder is Java 7
 
@@ -95,6 +98,7 @@ public class LocaleJavaDescriptor extends AbstractBasicJavaDescriptor<Locale> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Locale value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -105,6 +109,7 @@ public class LocaleJavaDescriptor extends AbstractBasicJavaDescriptor<Locale> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Locale wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

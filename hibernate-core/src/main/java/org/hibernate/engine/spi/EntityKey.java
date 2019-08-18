@@ -74,6 +74,7 @@ public final class EntityKey implements EntityKeyCommon, Serializable {
 		return identifier;
 	}
 
+	@Override
 	public String getEntityName() {
 		return entityDescriptor.getEntityName();
 	}

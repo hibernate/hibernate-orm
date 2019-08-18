@@ -36,6 +36,7 @@ public interface EntityValuedNavigable<J>
 		return Type.PersistenceType.ENTITY;
 	}
 
+	@Override
 	EntityJavaDescriptor<J> getJavaTypeDescriptor();
 
 	boolean isNullable();

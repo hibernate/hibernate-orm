@@ -27,18 +27,22 @@ public class MapMember implements Member {
 		return type;
 	}
 
+	@Override
 	public int getModifiers() {
 		return Modifier.PUBLIC;
 	}
 
+	@Override
 	public boolean isSynthetic() {
 		return false;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public Class<?> getDeclaringClass() {
 		return null;
 	}

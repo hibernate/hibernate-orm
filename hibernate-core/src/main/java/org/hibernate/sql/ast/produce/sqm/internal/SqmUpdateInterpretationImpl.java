@@ -32,6 +32,7 @@ public class SqmUpdateInterpretationImpl implements SqmUpdateInterpretation {
 		this.jdbcParamXref = jdbcParamXref;
 	}
 
+	@Override
 	public List<UpdateStatement> getSqlUpdates() {
 		return sqlUpdates;
 	}

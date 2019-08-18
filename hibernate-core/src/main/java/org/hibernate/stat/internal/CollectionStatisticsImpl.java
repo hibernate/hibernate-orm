@@ -36,22 +36,27 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 		this.collectionRole = descriptor.getNavigableRole().getFullPath();
 	}
 
+	@Override
 	public long getLoadCount() {
 		return loadCount.sum();
 	}
 
+	@Override
 	public long getFetchCount() {
 		return fetchCount.sum();
 	}
 
+	@Override
 	public long getRecreateCount() {
 		return recreateCount.sum();
 	}
 
+	@Override
 	public long getRemoveCount() {
 		return removeCount.sum();
 	}
 
+	@Override
 	public long getUpdateCount() {
 		return updateCount.sum();
 	}
@@ -76,6 +81,7 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 		removeCount.increment();
 	}
 
+	@Override
 	public String toString() {
 		final StringBuilder buffer = new StringBuilder()
 				.append( "CollectionStatistics" )

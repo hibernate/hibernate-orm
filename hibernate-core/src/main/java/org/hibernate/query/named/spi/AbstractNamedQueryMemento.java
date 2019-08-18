@@ -72,6 +72,7 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 		return name;
 	}
 
+	@Override
 	public List<ParameterMemento> getParameterMementos() {
 		return parameterMementos;
 	}

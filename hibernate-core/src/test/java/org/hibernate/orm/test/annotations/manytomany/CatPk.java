@@ -36,6 +36,7 @@ public class CatPk implements Serializable {
 		this.name = name;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof CatPk ) ) return false;
@@ -48,6 +49,7 @@ public class CatPk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = name.hashCode();

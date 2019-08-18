@@ -32,6 +32,7 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 		return selectableNode;
 	}
 
+	@Override
 	public String getAlias() {
 		return alias;
 	}

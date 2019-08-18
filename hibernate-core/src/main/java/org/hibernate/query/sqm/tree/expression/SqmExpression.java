@@ -31,6 +31,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 *
 	 * Can change as a result of calls to {@link #applyInferableType}
 	 */
+	@Override
 	ExpressableType<T> getExpressableType();
 
 	/**

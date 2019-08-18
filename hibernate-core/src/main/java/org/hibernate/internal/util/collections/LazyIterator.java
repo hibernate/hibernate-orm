@@ -25,14 +25,17 @@ public final class LazyIterator implements Iterator {
 		this.map = map;
 	}
 	
+	@Override
 	public boolean hasNext() {
 		return getIterator().hasNext();
 	}
 
+	@Override
 	public Object next() {
 		return getIterator().next();
 	}
 
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException();
 	}

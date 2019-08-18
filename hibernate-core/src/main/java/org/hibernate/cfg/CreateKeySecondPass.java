@@ -27,6 +27,7 @@ public class CreateKeySecondPass implements SecondPass {
 		this.joinedSubClass = joinedSubClass;
 	}
 
+	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( rootClass != null ) {
 			rootClass.createPrimaryKey();

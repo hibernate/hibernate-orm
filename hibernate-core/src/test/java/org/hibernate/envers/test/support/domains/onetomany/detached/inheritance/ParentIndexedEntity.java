@@ -88,6 +88,7 @@ public abstract class ParentIndexedEntity {
 		this.references = references;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -109,6 +110,7 @@ public abstract class ParentIndexedEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -116,6 +118,7 @@ public abstract class ParentIndexedEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ParentIndexedEntity(id = " + id + ", data = " + data + ")";
 	}

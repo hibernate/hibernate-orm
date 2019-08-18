@@ -227,6 +227,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor<Query
 		return ! labels.isEmpty();
 	}
 
+	@Override
 	public Set<Integer> getOrdinalParameterLabels() {
 		return labels;
 	}

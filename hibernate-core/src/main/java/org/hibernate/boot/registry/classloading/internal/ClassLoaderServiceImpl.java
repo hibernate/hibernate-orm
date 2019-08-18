@@ -84,6 +84,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		// now build the aggregated class loader...
 		this.aggregatedClassLoader = AccessController.doPrivileged( new PrivilegedAction<AggregatedClassLoader>() {
+			@Override
 			public AggregatedClassLoader run() {
 				return new AggregatedClassLoader( orderedClassLoaderSet, lookupPrecedence );
 			}

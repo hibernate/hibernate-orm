@@ -18,6 +18,7 @@ import org.hibernate.query.NavigablePath;
 public interface CollectionInitializer extends Initializer {
 	PluralPersistentAttribute getFetchedAttribute();
 
+	@Override
 	NavigablePath getNavigablePath();
 
 	PersistentCollection getCollectionInstance();

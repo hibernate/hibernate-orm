@@ -49,6 +49,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 		this.includeDeletions = includeDeletions;
 	}
 
+	@Override
 	public List list() {
 		/*
          * The query that we need to create:

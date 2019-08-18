@@ -46,6 +46,7 @@ public class PropertyInferredData implements PropertyData {
 		this.reflectionManager = reflectionManager;
 	}
 
+	@Override
 	public AccessType getDefaultAccess() throws MappingException {
 		AccessType accessType = defaultAccess;
 
@@ -83,10 +84,12 @@ public class PropertyInferredData implements PropertyData {
 		return accessType;
 	}
 
+	@Override
 	public String getPropertyName() throws MappingException {
 		return property.getName();
 	}
 
+	@Override
 	public XClass getPropertyClass() throws MappingException {
 		if ( property.isAnnotationPresent( Target.class ) ) {
 			return reflectionManager.toXClass( property.getAnnotation( Target.class ).value() );
@@ -96,6 +99,7 @@ public class PropertyInferredData implements PropertyData {
 		}
 	}
 
+	@Override
 	public XClass getClassOrElement() throws MappingException {
 		if ( property.isAnnotationPresent( Target.class ) ) {
 			return reflectionManager.toXClass( property.getAnnotation( Target.class ).value() );
@@ -105,18 +109,22 @@ public class PropertyInferredData implements PropertyData {
 		}
 	}
 
+	@Override
 	public String getClassOrElementName() throws MappingException {
 		return getClassOrElement().getName();
 	}
 
+	@Override
 	public String getTypeName() throws MappingException {
 		return getPropertyClass().getName();
 	}
 
+	@Override
 	public XProperty getProperty() {
 		return property;
 	}
 
+	@Override
 	public XClass getDeclaringClass() {
 		return declaringClass;
 	}

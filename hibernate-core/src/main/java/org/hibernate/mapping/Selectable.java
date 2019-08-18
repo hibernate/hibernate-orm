@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
  * Models the commonality between a column and a formula (computed value).
  */
 public interface Selectable extends MappedColumn {
+	@Override
 	String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry);
 
 	/**

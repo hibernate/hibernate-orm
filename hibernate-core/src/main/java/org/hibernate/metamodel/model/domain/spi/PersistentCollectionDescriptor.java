@@ -89,6 +89,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	@Override
 	ManagedTypeDescriptor<O> getContainer();
 
+	@Override
 	NavigableRole getNavigableRole();
 
 	PluralPersistentAttribute getDescribedAttribute() ;
@@ -124,6 +125,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	/**
 	 * Access to information about the collection's elements
 	 */
+	@Override
 	CollectionElement<E> getElementDescriptor();
 
 	/**
@@ -232,6 +234,7 @@ public interface PersistentCollectionDescriptor<O,C,E>
 
 	boolean isExtraLazy();
 
+	@Override
 	boolean isDirty(Object old, Object value, SharedSessionContractImplementor session);
 
 

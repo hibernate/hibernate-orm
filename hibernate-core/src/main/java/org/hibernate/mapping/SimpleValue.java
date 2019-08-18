@@ -250,11 +250,13 @@ public abstract class SimpleValue implements KeyValue {
 		return identifierGenerator;
 	}
 
+	@Override
 	public boolean isUpdateable() {
 		//needed to satisfy KeyValue
 		return true;
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.SELECT;
 	}
@@ -263,6 +265,7 @@ public abstract class SimpleValue implements KeyValue {
 		return identifierGeneratorProperties;
 	}
 
+	@Override
 	public String getNullValue() {
 		return nullValue;
 	}
@@ -285,6 +288,7 @@ public abstract class SimpleValue implements KeyValue {
 		return identifierGeneratorStrategy;
 	}
 
+	@Override
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory) {
 		return IdentityGenerator.class.isAssignableFrom(identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy ));
 	}
@@ -329,6 +333,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.foreignKeyDefinition = foreignKeyDefinition;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return alternateUniqueKey;
 	}
@@ -337,6 +342,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.alternateUniqueKey = unique;
 	}
 
+	@Override
 	public boolean isNullable() {
 		final List<MappedColumn> mappedColumns = getMappedColumns();
 		for ( MappedColumn column : mappedColumns ) {
@@ -355,6 +361,7 @@ public abstract class SimpleValue implements KeyValue {
 		return true;
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return true;
 	}
@@ -450,6 +457,7 @@ public abstract class SimpleValue implements KeyValue {
 		return getClass().getName() + '(' + columns.toString() + ')';
 	}
 
+	@Override
 	public boolean[] getColumnInsertability() {
 		final boolean[] columnInsertability = new boolean[ getColumnSpan() ];
 		int i = 0;
@@ -459,6 +467,7 @@ public abstract class SimpleValue implements KeyValue {
 		return columnInsertability;
 	}
 
+	@Override
 	public boolean[] getColumnUpdateability() {
 		final boolean[] columnInsertability = new boolean[getColumnSpan()];
 		int i = 0;
@@ -474,6 +483,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public interface BasicTypeDescriptorResolver extends TypeDescriptorResolver {
+		@Override
 		SqlTypeDescriptor resolveSqlTypeDescriptor();
 
 		@Override

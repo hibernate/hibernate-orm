@@ -40,18 +40,22 @@ public class ClobJavaDescriptor extends AbstractBasicJavaDescriptor<Clob> {
 	public static class ClobMutabilityPlan implements MutabilityPlan<Clob> {
 		public static final ClobMutabilityPlan INSTANCE = new ClobMutabilityPlan();
 
+		@Override
 		public boolean isMutable() {
 			return false;
 		}
 
+		@Override
 		public Clob deepCopy(Clob value) {
 			return value;
 		}
 
+		@Override
 		public Serializable disassemble(Clob value) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 
+		@Override
 		public Clob assemble(Serializable cached) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
@@ -61,10 +65,12 @@ public class ClobJavaDescriptor extends AbstractBasicJavaDescriptor<Clob> {
 		super( Clob.class, ClobMutabilityPlan.INSTANCE );
 	}
 
+	@Override
 	public String toString(Clob value) {
 		return LobStreamDataHelper.extractString( value );
 	}
 
+	@Override
 	public Clob fromString(String string) {
 		return ClobProxy.generateProxy( string );
 	}
@@ -99,6 +105,7 @@ public class ClobJavaDescriptor extends AbstractBasicJavaDescriptor<Clob> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(final Clob value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -129,6 +136,7 @@ public class ClobJavaDescriptor extends AbstractBasicJavaDescriptor<Clob> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Clob wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

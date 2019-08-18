@@ -70,10 +70,12 @@ public class Any extends SimpleValue {
 		this.discriminatorMap = discriminatorMap;
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName)
 		throws MappingException {
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

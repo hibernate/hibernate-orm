@@ -131,6 +131,7 @@ public interface SessionFactory extends EntityManagerFactory, AuditReaderFactory
 	 *
 	 * @throws HibernateException Indicates an issue closing the factory.
 	 */
+	@Override
 	void close() throws HibernateException;
 
 	/**

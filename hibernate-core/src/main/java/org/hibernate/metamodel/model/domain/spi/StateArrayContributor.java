@@ -96,6 +96,7 @@ public interface StateArrayContributor<J> extends Navigable<J>, ExpressableType<
 	 *
 	 * @apiNote
 	 */
+	@Override
 	default Object resolveHydratedState(
 			Object hydratedForm,
 			ExecutionContext executionContext,

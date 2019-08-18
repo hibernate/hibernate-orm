@@ -15,12 +15,15 @@ package org.hibernate.boot.model.source.spi;
 public interface PluralAttributeElementSourceManyToMany
 		extends PluralAttributeElementSourceAssociation, RelationalValueSourceContainer,
 				ForeignKeyContributingSource, Orderable {
+	@Override
 	public String getReferencedEntityName();
 
 	public String getReferencedEntityAttributeName();
 
+	@Override
 	public boolean isIgnoreNotFound();
 
+	@Override
 	public String getExplicitForeignKeyName();
 
 	public boolean isUnique();

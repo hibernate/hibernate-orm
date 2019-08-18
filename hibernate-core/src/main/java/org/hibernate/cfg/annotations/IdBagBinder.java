@@ -34,6 +34,7 @@ import org.hibernate.mapping.Table;
  * @author Emmanuel Bernard
  */
 public class IdBagBinder extends BagBinder {
+	@Override
 	protected Collection createCollection(PersistentClass persistentClass) {
 		return new org.hibernate.mapping.IdentifierBag( getBuildingContext(), persistentClass );
 	}

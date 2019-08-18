@@ -33,6 +33,7 @@ public class BooleanSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 	public BooleanSqlDescriptor() {
 	}
 
+	@Override
 	public int getJdbcTypeCode() {
 		return Types.BOOLEAN;
 	}

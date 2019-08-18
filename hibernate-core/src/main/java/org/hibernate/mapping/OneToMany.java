@@ -79,6 +79,7 @@ public class OneToMany implements ForeignKeyExporter, Value {
 	 * @deprecated since 6.0, use {@link #getMappedTable()}
 	 */
 	@Deprecated
+	@Override
 	public Table getTable() {
 		return (Table) referencingTable;
 	}
@@ -98,6 +99,7 @@ public class OneToMany implements ForeignKeyExporter, Value {
 		return false;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return false;
 	}
@@ -152,6 +154,7 @@ public class OneToMany implements ForeignKeyExporter, Value {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public boolean[] getColumnUpdateability() {
 		//TODO: we could just return all false...
 		throw new UnsupportedOperationException();

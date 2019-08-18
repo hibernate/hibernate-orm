@@ -483,6 +483,7 @@ public abstract class PersistentClass
 		this.batchSize = batchSize;
 	}
 
+	@Override
 	public boolean hasSelectBeforeUpdate() {
 		return selectBeforeUpdate;
 	}

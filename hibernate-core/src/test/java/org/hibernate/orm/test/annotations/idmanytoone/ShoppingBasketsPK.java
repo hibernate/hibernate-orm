@@ -49,6 +49,7 @@ public class ShoppingBasketsPK implements Serializable {
 		return this.basketDatetime;
 	}
 
+	@Override
 	public boolean equals(Object aObj) {
 		if (aObj == this)
 			return true;
@@ -64,6 +65,7 @@ public class ShoppingBasketsPK implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int hashcode = 0;
 		if (getOwner() != null) {

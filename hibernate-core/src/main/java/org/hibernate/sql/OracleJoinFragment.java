@@ -24,6 +24,7 @@ public class OracleJoinFragment extends JoinFragment {
 	private StringBuilder afterFrom = new StringBuilder();
 	private StringBuilder afterWhere = new StringBuilder();
 
+	@Override
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 		addCrossJoin( tableName, alias );
 
@@ -78,19 +79,23 @@ public class OracleJoinFragment extends JoinFragment {
 		}
 	}
 
+	@Override
 	public String toFromFragmentString() {
 		return afterFrom.toString();
 	}
 
+	@Override
 	public String toWhereFragmentString() {
 		return afterWhere.toString();
 	}
 
+	@Override
 	public void addJoins(String fromFragment, String whereFragment) {
 		afterFrom.append( fromFragment );
 		afterWhere.append( whereFragment );
 	}
 
+	@Override
 	public JoinFragment copy() {
 		OracleJoinFragment copy = new OracleJoinFragment();
 		copy.afterFrom = new StringBuilder( afterFrom.toString() );
@@ -108,6 +113,7 @@ public class OracleJoinFragment extends JoinFragment {
 		}
 	}
 
+	@Override
 	public void addCrossJoin(String tableName, String alias) {
 		afterFrom.append( ", " )
 				.append( tableName )
@@ -115,10 +121,12 @@ public class OracleJoinFragment extends JoinFragment {
 				.append( alias );
 	}
 
+	@Override
 	public void addCondition(String alias, String[] fkColumns, String[] pkColumns) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public boolean addCondition(String condition) {
 		return addCondition( afterWhere, condition );
 	}
@@ -127,6 +135,7 @@ public class OracleJoinFragment extends JoinFragment {
 		afterFrom.append( fromFragmentString );
 	}
 
+	@Override
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		//arbitrary on clause ignored!!
 		addJoin( tableName, alias, fkColumns, pkColumns, joinType );
@@ -141,6 +150,7 @@ public class OracleJoinFragment extends JoinFragment {
 		}
 	}
 
+	@Override
 	public void addJoin(String tableName, String alias, String[][] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		//arbitrary on clause ignored!!
 		addJoin( tableName, alias, fkColumns, pkColumns, joinType );

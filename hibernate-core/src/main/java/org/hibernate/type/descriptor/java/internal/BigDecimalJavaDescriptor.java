@@ -39,6 +39,7 @@ public class BigDecimalJavaDescriptor extends AbstractNumericJavaDescriptor<BigD
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(BigDecimal value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -73,6 +74,7 @@ public class BigDecimalJavaDescriptor extends AbstractNumericJavaDescriptor<BigD
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> BigDecimal wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

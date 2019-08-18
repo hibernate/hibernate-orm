@@ -12,6 +12,7 @@ package org.hibernate.query.spi;
  */
 public enum ComparisonOperator {
 	EQUAL {
+		@Override
 		public ComparisonOperator negated() {
 			return NOT_EQUAL;
 		}
@@ -23,6 +24,7 @@ public enum ComparisonOperator {
 	},
 
 	NOT_EQUAL {
+		@Override
 		public ComparisonOperator negated() {
 			return EQUAL;
 		}
@@ -34,6 +36,7 @@ public enum ComparisonOperator {
 	},
 
 	LESS_THAN {
+		@Override
 		public ComparisonOperator negated() {
 			return GREATER_THAN_OR_EQUAL;
 		}
@@ -45,6 +48,7 @@ public enum ComparisonOperator {
 	},
 
 	LESS_THAN_OR_EQUAL {
+		@Override
 		public ComparisonOperator negated() {
 			return GREATER_THAN;
 		}
@@ -56,6 +60,7 @@ public enum ComparisonOperator {
 	},
 
 	GREATER_THAN {
+		@Override
 		public ComparisonOperator negated() {
 			return LESS_THAN_OR_EQUAL;
 		}
@@ -67,6 +72,7 @@ public enum ComparisonOperator {
 	},
 
 	GREATER_THAN_OR_EQUAL {
+		@Override
 		public ComparisonOperator negated() {
 			return LESS_THAN;
 		}

@@ -32,6 +32,7 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	@Override
 	RootGraph<J> makeRootGraph(String name, boolean mutable);
 
+	@Override
 	SubGraph<J> makeSubGraph(boolean mutable);
 
 	@Override

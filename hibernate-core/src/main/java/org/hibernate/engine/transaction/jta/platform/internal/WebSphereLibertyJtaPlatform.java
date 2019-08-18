@@ -48,6 +48,7 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 		return (UserTransaction) jndiService().locate( UT_NAME );
 	}
 
+	@Override
 	public boolean canRegisterSynchronization() {
 		try {
 			return getCurrentStatus() == Status.STATUS_ACTIVE;
@@ -57,14 +58,17 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 		}
 	}
 
+	@Override
 	public int getCurrentStatus() throws SystemException {
 		return retrieveTransactionManager().getStatus();
 	}
 
+	@Override
 	public Object getTransactionIdentifier(Transaction transaction) {
 		return transaction;
 	}
 
+	@Override
 	public void registerSynchronization(Synchronization synchronization) {
 		try {
 			retrieveTransactionManager().getTransaction().registerSynchronization(synchronization);

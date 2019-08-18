@@ -27,6 +27,7 @@ public interface EntityDataCachingConfig extends DomainDataCachingConfig {
 	 * not produce a null Comparator later
 	 *
 	 */
+	@Override
 	boolean isVersioned();
 
 	/**

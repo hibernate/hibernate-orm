@@ -32,6 +32,7 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	@Override
 	SqmPredicate getJoinPredicate();
 
+	@Override
 	void setJoinPredicate(SqmPredicate predicate);
 
 }

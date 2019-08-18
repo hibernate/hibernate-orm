@@ -18,6 +18,7 @@ public interface SqmNegatablePredicate extends SqmPredicate {
 	 *
 	 * @return {@code true} if we have a negated form currently
 	 */
+	@Override
 	boolean isNegated();
 
 	/**

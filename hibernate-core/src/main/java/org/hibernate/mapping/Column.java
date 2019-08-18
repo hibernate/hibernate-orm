@@ -252,14 +252,17 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return (BasicJavaDescriptor) javaTypeMapping.getJavaTypeDescriptor();
 	}
 
+	@Override
 	public void setSqlTypeDescriptorAccess(Supplier<SqlTypeDescriptor> sqlTypeDescriptorAccess) {
 		this.sqlTypeDescriptorAccess = sqlTypeDescriptorAccess;
 	}
 
+	@Override
 	public JavaTypeMapping getJavaTypeMapping() {
 		return javaTypeMapping;
 	}
 
+	@Override
 	public void setJavaTypeMapping(JavaTypeMapping javaTypeMapping) {
 		this.javaTypeMapping = javaTypeMapping;
 	}

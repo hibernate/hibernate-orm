@@ -27,6 +27,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 *
 	 * @return The parameter name, or {@code null} if not a named parameter
 	 */
+	@Override
 	String getName();
 
 	/**
@@ -35,6 +36,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 *
 	 * @return The parameter position
 	 */
+	@Override
 	Integer getPosition();
 
 	/**

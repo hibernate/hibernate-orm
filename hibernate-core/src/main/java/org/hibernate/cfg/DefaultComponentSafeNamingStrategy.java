@@ -40,6 +40,7 @@ public class DefaultComponentSafeNamingStrategy extends EJB3NamingStrategy {
 	}
 
 
+	@Override
 	public String foreignKeyColumnName(
 			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
 	) {

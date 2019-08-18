@@ -80,6 +80,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Get the creating <tt>SessionFactoryImplementor</tt>
 	 */
+	@Override
 	SessionFactoryImplementor getFactory();
 
 	SessionEventListenerManager getEventListenerManager();
@@ -98,6 +99,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The tenant identifier; may be {@code null}
 	 */
+	@Override
 	String getTenantIdentifier();
 
 	/**

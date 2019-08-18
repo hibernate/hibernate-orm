@@ -162,6 +162,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		subInitializerConsumer.finishUp();
 	}
 
+	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}

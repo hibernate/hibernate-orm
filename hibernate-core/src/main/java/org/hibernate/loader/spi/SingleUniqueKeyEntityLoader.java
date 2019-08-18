@@ -18,5 +18,6 @@ public interface SingleUniqueKeyEntityLoader<T> extends SingleEntityLoader {
 	/**
 	 * Here, the passed key is expected to be the uk value
 	 */
+	@Override
 	T load(Object ukValue, LockOptions lockOptions, SharedSessionContractImplementor session);
 }

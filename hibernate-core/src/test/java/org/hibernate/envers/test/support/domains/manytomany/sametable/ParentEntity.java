@@ -122,6 +122,7 @@ public class ParentEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ParentEntity(id = " + id + ", parentData = " + parentData + ")";
 	}

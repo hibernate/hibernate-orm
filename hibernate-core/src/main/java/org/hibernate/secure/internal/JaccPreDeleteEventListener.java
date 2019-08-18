@@ -20,6 +20,7 @@ public class JaccPreDeleteEventListener extends AbstractJaccSecurableEventListen
 	public JaccPreDeleteEventListener() {
 	}
 
+	@Override
 	public boolean onPreDelete(PreDeleteEvent event) {
 		performSecurityCheck( event, PermissibleAction.DELETE );
 		return false;

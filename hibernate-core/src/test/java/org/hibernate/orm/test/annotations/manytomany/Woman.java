@@ -80,11 +80,13 @@ public class Woman implements Serializable {
 	}
 
 
+	@Override
 	public int hashCode() {
 		//a NPE can occurs, but I don't expect hashcode to be used before pk is set
 		return getId().hashCode();
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		//a NPE can occurs, but I don't expect equals to be used before pk is set
 		if ( obj != null && obj instanceof Woman ) {

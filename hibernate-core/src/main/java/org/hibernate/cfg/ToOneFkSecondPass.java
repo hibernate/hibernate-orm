@@ -85,6 +85,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		return false;
 	}
 
+	@Override
 	public void doSecondPass(java.util.Map persistentClasses) throws MappingException {
 		if ( value instanceof ManyToOne ) {
 			final ManyToOne manyToOne = (ManyToOne) value;

@@ -31,6 +31,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Andrea Boriero
  */
 public interface DomainType<J> extends ExpressableType<J>, Type<J> {
+	@Override
 	JavaTypeDescriptor<J> getJavaTypeDescriptor();
 
 	@Override

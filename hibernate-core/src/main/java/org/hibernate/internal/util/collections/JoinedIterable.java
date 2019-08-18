@@ -33,6 +33,7 @@ public class JoinedIterable<T> implements Iterable<T> {
 		iterator = new TypeSafeJoinedIterator<T>( iterables );
 	}
 
+	@Override
 	public Iterator<T> iterator() {
 		return iterator;
 	}
@@ -55,16 +56,19 @@ public class JoinedIterable<T> implements Iterable<T> {
 			this.iterables = iterables;
 		}
 
+		@Override
 		public boolean hasNext() {
 			updateCurrentIterator();
 			return currentIterator.hasNext();
 		}
 
+		@Override
 		public T next() {
 			updateCurrentIterator();
 			return currentIterator.next();
 		}
 
+		@Override
 		public void remove() {
 			updateCurrentIterator();
 			lastUsedIterator.remove();

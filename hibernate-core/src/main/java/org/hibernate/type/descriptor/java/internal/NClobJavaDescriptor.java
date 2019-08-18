@@ -41,18 +41,22 @@ public class NClobJavaDescriptor extends AbstractBasicJavaDescriptor<NClob> {
 	public static class NClobMutabilityPlan implements MutabilityPlan<NClob> {
 		public static final NClobMutabilityPlan INSTANCE = new NClobMutabilityPlan();
 
+		@Override
 		public boolean isMutable() {
 			return false;
 		}
 
+		@Override
 		public NClob deepCopy(NClob value) {
 			return value;
 		}
 
+		@Override
 		public Serializable disassemble(NClob value) {
 			throw new UnsupportedOperationException( "LOB locators are not cacheable" );
 		}
 
+		@Override
 		public NClob assemble(Serializable cached) {
 			throw new UnsupportedOperationException( "LOB locators are not cacheable" );
 		}
@@ -62,10 +66,12 @@ public class NClobJavaDescriptor extends AbstractBasicJavaDescriptor<NClob> {
 		super( NClob.class, NClobMutabilityPlan.INSTANCE );
 	}
 
+	@Override
 	public String toString(NClob value) {
 		return LobStreamDataHelper.extractString( value );
 	}
 
+	@Override
 	public NClob fromString(String string) {
 		return NClobProxy.generateProxy( string );
 	}
@@ -99,6 +105,7 @@ public class NClobJavaDescriptor extends AbstractBasicJavaDescriptor<NClob> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(final NClob value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -129,6 +136,7 @@ public class NClobJavaDescriptor extends AbstractBasicJavaDescriptor<NClob> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> NClob wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

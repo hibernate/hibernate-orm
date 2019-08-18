@@ -104,26 +104,32 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutators
 
+	@Override
 	public void setQueryCompliance(boolean queryCompliance) {
 		this.queryCompliance = queryCompliance;
 	}
 
+	@Override
 	public void setTransactionCompliance(boolean transactionCompliance) {
 		this.transactionCompliance = transactionCompliance;
 	}
 
+	@Override
 	public void setListCompliance(boolean listCompliance) {
 		this.listCompliance = listCompliance;
 	}
 
+	@Override
 	public void setClosedCompliance(boolean closedCompliance) {
 		this.closedCompliance = closedCompliance;
 	}
 
+	@Override
 	public void setProxyCompliance(boolean proxyCompliance) {
 		this.proxyCompliance = proxyCompliance;
 	}
 
+	@Override
 	public void setCachingCompliance(boolean cachingCompliance) {
 		this.cachingCompliance = cachingCompliance;
 	}

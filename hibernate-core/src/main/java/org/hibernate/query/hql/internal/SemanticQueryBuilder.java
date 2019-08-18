@@ -196,6 +196,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	private ParameterCollector parameterCollector;
 
 
+	@Override
 	public Stack<SqmCreationProcessingState> getProcessingStateStack() {
 		return processingStateStack;
 	}

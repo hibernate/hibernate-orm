@@ -52,10 +52,12 @@ public abstract class AbstractStandardBasicType<T>
 
 	// final implementations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public final BasicJavaDescriptor<T> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 
+	@Override
 	public final SqlTypeDescriptor getSqlTypeDescriptor() {
 		return sqlTypeDescriptor;
 	}

@@ -41,6 +41,7 @@ public class EmbId implements Serializable {
 		this.y = y;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -61,6 +62,7 @@ public class EmbId implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (x != null ? x.hashCode() : 0);
@@ -68,6 +70,7 @@ public class EmbId implements Serializable {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "EmbId(" + x + ", " + y + ")";
 	}

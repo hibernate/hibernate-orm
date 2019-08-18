@@ -416,6 +416,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return false;
 	}
 
+	@Override
 	public boolean isDefaultReadOnly() {
 		return false;
 	}

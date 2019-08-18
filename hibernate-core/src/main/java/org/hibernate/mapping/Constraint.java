@@ -121,6 +121,7 @@ public abstract class Constraint implements MappedConstraint, Serializable {
 	public static class ColumnComparator implements Comparator<Column> {
 		public static ColumnComparator INSTANCE = new ColumnComparator();
 
+		@Override
 		public int compare(Column col1, Column col2) {
 			return col1.getName().compareTo( col2.getName() );
 		}
@@ -221,6 +222,7 @@ public abstract class Constraint implements MappedConstraint, Serializable {
 	}
 
 
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + getMappedTable().getName() + getColumns() + ") as " + name;
 	}

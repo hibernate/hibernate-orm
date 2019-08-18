@@ -14,6 +14,7 @@ import org.hibernate.boot.model.relational.ForeignKeyExporter;
  * @author Gavin King
  */
 public interface Fetchable extends ForeignKeyExporter {
+	@Override
 	FetchMode getFetchMode();
 	void setFetchMode(FetchMode joinedFetch);
 	boolean isLazy();

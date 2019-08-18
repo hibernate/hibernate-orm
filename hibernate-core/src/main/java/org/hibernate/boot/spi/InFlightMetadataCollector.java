@@ -57,6 +57,7 @@ import org.hibernate.type.spi.BasicType;
 public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
 
+	@Override
 	Database getDatabase();
 
 	/**

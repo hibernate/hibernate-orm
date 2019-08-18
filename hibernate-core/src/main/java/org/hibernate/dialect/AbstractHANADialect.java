@@ -1704,6 +1704,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 	}
 
+	@Override
 	public boolean supportsNoColumnsInsert() {
 		return false;
 	}

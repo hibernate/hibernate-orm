@@ -58,6 +58,7 @@ public interface ManagedTypeDescriptor<T>
 
 	TypeConfiguration getTypeConfiguration();
 
+	@Override
 	ManagedJavaDescriptor<T> getJavaTypeDescriptor();
 
 	/**

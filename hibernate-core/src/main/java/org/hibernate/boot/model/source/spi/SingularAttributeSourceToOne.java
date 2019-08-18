@@ -21,6 +21,7 @@ public interface SingularAttributeSourceToOne
 			CascadeStyleSource{
 
 	public String getReferencedEntityAttributeName();
+	@Override
 	public String getReferencedEntityName();
 	public ForeignKeyDirection getForeignKeyDirection();
 

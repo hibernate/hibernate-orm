@@ -97,6 +97,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 *
 	 * @throws IllegalStateException Thrown if the EM is closed
 	 */
+	@Override
 	void checkOpen(boolean markForRollbackIfClosed) throws IllegalStateException;
 
 	/**
@@ -104,11 +105,13 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 *
 	 * @return True if a transaction is considered currently in progress; false otherwise.
 	 */
+	@Override
 	boolean isTransactionInProgress();
 
 	/**
 	 * Used to mark a transaction for rollback only (when that is the JPA spec defined behavior).
 	 */
+	@Override
 	void markForRollbackOnly();
 
 	@Override
@@ -186,6 +189,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	@Deprecated
 	void removeOrphanBeforeUpdates(String entityName, Object child);
 
+	@Override
 	SessionImplementor getSession();
 
 	/**

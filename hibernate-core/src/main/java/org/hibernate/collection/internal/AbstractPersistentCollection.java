@@ -1237,6 +1237,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			this.orphan = orphan;
 		}
 
+		@Override
 		public void replace(PersistentCollectionDescriptor descriptor, Map copyCache) {
 			if ( addedValue != null ) {
 				addedValue = getReplacement( descriptor.getElementDescriptor(), addedValue, copyCache );

@@ -27,10 +27,12 @@ public class Map extends IndexedCollection {
 		super( buildingContext, owner );
 	}
 
+	@Override
 	public boolean isMap() {
 		return true;
 	}
 
+	@Override
 	public void createAllKeys() throws MappingException {
 		super.createAllKeys();
 		if ( !isInverse() ) {
@@ -38,6 +40,7 @@ public class Map extends IndexedCollection {
 		}
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

@@ -19,6 +19,8 @@ import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 public interface JpaAttributeConverter<O,R> extends BasicValueConverter<O,R> {
 	ManagedBean<AttributeConverter<O,R>> getConverterBean();
 
+	@Override
 	BasicJavaDescriptor<O> getDomainJavaDescriptor();
+	@Override
 	BasicJavaDescriptor<R> getRelationalJavaDescriptor();
 }

@@ -80,6 +80,7 @@ public class ChildIndexedEntity
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ChildIndexedEntity(id = " + getId() + ", data = " + getData() + ", data2 = " + data2 + ")";
 	}

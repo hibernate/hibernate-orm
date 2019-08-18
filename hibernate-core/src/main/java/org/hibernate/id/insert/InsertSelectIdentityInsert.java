@@ -19,6 +19,7 @@ public class InsertSelectIdentityInsert extends IdentifierGeneratingInsert {
 		super( dialect );
 	}
 
+	@Override
 	public String toStatementString() {
 		return getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( super.toStatementString() );
 	}

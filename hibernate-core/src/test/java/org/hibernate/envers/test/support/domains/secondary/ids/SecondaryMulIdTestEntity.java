@@ -83,6 +83,7 @@ public class SecondaryMulIdTestEntity {
 		this.s2 = s2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -109,6 +110,7 @@ public class SecondaryMulIdTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id1 != null ? id1.hashCode() : 0);

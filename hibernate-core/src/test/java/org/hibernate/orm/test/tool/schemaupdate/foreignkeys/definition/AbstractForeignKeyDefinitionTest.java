@@ -34,6 +34,7 @@ public abstract class AbstractForeignKeyDefinitionTest extends BaseSchemaUnitTes
 		return true;
 	}
 
+	@Override
 	protected abstract Class<?>[] getAnnotatedClasses();
 
 	protected abstract boolean validate(String fileContent);

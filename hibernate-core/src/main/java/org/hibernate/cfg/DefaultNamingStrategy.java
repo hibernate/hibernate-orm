@@ -26,24 +26,28 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	/**
 	 * Return the unqualified class name
 	 */
+	@Override
 	public String classToTableName(String className) {
 		return StringHelper.unqualify(className);
 	}
 	/**
 	 * Return the unqualified property name
 	 */
+	@Override
 	public String propertyToColumnName(String propertyName) {
 		return StringHelper.unqualify(propertyName);
 	}
 	/**
 	 * Return the argument
 	 */
+	@Override
 	public String tableName(String tableName) {
 		return tableName;
 	}
 	/**
 	 * Return the argument
 	 */
+	@Override
 	public String columnName(String columnName) {
 		return columnName;
 	}
@@ -51,6 +55,7 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	/**
 	 * Return the unqualified property name, not the best strategy but a backward compatible one
 	 */
+	@Override
 	public String collectionTableName(
 			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
 			String propertyName
@@ -62,6 +67,7 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	/**
 	 * Return the argument
 	 */
+	@Override
 	public String joinKeyColumnName(String joinedColumn, String joinedTable) {
 		return columnName( joinedColumn );
 	}
@@ -69,6 +75,7 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	/**
 	 * Return the property name or propertyTableName
 	 */
+	@Override
 	public String foreignKeyColumnName(
 			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
 	) {
@@ -80,6 +87,7 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	/**
 	 * Return the column name or the unqualified property name
 	 */
+	@Override
 	public String logicalColumnName(String columnName, String propertyName) {
 		return StringHelper.isNotEmpty( columnName ) ? columnName : StringHelper.unqualify( propertyName );
 	}
@@ -89,6 +97,7 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	 * if there is an associated table, the concatenation of owner entity table and associated table
 	 * otherwise the concatenation of owner entity table and the unqualified property name
 	 */
+	@Override
 	public String logicalCollectionTableName(String tableName,
 			String ownerEntityTable, String associatedEntityTable, String propertyName
 	) {
@@ -109,6 +118,7 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	 * Return the column name if explicit or the concatenation of the property name and the referenced column
 	 *
 	 */
+	@Override
 	public String logicalCollectionColumnName(String columnName, String propertyName, String referencedColumn) {
 		return StringHelper.isNotEmpty( columnName ) ? columnName : propertyName + "_" + referencedColumn;
 	}

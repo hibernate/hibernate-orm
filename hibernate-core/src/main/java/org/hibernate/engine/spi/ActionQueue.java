@@ -106,9 +106,11 @@ public class ActionQueue {
 		EXECUTABLE_LISTS_MAP.put(
 				OrphanRemovalAction.class,
 				new ListProvider<OrphanRemovalAction>() {
+					@Override
 					ExecutableList<OrphanRemovalAction> get(ActionQueue instance) {
 						return instance.orphanRemovals;
 					}
+					@Override
 					ExecutableList<OrphanRemovalAction> init(ActionQueue instance) {
 						// OrphanRemovalAction executables never require sorting.
 						return instance.orphanRemovals = new ExecutableList<>( false );
@@ -118,9 +120,11 @@ public class ActionQueue {
 		EXECUTABLE_LISTS_MAP.put(
 				AbstractEntityInsertAction.class,
 				new ListProvider<AbstractEntityInsertAction>() {
+					@Override
 					ExecutableList<AbstractEntityInsertAction> get(ActionQueue instance) {
 						return instance.insertions;
 					}
+					@Override
 					ExecutableList<AbstractEntityInsertAction> init(ActionQueue instance) {
 						if ( instance.isOrderInsertsEnabled() ) {
 							return instance.insertions = new ExecutableList<>(
@@ -138,9 +142,11 @@ public class ActionQueue {
 		EXECUTABLE_LISTS_MAP.put(
 				EntityUpdateAction.class,
 				new ListProvider<EntityUpdateAction>() {
+					@Override
 					ExecutableList<EntityUpdateAction> get(ActionQueue instance) {
 						return instance.updates;
 					}
+					@Override
 					ExecutableList<EntityUpdateAction> init(ActionQueue instance) {
 						return instance.updates = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
@@ -151,9 +157,11 @@ public class ActionQueue {
 		EXECUTABLE_LISTS_MAP.put(
 				QueuedOperationCollectionAction.class,
 				new ListProvider<QueuedOperationCollectionAction>() {
+					@Override
 					ExecutableList<QueuedOperationCollectionAction> get(ActionQueue instance) {
 						return instance.collectionQueuedOps;
 					}
+					@Override
 					ExecutableList<QueuedOperationCollectionAction> init(ActionQueue instance) {
 						return instance.collectionQueuedOps = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
@@ -164,9 +172,11 @@ public class ActionQueue {
 		EXECUTABLE_LISTS_MAP.put(
 				CollectionRemoveAction.class,
 				new ListProvider<CollectionRemoveAction>() {
+					@Override
 					ExecutableList<CollectionRemoveAction> get(ActionQueue instance) {
 						return instance.collectionRemovals;
 					}
+					@Override
 					ExecutableList<CollectionRemoveAction> init(ActionQueue instance) {
 						return instance.collectionRemovals = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
@@ -177,9 +187,11 @@ public class ActionQueue {
 		EXECUTABLE_LISTS_MAP.put(
 				CollectionUpdateAction.class,
 				new ListProvider<CollectionUpdateAction>() {
+					@Override
 					ExecutableList<CollectionUpdateAction> get(ActionQueue instance) {
 						return instance.collectionUpdates;
 					}
+					@Override
 					ExecutableList<CollectionUpdateAction> init(ActionQueue instance) {
 						return instance.collectionUpdates = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
@@ -190,9 +202,11 @@ public class ActionQueue {
 		EXECUTABLE_LISTS_MAP.put(
 				CollectionRecreateAction.class,
 				new ListProvider<CollectionRecreateAction>() {
+					@Override
 					ExecutableList<CollectionRecreateAction> get(ActionQueue instance) {
 						return instance.collectionCreations;
 					}
+					@Override
 					ExecutableList<CollectionRecreateAction> init(ActionQueue instance) {
 						return instance.collectionCreations = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
@@ -203,9 +217,11 @@ public class ActionQueue {
 		EXECUTABLE_LISTS_MAP.put(
 				EntityDeleteAction.class,
 				new ListProvider<EntityDeleteAction>() {
+					@Override
 					ExecutableList<EntityDeleteAction> get(ActionQueue instance) {
 						return instance.deletions;
 					}
+					@Override
 					ExecutableList<EntityDeleteAction> init(ActionQueue instance) {
 						// EntityDeleteAction executables never require sorting.
 						return instance.deletions = new ExecutableList<>( false );
@@ -1139,6 +1155,7 @@ public class ActionQueue {
 		/**
 		 * Sort the insert actions.
 		 */
+		@Override
 		public void sort(List<AbstractEntityInsertAction> insertions) {
 			// optimize the hash size to eliminate a rehash.
 			this.latestBatches = new ArrayList<>( );

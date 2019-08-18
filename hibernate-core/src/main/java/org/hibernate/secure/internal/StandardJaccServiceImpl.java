@@ -181,6 +181,7 @@ public class StandardJaccServiceImpl implements JaccService, Configurable {
 		public static final PrivilegedContextSubjectAccess INSTANCE = new PrivilegedContextSubjectAccess();
 
 		private final PrivilegedAction<Subject> privilegedAction = new PrivilegedAction<Subject>() {
+			@Override
 			public Subject run() {
 				return NonPrivilegedContextSubjectAccess.INSTANCE.getContextSubject();
 			}

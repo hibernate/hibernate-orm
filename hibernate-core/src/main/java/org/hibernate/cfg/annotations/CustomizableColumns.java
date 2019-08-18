@@ -21,10 +21,12 @@ public class CustomizableColumns implements Columns {
 		this.columns = columns;
 	}
 
+	@Override
 	public Column[] columns() {
 		return columns;
 	}
 
+	@Override
 	public Class<? extends Annotation> annotationType() {
 		return Columns.class;
 	}

@@ -40,6 +40,7 @@ public class ChildPrimaryKeyJoinEntity extends ParentEntity {
 		this.namVal = namVal;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -63,12 +64,14 @@ public class ChildPrimaryKeyJoinEntity extends ParentEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + (namVal != null ? namVal.hashCode() : 0);
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "CPKJE(id = " + getId() + ", data = " + getData() + ", namVal = " + namVal + ")";
 	}

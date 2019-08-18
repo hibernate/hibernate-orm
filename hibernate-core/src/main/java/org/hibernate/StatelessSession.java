@@ -30,6 +30,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	/**
 	 * Close the stateless session and release the JDBC connection.
 	 */
+	@Override
 	void close();
 
 	/**

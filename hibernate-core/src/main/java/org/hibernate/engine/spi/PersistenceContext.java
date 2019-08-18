@@ -566,6 +566,7 @@ public interface PersistenceContext {
 	 *
 	 * @return a string representation of the object.
 	 */
+	@Override
 	String toString();
 
 	/**

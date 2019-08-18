@@ -272,10 +272,12 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return attributeConversionInfoMap.get( path );
 	}
 
+	@Override
 	public String getEntityName() {
 		return component.getEmbeddableClassName();
 	}
 
+	@Override
 	public void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		/*
@@ -300,15 +302,18 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		addProperty( prop, declaringClass );
 	}
 
+	@Override
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
 		return parent.addJoin( joinTableAnn, noDelayInPkColumnCreation );
 
 	}
 
+	@Override
 	public String getClassName() {
 		return component.getEmbeddableClassName();
 	}
 
+	@Override
 	public String getEntityOwnerClassName() {
 		return component.getOwner().getClassName();
 	}
@@ -317,42 +322,52 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	 * @deprecated since 6.0, use {@link #getMappedTable()} instead.
 	 */
 	@Deprecated
+	@Override
 	public Table getTable() {
 		return component.getTable();
 	}
 
+	@Override
 	public MappedTable getMappedTable() {
 		return component.getMappedTable();
 	}
 
+	@Override
 	public void addProperty(Property prop, XClass declaringClass) {
 		component.addProperty( prop );
 	}
 
+	@Override
 	public KeyValue getIdentifier() {
 		return component.getOwner().getIdentifier();
 	}
 
+	@Override
 	public boolean isOrWithinEmbeddedId() {
 		return isOrWithinEmbeddedId;
 	}
 
+	@Override
 	public boolean isWithinElementCollection() {
 		return isWithinElementCollection;
 	}
 
+	@Override
 	public PersistentClass getPersistentClass() {
 		return component.getOwner();
 	}
 
+	@Override
 	public boolean isComponent() {
 		return true;
 	}
 
+	@Override
 	public boolean isEntity() {
 		return false;
 	}
 
+	@Override
 	public void setParentProperty(String parentProperty) {
 		component.setParentProperty( parentProperty );
 	}

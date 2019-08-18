@@ -30,6 +30,7 @@ public abstract class AbstractReturningWork<T> implements ReturningWork<T>, Work
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
+	@Override
 	public T accept(WorkExecutor<T> executor, Connection connection) throws SQLException {
 		return executor.executeReturningWork( this, connection );
 	}

@@ -31,6 +31,7 @@ public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
 		this.buildingContext = buildingContext;
 	}
 
+	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		org.hibernate.mapping.FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile(
 				fetchProfileName

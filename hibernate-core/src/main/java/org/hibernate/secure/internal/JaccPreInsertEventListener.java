@@ -20,6 +20,7 @@ public class JaccPreInsertEventListener extends AbstractJaccSecurableEventListen
 	public JaccPreInsertEventListener() {
 	}
 
+	@Override
 	public boolean onPreInsert(PreInsertEvent event) {
 		performSecurityCheck( event, PermissibleAction.INSERT );
 		return false;

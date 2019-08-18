@@ -68,6 +68,7 @@ public class MappedNamespace implements RelationalNamespace<MappedTable, MappedS
 		);
 	}
 
+	@Override
 	public Collection<MappedTable> getTables() {
 		return tables.values();
 	}
@@ -159,6 +160,7 @@ public class MappedNamespace implements RelationalNamespace<MappedTable, MappedS
 		return name.hashCode();
 	}
 
+	@Override
 	public Collection<MappedSequence> getSequences() {
 		return sequences.values();
 	}

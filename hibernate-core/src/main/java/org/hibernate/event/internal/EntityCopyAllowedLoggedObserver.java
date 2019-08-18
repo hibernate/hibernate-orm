@@ -101,6 +101,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		countsByEntityName.put( entityName, countBeforeIncrement + 1 );
 	}
 
+	@Override
 	public void clear() {
 		if ( managedToMergeEntitiesXref != null ) {
 			managedToMergeEntitiesXref.clear();

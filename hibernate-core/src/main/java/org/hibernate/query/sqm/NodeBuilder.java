@@ -342,6 +342,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	@Override
 	SqmFunction<Time> currentTime();
 
+	@Override
 	SqmFunction<Instant> currentInstant();
 
 	@Override

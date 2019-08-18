@@ -137,6 +137,7 @@ public class PersistentArrayDescriptorImpl<O,E> extends AbstractPersistentCollec
 		return true;
 	}
 
+	@Override
 	protected boolean indexContainsFormula(){
 		return hasFormula;
 	}

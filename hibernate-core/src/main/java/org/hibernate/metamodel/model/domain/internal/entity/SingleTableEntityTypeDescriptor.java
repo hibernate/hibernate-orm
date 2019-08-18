@@ -185,6 +185,7 @@ public class SingleTableEntityTypeDescriptor<T> extends AbstractEntityTypeDescri
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
+	@Override
 	protected Object insertInternal(
 			Object id,
 			Object[] fields,

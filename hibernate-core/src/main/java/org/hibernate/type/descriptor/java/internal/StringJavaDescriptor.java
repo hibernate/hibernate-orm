@@ -49,15 +49,18 @@ public class StringJavaDescriptor extends AbstractBasicJavaDescriptor<String> {
 		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( jdbcTypeCode );
 	}
 
+	@Override
 	public String toString(String value) {
 		return value;
 	}
 
+	@Override
 	public String fromString(String string) {
 		return string;
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(String value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -90,6 +93,7 @@ public class StringJavaDescriptor extends AbstractBasicJavaDescriptor<String> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> String wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

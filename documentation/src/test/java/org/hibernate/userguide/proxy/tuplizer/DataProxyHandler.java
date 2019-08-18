@@ -35,6 +35,7 @@ public final class DataProxyHandler implements InvocationHandler {
         data.put( "Id", id );
     }
 
+	@Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         if ( methodName.startsWith( "set" ) ) {

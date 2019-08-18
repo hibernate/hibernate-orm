@@ -176,10 +176,12 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		return comparator;
 	}
 
+	@Override
 	public boolean isLazy() {
 		return lazy;
 	}
 
+	@Override
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
 	}
@@ -196,6 +198,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		return false;
 	}
 
+	@Override
 	public boolean hasFormula() {
 		return false;
 	}
@@ -302,6 +305,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		batchSize = i;
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return fetchMode;
 	}
@@ -311,6 +315,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		return buildingContext;
 	}
 
+	@Override
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode = fetchMode;
 	}
@@ -390,6 +395,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		}
 	}
 
+	@Override
 	public int getColumnSpan() {
 		return 0;
 	}
@@ -409,18 +415,22 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 //		}
 //	}
 
+	@Override
 	public boolean isNullable() {
 		return true;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return false;
 	}
 
+	@Override
 	public Table getTable() {
 		return owner.getTable();
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return false;
 	}
@@ -477,6 +487,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		this.cacheConcurrencyStrategy = cacheConcurrencyStrategy;
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName) {
 	}
 
@@ -564,6 +575,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		return deleteAllCheckStyle;
 	}
 
+	@Override
 	public void addFilter(
 			String name,
 			String condition,
@@ -582,6 +594,7 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		);
 	}
 
+	@Override
 	public java.util.List getFilters() {
 		return filters;
 	}
@@ -671,10 +684,12 @@ public abstract class Collection implements Fetchable, Value, ForeignKeyExporter
 		}
 	}
 
+	@Override
 	public boolean[] getColumnInsertability() {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
+	@Override
 	public boolean[] getColumnUpdateability() {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}

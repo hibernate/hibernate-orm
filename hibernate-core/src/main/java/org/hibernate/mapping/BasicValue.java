@@ -522,10 +522,12 @@ public class BasicValue
 		return resolution.build();
 	}
 
+	@Override
 	public boolean isNationalized() {
 		return isNationalized;
 	}
 
+	@Override
 	public boolean isLob() {
 		return isLob;
 	}
@@ -534,6 +536,7 @@ public class BasicValue
 		return enumType;
 	}
 
+	@Override
 	public TemporalType getTemporalPrecision() {
 		return temporalPrecision;
 	}
@@ -599,6 +602,7 @@ public class BasicValue
 		super.addFormula( formula );
 	}
 
+	@Override
 	public void setExplicitTypeName(String typeName) {
 		if ( typeName != null && typeName.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX ) ) {
 			final String converterClassName = typeName.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );

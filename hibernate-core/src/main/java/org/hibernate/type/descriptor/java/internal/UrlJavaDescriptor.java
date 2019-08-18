@@ -32,10 +32,12 @@ public class UrlJavaDescriptor extends AbstractBasicJavaDescriptor<URL> {
 		return StringJavaDescriptor.INSTANCE.getJdbcRecommendedSqlType( context );
 	}
 
+	@Override
 	public String toString(URL value) {
 		return value.toExternalForm();
 	}
 
+	@Override
 	public URL fromString(String string) {
 		try {
 			return new URL( string );
@@ -46,6 +48,7 @@ public class UrlJavaDescriptor extends AbstractBasicJavaDescriptor<URL> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(URL value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -56,6 +59,7 @@ public class UrlJavaDescriptor extends AbstractBasicJavaDescriptor<URL> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> URL wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

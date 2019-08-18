@@ -47,6 +47,7 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public IdentifiableTypeDescriptor<? super T> getSuperclassType() {
 		return (IdentifiableTypeDescriptor<? super T>) super.getSuperclassType();
 	}

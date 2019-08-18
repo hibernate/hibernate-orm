@@ -84,6 +84,7 @@ public class NotAuditedManyToOneComponentTestEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "NAMTOCTE(id = " + id + ", comp1 = " + comp1 + ")";
 	}

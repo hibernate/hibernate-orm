@@ -39,6 +39,7 @@ public abstract class FkSecondPass implements SecondPass {
 		return value;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof FkSecondPass ) ) return false;
@@ -50,6 +51,7 @@ public abstract class FkSecondPass implements SecondPass {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return uniqueCounter;
 	}

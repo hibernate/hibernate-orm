@@ -216,6 +216,7 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
 
 	/* start of TwoPhaseBootstrapCapable methods */
 
+	@Override
 	public EntityManagerFactoryBuilder getBootstrap(final PersistenceUnitInfo info, final Map map) {
 		return new TwoPhaseBootstrapImpl( info, map );
 	}

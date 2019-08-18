@@ -35,6 +35,7 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 		this.cfgProperties = cfgProperties;
 	}
 
+	@Override
 	public void prepare(boolean needsAutoCommit) throws SQLException {
 		serviceRegistry = createServiceRegistry( cfgProperties );
 		connection = serviceRegistry.getService( ConnectionProvider.class ).getConnection();
@@ -49,10 +50,12 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 		return (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().applySettings( properties ).build();
 	}
 
+	@Override
 	public Connection getConnection() throws SQLException {
 		return connection;
 	}
 
+	@Override
 	public void release() throws SQLException {
 		try {
 			releaseConnection();

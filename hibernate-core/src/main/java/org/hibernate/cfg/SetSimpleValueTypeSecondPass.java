@@ -21,6 +21,7 @@ public class SetSimpleValueTypeSecondPass implements SecondPass {
 		binder = val;
 	}
 
+	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		binder.fillSimpleValue();
 	}

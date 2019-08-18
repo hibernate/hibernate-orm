@@ -15,5 +15,6 @@ public interface PluralAttributeKeySource
 		extends ForeignKeyContributingSource,
 				RelationalValueSourceContainer {
 	public String getReferencedPropertyName();
+	@Override
 	public boolean isCascadeDeleteEnabled();
 }

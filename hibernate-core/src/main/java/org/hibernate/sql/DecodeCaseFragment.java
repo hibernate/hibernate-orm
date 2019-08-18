@@ -23,6 +23,7 @@ import org.hibernate.annotations.Remove;
 @Remove
 public class DecodeCaseFragment extends CaseFragment {
 
+	@Override
 	public String toFragmentString() {
 		
 		StringBuilder buf = new StringBuilder( cases.size() * 15 + 10 )

@@ -64,6 +64,7 @@ public class CollectionKey<T> implements Navigable<T> {
 		return joinForeignKey;
 	}
 
+	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}

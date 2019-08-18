@@ -69,18 +69,22 @@ public class NavigablePath implements DotIdentifierSequence, Loggable {
 		this( "" );
 	}
 
+	@Override
 	public NavigablePath append(String property) {
 		return new NavigablePath( this, property );
 	}
 
+	@Override
 	public NavigablePath getParent() {
 		return parent;
 	}
 
+	@Override
 	public String getLocalName() {
 		return localName;
 	}
 
+	@Override
 	public String getFullPath() {
 		return fullPath;
 	}

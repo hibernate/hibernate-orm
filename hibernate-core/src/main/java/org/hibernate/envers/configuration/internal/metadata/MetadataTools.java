@@ -446,10 +446,12 @@ public final class MetadataTools {
 	@Deprecated
 	public static ColumnNameIterator getColumnNameIterator(final Iterator<Selectable> selectableIterator) {
 		return new ColumnNameIterator() {
+			@Override
 			public boolean hasNext() {
 				return selectableIterator.hasNext();
 			}
 
+			@Override
 			public String next() {
 				final Selectable next = selectableIterator.next();
 				if ( next.isFormula() ) {
@@ -458,6 +460,7 @@ public final class MetadataTools {
 				return ( (Column) next ).getName().getText();
 			}
 
+			@Override
 			public void remove() {
 				selectableIterator.remove();
 			}
@@ -468,10 +471,12 @@ public final class MetadataTools {
 		return new ColumnNameIterator() {
 			private Iterator<MappedColumn> selectableIterator = columns.iterator();
 
+			@Override
 			public boolean hasNext() {
 				return selectableIterator.hasNext();
 			}
 
+			@Override
 			public String next() {
 				final MappedColumn next = selectableIterator.next();
 				if ( next.isFormula() ) {
@@ -480,6 +485,7 @@ public final class MetadataTools {
 				return ( (Column) next ).getName().getText();
 			}
 
+			@Override
 			public void remove() {
 				selectableIterator.remove();
 			}
@@ -490,14 +496,17 @@ public final class MetadataTools {
 		return new ColumnNameIterator() {
 			int counter;
 
+			@Override
 			public boolean hasNext() {
 				return counter < joinColumns.length;
 			}
 
+			@Override
 			public String next() {
 				return joinColumns[counter++].name();
 			}
 
+			@Override
 			public void remove() {
 				throw new UnsupportedOperationException();
 			}

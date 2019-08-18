@@ -79,6 +79,7 @@ public class AnnotatedTrackingRevisionEntity {
 		this.entityNames = entityNames;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -102,6 +103,7 @@ public class AnnotatedTrackingRevisionEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = customId;
 		result = 31 * result + (int) (customTimestamp ^ (customTimestamp >>> 32));

@@ -27,6 +27,7 @@ public class PkDrivenByDefaultMapsIdSecondPass implements SecondPass {
 		this.value = value;
 	}
 
+	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		PersistentClass referencedEntity = (PersistentClass) persistentClasses.get( referencedEntityName );
 		if ( referencedEntity == null ) {

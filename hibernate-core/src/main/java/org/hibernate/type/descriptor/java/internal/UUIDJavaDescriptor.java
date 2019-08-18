@@ -28,6 +28,7 @@ public class UUIDJavaDescriptor extends AbstractBasicJavaDescriptor<UUID> {
 	public static class UUIDComparator implements Comparator<UUID> {
 		public static final UUIDComparator INSTANCE = new UUIDComparator();
 
+		@Override
 		public int compare(UUID o1, UUID o2) {
 			return o1.compareTo( o2 );
 		}
@@ -37,10 +38,12 @@ public class UUIDJavaDescriptor extends AbstractBasicJavaDescriptor<UUID> {
 		super( UUID.class );
 	}
 
+	@Override
 	public String toString(UUID value) {
 		return value.toString();
 	}
 
+	@Override
 	public UUID fromString(String string) {
 		return UUID.fromString( string );
 	}
@@ -56,6 +59,7 @@ public class UUIDJavaDescriptor extends AbstractBasicJavaDescriptor<UUID> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(UUID value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -66,6 +70,7 @@ public class UUIDJavaDescriptor extends AbstractBasicJavaDescriptor<UUID> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> UUID wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -84,10 +89,12 @@ public class UUIDJavaDescriptor extends AbstractBasicJavaDescriptor<UUID> {
 	public static class PassThroughTransformer implements ValueTransformer {
 		public static final PassThroughTransformer INSTANCE = new PassThroughTransformer();
 
+		@Override
 		public UUID transform(UUID uuid) {
 			return uuid;
 		}
 
+		@Override
 		public UUID parse(Object value) {
 			return (UUID)value;
 		}
@@ -96,10 +103,12 @@ public class UUIDJavaDescriptor extends AbstractBasicJavaDescriptor<UUID> {
 	public static class ToStringTransformer implements ValueTransformer {
 		public static final ToStringTransformer INSTANCE = new ToStringTransformer();
 
+		@Override
 		public String transform(UUID uuid) {
 			return uuid.toString();
 		}
 
+		@Override
 		public UUID parse(Object value) {
 			return UUID.fromString( (String) value );
 		}
@@ -108,6 +117,7 @@ public class UUIDJavaDescriptor extends AbstractBasicJavaDescriptor<UUID> {
 	public static class ToBytesTransformer implements ValueTransformer {
 		public static final ToBytesTransformer INSTANCE = new ToBytesTransformer();
 
+		@Override
 		public byte[] transform(UUID uuid) {
 			byte[] bytes = new byte[16];
 			System.arraycopy( BytesHelper.fromLong( uuid.getMostSignificantBits() ), 0, bytes, 0, 8 );
@@ -115,6 +125,7 @@ public class UUIDJavaDescriptor extends AbstractBasicJavaDescriptor<UUID> {
 			return bytes;
 		}
 
+		@Override
 		public UUID parse(Object value) {
 			byte[] msb = new byte[8];
 			byte[] lsb = new byte[8];

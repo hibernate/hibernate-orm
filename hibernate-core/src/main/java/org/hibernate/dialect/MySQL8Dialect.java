@@ -111,6 +111,7 @@ public class MySQL8Dialect extends MySQL57Dialect {
 		return true;
 	}
 
+	@Override
 	public boolean supportsNoWait() {
 		return true;
 	}

@@ -29,6 +29,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 	 * Return the unqualified class name, mixed case converted to
 	 * underscores
 	 */
+	@Override
 	public String classToTableName(String className) {
 		return addUnderscores( StringHelper.unqualify(className) );
 	}
@@ -36,18 +37,21 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 	 * Return the full property path with underscore seperators, mixed
 	 * case converted to underscores
 	 */
+	@Override
 	public String propertyToColumnName(String propertyName) {
 		return addUnderscores( StringHelper.unqualify(propertyName) );
 	}
 	/**
 	 * Convert mixed case to underscores
 	 */
+	@Override
 	public String tableName(String tableName) {
 		return addUnderscores(tableName);
 	}
 	/**
 	 * Convert mixed case to underscores
 	 */
+	@Override
 	public String columnName(String columnName) {
 		return addUnderscores(columnName);
 	}
@@ -66,6 +70,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 		return buf.toString().toLowerCase(Locale.ROOT);
 	}
 
+	@Override
 	public String collectionTableName(
 			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
 			String propertyName
@@ -76,6 +81,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 	/**
 	 * Return the argument
 	 */
+	@Override
 	public String joinKeyColumnName(String joinedColumn, String joinedTable) {
 		return columnName( joinedColumn );
 	}
@@ -83,6 +89,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 	/**
 	 * Return the property name or propertyTableName
 	 */
+	@Override
 	public String foreignKeyColumnName(
 			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
 	) {
@@ -94,6 +101,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 	/**
 	 * Return the column name or the unqualified property name
 	 */
+	@Override
 	public String logicalColumnName(String columnName, String propertyName) {
 		return StringHelper.isNotEmpty( columnName ) ? columnName : StringHelper.unqualify( propertyName );
 	}
@@ -103,6 +111,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 	 * if there is an associated table, the concatenation of owner entity table and associated table
 	 * otherwise the concatenation of owner entity table and the unqualified property name
 	 */
+	@Override
 	public String logicalCollectionTableName(String tableName,
 			String ownerEntityTable, String associatedEntityTable, String propertyName
 	) {
@@ -122,6 +131,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 	/**
 	 * Return the column name if explicit or the concatenation of the property name and the referenced column
 	 */
+	@Override
 	public String logicalCollectionColumnName(String columnName, String propertyName, String referencedColumn) {
 		return StringHelper.isNotEmpty( columnName ) ?
 				columnName :

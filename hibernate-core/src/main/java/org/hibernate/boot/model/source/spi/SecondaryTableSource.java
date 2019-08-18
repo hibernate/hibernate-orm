@@ -41,6 +41,7 @@ public interface SecondaryTableSource extends ForeignKeyContributingSource {
 
 	public boolean isOptional();
 
+	@Override
 	public boolean isCascadeDeleteEnabled();
 
 	/**

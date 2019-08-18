@@ -29,6 +29,7 @@ public class MySQL57Dialect extends MySQL55Dialect {
 	 * @see <a href="https://dev.mysql.com/worklog/task/?id=7019">MySQL 5.7 work log</a>
 	 * @return supports IN clause row value expressions
 	 */
+	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}

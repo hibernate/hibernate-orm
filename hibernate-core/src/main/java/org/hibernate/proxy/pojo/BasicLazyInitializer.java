@@ -109,6 +109,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	}
 
+	@Override
 	public final Class getPersistentClass() {
 		return persistentClass;
 	}

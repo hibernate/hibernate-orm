@@ -74,6 +74,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 	}
 
 
+	@Override
 	public void addEntityAtRevisionRestriction(
 			AuditServiceOptions options,
 			QueryBuilder rootQueryBuilder,
@@ -106,6 +107,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 		parameters.addWhere( revisionProperty, addAlias, subqueryOperator, maxERevQb );
 	}
 
+	@Override
 	public void addAssociationAtRevisionRestriction(
 			QueryBuilder rootQueryBuilder,
 			Parameters parameters,

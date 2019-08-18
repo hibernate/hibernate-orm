@@ -36,22 +36,27 @@ public class SetRefEdEntity implements ISetRefEdEntity {
 		this.data = data;
 	}
 
+	@Override
 	public Integer getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Integer id) {
 		this.id = id;
 	}
 
+	@Override
 	public String getData() {
 		return data;
 	}
 
+	@Override
 	public void setData(String data) {
 		this.data = data;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -72,6 +77,7 @@ public class SetRefEdEntity implements ISetRefEdEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -79,6 +85,7 @@ public class SetRefEdEntity implements ISetRefEdEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "SetRefEdEntity(id = " + id + ", data = " + data + ")";
 	}

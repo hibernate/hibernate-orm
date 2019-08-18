@@ -49,6 +49,7 @@ public abstract class AbstractJtaPlatform
 	protected abstract TransactionManager locateTransactionManager();
 	protected abstract UserTransaction locateUserTransaction();
 
+	@Override
 	public void configure(Map configValues) {
 		cacheTransactionManager = ConfigurationHelper.getBoolean(
 				AvailableSettings.JTA_CACHE_TM,

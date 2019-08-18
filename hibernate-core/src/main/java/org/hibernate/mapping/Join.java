@@ -268,6 +268,7 @@ public class Join implements AttributeContainer, Serializable, MappedJoin {
 		this.optional = nullable;
 	}
 
+	@Override
 	public ExecuteUpdateResultCheckStyle getUpdateResultCheckStyle() {
 		String sql = getCustomSQLUpdate();
 		boolean callable = sql != null && isCustomUpdateCallable();

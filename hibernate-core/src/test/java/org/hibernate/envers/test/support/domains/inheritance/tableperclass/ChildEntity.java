@@ -37,6 +37,7 @@ public class ChildEntity extends ParentEntity {
 		this.numVal = numVal;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -57,12 +58,14 @@ public class ChildEntity extends ParentEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + (numVal != null ? numVal.hashCode() : 0);
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ChildPrimaryKeyJoinEntity(id = " + getId() + ", data = " + getData() + ", numVal = " + numVal + ")";
 	}

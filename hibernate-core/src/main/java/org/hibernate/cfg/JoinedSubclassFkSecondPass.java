@@ -31,14 +31,17 @@ public class JoinedSubclassFkSecondPass extends FkSecondPass {
 		this.buildingContext = buildingContext;
 	}
 
+	@Override
 	public String getReferencedEntityName() {
 		return entity.getSuperclass().getEntityName();
 	}
 
+	@Override
 	public boolean isInPrimaryKey() {
 		return true;
 	}
 
+	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		TableBinder.bindFk( entity.getSuperclass(), entity, columns, value, false, buildingContext );
 	}

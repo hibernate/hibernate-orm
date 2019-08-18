@@ -80,6 +80,7 @@ public class SQLExceptionConverterFactory {
 	 */
 	public static SQLExceptionConverter buildMinimalSQLExceptionConverter() {
 		return new SQLExceptionConverter() {
+			@Override
 			public JDBCException convert(SQLException sqlException, String message, String sql) {
 				return new GenericJDBCException( message, sqlException, sql );
 			}

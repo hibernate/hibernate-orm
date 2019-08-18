@@ -314,6 +314,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		return foreignKeyMap.values().iterator();
 	}
 
+	@Override
 	public java.util.Collection<MappedForeignKey> getForeignKeys() {
 		return Collections.unmodifiableCollection( foreignKeyMap.values() );
 	}
@@ -469,6 +470,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		return indexes.get( indexName );
 	}
 
+	@Override
 	public void addUniqueKey(MappedUniqueKey uniqueKey) {
 		MappedUniqueKey current = uniqueKeys.get( uniqueKey.getName() );
 		if ( current != null ) {
@@ -566,6 +568,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		return uniqueInteger;
 	}
 
+	@Override
 	public void setIdentifierValue(KeyValue idValue) {
 		this.idValue = idValue;
 	}
@@ -595,6 +598,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		this.rowId = rowId;
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder().append( getClass().getName() )
 				.append( '(' );
@@ -632,6 +636,7 @@ public class Table implements MappedTable<Column>, Serializable {
 		return hasDenormalizedTables() && isAbstract;
 	}
 
+	@Override
 	public boolean hasDenormalizedTables() {
 		return hasDenormalizedTables;
 	}
@@ -702,10 +707,12 @@ public class Table implements MappedTable<Column>, Serializable {
 			}
 		}
 
+		@Override
 		public int hashCode() {
 			return columns.hashCode() + referencedColumns.hashCode();
 		}
 
+		@Override
 		public boolean equals(Object other) {
 			ForeignKeyKey fkk = (ForeignKeyKey) other;
 			return fkk != null && fkk.columns.equals( columns ) && fkk.referencedColumns.equals( referencedColumns );

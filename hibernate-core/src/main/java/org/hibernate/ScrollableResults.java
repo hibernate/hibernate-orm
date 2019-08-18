@@ -34,6 +34,7 @@ public interface ScrollableResults<R> extends AutoCloseable, Closeable {
 	/**
 	 * Release resources immediately.
 	 */
+	@Override
 	void close();
 
 	/**

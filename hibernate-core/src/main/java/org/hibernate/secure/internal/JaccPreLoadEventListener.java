@@ -20,6 +20,7 @@ public class JaccPreLoadEventListener extends AbstractJaccSecurableEventListener
 	public JaccPreLoadEventListener() {
 	}
 
+	@Override
 	public void onPreLoad(PreLoadEvent event) {
 		performSecurityCheck( event.getSession(), event, PermissibleAction.READ );
 	}

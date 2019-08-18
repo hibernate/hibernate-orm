@@ -92,6 +92,7 @@ public class CompositeForeignKeyResultImpl extends AbstractFetchParent implement
 		}
 	}
 
+	@Override
 	protected void afterInitialize(DomainResultCreationState creationState) {
 
 	}

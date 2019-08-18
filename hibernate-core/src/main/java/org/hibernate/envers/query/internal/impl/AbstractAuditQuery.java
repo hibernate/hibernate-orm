@@ -111,10 +111,12 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	public abstract List list() throws AuditException;
 
+	@Override
 	public List getResultList() throws AuditException {
 		return list();
 	}
 
+	@Override
 	public Object getSingleResult() throws AuditException, NonUniqueResultException, NoResultException {
 		List result = list();
 
@@ -129,6 +131,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		return result.get( 0 );
 	}
 
+	@Override
 	public AuditQuery add(AuditCriterion criterion) {
 		criterions.add( criterion );
 		return this;
@@ -136,6 +139,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	// Projection and order
 
+	@Override
 	public AuditQuery addProjection(AuditProjection projection) {
 		AuditProjection.ProjectionData projectionData = projection.getData( versionsReader.getAuditService() );
 		String projectionEntityAlias = projectionData.getAlias( REFERENCED_ENTITY_ALIAS );
@@ -164,6 +168,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		return !projections.isEmpty();
 	}
 
+	@Override
 	public AuditQuery addOrder(AuditOrder order) {
 		hasOrder = true;
 		AuditOrder.OrderData orderData = order.getData( versionsReader.getAuditService() );
@@ -209,31 +214,37 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	// Query properties
 
+	@Override
 	public AuditQuery setMaxResults(int maxResults) {
 		this.maxResults = maxResults;
 		return this;
 	}
 
+	@Override
 	public AuditQuery setFirstResult(int firstResult) {
 		this.firstResult = firstResult;
 		return this;
 	}
 
+	@Override
 	public AuditQuery setCacheable(boolean cacheable) {
 		this.cacheable = cacheable;
 		return this;
 	}
 
+	@Override
 	public AuditQuery setCacheRegion(String cacheRegion) {
 		this.cacheRegion = cacheRegion;
 		return this;
 	}
 
+	@Override
 	public AuditQuery setComment(String comment) {
 		this.comment = comment;
 		return this;
 	}
 
+	@Override
 	public AuditQuery setFlushMode(FlushMode flushMode) {
 		this.flushMode = flushMode;
 		return this;
@@ -245,11 +256,13 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		return this;
 	}
 
+	@Override
 	public AuditQuery setCacheMode(CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
 		return this;
 	}
 
+	@Override
 	public AuditQuery setTimeout(int timeout) {
 		this.timeout = timeout;
 		return this;
@@ -265,6 +278,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	 * @deprecated Instead use setLockOptions
 	 */
 	@Deprecated
+	@Override
 	public AuditQuery setLockMode(LockMode lockMode) {
 		lockOptions.setLockMode( lockMode );
 		return this;

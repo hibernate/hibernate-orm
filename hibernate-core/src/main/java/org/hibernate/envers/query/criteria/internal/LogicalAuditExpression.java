@@ -28,6 +28,7 @@ public class LogicalAuditExpression implements AuditCriterion {
 		this.op = op;
 	}
 
+	@Override
 	public void addToQuery(
 			AuditReaderImplementor versionsReader,
 			Map<String, String> aliasToEntityNameMap,

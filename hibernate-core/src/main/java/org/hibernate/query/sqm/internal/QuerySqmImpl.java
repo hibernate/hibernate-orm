@@ -214,6 +214,7 @@ public class QuerySqmImpl<R>
 		throw new PersistenceException( "Unrecognized unwrap type [" + cls.getName() + "]" );
 	}
 
+	@Override
 	protected boolean applyNativeQueryLockMode(Object value) {
 		throw new IllegalStateException(
 				"Illegal attempt to set lock mode on non-native query via hint; use Query#setLockMode instead"

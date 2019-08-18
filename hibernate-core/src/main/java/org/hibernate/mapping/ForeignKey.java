@@ -135,6 +135,7 @@ public class ForeignKey extends Constraint implements MappedForeignKey {
 		this.keyDefinition = keyDefinition;
 	}
 
+	@Override
 	public boolean isCascadeDeleteEnabled() {
 		return cascadeDeleteEnabled;
 	}
@@ -206,6 +207,7 @@ public class ForeignKey extends Constraint implements MappedForeignKey {
 		return "FK_";
 	}
 
+	@Override
 	public String toString() {
 		return String.format(
 				Locale.ROOT,

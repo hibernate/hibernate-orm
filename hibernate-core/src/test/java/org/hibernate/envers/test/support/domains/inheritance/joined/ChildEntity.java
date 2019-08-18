@@ -59,6 +59,7 @@ public class ChildEntity extends ParentEntity {
 		return Objects.hash( super.hashCode(), numVal );
 	}
 
+	@Override
 	public String toString() {
 		return "ChildEntity(id = " + getId() + ", data = " + getData() + ", numVal = " + numVal + ")";
 	}

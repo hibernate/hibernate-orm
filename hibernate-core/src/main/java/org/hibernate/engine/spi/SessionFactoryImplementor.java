@@ -107,6 +107,7 @@ public interface SessionFactoryImplementor
 	 *
 	 * @return The factory's ServiceRegistry
 	 */
+	@Override
 	ServiceRegistryImplementor getServiceRegistry();
 
 	/**
@@ -121,6 +122,7 @@ public interface SessionFactoryImplementor
 	@Deprecated
 	Interceptor getInterceptor();
 
+	@Override
 	QueryEngine getQueryEngine();
 
 	@Override
@@ -185,6 +187,7 @@ public interface SessionFactoryImplementor
 	 * returned in case there are not entity graphs.
 	 */
 	@SuppressWarnings("unchecked")
+	@Override
 	default <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
 		return (List) findEntityGraphsByJavaType( entityClass );
 	}

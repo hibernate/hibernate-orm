@@ -106,6 +106,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * @throws HibernateException Indicates problems flushing the session or
 	 * talking to the database.
 	 */
+	@Override
 	void flush() throws HibernateException;
 
 	/**
@@ -184,6 +185,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * @return The session factory.
 	 * @see SessionFactory
 	 */
+	@Override
 	SessionFactory getSessionFactory();
 
 	/**
@@ -544,6 +546,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return an updated persistent instance
 	 */
+	@Override
 	Object merge(Object object);
 
 	/**
@@ -572,6 +575,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @param object a transient instance to be made persistent
 	 */
+	@Override
 	void persist(Object object);
 	/**
 	 * Make a transient instance persistent. This operation cascades to associated
@@ -669,6 +673,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @param object a persistent or detached instance
 	 */
+	@Override
 	void refresh(Object object);
 
 	/**
@@ -739,6 +744,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * saves, updates and deletions. Do not close open iterators or instances of
 	 * <tt>ScrollableResults</tt>.
 	 */
+	@Override
 	void clear();
 
 	/**
@@ -1056,6 +1062,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * @param work The work to be performed.
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
 	 */
+	@Override
 	void doWork(Work work) throws HibernateException;
 
 	/**
@@ -1069,6 +1076,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
 	 */
+	@Override
 	<T> T doReturningWork(ReturningWork<T> work) throws HibernateException;
 
 	@Override
@@ -1263,5 +1271,6 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	@Override
 	org.hibernate.query.Query getNamedQuery(String queryName);
 
+	@Override
 	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 }

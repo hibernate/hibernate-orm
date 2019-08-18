@@ -29,6 +29,7 @@ public interface ExportableTable extends Table, Exportable {
 
 	String getComment();
 
+	@Override
 	Collection<UniqueKey> getUniqueKeys();
 
 	List<String> getCheckConstraints();

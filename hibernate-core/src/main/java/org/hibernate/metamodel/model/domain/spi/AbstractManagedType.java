@@ -179,10 +179,12 @@ public abstract class AbstractManagedType<J> implements InheritanceCapable<J> {
 		return typeConfiguration;
 	}
 
+	@Override
 	public InheritanceCapable<? super J> getSuperclassType() {
 		return superTypeDescriptor;
 	}
 
+	@Override
 	public ManagedJavaDescriptor<J> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}

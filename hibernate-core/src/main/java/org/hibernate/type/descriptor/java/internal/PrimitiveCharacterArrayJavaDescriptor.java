@@ -32,10 +32,12 @@ public class PrimitiveCharacterArrayJavaDescriptor extends AbstractBasicJavaDesc
 		super( char[].class, ArrayMutabilityPlan.INSTANCE );
 	}
 
+	@Override
 	public String toString(char[] value) {
 		return new String( value );
 	}
 
+	@Override
 	public char[] fromString(String string) {
 		return string.toCharArray();
 	}
@@ -61,6 +63,7 @@ public class PrimitiveCharacterArrayJavaDescriptor extends AbstractBasicJavaDesc
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(char[] value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -83,6 +86,7 @@ public class PrimitiveCharacterArrayJavaDescriptor extends AbstractBasicJavaDesc
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> char[] wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

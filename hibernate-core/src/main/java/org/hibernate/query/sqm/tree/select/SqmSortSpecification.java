@@ -54,6 +54,7 @@ public class SqmSortSpecification implements JpaOrder {
 		return collation;
 	}
 
+	@Override
 	public SortOrder getSortOrder() {
 		return sortOrder;
 	}

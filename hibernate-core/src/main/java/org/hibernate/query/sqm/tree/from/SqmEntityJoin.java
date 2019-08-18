@@ -74,6 +74,7 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifi
 		return joinPredicate;
 	}
 
+	@Override
 	public void setJoinPredicate(SqmPredicate predicate) {
 		this.joinPredicate = predicate;
 	}

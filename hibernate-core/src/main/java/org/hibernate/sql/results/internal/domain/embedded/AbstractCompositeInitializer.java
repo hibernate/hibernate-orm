@@ -72,6 +72,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 		return fetchParentAccess;
 	}
 
+	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}

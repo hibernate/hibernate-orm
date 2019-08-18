@@ -76,6 +76,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
+	@Override
 	public boolean isFetched() {
 		return fetched;
 	}
@@ -85,6 +86,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		return onClausePredicate;
 	}
 
+	@Override
 	public void setJoinPredicate(SqmPredicate predicate) {
 		log.tracef(
 				"Setting join predicate [%s] (was [%s])",

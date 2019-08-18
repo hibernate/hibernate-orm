@@ -36,14 +36,17 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 		super( buildingContext, table );
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return fetchMode;
 	}
 
+	@Override
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode=fetchMode;
 	}
 
+	@Override
 	public abstract ForeignKey createForeignKey() throws MappingException;
 
 	public String getReferencedPropertyName() {
@@ -82,6 +85,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 		}
 	}
 
+	@Override
 	public boolean isTypeSpecified() {
 		return referencedEntityName!=null;
 	}
@@ -110,10 +114,12 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 		return super.isValid( );
 	}
 
+	@Override
 	public boolean isLazy() {
 		return lazy;
 	}
 	
+	@Override
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
 	}

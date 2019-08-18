@@ -35,6 +35,7 @@ public class BitSqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 	public BitSqlDescriptor() {
 	}
 
+	@Override
 	public int getJdbcTypeCode() {
 		return Types.BIT;
 	}

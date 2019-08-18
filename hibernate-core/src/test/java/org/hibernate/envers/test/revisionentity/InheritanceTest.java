@@ -41,6 +41,7 @@ public class InheritanceTest extends EnversEntityManagerFactoryBasedFunctionalTe
 	private long timestamp2;
 	private long timestamp3;
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { StrTestEntity.class, InheritedRevEntity.class };
 	}

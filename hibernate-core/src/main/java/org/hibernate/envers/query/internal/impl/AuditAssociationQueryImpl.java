@@ -238,6 +238,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 		return this;
 	}
 
+	@Override
 	public Q up() {
 		return parent;
 	}

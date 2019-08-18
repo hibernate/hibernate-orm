@@ -70,6 +70,7 @@ public class SetOwnedEntity {
 		this.referencing = referencing;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -90,6 +91,7 @@ public class SetOwnedEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -97,6 +99,7 @@ public class SetOwnedEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "SetOwnedEntity(id = " + id + ", data = " + data + ")";
 	}

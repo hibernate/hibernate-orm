@@ -43,6 +43,7 @@ public interface MetamodelImplementor extends Metamodel {
 
 	Set<String> findCollectionRolesByEntityParticipant(EntityTypeDescriptor entityDescriptor);
 
+	@Override
 	void visitEntityNameResolvers(Consumer<EntityNameResolver> action);
 
 	/**

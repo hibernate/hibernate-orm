@@ -49,6 +49,7 @@ public class SequenceInformationImpl implements SequenceInformation {
 		return minValue;
 	}
 
+	@Override
 	public Long getMaxValue() {
 		return maxValue;
 	}

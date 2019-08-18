@@ -25,6 +25,7 @@ public abstract class PluralAttributeInfoPrimitiveArrayAdapter
 		return JaxbHbmLazyWithExtraEnum.FALSE;
 	}
 
+	@Override
 	public JaxbHbmOneToManyCollectionElementType getOneToMany() {
 		return null;
 	}

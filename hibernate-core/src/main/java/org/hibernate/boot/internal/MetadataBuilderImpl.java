@@ -772,6 +772,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		 * in {@code orm.xml} mappings.  Forget that there are generally multiple
 		 * {@code orm.xml} mappings if using XML approach...  Ugh
 		 */
+		@Override
 		public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
 			if ( !mappingDefaults.shouldImplicitlyQuoteIdentifiers() ) {
 				mappingDefaults.implicitlyQuoteIdentifiers = jpaOrmXmlPersistenceUnitDefaults.shouldImplicitlyQuoteIdentifiers();

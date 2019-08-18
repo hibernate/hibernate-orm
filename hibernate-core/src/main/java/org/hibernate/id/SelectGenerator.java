@@ -43,6 +43,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 		uniqueKeyPropertyName = params.getProperty( "key" );
 	}
 
+	@Override
 	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
 			PostInsertIdentityPersister persister,
 			Dialect dialect,
@@ -114,6 +115,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 //			idType = persister.getIdentifierType();
 		}
 
+		@Override
 		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
 			return new IdentifierGeneratingInsert( dialect );
 		}
@@ -121,10 +123,12 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 
 		// AbstractSelectingDelegate impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+		@Override
 		protected String getSelectSQL() {
 			return idSelectString;
 		}
 
+		@Override
 		protected void bindParameters(
 				SharedSessionContractImplementor session,
 				PreparedStatement ps,
@@ -134,6 +138,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 //			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
 		}
 
+		@Override
 		protected Serializable getResult(
 				SharedSessionContractImplementor session,
 				ResultSet rs,

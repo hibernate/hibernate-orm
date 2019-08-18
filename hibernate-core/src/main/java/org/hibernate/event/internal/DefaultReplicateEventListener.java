@@ -47,6 +47,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 	 *
 	 * @throws TransientObjectException An invalid attempt to replicate a transient entity.
 	 */
+	@Override
 	public void onReplicate(ReplicateEvent event) {
 		final EventSource source = event.getSession();
 		if ( source.getPersistenceContext().reassociateIfUninitializedProxy( event.getObject() ) ) {

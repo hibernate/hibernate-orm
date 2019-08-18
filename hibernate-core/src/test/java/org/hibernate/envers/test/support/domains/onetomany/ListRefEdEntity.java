@@ -86,6 +86,7 @@ public class ListRefEdEntity {
 		return Objects.hash( id, data );
 	}
 
+	@Override
 	public String toString() {
 		return "ListRefEdEntity(id = " + id + ", data = " + data + ")";
 	}

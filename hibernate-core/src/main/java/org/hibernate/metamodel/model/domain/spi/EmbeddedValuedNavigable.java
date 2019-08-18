@@ -28,6 +28,7 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValuedExpressableTyp
 	@Override
 	EmbeddedContainer getContainer();
 
+	@Override
 	EmbeddedTypeDescriptor<J> getEmbeddedDescriptor();
 
 	@Override

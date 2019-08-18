@@ -170,10 +170,12 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return attributeConversionInfoMap.get( path );
 	}
 
+	@Override
 	public String getEntityName() {
 		return persistentClass.getEntityName();
 	}
 
+	@Override
 	public void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		if ( columns != null && columns[0].isSecondary() ) {
@@ -186,6 +188,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
+	@Override
 	public void addProperty(Property prop, XClass declaringClass) {
 		if ( prop.getValue() instanceof Component ) {
 			//TODO handle quote and non quote table comparison
@@ -203,6 +206,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
+	@Override
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
 		Join join = entityBinder.addJoin( joinTableAnn, this, noDelayInPkColumnCreation );
 		this.joins = entityBinder.getSecondaryTables();
@@ -271,34 +275,42 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return joinsPerRealTableName;
 	}
 
+	@Override
 	public String getClassName() {
 		return persistentClass.getClassName();
 	}
 
+	@Override
 	public String getEntityOwnerClassName() {
 		return getClassName();
 	}
 
+	@Override
 	public Table getTable() {
 		return persistentClass.getTable();
 	}
 
+	@Override
 	public boolean isComponent() {
 		return false;
 	}
 
+	@Override
 	public boolean isEntity() {
 		return true;
 	}
 
+	@Override
 	public PersistentClass getPersistentClass() {
 		return persistentClass;
 	}
 
+	@Override
 	public KeyValue getIdentifier() {
 		return persistentClass.getIdentifier();
 	}
 
+	@Override
 	public boolean isOrWithinEmbeddedId() {
 		return false;
 	}

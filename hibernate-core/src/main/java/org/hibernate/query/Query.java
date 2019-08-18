@@ -156,6 +156,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	List<R> list();
 
+	@Override
 	default List<R> getResultList() {
 		return list();
 	}
@@ -170,6 +171,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	R uniqueResult();
 
+	@Override
 	default R getSingleResult() {
 		return uniqueResult();
 	}

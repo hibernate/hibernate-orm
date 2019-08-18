@@ -53,7 +53,9 @@ public interface PersistentAttributeDescriptor<O, J> extends Navigable<J>, Persi
 		return getContainer();
 	}
 
+	@Override
 	SimpleTypeDescriptor<?> getValueGraphType();
+	@Override
 	SimpleTypeDescriptor<?> getKeyGraphType();
 
 	@Override

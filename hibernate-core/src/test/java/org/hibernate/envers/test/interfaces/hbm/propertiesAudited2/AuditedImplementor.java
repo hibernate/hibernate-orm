@@ -21,18 +21,22 @@ public class AuditedImplementor implements SimpleInterface {
 	protected AuditedImplementor() {
 	}
 
+	@Override
 	public long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(long id) {
 		this.id = id;
 	}
 
+	@Override
 	public String getData() {
 		return data;
 	}
 
+	@Override
 	public void setData(String data) {
 		this.data = data;
 	}
@@ -45,10 +49,12 @@ public class AuditedImplementor implements SimpleInterface {
 		this.auditedImplementorData = implementorData;
 	}
 
+	@Override
 	public int getNumerito() {
 		return numerito;
 	}
 
+	@Override
 	public void setNumerito(int numerito) {
 		this.numerito = numerito;
 	}

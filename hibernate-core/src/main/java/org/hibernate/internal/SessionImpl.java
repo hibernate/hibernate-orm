@@ -296,6 +296,7 @@ public final class SessionImpl
 		}
 	}
 
+	@Override
 	protected void applyQuerySettingsAndHints(Query query) {
 		if ( lockOptions.getLockMode() != LockMode.NONE ) {
 			query.setLockMode( getLockMode( lockOptions.getLockMode() ) );

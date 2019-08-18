@@ -42,6 +42,7 @@ public class DateEmbId implements Serializable {
 		this.y = y;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -62,6 +63,7 @@ public class DateEmbId implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (x != null ? x.hashCode() : 0);
@@ -69,6 +71,7 @@ public class DateEmbId implements Serializable {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "DateEmbId(" + x + ", " + y + ")";
 	}

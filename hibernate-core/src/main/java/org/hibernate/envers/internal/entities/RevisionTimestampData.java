@@ -27,6 +27,7 @@ public class RevisionTimestampData extends PropertyData {
 		this( old.getName(), old.getBeanName(), old.getAccessType(), javaTypeDescriptor );
 	}
 
+	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}

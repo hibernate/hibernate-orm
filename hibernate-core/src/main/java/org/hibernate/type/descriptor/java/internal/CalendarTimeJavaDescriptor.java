@@ -48,10 +48,12 @@ public class CalendarTimeJavaDescriptor
 		super( Calendar.class, CalendarJavaDescriptor.CalendarMutabilityPlan.INSTANCE );
 	}
 
+	@Override
 	public String toString(Calendar calendar) {
 		return calendar.toInstant().atZone( calendar.getTimeZone().toZoneId() ).format( FORMATTER );
 	}
 
+	@Override
 	public Calendar fromString(String string) {
 		final OffsetTime parsedOffsetTime = OffsetTime.parse( string, FORMATTER );
 		return GregorianCalendar.from( parsedOffsetTime.atDate( LocalDate.MIN ).atZoneSameInstant( parsedOffsetTime.getOffset() ) );
@@ -91,6 +93,7 @@ public class CalendarTimeJavaDescriptor
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Calendar value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -113,6 +116,7 @@ public class CalendarTimeJavaDescriptor
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Calendar wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

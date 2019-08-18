@@ -20,5 +20,6 @@ public interface ProcedureParameter<T> extends QueryParameter<T> {
 	 *
 	 * @return The parameter mode.
 	 */
+	@Override
 	ParameterMode getMode();
 }

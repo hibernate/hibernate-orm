@@ -100,6 +100,7 @@ public interface EmbeddedTypeDescriptor<T>
 	 */
 	CascadeStyle getCascadeStyle(int i);
 
+	@Override
 	default void setPropertyValues(Object object, Object[] values) {
 		// todo (6.0) : hook in BytecodeProvider's ReflectionOptimizer (if one) for this managed-type
 		visitStateArrayContributors(

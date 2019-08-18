@@ -15,6 +15,7 @@ import org.hibernate.query.NavigablePath;
  * @author Steve Ebersole
  */
 public interface CollectionFetch extends Fetch, CollectionMappingNode {
+	@Override
 	PluralPersistentAttribute getFetchedNavigable();
 
 	@Override

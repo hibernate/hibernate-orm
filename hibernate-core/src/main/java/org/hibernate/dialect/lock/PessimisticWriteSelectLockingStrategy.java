@@ -148,6 +148,7 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 		}
 	}
 
+	@Override
 	protected String generateLockString(int lockTimeout) {
 		final SessionFactoryImplementor factory = getLockable().getFactory();
 		final LockOptions lockOptions = new LockOptions( getLockMode() );

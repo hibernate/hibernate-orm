@@ -40,6 +40,7 @@ public class IndexMetadata {
 		return (ColumnMetadata[]) columns.toArray(new ColumnMetadata[0]);
 	}
 
+	@Override
 	public String toString() {
 		return "IndexMatadata(" + name + ')';
 	}

@@ -22,11 +22,13 @@ public class WomanPk implements Serializable {
 	private String firstName;
 	private String lastName;
 
+	@Override
 	public int hashCode() {
 		//this implem sucks
 		return getFirstName().hashCode() + getLastName().hashCode();
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		//firstName and lastName are expected to be set in this implem
 		if ( obj != null && obj instanceof WomanPk ) {

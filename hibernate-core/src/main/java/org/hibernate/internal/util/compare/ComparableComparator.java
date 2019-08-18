@@ -24,6 +24,7 @@ public class ComparableComparator<T extends Comparable> implements Comparator<T>
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public int compare(Comparable one, Comparable another) {
 		return one.compareTo( another );
 	}

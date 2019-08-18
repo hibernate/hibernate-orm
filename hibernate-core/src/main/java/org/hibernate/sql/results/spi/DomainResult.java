@@ -37,6 +37,7 @@ public interface DomainResult extends ResultSetMappingNode {
 	 */
 	String getResultVariable();
 
+	@Override
 	JavaTypeDescriptor getJavaTypeDescriptor();
 
 	/**

@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
  */
 public class DefaultPreLoadEventListener implements PreLoadEventListener {
 
+	@Override
 	public void onPreLoad(PreLoadEvent event) {
 		EntityTypeDescriptor descriptor = event.getDescriptor();
 		event.getSession()

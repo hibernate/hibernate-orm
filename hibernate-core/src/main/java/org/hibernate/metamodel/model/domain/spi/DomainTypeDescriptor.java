@@ -26,6 +26,7 @@ public interface DomainTypeDescriptor<J> extends DomainType<J> {
 		return getJavaTypeDescriptor().areEqual( x,y );
 	}
 
+	@Override
 	default int extractHashCode( J o ){
 		return getJavaTypeDescriptor().extractHashCode( o );
 	}

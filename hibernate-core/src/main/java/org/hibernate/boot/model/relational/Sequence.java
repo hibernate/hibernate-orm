@@ -61,10 +61,12 @@ public class Sequence implements MappedSequence {
 		return logicalName;
 	}
 
+	@Override
 	public int getInitialValue() {
 		return initialValue;
 	}
 
+	@Override
 	public int getIncrementSize() {
 		return incrementSize;
 	}

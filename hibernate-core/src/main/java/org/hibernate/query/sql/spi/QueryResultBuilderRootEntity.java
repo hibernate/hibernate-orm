@@ -67,6 +67,7 @@ public class QueryResultBuilderRootEntity
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// NativeQuery.RootReturn
 
+	@Override
 	public NativeQuery.RootReturn setLockMode(LockMode lockMode) {
 		this.lockMode = lockMode;
 		return this;
@@ -86,22 +87,26 @@ public class QueryResultBuilderRootEntity
 		return this;
 	}
 
+	@Override
 	public NativeQuery.RootReturn setDiscriminatorAlias(String alias) {
 		this.discriminatorColumnAlias = alias;
 		return this;
 	}
 
+	@Override
 	public NativeQuery.RootReturn addProperty(String propertyName, String columnAlias) {
 		addProperty( propertyName ).addColumnAlias( columnAlias );
 		return this;
 	}
 
+	@Override
 	public NativeQuery.ReturnProperty addProperty(final String propertyName) {
 		if ( propertyMappings == null ) {
 			propertyMappings = new HashMap<>();
 		}
 
 		return new NativeQuery.ReturnProperty() {
+			@Override
 			public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {
 				final AttributeMapping registration = propertyMappings.computeIfAbsent(
 						propertyName,

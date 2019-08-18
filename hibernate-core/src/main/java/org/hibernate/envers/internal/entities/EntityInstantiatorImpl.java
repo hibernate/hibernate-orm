@@ -43,6 +43,7 @@ public class EntityInstantiatorImpl implements EntityInstantiator {
 	 * @return An entity instance, with versioned properties set as in the versionsEntity map, and proxies
 	 *         created for collections.
 	 */
+	@Override
 	public Object createInstanceFromVersionsEntity(String entityName, Map versionsEntity, Number revision) {
 		if ( versionsEntity == null ) {
 			return null;
@@ -148,10 +149,12 @@ public class EntityInstantiatorImpl implements EntityInstantiator {
 		}
 	}
 
+	@Override
 	public AuditService getAuditService() {
 		return getAuditReaderImplementor().getAuditService();
 	}
 
+	@Override
 	public AuditReaderImplementor getAuditReaderImplementor() {
 		return versionsReader;
 	}

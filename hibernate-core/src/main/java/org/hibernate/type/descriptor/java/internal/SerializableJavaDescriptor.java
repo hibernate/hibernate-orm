@@ -61,10 +61,12 @@ public class SerializableJavaDescriptor<T extends Serializable> extends Abstract
 		);
 	}
 
+	@Override
 	public String toString(T value) {
 		return PrimitiveByteArrayJavaDescriptor.INSTANCE.toString( toBytes( value ) );
 	}
 
+	@Override
 	public T fromString(String string) {
 		return fromBytes( PrimitiveByteArrayJavaDescriptor.INSTANCE.fromString( string ) );
 	}
@@ -92,6 +94,7 @@ public class SerializableJavaDescriptor<T extends Serializable> extends Abstract
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(T value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -116,6 +119,7 @@ public class SerializableJavaDescriptor<T extends Serializable> extends Abstract
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public <X> T wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

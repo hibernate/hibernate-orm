@@ -282,6 +282,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		}
 	}
 
+	@Override
 	public NameSpaceTablesInformation getTables(Identifier catalog, Identifier schema) {
 
 		String catalogFilter = null;

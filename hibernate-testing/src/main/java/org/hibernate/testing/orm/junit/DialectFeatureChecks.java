@@ -17,150 +17,175 @@ import org.hibernate.dialect.Dialect;
  */
 abstract public class DialectFeatureChecks {
 	public static class SupportsSequences implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsSequences();
 		}
 	}
 
 	public static class SupportsExpectedLobUsagePattern implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsExpectedLobUsagePattern();
 		}
 	}
 
 	public static class UsesInputStreamToInsertBlob implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.useInputStreamToInsertBlob();
 		}
 	}
 
 	public static class SupportsIdentityColumns implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.getIdentityColumnSupport().supportsIdentityColumns();
 		}
 	}
 
 	public static class SupportsColumnCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsColumnCheck();
 		}
 	}
 
 	public static class SupportsEmptyInListCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsEmptyInList();
 		}
 	}
 
 	public static class CaseSensitiveCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.areStringComparisonsCaseInsensitive();
 		}
 	}
 
 	public static class SupportsResultSetPositioningOnForwardOnlyCursorCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsResultSetPositionQueryMethodsOnForwardOnlyCursor();
 		}
 	}
 
 	public static class SupportsCascadeDeleteCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsCascadeDelete();
 		}
 	}
 
 	public static class SupportsCircularCascadeDeleteCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsCircularCascadeDeleteConstraints();
 		}
 	}
 
 	public static class SupportsUnboundedLobLocatorMaterializationCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsExpectedLobUsagePattern() && dialect.supportsUnboundedLobLocatorMaterialization();
 		}
 	}
 
 	public static class SupportSubqueryAsLeftHandSideInPredicate implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsSubselectAsInPredicateLHS();
 		}
 	}
 
 	public static class SupportLimitCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsLimit();
 		}
 	}
 
 	public static class SupportLimitAndOffsetCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsLimit() && dialect.supportsLimitOffset();
 		}
 	}
 
 	public static class SupportsParametersInInsertSelectCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsParametersInInsertSelect();
 		}
 	}
 
 	public static class HasSelfReferentialForeignKeyBugCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.hasSelfReferentialForeignKeyBug();
 		}
 	}
 
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsRowValueConstructorSyntax();
 		}
 	}
 
 	public static class SupportsRowValueConstructorSyntaxInInListCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsRowValueConstructorSyntaxInInList();
 		}
 	}
 
 	public static class DoesReadCommittedCauseWritersToBlockReadersCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.doesReadCommittedCauseWritersToBlockReaders();
 		}
 	}
 
 	public static class DoesReadCommittedNotCauseWritersToBlockReadersCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return ! dialect.doesReadCommittedCauseWritersToBlockReaders();
 		}
 	}
 
 	public static class DoesRepeatableReadCauseReadersToBlockWritersCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.doesRepeatableReadCauseReadersToBlockWriters();
 		}
 	}
 
 	public static class DoesRepeatableReadNotCauseReadersToBlockWritersCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return ! dialect.doesRepeatableReadCauseReadersToBlockWriters();
 		}
 	}
 
 	public static class SupportsExistsInSelectCheck implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsExistsInSelect();
 		}
 	}
 	
 	public static class SupportsLobValueChangePropogation implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsLobValueChangePropogation();
 		}
 	}
 	
 	public static class SupportsLockTimeouts implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsLockTimeouts();
 		}
@@ -174,36 +199,42 @@ abstract public class DialectFeatureChecks {
 	}
 
 	public static class SupportSchemaCreation implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.canCreateSchema();
 		}
 	}
 
 	public static class SupportCatalogCreation implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.canCreateCatalog();
 		}
 	}
 
 	public static class DoesNotSupportRowValueConstructorSyntax implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsRowValueConstructorSyntax() == false;
 		}
 	}
 
 	public static class DoesNotSupportFollowOnLocking implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return !dialect.useFollowOnLocking( null, null );
 		}
 	}
 
 	public static class SupportPartitionBy implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsPartitionBy();
 		}
 	}
 
 	public static class SupportDropConstraints implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.dropConstraints();
 		}

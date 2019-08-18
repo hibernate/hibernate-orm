@@ -30,6 +30,7 @@ public class Set extends Collection {
 		super( buildingContext, owner );
 	}
 
+	@Override
 	public void validate() throws MappingException {
 		super.validate();
 
@@ -43,10 +44,12 @@ public class Set extends Collection {
 //		throw new MappingException("set element mappings must have at least one non-nullable column: " + getRole() );*/
 	}
 
+	@Override
 	public boolean isSet() {
 		return true;
 	}
 
+	@Override
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			final MappedPrimaryKey pk = new PrimaryKey( getMappedTable() );
@@ -77,6 +80,7 @@ public class Set extends Collection {
 		}
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept( this );
 	}

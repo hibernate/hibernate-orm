@@ -67,6 +67,7 @@ public class CalendarJavaDescriptor
 	public static class CalendarMutabilityPlan extends MutableMutabilityPlan<Calendar> {
 		public static final CalendarMutabilityPlan INSTANCE = new CalendarMutabilityPlan();
 
+		@Override
 		public Calendar deepCopyNotNull(Calendar value) {
 			return (Calendar) value.clone();
 		}
@@ -76,10 +77,12 @@ public class CalendarJavaDescriptor
 		super( Calendar.class, CalendarMutabilityPlan.INSTANCE );
 	}
 
+	@Override
 	public String toString(Calendar calendar) {
 		return calendar.toInstant().atZone( calendar.getTimeZone().toZoneId() ).format( FORMATTER );
 	}
 
+	@Override
 	public Calendar fromString(String string) {
 		final ZonedDateTime parsedZonedDateTime = ZonedDateTime.parse( string, FORMATTER );
 		return GregorianCalendar.from( parsedZonedDateTime );
@@ -127,6 +130,7 @@ public class CalendarJavaDescriptor
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Calendar value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;
@@ -149,6 +153,7 @@ public class CalendarJavaDescriptor
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Calendar wrap(X value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

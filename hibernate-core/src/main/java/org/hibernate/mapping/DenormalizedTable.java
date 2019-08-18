@@ -153,6 +153,7 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable<
 	 * @deprecated since 6.0, use {@link #getIncludedMappedTable()}.
 	 */
 	@Deprecated
+	@Override
 	public Table getIncludedTable() {
 		return (Table) getIncludedMappedTable();
 	}

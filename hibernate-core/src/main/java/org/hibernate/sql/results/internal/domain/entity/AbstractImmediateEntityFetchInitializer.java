@@ -61,6 +61,7 @@ public abstract class AbstractImmediateEntityFetchInitializer extends AbstractFe
 		return fetchedNavigable.getEntityDescriptor();
 	}
 
+	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}

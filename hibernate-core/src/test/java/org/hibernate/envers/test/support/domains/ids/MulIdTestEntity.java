@@ -66,6 +66,7 @@ public class MulIdTestEntity {
 		this.str1 = str1;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -89,6 +90,7 @@ public class MulIdTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id1 != null ? id1.hashCode() : 0);

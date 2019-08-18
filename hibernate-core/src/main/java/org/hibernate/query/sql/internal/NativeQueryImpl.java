@@ -544,6 +544,7 @@ public class NativeQueryImpl<R>
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
+	@Override
 	protected int doExecuteUpdate() {
 		// trigger the transaction-in-progress checks...
 		getSession().prepareForQueryExecution( true );

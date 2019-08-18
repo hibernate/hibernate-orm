@@ -45,6 +45,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 		this( buildingContext, collection, Collections.EMPTY_MAP );
 	}
 
+	@Override
 	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses)
 			throws MappingException {
 		final boolean debugEnabled = LOG.isDebugEnabled();

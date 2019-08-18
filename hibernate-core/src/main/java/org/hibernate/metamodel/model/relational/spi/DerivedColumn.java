@@ -45,6 +45,7 @@ public class DerivedColumn implements Column {
 		this.isUpdatable = updatable;
 	}
 
+	@Override
 	public String getExpression() {
 		return expression;
 	}

@@ -57,6 +57,7 @@ public class EmbeddableListEntity3 {
 		this.componentList = componentList;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -74,10 +75,12 @@ public class EmbeddableListEntity3 {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}
 
+	@Override
 	public String toString() {
 		return "EmbeddableListEntity3(id = " + id + ", componentList = " + componentList + ")";
 	}

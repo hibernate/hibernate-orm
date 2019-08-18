@@ -24,8 +24,11 @@ import org.hibernate.sql.ast.produce.spi.SqlQueryOptions;
 public interface QueryOptions extends SqlQueryOptions {
 	Limit getLimit();
 	Integer getFetchSize();
+	@Override
 	String getComment();
+	@Override
 	LockOptions getLockOptions();
+	@Override
 	List<String> getDatabaseHints();
 
 	Integer getTimeout();

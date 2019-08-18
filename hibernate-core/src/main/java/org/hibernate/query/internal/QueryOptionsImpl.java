@@ -70,6 +70,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return flushMode;
 	}
 
+	@Override
 	public void setFlushMode(FlushMode flushMode) {
 		this.flushMode = flushMode;
 	}
@@ -79,6 +80,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return comment;
 	}
 
+	@Override
 	public void setComment(String comment) {
 		this.comment = comment;
 	}
@@ -133,6 +135,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return cacheMode;
 	}
 
+	@Override
 	public void setCacheMode(CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
 	}
@@ -142,6 +145,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return resultCachingEnabled;
 	}
 
+	@Override
 	public void setResultCachingEnabled(boolean resultCachingEnabled) {
 		this.resultCachingEnabled = resultCachingEnabled;
 	}
@@ -161,6 +165,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return resultListTransformer;
 	}
 
+	@Override
 	public void setResultCacheRegionName(String resultCacheRegionName) {
 		this.resultCacheRegionName = resultCacheRegionName;
 	}

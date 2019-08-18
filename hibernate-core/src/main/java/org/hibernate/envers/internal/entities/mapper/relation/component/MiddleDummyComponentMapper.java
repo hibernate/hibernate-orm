@@ -16,6 +16,7 @@ import org.hibernate.envers.metamodel.spi.EntityInstantiator;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class MiddleDummyComponentMapper implements MiddleComponentMapper {
+	@Override
 	public Object mapToObjectFromFullMap(
 			EntityInstantiator entityInstantiator,
 			Map<String, Object> data,

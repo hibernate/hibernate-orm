@@ -41,6 +41,7 @@ public class CurrencyJavaDescriptor extends AbstractBasicJavaDescriptor<Currency
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Currency value, Class<X> type, SharedSessionContractImplementor session) {
 		if ( value == null ) {
 			return null;

@@ -55,6 +55,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	 * @param event The create event to be handled.
 	 *
 	 */
+	@Override
 	public void onPersist(PersistEvent event) throws HibernateException {
 		onPersist( event, new IdentityHashMap( 10 ) );
 	}
@@ -65,6 +66,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	 * @param event The create event to be handled.
 	 *
 	 */
+	@Override
 	public void onPersist(PersistEvent event, Map createCache) throws HibernateException {
 		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();

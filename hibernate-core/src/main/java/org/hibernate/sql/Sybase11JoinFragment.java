@@ -24,6 +24,7 @@ public class Sybase11JoinFragment extends JoinFragment {
 	private StringBuilder afterFrom = new StringBuilder();
 	private StringBuilder afterWhere = new StringBuilder();
 
+	@Override
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 
 		addCrossJoin( tableName, alias );
@@ -96,19 +97,23 @@ public class Sybase11JoinFragment extends JoinFragment {
 		}
 	}
 
+	@Override
 	public String toFromFragmentString() {
 		return afterFrom.toString();
 	}
 
+	@Override
 	public String toWhereFragmentString() {
 		return afterWhere.toString();
 	}
 
+	@Override
 	public void addJoins(String fromFragment, String whereFragment) {
 		afterFrom.append( fromFragment );
 		afterWhere.append( whereFragment );
 	}
 
+	@Override
 	public JoinFragment copy() {
 		Sybase11JoinFragment copy = new Sybase11JoinFragment();
 		copy.afterFrom = new StringBuilder( afterFrom.toString() );
@@ -126,6 +131,7 @@ public class Sybase11JoinFragment extends JoinFragment {
 		}
 	}
 
+	@Override
 	public void addCrossJoin(String tableName, String alias) {
 		afterFrom.append( ", " )
 				.append( tableName )
@@ -133,11 +139,13 @@ public class Sybase11JoinFragment extends JoinFragment {
 				.append( alias );
 	}
 
+	@Override
 	public void addCondition(String alias, String[] fkColumns, String[] pkColumns) {
 		throw new UnsupportedOperationException();
 
 	}
 
+	@Override
 	public boolean addCondition(String condition) {
 		return addCondition( afterWhere, condition );
 	}
@@ -148,6 +156,7 @@ public class Sybase11JoinFragment extends JoinFragment {
 	}
 
 
+	@Override
 	public void addJoin(
 			String tableName,
 			String alias,
@@ -159,6 +168,7 @@ public class Sybase11JoinFragment extends JoinFragment {
 		addCondition( on );
 	}
 
+	@Override
 	public void addJoin(
 			String tableName,
 			String alias,

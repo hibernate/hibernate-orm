@@ -66,6 +66,7 @@ public class IdentitySet<E> implements Set<E> {
 	}
 
 	@SuppressWarnings("SuspiciousToArrayCall")
+	@Override
 	public <T> T[] toArray(T[] a) {
 		return map.keySet().toArray( a );
 	}
@@ -103,11 +104,13 @@ public class IdentitySet<E> implements Set<E> {
 		return changed;
 	}
 
+	@Override
 	public boolean retainAll(Collection<?> keepers) {
 		//doable if needed
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public boolean removeAll(Collection<?> removals) {
 		boolean changed = false;
 
@@ -118,6 +121,7 @@ public class IdentitySet<E> implements Set<E> {
 		return changed;
 	}
 
+	@Override
 	public void clear() {
 		map.clear();
 	}

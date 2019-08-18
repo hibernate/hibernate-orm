@@ -219,6 +219,7 @@ public class SessionFactoryExtension
 			return producer.produceSessionFactory( modelScope.getDomainModel() );
 		}
 
+		@Override
 		public void inSession(Consumer<SessionImplementor> action) {
 			log.trace( "#inSession(Consumer)" );
 

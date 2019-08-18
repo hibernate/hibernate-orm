@@ -34,6 +34,7 @@ public class IdentifierBag extends IdentifierCollection {
 		return StandardIdentifierBagSemantics.INSTANCE;
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

@@ -72,6 +72,7 @@ public class SequenceGenerator
 		return identifierType;
 	}
 
+	@Override
 	public Object generatorKey() {
 		return getSequenceName();
 	}

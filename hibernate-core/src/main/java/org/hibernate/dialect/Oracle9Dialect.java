@@ -240,6 +240,7 @@ public class Oracle9Dialect extends Dialect {
 		return "select * from all_sequences";
 	}
 
+	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceInformationExtractorOracleDatabaseImpl.INSTANCE;
 	}

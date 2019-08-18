@@ -34,6 +34,7 @@ public class Brand {
 		this.surname = surname;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( o == null || getClass() != o.getClass() ) return false;
@@ -45,6 +46,7 @@ public class Brand {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}

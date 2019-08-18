@@ -19,6 +19,7 @@ public class DogPk implements Serializable {
 	public String name;
 	public String ownerName;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof DogPk ) ) return false;
@@ -31,6 +32,7 @@ public class DogPk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = name.hashCode();

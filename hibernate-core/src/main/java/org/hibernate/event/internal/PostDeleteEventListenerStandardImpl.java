@@ -22,10 +22,12 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeDescriptor;
 public class PostDeleteEventListenerStandardImpl implements PostDeleteEventListener, CallbackRegistryConsumer {
 	private CallbackRegistry callbackRegistry;
 
+	@Override
 	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
 		this.callbackRegistry = callbackRegistry;
 	}
 
+	@Override
 	public void onPostDelete(PostDeleteEvent event) {
 		Object entity = event.getEntity();
 		callbackRegistry.postRemove( entity );

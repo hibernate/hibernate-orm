@@ -510,14 +510,17 @@ public class PersistenceXmlParser {
 			this.errors = errors;
 		}
 
+		@Override
 		public void error(SAXParseException error) {
 			errors.add( error );
 		}
 
+		@Override
 		public void fatalError(SAXParseException error) {
 			errors.add( error );
 		}
 
+		@Override
 		public void warning(SAXParseException warn) {
 			LOG.trace( extractInfo( warn ) );
 		}

@@ -30,6 +30,7 @@ public class ProtectedConstructorEntity implements Serializable {
 		this.str1 = str1;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -52,6 +53,7 @@ public class ProtectedConstructorEntity implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = (wrappedStringId != null ? wrappedStringId.hashCode() : 0);
 		result = 31 * result + (str1 != null ? str1.hashCode() : 0);

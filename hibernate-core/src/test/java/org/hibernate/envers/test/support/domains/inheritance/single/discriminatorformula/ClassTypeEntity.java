@@ -24,6 +24,7 @@ public class ClassTypeEntity {
 
 	private String type;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -44,6 +45,7 @@ public class ClassTypeEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + (id != null ? id.hashCode() : 0);
@@ -51,6 +53,7 @@ public class ClassTypeEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ClassTypeEntity(id = " + id + ", type = " + type + ")";
 	}

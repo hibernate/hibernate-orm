@@ -20,6 +20,7 @@ public class List extends IndexedCollection {
 	private final JavaTypeMapping javaTypeMapping;
 	private int baseIndex;
 
+	@Override
 	public boolean isList() {
 		return true;
 	}
@@ -33,6 +34,7 @@ public class List extends IndexedCollection {
 		);
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

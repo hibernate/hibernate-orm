@@ -71,6 +71,7 @@ public class Teradata14Dialect extends TeradataDialect {
 	 *
 	 * @throws HibernateException
 	 */
+	@Override
 	public String getTypeName(int code, int length, int precision, int scale) throws HibernateException {
 		/*
 		 * We might want a special case for 19,2. This is very common for money types

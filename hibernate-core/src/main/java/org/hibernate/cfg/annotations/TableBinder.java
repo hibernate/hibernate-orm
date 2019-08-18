@@ -126,10 +126,12 @@ public class TableBinder {
 			this.logicalName = logicalName;
 		}
 
+		@Override
 		public String getExplicitName() {
 			return explicitName;
 		}
 
+		@Override
 		public String getLogicalName() {
 			return logicalName;
 		}

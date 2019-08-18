@@ -438,6 +438,7 @@ public class SingularPersistentAttributeEntity<O, J>
 		return asLoggableText();
 	}
 
+	@Override
 	public String getEntityName() {
 		return entityDescriptor.getEntityName();
 	}

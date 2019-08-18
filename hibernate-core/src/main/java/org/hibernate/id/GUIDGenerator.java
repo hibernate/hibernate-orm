@@ -32,6 +32,7 @@ public class GUIDGenerator implements IdentifierGenerator {
 		}
 	}
 
+	@Override
 	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
 		final String sql = session.getJdbcServices().getJdbcEnvironment().getDialect().getSelectGUIDString();
 		try {

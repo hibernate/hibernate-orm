@@ -78,6 +78,7 @@ public class SequenceIdentityGenerator
 			}
 		}
 
+		@Override
 		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
 			NoCommentsInsert insert = new NoCommentsInsert( dialect );
 			insert.addColumn( getPersister().getRootTableKeyColumnNames()[0], sequenceNextValFragment );

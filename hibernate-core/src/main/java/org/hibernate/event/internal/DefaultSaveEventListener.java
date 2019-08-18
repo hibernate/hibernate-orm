@@ -19,6 +19,7 @@ import org.hibernate.event.spi.SaveOrUpdateEvent;
  */
 public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 
+	@Override
 	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
 		// this implementation is supposed to tolerate incorrect unsaved-value
 		// mappings, for the purpose of backward-compatibility
@@ -31,6 +32,7 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 		}
 	}
 	
+	@Override
 	protected Object saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
 		if ( event.getRequestedId() == null ) {
 			return super.saveWithGeneratedOrRequestedId(event);
@@ -47,6 +49,7 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 		
 	}
 
+	@Override
 	protected boolean reassociateIfUninitializedProxy(Object object, SessionImplementor source) {
 		if ( !Hibernate.isInitialized(object) ) {
 			throw new PersistentObjectException("uninitialized proxy passed to save()");

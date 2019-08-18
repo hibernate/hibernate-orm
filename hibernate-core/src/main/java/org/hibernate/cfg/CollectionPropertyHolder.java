@@ -263,26 +263,32 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		return elementAttributeConversionInfoMap.get( path );
 	}
 
+	@Override
 	public String getClassName() {
 		throw new AssertionFailure( "Collection property holder does not have a class name" );
 	}
 
+	@Override
 	public String getEntityOwnerClassName() {
 		return null;
 	}
 
+	@Override
 	public Table getTable() {
 		return collection.getCollectionTable();
 	}
 
+	@Override
 	public void addProperty(Property prop, XClass declaringClass) {
 		throw new AssertionFailure( "Cannot add property to a collection" );
 	}
 
+	@Override
 	public KeyValue getIdentifier() {
 		throw new AssertionFailure( "Identifier collection not yet managed" );
 	}
 
+	@Override
 	public boolean isOrWithinEmbeddedId() {
 		return false;
 	}
@@ -292,27 +298,33 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		return false;
 	}
 
+	@Override
 	public PersistentClass getPersistentClass() {
 		return collection.getOwner();
 	}
 
+	@Override
 	public boolean isComponent() {
 		return false;
 	}
 
+	@Override
 	public boolean isEntity() {
 		return false;
 	}
 
+	@Override
 	public String getEntityName() {
 		return collection.getOwner().getEntityName();
 	}
 
+	@Override
 	public void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		throw new AssertionFailure( "addProperty to a join table of a collection: does it make sense?" );
 	}
 
+	@Override
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
 		throw new AssertionFailure( "Add a <join> in a second pass" );
 	}

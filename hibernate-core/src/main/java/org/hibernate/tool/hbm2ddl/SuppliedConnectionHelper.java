@@ -31,6 +31,7 @@ class SuppliedConnectionHelper implements ConnectionHelper {
 		this.sqlExceptionHelper = sqlExceptionHelper;
 	}
 
+	@Override
 	public void prepare(boolean needsAutoCommit) throws SQLException {
 		toggleAutoCommit = needsAutoCommit && !connection.getAutoCommit();
 		if ( toggleAutoCommit ) {
@@ -44,10 +45,12 @@ class SuppliedConnectionHelper implements ConnectionHelper {
 		}
 	}
 
+	@Override
 	public Connection getConnection() {
 		return connection;
 	}
 
+	@Override
 	public void release() throws SQLException {
 		sqlExceptionHelper.logAndClearWarnings( connection );
 		if ( toggleAutoCommit ) {

@@ -88,6 +88,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	}
 
 	@SuppressWarnings({"unchecked"})
+	@Override
 	public List list() throws AuditException {
         /*
 		The query that should be executed in the versions table:

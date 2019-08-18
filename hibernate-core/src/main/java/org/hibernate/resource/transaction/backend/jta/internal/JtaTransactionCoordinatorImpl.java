@@ -383,6 +383,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		synchronizationRegistered = false;
 	}
 
+	@Override
 	public void addObserver(TransactionObserver observer) {
 		observers.add( observer );
 	}

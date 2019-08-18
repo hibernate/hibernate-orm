@@ -127,6 +127,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	/**
 	 * reset all statistics
 	 */
+	@Override
 	public void clear() {
 		secondLevelCacheHitCount.reset();
 		secondLevelCacheMissCount.reset();

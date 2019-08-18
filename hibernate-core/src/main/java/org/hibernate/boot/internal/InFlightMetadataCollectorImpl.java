@@ -1215,6 +1215,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return null;
 		}
 
+		@Override
 		public Join locateJoin(Identifier tableName) {
 			if ( tableName == null ) {
 				return null;

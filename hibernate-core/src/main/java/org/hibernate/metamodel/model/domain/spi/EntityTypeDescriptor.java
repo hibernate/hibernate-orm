@@ -100,9 +100,11 @@ public interface EntityTypeDescriptor<T>
 	/**
 	 * The entity name which this descriptor maps.
 	 */
+	@Override
 	String getEntityName();
 
 
+	@Override
 	EntityJavaDescriptor<T> getJavaTypeDescriptor();
 
 	/**
@@ -115,6 +117,7 @@ public interface EntityTypeDescriptor<T>
 	 *
 	 * @since 6.0
 	 */
+	@Override
 	EntityHierarchy getHierarchy();
 
 	boolean canReadFromCache();
@@ -156,12 +159,14 @@ public interface EntityTypeDescriptor<T>
 	/**
 	 * Access to the root table for this entity.
 	 */
+	@Override
 	Table getPrimaryTable();
 
 	/**
 	 * Access to all "declared" secondary table mapping info for this entity.
 	 * This does not include secondary tables from super-types.
 	 */
+	@Override
 	List<JoinedTableBinding> getSecondaryTableBindings();
 
 	// todo (6.0) : clean these up

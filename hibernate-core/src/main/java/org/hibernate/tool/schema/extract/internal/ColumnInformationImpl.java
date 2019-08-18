@@ -79,6 +79,7 @@ public class ColumnInformationImpl implements ColumnInformation {
 		return nullable;
 	}
 
+	@Override
 	public String toString() {
 		return "ColumnInformation(" + columnIdentifier + ')';
 	}

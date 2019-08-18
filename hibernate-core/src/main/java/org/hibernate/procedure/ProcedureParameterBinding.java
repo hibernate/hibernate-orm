@@ -22,6 +22,7 @@ public interface ProcedureParameterBinding<T> extends QueryParameterBinding<T> {
 	 */
 	T getValue();
 
+	@Override
 	AllowableParameterType<T> getBindType();
 
 	/**

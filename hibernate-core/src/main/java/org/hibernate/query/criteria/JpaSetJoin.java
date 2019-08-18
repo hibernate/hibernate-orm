@@ -19,13 +19,18 @@ public interface JpaSetJoin<O, T> extends JpaJoin<O, T>, SetJoin<O, T> {
 	@Override
 	JpaSetJoin<O, T> correlateTo(JpaSubQuery<T> subquery);
 
+	@Override
 	JpaSetJoin<O, T> on(JpaExpression<Boolean> restriction);
 
+	@Override
 	JpaSetJoin<O, T> on(Expression<Boolean> restriction);
 
+	@Override
 	JpaSetJoin<O, T> on(JpaPredicate... restrictions);
 
+	@Override
 	JpaSetJoin<O, T> on(Predicate... restrictions);
 
+	@Override
 	<S extends T> JpaSetJoin<O, S> treatAs(Class<S> treatAsType);
 }

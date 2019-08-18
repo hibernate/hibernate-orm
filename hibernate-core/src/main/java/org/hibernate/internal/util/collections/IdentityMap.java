@@ -162,14 +162,17 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 			identityKeyIterator = iterator;
 		}
 
+		@Override
 		public boolean hasNext() {
 			return identityKeyIterator.hasNext();
 		}
 
+		@Override
 		public K next() {
 			return identityKeyIterator.next().getRealKey();
 		}
 
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
@@ -184,14 +187,17 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 			this.value=value;
 		}
 
+		@Override
 		public K getKey() {
 			return key;
 		}
 
+		@Override
 		public V getValue() {
 			return value;
 		}
 
+		@Override
 		public V setValue(final V value) {
 			V result = this.value;
 			this.value = value;

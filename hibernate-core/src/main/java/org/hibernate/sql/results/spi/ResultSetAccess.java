@@ -22,6 +22,7 @@ public interface ResultSetAccess extends ResultSetMappingDescriptor.JdbcValuesMe
 	SessionFactoryImplementor getFactory();
 	void release();
 
+	@Override
 	default int getColumnCount() {
 		try {
 			return getResultSet().getMetaData().getColumnCount();
@@ -34,6 +35,7 @@ public interface ResultSetAccess extends ResultSetMappingDescriptor.JdbcValuesMe
 		}
 	}
 
+	@Override
 	default int resolveColumnPosition(String columnName) {
 		try {
 			return getResultSet().findColumn( columnName );
@@ -46,6 +48,7 @@ public interface ResultSetAccess extends ResultSetMappingDescriptor.JdbcValuesMe
 		}
 	}
 
+	@Override
 	default String resolveColumnName(int position) {
 		try {
 			return getFactory().getJdbcServices().
@@ -62,6 +65,7 @@ public interface ResultSetAccess extends ResultSetMappingDescriptor.JdbcValuesMe
 		}
 	}
 
+	@Override
 	default SqlTypeDescriptor resolveSqlTypeDescriptor(int position) {
 		try {
 			return getFactory().getTypeConfiguration()

@@ -21,6 +21,7 @@ import org.hibernate.annotations.Remove;
 @Remove
 public class CacheJoinFragment extends ANSIJoinFragment {
 
+	@Override
 	public void addJoin(String rhsTableName, String rhsAlias, String[] lhsColumns, String[] rhsColumns, JoinType joinType, String on) {
 		if ( joinType == JoinType.FULL_JOIN ) {
 			throw new AssertionFailure( "Cache does not support full outer joins" );

@@ -66,6 +66,7 @@ public class BiEmbIdRefEdEntity {
 		this.referencing = referencing;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -86,6 +87,7 @@ public class BiEmbIdRefEdEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

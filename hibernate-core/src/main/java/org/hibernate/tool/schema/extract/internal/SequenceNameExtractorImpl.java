@@ -18,6 +18,7 @@ public class SequenceNameExtractorImpl extends SequenceInformationExtractorLegac
 	 */
 	public static final SequenceNameExtractorImpl INSTANCE = new SequenceNameExtractorImpl();
 
+	@Override
 	protected String resultSetSequenceName(ResultSet resultSet) throws SQLException {
 		return resultSet.getString( 1 );
 	}

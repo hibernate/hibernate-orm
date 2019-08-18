@@ -78,6 +78,7 @@ public class OneToOneSecondPass implements SecondPass {
 	}
 
 	//TODO refactor this code, there is a lot of duplication in this method
+	@Override
 	public void doSecondPass(Map<String,PersistentClass> persistentClasses) throws MappingException {
 		org.hibernate.mapping.OneToOne value = new org.hibernate.mapping.OneToOne(
 				buildingContext,

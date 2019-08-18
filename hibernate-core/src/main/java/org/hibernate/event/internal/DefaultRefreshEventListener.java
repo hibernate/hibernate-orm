@@ -45,6 +45,7 @@ import org.hibernate.pretty.MessageHelper;
 public class DefaultRefreshEventListener implements RefreshEventListener {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultRefreshEventListener.class );
 
+	@Override
 	public void onRefresh(RefreshEvent event) throws HibernateException {
 		onRefresh( event, new IdentityHashMap( 10 ) );
 	}
@@ -54,6 +55,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 *
 	 * @param event The refresh event to be handled.
 	 */
+	@Override
 	public void onRefresh(RefreshEvent event, Map refreshedAlready) {
 
 		final EventSource source = event.getSession();

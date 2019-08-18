@@ -148,6 +148,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.isTransactionInProgress();
 	}
 
+	@Override
 	public LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
 		return delegate.buildLockOptions( lockModeType, properties );
 	}

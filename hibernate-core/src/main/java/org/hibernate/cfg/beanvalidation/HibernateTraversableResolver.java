@@ -77,6 +77,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 		return path.toString();
 	}
 
+	@Override
 	public boolean isReachable(Object traversableObject,
 			Path.Node traversableProperty,
 			Class<?> rootBeanType,
@@ -87,6 +88,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 				&& Hibernate.isPropertyInitialized( traversableObject, traversableProperty.getName() );
 	}
 
+	@Override
 	public boolean isCascadable(Object traversableObject,
 			Path.Node traversableProperty,
 			Class<?> rootBeanType,

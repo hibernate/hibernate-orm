@@ -17,34 +17,42 @@ public class WrappedInferredData implements PropertyData {
 	private PropertyData wrappedInferredData;
 	private String propertyName;
 
+	@Override
 	public XClass getClassOrElement() throws MappingException {
 		return wrappedInferredData.getClassOrElement();
 	}
 
+	@Override
 	public String getClassOrElementName() throws MappingException {
 		return wrappedInferredData.getClassOrElementName();
 	}
 
+	@Override
 	public AccessType getDefaultAccess() {
 		return wrappedInferredData.getDefaultAccess();
 	}
 
+	@Override
 	public XProperty getProperty() {
 		return wrappedInferredData.getProperty();
 	}
 
+	@Override
 	public XClass getDeclaringClass() {
 		return wrappedInferredData.getDeclaringClass();
 	}
 
+	@Override
 	public XClass getPropertyClass() throws MappingException {
 		return wrappedInferredData.getPropertyClass();
 	}
 
+	@Override
 	public String getPropertyName() throws MappingException {
 		return propertyName;
 	}
 
+	@Override
 	public String getTypeName() throws MappingException {
 		return wrappedInferredData.getTypeName();
 	}

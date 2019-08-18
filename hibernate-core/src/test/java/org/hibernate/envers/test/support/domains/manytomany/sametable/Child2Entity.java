@@ -105,6 +105,7 @@ public class Child2Entity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "Child2Entity(id = " + id + ", child2Data = " + child2Data + ")";
 	}

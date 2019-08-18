@@ -92,6 +92,7 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 		}
 	}
 
+	@Override
 	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		return valueTransformer.transform( strategy.generateUUID( session ) );
 	}

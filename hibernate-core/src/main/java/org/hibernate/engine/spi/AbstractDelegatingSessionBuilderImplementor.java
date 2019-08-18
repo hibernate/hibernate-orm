@@ -20,6 +20,7 @@ public abstract class AbstractDelegatingSessionBuilderImplementor<T extends Sess
 		super( delegate );
 	}
 
+	@Override
 	protected SessionBuilderImplementor delegate() {
 		return (SessionBuilderImplementor) super.delegate();
 	}

@@ -14,6 +14,7 @@ import org.hibernate.query.NavigablePath;
  * @author Steve Ebersole
  */
 public interface EntityFetch extends EntityMappingNode, Fetch {
+	@Override
 	default NavigablePath getNavigablePath() {
 		return getFetchParent().getNavigablePath().append( getFetchedNavigable().getNavigableName() );
 	}

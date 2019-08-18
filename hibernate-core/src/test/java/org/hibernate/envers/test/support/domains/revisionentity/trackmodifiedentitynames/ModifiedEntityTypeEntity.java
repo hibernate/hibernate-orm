@@ -55,6 +55,7 @@ public class ModifiedEntityTypeEntity {
 		this.entityClassName = entityClassName;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -74,6 +75,7 @@ public class ModifiedEntityTypeEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return entityClassName != null ? entityClassName.hashCode() : 0;
 	}

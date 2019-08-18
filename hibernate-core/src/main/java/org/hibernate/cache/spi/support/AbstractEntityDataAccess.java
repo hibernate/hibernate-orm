@@ -60,6 +60,7 @@ public abstract class AbstractEntityDataAccess
 		clearCache();
 	}
 
+	@Override
 	public SoftLock lockItem(
 			SharedSessionContractImplementor session,
 			Object key,

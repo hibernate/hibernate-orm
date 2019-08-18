@@ -25,6 +25,7 @@ public abstract class AbstractCollectionElement<J> implements CollectionElement<
 		return descriptor;
 	}
 
+	@Override
 	public PersistentCollectionDescriptor getCollectionDescriptor() {
 		return descriptor;
 	}

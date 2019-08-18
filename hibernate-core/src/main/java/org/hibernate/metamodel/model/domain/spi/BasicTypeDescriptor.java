@@ -19,6 +19,7 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 public interface BasicTypeDescriptor<J>
 		extends BasicDomainType<J>, SimpleTypeDescriptor<J>, AllowableParameterType<J>, AllowableFunctionReturnType<J> {
 
+	@Override
 	default boolean areEqual(J x, J y) throws HibernateException {
 		return Objects.equals( x, y );
 	}

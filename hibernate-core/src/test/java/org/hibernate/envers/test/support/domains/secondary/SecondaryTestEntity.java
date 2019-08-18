@@ -68,6 +68,7 @@ public class SecondaryTestEntity {
 		this.s2 = s2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -91,6 +92,7 @@ public class SecondaryTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

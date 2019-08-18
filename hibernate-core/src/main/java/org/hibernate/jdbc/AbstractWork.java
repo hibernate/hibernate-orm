@@ -34,6 +34,7 @@ public abstract class AbstractWork implements Work, WorkExecutorVisitable<Void> 
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
+	@Override
 	public Void accept(WorkExecutor<Void> executor, Connection connection) throws SQLException {
 		return executor.executeWork( this, connection );
 	}

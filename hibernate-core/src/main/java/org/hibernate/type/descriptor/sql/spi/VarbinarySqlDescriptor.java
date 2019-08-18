@@ -32,6 +32,7 @@ public class VarbinarySqlDescriptor extends AbstractTemplateSqlTypeDescriptor {
 	public VarbinarySqlDescriptor() {
 	}
 
+	@Override
 	public int getJdbcTypeCode() {
 		return Types.VARBINARY;
 	}

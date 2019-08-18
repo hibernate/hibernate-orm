@@ -74,6 +74,7 @@ public class BeanValidationEventListener
 		initialized = true;
 	}
 
+	@Override
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
 				event.getEntity(), event.getDescriptor().getRepresentationStrategy().getMode(), event.getDescriptor(),
@@ -82,6 +83,7 @@ public class BeanValidationEventListener
 		return false;
 	}
 
+	@Override
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
 				event.getEntity(), event.getDescriptor().getRepresentationStrategy().getMode(), event.getDescriptor(),
@@ -90,6 +92,7 @@ public class BeanValidationEventListener
 		return false;
 	}
 
+	@Override
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
 				event.getEntity(),

@@ -137,6 +137,7 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 		delegate.add( propertyData );
 	}
 
+	@Override
 	public Map<PropertyData, PropertyMapper> getProperties() {
 		return delegate.getProperties();
 	}

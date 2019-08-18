@@ -46,6 +46,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	/**
 	 * Returns the NavigablePath.
 	 */
+	@Override
 	NavigablePath getNavigablePath();
 
 	/**
@@ -57,6 +58,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 * Get the left-hand side of this path - may be null, indicating a
 	 * root, cross-join or entity-join
 	 */
+	@Override
 	SqmPath<?> getLhs();
 
 	default SqmRoot findRoot() {

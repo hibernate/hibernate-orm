@@ -57,8 +57,8 @@ public class ImplicitCompositeKeyJoinTest {
 				if ( command.toLowerCase().matches( "^create( (column|row))? table employee.+" ) ) {
 					final String[] columnsDefinition = getColumnsDefinition( command );
 
-					for ( int i = 0; i < columnsDefinition.length; i++ ) {
-						checkColumnSize( columnsDefinition[i] );
+					for (String columnsDefinition1 : columnsDefinition) {
+						checkColumnSize(columnsDefinition1);
 					}
 					createTableEmployeeFound = true;
 				}

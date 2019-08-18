@@ -112,9 +112,8 @@ public class CteValuesListUpdateHandlerImpl
 							}
 						}
 						if ( assignmentParameterSpecifications[i] != null ) {
-							for ( int x = 0; x < assignmentParameterSpecifications[i].length; x++ ) {
-								position += assignmentParameterSpecifications[i][x]
-										.bind( ps, queryParameters, session, position );
+							for (ParameterSpecification assignmentParameterSpecification : assignmentParameterSpecifications[i]) {
+								position += assignmentParameterSpecification.bind(ps, queryParameters, session, position);
 							}
 						}
 						session

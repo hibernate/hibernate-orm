@@ -471,8 +471,8 @@ public class FumTest extends LegacyTestCase {
 		Query qu = s.createQuery("select fum.fum, fum , fum.fum from Fum fum");
 		Type[] types = qu.getReturnTypes();
 		assertTrue(types.length==3);
-		for ( int k=0; k<types.length; k++) {
-			assertTrue( types[k]!=null );
+		for (Type type : types) {
+			assertTrue(type != null);
 		}
 		assertTrue(types[0] instanceof StringType);
 		assertTrue(types[1] instanceof EntityType);

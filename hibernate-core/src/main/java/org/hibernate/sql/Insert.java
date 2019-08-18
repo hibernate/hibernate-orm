@@ -42,8 +42,8 @@ public class Insert {
 	}
 
 	public Insert addColumns(String[] columnNames) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addColumn( columnNames[i] );
+		for (String columnName : columnNames) {
+			addColumn(columnName);
 		}
 		return this;
 	}

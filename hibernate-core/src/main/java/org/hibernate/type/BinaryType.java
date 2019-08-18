@@ -27,6 +27,7 @@ public class BinaryType
 
 	public static final BinaryType INSTANCE = new BinaryType();
 
+	@Override
 	public String getName() {
 		return "binary";
 	}

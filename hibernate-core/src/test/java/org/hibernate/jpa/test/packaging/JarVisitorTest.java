@@ -284,9 +284,11 @@ public class JarVisitorTest extends PackagingTestCase {
 
 		//setting URL to accept vfs based protocol
 		URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
+										   @Override
 										   public URLStreamHandler createURLStreamHandler(String protocol) {
 											   if("vfszip".equals(protocol) || "vfsfile".equals(protocol) )
 												   return new URLStreamHandler() {
+												   @Override
 													   protected URLConnection openConnection(URL u)
 															   throws IOException {
 														   return null;

@@ -25,6 +25,7 @@ public class SecondaryTableSecondPass implements SecondPass {
 		this.annotatedClass = annotatedClass;
 	}
 
+	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		entityBinder.finalSecondaryTableBinding( propertyHolder );
 		

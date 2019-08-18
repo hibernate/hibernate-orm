@@ -37,6 +37,7 @@ public class ParentPk implements Serializable {
 	@Column(name = "p_lname")
 	private String lastName;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof ParentPk ) ) return false;
@@ -49,6 +50,7 @@ public class ParentPk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = firstName.hashCode();

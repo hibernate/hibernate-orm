@@ -37,6 +37,7 @@ import static org.junit.Assert.assertNotNull;
 public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 	private static final int CLOB_SIZE = 10000;
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lob/LobMappings.hbm.xml" };
 	}

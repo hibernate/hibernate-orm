@@ -35,10 +35,12 @@ public class Country implements Serializable {
 		name = string;
 	}
 
+	@Override
 	public int hashCode() {
 		return name == null ? 0 : name.hashCode();
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if ( obj == this ) return true;
 		if ( ! ( obj instanceof Country ) ) return false;

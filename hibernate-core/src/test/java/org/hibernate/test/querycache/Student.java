@@ -80,6 +80,7 @@ public class Student {
 		this.secretCodes = secretCodes;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -100,6 +101,7 @@ public class Student {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = ( int ) ( studentNumber ^ ( studentNumber >>> 32 ) );
 		result = 31 * result + ( name != null ? name.hashCode() : 0 );

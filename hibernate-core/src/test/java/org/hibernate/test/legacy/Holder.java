@@ -76,6 +76,7 @@ public class Holder implements Named {
 	 * Returns the name.
 	 * @return String
 	 */
+	@Override
 	public String getName() {
 		return name;
 	}

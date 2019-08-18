@@ -671,6 +671,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 2 );
 	}
 
+	@Override
 	protected void cleanupTest() throws Exception {
 		cleanup();
 		super.cleanupTest();

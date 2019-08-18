@@ -26,11 +26,13 @@ public class RegionalArticlePk implements Serializable {
 	public String iso2;
 	public String localUniqueKey;
 
+	@Override
 	public int hashCode() {
 		//this implem sucks
 		return ( iso2 + localUniqueKey ).hashCode();
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		//iso2 and localUniqueKey are expected to be set in this implem
 		if ( obj != null && obj instanceof RegionalArticlePk ) {

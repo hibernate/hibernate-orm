@@ -111,49 +111,61 @@ public class ComparisonPredicate
 	 */
 	public static enum ComparisonOperator {
 		EQUAL {
+			@Override
 			public ComparisonOperator negated() {
 				return NOT_EQUAL;
 			}
+			@Override
 			public String rendered() {
 				return "=";
 			}
 		},
 		NOT_EQUAL {
+			@Override
 			public ComparisonOperator negated() {
 				return EQUAL;
 			}
+			@Override
 			public String rendered() {
 				return "<>";
 			}
 		},
 		LESS_THAN {
+			@Override
 			public ComparisonOperator negated() {
 				return GREATER_THAN_OR_EQUAL;
 			}
+			@Override
 			public String rendered() {
 				return "<";
 			}
 		},
 		LESS_THAN_OR_EQUAL {
+			@Override
 			public ComparisonOperator negated() {
 				return GREATER_THAN;
 			}
+			@Override
 			public String rendered() {
 				return "<=";
 			}
 		},
 		GREATER_THAN {
+			@Override
 			public ComparisonOperator negated() {
 				return LESS_THAN_OR_EQUAL;
 			}
+			@Override
 			public String rendered() {
 				return ">";
 			}
 		},
 		GREATER_THAN_OR_EQUAL {
+			@Override
 			public ComparisonOperator negated() {
 				return LESS_THAN;
 			}
+			@Override
 			public String rendered() {
 				return ">=";
 			}

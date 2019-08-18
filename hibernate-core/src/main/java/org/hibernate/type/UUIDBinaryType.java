@@ -23,6 +23,7 @@ public class UUIDBinaryType extends AbstractSingleColumnStandardBasicType<UUID> 
 		super( BinaryTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "uuid-binary";
 	}

@@ -49,6 +49,7 @@ public class JCacheTransactionalCacheConcurrencyStrategyTest
 		settings.put( Environment.CACHE_REGION_FACTORY, "jcache" );
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Parent.class,

@@ -27,6 +27,7 @@ import org.hibernate.usertype.UserCollectionType;
 public class DefaultableListType implements UserCollectionType, ParameterizedType {
     private String defaultValue;
 
+	@Override
 	public Object instantiate(int anticipatedSize) {
 		DefaultableListImpl list = anticipatedSize < 0 ? new DefaultableListImpl() : new DefaultableListImpl( anticipatedSize );
 		list.setDefaultValue( defaultValue );

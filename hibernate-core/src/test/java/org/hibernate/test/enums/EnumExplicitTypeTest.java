@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class EnumExplicitTypeTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "enums/Person.hbm.xml" };
 	}

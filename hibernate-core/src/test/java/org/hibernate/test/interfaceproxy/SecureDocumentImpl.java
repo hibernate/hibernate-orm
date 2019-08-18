@@ -18,24 +18,28 @@ public class SecureDocumentImpl extends DocumentImpl implements SecureDocument {
 	/**
 	 * @return Returns the owner.
 	 */
+	@Override
 	public String getOwner() {
 		return owner;
 	}
 	/**
 	 * @param owner The owner to set.
 	 */
+	@Override
 	public void setOwner(String owner) {
 		this.owner = owner;
 	}
 	/**
 	 * @return Returns the permissionBits.
 	 */
+	@Override
 	public byte getPermissionBits() {
 		return permissionBits;
 	}
 	/**
 	 * @param permissionBits The permissionBits to set.
 	 */
+	@Override
 	public void setPermissionBits(byte permissionBits) {
 		this.permissionBits = permissionBits;
 	}

@@ -22,10 +22,12 @@ import static org.junit.Assert.assertEquals;
  * @author Gavin King
  */
 public class TimestampTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "timestamp/User.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
 	}

@@ -24,6 +24,7 @@ public class UrlType extends AbstractSingleColumnStandardBasicType<URL> implemen
 		super( VarcharTypeDescriptor.INSTANCE, UrlTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "url";
 	}
@@ -38,10 +39,12 @@ public class UrlType extends AbstractSingleColumnStandardBasicType<URL> implemen
 		return UrlTypeDescriptor.INSTANCE.toString( value );
 	}
 
+	@Override
 	public String objectToSQLString(URL value, Dialect dialect) throws Exception {
 		return StringType.INSTANCE.objectToSQLString( toString( value ), dialect );
 	}
 
+	@Override
 	public URL stringToObject(String xml) throws Exception {
 		return UrlTypeDescriptor.INSTANCE.fromString( xml );
 	}

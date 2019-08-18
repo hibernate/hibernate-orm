@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 public class StandardRefCursorSupportTest {
 
     interface TestDatabaseMetaData extends DatabaseMetaData {
+		@Override
         boolean supportsRefCursors() throws SQLException;
     }
 

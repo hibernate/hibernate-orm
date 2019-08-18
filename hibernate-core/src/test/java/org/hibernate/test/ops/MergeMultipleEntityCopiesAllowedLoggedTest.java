@@ -14,6 +14,7 @@ import org.hibernate.cfg.Configuration;
  * @author Gail Badner
  */
 public class MergeMultipleEntityCopiesAllowedLoggedTest extends MergeMultipleEntityCopiesAllowedTest {
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty(

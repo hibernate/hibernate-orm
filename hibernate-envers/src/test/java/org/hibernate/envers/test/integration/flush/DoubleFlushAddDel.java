@@ -21,6 +21,7 @@ import org.junit.Test;
 public class DoubleFlushAddDel extends AbstractFlushTest {
 	private Integer id;
 
+	@Override
 	public FlushMode getFlushMode() {
 		return FlushMode.MANUAL;
 	}

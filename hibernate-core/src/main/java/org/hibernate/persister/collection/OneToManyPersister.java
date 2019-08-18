@@ -58,6 +58,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return keyIsUpdateable;
 	}
 
+	@Override
 	public boolean isCascadeDeleteEnabled() {
 		return cascadeDeleteEnabled;
 	}
@@ -301,14 +302,17 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		}
 	}
 
+	@Override
 	public boolean consumesEntityAlias() {
 		return true;
 	}
 
+	@Override
 	public boolean consumesCollectionAlias() {
 		return true;
 	}
 
+	@Override
 	public boolean isOneToMany() {
 		return true;
 	}
@@ -483,6 +487,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		}
 	}
 
+	@Override
 	public String selectFragment(
 			Joinable rhs,
 			String rhsAlias,

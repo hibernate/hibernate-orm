@@ -26,11 +26,13 @@ public class ParentPk implements Serializable {
 	//show hetereogenous PK types
 	boolean isMale;
 
+	@Override
 	public int hashCode() {
 		//this implem sucks
 		return firstName.hashCode() + lastName.hashCode() + ( isMale ? 0 : 1 );
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		//firstName and lastName are expected to be set in this implem
 		if ( obj != null && obj instanceof ParentPk ) {

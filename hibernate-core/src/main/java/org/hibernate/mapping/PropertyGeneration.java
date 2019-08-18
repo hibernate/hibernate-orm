@@ -57,6 +57,7 @@ public class PropertyGeneration implements Serializable {
 		return parse( name );
 	}
 	
+	@Override
 	public String toString() {
 		return getClass().getName() + "(" + getName() + ")";
 	}

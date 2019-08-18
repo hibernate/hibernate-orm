@@ -44,6 +44,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		session.doWork(
 				new Work() {
+					@Override
 					public void execute(Connection connection) throws SQLException {
 						// in this current form, users must handle try/catches themselves for proper resource release
 						Statement statement = null;
@@ -81,6 +82,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 		try {
 			session.doWork(
 					new Work() {
+						@Override
 						public void execute(Connection connection) throws SQLException {
 							Statement statement = null;
 							try {
@@ -114,6 +116,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 		session2.beginTransaction();
 		long count = session2.doReturningWork(
 				new ReturningWork<Long>() {
+					@Override
 					public Long execute(Connection connection) throws SQLException {
 						// in this current form, users must handle try/catches themselves for proper resource release
 						Statement statement = null;

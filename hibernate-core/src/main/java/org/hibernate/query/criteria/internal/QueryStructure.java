@@ -70,6 +70,7 @@ public class QueryStructure<T> implements Serializable {
 	public Set<ParameterExpression<?>> getParameters() {
 		final Set<ParameterExpression<?>> parameters = new LinkedHashSet<ParameterExpression<?>>();
 		final ParameterRegistry registry = new ParameterRegistry() {
+			@Override
 			public void registerParameter(ParameterExpression<?> parameter) {
 				parameters.add( parameter );
 			}

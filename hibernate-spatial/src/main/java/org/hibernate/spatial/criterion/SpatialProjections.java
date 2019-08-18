@@ -39,12 +39,14 @@ public class SpatialProjections {
 	public static Projection extent(final String propertyName) {
 		return new SimpleProjection() {
 
+			@Override
 			public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 				return new Type[] {
 						criteriaQuery.getType( criteria, propertyName )
 				};
 			}
 
+			@Override
 			public String toSqlString(Criteria criteria, int position, CriteriaQuery criteriaQuery)
 					throws HibernateException {
 				final StringBuilder stbuf = new StringBuilder();

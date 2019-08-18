@@ -24,6 +24,7 @@ public class ValueHandlerFactory {
 	}
 
 	public static abstract class BaseValueHandler<T> implements ValueHandler<T>, Serializable {
+		@Override
 		public String render(T value) {
 			return value.toString();
 		}
@@ -31,6 +32,7 @@ public class ValueHandlerFactory {
 
 	public static class NoOpValueHandler<T> extends BaseValueHandler<T> {
 		@SuppressWarnings({ "unchecked" })
+		@Override
 		public T convert(Object value) {
 			return (T) value;
 		}
@@ -75,6 +77,7 @@ public class ValueHandlerFactory {
 	public static class ByteValueHandler extends BaseValueHandler<Byte> implements Serializable {
 		public static final ByteValueHandler INSTANCE = new ByteValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
+		@Override
 		public Byte convert(Object value) {
 			if ( value == null ) {
 				return null;
@@ -92,6 +95,7 @@ public class ValueHandlerFactory {
 	public static class ShortValueHandler extends BaseValueHandler<Short> implements Serializable {
 		public static final ShortValueHandler INSTANCE = new ShortValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
+		@Override
 		public Short convert(Object value) {
 			if ( value == null ) {
 				return null;
@@ -109,6 +113,7 @@ public class ValueHandlerFactory {
 	public static class IntegerValueHandler extends BaseValueHandler<Integer> implements Serializable {
 		public static final IntegerValueHandler INSTANCE = new IntegerValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
+		@Override
 		public Integer convert(Object value) {
 			if ( value == null ) {
 				return null;
@@ -126,6 +131,7 @@ public class ValueHandlerFactory {
 	public static class LongValueHandler extends BaseValueHandler<Long> implements Serializable {
 		public static final LongValueHandler INSTANCE = new LongValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
+		@Override
 		public Long convert(Object value) {
 			if ( value == null ) {
 				return null;
@@ -148,6 +154,7 @@ public class ValueHandlerFactory {
 	public static class FloatValueHandler extends BaseValueHandler<Float> implements Serializable {
 		public static final FloatValueHandler INSTANCE = new FloatValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
+		@Override
 		public Float convert(Object value) {
 			if ( value == null ) {
 				return null;
@@ -170,6 +177,7 @@ public class ValueHandlerFactory {
 	public static class DoubleValueHandler extends BaseValueHandler<Double> implements Serializable {
 		public static final DoubleValueHandler INSTANCE = new DoubleValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
+		@Override
 		public Double convert(Object value) {
 			if ( value == null ) {
 				return null;
@@ -191,6 +199,7 @@ public class ValueHandlerFactory {
 
 	public static class BigIntegerValueHandler extends BaseValueHandler<BigInteger> implements Serializable {
 		public static final BigIntegerValueHandler INSTANCE = new BigIntegerValueHandler();
+		@Override
 		public BigInteger convert(Object value) {
 			if ( value == null ) {
 				return null;
@@ -218,6 +227,7 @@ public class ValueHandlerFactory {
 
 	public static class BigDecimalValueHandler extends BaseValueHandler<BigDecimal> implements Serializable {
 		public static final BigDecimalValueHandler INSTANCE = new BigDecimalValueHandler();
+		@Override
 		public BigDecimal convert(Object value) {
 			if ( value == null ) {
 				return null;
@@ -246,6 +256,7 @@ public class ValueHandlerFactory {
 	public static class BooleanValueHandler extends BaseValueHandler<Boolean> implements Serializable {
 		public static final BooleanValueHandler INSTANCE = new BooleanValueHandler();
 
+		@Override
 		public Boolean convert(Object value) {
 			if ( value == null ) {
 				return null;
@@ -262,6 +273,7 @@ public class ValueHandlerFactory {
 
 	public static class StringValueHandler extends BaseValueHandler<String> implements Serializable {
 		public static final StringValueHandler INSTANCE = new StringValueHandler();
+		@Override
 		public String convert(Object value) {
 			return value == null ? null : value.toString();
 		}

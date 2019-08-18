@@ -55,6 +55,7 @@ public class NotAuditedSubclassEntity extends AuditedAllMappedSuperclass {
 		this.notAuditedStr = notAuditedStr;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -75,6 +76,7 @@ public class NotAuditedSubclassEntity extends AuditedAllMappedSuperclass {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + (id != null ? id.hashCode() : 0);

@@ -42,6 +42,7 @@ public class ArrayTypeDescriptor extends AbstractTypeDescriptor<Array> {
     }
 
     @SuppressWarnings({"unchecked"})
+	@Override
     public <X> X unwrap(Array value, Class<X> type, WrapperOptions options) {
         if ( value == null ) {
             return null;
@@ -55,6 +56,7 @@ public class ArrayTypeDescriptor extends AbstractTypeDescriptor<Array> {
         throw unknownUnwrap( type );
     }
 
+	@Override
     public <X> Array wrap(X value, WrapperOptions options) {
         if ( value == null ) {
             return null;

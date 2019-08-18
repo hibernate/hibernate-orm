@@ -60,6 +60,7 @@ public abstract class AbstractTypeDescriptor<T> implements BasicJavaDescriptor<T
 		return mutabilityPlan;
 	}
 
+	@Override
 	public Class<T> getJavaType() {
 		return type;
 	}

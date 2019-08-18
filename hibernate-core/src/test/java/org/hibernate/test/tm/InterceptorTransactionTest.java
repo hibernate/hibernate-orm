@@ -112,6 +112,7 @@ public class InterceptorTransactionTest extends BaseJpaOrNativeBootstrapFunction
 		return new Class<?>[] { SimpleEntity.class };
 	}
 
+	@Override
 	protected void configure(Map<Object, Object> properties) {
 		super.configure( properties );
 		TestingJtaBootstrap.prepare( properties );

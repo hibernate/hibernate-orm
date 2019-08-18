@@ -55,6 +55,7 @@ public class EmbeddableMapEntity {
 		this.componentMap = strings;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -72,10 +73,12 @@ public class EmbeddableMapEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}
 
+	@Override
 	public String toString() {
 		return "EME(id = " + id + ", componentMap = " + componentMap + ")";
 	}

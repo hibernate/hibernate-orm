@@ -60,6 +60,7 @@ public class SearchedCaseExpression<R>
 		super( criteriaBuilder, javaType );
 	}
 
+	@Override
 	public Case<R> when(Expression<Boolean> condition, R result) {
 		return when( condition, buildLiteral( result ) );
 	}
@@ -72,6 +73,7 @@ public class SearchedCaseExpression<R>
 		return new LiteralExpression<R>( criteriaBuilder(), type, result );
 	}
 
+	@Override
 	public Case<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
 		WhenClause whenClause = new WhenClause( condition, result );
 		whenClauses.add( whenClause );
@@ -79,10 +81,12 @@ public class SearchedCaseExpression<R>
 		return this;
 	}
 
+	@Override
 	public Expression<R> otherwise(R result) {
 		return otherwise( buildLiteral( result ) );
 	}
 
+	@Override
 	public Expression<R> otherwise(Expression<? extends R> result) {
 		this.otherwiseResult = result;
 		resetJavaType( result.getJavaType() );
@@ -97,6 +101,7 @@ public class SearchedCaseExpression<R>
 		return whenClauses;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getOtherwiseResult(), registry );
 		for ( WhenClause whenClause : getWhenClauses() ) {
@@ -105,6 +110,7 @@ public class SearchedCaseExpression<R>
 		}
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		StringBuilder caseStatement = new StringBuilder( "case" );
 		for ( WhenClause whenClause : getWhenClauses() ) {

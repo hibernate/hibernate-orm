@@ -50,6 +50,7 @@ public class Order {
 		this.total = total;
 	}
 
+	@Override
 	public String toString() {
 		return "Order id=" + getId() + ", total=" + getTotal();
 	}

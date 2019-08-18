@@ -38,38 +38,47 @@ public class IdentitySet implements Set {
 		this.map = new IdentityHashMap( sizing );
 	}
 
+	@Override
 	public int size() {
 		return map.size();
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return map.isEmpty();
 	}
 
+	@Override
 	public boolean contains(Object o) {
 		return map.get( o ) == DUMP_VALUE;
 	}
 
+	@Override
 	public Iterator iterator() {
 		return map.keySet().iterator();
 	}
 
+	@Override
 	public Object[] toArray() {
 		return map.keySet().toArray();
 	}
 
+	@Override
 	public Object[] toArray(Object[] a) {
 		return map.keySet().toArray( a );
 	}
 
+	@Override
 	public boolean add(Object o) {
 		return map.put( o, DUMP_VALUE ) == null;
 	}
 
+	@Override
 	public boolean remove(Object o) {
 		return map.remove( o ) == DUMP_VALUE;
 	}
 
+	@Override
 	public boolean containsAll(Collection c) {
 		Iterator it = c.iterator();
 		while ( it.hasNext() ) {
@@ -80,6 +89,7 @@ public class IdentitySet implements Set {
 		return true;
 	}
 
+	@Override
 	public boolean addAll(Collection c) {
 		Iterator it = c.iterator();
 		boolean changed = false;
@@ -91,11 +101,13 @@ public class IdentitySet implements Set {
 		return changed;
 	}
 
+	@Override
 	public boolean retainAll(Collection c) {
 		//doable if needed
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public boolean removeAll(Collection c) {
 		Iterator it = c.iterator();
 		boolean changed = false;
@@ -107,6 +119,7 @@ public class IdentitySet implements Set {
 		return changed;
 	}
 
+	@Override
 	public void clear() {
 		map.clear();
 	}

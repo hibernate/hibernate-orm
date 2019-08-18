@@ -348,6 +348,7 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 			}
 		}
 
+		@Override
 		public IntegralDataTypeHolder getNextValue() {
 			try {
 				if ( timesCalled == 0 ) {

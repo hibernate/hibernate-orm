@@ -122,6 +122,7 @@ public class InformixDialect extends Dialect {
 		return result.toString();
 	}
 
+	@Override
 	public String getAddForeignKeyConstraintString(
 			String constraintName,
 			String foreignKeyDefinition) {

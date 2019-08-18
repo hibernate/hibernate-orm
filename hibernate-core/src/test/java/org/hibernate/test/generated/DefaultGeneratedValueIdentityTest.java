@@ -245,20 +245,24 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 		public void initialize(FunctionCreationTimestamp annotation, Class<?> propertyType) {
 		}
 
+		@Override
 		public GenerationTiming getGenerationTiming() {
 			// its creation...
 			return GenerationTiming.INSERT;
 		}
 
+		@Override
 		public ValueGenerator<?> getValueGenerator() {
 			// no in-memory generation
 			return null;
 		}
 
+		@Override
 		public boolean referenceColumnInSql() {
 			return true;
 		}
 
+		@Override
 		public String getDatabaseGeneratedReferencedColumnValue() {
 			return "current_timestamp";
 		}

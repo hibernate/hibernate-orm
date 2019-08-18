@@ -40,6 +40,7 @@ public class StaleObjectStateException extends StaleStateException {
 		return identifier;
 	}
 
+	@Override
 	public String getMessage() {
 		return super.getMessage() + " : " + MessageHelper.infoString( entityName, identifier );
 	}

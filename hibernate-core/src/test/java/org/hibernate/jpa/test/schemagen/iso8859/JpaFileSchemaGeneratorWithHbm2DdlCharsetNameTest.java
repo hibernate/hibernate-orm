@@ -22,6 +22,7 @@ import org.hibernate.testing.TestForIssue;
 @TestForIssue( jiraKey = "HHH-10972" )
 public class JpaFileSchemaGeneratorWithHbm2DdlCharsetNameTest extends JpaSchemaGeneratorTest {
 
+	@Override
 	public String getScriptFolderPath() {
 		return "org/hibernate/jpa/test/schemagen/iso8859/";
 	}
@@ -33,14 +34,17 @@ public class JpaFileSchemaGeneratorWithHbm2DdlCharsetNameTest extends JpaSchemaG
 		return settings;
 	}
 
+	@Override
 	protected String getLoadSqlScript() {
 		return toFilePath(super.getLoadSqlScript());
 	}
 
+	@Override
 	protected String getCreateSqlScript() {
 		return toFilePath(super.getCreateSqlScript());
 	}
 
+	@Override
 	protected String getDropSqlScript() {
 		return toFilePath(super.getDropSqlScript());
 	}

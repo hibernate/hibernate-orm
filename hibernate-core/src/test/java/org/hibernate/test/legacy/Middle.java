@@ -30,6 +30,7 @@ public class Middle implements Serializable {
 		this.bla = bla;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof Middle)) return false;
@@ -41,6 +42,7 @@ public class Middle implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}

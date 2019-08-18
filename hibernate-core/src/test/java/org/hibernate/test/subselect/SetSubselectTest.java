@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
  */
 @TestForIssue(jiraKey = "")
 public class SetSubselectTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {"subselect/Book.hbm.xml"};
 	}

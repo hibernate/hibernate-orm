@@ -27,6 +27,7 @@ public class ParentWithBidirectionalManyToMany extends AbstractParentWithCollect
 		super( name );
 	}
 
+	@Override
 	public void newChildren(Collection children) {
 		if ( children == getChildren() ) {
 			return;
@@ -46,15 +47,18 @@ public class ParentWithBidirectionalManyToMany extends AbstractParentWithCollect
 		super.newChildren( children );
 	}
 
+	@Override
 	public Child createChild(String name) {
 		return new ChildWithBidirectionalManyToMany( name, new HashSet() );
 	}
 
+	@Override
 	public void addChild(Child child) {
 		super.addChild( child );
 		( ( ChildWithBidirectionalManyToMany ) child ).addParent( this );
 	}
 
+	@Override
 	public void addAllChildren(Collection children) {
 		super.addAllChildren( children );
 		for ( Iterator it = children.iterator(); it.hasNext(); ) {
@@ -63,6 +67,7 @@ public class ParentWithBidirectionalManyToMany extends AbstractParentWithCollect
 		}
 	}
 
+	@Override
 	public void removeChild(Child child) {
 		// Note: if the collection is a bag, the same child can be in the collection more than once
 		super.removeChild( child );
@@ -72,6 +77,7 @@ public class ParentWithBidirectionalManyToMany extends AbstractParentWithCollect
 		}
 	}
 
+	@Override
 	public void removeAllChildren(Collection children) {
 		super.removeAllChildren( children );
 		for ( Iterator it = children.iterator(); it.hasNext(); ) {
@@ -80,6 +86,7 @@ public class ParentWithBidirectionalManyToMany extends AbstractParentWithCollect
 		}
 	}
 
+	@Override
 	public void clearChildren() {
 		if ( getChildren() != null ) {
 			for ( Iterator it = getChildren().iterator(); it.hasNext(); ) {

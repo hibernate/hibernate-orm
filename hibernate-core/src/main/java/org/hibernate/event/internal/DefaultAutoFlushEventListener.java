@@ -36,6 +36,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	 *            The auto-flush event to be handled.
 	 * @throws HibernateException
 	 */
+	@Override
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		final SessionEventListenerManager eventListenerManager = source.getEventListenerManager();

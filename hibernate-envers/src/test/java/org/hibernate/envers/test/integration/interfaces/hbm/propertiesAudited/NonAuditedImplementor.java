@@ -19,18 +19,22 @@ public class NonAuditedImplementor implements SimpleInterface {
 	protected NonAuditedImplementor() {
 	}
 
+	@Override
 	public long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(long id) {
 		this.id = id;
 	}
 
+	@Override
 	public String getData() {
 		return data;
 	}
 
+	@Override
 	public void setData(String data) {
 		this.data = data;
 	}
@@ -43,10 +47,12 @@ public class NonAuditedImplementor implements SimpleInterface {
 		this.nonAuditedImplementorData = implementorData;
 	}
 
+	@Override
 	public int getNumerito() {
 		return numerito;
 	}
 
+	@Override
 	public void setNumerito(int numerito) {
 		this.numerito = numerito;
 	}

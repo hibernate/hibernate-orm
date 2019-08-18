@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class PartialComponentPropertyRefTest extends BaseNonConfigCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "propertyref/component/partial/Mapping.hbm.xml" };
 	}

@@ -13,10 +13,12 @@ package org.hibernate.test.legacy;
 public class FumCompositeID implements java.io.Serializable {
 	String string_;
 	short short_;
+	@Override
 	public boolean equals(Object other) {
 		FumCompositeID that = (FumCompositeID) other;
 		return this.string_.equals(that.string_) && this.short_==that.short_;
 	}
+	@Override
 	public int hashCode() {
 		return string_.hashCode();
 	}

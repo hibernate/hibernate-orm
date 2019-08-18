@@ -53,6 +53,7 @@ public class DateTestEntity {
 		this.dateValue = dateValue;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -80,6 +81,7 @@ public class DateTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

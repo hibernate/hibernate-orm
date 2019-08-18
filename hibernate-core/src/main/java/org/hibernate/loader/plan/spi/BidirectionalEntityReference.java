@@ -39,5 +39,6 @@ public interface BidirectionalEntityReference extends EntityReference {
 	 *
 	 * @return The query space UID.
 	 */
+	@Override
 	public String getQuerySpaceUid();
 }

@@ -44,6 +44,7 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 		return entityType;
 	}
 
+	@Override
 	public EntityType<X> getModel() {
 		return getEntityType();
 	}
@@ -75,6 +76,7 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 		return allowJoins ? super.illegalFetch() : new IllegalArgumentException( "UPDATE/DELETE criteria queries cannot define fetches" );
 	}
 
+	@Override
 	public String renderTableExpression(RenderingContext renderingContext) {
 		prepareAlias( renderingContext );
 		return getModel().getName() + " as " + getAlias();

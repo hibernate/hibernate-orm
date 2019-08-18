@@ -34,6 +34,7 @@ public class TestStoreRetrieveUsingJTS extends AbstractTestStoreRetrieve<Geometr
 	);
 
 
+	@Override
 	protected HSMessageLogger getLogger() {
 		return LOG;
 	}

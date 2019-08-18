@@ -34,12 +34,14 @@ public class CrazyCompositeKey implements Serializable {
 		this.otherId = otherId;
 	}
 	
+	@Override
 	public boolean equals(Object that) {
 		CrazyCompositeKey cck = (CrazyCompositeKey) that;
 		return cck.id.longValue() == id.longValue()
 			&& cck.otherId.longValue() == otherId.longValue();
 	}
 	
+	@Override
 	public int hashCode() {
 		return id.hashCode() + otherId.hashCode();
 	}

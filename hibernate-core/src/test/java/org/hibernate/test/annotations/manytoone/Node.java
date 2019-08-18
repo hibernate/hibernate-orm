@@ -26,6 +26,7 @@ public class Node implements Serializable {
 	private String description;
 	private Node parent;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Node ) ) return false;
@@ -37,6 +38,7 @@ public class Node implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return id.hashCode();
 	}

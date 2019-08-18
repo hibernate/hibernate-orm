@@ -23,6 +23,7 @@ public class UserImpl implements User {
 
 	@Id
 	@GeneratedValue
+	@Override
 	public Integer getId() {
 		return id;
 	}
@@ -32,6 +33,7 @@ public class UserImpl implements User {
 	}
 
 	@OneToMany(targetEntity = ContactImpl.class)
+	@Override
 	public Collection<Contact> getContacts() {
 		return contacts;
 	}

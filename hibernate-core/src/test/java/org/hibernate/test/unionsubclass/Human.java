@@ -27,6 +27,7 @@ public class Human extends Being {
 	public void setSex(char sex) {
 		this.sex = sex;
 	}
+	@Override
 	public String getSpecies() {
 		return "human";
 	}

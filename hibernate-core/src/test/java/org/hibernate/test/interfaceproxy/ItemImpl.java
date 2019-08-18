@@ -18,6 +18,7 @@ public abstract class ItemImpl implements Item {
 	/**
 	 * @return Returns the id.
 	 */
+	@Override
 	public Long getId() {
 		return id;
 	}
@@ -30,12 +31,14 @@ public abstract class ItemImpl implements Item {
 	/**
 	 * @return Returns the name.
 	 */
+	@Override
 	public String getName() {
 		return name;
 	}
 	/**
 	 * @param name The name to set.
 	 */
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}

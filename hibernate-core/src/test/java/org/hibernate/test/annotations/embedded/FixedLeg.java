@@ -27,6 +27,7 @@ public class FixedLeg extends Leg {
 		this.rate = rate;
 	}
 
+	@Override
 	public String toString() {
 		NumberFormat format = NumberFormat.getNumberInstance();
 		format.setMinimumFractionDigits( 4 );

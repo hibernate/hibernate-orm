@@ -31,6 +31,7 @@ public class MyEntityInstantiator implements Instantiator {
 		this.entityName = entityName;
 	}
 
+	@Override
 	public Object instantiate(Serializable id) {
 		if ( Person.class.getName().equals( entityName ) ) {
 			return ProxyHelper.newPersonProxy( id );
@@ -49,10 +50,12 @@ public class MyEntityInstantiator implements Instantiator {
 		}
 	}
 
+	@Override
 	public Object instantiate() {
 		return instantiate( null );
 	}
 
+	@Override
 	public boolean isInstance(Object object) {
 		String resolvedEntityName = null;
 		if ( Proxy.isProxyClass( object.getClass() ) ) {

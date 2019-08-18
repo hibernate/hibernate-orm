@@ -50,6 +50,7 @@ public class Address implements Serializable {
 		this.zip = zip;
 	}
 	
+	@Override
 	public boolean equals(Object that) {
 		if ( !(that instanceof Address) ) return false;
 		Address address = (Address) that;
@@ -57,6 +58,7 @@ public class Address implements Serializable {
 			address.getPerson().getName().equals( person.getName() );
 	}
 	
+	@Override
 	public int hashCode() {
 		return person.getName().hashCode() + type.hashCode();
 	}

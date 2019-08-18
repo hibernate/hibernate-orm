@@ -55,6 +55,7 @@ public class CompositeCustomTypeEntity {
 		this.component = component;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -75,6 +76,7 @@ public class CompositeCustomTypeEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -82,6 +84,7 @@ public class CompositeCustomTypeEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "CCTE(id = " + id + ", component = " + component + ")";
 	}

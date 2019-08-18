@@ -159,6 +159,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return true;
 	}
 
+	@Override
 	public Class getReturnedClass() {
 		return componentTuplizer.getMappedClass();
 	}
@@ -222,6 +223,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return 0;
 	}
 
+	@Override
 	public boolean isMethodOf(Method method) {
 		return false;
 	}
@@ -266,6 +268,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return false;
 	}
 
+	@Override
 	public boolean isDirty(final Object x, final Object y, final boolean[] checkable, final SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( x == y ) {

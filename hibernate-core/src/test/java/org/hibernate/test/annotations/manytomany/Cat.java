@@ -54,6 +54,7 @@ public class Cat {
 		this.age = age;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Cat ) ) return false;
@@ -65,6 +66,7 @@ public class Cat {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return id.hashCode();
 	}

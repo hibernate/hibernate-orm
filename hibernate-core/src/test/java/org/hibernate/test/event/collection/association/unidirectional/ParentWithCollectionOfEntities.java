@@ -24,6 +24,7 @@ public class ParentWithCollectionOfEntities extends AbstractParentWithCollection
 		super( name );
 	}
 
+	@Override
 	public Child createChild(String name) {
 		return new ChildEntity( name );
 	}

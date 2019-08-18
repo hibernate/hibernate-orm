@@ -53,6 +53,7 @@ public class SecondaryTableSchemaTest
 		};
 	}
 
+	@Override
 	protected void addConfigOptions(Map options) {
 		options.put(
 			AvailableSettings.URL,

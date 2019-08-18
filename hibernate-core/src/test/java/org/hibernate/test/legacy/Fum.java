@@ -81,6 +81,7 @@ public class Fum implements Lifecycle, Serializable {
 	}
 
 
+	@Override
 	public boolean onDelete(Session s) throws CallbackException {
 		if (friends==null) return false;
 		try {
@@ -96,10 +97,12 @@ public class Fum implements Lifecycle, Serializable {
 	}
 
 
+	@Override
 	public void onLoad(Session s, Serializable id) {
 	}
 
 
+	@Override
 	public boolean onSave(Session s) throws CallbackException {
 		if (friends==null) return false;
 		try {
@@ -115,6 +118,7 @@ public class Fum implements Lifecycle, Serializable {
 	}
 
 
+	@Override
 	public boolean onUpdate(Session s) throws CallbackException {
 		return false;
 	}

@@ -49,6 +49,7 @@ public class Person
     this.name = name;
   }
 
+  @Override
   public int hashCode()
   {
     int hash = 0;
@@ -56,6 +57,7 @@ public class Person
     return hash;
   }
 
+  @Override
   public boolean equals(Object object)
   {
     if (!(object instanceof Person)) {
@@ -66,6 +68,7 @@ public class Person
     return ((this.id != null) || (other.id == null)) && ((this.id == null) || (this.id.equals(other.id)));
   }
 
+  @Override
   public String toString()
   {
     return "nogroup.hibertest.Person[ id=" + this.id + " ]";

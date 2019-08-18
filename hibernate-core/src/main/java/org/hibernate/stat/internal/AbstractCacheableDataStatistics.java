@@ -42,6 +42,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		return cacheRegionName;
 	}
 
+	@Override
 	public long getCacheHitCount() {
 		if ( cacheRegionName == null ) {
 			return NOT_CACHED_COUNT;
@@ -50,6 +51,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		return cacheHitCount.sum();
 	}
 
+	@Override
 	public long getCachePutCount() {
 		if ( cacheRegionName == null ) {
 			return NOT_CACHED_COUNT;
@@ -58,6 +60,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		return cachePutCount.sum();
 	}
 
+	@Override
 	public long getCacheMissCount() {
 		if ( cacheRegionName == null ) {
 			return NOT_CACHED_COUNT;

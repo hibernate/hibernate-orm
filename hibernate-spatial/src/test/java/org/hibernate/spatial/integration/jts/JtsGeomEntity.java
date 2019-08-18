@@ -47,26 +47,32 @@ public class JtsGeomEntity implements GeomEntityLike<Geometry> {
 		return result;
 	}
 
+	@Override
 	public Integer getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Integer id) {
 		this.id = id;
 	}
 
+	@Override
 	public String getType() {
 		return type;
 	}
 
+	@Override
 	public void setType(String type) {
 		this.type = type;
 	}
 
+	@Override
 	public Geometry getGeom() {
 		return geom;
 	}
 
+	@Override
 	public void setGeom(Geometry geom) {
 		this.geom = geom;
 	}

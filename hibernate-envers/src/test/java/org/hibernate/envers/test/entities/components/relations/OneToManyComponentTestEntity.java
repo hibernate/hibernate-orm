@@ -84,6 +84,7 @@ public class OneToManyComponentTestEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "OTMCTE(id = " + id + ", comp1 = " + comp1 + ")";
 	}

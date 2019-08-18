@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
  */
 @RequiresDialect( Oracle9iDialect.class )
 public class SelectGeneratorTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "generatedkeys/select/MyEntity.hbm.xml" };
 	}

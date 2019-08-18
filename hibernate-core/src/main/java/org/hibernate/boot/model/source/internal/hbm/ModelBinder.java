@@ -3057,6 +3057,7 @@ public class ModelBinder {
 			this.propertyRefOrigin = propertyRefOrigin;
 		}
 
+		@Override
 		public void process(InFlightMetadataCollector metadataCollector) {
 			log.tracef(
 					"Performing delayed property-ref handling [%s, %s, %s]",

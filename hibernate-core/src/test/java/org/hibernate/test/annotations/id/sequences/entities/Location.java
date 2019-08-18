@@ -17,6 +17,7 @@ public class Location implements Serializable {
 	public double longitude;
 	public double latitude;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( o == null || getClass() != o.getClass() ) return false;
@@ -29,6 +30,7 @@ public class Location implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		long temp;

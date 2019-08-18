@@ -690,6 +690,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		interceptor.blockOnLoad();
 
 		Future<Item> fetchedItem = executor.submit(new Callable<Item>() {
+			@Override
 			public Item call() throws Exception {
 				return findByDescription(sessionBuilder, "Washington");
 			}

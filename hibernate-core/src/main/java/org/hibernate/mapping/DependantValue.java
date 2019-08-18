@@ -37,16 +37,20 @@ public class DependantValue extends SimpleValue {
 		this.wrappedValue = prototype;
 	}
 
+	@Override
 	public Type getType() throws MappingException {
 		return wrappedValue.getType();
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName) {}
 	
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
 
+	@Override
 	public boolean isNullable() {
 		return nullable;
 	
@@ -56,6 +60,7 @@ public class DependantValue extends SimpleValue {
 		this.nullable = nullable;
 	}
 	
+	@Override
 	public boolean isUpdateable() {
 		return updateable;
 	}

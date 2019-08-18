@@ -211,14 +211,17 @@ public class Property implements Serializable, MetaAttributable {
 		return propertyAccessorName==null || "property".equals( propertyAccessorName );
 	}
 
+	@Override
 	public java.util.Map getMetaAttributes() {
 		return metaAttributes;
 	}
 
+	@Override
 	public MetaAttribute getMetaAttribute(String attributeName) {
 		return metaAttributes==null?null:(MetaAttribute) metaAttributes.get(attributeName);
 	}
 
+	@Override
 	public void setMetaAttributes(java.util.Map metas) {
 		this.metaAttributes = metas;
 	}
@@ -227,6 +230,7 @@ public class Property implements Serializable, MetaAttributable {
 		return getValue().isValid(mapping);
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + name + ')';
 	}

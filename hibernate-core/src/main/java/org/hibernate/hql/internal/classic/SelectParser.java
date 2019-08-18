@@ -58,6 +58,7 @@ public class SelectParser implements Parser {
 		aggregatePathExpressionParser.setUseThetaStyleJoin( true );
 	}
 
+	@Override
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 		String lctoken = token.toLowerCase(Locale.ROOT);
 
@@ -235,6 +236,7 @@ public class SelectParser implements Parser {
 		return q.getFactory().getSqlFunctionRegistry().findSQLFunction( name );
 	}
 
+	@Override
 	public void start(QueryTranslatorImpl q) {
 		ready = true;
 		first = true;
@@ -245,6 +247,7 @@ public class SelectParser implements Parser {
 		aggregateFuncTokenList.clear();
 	}
 
+	@Override
 	public void end(QueryTranslatorImpl q) {
 	}
 

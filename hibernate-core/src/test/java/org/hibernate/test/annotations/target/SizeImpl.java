@@ -16,10 +16,12 @@ public class SizeImpl implements Size {
     @Column(name = "name", nullable = false)
 	private String name;
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}

@@ -34,6 +34,7 @@ public interface BytecodeLazyAttributeInterceptor extends SessionAssociableInter
 	/**
 	 * Callback from the enhanced class that an attribute has been read or written
 	 */
+	@Override
 	void attributeInitialized(String name);
 
 

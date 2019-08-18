@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class OrphanTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "orphan/Product.hbm.xml" };
 	}

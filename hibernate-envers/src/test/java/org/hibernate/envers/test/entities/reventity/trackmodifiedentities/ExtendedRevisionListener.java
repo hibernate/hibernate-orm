@@ -14,6 +14,7 @@ import org.hibernate.envers.RevisionListener;
 public class ExtendedRevisionListener implements RevisionListener {
 	public static final String COMMENT_VALUE = "Comment";
 
+	@Override
 	public void newRevision(Object revisionEntity) {
 		((ExtendedRevisionEntity) revisionEntity).setComment( COMMENT_VALUE );
 	}

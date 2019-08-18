@@ -98,6 +98,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession(
 				new EmptyInterceptor() {
+					@Override
 					public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
 						currentState[0] = "test";
 						return true;
@@ -158,6 +159,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession(
 				new EmptyInterceptor() {
+					@Override
 					public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
 						if ( state[0] == null ) {
 							Image.Details detail = new Image.Details();

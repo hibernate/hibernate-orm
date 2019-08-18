@@ -32,6 +32,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest {
 
 	private Person currentPers1;
 
+	@Override
 	protected void initMappings() throws MappingException, URISyntaxException {
 		URL url = Thread.currentThread().getContextClassLoader().getResource(
 				"mappings/entityNames/auditedEntity/mappings.hbm.xml"

@@ -22,6 +22,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener {
 
+	@Override
 	protected Serializable performSaveOrUpdate(SaveOrUpdateEvent event) {
 		// this implementation is supposed to tolerate incorrect unsaved-value
 		// mappings, for the purpose of backward-compatibility
@@ -44,6 +45,7 @@ public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener
 	 * If the user specified an id, assign it to the instance and use that, 
 	 * otherwise use the id already assigned to the instance
 	 */
+	@Override
 	protected Serializable getUpdateId(
 			Object entity,
 			EntityPersister persister,

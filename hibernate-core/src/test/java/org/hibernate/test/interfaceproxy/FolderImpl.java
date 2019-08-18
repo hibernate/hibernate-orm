@@ -17,12 +17,14 @@ public class FolderImpl extends ItemImpl implements Folder {
 	/**
 	 * @return Returns the parent.
 	 */
+	@Override
 	public Folder getParent() {
 		return parent;
 	}
 	/**
 	 * @param parent The parent to set.
 	 */
+	@Override
 	public void setParent(Folder parent) {
 		this.parent = parent;
 	}

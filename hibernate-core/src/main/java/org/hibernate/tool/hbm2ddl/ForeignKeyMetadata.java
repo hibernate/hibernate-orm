@@ -74,6 +74,7 @@ public class ForeignKeyMetadata {
 		return false;
 	}
 	
+	@Override
 	public String toString() {
 		return "ForeignKeyMetadata(" + name + ')';
 	}

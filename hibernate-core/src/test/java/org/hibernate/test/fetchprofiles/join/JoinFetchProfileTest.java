@@ -28,14 +28,17 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "fetchprofiles/join/Mappings.hbm.xml" };
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
@@ -75,22 +78,27 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 
 		testCode.perform(
 				new TestData() {
+					@Override
 					public Long getStudentId() {
 						return me.getId();
 					}
 
+					@Override
 					public Long getDepartmentId() {
 						return literatureDepartment.getId();
 					}
 
+					@Override
 					public Long getCourseId() {
 						return lit101.getId();
 					}
 
+					@Override
 					public Long getSectionId() {
 						return section.getId();
 					}
 
+					@Override
 					public Long getEnrollmentId() {
 						return enrollment.getId();
 					}
@@ -112,6 +120,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public void testNormalLoading() {
 		performWithStandardData(
 				new TestCode() {
+					@Override
 					public void perform(TestData data) {
 						Session session = openSession();
 						session.beginTransaction();
@@ -134,6 +143,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public void testNormalCriteria() {
 		performWithStandardData(
 				new TestCode() {
+					@Override
 					public void perform(TestData data) {
 						Session session = openSession();
 						session.beginTransaction();
@@ -176,6 +186,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public void testLoadManyToOneFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
+					@Override
 					public void perform(TestData data) {
 						Session session = openSession();
 						session.beginTransaction();
@@ -197,6 +208,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public void testCriteriaManyToOneFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
+					@Override
 					public void perform(TestData data) {
 						Session session = openSession();
 						session.beginTransaction();
@@ -218,6 +230,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public void testLoadOneToManyFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
+					@Override
 					public void perform(TestData data) {
 						Session session = openSession();
 						session.beginTransaction();
@@ -237,6 +250,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public void testLoadDeepFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
+					@Override
 					public void perform(TestData data) {
 						Session session = openSession();
 						session.beginTransaction();
@@ -260,6 +274,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public void testLoadComponentDerefFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
+					@Override
 					public void perform(TestData data) {
 						Session session = openSession();
 						session.beginTransaction();
@@ -279,6 +294,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public void testHQL() {
 		performWithStandardData(
 				new TestCode() {
+					@Override
 					public void perform(TestData data) {
 						Session session = openSession();
 						session.beginTransaction();

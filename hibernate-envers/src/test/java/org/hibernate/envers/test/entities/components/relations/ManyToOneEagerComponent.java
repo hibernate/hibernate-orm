@@ -79,6 +79,7 @@ public class ManyToOneEagerComponent {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ManyToOneEagerComponent(data = " + data + ")";
 	}

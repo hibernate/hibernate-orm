@@ -46,6 +46,7 @@ public class MembershipWithCompositeId extends Membership {
 			this.groupId = groupId;
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			if (this == obj)
 				return true;
@@ -67,6 +68,7 @@ public class MembershipWithCompositeId extends Membership {
 			return true;
 		}
 
+		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
@@ -85,6 +87,7 @@ public class MembershipWithCompositeId extends Membership {
 		super( new Id(), name );
 	}
 
+	@Override
 	public void setGroup(Group group) {
 		if (getId() == null) {
 			setId(new Id());
@@ -93,6 +96,7 @@ public class MembershipWithCompositeId extends Membership {
 		super.setGroup( group );
 	}
 
+	@Override
 	public void setUser(User user) {
 		if (getId() == null) {
 			setId(new Id());

@@ -45,6 +45,7 @@ public class Expectations {
 			}
 		}
 
+		@Override
 		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition) {
 			rowCount = determineRowCount( rowCount, statement );
 			if ( batchPosition < 0 ) {
@@ -93,10 +94,12 @@ public class Expectations {
 			}
 		}
 
+		@Override
 		public int prepare(PreparedStatement statement) throws SQLException, HibernateException {
 			return 0;
 		}
 
+		@Override
 		public boolean canBeBatched() {
 			return true;
 		}
@@ -150,14 +153,17 @@ public class Expectations {
 	// Various Expectation instances ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public static final Expectation NONE = new Expectation() {
+		@Override
 		public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition) {
 			// explicitly doAfterTransactionCompletion no checking...
 		}
 
+		@Override
 		public int prepare(PreparedStatement statement) {
 			return 0;
 		}
 
+		@Override
 		public boolean canBeBatched() {
 			return true;
 		}

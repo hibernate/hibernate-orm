@@ -47,6 +47,7 @@ public class QueryCacheJoinFetchTest extends BaseEntityManagerFunctionalTestCase
 		};
 	}
 
+	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( AvailableSettings.USE_QUERY_CACHE, "true" );
 		options.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );

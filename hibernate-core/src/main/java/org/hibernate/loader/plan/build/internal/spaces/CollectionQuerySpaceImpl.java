@@ -42,6 +42,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Expa
 		return (PropertyMapping) persister;
 	}
 
+	@Override
 	public String[] toAliasedColumns(String alias, String propertyName) {
 		final QueryableCollection queryableCollection = (QueryableCollection) persister;
 		if ( propertyName.equals( CollectionPropertyNames.COLLECTION_ELEMENTS ) ) {

@@ -66,12 +66,14 @@ public class CompoundSelectionImpl<X>
 		return foundHandlers ? null : valueHandlers;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		for ( Selection selectionItem : getCompoundSelectionItems() ) {
 			Helper.possibleParameter(selectionItem, registry);
 		}
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		StringBuilder buff = new StringBuilder();
 		if ( isConstructor ) {

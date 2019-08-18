@@ -58,10 +58,12 @@ public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCas
 		super.configure( cfg );
 		final MessageInterpolator messageInterpolator = new MessageInterpolator() {
 
+			@Override
 			public String interpolate(String s, Context context) {
 				return "Oops";
 			}
 
+			@Override
 			public String interpolate(String s, Context context, Locale locale) {
 				return interpolate( s, context );
 			}

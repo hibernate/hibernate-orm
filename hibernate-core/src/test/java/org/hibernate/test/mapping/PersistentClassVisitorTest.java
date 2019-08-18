@@ -64,22 +64,27 @@ public class PersistentClassVisitorTest extends BaseUnitTestCase {
 			return null;
 		}
 
+		@Override
 		public Object accept(RootClass class1) {
 			return validate(RootClass.class, class1);
 		}
 
+		@Override
 		public Object accept(UnionSubclass subclass) {
 			return validate(UnionSubclass.class, subclass);
 		}
 
+		@Override
 		public Object accept(SingleTableSubclass subclass) {
 			return validate(SingleTableSubclass.class, subclass);
 		}
 
+		@Override
 		public Object accept(JoinedSubclass subclass) {
 			return validate(JoinedSubclass.class, subclass);
 		}
 
+		@Override
 		public Object accept(Subclass subclass) {
 			return validate(Subclass.class, subclass);
 		}

@@ -22,6 +22,7 @@ public abstract class AbstractActivity implements Activity {
 
 	private Integer sequenceNumber;
 
+	@Override
 	public ActivityId getId() {
 		return id;
 	}
@@ -30,6 +31,7 @@ public abstract class AbstractActivity implements Activity {
 		this.id = id;
 	}
 
+	@Override
 	public Integer getSequenceNumber() {
 		return sequenceNumber;
 	}

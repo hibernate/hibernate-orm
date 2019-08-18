@@ -54,6 +54,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 *
 	 * @param event The load event to be handled.
 	 */
+	@Override
 	public void onLoad(
 			final LoadEvent event,
 			final LoadEventListener.LoadType loadType) throws HibernateException {

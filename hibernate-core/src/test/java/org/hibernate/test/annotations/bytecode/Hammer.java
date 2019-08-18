@@ -15,14 +15,17 @@ package org.hibernate.test.annotations.bytecode;
 public class Hammer implements Tool {
 	private Long id;
 
+	@Override
 	public Long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}
 
+	@Override
 	public Integer usage() {
 		return 0;
 	}

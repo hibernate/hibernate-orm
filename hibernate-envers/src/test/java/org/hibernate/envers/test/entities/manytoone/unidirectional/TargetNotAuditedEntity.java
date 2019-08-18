@@ -75,6 +75,7 @@ public class TargetNotAuditedEntity {
 		this.reference = reference;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -95,6 +96,7 @@ public class TargetNotAuditedEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -102,6 +104,7 @@ public class TargetNotAuditedEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "TargetNotAuditedEntity(id = " + id + ", data = " + data + ")";
 	}

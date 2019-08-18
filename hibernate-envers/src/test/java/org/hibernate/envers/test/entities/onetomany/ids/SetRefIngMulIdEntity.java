@@ -89,6 +89,7 @@ public class SetRefIngMulIdEntity {
 		this.reference = reference;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -112,6 +113,7 @@ public class SetRefIngMulIdEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id1 != null ? id1.hashCode() : 0);
@@ -120,6 +122,7 @@ public class SetRefIngMulIdEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "SetRefIngMulIdEntity(id1 = " + id1 + ", id2 = " + id2 + ", data = " + data + ")";
 	}

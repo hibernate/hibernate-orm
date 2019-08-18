@@ -18,6 +18,7 @@ public class SocialSecurityNumber implements Serializable {
 	public String number;
 	public String countryCode;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( o == null || getClass() != o.getClass() ) return false;
@@ -30,6 +31,7 @@ public class SocialSecurityNumber implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = number.hashCode();

@@ -23,10 +23,12 @@ import org.hibernate.tuple.Instantiator;
  */
 public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 
+	@Override
 	public Class getMappedClass() {
 		return Map.class;
 	}
 
+	@Override
 	protected Instantiator buildInstantiator(Component component) {
 		return new DynamicMapInstantiator();
 	}
@@ -35,10 +37,12 @@ public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 		super(component);
 	}
 
+	@Override
 	protected Getter buildGetter(Component component, Property prop) {
 		return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, prop.getName() ).getGetter();
 	}
 
+	@Override
 	protected Setter buildSetter(Component component, Property prop) {
 		return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, prop.getName() ).getSetter();
 	}

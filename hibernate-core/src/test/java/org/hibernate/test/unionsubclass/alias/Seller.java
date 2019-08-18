@@ -33,6 +33,7 @@ public class Seller implements Serializable {
         this.buyers = buyers;
     }
 
+	@Override
     public boolean equals( Object obj ) {
         if ( obj == null )
             return false;
@@ -44,6 +45,7 @@ public class Seller implements Serializable {
         return ( (Seller) obj ).getId().equals( getId() );
     }
 
+	@Override
     public int hashCode() {
         return id.hashCode();
     }

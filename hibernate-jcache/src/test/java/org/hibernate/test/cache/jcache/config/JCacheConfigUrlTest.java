@@ -28,6 +28,7 @@ public class JCacheConfigUrlTest
 		);
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Product.class

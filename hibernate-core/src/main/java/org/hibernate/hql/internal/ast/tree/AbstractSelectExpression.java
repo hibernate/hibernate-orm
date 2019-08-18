@@ -20,26 +20,32 @@ public abstract class AbstractSelectExpression extends HqlSqlWalkerNode implemen
 	private String alias;
 	private int scalarColumnIndex = -1;
 	
+	@Override
 	public final void setAlias(String alias) {
 		this.alias = alias;
 	}
 	
+	@Override
 	public final String getAlias() {
 		return alias;
 	}
 
+	@Override
 	public boolean isConstructor() {
 		return false;
 	}
 
+	@Override
 	public boolean isReturnableEntity() throws SemanticException {
 		return false;
 	}
 
+	@Override
 	public FromElement getFromElement() {
 		return null;
 	}
 
+	@Override
 	public boolean isScalar() throws SemanticException {
 		// Default implementation:
 		// If this node has a data type, and that data type is not an association, then this is scalar.
@@ -47,11 +53,13 @@ public abstract class AbstractSelectExpression extends HqlSqlWalkerNode implemen
 		return type != null && !type.isAssociationType();	// Moved here from SelectClause [jsd]
 	}
 
+	@Override
 	public void setScalarColumn(int i) throws SemanticException {
 		this.scalarColumnIndex = i;
 		setScalarColumnText( i );
 	}
 
+	@Override
 	public int getScalarColumnIndex() {
 		return scalarColumnIndex;
 	}

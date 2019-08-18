@@ -52,6 +52,7 @@ public class ParentEntity {
 		this.data = data;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -72,6 +73,7 @@ public class ParentEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -79,6 +81,7 @@ public class ParentEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ParentEntity(id = " + getId() + ", data = " + getData() + ")";
 	}

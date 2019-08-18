@@ -122,6 +122,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 *
 	 * @throws HibernateException Indicates an issue closing the factory.
 	 */
+	@Override
 	void close() throws HibernateException;
 
 	/**

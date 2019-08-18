@@ -41,6 +41,7 @@ public class AuditProcessManager {
 
 			session.getActionQueue().registerProcess(
 					new BeforeTransactionCompletionProcess() {
+						@Override
 						public void doBeforeTransactionCompletion(SessionImplementor session) {
 							final AuditProcess process = auditProcesses.get( transaction );
 							if ( process != null ) {
@@ -52,6 +53,7 @@ public class AuditProcessManager {
 
 			session.getActionQueue().registerProcess(
 					new AfterTransactionCompletionProcess() {
+						@Override
 						public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 							auditProcesses.remove( transaction );
 						}

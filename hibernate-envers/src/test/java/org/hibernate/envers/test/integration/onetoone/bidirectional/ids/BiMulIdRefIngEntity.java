@@ -74,6 +74,7 @@ public class BiMulIdRefIngEntity {
 		this.reference = reference;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -97,6 +98,7 @@ public class BiMulIdRefIngEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id1 != null ? id1.hashCode() : 0);

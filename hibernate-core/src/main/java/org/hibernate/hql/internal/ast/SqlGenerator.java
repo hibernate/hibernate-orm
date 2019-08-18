@@ -259,6 +259,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			++argInd;
 		}
 
+		@Override
 		public List getArgs() {
 			return args;
 		}
@@ -302,6 +303,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			startedType = true;
 		}
 
+		@Override
 		public List getArgs() {
 			List<String> rtn = CollectionHelper.arrayList( 2 );
 			rtn.add( castExpression );

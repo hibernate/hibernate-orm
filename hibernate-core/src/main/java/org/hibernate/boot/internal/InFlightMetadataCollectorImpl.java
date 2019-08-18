@@ -214,6 +214,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
 	 */
 	@Deprecated
+	@Override
 	public TypeResolver getTypeResolver() {
 		return bootstrapContext.getTypeConfiguration().getTypeResolver();
 	}
@@ -526,6 +527,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named query handling
 
+	@Override
 	public NamedQueryDefinition getNamedQueryDefinition(String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid query name" );
@@ -1472,6 +1474,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return null;
 		}
 
+		@Override
 		public Join locateJoin(Identifier tableName) {
 			if ( tableName == null ) {
 				return null;

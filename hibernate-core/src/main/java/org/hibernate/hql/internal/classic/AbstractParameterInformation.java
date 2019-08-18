@@ -25,6 +25,7 @@ public abstract class AbstractParameterInformation implements ParameterInformati
 		return ArrayHelper.toIntArray( sqlPositions );
 	}
 
+	@Override
 	public void addSourceLocation(int position) {
 		sqlPositions.add( position );
 	}

@@ -19,6 +19,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class IJ2Test extends LegacyTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "legacy/IJ2.hbm.xml" };
 	}

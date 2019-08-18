@@ -22,6 +22,7 @@ public interface TimestampsCache extends UpdateTimestampsCache {
 	/**
 	 * The region used to store all timestamps data
 	 */
+	@Override
 	TimestampsRegion getRegion();
 
 	/**

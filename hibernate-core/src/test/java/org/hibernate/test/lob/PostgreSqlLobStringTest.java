@@ -184,6 +184,7 @@ public class PostgreSqlLobStringTest extends BaseCoreFunctionalTestCase {
 		return true;
 	}
 
+	@Override
 	protected boolean isCleanupTestDataUsingBulkDelete() {
 		return true;
 	}

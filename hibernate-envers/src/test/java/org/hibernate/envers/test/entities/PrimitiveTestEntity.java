@@ -96,6 +96,7 @@ public class PrimitiveTestEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "PTE(id = " + id + ", numVal1 = " + numVal1 + ", numVal2 = " + numVal2 + ")";
 	}

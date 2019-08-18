@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Emmanuel Bernard
  */
 public class ArrayTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "array/A.hbm.xml" };
 	}

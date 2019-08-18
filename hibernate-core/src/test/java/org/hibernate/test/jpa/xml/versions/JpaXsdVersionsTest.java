@@ -130,16 +130,19 @@ public class JpaXsdVersionsTest {
 			this.persistenceSchemaVersion = persistenceSchemaVersion;
 		}
 
+		@Override
 		public String getPersistenceUnitName() {
 			return name;
 		}
 
+		@Override
 		public String getPersistenceXMLSchemaVersion() {
 			return persistenceSchemaVersion;
 		}
 
 		private final List<String> mappingFileNames = new ArrayList<String>();
 
+		@Override
 		public List<String> getMappingFileNames() {
 			return mappingFileNames;
 		}
@@ -151,61 +154,75 @@ public class JpaXsdVersionsTest {
 			return this;
 		}
 
+		@Override
 		public List<String> getManagedClassNames() {
 			return managedClassNames;
 		}
 
+		@Override
 		public String getPersistenceProviderClassName() {
 			return null;
 		}
 
+		@Override
 		public PersistenceUnitTransactionType getTransactionType() {
 			return PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 
+		@Override
 		public DataSource getJtaDataSource() {
 			return null;
 		}
 
+		@Override
 		public DataSource getNonJtaDataSource() {
 			return null;
 		}
 
 		private final List<URL> jarFileUrls = new ArrayList<URL>();
 
+		@Override
 		public List<URL> getJarFileUrls() {
 			return jarFileUrls;
 		}
 
+		@Override
 		public URL getPersistenceUnitRootUrl() {
 			return null;
 		}
 
+		@Override
 		public boolean excludeUnlistedClasses() {
 			return false;
 		}
 
+		@Override
 		public SharedCacheMode getSharedCacheMode() {
 			return null;
 		}
 
+		@Override
 		public ValidationMode getValidationMode() {
 			return null;
 		}
 
 		private final Properties properties = new Properties();
 
+		@Override
 		public Properties getProperties() {
 			return properties;
 		}
 
+		@Override
 		public ClassLoader getClassLoader() {
 			return Thread.currentThread().getContextClassLoader();
 		}
 
+		@Override
 		public void addTransformer(ClassTransformer transformer) {
 		}
 
+		@Override
 		public ClassLoader getNewTempClassLoader() {
 			return getClassLoader();
 		}

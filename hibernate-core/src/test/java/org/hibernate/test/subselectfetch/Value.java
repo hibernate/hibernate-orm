@@ -21,11 +21,13 @@ public class Value implements Serializable {
    public void setName(Name name) { this.name = name; }
    public void setValue(String value) { this.value = value; }
 
+   @Override
    public boolean equals(Object obj) {
       if (!(obj instanceof Value )) return false;
       Value other = (Value) obj;
       return other.id == this.id;
    }
 
+   @Override
    public int hashCode() { return id; }
 }

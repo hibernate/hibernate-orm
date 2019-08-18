@@ -26,21 +26,25 @@ public class ParentWithBidirectionalOneToMany extends AbstractParentWithCollecti
 		super( name );
 	}
 
+	@Override
 	public Child createChild( String name ) {
 		return new ChildWithManyToOne( name );
 	}
 
+	@Override
 	public Child addChild(String name) {
 		Child child = createChild( name );
 		addChild( child );
 		return child;
 	}
 
+	@Override
 	public void addChild(Child child) {
 		super.addChild( child );
 		( ( ChildWithManyToOne ) child ).setParent( this );
 	}
 
+	@Override
 	public void newChildren(Collection children) {
 		if ( children == getChildren() ) {
 			return;
@@ -60,6 +64,7 @@ public class ParentWithBidirectionalOneToMany extends AbstractParentWithCollecti
 		super.newChildren( children );
 	}
 
+	@Override
 	public void removeChild(Child child) {
 		// Note: there can be more than one child in the collection
 		super.removeChild( child );

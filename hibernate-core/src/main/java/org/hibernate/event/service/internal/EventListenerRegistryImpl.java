@@ -161,6 +161,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <T> EventListenerGroupImpl<T> getEventListenerGroup(EventType<T> eventType) {
 		EventListenerGroupImpl<T> listeners = registeredEventListeners[ eventType.ordinal() ];
 		if ( listeners == null ) {

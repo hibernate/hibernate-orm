@@ -102,6 +102,7 @@ public class PathExpressionParser implements Parser {
 		ignoreInitialJoin = true;
 	}
 
+	@Override
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 
 		if ( token != null ) {
@@ -312,6 +313,7 @@ public class PathExpressionParser implements Parser {
 		currentPropertyMapping = null;
 	}
 
+	@Override
 	public void start(QueryTranslatorImpl q) {
 		if ( !continuation ) {
 			reset( q );
@@ -320,6 +322,7 @@ public class PathExpressionParser implements Parser {
 		}
 	}
 
+	@Override
 	public void end(QueryTranslatorImpl q) throws QueryException {
 		ignoreInitialJoin = false;
 

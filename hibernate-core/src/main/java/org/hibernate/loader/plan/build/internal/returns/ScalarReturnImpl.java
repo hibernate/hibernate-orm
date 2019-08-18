@@ -22,10 +22,12 @@ public class ScalarReturnImpl implements ScalarReturn {
 		this.type = type;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public Type getType() {
 		return type;
 	}

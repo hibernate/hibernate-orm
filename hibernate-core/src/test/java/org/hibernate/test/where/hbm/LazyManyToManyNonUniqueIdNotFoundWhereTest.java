@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "where/hbm/LazyManyToManyNonUniqueIdNotFoundWhereTest.hbm.xml" };
 	}

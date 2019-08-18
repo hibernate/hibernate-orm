@@ -22,6 +22,7 @@ public class MaterializedClobType extends AbstractSingleColumnStandardBasicType<
 		super( ClobTypeDescriptor.DEFAULT, StringTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "materialized_clob";
 	}

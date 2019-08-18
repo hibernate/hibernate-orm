@@ -29,10 +29,12 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class CompositePropertyRefTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "cuk/Person.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.DEFAULT_BATCH_FETCH_SIZE, "1");
 	}

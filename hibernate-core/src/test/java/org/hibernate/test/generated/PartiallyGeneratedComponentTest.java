@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
  */
 @RequiresDialect( Oracle9iDialect.class )
 public class PartiallyGeneratedComponentTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "generated/ComponentOwner.hbm.xml" };
 	}

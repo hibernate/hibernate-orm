@@ -33,6 +33,7 @@ public class OrderByParser implements Parser {
 		pathExpressionParser.setUseThetaStyleJoin( true ); //TODO: would be nice to use false, but issues with MS SQL
 	}
 
+	@Override
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 
 		if ( q.isName( StringHelper.root( token ) ) ) {
@@ -72,9 +73,11 @@ public class OrderByParser implements Parser {
 		}
 	}
 
+	@Override
 	public void start(QueryTranslatorImpl q) throws QueryException {
 	}
 
+	@Override
 	public void end(QueryTranslatorImpl q) throws QueryException {
 	}
 

@@ -26,6 +26,7 @@ public class StringNVarcharType
 		super( NVarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "nstring";
 	}
@@ -35,14 +36,17 @@ public class StringNVarcharType
 		return false;
 	}
 
+	@Override
 	public String objectToSQLString(String value, Dialect dialect) throws Exception {
 		return '\'' + value + '\'';
 	}
 
+	@Override
 	public String stringToObject(String xml) throws Exception {
 		return xml;
 	}
 
+	@Override
 	public String toString(String value) {
 		return value;
 	}

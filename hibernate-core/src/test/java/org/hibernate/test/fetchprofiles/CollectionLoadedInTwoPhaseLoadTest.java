@@ -47,6 +47,7 @@ public class CollectionLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCa
 	private final String P_1 = "p_1";
 	private final String P_2 = "p_2";
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}

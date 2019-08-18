@@ -32,6 +32,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>(  );
 	private Identifier name;
 
+	@Override
 	public String sqlCreateString(Dialect dialect, Mapping mapping, String defaultCatalog, String defaultSchema)
 			throws HibernateException {
 		return buildSqlCreateIndexString(

@@ -90,6 +90,7 @@ public class Person implements Serializable {
 		this.deleted = deleted;
 	}
 	
+	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Person) {
 			Person that = (Person) other;
@@ -100,6 +101,7 @@ public class Person implements Serializable {
 		}
 	}
 	
+	@Override
 	public int hashCode() {
 		return userId.hashCode();
 	}

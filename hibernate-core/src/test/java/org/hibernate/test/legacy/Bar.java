@@ -16,13 +16,16 @@ public class Bar extends Abstract implements BarProxy, Named {
 	private int x;
 	private Object object;
 	
+	@Override
 	public int getX() {
 		return x;
 	}
+	@Override
 	public void setX(int x) {
 		this.x = x;
 	}
 
+	@Override
 	public String getBarString() {
 		return barString;
 	}
@@ -31,24 +34,29 @@ public class Bar extends Abstract implements BarProxy, Named {
 		this.barString = barString;
 	}
 	
+	@Override
 	public FooComponent getBarComponent() {
 		return barComponent;
 	}
 	
+	@Override
 	public void setBarComponent(FooComponent barComponent) {
 		this.barComponent = barComponent;
 	}
 	
+	@Override
 	public Baz getBaz() {
 		return baz;
 	}
 	
+	@Override
 	public void setBaz(Baz baz) {
 		this.baz = baz;
 	}
 	
 	private String name = "bar";
 	
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -57,10 +65,12 @@ public class Bar extends Abstract implements BarProxy, Named {
 		this.name = name;
 	}
 
+	@Override
 	public Object getObject() {
 		return object;
 	}
 
+	@Override
 	public void setObject(Object object) {
 		this.object = object;
 	}

@@ -60,6 +60,7 @@ public class UniquePropsEntity implements Serializable {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "UniquePropsEntity(id = " + id + ", data1 = " + data1 + ", data2 = " + data2 + ")";
 	}

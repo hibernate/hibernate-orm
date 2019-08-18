@@ -37,6 +37,7 @@ public interface IdentifiableTypeSource extends AttributeSourceContainer {
 	 *
 	 * @return The local binding context
 	 */
+	@Override
 	public LocalMetadataBuildingContext getLocalMetadataBuildingContext();
 
 	/**

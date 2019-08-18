@@ -26,6 +26,7 @@ public class MapKey implements Serializable {
 		return role;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -43,6 +44,7 @@ public class MapKey implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return role.hashCode();
 	}

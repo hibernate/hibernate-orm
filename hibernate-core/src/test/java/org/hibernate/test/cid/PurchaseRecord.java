@@ -48,9 +48,11 @@ public class PurchaseRecord {
 		public void setPurchaseSequence(String purchaseSequence) {
 			this.purchaseSequence = purchaseSequence;
 		}
+		@Override
 		public int hashCode() {
 			return purchaseNumber + purchaseSequence.hashCode();
 		}
+		@Override
 		public boolean equals(Object other) {
 			if (other instanceof Id) {
 				Id that = (Id) other;

@@ -21,10 +21,12 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class SQLServerTestSupport extends TestSupport {
 
 
+	@Override
 	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
 		return TestData.fromFile( "test-data-set.xml" );
 	}
 
+	@Override
 	public SqlServerExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		return new SqlServerExpectationsFactory( dataSourceUtils );
 	}

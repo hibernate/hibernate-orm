@@ -165,6 +165,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 
 	private static DriverManagerConnectionProviderImpl buildConnectionProvider(Properties props, final boolean allowAggressiveRelease) {
 		DriverManagerConnectionProviderImpl connectionProvider = new DriverManagerConnectionProviderImpl() {
+			@Override
 			public boolean supportsAggressiveRelease() {
 				return allowAggressiveRelease;
 			}

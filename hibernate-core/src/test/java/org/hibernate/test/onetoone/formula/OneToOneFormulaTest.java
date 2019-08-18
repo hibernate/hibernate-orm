@@ -40,15 +40,18 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		public TextAsMaterializedClobType() {
 			super(  ClobTypeDescriptor.DEFAULT, TextType.INSTANCE.getJavaTypeDescriptor() );
 		}
+		@Override
 		public String getName() {
 			return TextType.INSTANCE.getName();
 		}
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "onetoone/formula/Person.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		if ( Oracle8iDialect.class.isInstance( getDialect() ) ) {
 			cfg.registerTypeOverride( TextAsMaterializedClobType.INSTANCE );

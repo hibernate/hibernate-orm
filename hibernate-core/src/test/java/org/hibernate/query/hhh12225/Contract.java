@@ -121,6 +121,7 @@ public class Contract {
 		this.version = version;
 	}
 
+	@Override
 	public String toString() {
 		return String.valueOf( id );
 	}

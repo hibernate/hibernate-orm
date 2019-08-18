@@ -30,21 +30,25 @@ public class NativeQueryReturnBuilderFetchImpl implements NativeQuery.FetchRetur
 		this.joinedPropertyName = joinedPropertyName;
 	}
 
+	@Override
 	public NativeQuery.FetchReturn setLockMode(LockMode lockMode) {
 		this.lockMode = lockMode;
 		return this;
 	}
 
+	@Override
 	public NativeQuery.FetchReturn addProperty(String propertyName, String columnAlias) {
 		addProperty( propertyName ).addColumnAlias( columnAlias );
 		return this;
 	}
 
+	@Override
 	public NativeQuery.ReturnProperty addProperty(final String propertyName) {
 		if ( propertyMappings == null ) {
 			propertyMappings = new HashMap<>();
 		}
 		return new NativeQuery.ReturnProperty() {
+			@Override
 			public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {
 				String[] columnAliases = propertyMappings.get( propertyName );
 				if ( columnAliases == null ) {
@@ -62,6 +66,7 @@ public class NativeQueryReturnBuilderFetchImpl implements NativeQuery.FetchRetur
 		};
 	}
 
+	@Override
 	public NativeSQLQueryReturn buildReturn() {
 		return new NativeSQLQueryJoinReturn(
 				alias,

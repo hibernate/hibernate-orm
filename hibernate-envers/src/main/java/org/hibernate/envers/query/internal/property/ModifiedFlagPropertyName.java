@@ -21,6 +21,7 @@ public class ModifiedFlagPropertyName implements PropertyNameGetter {
 		this.propertyNameGetter = propertyNameGetter;
 	}
 
+	@Override
 	public String get(EnversService enversService) {
 		return MetadataTools.getModifiedFlagPropertyName(
 				propertyNameGetter.get( enversService ),

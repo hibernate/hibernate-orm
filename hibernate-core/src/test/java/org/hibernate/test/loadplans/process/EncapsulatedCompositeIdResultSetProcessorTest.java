@@ -218,6 +218,7 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 		@EmbeddedId
 		public ParentPK id;
 
+		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) return true;
 			if ( !( o instanceof Parent ) ) return false;
@@ -229,6 +230,7 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 			return true;
 		}
 
+		@Override
 		public int hashCode() {
 			return id.hashCode();
 		}
@@ -239,6 +241,7 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 		private String firstName;
 		private String lastName;
 
+		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) return true;
 			if ( !( o instanceof ParentPK ) ) return false;
@@ -251,6 +254,7 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 			return true;
 		}
 
+		@Override
 		public int hashCode() {
 			int result;
 			result = firstName.hashCode();

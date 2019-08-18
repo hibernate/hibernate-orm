@@ -28,6 +28,7 @@ import static org.junit.Assert.assertThat;
 public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancyTest<
 		AbstractMultiTenantConnectionProvider, DriverManagerConnectionProviderImpl> {
 
+	@Override
 	protected AbstractMultiTenantConnectionProvider buildMultiTenantConnectionProvider() {
 		acmeProvider = ConnectionProviderBuilder.buildConnectionProvider( "acme" );
 		jbossProvider = ConnectionProviderBuilder.buildConnectionProvider( "jboss" );

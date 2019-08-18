@@ -20,6 +20,7 @@ public class Parent {
 	@EmbeddedId
 	public ParentPk id;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Parent ) ) return false;
@@ -31,6 +32,7 @@ public class Parent {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return id.hashCode();
 	}

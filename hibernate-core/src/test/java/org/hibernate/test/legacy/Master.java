@@ -103,6 +103,7 @@ public class Master implements Serializable, Named {
 		this.moreDetails = moreDetails;
 	}
 	
+	@Override
 	public String getName() {
 		return name;
 	}

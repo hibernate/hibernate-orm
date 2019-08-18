@@ -35,6 +35,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {"exception/User.hbm.xml", "exception/Group.hbm.xml"};
 	}

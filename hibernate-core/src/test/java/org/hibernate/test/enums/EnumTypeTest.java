@@ -47,6 +47,7 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	private Triggerable extractorTriggerable;
 
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "enums/Person.hbm.xml" };
 	}

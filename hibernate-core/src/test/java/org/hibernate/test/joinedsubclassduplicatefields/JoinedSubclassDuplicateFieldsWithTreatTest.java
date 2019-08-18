@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue( jiraKey = "HHH-11686" )
 public class JoinedSubclassDuplicateFieldsWithTreatTest extends BaseCoreFunctionalTestCase {
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
 			Account.class,

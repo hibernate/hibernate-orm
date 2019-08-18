@@ -26,6 +26,7 @@ public class CompositeEnhancer extends PersistentAttributesEnhancer {
 		super( context );
 	}
 
+	@Override
 	public void enhance(CtClass managedCtClass) {
 		// add the ManagedComposite interface
 		managedCtClass.addInterface( loadCtClassFromClass( ManagedComposite.class ) );

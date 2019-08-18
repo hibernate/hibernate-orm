@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
  */
 public class ManyToOneLazyLoadingByIdTest extends BaseEntityManagerFunctionalTestCase {
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Continent.class,

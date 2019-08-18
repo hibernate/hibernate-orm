@@ -23,6 +23,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class PostgisTestSupport extends TestSupport {
 
 
+	@Override
 	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
 		if ( testcase.getClass().getCanonicalName().contains( "TestSpatialFunctions" ) ||
 				testcase.getClass().getCanonicalName().contains( "TestSpatialRestrictions" ) ) {
@@ -31,6 +32,7 @@ public class PostgisTestSupport extends TestSupport {
 		return TestData.fromFile( "test-data-set.xml" );
 	}
 
+	@Override
 	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		return new PostgisExpectationsFactory( dataSourceUtils );
 	}

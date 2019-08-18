@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 @TestForIssue( jiraKey = "HHH-13060" )
 public class DuplicateEntityNameTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Purchase1.class,

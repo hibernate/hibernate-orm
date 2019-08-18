@@ -50,6 +50,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"hql/Animal.hbm.xml",
@@ -65,6 +66,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { Farm.class, Crop.class };
 	}

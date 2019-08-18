@@ -14,6 +14,7 @@ public class Currency implements Unit {
 		this.name = name;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

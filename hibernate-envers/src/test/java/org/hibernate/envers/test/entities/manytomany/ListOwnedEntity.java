@@ -68,6 +68,7 @@ public class ListOwnedEntity {
 		this.referencing = referencing;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -88,6 +89,7 @@ public class ListOwnedEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -95,6 +97,7 @@ public class ListOwnedEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ListOwnedEntity(id = " + id + ", data = " + data + ")";
 	}

@@ -46,24 +46,28 @@ public class Vetoer implements Lifecycle {
 	boolean onUpdateCalled;
 	boolean onDeleteCalled;
 
+	@Override
 	public boolean onSave(Session s) throws CallbackException {
 		boolean result = !onSaveCalled;
 		onSaveCalled = true;
 		return result;
 	}
 
+	@Override
 	public boolean onUpdate(Session s) throws CallbackException {
 		boolean result = !onUpdateCalled;
 		onUpdateCalled = true;
 		return result;
 	}
 
+	@Override
 	public boolean onDelete(Session s) throws CallbackException {
 		boolean result = !onDeleteCalled;
 		onDeleteCalled = true;
 		return result;
 	}
 
+	@Override
 	public void onLoad(Session s, Serializable id) {}
 }
 

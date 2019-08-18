@@ -136,6 +136,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	 * Flushes a single entity's state to the database, by scheduling
 	 * an update action, if necessary
 	 */
+	@Override
 	public void onFlushEntity(FlushEntityEvent event) throws HibernateException {
 		final Object entity = event.getEntity();
 		final EntityEntry entry = event.getEntityEntry();

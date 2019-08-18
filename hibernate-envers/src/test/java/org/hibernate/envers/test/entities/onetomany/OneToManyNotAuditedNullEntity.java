@@ -49,6 +49,7 @@ public class OneToManyNotAuditedNullEntity implements Serializable {
 		this.data = data;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof OneToManyNotAuditedNullEntity ) ) return false;
@@ -61,12 +62,14 @@ public class OneToManyNotAuditedNullEntity implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = ( id != null ? id.hashCode() : 0 );
 		result = 31 * result + ( data != null ? data.hashCode() : 0 );
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "OneToManyNotAuditedNullEntity(id = " + id + ", data = " + data + ")";
 	}

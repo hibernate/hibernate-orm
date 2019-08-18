@@ -66,6 +66,7 @@ public class UniqueKey extends Constraint {
 		return columnOrderMap;
 	}
 
+	@Override
 	public String generatedConstraintNamePrefix() {
 		return "UK_";
 	}

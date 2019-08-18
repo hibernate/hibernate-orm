@@ -22,6 +22,7 @@ public class TestStrategyRegistrationProvider implements StrategyRegistrationPro
 	public static final String GREGORIAN = "gregorian";
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
 		return Collections.singletonList(
 				new SimpleStrategyRegistrationImpl(

@@ -19,6 +19,7 @@ import org.hibernate.testing.TestForIssue;
 @TestForIssue( jiraKey = "HHH-9106")
 public class MergeMultipleEntityCopiesDisallowedTest extends MergeMultipleEntityCopiesDisallowedByDefaultTest {
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty(

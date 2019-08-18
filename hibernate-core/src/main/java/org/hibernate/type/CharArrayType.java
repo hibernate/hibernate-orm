@@ -21,6 +21,7 @@ public class CharArrayType extends AbstractSingleColumnStandardBasicType<char[]>
 		super( VarcharTypeDescriptor.INSTANCE, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "characters"; 
 	}

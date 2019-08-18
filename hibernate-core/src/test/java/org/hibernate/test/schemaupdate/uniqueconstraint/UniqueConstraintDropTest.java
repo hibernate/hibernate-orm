@@ -178,6 +178,7 @@ public class UniqueConstraintDropTest {
 	}
 
 	private class TargetDescriptorImpl implements TargetDescriptor {
+		@Override
 		public EnumSet<TargetType> getTargetTypes() {
 			return EnumSet.of( TargetType.SCRIPT );
 		}

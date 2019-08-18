@@ -35,12 +35,14 @@ import static org.junit.Assert.fail;
  */
 public class MergeMultipleEntityCopiesAllowedTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"ops/Hoarder.hbm.xml"
 		};
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty(

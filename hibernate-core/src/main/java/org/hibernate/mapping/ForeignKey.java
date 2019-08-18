@@ -54,6 +54,7 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
+	@Override
 	public String sqlConstraintString(
 			Dialect dialect,
 			String constraintName,
@@ -172,6 +173,7 @@ public class ForeignKey extends Constraint {
 		this.keyDefinition = keyDefinition;
 	}
 	
+	@Override
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
 		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
@@ -229,6 +231,7 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
+	@Override
 	public String toString() {
 		if ( !isReferenceToPrimaryKey() ) {
 			return getClass().getName()
@@ -241,6 +244,7 @@ public class ForeignKey extends Constraint {
 
 	}
 
+	@Override
 	public String generatedConstraintNamePrefix() {
 		return "FK_";
 	}

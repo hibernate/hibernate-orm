@@ -23,14 +23,17 @@ import org.hibernate.usertype.CompositeUserType;
  * @author Adam Warski (adam at warski dot org)
  */
 public class CompositeTestUserType implements CompositeUserType {
+	@Override
 	public String[] getPropertyNames() {
 		return new String[] {"prop1", "prop2"};
 	}
 
+	@Override
 	public Type[] getPropertyTypes() {
 		return new Type[] {StringType.INSTANCE, IntegerType.INSTANCE};
 	}
 
+	@Override
 	public Object getPropertyValue(final Object component, final int property) throws HibernateException {
 		Component comp = (Component) component;
 		if ( property == 0 ) {
@@ -41,6 +44,7 @@ public class CompositeTestUserType implements CompositeUserType {
 		}
 	}
 
+	@Override
 	public void setPropertyValue(final Object component, final int property, final Object value)
 			throws HibernateException {
 		Component comp = (Component) component;
@@ -52,10 +56,12 @@ public class CompositeTestUserType implements CompositeUserType {
 		}
 	}
 
+	@Override
 	public Class returnedClass() {
 		return Component.class;
 	}
 
+	@Override
 	public boolean equals(final Object x, final Object y) throws HibernateException {
 		//noinspection ObjectEquality
 		if ( x == y ) {
@@ -69,10 +75,12 @@ public class CompositeTestUserType implements CompositeUserType {
 		return x.equals( y );
 	}
 
+	@Override
 	public int hashCode(final Object x) throws HibernateException {
 		return x.hashCode();
 	}
 
+	@Override
 	public Object nullSafeGet(
 			final ResultSet rs, final String[] names,
 			final SharedSessionContractImplementor session,
@@ -86,6 +94,7 @@ public class CompositeTestUserType implements CompositeUserType {
 		return new Component( prop1, prop2 );
 	}
 
+	@Override
 	public void nullSafeSet(
 			final PreparedStatement st, final Object value,
 			final int index, final SharedSessionContractImplementor session)
@@ -101,26 +110,31 @@ public class CompositeTestUserType implements CompositeUserType {
 		}
 	}
 
+	@Override
 	public Object deepCopy(final Object value) throws HibernateException {
 		Component comp = (Component) value;
 		return new Component( comp.getProp1(), comp.getProp2() );
 	}
 
+	@Override
 	public boolean isMutable() {
 		return true;
 	}
 
+	@Override
 	public Serializable disassemble(
 			final Object value, final SharedSessionContractImplementor session) throws HibernateException {
 		return (Serializable) value;
 	}
 
+	@Override
 	public Object assemble(
 			final Serializable cached, final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException {
 		return cached;
 	}
 
+	@Override
 	public Object replace(
 			Object original, Object target,
 			SharedSessionContractImplementor session, Object owner) throws HibernateException {

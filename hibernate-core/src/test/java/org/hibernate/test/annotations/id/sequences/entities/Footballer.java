@@ -32,6 +32,7 @@ public class Footballer {
 		this.club = club;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Footballer ) ) return false;
@@ -44,6 +45,7 @@ public class Footballer {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = firstname.hashCode();

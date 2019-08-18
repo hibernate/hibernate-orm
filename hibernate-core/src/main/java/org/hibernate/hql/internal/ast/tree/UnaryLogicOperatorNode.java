@@ -18,20 +18,24 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class UnaryLogicOperatorNode extends AbstractSelectExpression implements UnaryOperatorNode {
+	@Override
 	public Node getOperand() {
 		return (Node) getFirstChild();
 	}
 
+	@Override
 	public void initialize() {
 		// nothing to do; even if the operand is a parameter, no way we could
 		// infer an appropriate expected type here
 	}
 
+	@Override
 	public Type getDataType() {
 		// logic operators by definition resolve to booleans
 		return StandardBasicTypes.BOOLEAN;
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}

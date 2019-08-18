@@ -24,6 +24,7 @@ public class CharacterArrayTextType extends AbstractSingleColumnStandardBasicTyp
 		super( LongVarcharTypeDescriptor.INSTANCE, CharacterArrayTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		// todo name these annotation types for addition to the registry
 		return null;

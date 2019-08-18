@@ -48,6 +48,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 *
 	 * @param event The update event to be handled.
 	 */
+	@Override
 	public void onSaveOrUpdate(SaveOrUpdateEvent event) {
 		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();

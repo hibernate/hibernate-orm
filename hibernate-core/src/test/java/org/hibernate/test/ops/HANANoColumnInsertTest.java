@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 @RequiresDialect(value = { AbstractHANADialect.class })
 public class HANANoColumnInsertTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 			"ops/Competition.hbm.xml"

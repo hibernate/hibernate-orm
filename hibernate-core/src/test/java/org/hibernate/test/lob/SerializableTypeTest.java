@@ -22,10 +22,12 @@ import static org.junit.Assert.assertNull;
  * @author Steve Ebersole
  */
 public class SerializableTypeTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lob/SerializableMappings.hbm.xml" };
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}

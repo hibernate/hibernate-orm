@@ -23,12 +23,14 @@ import org.hibernate.testing.TestForIssue;
 @RequiresDialectFeature( value = DialectChecks.SupportsSequences.class )
 public class BigIntegerSequenceGeneratorZeroScaleTest extends BigIntegerSequenceGeneratorTest {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "idgen/biginteger/sequence/ZeroScaleMapping.hbm.xml" };
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9250")
+	@Override
 	public void testBasics() {
 		super.testBasics();
 	}

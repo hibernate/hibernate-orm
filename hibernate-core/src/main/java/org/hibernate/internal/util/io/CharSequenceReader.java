@@ -34,6 +34,7 @@ public class CharSequenceReader extends Reader {
 		this.mark = this.position;
 	}
 
+	@Override
 	public int read() throws IOException {
 		verifyOpen();
 
@@ -77,10 +78,12 @@ public class CharSequenceReader extends Reader {
 		return n;
 	}
 
+	@Override
 	public void reset() {
 		this.position = this.mark;
 	}
 
+	@Override
 	public long skip(long n) {
 		if ( n < 0L ) {
 			throw new IllegalArgumentException( "Number of characters to skip must be greater than zero: " + n );

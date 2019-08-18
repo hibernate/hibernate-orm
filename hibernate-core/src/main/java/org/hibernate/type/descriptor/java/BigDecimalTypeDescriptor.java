@@ -23,10 +23,12 @@ public class BigDecimalTypeDescriptor extends AbstractTypeDescriptor<BigDecimal>
 		super( BigDecimal.class );
 	}
 
+	@Override
 	public String toString(BigDecimal value) {
 		return value.toString();
 	}
 
+	@Override
 	public BigDecimal fromString(String string) {
 		return new BigDecimal( string );
 	}
@@ -42,6 +44,7 @@ public class BigDecimalTypeDescriptor extends AbstractTypeDescriptor<BigDecimal>
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(BigDecimal value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -73,6 +76,7 @@ public class BigDecimalTypeDescriptor extends AbstractTypeDescriptor<BigDecimal>
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> BigDecimal wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

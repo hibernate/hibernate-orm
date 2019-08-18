@@ -286,6 +286,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	private static class ExactDecimalFormatter implements DecimalFormatter {
 		public static final ExactDecimalFormatter INSTANCE = new ExactDecimalFormatter();
 
+		@Override
 		public String format(BigDecimal number) {
 			return number.toString();
 		}
@@ -296,6 +297,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 
 		private static final String FORMAT_STRING = "#0.0E0";
 
+		@Override
 		public String format(BigDecimal number) {
 			try {
 				// TODO : what amount of significant digits need to be supported here?

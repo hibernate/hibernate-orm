@@ -33,12 +33,15 @@ public class Part {
 	public void setDescription(String password) {
 		this.description = password;
 	}
+	@Override
 	public boolean equals(Object that) {
 		return ( (Part) that ).getName().equals(name);
 	}
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}
+	@Override
 	public String toString() {
 		return name + ":" + description;
 	}

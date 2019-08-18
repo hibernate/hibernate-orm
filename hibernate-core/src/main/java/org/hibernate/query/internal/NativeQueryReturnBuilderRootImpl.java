@@ -28,26 +28,31 @@ public class NativeQueryReturnBuilderRootImpl implements NativeQuery.RootReturn,
 		this.entityName = entityName;
 	}
 
+	@Override
 	public NativeQuery.RootReturn setLockMode(LockMode lockMode) {
 		this.lockMode = lockMode;
 		return this;
 	}
 
+	@Override
 	public NativeQuery.RootReturn setDiscriminatorAlias(String alias) {
 		addProperty( "class", alias );
 		return this;
 	}
 
+	@Override
 	public NativeQuery.RootReturn addProperty(String propertyName, String columnAlias) {
 		addProperty( propertyName ).addColumnAlias( columnAlias );
 		return this;
 	}
 
+	@Override
 	public NativeQuery.ReturnProperty addProperty(final String propertyName) {
 		if ( propertyMappings == null ) {
 			propertyMappings = new HashMap<>();
 		}
 		return new NativeQuery.ReturnProperty() {
+			@Override
 			public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {
 				String[] columnAliases = propertyMappings.get( propertyName );
 				if ( columnAliases == null ) {
@@ -65,6 +70,7 @@ public class NativeQueryReturnBuilderRootImpl implements NativeQuery.RootReturn,
 		};
 	}
 
+	@Override
 	public NativeSQLQueryReturn buildReturn() {
 		return new NativeSQLQueryRootReturn( alias, entityName, propertyMappings, lockMode );
 	}

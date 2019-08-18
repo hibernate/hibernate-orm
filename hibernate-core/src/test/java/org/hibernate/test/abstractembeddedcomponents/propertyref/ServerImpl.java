@@ -16,26 +16,32 @@ public class ServerImpl implements Server {
 	private String serverType;
 	private Address address;
 
+	@Override
 	public Long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}
 
+	@Override
 	public String getServerType() {
 		return serverType;
 	}
 
+	@Override
 	public void setServerType(String serverType) {
 		this.serverType = serverType;
 	}
 
+	@Override
 	public Address getAddress() {
 		return address;
 	}
 
+	@Override
 	public void setAddress(Address address) {
 		this.address = address;
 	}

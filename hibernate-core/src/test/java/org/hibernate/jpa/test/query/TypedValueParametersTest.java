@@ -65,6 +65,7 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 	public void testNative() {
 		test(new Binder() {
 
+			@Override
 			public void bind(Query q) {
 				org.hibernate.Query hibernateQuery = q.unwrap(org.hibernate.Query.class);
 				hibernateQuery.setParameter("tags", Arrays.asList("important","business"), new CustomType(TagUserType.INSTANCE));
@@ -76,6 +77,7 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 	public void testJpa() {
 		test(new Binder() {
 
+			@Override
 			public void bind(Query q) {
 				q.setParameter("tags", new TypedParameterValue( new CustomType( TagUserType.INSTANCE), Arrays.asList("important","business")));
 			}
@@ -180,10 +182,12 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 			return list;
 		}
 
+		@Override
 		public int[] sqlTypes() {
 			return new int[]{SQLTYPE};
 		}
 
+		@Override
 		public Class returnedClass() {
 			return List.class;
 		}

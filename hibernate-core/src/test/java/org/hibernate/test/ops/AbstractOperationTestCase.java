@@ -19,11 +19,13 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public abstract class AbstractOperationTestCase extends BaseCoreFunctionalTestCase {
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"ops/Node.hbm.xml",
@@ -34,6 +36,7 @@ public abstract class AbstractOperationTestCase extends BaseCoreFunctionalTestCa
 		};
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}

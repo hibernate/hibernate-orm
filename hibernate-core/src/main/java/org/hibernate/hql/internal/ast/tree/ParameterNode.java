@@ -25,19 +25,23 @@ public class ParameterNode extends HqlSqlWalkerNode implements DisplayableNode, 
 		this.parameterSpecification = parameterSpecification;
 	}
 
+	@Override
 	public String getDisplayText() {
 		return "{" + ( parameterSpecification == null ? "???" : parameterSpecification.renderDisplayInfo() ) + "}";
 	}
 
+	@Override
 	public void setExpectedType(Type expectedType) {
 		getHqlParameterSpecification().setExpectedType( expectedType );
 		setDataType( expectedType );
 	}
 
+	@Override
 	public Type getExpectedType() {
 		return getHqlParameterSpecification() == null ? null : getHqlParameterSpecification().getExpectedType();
 	}
 
+	@Override
 	public String getRenderText(SessionFactoryImplementor sessionFactory) {
 		int count = 0;
 		if ( getExpectedType() != null && ( count = getExpectedType().getColumnSpan( sessionFactory ) ) > 1 ) {

@@ -32,14 +32,17 @@ public class DynamicInstantiator
         }
     }
 
+	@Override
     public Object instantiate(Serializable id) {
         return ProxyHelper.newProxy( targetClass, id );
     }
 
+	@Override
     public Object instantiate() {
         return instantiate( null );
     }
 
+	@Override
     public boolean isInstance(Object object) {
         try {
             return targetClass.isInstance( object );

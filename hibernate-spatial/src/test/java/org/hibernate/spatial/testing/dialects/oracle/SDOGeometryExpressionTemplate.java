@@ -15,6 +15,7 @@ public class SDOGeometryExpressionTemplate implements SQLExpressionTemplate {
 	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', %s)";
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public String toInsertSql(TestDataElement testDataElement) {
 		if ( !( testDataElement instanceof SDOTestDataElement ) ) {
 			throw new IllegalArgumentException( "Require SDOTestDataElements" );

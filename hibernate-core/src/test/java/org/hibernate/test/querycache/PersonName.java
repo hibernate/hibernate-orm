@@ -48,6 +48,7 @@ public class PersonName {
 		this.last = last;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -71,6 +72,7 @@ public class PersonName {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = first != null ? first.hashCode() : 0;
 		result = 31 * result + ( last != null ? last.hashCode() : 0 );

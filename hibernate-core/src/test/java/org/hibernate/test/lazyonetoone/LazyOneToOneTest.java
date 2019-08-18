@@ -32,10 +32,12 @@ import static org.junit.Assert.assertTrue;
 		message = "Test domain classes were not instrumented"
 )
 public class LazyOneToOneTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lazyonetoone/Person.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.MAX_FETCH_DEPTH, "2");
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");

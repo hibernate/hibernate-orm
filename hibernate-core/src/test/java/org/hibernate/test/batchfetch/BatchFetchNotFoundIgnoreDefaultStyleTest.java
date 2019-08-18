@@ -318,6 +318,7 @@ public class BatchFetchNotFoundIgnoreDefaultStyleTest extends BaseCoreFunctional
 	public static class AStatementInspector implements StatementInspector {
 		private List<Integer> parameterCounts = new ArrayList<>();
 
+		@Override
 		public String inspect(String sql) {
 			parameterCounts.add( countParameters( sql ) );
 			return sql;

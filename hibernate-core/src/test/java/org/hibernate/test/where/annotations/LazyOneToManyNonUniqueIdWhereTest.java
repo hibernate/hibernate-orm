@@ -41,6 +41,7 @@ import static org.junit.Assert.fail;
  */
 public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Material.class, Building.class, Rating.class, Size.class };
 	}

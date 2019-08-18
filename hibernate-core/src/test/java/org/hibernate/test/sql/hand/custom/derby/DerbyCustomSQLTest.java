@@ -16,6 +16,7 @@ import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
  */
 @RequiresDialect(DerbyDialect.class)
 public class DerbyCustomSQLTest extends CustomStoredProcTestSupport {
+	@Override
 	public String[] getMappings() {
 		return new String[] {"sql/hand/custom/derby/Mappings.hbm.xml"};
 	}

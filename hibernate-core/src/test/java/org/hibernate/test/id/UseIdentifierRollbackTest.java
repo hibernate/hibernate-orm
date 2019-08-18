@@ -22,10 +22,12 @@ import static org.junit.Assert.assertNull;
  * @author Emmanuel Bernard
  */
 public class UseIdentifierRollbackTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "id/Product.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.USE_IDENTIFIER_ROLLBACK, "true");
 		super.configure( cfg );

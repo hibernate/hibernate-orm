@@ -21,10 +21,12 @@ public class ClassTypeDescriptor extends AbstractTypeDescriptor<Class> {
 		super( Class.class );
 	}
 
+	@Override
 	public String toString(Class value) {
 		return value.getName();
 	}
 
+	@Override
 	public Class fromString(String string) {
 		if ( string == null ) {
 			return null;
@@ -39,6 +41,7 @@ public class ClassTypeDescriptor extends AbstractTypeDescriptor<Class> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Class value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -52,6 +55,7 @@ public class ClassTypeDescriptor extends AbstractTypeDescriptor<Class> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Class wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

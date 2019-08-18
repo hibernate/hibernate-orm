@@ -23,6 +23,7 @@ public class NTextType extends AbstractSingleColumnStandardBasicType<String> {
 		super( LongNVarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() { 
 		return "ntext";
 	}

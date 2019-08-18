@@ -24,6 +24,7 @@ public class NotAuditExpression implements AuditCriterion {
 		this.criterion = criterion;
 	}
 
+	@Override
 	public void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,

@@ -31,6 +31,7 @@ import static org.junit.Assert.fail;
  */
 public class CascadeTest extends AbstractJPATest {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "jpa/cascade/ParentChild.hbm.xml" };
 	}

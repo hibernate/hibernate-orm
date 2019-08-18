@@ -45,6 +45,7 @@ public class Container {
 			this.name = name;
 		}
 		
+		@Override
 		public String toString() {
 			return name + " = " 
 			+ (simple==null ? "nil" : Integer.toString( simple.getCount() ) )
@@ -101,10 +102,12 @@ public class Container {
 			this.count = count;
 		}
 		
+		@Override
 		public int hashCode() {
 			return count + name.hashCode();
 		}
 		
+		@Override
 		public boolean equals(Object other) {
 			ContainerInnerClass cic = (ContainerInnerClass) other;
 			return cic.name.equals(name) 

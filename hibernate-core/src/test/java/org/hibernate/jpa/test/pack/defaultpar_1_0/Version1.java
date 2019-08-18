@@ -43,6 +43,7 @@ public class Version1 {
 		this.micro = micro;
 	}
 
+	@Override
 	public String toString() {
 		return new StringBuffer( major ).append( DOT ).append( minor ).append( DOT ).append( micro ).toString();
 	}

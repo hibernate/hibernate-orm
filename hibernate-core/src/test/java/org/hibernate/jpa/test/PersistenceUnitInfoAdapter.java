@@ -28,54 +28,67 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 	private final String name = "persistenceUnitInfoAdapter@" + System.identityHashCode( this );
 	private Properties properties;
 
+	@Override
 	public String getPersistenceUnitName() {
 		return name;
 	}
 
+	@Override
 	public String getPersistenceProviderClassName() {
 		return HibernatePersistenceProvider.class.getName();
 	}
 
+	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
 		return null;
 	}
 
+	@Override
 	public DataSource getJtaDataSource() {
 		return null;
 	}
 
+	@Override
 	public DataSource getNonJtaDataSource() {
 		return null;
 	}
 
+	@Override
 	public List<String> getMappingFileNames() {
 		return Collections.emptyList();
 	}
 
+	@Override
 	public List<URL> getJarFileUrls() {
 		return Collections.emptyList();
 	}
 
+	@Override
 	public URL getPersistenceUnitRootUrl() {
 		return null;
 	}
 
+	@Override
 	public List<String> getManagedClassNames() {
 		return Collections.emptyList();
 	}
 
+	@Override
 	public boolean excludeUnlistedClasses() {
 		return false;
 	}
 
+	@Override
 	public SharedCacheMode getSharedCacheMode() {
 		return null;
 	}
 
+	@Override
 	public ValidationMode getValidationMode() {
 		return null;
 	}
 
+	@Override
 	public Properties getProperties() {
 		if ( properties == null ) {
 			properties = new Properties();
@@ -83,17 +96,21 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 		return properties;
 	}
 
+	@Override
 	public String getPersistenceXMLSchemaVersion() {
 		return null;
 	}
 
+	@Override
 	public ClassLoader getClassLoader() {
 		return Thread.currentThread().getContextClassLoader();
 	}
 
+	@Override
 	public void addTransformer(ClassTransformer transformer) {
 	}
 
+	@Override
 	public ClassLoader getNewTempClassLoader() {
 		return Thread.currentThread().getContextClassLoader();
 	}

@@ -43,6 +43,7 @@ public class EmbeddableWithOneToMany_HHH_8860_Test
 		};
 	}
 
+	@Override
 	protected void buildSessionFactory() {
 		try {
 			super.buildSessionFactory();

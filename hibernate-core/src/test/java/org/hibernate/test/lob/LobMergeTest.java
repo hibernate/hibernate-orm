@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 public class LobMergeTest extends BaseCoreFunctionalTestCase {
 	private static final int LOB_SIZE = 10000;
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lob/LobMappings.hbm.xml" };
 	}

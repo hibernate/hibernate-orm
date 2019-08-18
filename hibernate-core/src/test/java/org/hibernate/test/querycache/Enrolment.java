@@ -57,6 +57,7 @@ public class Enrolment implements Serializable {
 		this.year = year;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -83,6 +84,7 @@ public class Enrolment implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = ( int ) ( studentNumber ^ ( studentNumber >>> 32 ) );
 		result = 31 * result + ( courseCode != null ? courseCode.hashCode() : 0 );

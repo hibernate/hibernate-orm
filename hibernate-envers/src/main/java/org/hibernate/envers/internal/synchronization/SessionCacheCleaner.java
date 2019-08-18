@@ -29,6 +29,7 @@ public class SessionCacheCleaner {
 	public void scheduleAuditDataRemoval(final Session session, final Object data) {
 		( (EventSource) session ).getActionQueue().registerProcess(
 				new AfterTransactionCompletionProcess() {
+					@Override
 					public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor sessionImplementor) {
 						if ( !sessionImplementor.isClosed() ) {
 							try {

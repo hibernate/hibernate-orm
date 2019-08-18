@@ -18,6 +18,7 @@ public class ComputerPk implements Serializable {
 	private String brand;
 	private String model;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof ComputerPk ) ) return false;
@@ -30,6 +31,7 @@ public class ComputerPk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = brand.hashCode();

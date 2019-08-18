@@ -50,6 +50,7 @@ public class RefEdMapKeyEntity {
 		this.idmap = idmap;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -67,10 +68,12 @@ public class RefEdMapKeyEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}
 
+	@Override
 	public String toString() {
 		return "RedMKE(id = " + id + ", idmap = " + idmap + ")";
 	}

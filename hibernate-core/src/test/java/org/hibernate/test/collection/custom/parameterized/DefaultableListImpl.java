@@ -24,6 +24,7 @@ public class DefaultableListImpl extends ArrayList implements DefaultableList {
 		super( anticipatedSize + ( int ) Math.ceil( anticipatedSize * .75f ) );
 	}
 
+	@Override
 	public String getDefaultValue() {
         return defaultValue;
     }

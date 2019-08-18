@@ -17,18 +17,22 @@ import org.hibernate.internal.util.StringHelper;
 public class AlternativeNamingStrategy extends EJB3NamingStrategy {
 	public static NamingStrategy INSTANCE = new AlternativeNamingStrategy();
 
+	@Override
 	public String classToTableName(String className) {
 		return tableName( StringHelper.unqualify( className ) );
 	}
 
+	@Override
 	public String propertyToColumnName(String propertyName) {
 		return columnName( StringHelper.unqualify( propertyName ) );
 	}
 
+	@Override
 	public String tableName(String tableName) {
 		return "table_" + tableName;
 	}
 
+	@Override
 	public String columnName(String columnName) {
 		return "f_" + columnName;
 	}
@@ -37,10 +41,12 @@ public class AlternativeNamingStrategy extends EJB3NamingStrategy {
 		return tableName( StringHelper.unqualify( className ) + "_" + StringHelper.unqualify( propertyName ) );
 	}
 
+	@Override
 	public String logicalColumnName(String columnName, String propertyName) {
 		return StringHelper.isNotEmpty( columnName ) ? columnName : propertyName;
 	}
 
+	@Override
 	public String collectionTableName(
 			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
 			String propertyName
@@ -73,6 +79,7 @@ public class AlternativeNamingStrategy extends EJB3NamingStrategy {
 		}
 	}
 
+	@Override
 	public String logicalCollectionColumnName(String columnName, String propertyName, String referencedColumn) {
 		return StringHelper.isNotEmpty( columnName ) ? columnName : propertyName + "_" + referencedColumn;
 	}

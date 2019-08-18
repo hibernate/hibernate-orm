@@ -26,18 +26,22 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 @RequiresDialect( value = Oracle9iDialect.class )
 public class RowIdTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "rowid/Point.hbm.xml" };
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
+	@Override
 	public boolean createSchema() {
 		return false;
 	}
 
+	@Override
 	public void afterSessionFactoryBuilt() {
 		super.afterSessionFactoryBuilt();
 		final Session session = sessionFactory().openSession();

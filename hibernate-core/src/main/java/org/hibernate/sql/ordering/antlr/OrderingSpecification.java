@@ -46,6 +46,7 @@ public class OrderingSpecification extends NodeSupport {
 		}
 	}
 
+	@Override
 	public String getRenderableText() {
 		return getOrdering().name;
 	}

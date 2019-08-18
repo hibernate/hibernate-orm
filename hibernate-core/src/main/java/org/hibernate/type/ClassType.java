@@ -21,6 +21,7 @@ public class ClassType extends AbstractSingleColumnStandardBasicType<Class> {
 		super( VarcharTypeDescriptor.INSTANCE, ClassTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "class";
 	}

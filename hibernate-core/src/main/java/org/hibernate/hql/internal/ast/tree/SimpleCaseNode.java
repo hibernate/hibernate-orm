@@ -29,6 +29,7 @@ import antlr.collections.AST;
  */
 public class SimpleCaseNode extends AbstractSelectExpression implements SelectExpression, ExpectedTypeAwareNode {
 
+	@Override
 	public Type getDataType() {
 		final AST expression = getFirstChild();
 		// option is used to hold each WHEN/ELSE in turn
@@ -61,6 +62,7 @@ public class SimpleCaseNode extends AbstractSelectExpression implements SelectEx
 		return null;
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}

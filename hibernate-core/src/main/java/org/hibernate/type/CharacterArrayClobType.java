@@ -23,6 +23,7 @@ public class CharacterArrayClobType extends AbstractSingleColumnStandardBasicTyp
 		super( ClobTypeDescriptor.DEFAULT, CharacterArrayTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		// todo name these annotation types for addition to the registry
 		return null;

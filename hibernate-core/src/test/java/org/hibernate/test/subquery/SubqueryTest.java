@@ -34,18 +34,22 @@ import java.util.function.Consumer;
 public class SubqueryTest extends BaseCoreFunctionalTestCase {
 
     private static final SQLFunction LIMIT_FUNCTION = new SQLFunction() {
+		@Override
         public boolean hasArguments() {
             return true;
         }
 
+		@Override
         public boolean hasParenthesesIfNoArguments() {
             return true;
         }
 
+		@Override
         public Type getReturnType(Type type, Mapping mpng) throws QueryException {
             return type;
         }
 
+		@Override
         public String render(Type type, List list, SessionFactoryImplementor sfi) throws QueryException {
             String subquery = list.get(0).toString();
             return subquery.substring(0, subquery.length() - 1) + " limit " + list.get(1) + ")";

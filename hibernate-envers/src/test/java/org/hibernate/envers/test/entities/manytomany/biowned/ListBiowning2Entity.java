@@ -75,6 +75,7 @@ public class ListBiowning2Entity {
 		this.references = references;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -96,6 +97,7 @@ public class ListBiowning2Entity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -103,6 +105,7 @@ public class ListBiowning2Entity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ListBiowning2Entity(id = " + id + ", data = " + data + ")";
 	}

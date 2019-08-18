@@ -32,12 +32,14 @@ import static org.junit.Assert.assertTrue;
 @TestForIssue( jiraKey = "HHH-9106")
 public class MergeMultipleEntityCopiesCustomTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"ops/Hoarder.hbm.xml"
 		};
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty(

@@ -22,10 +22,12 @@ public class WrappedStringId implements Serializable {
 		this.id = id;
 	}
 
+	@Override
 	public String toString() {
 		return id;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -37,6 +39,7 @@ public class WrappedStringId implements Serializable {
 		return !(id != null ? !id.equals( that.id ) : that.id != null);
 	}
 
+	@Override
 	public int hashCode() {
 		return id != null ? id.hashCode() : 0;
 	}

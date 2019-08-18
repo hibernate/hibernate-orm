@@ -28,6 +28,7 @@ public class TimeType
 		super( org.hibernate.type.descriptor.sql.TimeTypeDescriptor.INSTANCE, JdbcTimeTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "time";
 	}
@@ -45,6 +46,7 @@ public class TimeType
 //		return true;
 //	}
 
+	@Override
 	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
 		Time jdbcTime = Time.class.isInstance( value )
 				? ( Time ) value

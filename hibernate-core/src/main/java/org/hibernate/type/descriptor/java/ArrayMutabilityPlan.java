@@ -17,6 +17,7 @@ public class ArrayMutabilityPlan<T> extends MutableMutabilityPlan<T> {
 	public static final ArrayMutabilityPlan INSTANCE = new ArrayMutabilityPlan();
 
 	@SuppressWarnings({ "unchecked", "SuspiciousSystemArraycopy" })
+	@Override
 	public T deepCopyNotNull(T value) {
 		if ( ! value.getClass().isArray() ) {
 			// ugh!  cannot find a way to properly define the type signature here to

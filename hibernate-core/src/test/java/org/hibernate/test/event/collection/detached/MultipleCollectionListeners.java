@@ -55,6 +55,7 @@ public class MultipleCollectionListeners {
 			this.listeners = listeners;
 		}
 
+		@Override
 		public void addEvent(AbstractCollectionEvent event, Listener listener) {
 			listeners.addEvent(event, listener);
 		}
@@ -69,11 +70,13 @@ public class MultipleCollectionListeners {
 			this.listeners = listeners;
 		}
 
+		@Override
 		public void onInitializeCollection(InitializeCollectionEvent event) {
 			super.onInitializeCollection(event);
 			addEvent(event, this);
 		}
 
+		@Override
 		public void addEvent(AbstractCollectionEvent event, Listener listener) {
 			listeners.addEvent(event, listener);
 		}
@@ -86,6 +89,7 @@ public class MultipleCollectionListeners {
 			super(listeners);
 		}
 
+		@Override
 		public void onPreRecreateCollection(PreCollectionRecreateEvent event) {
 			addEvent(event, this);
 		}
@@ -98,6 +102,7 @@ public class MultipleCollectionListeners {
 			super(listeners);
 		}
 
+		@Override
 		public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
 			addEvent(event, this);
 		}
@@ -110,6 +115,7 @@ public class MultipleCollectionListeners {
 			super(listeners);
 		}
 
+		@Override
 		public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
 			addEvent(event, this);
 		}
@@ -122,6 +128,7 @@ public class MultipleCollectionListeners {
 			super(listeners);
 		}
 
+		@Override
 		public void onPostRemoveCollection(PostCollectionRemoveEvent event) {
 			addEvent(event, this);
 		}
@@ -134,6 +141,7 @@ public class MultipleCollectionListeners {
 			super(listeners);
 		}
 
+		@Override
 		public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
 			addEvent(event, this);
 		}
@@ -146,6 +154,7 @@ public class MultipleCollectionListeners {
 			super(listeners);
 		}
 
+		@Override
 		public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
 			addEvent(event, this);
 		}

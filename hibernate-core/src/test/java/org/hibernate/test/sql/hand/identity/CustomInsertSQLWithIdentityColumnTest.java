@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialectFeature( DialectChecks.SupportsIdentityColumns.class )
 public class CustomInsertSQLWithIdentityColumnTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {"sql/hand/identity/Mappings.hbm.xml"};
 	}

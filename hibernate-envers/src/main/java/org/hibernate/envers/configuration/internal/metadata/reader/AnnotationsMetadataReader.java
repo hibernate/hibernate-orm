@@ -124,18 +124,22 @@ public final class AnnotationsMetadataReader {
 	}
 
 	private AuditTable defaultAuditTable = new AuditTable() {
+		@Override
 		public String value() {
 			return "";
 		}
 
+		@Override
 		public String schema() {
 			return "";
 		}
 
+		@Override
 		public String catalog() {
 			return "";
 		}
 
+		@Override
 		public Class<? extends Annotation> annotationType() {
 			return this.getClass();
 		}
@@ -153,14 +157,17 @@ public final class AnnotationsMetadataReader {
 		}
 
 		@SuppressWarnings({"unchecked"})
+		@Override
 		public Iterator<Property> getPropertyIterator() {
 			return pc.getPropertyIterator();
 		}
 
+		@Override
 		public Property getProperty(String propertyName) {
 			return pc.getProperty( propertyName );
 		}
 
+		@Override
 		public XClass getXClass() {
 			return xclass;
 		}

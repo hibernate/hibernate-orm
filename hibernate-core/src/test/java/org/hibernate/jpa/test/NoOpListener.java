@@ -14,6 +14,7 @@ import org.hibernate.event.spi.PreInsertEventListener;
  * @author Emmanuel Bernard
  */
 public class NoOpListener implements PreInsertEventListener {
+	@Override
 	public boolean onPreInsert(PreInsertEvent event) {
 		return false;
 	}

@@ -17,10 +17,12 @@ public class MoreStuff implements Serializable {
 	private Collection stuffs;
 	private String name;
 	
+	@Override
 	public boolean equals(Object other) {
 		return ( (MoreStuff) other ).getIntId()==intId && ( (MoreStuff) other ).getStringId().equals(stringId);
 	}
 	
+	@Override
 	public int hashCode() {
 		return stringId.hashCode();
 	}

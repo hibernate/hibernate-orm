@@ -493,6 +493,7 @@ public class Oracle8iDialect extends Dialect {
 		return "select * from all_sequences";
 	}
 
+	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceInformationExtractorOracleDatabaseImpl.INSTANCE;
 	}

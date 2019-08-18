@@ -55,6 +55,7 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 		initializeRelationNames();
 	}
 
+	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final DB2GeometryTypeDescriptor typeDescriptor = mkDescriptor( serviceRegistry );
 		typeContributions.contributeType( new GeolatteGeometryType( typeDescriptor ) );
@@ -331,6 +332,7 @@ public class DB2SpatialDialect extends DB2Dialect implements SpatialDialect {
 			super( "db2gse.ST_Dwithin" , StandardBasicTypes.NUMERIC_BOOLEAN);
 		}
 
+		@Override
 		public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
 			StringBuilder sb = new StringBuilder( "db2gse.ST_Intersects( " );
 			sb.append( (String)args.get(0) ) //

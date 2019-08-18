@@ -79,6 +79,7 @@ public class AssignmentSpecification {
 			List parameterList = ASTUtil.collectChildren(
 					rhs,
 					new ASTUtil.IncludePredicate() {
+						@Override
 						public boolean include(AST node) {
 							return isParam( node );
 						}

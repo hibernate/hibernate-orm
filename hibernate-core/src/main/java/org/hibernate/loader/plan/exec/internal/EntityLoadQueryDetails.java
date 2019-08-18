@@ -115,6 +115,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 	 * @see org.hibernate.persister.entity.OuterJoinLoadable#fromTableFragment(java.lang.String)
 	 * @see org.hibernate.persister.entity.Joinable#fromJoinFragment(java.lang.String, boolean, boolean)
 	 */
+	@Override
 	protected void applyRootReturnTableFragments(SelectStatementBuilder select) {
 		final String fromTableFragment;
 		final String rootAlias = entityReferenceAliases.getTableAlias();
@@ -140,6 +141,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 		select.appendFromClauseFragment( fromTableFragment + outerJoinLoadable.fromJoinFragment( rootAlias, true, true ) );
 	}
 
+	@Override
 	protected void applyRootReturnFilterRestrictions(SelectStatementBuilder selectStatementBuilder) {
 		final Queryable rootQueryable = (Queryable) getRootEntityReturn().getEntityPersister();
 		selectStatementBuilder.appendRestrictions(
@@ -150,6 +152,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 		);
 	}
 
+	@Override
 	protected void applyRootReturnWhereJoinRestrictions(SelectStatementBuilder selectStatementBuilder) {
 		final Joinable joinable = (OuterJoinLoadable) getRootEntityReturn().getEntityPersister();
 		selectStatementBuilder.appendRestrictions(
@@ -197,6 +200,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 		return false;
 	}
 
+	@Override
 	protected void applyRootReturnSelectFragments(SelectStatementBuilder selectStatementBuilder) {
 		final OuterJoinLoadable outerJoinLoadable = (OuterJoinLoadable) getRootEntityReturn().getEntityPersister();
 		selectStatementBuilder.appendSelectClauseFragment(

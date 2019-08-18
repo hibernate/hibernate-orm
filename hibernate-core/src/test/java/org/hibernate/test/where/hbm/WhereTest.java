@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNull;
  * @author Max Rydahl Andersen
  */
 public class WhereTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "where/hbm/File.hbm.xml" };
 	}

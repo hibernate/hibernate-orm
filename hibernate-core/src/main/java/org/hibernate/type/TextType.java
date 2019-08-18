@@ -22,6 +22,7 @@ public class TextType extends AbstractSingleColumnStandardBasicType<String> {
 		super( LongVarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() { 
 		return "text";
 	}

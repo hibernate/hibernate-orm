@@ -23,6 +23,7 @@ public class BasketItemsPK implements Serializable {
 
 	private static final long serialVersionUID = 3585214409096105241L;
 
+	@Override
 	public boolean equals(Object aObj) {
 		if (aObj == this)
 			return true;
@@ -38,6 +39,7 @@ public class BasketItemsPK implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int hashcode = 0;
 		if (getShoppingBaskets() != null) {

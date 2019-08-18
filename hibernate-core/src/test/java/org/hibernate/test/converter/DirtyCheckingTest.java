@@ -144,20 +144,24 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	public static class NameConverter implements AttributeConverter<Name, String> {
+		@Override
 		public String convertToDatabaseColumn(Name name) {
 			return name == null ? null : name.getText();
 		}
 
+		@Override
 		public Name convertToEntityAttribute(String s) {
 			return s == null ? null : new Name( s );
 		}
 	}
 
 	public static class IntegerConverter implements AttributeConverter<Integer, String> {
+		@Override
 		public String convertToDatabaseColumn(Integer value) {
 			return value == null ? null : value.toString();
 		}
 
+		@Override
 		public Integer convertToEntityAttribute(String s) {
 			return s == null ? null : Integer.parseInt( s );
 		}

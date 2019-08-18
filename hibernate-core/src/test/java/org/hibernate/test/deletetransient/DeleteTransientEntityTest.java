@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class DeleteTransientEntityTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "deletetransient/Person.hbm.xml" };
 	}

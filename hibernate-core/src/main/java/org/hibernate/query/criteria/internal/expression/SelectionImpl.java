@@ -29,21 +29,25 @@ public abstract class SelectionImpl<X>
 		super( criteriaBuilder, javaType );
 	}
 
+	@Override
 	public Selection<X> alias(String alias) {
 		setAlias( alias );
 		return this;
 	}
 
+	@Override
 	public boolean isCompoundSelection() {
 		return false;
 	}
 
+	@Override
 	public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
 		return getValueHandler() == null
 				? null
 				: Collections.singletonList( (ValueHandlerFactory.ValueHandler) getValueHandler() );
 	}
 
+	@Override
 	public List<Selection<?>> getCompoundSelectionItems() {
 		throw new IllegalStateException( "Not a compound selection" );
 	}

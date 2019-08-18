@@ -21,6 +21,7 @@ public class ReaderInputStream extends org.hibernate.engine.jdbc.ReaderInputStre
 		super(reader);
 	}
 
+	@Override
 	public int read() throws IOException {
 		return super.read();
 	}

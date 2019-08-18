@@ -45,6 +45,7 @@ public class FloatLeg extends Leg {
 		this.rateSpread = rateSpread;
 	}
 
+	@Override
 	public String toString() {
 		NumberFormat format = NumberFormat.getNumberInstance();
 		format.setMinimumFractionDigits( 1 );

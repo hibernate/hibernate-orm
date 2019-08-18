@@ -18,6 +18,7 @@ public class BagBinder extends CollectionBinder {
 		super( false );
 	}
 
+	@Override
 	protected Collection createCollection(PersistentClass persistentClass) {
 		return new org.hibernate.mapping.Bag( getBuildingContext(), persistentClass );
 	}

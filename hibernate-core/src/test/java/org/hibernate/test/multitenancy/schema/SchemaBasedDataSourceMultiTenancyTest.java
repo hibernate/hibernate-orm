@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedMultiTenancyTest<
 		AbstractDataSourceBasedMultiTenantConnectionProviderImpl, DatasourceConnectionProviderImpl> {
 
+	@Override
 	protected AbstractDataSourceBasedMultiTenantConnectionProviderImpl buildMultiTenantConnectionProvider() {
 		acmeProvider = ConnectionProviderBuilder.buildDataSourceConnectionProvider( "acme" );
 		jbossProvider = ConnectionProviderBuilder.buildDataSourceConnectionProvider( "jboss" );

@@ -33,5 +33,6 @@ public interface ExpandingCollectionQuerySpace extends CollectionQuerySpace, Exp
 	 * is neither {@code "elements"} and {@code "indices"}.
 	 * @throws java.lang.IllegalStateException if there is already an existing join with the same joined property name.
 	 */
+	@Override
 	void addJoin(Join join);
 }

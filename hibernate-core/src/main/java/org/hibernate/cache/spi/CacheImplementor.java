@@ -41,6 +41,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * of interacting with the configured RegionFactory.  Care should
 	 * be taken when accessing the RegionFactory directly.
 	 */
+	@Override
 	RegionFactory getRegionFactory();
 
 	/**
@@ -49,6 +50,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @since 5.3
 	 */
+	@Override
 	void prime(Set<DomainDataRegionConfig> cacheRegionConfigs);
 
 	/**
@@ -59,6 +61,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @since 5.3
 	 */
+	@Override
 	Region getRegion(String regionName);
 
 	/**
@@ -66,6 +69,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @since 5.3
 	 */
+	@Override
 	Set<String> getCacheRegionNames();
 
 	/**
@@ -74,6 +78,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @since 5.3
 	 */
+	@Override
 	TimestampsCache getTimestampsCache();
 
 	/**
@@ -81,6 +86,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * was requested but no region was explicitly named.  Will return {@code null}
 	 * if Hibernate is not configured for query result caching
 	 */
+	@Override
 	QueryResultsCache getDefaultQueryResultsCache();
 
 	/**
@@ -90,6 +96,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * Will return {@code null} if Hibernate is not configured for query result caching
 	 */
+	@Override
 	QueryResultsCache getQueryResultsCache(String regionName);
 
 	/**
@@ -101,11 +108,13 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @since 5.3
 	 */
+	@Override
 	QueryResultsCache getQueryResultsCacheStrictly(String regionName);
 
 	/**
 	 * Clean up the default query cache
 	 */
+	@Override
 	default void evictQueries() throws HibernateException {
 		QueryResultsCache cache = getDefaultQueryResultsCache();
 		if ( cache != null ) {
@@ -116,6 +125,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	/**
 	 * Close this "cache", releasing all underlying resources.
 	 */
+	@Override
 	void close();
 
 
@@ -130,6 +140,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated (since 5.3) Use {@link CacheImplementor#getCacheRegionNames()} instead
 	 */
 	@Deprecated
+	@Override
 	String[] getSecondLevelCacheRegionNames();
 
 	/**
@@ -144,6 +155,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated Use {@link EntityPersister#getCacheAccessStrategy()} instead
 	 */
 	@Deprecated
+	@Override
 	EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName);
 
 	/**
@@ -159,6 +171,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} ()} instead
 	 */
 	@Deprecated
+	@Override
 	NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName);
 
 	/**
@@ -171,6 +184,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} ()} instead
 	 */
 	@Deprecated
+	@Override
 	CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole);
 
 
@@ -180,6 +194,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated Use {@link #getTimestampsCache} instead
 	 */
 	@Deprecated
+	@Override
 	default UpdateTimestampsCache getUpdateTimestampsCache() {
 		return getTimestampsCache();
 	}
@@ -190,6 +205,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
 	 */
 	@Deprecated
+	@Override
 	default QueryCache getQueryCache() {
 		return getDefaultQueryResultsCache();
 	}
@@ -200,6 +216,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
 	 */
 	@Deprecated
+	@Override
 	default QueryCache getDefaultQueryCache() {
 		return getDefaultQueryResultsCache();
 	}
@@ -208,6 +225,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated Use {@link #getQueryResultsCache(String)} instead, but using unqualified name
 	 */
 	@Deprecated
+	@Override
 	default QueryCache getQueryCache(String regionName) throws HibernateException {
 		return getQueryResultsCache( unqualifyRegionName( regionName ) );
 	}
@@ -222,6 +240,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * in supporting the newly deprecated methods expecting a qualified (prefix +) region name
 	 */
 	@Deprecated
+	@Override
 	default String unqualifyRegionName(String name) {
 		if ( getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix() == null ) {
 			return name;
@@ -246,6 +265,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated No replacement - added just for support of the newly deprecated methods expecting a qualified region name
 	 */
 	@Deprecated
+	@Override
 	default Region getRegionByLegacyName(String legacyName) {
 		return getRegion( unqualifyRegionName( legacyName ) );
 	}
@@ -254,5 +274,6 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @deprecated No replacement - added just for support of the newly deprecated methods expecting a qualified region name
 	 */
 	@Deprecated
+	@Override
 	Set<NaturalIdDataAccess> getNaturalIdAccessesInRegion(String legacyQualifiedRegionName);
 }

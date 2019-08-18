@@ -41,6 +41,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 			TestSpatialRestrictions.class.getName()
 	);
 
+	@Override
 	protected HSMessageLogger getLogger() {
 		return LOG;
 	}

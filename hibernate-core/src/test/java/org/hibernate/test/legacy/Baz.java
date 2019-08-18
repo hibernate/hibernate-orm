@@ -202,6 +202,7 @@ public class Baz implements Named, Serializable, Comparable {
 		this.count = count;
 	}
 	
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -326,6 +327,7 @@ public class Baz implements Named, Serializable, Comparable {
 	/**
 	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
+	@Override
 	public int compareTo(Object o) {
 		return ( (Baz) o ).code.compareTo(code);
 	}

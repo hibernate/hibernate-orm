@@ -55,6 +55,7 @@ public abstract class AbstractType<X> implements DomainTypeDescriptor<X>, Serial
 	 *
 	 * @return The type name
 	 */
+	@Override
 	public String getTypeName() {
 		return typeName;
 	}

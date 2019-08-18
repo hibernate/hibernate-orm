@@ -446,6 +446,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		this.optionsBuilder.disableJtaTransactionAccess();
 	}
 
+	@Override
 	public void enableJdbcStyleParamsZeroBased() {
 		this.optionsBuilder.enableJdbcStyleParamsZeroBased();
 	}

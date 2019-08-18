@@ -17,6 +17,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 public class CustomStrategyTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "id/uuid/strategy/Node.hbm.xml" };
 	}

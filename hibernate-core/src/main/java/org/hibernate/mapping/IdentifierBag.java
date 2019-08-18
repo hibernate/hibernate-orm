@@ -27,12 +27,14 @@ public class IdentifierBag extends IdentifierCollection {
 		super( buildingContext, owner );
 	}
 
+	@Override
 	public CollectionType getDefaultCollectionType() {
 		return getMetadata().getTypeResolver()
 				.getTypeFactory()
 				.idbag( getRole(), getReferencedPropertyName() );
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}	

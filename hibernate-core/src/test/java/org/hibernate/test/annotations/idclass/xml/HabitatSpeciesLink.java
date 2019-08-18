@@ -104,6 +104,7 @@ public class HabitatSpeciesLink implements Serializable {
 		 * must use instanceof rather than comparing classes directly (some JPA
 		 * implementations may subclass the identity class).
 		 */
+		@Override
 		public boolean equals(Object other) {
 			if ( other == this ) {
 				return true;
@@ -121,12 +122,14 @@ public class HabitatSpeciesLink implements Serializable {
 		/**
 		 * Hashcode must also depend on identity values.
 		 */
+		@Override
 		public int hashCode() {
 			return ( ( habitatId == null ) ? 0
 					: habitatId.hashCode() ) ^ ( ( speciesId == null ) ? 0
 					: speciesId.hashCode() );
 		}
 
+		@Override
 		public String toString() {
 			return "habitatId[" + habitatId + "],speciesId[" + speciesId + "]";
 		}

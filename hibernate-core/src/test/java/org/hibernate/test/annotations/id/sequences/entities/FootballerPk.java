@@ -46,6 +46,7 @@ public class FootballerPk implements Serializable {
 
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof FootballerPk ) ) return false;
@@ -58,6 +59,7 @@ public class FootballerPk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = firstname.hashCode();

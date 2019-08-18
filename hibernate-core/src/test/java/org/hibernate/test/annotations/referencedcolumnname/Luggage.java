@@ -77,6 +77,7 @@ public class Luggage implements Serializable {
 		this.hasInside = hasInside;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Luggage ) ) return false;
@@ -89,6 +90,7 @@ public class Luggage implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = owner.hashCode();

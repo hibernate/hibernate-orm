@@ -80,6 +80,7 @@ public class ChildIndexedListJoinColumnBidirectionalRefIngEntity
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ChildIndexedListJoinColumnBidirectionalRefIngEntity(id = " + getId() + ", data = " + getData() + ", data2 = " + data2 + ")";
 	}

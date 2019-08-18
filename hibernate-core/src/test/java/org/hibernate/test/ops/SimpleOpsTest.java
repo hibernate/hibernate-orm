@@ -23,10 +23,12 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  */
 public class SimpleOpsTest extends AbstractOperationTestCase {
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "ops/SimpleEntity.hbm.xml" };
 	}

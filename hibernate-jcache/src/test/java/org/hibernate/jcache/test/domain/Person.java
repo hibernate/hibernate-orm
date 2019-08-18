@@ -105,6 +105,7 @@ public class Person {
 		this.talismans = talismans;
 	}
 
+	@Override
 	public String toString() {
 		return getFirstname() + " " + getLastname();
 	}

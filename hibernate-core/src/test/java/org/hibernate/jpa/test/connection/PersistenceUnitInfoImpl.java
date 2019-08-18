@@ -42,30 +42,37 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		this.puRoot = puRoot;
 	}
 
+	@Override
 	public String getPersistenceUnitName() {
 		return "persistenceinfo";
 	}
 
+	@Override
 	public String getPersistenceProviderClassName() {
 		return HibernatePersistenceProvider.class.getName();
 	}
 
+	@Override
 	public DataSource getJtaDataSource() {
 		return new FakeDataSource();
 	}
 
+	@Override
 	public DataSource getNonJtaDataSource() {
 		return null;
 	}
 
+	@Override
 	public List<String> getMappingFileNames() {
 		return mappingFiles;
 	}
 
+	@Override
 	public List<URL> getJarFileUrls() {
 		return new ArrayList<URL>();
 	}
 
+	@Override
 	public List<String> getManagedClassNames() {
 		List<String> classes = new ArrayList<String>();
 		classes.add( Item.class.getName() );
@@ -75,42 +82,52 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		return classes;
 	}
 
+	@Override
 	public Properties getProperties() {
 		properties.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		return properties;
 	}
 
+	@Override
 	public String getPersistenceXMLSchemaVersion() {
 		return null;
 	}
 
+	@Override
 	public ClassLoader getClassLoader() {
 		return Thread.currentThread().getContextClassLoader();
 	}
 
+	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
 		return null;
 	}
 
+	@Override
 	public URL getPersistenceUnitRootUrl() {
 		return puRoot;
 	}
 
+	@Override
 	public boolean excludeUnlistedClasses() {
 		return true;
 	}
 
+	@Override
 	public SharedCacheMode getSharedCacheMode() {
 		return null;
 	}
 
+	@Override
 	public ValidationMode getValidationMode() {
 		return null;
 	}
 
+	@Override
 	public void addTransformer(ClassTransformer transformer) {
 	}
 
+	@Override
 	public ClassLoader getNewTempClassLoader() {
 		return Thread.currentThread().getContextClassLoader();
 	}

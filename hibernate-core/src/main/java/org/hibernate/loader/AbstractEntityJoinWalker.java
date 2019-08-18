@@ -133,6 +133,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 	/**
 	 * The superclass deliberately excludes collections
 	 */
+	@Override
 	protected boolean isJoinedFetchEnabled(AssociationType type, FetchMode config, CascadeStyle cascadeStyle) {
 		return isJoinedFetchEnabledInMapping( config, type );
 	}
@@ -194,6 +195,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 		return mergeOrderings( orderBy, orderBy( associations ) );
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + getPersister().getEntityName() + ')';
 	}

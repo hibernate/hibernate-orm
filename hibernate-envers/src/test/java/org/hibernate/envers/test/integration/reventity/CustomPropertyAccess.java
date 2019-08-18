@@ -28,6 +28,7 @@ public class CustomPropertyAccess extends BaseEnversJPAFunctionalTestCase {
 	private long timestamp2;
 	private long timestamp3;
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {StrTestEntity.class, CustomPropertyAccessRevEntity.class};
 	}

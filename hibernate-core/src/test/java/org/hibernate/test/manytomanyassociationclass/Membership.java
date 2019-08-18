@@ -66,6 +66,7 @@ public class Membership {
 		this.group = group;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if ( this == obj ) {
 			return true;
@@ -84,6 +85,7 @@ public class Membership {
 		}
 	}
 
+	@Override
 	public int hashCode() {
 		return ( name == null ? super.hashCode() : name.hashCode() );
 	}

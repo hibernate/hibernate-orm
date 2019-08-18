@@ -70,6 +70,7 @@ public class Vehicle {
 		this.name = name;
 	}
 
+	@Override
 	public String toString()
 	{
 		StringBuilder buffer = new StringBuilder();

@@ -11,6 +11,7 @@ package org.hibernate.id;
  * @author Steve Ebersole
  */
 public class LongHolderTest extends AbstractHolderTest {
+	@Override
 	protected IntegralDataTypeHolder makeHolder() {
 		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( Long.class );
 	}

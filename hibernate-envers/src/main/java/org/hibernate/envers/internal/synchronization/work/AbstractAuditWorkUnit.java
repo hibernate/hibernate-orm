@@ -89,6 +89,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 		this.performedData = performedData;
 	}
 
+	@Override
 	public void undo(Session session) {
 		if ( isPerformed() ) {
 			session.delete(

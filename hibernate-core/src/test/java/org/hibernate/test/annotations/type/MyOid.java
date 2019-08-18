@@ -60,6 +60,7 @@ public class MyOid implements Serializable {
 		other = aOther;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( o == null || getClass() != o.getClass() ) return false;
@@ -74,6 +75,7 @@ public class MyOid implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = low;

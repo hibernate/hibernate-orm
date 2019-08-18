@@ -89,6 +89,7 @@ public class A
         h.setA(this);
     }
 
+	@Override
     public String toString()
     {
         return "A[" + id + ", " + data + "]";

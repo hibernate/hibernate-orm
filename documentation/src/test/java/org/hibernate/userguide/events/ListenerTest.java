@@ -182,6 +182,7 @@ public class ListenerTest extends BaseEntityManagerFunctionalTestCase {
 	//tag::events-interceptors-example[]
 	public static class SecuredLoadEntityListener implements LoadEventListener {
 		// this is the single method defined by the LoadEventListener interface
+		@Override
 		public void onLoad(LoadEvent event, LoadEventListener.LoadType loadType)
 				throws HibernateException {
 			if ( !Principal.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {

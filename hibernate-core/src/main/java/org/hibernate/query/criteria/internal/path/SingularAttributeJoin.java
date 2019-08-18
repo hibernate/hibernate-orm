@@ -106,6 +106,7 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 		return super.locateManagedType();
 	}
 
+	@Override
 	public Bindable<X> getModel() {
 		return model;
 	}

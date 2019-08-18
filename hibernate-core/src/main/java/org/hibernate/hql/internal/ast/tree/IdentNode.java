@@ -45,6 +45,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		return columns;
 	}
 
+	@Override
 	public void resolveIndex(AST parent) throws SemanticException {
 		// An ident node can represent an index expression if the ident
 		// represents a naked property ref
@@ -102,6 +103,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		setText( text );
 	}
 	
+	@Override
 	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate) {
 		if (!isResolved()) {
 			if ( getWalker().getCurrentFromClause().isFromElementAlias( getText() ) ) {
@@ -370,6 +372,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		return null;
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		if (nakedPropertyRef) {
 			// do *not* over-write the column text, as that has already been

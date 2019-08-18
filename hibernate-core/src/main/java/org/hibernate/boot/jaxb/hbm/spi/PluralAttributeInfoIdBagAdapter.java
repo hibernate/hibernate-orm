@@ -15,6 +15,7 @@ package org.hibernate.boot.jaxb.hbm.spi;
 public abstract class PluralAttributeInfoIdBagAdapter
 		extends JaxbHbmToolingHintContainer
 		implements PluralAttributeInfo {
+	@Override
 	public JaxbHbmOneToManyCollectionElementType getOneToMany() {
 		// idbag collections cannot contain 1-m mappings.
 		return null;

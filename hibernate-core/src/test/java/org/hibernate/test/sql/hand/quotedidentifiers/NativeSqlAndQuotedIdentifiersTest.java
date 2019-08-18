@@ -22,6 +22,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 @RequiresDialectFeature( value = NativeSqlAndQuotedIdentifiersTest.LocalDialectCheck.class )
 public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/hand/quotedidentifiers/Mappings.hbm.xml" };
 	}

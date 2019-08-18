@@ -346,11 +346,13 @@ public class SimpleValue implements KeyValue {
 		return identifierGenerator;
 	}
 
+	@Override
 	public boolean isUpdateable() {
 		//needed to satisfy KeyValue
 		return true;
 	}
 	
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.SELECT;
 	}
@@ -359,10 +361,12 @@ public class SimpleValue implements KeyValue {
 		return identifierGeneratorProperties;
 	}
 
+	@Override
 	public String getNullValue() {
 		return nullValue;
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}
@@ -375,6 +379,7 @@ public class SimpleValue implements KeyValue {
 		return identifierGeneratorStrategy;
 	}
 	
+	@Override
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
 		identifierGeneratorFactory.setDialect( dialect );
 		return IdentityGenerator.class.isAssignableFrom(identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy ));
@@ -420,6 +425,7 @@ public class SimpleValue implements KeyValue {
 		this.foreignKeyDefinition = foreignKeyDefinition;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return alternateUniqueKey;
 	}
@@ -428,6 +434,7 @@ public class SimpleValue implements KeyValue {
 		this.alternateUniqueKey = unique;
 	}
 
+	@Override
 	public boolean isNullable() {
 		Iterator itr = getColumnIterator();
 		while ( itr.hasNext() ) {
@@ -447,14 +454,17 @@ public class SimpleValue implements KeyValue {
 		return true;
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return true;
 	}
 
+	@Override
 	public boolean isValid(Mapping mapping) throws MappingException {
 		return getColumnSpan()==getType().getColumnSpan(mapping);
 	}
 
+	@Override
 	public Type getType() throws MappingException {
 		if ( type != null ) {
 			return type;
@@ -704,14 +714,17 @@ public class SimpleValue implements KeyValue {
 		return getClass().getName() + '(' + columns.toString() + ')';
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
 	
+	@Override
 	public boolean[] getColumnInsertability() {
 		return extractBooleansFromList( insertability );
 	}
 	
+	@Override
 	public boolean[] getColumnUpdateability() {
 		return extractBooleansFromList( updatability );
 	}

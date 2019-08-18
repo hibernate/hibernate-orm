@@ -228,6 +228,7 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
 		Thread thread = new Thread() {
+			@Override
 			public void run() {
 				((JtaTransactionCoordinatorImpl)sImpl.getTransactionCoordinator()).getSynchronizationCallbackCoordinator()
 						.afterCompletion( Status.STATUS_ROLLEDBACK );

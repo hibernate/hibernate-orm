@@ -18,6 +18,7 @@ public class Address {
 	public String state;
 	public String zip;
 	
+	@Override
 	public String toString() {
 		return this.getClass() + ":" + street;
 	}

@@ -48,6 +48,7 @@ public class Child {
 		this.description = description;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -68,6 +69,7 @@ public class Child {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = name.hashCode();
 		result = 31 * result + ( description != null ? description.hashCode() : 0 );

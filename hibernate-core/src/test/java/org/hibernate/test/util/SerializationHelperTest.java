@@ -85,6 +85,7 @@ public class SerializationHelperTest extends BaseUnitTestCase {
 			super( parent );
 		}
 
+		@Override
 		public Class loadClass(String name) throws ClassNotFoundException {
 			if ( name.equals( "org.hibernate.LockMode" ) ) {
 				throw new ClassNotFoundException( "Could not find "+ name );

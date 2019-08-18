@@ -75,6 +75,7 @@ public class Category {
 		this.products = products;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Category ) ) return false;
@@ -100,6 +101,7 @@ public class Category {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = name.hashCode();

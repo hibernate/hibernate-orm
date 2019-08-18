@@ -28,6 +28,7 @@ public class RowVersionType
 
 	public static final RowVersionType INSTANCE = new RowVersionType();
 
+	@Override
 	public String getName() {
 		return "row_version";
 	}

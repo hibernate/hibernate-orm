@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
  */
 public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 	
+	@Override
 	protected Class[] getAnnotatedClasses() {
         return new Class[]{
                 Room.class,

@@ -22,6 +22,7 @@ public class InstantiateInterceptor extends EmptyInterceptor {
 		this.injectedString = injectedString;		
 	}
 
+	@Override
 	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException {
 		if ( ! "org.hibernate.test.interceptor.User".equals( entityName ) ) {
 			return null;

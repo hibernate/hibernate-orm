@@ -52,6 +52,7 @@ public class Parent {
 		children.add( child );
 	}
 
+	@Override
 	public String toString() {
 		return name;
 	}

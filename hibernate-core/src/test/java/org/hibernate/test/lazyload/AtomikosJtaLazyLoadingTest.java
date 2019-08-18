@@ -35,6 +35,7 @@ public class AtomikosJtaLazyLoadingTest
 	private Long parentID;
 	private Long lastChildID;
 
+	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
@@ -43,6 +44,7 @@ public class AtomikosJtaLazyLoadingTest
 		cfg.setProperty( AvailableSettings.JTA_PLATFORM, "Atomikos" );
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Parent.class,
@@ -50,6 +52,7 @@ public class AtomikosJtaLazyLoadingTest
 		};
 	}
 
+	@Override
 	protected void prepareTest()
 			throws Exception {
 		doInHibernate( this::sessionFactory, session -> {

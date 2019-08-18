@@ -26,14 +26,17 @@ public class ColumnEntityAliases extends DefaultEntityAliases {
 		super( returnProperties, persister, suffix );
 	}
 	
+	@Override
 	protected String[] getIdentifierAliases(Loadable persister, String suffix) {
 		return persister.getIdentifierColumnNames();
 	}
 	
+	@Override
 	protected String getDiscriminatorAlias(Loadable persister, String suffix) {
 		return persister.getDiscriminatorColumnName();
 	}
 	
+	@Override
 	protected String[] getPropertyAliases(Loadable persister, int j) {
 		return persister.getPropertyColumnNames(j);
 	}

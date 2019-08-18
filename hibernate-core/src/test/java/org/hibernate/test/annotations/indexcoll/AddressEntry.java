@@ -22,6 +22,7 @@ public class AddressEntry {
 	private AddressBook book;
 	private AlphabeticalDirectory directory;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof AddressEntry ) ) return false;
@@ -33,6 +34,7 @@ public class AddressEntry {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return person.hashCode();
 	}

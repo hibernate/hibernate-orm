@@ -43,6 +43,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 			TestSpatialFunctions.class.getName()
 	);
 
+	@Override
 	protected HSMessageLogger getLogger() {
 		return LOG;
 	}

@@ -36,6 +36,7 @@ public class ManyToOne extends ToOne {
 		super( buildingContext, table );
 	}
 
+	@Override
 	public Type getType() throws MappingException {
 		return getMetadata().getTypeResolver().getTypeFactory().manyToOne(
 				getReferencedEntityName(),
@@ -49,6 +50,7 @@ public class ManyToOne extends ToOne {
 		);
 	}
 
+	@Override
 	public void createForeignKey() throws MappingException {
 		// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
 		if (referencedPropertyName==null && !hasFormula() ) {
@@ -93,6 +95,7 @@ public class ManyToOne extends ToOne {
 		}
 	}
 	
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

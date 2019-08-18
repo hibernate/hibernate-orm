@@ -34,6 +34,7 @@ public class PaintingPk implements Serializable {
 		this.painter = painter;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( o == null || getClass() != o.getClass() ) return false;
@@ -46,6 +47,7 @@ public class PaintingPk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = name.hashCode();

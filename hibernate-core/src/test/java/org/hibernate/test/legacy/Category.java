@@ -78,6 +78,7 @@ public class Category {
 		this.assignable = assignable;
 	}
 	
+	@Override
 	public String toString() {
 		return id + ":" + name;
 	}

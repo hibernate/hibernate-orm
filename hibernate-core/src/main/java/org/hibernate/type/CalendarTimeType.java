@@ -26,6 +26,7 @@ public class CalendarTimeType extends AbstractSingleColumnStandardBasicType<Cale
 		super( TimeTypeDescriptor.INSTANCE, CalendarTimeTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "calendar_time";
 	}

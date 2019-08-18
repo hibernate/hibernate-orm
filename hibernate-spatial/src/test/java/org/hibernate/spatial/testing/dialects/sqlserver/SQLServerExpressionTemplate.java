@@ -18,6 +18,7 @@ public class SQLServerExpressionTemplate implements SQLExpressionTemplate {
 
 	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', Geometry::STGeomFromText('%s', %d))";
 
+	@Override
 	public String toInsertSql(TestDataElement testDataElement) {
 		int srid = WktUtility.getSRID( testDataElement.wkt );
 		String wkt = WktUtility.getWkt( testDataElement.wkt );

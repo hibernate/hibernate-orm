@@ -65,6 +65,7 @@ public class BasicTestEntity1 {
 		this.long1 = long1;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -88,6 +89,7 @@ public class BasicTestEntity1 {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

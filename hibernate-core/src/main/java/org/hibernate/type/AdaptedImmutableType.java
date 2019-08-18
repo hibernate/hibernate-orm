@@ -29,6 +29,7 @@ public class AdaptedImmutableType<T> extends AbstractSingleColumnStandardBasicTy
 		return ImmutableMutabilityPlan.INSTANCE;
 	}
 
+	@Override
 	public String getName() {
 		return "imm_" + baseMutableType.getName();
 	}

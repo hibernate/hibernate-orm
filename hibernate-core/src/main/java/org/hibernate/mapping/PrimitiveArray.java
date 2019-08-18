@@ -25,10 +25,12 @@ public class PrimitiveArray extends Array {
 		super( buildingContext, owner );
 	}
 
+	@Override
 	public boolean isPrimitiveArray() {
 		return true;
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

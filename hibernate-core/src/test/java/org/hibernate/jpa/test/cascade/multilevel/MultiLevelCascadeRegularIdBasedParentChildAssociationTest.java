@@ -42,6 +42,7 @@ public class MultiLevelCascadeRegularIdBasedParentChildAssociationTest extends B
 		};
 	}
 
+	@Override
 	protected void afterEntityManagerFactoryBuilt() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Parent parent = new Parent();

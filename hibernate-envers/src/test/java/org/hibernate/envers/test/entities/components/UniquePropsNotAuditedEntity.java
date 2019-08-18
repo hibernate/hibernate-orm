@@ -59,6 +59,7 @@ public class UniquePropsNotAuditedEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "UniquePropsNotAuditedEntity(id = " + id + ", data1 = " + data1 + ", data2 = " + data2 + ")";
 	}

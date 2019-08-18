@@ -67,6 +67,7 @@ public class SetRefEdEmbIdEntity {
 		this.reffering = reffering;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -87,6 +88,7 @@ public class SetRefEdEmbIdEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -94,6 +96,7 @@ public class SetRefEdEmbIdEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "SetRefEdEmbIdEntity(id = " + id + ", data = " + data + ")";
 	}

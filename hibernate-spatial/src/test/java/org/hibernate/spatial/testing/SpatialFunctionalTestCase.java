@@ -49,6 +49,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	/**
 	 * Inserts the test data via a direct route (JDBC).
 	 */
+	@Override
 	public void prepareTest() {
 		try {
 			dataSourceUtils.insertTestData( testData );
@@ -64,6 +65,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	/**
 	 * Removes the test data.
 	 */
+	@Override
 	public void cleanupTest() {
 		cleanUpTest( "jts" );
 		cleanUpTest( "geolatte" );
@@ -98,6 +100,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 *
 	 * @return
 	 */
+	@Override
 	protected void afterConfigurationBuilt(Configuration cfg) {
 		super.afterConfigurationBuilt( cfg );
 		initializeSpatialTestSupport( serviceRegistry() );
@@ -121,6 +124,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 * <p/>
 	 * Mostly used to register spatial metadata in databases such as Oracle Spatial.
 	 */
+	@Override
 	public void afterSessionFactoryBuilt() {
 		dataSourceUtils.afterCreateSchema();
 	}
@@ -135,10 +139,12 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		dataSourceUtils.close();
 	}
 
+	@Override
 	public String getBaseForMappings() {
 		return "";
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {};
 	}

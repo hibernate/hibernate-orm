@@ -18,6 +18,7 @@ public class Doctor extends Person implements IDoctor {
 		super( name );
 	}
 
+	@Override
     public String operate() {
         return "Dr. " + getName() + " is in";
     }

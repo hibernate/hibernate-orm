@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class AuctionTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "bidi/Auction.hbm.xml" };
 	}

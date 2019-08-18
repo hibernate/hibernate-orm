@@ -55,6 +55,7 @@ public class MultiLevelCascadeCollectionEmbeddableTest extends BaseEntityManager
 		};
 	}
 
+	@Override
 	protected void afterEntityManagerFactoryBuilt() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createNativeQuery( "INSERT INTO MAIN_TABLE(ID_NUM) VALUES (99427)" ).executeUpdate();

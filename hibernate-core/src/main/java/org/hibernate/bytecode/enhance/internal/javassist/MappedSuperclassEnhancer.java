@@ -25,6 +25,7 @@ public class MappedSuperclassEnhancer extends PersistentAttributesEnhancer {
 		super( context );
 	}
 
+	@Override
 	public void enhance(CtClass managedCtClass) {
 		// Add the Managed interface
 		managedCtClass.addInterface( loadCtClassFromClass( ManagedMappedSuperclass.class ) );

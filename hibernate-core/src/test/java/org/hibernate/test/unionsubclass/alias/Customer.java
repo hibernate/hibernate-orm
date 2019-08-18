@@ -22,6 +22,7 @@ public abstract class Customer implements Serializable {
         this.id = id;
     }
 
+	@Override
     public boolean equals( Object obj ) {
         if ( obj == null )
             return false;
@@ -32,6 +33,7 @@ public abstract class Customer implements Serializable {
         return ( (Customer) obj ).getId().equals( getId() );
     }
 
+	@Override
     public int hashCode() {
         return id.hashCode();
     }

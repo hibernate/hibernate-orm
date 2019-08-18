@@ -23,6 +23,7 @@ public class MapProxyFactory implements ProxyFactory {
 
 	private String entityName;
 
+	@Override
 	public void postInstantiate(
 			final String entityName,
 			final Class persistentClass,

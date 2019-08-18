@@ -30,12 +30,14 @@ import static org.junit.Assert.assertTrue;
  */
 public class MergeMultipleEntityCopiesAllowedOrphanDeleteTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"ops/HoarderOrphanDelete.hbm.xml"
 		};
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty(

@@ -35,6 +35,7 @@ import static org.junit.Assert.assertNotNull;
 public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 	private static final long BLOB_SIZE = 10000L;
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lob/LobMappings.hbm.xml" };
 	}

@@ -35,6 +35,7 @@ public class HasChangedAuditedManyToManyTest extends AbstractModifiedFlagsOneSes
 	private long id_pers1;
 	private long id_pers2;
 
+	@Override
 	protected void initMappings() throws MappingException, URISyntaxException {
 		URL url = Thread.currentThread().getContextClassLoader().getResource(
 				"mappings/entityNames/manyToManyAudited/mappings.hbm.xml"

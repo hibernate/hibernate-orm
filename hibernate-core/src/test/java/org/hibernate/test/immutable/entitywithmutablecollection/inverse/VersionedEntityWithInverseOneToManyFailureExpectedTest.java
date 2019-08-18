@@ -17,6 +17,7 @@ import org.hibernate.testing.FailureExpected;
  * These tests reproduce HHH-4992.
  */
 public class VersionedEntityWithInverseOneToManyFailureExpectedTest extends AbstractEntityWithOneToManyTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersioned.hbm.xml" };
 	}

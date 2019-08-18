@@ -24,10 +24,12 @@ public class SchemaCreateDropWithHbm2DdlCharsetNameTest extends
 		return settings;
 	}
 
+	@Override
 	protected String expectedTableName() {
 		return "test_" + '\uFFFD' + "ntity";
 	}
 
+	@Override
 	protected String expectedFieldName() {
 		return "fi" + '\uFFFD' + "ld";
 	}

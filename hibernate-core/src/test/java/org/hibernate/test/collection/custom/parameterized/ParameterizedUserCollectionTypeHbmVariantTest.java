@@ -10,6 +10,7 @@ package org.hibernate.test.collection.custom.parameterized;
  * @author Steve Ebersole
  */
 public class ParameterizedUserCollectionTypeHbmVariantTest extends ParameterizedUserCollectionTypeTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/custom/parameterized/Mapping.hbm.xml" };
 	}

@@ -239,6 +239,7 @@ public class PaginationTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.close();
 	}
 
+	@Override
 	public void cleanupTestData() {
 		Session session = openSession();
 		session.beginTransaction();

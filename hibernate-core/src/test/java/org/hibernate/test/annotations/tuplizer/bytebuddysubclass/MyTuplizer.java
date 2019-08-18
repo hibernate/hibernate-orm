@@ -22,6 +22,7 @@ public class MyTuplizer extends PojoEntityTuplizer {
 		super( entityMetamodel, mappedEntity );
 	}
 
+	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return new EntityNameResolver[] { MyEntityNameResolver.INSTANCE };
 	}
@@ -34,6 +35,7 @@ public class MyTuplizer extends PojoEntityTuplizer {
 	public static class MyEntityNameResolver implements EntityNameResolver {
 		public static final MyEntityNameResolver INSTANCE = new MyEntityNameResolver();
 
+		@Override
 		public String resolveEntityName(Object entity) {
 			if ( entity.getClass().getName().contains( "$ByteBuddy$" ) ) {
 				return entity.getClass().getSuperclass().getName();
@@ -44,10 +46,12 @@ public class MyTuplizer extends PojoEntityTuplizer {
 
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			return getClass().equals( obj.getClass() );
 		}
 
+		@Override
 		public int hashCode() {
 			return getClass().hashCode();
 		}

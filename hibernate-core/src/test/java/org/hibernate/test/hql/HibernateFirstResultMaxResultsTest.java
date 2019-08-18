@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNull;
 @TestForIssue( jiraKey = "HHH-12729")
 public class HibernateFirstResultMaxResultsTest extends BaseNonConfigCoreFunctionalTestCase {
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { Employee.class };
 	}

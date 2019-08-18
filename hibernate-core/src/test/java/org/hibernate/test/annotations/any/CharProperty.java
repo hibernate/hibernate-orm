@@ -30,10 +30,12 @@ public class CharProperty implements Property {
 		this.value = value;
 	}
 
+	@Override
 	public String asString() {
 		return Character.toString( value );
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

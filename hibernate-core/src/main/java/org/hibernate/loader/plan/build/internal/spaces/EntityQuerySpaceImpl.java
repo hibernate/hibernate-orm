@@ -30,6 +30,7 @@ public class EntityQuerySpaceImpl extends AbstractExpandingSourceQuerySpace impl
 		this.persister = persister;
 	}
 
+	@Override
 	protected SessionFactoryImplementor sessionFactory() {
 		return super.sessionFactory();
 	}

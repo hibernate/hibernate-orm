@@ -57,6 +57,7 @@ public class StrTestNoProxyEntity implements Serializable {
 		this.str = str;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -77,12 +78,14 @@ public class StrTestNoProxyEntity implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = (id != null ? id.hashCode() : 0);
 		result = 31 * result + (str != null ? str.hashCode() : 0);
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "STNPE(id = " + id + ", str = " + str + ")";
 	}

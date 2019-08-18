@@ -24,15 +24,18 @@ public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
 		super( UUID.class );
 	}
 
+	@Override
 	public String toString(UUID value) {
 		return ToStringTransformer.INSTANCE.transform( value );
 	}
 
+	@Override
 	public UUID fromString(String string) {
 		return ToStringTransformer.INSTANCE.parse( string );
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(UUID value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -49,6 +52,7 @@ public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> UUID wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -73,10 +77,12 @@ public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
 	public static class PassThroughTransformer implements ValueTransformer {
 		public static final PassThroughTransformer INSTANCE = new PassThroughTransformer();
 
+		@Override
 		public UUID transform(UUID uuid) {
 			return uuid;
 		}
 
+		@Override
 		public UUID parse(Object value) {
 			return (UUID)value;
 		}
@@ -85,10 +91,12 @@ public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
 	public static class ToStringTransformer implements ValueTransformer {
 		public static final ToStringTransformer INSTANCE = new ToStringTransformer();
 
+		@Override
 		public String transform(UUID uuid) {
 			return uuid.toString();
 		}
 
+		@Override
 		public UUID parse(Object value) {
 			return UUID.fromString( (String) value );
 		}
@@ -97,6 +105,7 @@ public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
 	public static class ToBytesTransformer implements ValueTransformer {
 		public static final ToBytesTransformer INSTANCE = new ToBytesTransformer();
 
+		@Override
 		public byte[] transform(UUID uuid) {
 			byte[] bytes = new byte[16];
 			BytesHelper.fromLong( uuid.getMostSignificantBits(), bytes, 0);
@@ -104,6 +113,7 @@ public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
 			return bytes;
 		}
 
+		@Override
 		public UUID parse(Object value) {
 			byte[] bytea = (byte[]) value;
 			return new UUID( BytesHelper.asLong( bytea, 0 ), BytesHelper.asLong( bytea, 8 ) );

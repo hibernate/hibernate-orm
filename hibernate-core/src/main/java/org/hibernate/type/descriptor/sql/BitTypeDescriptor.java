@@ -31,6 +31,7 @@ public class BitTypeDescriptor implements SqlTypeDescriptor {
 	public BitTypeDescriptor() {
 	}
 
+	@Override
 	public int getSqlType() {
 		return Types.BIT;
 	}

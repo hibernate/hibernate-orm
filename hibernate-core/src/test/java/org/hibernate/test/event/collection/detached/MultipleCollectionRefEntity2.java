@@ -33,10 +33,12 @@ public class MultipleCollectionRefEntity2 implements org.hibernate.test.event.co
 	@Column(name = "MCE_ID", insertable = false, updatable = false)
 	private Long multipleCollectionEntityId;
 
+	@Override
 	public Long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}

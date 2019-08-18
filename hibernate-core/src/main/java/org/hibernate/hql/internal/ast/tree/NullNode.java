@@ -17,6 +17,7 @@ import org.hibernate.type.Type;
  */
 public class NullNode extends AbstractSelectExpression {
 
+	@Override
 	public Type getDataType() {
 		return null;
 	}

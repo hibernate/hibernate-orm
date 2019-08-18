@@ -367,6 +367,7 @@ public class AuditProperty<T> implements AuditProjection {
 
 	// Projection on this property
 
+	@Override
 	public ProjectionData getData(EnversService enversService) {
 		return new ProjectionData( null, alias, propertyNameGetter.get( enversService ), false );
 	}

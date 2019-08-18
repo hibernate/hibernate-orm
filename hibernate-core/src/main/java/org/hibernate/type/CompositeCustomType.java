@@ -85,6 +85,7 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return userType.getPropertyTypes();
 	}
 
+	@Override
 	public String[] getPropertyNames() {
 		return userType.getPropertyNames();
 	}

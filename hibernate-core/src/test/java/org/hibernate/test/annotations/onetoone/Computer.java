@@ -41,6 +41,7 @@ public class Computer {
 		this.serial = serial;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Computer ) ) return false;
@@ -52,6 +53,7 @@ public class Computer {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return id.hashCode();
 	}

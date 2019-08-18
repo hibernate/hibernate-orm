@@ -53,6 +53,7 @@ public class IdMapKeyEntity {
 		this.idmap = idmap;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -70,10 +71,12 @@ public class IdMapKeyEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}
 
+	@Override
 	public String toString() {
 		return "IMKE(id = " + id + ", idmap = " + idmap + ")";
 	}

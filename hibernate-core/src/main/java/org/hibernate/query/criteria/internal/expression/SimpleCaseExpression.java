@@ -63,10 +63,12 @@ public class SimpleCaseExpression<C,R>
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public Expression<C> getExpression() {
 		return (Expression<C>) expression;
 	}
 
+	@Override
 	public SimpleCase<C, R> when(C condition, R result) {
 		return when( condition, buildLiteral(result) );
 	}
@@ -79,6 +81,7 @@ public class SimpleCaseExpression<C,R>
 		return new LiteralExpression<R>( criteriaBuilder(), type, result );
 	}
 
+	@Override
 	public SimpleCase<C, R> when(C condition, Expression<? extends R> result) {
 		WhenClause whenClause = new WhenClause(
 				new LiteralExpression<C>( criteriaBuilder(), condition ),
@@ -89,10 +92,12 @@ public class SimpleCaseExpression<C,R>
 		return this;
 	}
 
+	@Override
 	public Expression<R> otherwise(R result) {
 		return otherwise( buildLiteral(result) );
 	}
 
+	@Override
 	public Expression<R> otherwise(Expression<? extends R> result) {
 		this.otherwiseResult = result;
 		resetJavaType( result.getJavaType() );
@@ -107,6 +112,7 @@ public class SimpleCaseExpression<C,R>
 		return whenClauses;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getExpression(), registry );
 		for ( WhenClause whenClause : getWhenClauses() ) {

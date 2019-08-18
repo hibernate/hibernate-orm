@@ -26,15 +26,18 @@ public class StringTypeDescriptor extends AbstractTypeDescriptor<String> {
 		super( String.class );
 	}
 
+	@Override
 	public String toString(String value) {
 		return value;
 	}
 
+	@Override
 	public String fromString(String string) {
 		return string;
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(String value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -61,6 +64,7 @@ public class StringTypeDescriptor extends AbstractTypeDescriptor<String> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> String wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

@@ -21,6 +21,7 @@ import org.hibernate.testing.SkipForDialect;
 @RequiresDialect( DB2Dialect.class )
 @SkipForDialect( DerbyDialect.class )
 public class DB2CustomSQLTest extends CustomStoredProcTestSupport {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/hand/custom/db2/Mappings.hbm.xml" };
 	}

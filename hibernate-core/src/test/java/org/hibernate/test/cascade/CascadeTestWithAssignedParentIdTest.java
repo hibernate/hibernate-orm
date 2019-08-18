@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
  * @author Wallace Wadge (based on code by Gail Badner)
  */
 public class CascadeTestWithAssignedParentIdTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"cascade/ChildForParentWithAssignedId.hbm.xml",

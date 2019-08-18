@@ -92,6 +92,7 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 			this.s = s;
 		}
 		
+		@Override
 		public void execute(Connection connection) throws SQLException {
 			// id -> java.util.Date (DATE - becase of explicit TemporalType)
 			validateColumn( connection, "ID", java.sql.Types.DATE );
@@ -147,6 +148,7 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 			this.table = table;
 		}
 
+		@Override
 		public void execute(Connection connection) throws SQLException {
 			Statement st = s.getJdbcCoordinator().getStatementPreparer().createStatement();
 			s.getJdbcCoordinator().getResultSetReturn().extract( st, "SELECT COUNT(*) FROM " + table );

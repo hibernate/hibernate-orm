@@ -26,6 +26,7 @@ public class AddressEntryPk implements Serializable {
 		this.lastname = lastname;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof AddressEntryPk ) ) return false;
@@ -38,6 +39,7 @@ public class AddressEntryPk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = firstname.hashCode();

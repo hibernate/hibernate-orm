@@ -16,10 +16,12 @@ public class Company extends org.hibernate.test.legacy.Party {
    java.lang.String president;
 
 
+   @Override
   java.lang.String getId() {
     return id;
   }
 
+   @Override
   void  setId(java.lang.String newValue) {
     id = newValue;
   }

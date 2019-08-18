@@ -25,6 +25,7 @@ import static org.junit.Assert.assertSame;
  */
 public class EagerManyToOneFetchModeJoinWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "where/hbm/EagerManyToOneFetchModeJoinWhereTest.hbm.xml" };
 	}

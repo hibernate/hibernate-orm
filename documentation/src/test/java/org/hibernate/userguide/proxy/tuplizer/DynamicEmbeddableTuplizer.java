@@ -23,6 +23,7 @@ public class DynamicEmbeddableTuplizer
         super( embeddable );
     }
 
+	@Override
     protected Instantiator buildInstantiator(Component embeddable) {
         return new DynamicInstantiator(
             embeddable.getComponentClassName()

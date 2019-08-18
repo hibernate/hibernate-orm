@@ -37,10 +37,12 @@ public class ListIndexExpression extends ExpressionImpl<Integer> implements Seri
 		return listAttribute;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return "index("
 				+ origin.getPathIdentifier()

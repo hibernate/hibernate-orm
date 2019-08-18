@@ -44,6 +44,7 @@ public abstract class PluralAttributeJoinSupport<O,C,E>
 		return (PluralAttribute<? super O, C, E>) super.getAttribute();
 	}
 
+	@Override
 	public PluralAttribute<? super O, C, E> getModel() {
 		return getAttribute();
 	}

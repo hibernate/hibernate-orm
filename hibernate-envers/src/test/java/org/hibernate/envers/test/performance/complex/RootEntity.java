@@ -118,6 +118,7 @@ public class RootEntity {
 		this.child3 = child3;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -150,6 +151,7 @@ public class RootEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

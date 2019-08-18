@@ -41,6 +41,7 @@ public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class[0];
 	}
 
+	@Override
 	protected void addConfigOptions(Map options) {
 		options.put(  AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
 	}

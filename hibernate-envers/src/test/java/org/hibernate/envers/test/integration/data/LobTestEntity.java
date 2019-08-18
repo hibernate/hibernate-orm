@@ -96,6 +96,7 @@ public class LobTestEntity {
 		this.data = data;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -125,6 +126,7 @@ public class LobTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

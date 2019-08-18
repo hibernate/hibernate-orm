@@ -42,74 +42,93 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 		this.x = x;
 	}
 
+	@Override
 	public int getVersion() {
 		return version;
 	}
 
+	@Override
 	public void setVersion(int version) {
 		this.version = version;
 	}
 
+	@Override
 	public GlarchProxy getNext() {
 		return next;
 	}
+	@Override
 	public void setNext(GlarchProxy next) {
 		this.next = next;
 	}
 
+	@Override
 	public short getOrder() {
 		return order;
 	}
+	@Override
 	public void setOrder(short order) {
 		this.order = order;
 	}
 
+	@Override
 	public List getStrings() {
 		return strings;
 	}
 
+	@Override
 	public void setStrings(List strings) {
 		this.strings = strings;
 	}
 
+	@Override
 	public Map getStringSets() {
 		return stringSets;
 	}
 
+	@Override
 	public void setStringSets(Map stringSets) {
 		this.stringSets = stringSets;
 	}
 
+	@Override
 	public List getFooComponents() {
 		return fooComponents;
 	}
 
+	@Override
 	public void setFooComponents(List fooComponents) {
 		this.fooComponents = fooComponents;
 	}
 
+	@Override
 	public GlarchProxy[] getProxyArray() {
 		return proxyArray;
 	}
+	@Override
 	public void setProxyArray(GlarchProxy[] proxyArray) {
 		this.proxyArray = proxyArray;
 	}
+	@Override
 	public Set getProxySet() {
 		return proxySet;
 	}
 
+	@Override
 	public void setProxySet(Set proxySet) {
 		this.proxySet = proxySet;
 	}
 
+	@Override
 	public boolean onDelete(Session s) throws CallbackException {
 		return NO_VETO;
 	}
 
+	@Override
 	public void onLoad(Session s, Serializable id) {
 		if ( ! ( ( (String) id ).length()==32 ) ) throw new RuntimeException("id problem");
 	}
 
+	@Override
 	public boolean onSave(Session s) throws CallbackException {
 		dynaBean = new HashMap();
 		dynaBean.put("foo", "foo");
@@ -118,6 +137,7 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 		return NO_VETO;
 	}
 
+	@Override
 	public boolean onUpdate(Session s) throws CallbackException {
 		return NO_VETO;
 	}
@@ -134,6 +154,7 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	 * Returns the dynaBean.
 	 * @return DynaBean
 	 */
+	@Override
 	public Map getDynaBean() {
 		return dynaBean;
 	}
@@ -142,6 +163,7 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	 * Sets the dynaBean.
 	 * @param dynaBean The dynaBean to set
 	 */
+	@Override
 	public void setDynaBean(Map dynaBean) {
 		this.dynaBean = dynaBean;
 	}
@@ -166,6 +188,7 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	 * Returns the derivedVersion.
 	 * @return int
 	 */
+	@Override
 	public int getDerivedVersion() {
 		return derivedVersion;
 	}
@@ -182,6 +205,7 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	 * Returns the any.
 	 * @return Object
 	 */
+	@Override
 	public Object getAny() {
 		return any;
 	}
@@ -190,6 +214,7 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	 * Sets the any.
 	 * @param any The any to set
 	 */
+	@Override
 	public void setAny(Object any) {
 		this.any = any;
 	}
@@ -197,6 +222,7 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	/**
 	 * @return
 	 */
+	@Override
 	public Multiplicity getMultiple() {
 		return multiple;
 	}
@@ -204,10 +230,12 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	/**
 	 * @param multiplicity
 	 */
+	@Override
 	public void setMultiple(Multiplicity multiplicity) {
 		multiple = multiplicity;
 	}
 
+	@Override
 	public String getName() {
 		return super.getName();
 	}

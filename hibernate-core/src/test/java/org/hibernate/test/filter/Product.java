@@ -56,10 +56,12 @@ public class Product {
 		this.stockNumber = stockNumber;
 	}
 
+	@Override
 	public int hashCode() {
 		return stockNumber;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		return ( (Product) obj ).stockNumber == this.stockNumber;
 	}

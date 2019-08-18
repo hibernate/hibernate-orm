@@ -30,6 +30,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 	}

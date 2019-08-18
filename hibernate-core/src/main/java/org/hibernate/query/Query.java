@@ -161,6 +161,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	@Override
 	List<R> list();
 
+	@Override
 	default List<R> getResultList() {
 		return list();
 	}
@@ -168,6 +169,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	@Override
 	R uniqueResult();
 
+	@Override
 	default R getSingleResult() {
 		return uniqueResult();
 	}
@@ -352,6 +354,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setString(int position, String val) {
 		setParameter( position, val, StringType.INSTANCE );
 		return this;
@@ -370,6 +373,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setCharacter(int position, char val) {
 		setParameter( position, val, CharacterType.INSTANCE );
 		return this;
@@ -388,6 +392,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setBoolean(int position, boolean val) {
 		setParameter( position, val, determineProperBooleanType( position, val, BooleanType.INSTANCE ) );
 		return this;
@@ -406,6 +411,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setByte(int position, byte val) {
 		setParameter( position, val, ByteType.INSTANCE );
 		return this;
@@ -424,6 +430,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setShort(int position, short val) {
 		setParameter( position, val, ShortType.INSTANCE );
 		return this;
@@ -442,6 +449,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setInteger(int position, int val) {
 		setParameter( position, val, IntegerType.INSTANCE );
 		return this;
@@ -460,6 +468,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setLong(int position, long val) {
 		setParameter( position, val, LongType.INSTANCE );
 		return this;
@@ -478,6 +487,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setFloat(int position, float val) {
 		setParameter( position, val, FloatType.INSTANCE );
 		return this;
@@ -496,6 +506,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setDouble(int position, double val) {
 		setParameter( position, val, DoubleType.INSTANCE );
 		return this;
@@ -514,6 +525,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setBinary(int position, byte[] val) {
 		setParameter( position, val, BinaryType.INSTANCE );
 		return this;
@@ -532,6 +544,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setText(int position, String val) {
 		setParameter( position, val, TextType.INSTANCE );
 		return this;
@@ -550,6 +563,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setSerializable(int position, Serializable val) {
 		setParameter( position, val );
 		return this;
@@ -568,6 +582,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setLocale(int position, Locale val) {
 		setParameter( position, val, LocaleType.INSTANCE );
 		return this;
@@ -586,6 +601,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setBigDecimal(int position, BigDecimal val) {
 		setParameter( position, val, BigDecimalType.INSTANCE );
 		return this;
@@ -604,6 +620,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setBigInteger(int position, BigInteger val) {
 		setParameter( position, val, BigIntegerType.INSTANCE );
 		return this;
@@ -622,6 +639,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setDate(int position, Date val) {
 		setParameter( position, val, DateType.INSTANCE );
 		return this;
@@ -640,6 +658,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setTime(int position, Date val) {
 		setParameter( position, val, TimeType.INSTANCE );
 		return this;
@@ -658,6 +677,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setTimestamp(int position, Date val) {
 		setParameter( position, val, TimestampType.INSTANCE );
 		return this;
@@ -676,6 +696,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setCalendar(int position, Calendar val) {
 		setParameter( position, val, TimestampType.INSTANCE );
 		return this;
@@ -694,6 +715,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setCalendarDate(int position, Calendar val) {
 		setParameter( position, val, DateType.INSTANCE );
 		return this;
@@ -712,6 +734,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setString(String name, String val) {
 		setParameter( name, val, StringType.INSTANCE );
 		return this;
@@ -730,6 +753,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setCharacter(String name, char val) {
 		setParameter( name, val, CharacterType.INSTANCE );
 		return this;
@@ -748,6 +772,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setBoolean(String name, boolean val) {
 		setParameter( name, val, determineProperBooleanType( name, val, BooleanType.INSTANCE ) );
 		return this;
@@ -766,6 +791,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setByte(String name, byte val) {
 		setParameter( name, val, ByteType.INSTANCE );
 		return this;
@@ -784,6 +810,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setShort(String name, short val) {
 		setParameter( name, val, ShortType.INSTANCE );
 		return this;
@@ -802,6 +829,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setInteger(String name, int val) {
 		setParameter( name, val, IntegerType.INSTANCE );
 		return this;
@@ -820,6 +848,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setLong(String name, long val) {
 		setParameter( name, val, LongType.INSTANCE );
 		return this;
@@ -838,6 +867,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setFloat(String name, float val) {
 		setParameter( name, val, FloatType.INSTANCE );
 		return this;
@@ -856,6 +886,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setDouble(String name, double val) {
 		setParameter( name, val, DoubleType.INSTANCE );
 		return this;
@@ -874,6 +905,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setBinary(String name, byte[] val) {
 		setParameter( name, val, BinaryType.INSTANCE );
 		return this;
@@ -892,6 +924,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setText(String name, String val) {
 		setParameter( name, val, TextType.INSTANCE );
 		return this;
@@ -910,6 +943,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setSerializable(String name, Serializable val) {
 		setParameter( name, val );
 		return this;
@@ -927,6 +961,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setLocale(String name, Locale val) {
 		setParameter( name, val, TextType.INSTANCE );
 		return this;
@@ -944,6 +979,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setBigDecimal(String name, BigDecimal val) {
 		setParameter( name, val, BigDecimalType.INSTANCE );
 		return this;
@@ -961,6 +997,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setBigInteger(String name, BigInteger val) {
 		setParameter( name, val, BigIntegerType.INSTANCE );
 		return this;
@@ -979,6 +1016,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setDate(String name, Date val) {
 		setParameter( name, val, DateType.INSTANCE );
 		return this;
@@ -997,6 +1035,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setTime(String name, Date val) {
 		setParameter( name, val, TimeType.INSTANCE );
 		return this;
@@ -1015,6 +1054,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setTimestamp(String name, Date value) {
 		setParameter( name, value, TimestampType.INSTANCE );
 		return this;
@@ -1033,6 +1073,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setCalendar(String name, Calendar value) {
 		setParameter( name, value, TimestampType.INSTANCE );
 		return this;
@@ -1051,6 +1092,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setCalendarDate(String name, Calendar value) {
 		setParameter( name, value, DateType.INSTANCE );
 		return this;
@@ -1071,6 +1113,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	Query<R> setEntity(int position, Object val);
 
 	/**
@@ -1087,6 +1130,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	Query<R> setEntity(String name, Object val);
 
 	/**
@@ -1101,6 +1145,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 * @todo develop a new approach to result transformers
 	 */
 	@Deprecated
+	@Override
 	Query<R> setResultTransformer(ResultTransformer transformer);
 
 	/**
@@ -1119,6 +1164,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setParameters(Object[] values, Type[] types) {
 		assert values.length == types.length;
 		for ( int i = 0; i < values.length; i++ ) {
@@ -1136,6 +1182,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 * @return The results Stream
 	 * @since 5.2.11
 	 */
+	@Override
 	default Stream<R> getResultStream() {
 		return stream();
 	}

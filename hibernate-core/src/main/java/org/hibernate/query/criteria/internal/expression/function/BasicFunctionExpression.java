@@ -36,18 +36,22 @@ public class BasicFunctionExpression<X>
 		return number + (int)( number*.75 ) + 1;
 	}
 
+	@Override
 	public String getFunctionName() {
 		return functionName;
 	}
 
+	@Override
 	public boolean isAggregation() {
 		return false;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do here...
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return getFunctionName() + "()";
 	}

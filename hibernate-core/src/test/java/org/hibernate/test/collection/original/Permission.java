@@ -24,11 +24,13 @@ public class Permission {
 	public Permission(String type) {
 		this.type = type;
 	}
+	@Override
 	public boolean equals(Object that) {
 		if ( !(that instanceof Permission) ) return false;
 		Permission p = (Permission) that;
 		return this.type.equals(p.type);
 	}
+	@Override
 	public int hashCode() {
 		return type.hashCode();
 	}

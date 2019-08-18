@@ -17,6 +17,7 @@ public class Sortable implements Comparable {
 		this.name = name;
 	}
 	
+	@Override
 	public int compareTo(Object o) {
 		return name.compareTo( ( (Sortable) o).name );
 	}

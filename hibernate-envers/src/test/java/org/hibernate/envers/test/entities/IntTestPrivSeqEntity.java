@@ -60,6 +60,7 @@ public class IntTestPrivSeqEntity {
 		this.number = number;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -80,12 +81,14 @@ public class IntTestPrivSeqEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = (id != null ? id.hashCode() : 0);
 		result = 31 * result + (number != null ? number.hashCode() : 0);
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ITPSE(id = " + id + ", number = " + number + ")";
 	}

@@ -46,6 +46,7 @@ public class BitSetTypeDescriptor extends AbstractTypeDescriptor<BitSet> {
     }
 
     @SuppressWarnings({"unchecked"})
+	@Override
     public <X> X unwrap(BitSet value, Class<X> type, WrapperOptions options) {
         if ( value == null ) {
             return null;
@@ -59,6 +60,7 @@ public class BitSetTypeDescriptor extends AbstractTypeDescriptor<BitSet> {
         throw unknownUnwrap( type );
     }
 
+	@Override
     public <X> BitSet wrap(X value, WrapperOptions options) {
         if ( value == null ) {
             return null;

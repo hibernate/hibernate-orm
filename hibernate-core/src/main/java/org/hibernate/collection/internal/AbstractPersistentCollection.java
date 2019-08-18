@@ -1200,6 +1200,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			this.orphan = orphan;
 		}
 
+		@Override
 		public void replace(CollectionPersister persister, Map copyCache) {
 			if ( addedValue != null ) {
 				addedValue = getReplacement( persister.getElementType(), addedValue, copyCache );

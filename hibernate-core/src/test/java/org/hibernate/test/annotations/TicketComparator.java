@@ -16,6 +16,7 @@ import java.util.Comparator;
  */
 public class TicketComparator implements Comparator<Ticket> {
 
+	@Override
 	public int compare(Ticket ticket, Ticket ticket1) {
 		if ( ticket == null || ticket1 == null ) {
 			throw new IllegalStateException( "Ticket comparison only available through non null tickets" );

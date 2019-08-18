@@ -59,6 +59,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 		return getUnderlyingStream().getInputStream();
 	}
 
+	@Override
 	public BinaryStream getUnderlyingStream() throws SQLException {
 		resetIfNeeded();
 		return binaryStream;

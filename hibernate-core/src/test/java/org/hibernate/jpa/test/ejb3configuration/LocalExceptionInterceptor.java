@@ -19,6 +19,7 @@ import org.hibernate.type.Type;
 public class LocalExceptionInterceptor extends ExceptionInterceptor {
 	public static final String LOCAL_EXCEPTION_MESSAGE = "Session-scoped interceptor enabled";
 
+	@Override
 	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
 		if (allowSave) return false;

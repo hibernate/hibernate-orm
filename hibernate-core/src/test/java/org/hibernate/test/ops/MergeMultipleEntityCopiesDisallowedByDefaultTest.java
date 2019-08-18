@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 @TestForIssue( jiraKey = "HHH-9106")
 public class MergeMultipleEntityCopiesDisallowedByDefaultTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"ops/Hoarder.hbm.xml"

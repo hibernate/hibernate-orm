@@ -52,6 +52,7 @@ public class EmbIdTestEntity {
 		this.str1 = str1;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -72,6 +73,7 @@ public class EmbIdTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

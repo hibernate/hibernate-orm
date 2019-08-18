@@ -28,6 +28,7 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 		return name;
 	}
 
+	@Override
 	public Categorization getCategorization() {
 		return categorization;
 	}

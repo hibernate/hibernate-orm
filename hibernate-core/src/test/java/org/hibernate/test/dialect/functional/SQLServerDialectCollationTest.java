@@ -50,6 +50,7 @@ public class SQLServerDialectCollationTest extends BaseCoreFunctionalTestCase {
 		return configuration;
 	}
 
+	@Override
 	protected void buildSessionFactory() {
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
 		StandardServiceRegistryImpl _serviceRegistry = buildServiceRegistry( bootRegistry, constructConfiguration() );

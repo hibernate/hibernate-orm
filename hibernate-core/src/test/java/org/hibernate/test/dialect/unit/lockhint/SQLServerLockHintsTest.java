@@ -15,10 +15,12 @@ import org.hibernate.dialect.SQLServerDialect;
 public class SQLServerLockHintsTest extends AbstractLockHintTest {
 	public static final Dialect DIALECT = new SQLServerDialect();
 
+	@Override
 	protected String getLockHintUsed() {
 		return "with (updlock, rowlock)";
 	}
 
+	@Override
 	protected Dialect getDialectUnderTest() {
 		return DIALECT;
 	}

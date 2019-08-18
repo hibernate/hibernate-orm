@@ -10,6 +10,7 @@ public enum Percent implements Unit {
 
 	INSTANCE;
 
+	@Override
 	public String getName() {
 		return "%";
 	}

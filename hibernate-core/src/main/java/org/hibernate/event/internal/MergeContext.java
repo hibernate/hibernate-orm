@@ -109,6 +109,7 @@ class MergeContext implements Map {
 	/**
 	 * Clears the MergeContext.
 	 */
+	@Override
 	public void clear() {
 		mergeToManagedEntityXref.clear();
 		managedToMergeEntityXref.clear();
@@ -123,6 +124,7 @@ class MergeContext implements Map {
 	 * @return true if this MergeContext contains a cross-reference for the specified merge entity
 	 * @throws NullPointerException if mergeEntity is null
 	 */
+	@Override
 	public boolean containsKey(Object mergeEntity) {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
@@ -138,6 +140,7 @@ class MergeContext implements Map {
 	 * to a merge entity
 	 * @throws NullPointerException if managedEntity is null
 	 */
+	@Override
 	public boolean containsValue(Object managedEntity) {
 		if ( managedEntity == null ) {
 			throw new NullPointerException( "null copies are not supported by " + getClass().getName() );
@@ -151,6 +154,7 @@ class MergeContext implements Map {
 	 *
 	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
 	 */
+	@Override
 	public Set entrySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.entrySet() );
 	}
@@ -161,6 +165,7 @@ class MergeContext implements Map {
 	 * @return  the managed entity associated with the specified merge Entity
 	 * @throws NullPointerException if mergeEntity is null
 	 */
+	@Override
 	public Object get(Object mergeEntity) {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
@@ -172,6 +177,7 @@ class MergeContext implements Map {
 	 * Returns true if this MergeContext contains no merge-to-managed entity cross-references.
 	 * @return true if this MergeContext contains no merge-to-managed entity cross-references.
 	 */
+	@Override
 	public boolean isEmpty() {
 		return mergeToManagedEntityXref.isEmpty();
 	}
@@ -182,6 +188,7 @@ class MergeContext implements Map {
 	 *
 	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
 	 */
+	@Override
 	public Set keySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.keySet() );
 	}
@@ -205,6 +212,7 @@ class MergeContext implements Map {
 	 * managed entity associated with <code>merge entity</code>
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
+	@Override
 	public Object put(Object mergeEntity, Object managedEntity) {
 		return put( mergeEntity, managedEntity, Boolean.FALSE );
 	}
@@ -289,6 +297,7 @@ class MergeContext implements Map {
 	 * but associated value in <code>map</code> is different from the previous value in this MergeContext.
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
+	@Override
 	public void putAll(Map map) {
 		for ( Object o : map.entrySet() ) {
 			Entry entry = (Entry) o;
@@ -301,6 +310,7 @@ class MergeContext implements Map {
 	 * @param mergeEntity the merge entity.
 	 * @throws UnsupportedOperationException if called.
 	 */
+	@Override
 	public Object remove(Object mergeEntity) {
 		throw new UnsupportedOperationException(
 				String.format( "Operation not supported: %s.remove()", getClass().getName() )
@@ -311,6 +321,7 @@ class MergeContext implements Map {
 	 * Returns the number of merge-to-managed entity cross-references in this MergeContext
 	 * @return the number of merge-to-managed entity cross-references in this MergeContext
 	 */
+	@Override
 	public int size() {
 		return mergeToManagedEntityXref.size();
 	}
@@ -321,6 +332,7 @@ class MergeContext implements Map {
 	 *
 	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
 	 */
+	@Override
 	public Collection values() {
 		return Collections.unmodifiableSet( managedToMergeEntityXref.keySet() );
 	}

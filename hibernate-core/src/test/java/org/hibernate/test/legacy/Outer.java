@@ -30,6 +30,7 @@ public class Outer implements Serializable {
 		this.bubu = bubu;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof Outer)) return false;
@@ -41,6 +42,7 @@ public class Outer implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}

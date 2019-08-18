@@ -48,6 +48,7 @@ public class ManyToOneNotAuditedNullEntity implements Serializable {
 		this.reference = reference;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof ManyToOneNotAuditedNullEntity ) ) return false;
@@ -60,12 +61,14 @@ public class ManyToOneNotAuditedNullEntity implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = ( id != null ? id.hashCode() : 0 );
 		result = 31 * result + ( data != null ? data.hashCode() : 0 );
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ManyToOneNotAuditedNullEntity(id = " + id + ", data = " + data + ")";
 	}

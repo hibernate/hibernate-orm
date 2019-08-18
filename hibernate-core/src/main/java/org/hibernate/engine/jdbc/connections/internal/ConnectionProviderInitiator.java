@@ -216,6 +216,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			new BeanInfoHelper( connectionProvider.getClass() ).applyToBeanInfo(
 					connectionProvider,
 					new BeanInfoHelper.BeanInfoDelegate() {
+						@Override
 						public void processBeanInfo(BeanInfo beanInfo) throws Exception {
 							final PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
 							for ( PropertyDescriptor descriptor : descriptors ) {

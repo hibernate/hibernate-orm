@@ -39,6 +39,7 @@ public class MiddleKey implements Serializable {
 		this.sup = sup;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof MiddleKey)) return false;
@@ -52,6 +53,7 @@ public class MiddleKey implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (sup != null ? sup.hashCode() : 0);

@@ -69,6 +69,7 @@ public class House implements Serializable {
 		this.hasInhabitants = hasInhabitants;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof House ) ) return false;
@@ -80,6 +81,7 @@ public class House implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return ( address != null ? address.hashCode() : 0 );
 	}

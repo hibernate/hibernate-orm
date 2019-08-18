@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
  * @author Gavin King
  */
 public class MapElementFormulaTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "mapelemformula/UserGroup.hbm.xml" };
 	}

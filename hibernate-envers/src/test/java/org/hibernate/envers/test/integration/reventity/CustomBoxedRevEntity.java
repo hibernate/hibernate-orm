@@ -55,6 +55,7 @@ public class CustomBoxedRevEntity {
 		this.customTimestamp = customTimestamp;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -77,6 +78,7 @@ public class CustomBoxedRevEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (customId != null ? customId.hashCode() : 0);

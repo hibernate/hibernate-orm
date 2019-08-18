@@ -35,6 +35,7 @@ public class OrderLine {
     this.articleId = articleId;
   }
   
+  @Override
   public String toString() {
     return "[" + getLineId() + ":" + getArticleId() + "]";
   }

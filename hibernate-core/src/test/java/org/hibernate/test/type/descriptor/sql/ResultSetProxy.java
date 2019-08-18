@@ -33,6 +33,7 @@ public class ResultSetProxy<T> implements InvocationHandler {
 		return cl;
 	}
 
+	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		if ( method.getName().equals( methodName ) && args.length >= 1 ) {
 			return value;

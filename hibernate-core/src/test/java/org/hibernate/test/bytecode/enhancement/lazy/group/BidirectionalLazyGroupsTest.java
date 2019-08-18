@@ -50,6 +50,7 @@ import static org.junit.Assert.assertTrue;
 })
 public class BidirectionalLazyGroupsTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Employer.class, Employee.class };
 	}
@@ -181,6 +182,7 @@ public class BidirectionalLazyGroupsTest extends BaseCoreFunctionalTestCase {
 			this.employer = employer;
 		}
 
+		@Override
 		public int hashCode() {
 			if ( name != null ) {
 				return name.hashCode();
@@ -190,6 +192,7 @@ public class BidirectionalLazyGroupsTest extends BaseCoreFunctionalTestCase {
 			}
 		}
 
+		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;

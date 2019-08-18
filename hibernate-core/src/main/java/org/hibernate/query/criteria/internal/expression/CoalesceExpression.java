@@ -43,11 +43,13 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		return javaType;
 	}
 
+	@Override
 	public Coalesce<T> value(T value) {
 		return value( new LiteralExpression<T>( criteriaBuilder(), value ) );
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public Coalesce<T> value(Expression<? extends T> value) {
 		expressions.add( value );
 		if ( javaType == null ) {
@@ -60,12 +62,14 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		return expressions;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		for ( Expression expression : getExpressions() ) {
 			Helper.possibleParameter(expression, registry);
 		}
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		StringBuilder buffer = new StringBuilder( "coalesce(" );
 		String sep = "";

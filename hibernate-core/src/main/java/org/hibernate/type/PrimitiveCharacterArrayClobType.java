@@ -20,6 +20,7 @@ public class PrimitiveCharacterArrayClobType extends AbstractSingleColumnStandar
 		super( ClobTypeDescriptor.DEFAULT, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		// todo name these annotation types for addition to the registry
 		return null;

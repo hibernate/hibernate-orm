@@ -45,12 +45,14 @@ public class Email {
 		this.address = type;
 	}
 
+	@Override
 	public boolean equals(Object that) {
 		if ( !(that instanceof Email) ) return false;
 		Email p = (Email) that;
 		return this.address.equals(p.address);
 	}
 
+	@Override
 	public int hashCode() {
 		return address.hashCode();
 	}

@@ -58,6 +58,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	 *
 	 * @param session The session being deserialized
 	 */
+	@Override
 	public void afterDeserialize(SharedSessionContractImplementor session) {
 		if ( this.session != null || this.persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );

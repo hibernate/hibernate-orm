@@ -13,6 +13,7 @@ package org.hibernate.test.lob;
  * @author Gail Badner
  */
 public class TextTest extends LongStringTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lob/TextMappings.hbm.xml" };
 	}

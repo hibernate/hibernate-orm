@@ -18,6 +18,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 @RequiresDialectFeature( value = DialectChecks.SupportsSequences.class )
 public class BigIntegerSequenceGeneratorTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "idgen/biginteger/sequence/Mapping.hbm.xml" };
 	}

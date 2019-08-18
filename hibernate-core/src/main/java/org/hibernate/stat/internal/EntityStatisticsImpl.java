@@ -36,26 +36,32 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 		this.rootEntityName = rootEntityDescriptor.getRootEntityName();
 	}
 
+	@Override
 	public long getDeleteCount() {
 		return deleteCount.sum();
 	}
 
+	@Override
 	public long getInsertCount() {
 		return insertCount.sum();
 	}
 
+	@Override
 	public long getLoadCount() {
 		return loadCount.sum();
 	}
 
+	@Override
 	public long getUpdateCount() {
 		return updateCount.sum();
 	}
 
+	@Override
 	public long getFetchCount() {
 		return fetchCount.sum();
 	}
 
+	@Override
 	public long getOptimisticFailureCount() {
 		return optimisticFailureCount.sum();
 	}
@@ -84,6 +90,7 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 		optimisticFailureCount.increment();
 	}
 
+	@Override
 	public String toString() {
 		final StringBuilder buffer = new StringBuilder()
 				.append( "EntityStatistics" )

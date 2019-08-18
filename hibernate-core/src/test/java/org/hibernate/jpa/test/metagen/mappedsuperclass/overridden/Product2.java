@@ -19,10 +19,12 @@ import javax.persistence.Entity;
 public class Product2 extends Product1 {
 
 	@Column(name = "overridenName"/*, insertable = false, updatable = false*/)
+	@Override
 	public String getOverridenName() {
 		return super.getOverridenName();
 	}
 
+	@Override
 	public void setOverridenName(String overridenName) {
 		super.setOverridenName(overridenName);
 	}

@@ -19,6 +19,7 @@ import org.hibernate.testing.SkipForDialect;
                 "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
 )
 public class EntityWithNonInverseOneToManyJoinTest extends AbstractEntityWithOneToManyTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/noninverse/ContractVariationOneToManyJoin.hbm.xml" };
 	}

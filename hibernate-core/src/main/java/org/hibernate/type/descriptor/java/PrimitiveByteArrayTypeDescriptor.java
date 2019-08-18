@@ -46,6 +46,7 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 		return hashCode;
 	}
 
+	@Override
 	public String toString(byte[] bytes) {
 		final StringBuilder buf = new StringBuilder( bytes.length * 2 );
 		for ( byte aByte : bytes ) {
@@ -63,6 +64,7 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 		return (value == null) ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}
 
+	@Override
 	public byte[] fromString(String string) {
 		if ( string == null ) {
 			return null;
@@ -85,6 +87,7 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(byte[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -105,6 +108,7 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> byte[] wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

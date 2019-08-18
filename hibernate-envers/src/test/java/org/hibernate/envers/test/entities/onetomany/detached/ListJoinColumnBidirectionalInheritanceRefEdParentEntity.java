@@ -86,6 +86,7 @@ public class ListJoinColumnBidirectionalInheritanceRefEdParentEntity {
 		this.parentData = parentData;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -107,6 +108,7 @@ public class ListJoinColumnBidirectionalInheritanceRefEdParentEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -114,6 +116,7 @@ public class ListJoinColumnBidirectionalInheritanceRefEdParentEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ListJoinColumnBidirectionalInheritanceRefEdParentEntity(id = " + id + ", parentData = " + parentData + ")";
 	}

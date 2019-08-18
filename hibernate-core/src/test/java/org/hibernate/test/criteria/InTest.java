@@ -21,6 +21,7 @@ import org.junit.Test;
  */
 public class InTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[]{ "criteria/Person.hbm.xml" };
 	}

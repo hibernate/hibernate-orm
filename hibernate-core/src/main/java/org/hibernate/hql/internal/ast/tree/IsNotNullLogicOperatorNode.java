@@ -13,10 +13,12 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
  * @author Steve Ebersole
  */
 public class IsNotNullLogicOperatorNode extends AbstractNullnessCheckNode {
+	@Override
 	protected int getExpansionConnectorType() {
 		return HqlSqlTokenTypes.OR;
 	}
 
+	@Override
 	protected String getExpansionConnectorText() {
 		return "OR";
 	}

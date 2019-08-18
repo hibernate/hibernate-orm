@@ -46,6 +46,7 @@ public class AuditedMethodMappedSuperclass {
 		this.otherStr = otherStr;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -63,6 +64,7 @@ public class AuditedMethodMappedSuperclass {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (str != null ? str.hashCode() : 0);
 	}

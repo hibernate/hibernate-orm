@@ -23,6 +23,7 @@ public class ImageType extends AbstractSingleColumnStandardBasicType<byte[]> {
 		super( LongVarbinaryTypeDescriptor.INSTANCE, PrimitiveByteArrayTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "image";
 	}

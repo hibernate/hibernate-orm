@@ -18,6 +18,7 @@ public class GenderType extends AbstractSingleColumnStandardBasicType<Gender> {
         );
     }
 
+	@Override
     public String getName() {
         return "gender";
     }

@@ -29,16 +29,19 @@ public class Bag extends Collection {
 		super( buildingContext, owner );
 	}
 
+	@Override
 	public CollectionType getDefaultCollectionType() {
 		return getMetadata().getTypeResolver()
 				.getTypeFactory()
 				.bag( getRole(), getReferencedPropertyName() );
 	}
 
+	@Override
 	void createPrimaryKey() {
 		//create an index on the key columns??
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

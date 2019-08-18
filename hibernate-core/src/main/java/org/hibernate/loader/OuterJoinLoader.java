@@ -49,10 +49,12 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		this.loadQueryInfluencers = loadQueryInfluencers;
 	}
 
+	@Override
 	protected String[] getSuffixes() {
 		return suffixes;
 	}
 
+	@Override
 	protected String[] getCollectionSuffixes() {
 		return collectionSuffixes;
 	}
@@ -62,18 +64,22 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		return sql;
 	}
 
+	@Override
 	protected final Loadable[] getEntityPersisters() {
 		return persisters;
 	}
 
+	@Override
 	protected int[] getOwners() {
 		return owners;
 	}
 
+	@Override
 	protected EntityType[] getOwnerAssociationTypes() {
 		return ownerAssociationTypes;
 	}
 
+	@Override
 	protected LockMode[] getLockModes(LockOptions lockOptions) {
 		return lockModeArray;
 	}
@@ -86,14 +92,17 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		return loadQueryInfluencers;
 	}
 
+	@Override
 	protected final String[] getAliases() {
 		return aliases;
 	}
 
+	@Override
 	protected final CollectionPersister[] getCollectionPersisters() {
 		return collectionPersisters;
 	}
 
+	@Override
 	protected final int[] getCollectionOwners() {
 		return collectionOwners;
 	}

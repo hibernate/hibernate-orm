@@ -214,22 +214,27 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	}
 
+	@Override
 	public Serializable[] getQuerySpaces() {
 		return subclassSpaces;
 	}
 
+	@Override
 	public String getTableName() {
 		return subquery;
 	}
 
+	@Override
 	public Type getDiscriminatorType() {
 		return StandardBasicTypes.INTEGER;
 	}
 
+	@Override
 	public Object getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
+	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLValue;
 	}
@@ -238,10 +243,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassClosure;
 	}
 
+	@Override
 	public String getSubclassForDiscriminatorValue(Object value) {
 		return (String) subclassByDiscriminatorValue.get( value );
 	}
 
+	@Override
 	public Serializable[] getPropertySpaces() {
 		return spaces;
 	}
@@ -287,24 +294,29 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return null;
 	}
 
+	@Override
 	protected String getTableName(int j) {
 		return tableName;
 	}
 
+	@Override
 	protected String[] getKeyColumns(int j) {
 		return getIdentifierColumnNames();
 	}
 
+	@Override
 	protected boolean isTableCascadeDeleteEnabled(int j) {
 		return false;
 	}
 
+	@Override
 	protected boolean isPropertyOfTable(int property, int j) {
 		return true;
 	}
 
 	// Execute the SQL:
 
+	@Override
 	public String fromTableFragment(String name) {
 		return getTableName() + ' ' + name;
 	}
@@ -321,39 +333,48 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return filterFragment( alias );
 	}
 
+	@Override
 	public String getSubclassPropertyTableName(int i) {
 		return getTableName();//ie. the subquery! yuck!
 	}
 
+	@Override
 	protected void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
 		select.addColumn( name, getDiscriminatorColumnName(), getDiscriminatorAlias() );
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbersInSelect() {
 		return new int[getPropertySpan()];
 	}
 
+	@Override
 	protected int getSubclassPropertyTableNumber(int i) {
 		return 0;
 	}
 
+	@Override
 	public int getSubclassPropertyTableNumber(String propertyName) {
 		return 0;
 	}
 
+	@Override
 	public boolean isMultiTable() {
 		// This could also just be true all the time...
 		return isAbstract() || hasSubclasses();
 	}
 
+	@Override
 	public int getTableSpan() {
 		return 1;
 	}
 
+	@Override
 	protected int[] getSubclassColumnTableNumberClosure() {
 		return new int[getSubclassColumnClosure().length];
 	}
 
+	@Override
 	protected int[] getSubclassFormulaTableNumberClosure() {
 		return new int[getSubclassFormulaClosure().length];
 	}
@@ -362,6 +383,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return new boolean[] {true};
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbers() {
 		return new int[getPropertySpan()];
 	}
@@ -441,6 +463,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return buf.append( " )" ).toString();
 	}
 
+	@Override
 	protected String[] getSubclassTableKeyColumns(int j) {
 		if ( j != 0 ) {
 			throw new AssertionFailure( "only one table" );
@@ -448,6 +471,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return getIdentifierColumnNames();
 	}
 
+	@Override
 	public String getSubclassTableName(int j) {
 		if ( j != 0 ) {
 			throw new AssertionFailure( "only one table" );
@@ -455,10 +479,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return tableName;
 	}
 
+	@Override
 	public int getSubclassTableSpan() {
 		return 1;
 	}
 
+	@Override
 	protected boolean isClassOrSuperclassTable(int j) {
 		if ( j != 0 ) {
 			throw new AssertionFailure( "only one table" );
@@ -466,15 +492,18 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return true;
 	}
 
+	@Override
 	public String getPropertyTableName(String propertyName) {
 		//TODO: check this....
 		return getTableName();
 	}
 
+	@Override
 	public String[] getConstraintOrderedTableNameClosure() {
 		return constraintOrderedTableNames;
 	}
 
+	@Override
 	public String[][] getContraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}

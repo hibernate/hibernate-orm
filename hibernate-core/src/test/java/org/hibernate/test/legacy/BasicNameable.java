@@ -22,6 +22,7 @@ public class BasicNameable implements Nameable {
 	/**
 	 * @see Nameable#getName()
 	 */
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -29,6 +30,7 @@ public class BasicNameable implements Nameable {
 	/**
 	 * @see Nameable#setName()
 	 */
+	@Override
 	public void setName(String n) {
 		name = n;
 	}
@@ -36,6 +38,7 @@ public class BasicNameable implements Nameable {
 	/**
 	 * @see Nameable#getKey()
 	 */
+	@Override
 	public Long getKey() {
 		return id;
 	}
@@ -43,6 +46,7 @@ public class BasicNameable implements Nameable {
 	/**
 	 * @see Nameable#setKey()
 	 */
+	@Override
 	public void setKey(Long k) {
 		id = k;
 	}

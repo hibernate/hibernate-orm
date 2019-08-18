@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ABCTest extends BaseNonConfigCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "legacy/ABC.hbm.xml", "legacy/ABCExtends.hbm.xml" };
 	}

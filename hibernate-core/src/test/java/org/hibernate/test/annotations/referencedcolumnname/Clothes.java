@@ -56,6 +56,7 @@ public class Clothes {
 		this.flavor = flavor;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Clothes ) ) return false;
@@ -68,6 +69,7 @@ public class Clothes {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = type.hashCode();

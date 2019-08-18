@@ -36,6 +36,7 @@ public abstract class AbstractCompositeReference extends AbstractExpandingFetchS
 		// anything to do here?
 	}
 
+	@Override
 	protected CompositeAttributeFetch createCompositeAttributeFetch(
 			AttributeDefinition attributeDefinition,
 			ExpandingCompositeQuerySpace compositeQuerySpace) {

@@ -109,6 +109,7 @@ public class WhereJoinTableEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "WJTE(id = " + id + ", data = " + data + ")";
 	}

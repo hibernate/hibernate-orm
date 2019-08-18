@@ -23,26 +23,32 @@ public class ImpliedFromElement extends FromElement {
 	 */
 	private boolean inProjectionList;
 
+	@Override
 	public boolean isImplied() {
 		return true;
 	}
 
+	@Override
 	public void setImpliedInFromClause(boolean flag) {
 		impliedInFromClause = flag;
 	}
 
+	@Override
 	public boolean isImpliedInFromClause() {
 		return impliedInFromClause;
 	}
 
+	@Override
 	public void setInProjectionList(boolean inProjectionList) {
 		this.inProjectionList = inProjectionList;
 	}
 
+	@Override
 	public boolean inProjectionList() {
 		return inProjectionList && isFromOrJoinFragment();
 	}
 
+	@Override
 	public boolean isIncludeSubclasses() {
 		return false;	// Never include subclasses for implied from elements.
 	}
@@ -52,6 +58,7 @@ public class ImpliedFromElement extends FromElement {
 	 *
 	 * @return String - The additional display text.
 	 */
+	@Override
 	public String getDisplayText() {
 		StringBuilder buf = new StringBuilder();
 		buf.append( "ImpliedFromElement{" );

@@ -95,6 +95,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		SelectClause.VERSION2_SQL = true;
 		DotNode.regressionStyleJoinSuppression = true;
 		DotNode.ILLEGAL_COLL_DEREF_EXCP_BUILDER = new DotNode.IllegalCollectionDereferenceExceptionBuilder() {
+			@Override
 			public QueryException buildIllegalCollectionDereferenceException(String propertyName, FromReferenceNode lhs) {
 				throw new QueryException( "illegal syntax near collection: " + propertyName );
 			}

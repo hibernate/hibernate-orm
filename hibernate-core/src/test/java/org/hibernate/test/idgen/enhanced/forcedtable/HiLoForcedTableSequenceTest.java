@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class HiLoForcedTableSequenceTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "idgen/enhanced/forcedtable/HiLo.hbm.xml" };
 	}

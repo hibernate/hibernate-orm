@@ -58,6 +58,7 @@ public abstract class AbstractQuerySpace implements QuerySpace {
 	 *
 	 * @return The query spaces
 	 */
+	@Override
 	public QuerySpaces getQuerySpaces() {
 		return querySpaces;
 	}

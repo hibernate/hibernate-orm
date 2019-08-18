@@ -41,12 +41,14 @@ public class Broken implements Serializable {
 		otherId = string;
 	}
 	
+	@Override
 	public boolean equals(Object other) {
 		if ( !(other instanceof Broken) ) return false;
 		Broken that = (Broken) other;
 		return this.id.equals(that.id) && this.otherId.equals(that.otherId);
 	}
 	
+	@Override
 	public int hashCode() {
 		return 1;
 	}

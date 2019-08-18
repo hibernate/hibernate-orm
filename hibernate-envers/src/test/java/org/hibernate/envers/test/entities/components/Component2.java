@@ -41,6 +41,7 @@ public class Component2 {
 		this.str6 = str6;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -61,6 +62,7 @@ public class Component2 {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (str5 != null ? str5.hashCode() : 0);
@@ -68,6 +70,7 @@ public class Component2 {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "Comp2(str1 = " + str5 + ", " + str6 + ")";
 	}

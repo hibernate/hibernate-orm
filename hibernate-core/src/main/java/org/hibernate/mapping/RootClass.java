@@ -68,6 +68,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return 0;
 	}
 
+	@Override
 	public void setTable(Table table) {
 		this.table = table;
 	}

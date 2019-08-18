@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class CascadeToComponentCollectionTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "component/cascading/collection/Mappings.hbm.xml" };
 	}

@@ -26,6 +26,7 @@ public class TestTypeContributor implements TypeContributor {
 
 	public static final String NAME = "test-type";
 
+	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		typeContributions.contributeType( new TestType(), NAME );
 	}

@@ -50,6 +50,7 @@ public class StringListEntity {
 		this.strings = strings;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -67,10 +68,12 @@ public class StringListEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}
 
+	@Override
 	public String toString() {
 		return "SLE(id = " + id + ", strings = " + strings + ")";
 	}

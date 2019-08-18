@@ -65,6 +65,7 @@ public class AuditedBaseEntity implements Serializable {
 		this.number1 = number1;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -88,6 +89,7 @@ public class AuditedBaseEntity implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -96,6 +98,7 @@ public class AuditedBaseEntity implements Serializable {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "AuditedBaseEntity(id = " + id + ", str1 = " + str1 + ", number1 = " + number1 + ")";
 	}

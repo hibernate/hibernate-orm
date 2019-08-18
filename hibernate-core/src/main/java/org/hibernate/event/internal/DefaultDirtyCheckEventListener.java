@@ -29,6 +29,7 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 	 * @param event The dirty-check event to be handled.
 	 * @throws HibernateException
 	 */
+	@Override
 	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException {
 		final ActionQueue actionQueue = event.getSession().getActionQueue();
 		int oldSize = actionQueue.numberOfCollectionRemovals();

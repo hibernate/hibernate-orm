@@ -25,6 +25,7 @@ import org.junit.Test;
 @TestForIssue(jiraKey = "HHH-7821")
 public class TestClearBatchFetchQueueAfterFlush extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.DEFAULT_BATCH_FETCH_SIZE, "10" );
 	}

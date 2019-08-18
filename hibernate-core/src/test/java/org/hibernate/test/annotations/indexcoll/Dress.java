@@ -30,6 +30,7 @@ public class Dress {
 		this.id = id;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Dress ) ) return false;
@@ -41,6 +42,7 @@ public class Dress {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return getId().hashCode();
 	}

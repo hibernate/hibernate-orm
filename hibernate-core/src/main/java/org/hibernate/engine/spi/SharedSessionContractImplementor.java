@@ -86,6 +86,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Get the creating <tt>SessionFactoryImplementor</tt>
 	 */
+	@Override
 	SessionFactoryImplementor getFactory();
 
 	SessionEventListenerManager getEventListenerManager();
@@ -110,6 +111,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The tenant identifier; may be {@code null}
 	 */
+	@Override
 	String getTenantIdentifier();
 
 	/**
@@ -393,6 +395,7 @@ public interface SharedSessionContractImplementor
 			throws HibernateException;
 
 
+	@Override
 	CacheMode getCacheMode();
 
 	void setCacheMode(CacheMode cm);
@@ -447,6 +450,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The flush mode
 	 */
+	@Override
 	FlushMode getHibernateFlushMode();
 
 	Connection connection();

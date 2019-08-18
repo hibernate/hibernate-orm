@@ -84,6 +84,7 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 	 *
 	 * @return Class - The AST node class to instantiate.
 	 */
+	@Override
 	public Class getASTNodeType(int tokenType) {
 		switch ( tokenType ) {
 			case SELECT:
@@ -202,6 +203,7 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	protected AST createUsingCtor(Token token, String className) {
 		Class c;
 		AST t;
@@ -243,6 +245,7 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 	 *
 	 * @return The instantiated and initialized node.
 	 */
+	@Override
 	protected AST create(Class c) {
 		AST t;
 		try {

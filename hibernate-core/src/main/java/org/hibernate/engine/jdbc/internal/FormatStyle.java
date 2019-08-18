@@ -47,6 +47,7 @@ public enum FormatStyle {
 		 */
 		public static final NoFormatImpl INSTANCE = new NoFormatImpl();
 
+		@Override
 		public String format(String source) {
 			return source;
 		}

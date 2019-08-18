@@ -50,6 +50,7 @@ public class EmbeddableWithManyToMany_HHH_11302_Test
 		};
 	}
 
+	@Override
 	protected void buildSessionFactory() {
 		try {
 			super.buildSessionFactory();

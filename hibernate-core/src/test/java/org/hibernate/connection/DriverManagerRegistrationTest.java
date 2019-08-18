@@ -131,6 +131,7 @@ public class DriverManagerRegistrationTest extends BaseUnitTestCase {
 			return false;
 		}
 
+		@Override
 		public Logger getParentLogger()
 				throws SQLFeatureNotSupportedException {
 			throw new SQLFeatureNotSupportedException();

@@ -43,6 +43,7 @@ public class IdentifierGeneratorWithNaturalIdCacheTest
 		};
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(
 				AvailableSettings.CACHE_REGION_FACTORY,

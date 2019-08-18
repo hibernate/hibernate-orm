@@ -25,6 +25,7 @@ public class JCacheConfigRelativePathTest
 		settings.put( ConfigSettings.CONFIG_URI, "/hibernate-config/ehcache/jcache-ehcache-config.xml" );
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Product.class

@@ -31,19 +31,23 @@ public class AImpl implements A {
 	@Id
 	@GeneratedValue
 	@Column( name = "aID" )
+	@Override
 	public Integer getAId() {
 		return this.aId;
 	}
 
+	@Override
 	public void setAId(Integer aId) {
 		this.aId = aId;
 	}
 
 	@Column( name = "description" )
+	@Override
 	public String getDescription() {
 		return description;
 	}
 
+	@Override
 	public void setDescription(String description) {
 		this.description = description;
 	}

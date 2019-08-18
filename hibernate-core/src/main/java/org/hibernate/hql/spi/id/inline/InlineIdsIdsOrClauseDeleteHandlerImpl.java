@@ -39,6 +39,7 @@ public class InlineIdsIdsOrClauseDeleteHandlerImpl
 		);
 	}
 
+	@Override
 	protected Delete generateDelete(
 			String tableName,
 			String[] columnNames,

@@ -160,6 +160,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public <T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter) {
 		QueryParameterBinding<T> binding = parameterBindingMap.get( parameter );
 
@@ -188,6 +189,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		return getBinding( parameterMetadata.getQueryParameter( name ) );
 	}
 
+	@Override
 	public void verifyParametersBound(boolean reserveFirstParameter) {
 		for ( QueryParameter<?> parameter : parameterMetadata.collectAllParameters() ) {
 			// check the "normal" bindings
@@ -241,6 +243,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 * @deprecated (since 5.2) expect a different approach to org.hibernate.engine.spi.QueryParameters in 6.0
 	 */
 	@Deprecated
+	@Override
 	public Type[] collectPositionalBindTypes() {
 		return ArrayHelper.EMPTY_TYPE_ARRAY;
 //		if ( ! parameterMetadata.hasPositionalParameters() ) {
@@ -298,6 +301,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	public Object[] collectPositionalBindValues() {
 		return EMPTY_VALUES;
 //		if ( ! parameterMetadata.hasPositionalParameters() ) {
@@ -321,6 +325,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 * @deprecated (since 5.2) expect a different approach to org.hibernate.engine.spi.QueryParameters in 6.0
 	 */
 	@Deprecated
+	@Override
 	public Map<String, TypedValue> collectNamedParameterBindings() {
 		final Map<String, TypedValue> collectedBindings = new HashMap<>();
 
@@ -357,6 +362,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	public <T> QueryParameterListBinding<T> getQueryParameterListBinding(QueryParameter<T> queryParameter) {
 		if ( parameterListBindingMap == null ) {
 			parameterListBindingMap = new HashMap<>();
@@ -445,6 +451,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	public <T> QueryParameterListBinding<T> getQueryParameterListBinding(String name) {
 		// find the QueryParameter instance for the given name
 		final QueryParameter<T> queryParameter = resolveQueryParameter( name );
@@ -473,6 +480,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	public <T> QueryParameterListBinding<T> getQueryParameterListBinding(int name) {
 		// find the QueryParameter instance for the given name
 		final QueryParameter<T> queryParameter = resolveQueryParameter( name );
@@ -501,6 +509,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 */
 	@Deprecated
 	@SuppressWarnings("unchecked")
+	@Override
 	public String expandListValuedParameters(String queryString, SharedSessionContractImplementor session) {
 		if ( queryString == null ) {
 			return null;

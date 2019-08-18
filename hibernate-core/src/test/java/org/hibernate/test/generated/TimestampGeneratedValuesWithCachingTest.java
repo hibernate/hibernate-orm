@@ -23,6 +23,7 @@ import org.hibernate.testing.RequiresDialect;
 		}
 )
 public class TimestampGeneratedValuesWithCachingTest extends AbstractGeneratedPropertyTest {
+	@Override
 	public final String[] getMappings() {
 		return new String[] { "generated/MSSQLGeneratedPropertyEntity.hbm.xml" };
 	}

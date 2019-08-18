@@ -291,6 +291,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		return false;
 	}
 
+	@Override
 	protected int doExecuteUpdate() {
 		return getProducer().executeNativeUpdate(
 				generateQuerySpecification(),
@@ -313,6 +314,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	public NativeQueryImplementor<T> addScalar(String columnAlias, Type type) {
 		addReturnBuilder(
 				new NativeQueryReturnBuilder() {
+					@Override
 					public NativeSQLQueryReturn buildReturn() {
 						return new NativeSQLQueryScalarReturn( columnAlias, type );
 					}

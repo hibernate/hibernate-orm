@@ -43,10 +43,12 @@ public class NamedParameterInformationImpl implements NamedParameterInformation 
 		return expectedType;
 	}
 
+	@Override
 	public void addSourceLocation(int position) {
 		sqlPositions.add( position );
 	}
 
+	@Override
 	public void setExpectedType(Type expectedType) {
 		this.expectedType = expectedType;
 	}

@@ -34,6 +34,7 @@ public class CourseMeeting {
 		this.course = course;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -54,6 +55,7 @@ public class CourseMeeting {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = id != null ? id.hashCode() : 0;
 		result = 31 * result + ( course != null ? course.hashCode() : 0 );

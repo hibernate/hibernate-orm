@@ -28,6 +28,7 @@ public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCol
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9387")
+	@Override
 	public void testDefaultTableNameOwnerEntityNameAndPKColumnOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -39,6 +40,7 @@ public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCol
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9387")
+	@Override
 	public void testDefaultTableNameOwnerPrimaryTableAndEntityNamesOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -51,6 +53,7 @@ public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCol
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9389")
+	@Override
 	public void testDefaultJoinColumnOwnerEntityNameAndPKColumnOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -63,6 +66,7 @@ public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCol
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9389")
+	@Override
 	public void testDefaultJoinColumnOwnerPrimaryTableAndEntityNamesOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -74,6 +78,7 @@ public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCol
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9389")
+	@Override
 	public void testDefaultJoinColumnOwnerPrimaryTableOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -85,6 +90,7 @@ public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCol
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9387")
+	@Override
 	public void testDefaultTableNameOwnerPrimaryTableOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).

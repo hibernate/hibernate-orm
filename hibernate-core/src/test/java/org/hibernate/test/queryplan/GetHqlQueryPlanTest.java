@@ -32,6 +32,7 @@ import static org.junit.Assert.*;
  * @author Gail Badner
  */
 public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[]{
 			"queryplan/filter-defs.hbm.xml",

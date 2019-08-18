@@ -16,26 +16,32 @@ public class AddressImpl implements Address {
 	private String addressType;
 	private Server server;
 
+	@Override
 	public Long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}
 
+	@Override
 	public String getAddressType() {
 		return addressType;
 	}
 
+	@Override
 	public void setAddressType(String addressType) {
 		this.addressType = addressType;
 	}
 
+	@Override
 	public Server getServer() {
 		return server;
 	}
 
+	@Override
 	public void setServer(Server server) {
 		this.server = server;
 	}

@@ -28,10 +28,12 @@ public abstract class AbstractPredicateImpl
 		super( criteriaBuilder, Boolean.class );
 	}
 
+	@Override
 	public boolean isNegated() {
 		return false;
 	}
 
+	@Override
 	public Predicate not() {
 		return new NegatedPredicateWrapper( this );
 	}

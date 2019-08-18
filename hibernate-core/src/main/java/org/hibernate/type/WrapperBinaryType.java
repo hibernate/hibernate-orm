@@ -26,6 +26,7 @@ public class WrapperBinaryType extends AbstractSingleColumnStandardBasicType<Byt
 		return new String[] { getName(), "Byte[]", Byte[].class.getName() };
 	}
 
+	@Override
 	public String getName() {
 		//TODO find a decent name before documenting
 		return "wrapper-binary";

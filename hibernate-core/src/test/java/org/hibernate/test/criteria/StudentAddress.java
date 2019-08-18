@@ -47,6 +47,7 @@ public class StudentAddress {
 		this.zip = zip;
 	}
 	// @Override
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -58,6 +59,7 @@ public class StudentAddress {
 		return result;
 	}
 	// @Override
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;

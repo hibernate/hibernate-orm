@@ -16,6 +16,7 @@ import org.hibernate.testing.RequiresDialect;
  */
 @RequiresDialect( value = Oracle9iDialect.class )
 public class TriggerGeneratedValuesWithCachingTest extends AbstractGeneratedPropertyTest {
+	@Override
 	public final String[] getMappings() {
 		return new String[] { "generated/GeneratedPropertyEntity.hbm.xml" };
 	}

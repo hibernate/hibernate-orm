@@ -43,6 +43,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 *
 	 * @throws HibernateException
 	 */
+	@Override
 	public void onEvict(EvictEvent event) throws HibernateException {
 		final Object object = event.getObject();
 		if ( object == null ) {

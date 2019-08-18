@@ -17,6 +17,7 @@ import org.hibernate.testing.RequiresDialect;
  */
 @RequiresDialect( Oracle9iDialect.class )
 public class OracleCustomSQLTest extends CustomStoredProcTestSupport {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/hand/custom/oracle/Mappings.hbm.xml", "sql/hand/custom/oracle/StoredProcedures.hbm.xml" };
 	}

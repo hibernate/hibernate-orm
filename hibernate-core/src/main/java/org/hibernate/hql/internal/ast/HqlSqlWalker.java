@@ -534,6 +534,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			this.queryTranslatorImpl = queryTranslatorImpl;
 		}
 
+		@Override
 		public void visit(AST node) {
 			// TODO : currently expects that the individual with expressions apply to the same sql table join.
 			//      This may not be the case for joined-subclass where the property values
@@ -1282,6 +1283,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	/**
 	 * Returns the locations of all occurrences of the named parameter.
 	 */
+	@Override
 	public int[] getNamedParameterLocations(String name) throws QueryException {
 		Object o = namedParameters.get( name );
 		if ( o == null ) {

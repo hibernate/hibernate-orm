@@ -21,14 +21,17 @@ public class ASTParentsFirstIterator implements Iterator {
 	private AST tree;
 	private LinkedList<AST> parents = new LinkedList<AST>();
 
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException( "remove() is not supported" );
 	}
 
+	@Override
 	public boolean hasNext() {
 		return next != null;
 	}
 
+	@Override
 	public Object next() {
 		return nextNode();
 	}

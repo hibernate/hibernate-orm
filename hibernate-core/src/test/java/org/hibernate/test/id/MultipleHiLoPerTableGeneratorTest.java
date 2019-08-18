@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
  * @author Emmanuel Bernard
  */
 public class MultipleHiLoPerTableGeneratorTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[]{ "id/Car.hbm.xml", "id/Plane.hbm.xml", "id/Radio.hbm.xml" };
 	}

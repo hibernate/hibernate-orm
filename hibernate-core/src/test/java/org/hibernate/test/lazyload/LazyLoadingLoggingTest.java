@@ -31,6 +31,7 @@ import static org.junit.Assert.fail;
 public class LazyLoadingLoggingTest
 		extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Client.class,
@@ -99,6 +100,7 @@ public class LazyLoadingLoggingTest
 		} );
 	}
 
+	@Override
 	protected boolean rebuildSessionFactoryOnError() {
 		return false;
 	}

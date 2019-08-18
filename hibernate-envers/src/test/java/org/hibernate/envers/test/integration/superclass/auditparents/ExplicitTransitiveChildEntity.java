@@ -29,6 +29,7 @@ public class ExplicitTransitiveChildEntity extends TransitiveParentEntity {
 		this.child = child;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -49,12 +50,14 @@ public class ExplicitTransitiveChildEntity extends TransitiveParentEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + (child != null ? child.hashCode() : 0);
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ExplicitTransitiveChildEntity(" + super.toString() + ", child = " + child + ")";
 	}

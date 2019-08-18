@@ -20,6 +20,7 @@ public class SerialNumber {
 	private SerialNumberPk id;
 	private String value;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof SerialNumber ) ) return false;
@@ -31,6 +32,7 @@ public class SerialNumber {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return id.hashCode();
 	}

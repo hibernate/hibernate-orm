@@ -30,6 +30,7 @@ class SDOObjectProperty implements SQLFunction {
 		this.name = name;
 	}
 
+	@Override
 	public Type getReturnType(Type columnType, Mapping mapping)
 			throws QueryException {
 		return type == null ? columnType : type;
@@ -41,6 +42,7 @@ class SDOObjectProperty implements SQLFunction {
 	 * @see org.hibernate.dialect.function.SQLFunction#hasArguments()
 	 */
 
+	@Override
 	public boolean hasArguments() {
 		return true;
 	}
@@ -51,6 +53,7 @@ class SDOObjectProperty implements SQLFunction {
 	 * @see org.hibernate.dialect.function.SQLFunction#hasParenthesesIfNoArguments()
 	 */
 
+	@Override
 	public boolean hasParenthesesIfNoArguments() {
 		return false;
 	}
@@ -66,6 +69,7 @@ class SDOObjectProperty implements SQLFunction {
 	 *      org.hibernate.engine.SessionFactoryImplementor)
 	 */
 
+	@Override
 	public String render(Type firstArgtype, List args, SessionFactoryImplementor factory)
 			throws QueryException {
 		final StringBuffer buf = new StringBuffer();

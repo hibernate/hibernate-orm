@@ -25,6 +25,7 @@ public final class XMLHelper {
 
 	public XMLHelper() {
 		PrivilegedAction<DocumentFactory> action = new PrivilegedAction<DocumentFactory>() {
+			@Override
 			public DocumentFactory run() {
 				final ClassLoader originalTccl = Thread.currentThread().getContextClassLoader();
 				try {

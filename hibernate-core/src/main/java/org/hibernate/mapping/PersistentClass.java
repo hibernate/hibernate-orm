@@ -653,14 +653,17 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return NULL_DISCRIMINATOR_MAPPING.equals( getDiscriminatorValue() );
 	}
 
+	@Override
 	public java.util.Map getMetaAttributes() {
 		return metaAttributes;
 	}
 
+	@Override
 	public void setMetaAttributes(java.util.Map metas) {
 		this.metaAttributes = metas;
 	}
 
+	@Override
 	public MetaAttribute getMetaAttribute(String name) {
 		return metaAttributes == null
 				? null
@@ -798,6 +801,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return deleteCheckStyle;
 	}
 
+	@Override
 	public void addFilter(
 			String name,
 			String condition,
@@ -816,6 +820,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		);
 	}
 
+	@Override
 	public java.util.List getFilters() {
 		return filters;
 	}

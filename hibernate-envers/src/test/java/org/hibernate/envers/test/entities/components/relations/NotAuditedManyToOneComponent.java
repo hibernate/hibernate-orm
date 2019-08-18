@@ -77,6 +77,7 @@ public class NotAuditedManyToOneComponent {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "NotAuditedManyToOneComponent(str1 = " + data + ")";
 	}

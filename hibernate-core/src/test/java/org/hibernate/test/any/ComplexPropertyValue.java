@@ -34,6 +34,7 @@ public class ComplexPropertyValue implements PropertyValue {
 		this.subProperties = subProperties;
 	}
 
+	@Override
 	public String asString() {
 		return "complex[" + keyString() + "]";
 	}

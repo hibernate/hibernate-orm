@@ -137,6 +137,7 @@ public class LockRefreshTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
+	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
 	}

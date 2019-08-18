@@ -38,6 +38,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		super( PostgresUUIDSqlTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "pg-uuid";
 	}
@@ -51,6 +52,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 	public static class PostgresUUIDSqlTypeDescriptor implements SqlTypeDescriptor {
 		public static final PostgresUUIDSqlTypeDescriptor INSTANCE = new PostgresUUIDSqlTypeDescriptor();
 
+		@Override
 		public int getSqlType() {
 			// ugh
 			return Types.OTHER;
@@ -67,6 +69,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 			return (BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( UUID.class );
 		}
 
+		@Override
 		public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -82,6 +85,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 			};
 		}
 
+		@Override
 		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 				@Override

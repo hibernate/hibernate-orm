@@ -50,6 +50,7 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 	private static final String OLD_HIBERNATE_NAMESPACE = "http://hibernate.sourceforge.net/";
 	private static final String USER_NAMESPACE = "classpath://";
 
+	@Override
 	public InputSource resolveEntity(String publicId, String systemId) {
 		InputSource source = null; // returning null triggers default behavior
 		if ( systemId != null ) {

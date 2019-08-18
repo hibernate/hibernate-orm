@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
  * @author pholvs
  */
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {Child.class, Parent.class, Father.class, Mother.class};
 	}

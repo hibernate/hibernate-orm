@@ -26,10 +26,12 @@ public class PathTypeExpression<T> extends ExpressionImpl<T> implements Serializ
 		this.pathImpl = pathImpl;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return "type(" + pathImpl.getPathIdentifier() + ")";
 	}

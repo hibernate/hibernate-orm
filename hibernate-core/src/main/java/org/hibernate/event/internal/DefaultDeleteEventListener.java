@@ -68,6 +68,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 *
 	 * @throws HibernateException
 	 */
+	@Override
 	public void onDelete(DeleteEvent event) throws HibernateException {
 		onDelete( event, new IdentitySet() );
 	}
@@ -80,6 +81,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 *
 	 * @throws HibernateException
 	 */
+	@Override
 	public void onDelete(DeleteEvent event, Set transientEntities) throws HibernateException {
 
 		final EventSource source = event.getSession();

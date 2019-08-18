@@ -18,6 +18,7 @@ import antlr.SemanticException;
  */
 public class BetweenOperatorNode extends SqlNode implements OperatorNode {
 
+	@Override
 	public void initialize() throws SemanticException {
 		final Node fixture = getFixtureOperand();
 		if ( fixture == null ) {

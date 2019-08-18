@@ -24,10 +24,12 @@ public class LuggageImpl implements Luggage {
 
 	@Embedded
 	@Target(OwnerImpl.class)
+	@Override
 	public Owner getOwner() {
 		return owner;
 	}
 
+	@Override
 	public void setOwner(Owner owner) {
 		this.owner = owner;
 	}
@@ -42,18 +44,22 @@ public class LuggageImpl implements Luggage {
 		this.id = id;
 	}
 
+	@Override
 	public double getHeight() {
 		return height;
 	}
 
+	@Override
 	public void setHeight(double height) {
 		this.height = height;
 	}
 
+	@Override
 	public double getWidth() {
 		return width;
 	}
 
+	@Override
 	public void setWidth(double width) {
 		this.width = width;
 	}

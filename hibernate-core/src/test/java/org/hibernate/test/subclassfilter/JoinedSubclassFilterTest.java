@@ -30,6 +30,7 @@ import static org.junit.Assert.assertEquals;
                 "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
 )
 public class JoinedSubclassFilterTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public final String[] getMappings() {
 		return new String[] { "subclassfilter/joined-subclass.hbm.xml" };
 	}

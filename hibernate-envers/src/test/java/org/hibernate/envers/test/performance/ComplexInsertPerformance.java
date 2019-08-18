@@ -57,6 +57,7 @@ public class ComplexInsertPerformance extends AbstractPerformanceTest {
 		return ce;
 	}
 
+	@Override
 	protected void doTest() {
 		for ( int i = 0; i < NUMBER_INSERTS; i++ ) {
 			newEntityManager();

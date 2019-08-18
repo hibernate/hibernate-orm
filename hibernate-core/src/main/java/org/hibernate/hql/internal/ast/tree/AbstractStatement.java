@@ -19,6 +19,7 @@ public abstract class AbstractStatement extends HqlSqlWalkerNode implements Disp
 	 *
 	 * @return String - The additional display text.
 	 */
+	@Override
 	public String getDisplayText() {
 		StringBuilder buf = new StringBuilder();
 		if ( getWalker().getQuerySpaces().size() > 0 ) {

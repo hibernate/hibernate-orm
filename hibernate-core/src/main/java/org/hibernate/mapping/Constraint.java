@@ -108,6 +108,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	private static class ColumnComparator implements Comparator<Column> {
 		public static ColumnComparator INSTANCE = new ColumnComparator();
 
+		@Override
 		public int compare(Column col1, Column col2) {
 			return col1.getName().compareTo( col2.getName() );
 		}
@@ -163,6 +164,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return true;
 	}
 
+	@Override
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		if ( isGenerated( dialect ) ) {
 			final String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
@@ -178,6 +180,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		}
 	}
 
+	@Override
 	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
 		if ( isGenerated( dialect ) ) {
 			// Certain dialects (ex: HANA) don't support FKs as expected, but other constraints can still be created.
@@ -202,6 +205,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			String defaultCatalog,
 			String defaultSchema);
 
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
 	}

@@ -110,10 +110,12 @@ public class AttributeFactory {
 
 	private <X> AttributeContext<X> wrap(final ManagedTypeDescriptor<X> ownerType, final Property property) {
 		return new AttributeContext<X>() {
+			@Override
 			public ManagedTypeDescriptor<X> getOwnerType() {
 				return ownerType;
 			}
 
+			@Override
 			public Property getPropertyMapping() {
 				return property;
 			}
@@ -641,10 +643,12 @@ public class AttributeFactory {
 			this.javaType = accountForPrimitiveTypes( declaredType );
 		}
 
+		@Override
 		public String getName() {
 			return propertyMapping.getName();
 		}
 
+		@Override
 		public Member getMember() {
 			return member;
 		}
@@ -657,22 +661,27 @@ public class AttributeFactory {
 			return member.getDeclaringClass().getName() + '#' + member.getName();
 		}
 
+		@Override
 		public Class<Y> getJavaType() {
 			return javaType;
 		}
 
+		@Override
 		public Attribute.PersistentAttributeType getJpaAttributeNature() {
 			return persistentAttributeType;
 		}
 
+		@Override
 		public ManagedTypeDescriptor<X> getOwnerType() {
 			return ownerType;
 		}
 
+		@Override
 		public boolean isPlural() {
 			return propertyMapping.getType().isCollectionType();
 		}
 
+		@Override
 		public Property getPropertyMapping() {
 			return propertyMapping;
 		}
@@ -726,14 +735,17 @@ public class AttributeFactory {
 				Attribute.PersistentAttributeType persistentAttributeType) {
 			super( propertyMapping, ownerType, member, persistentAttributeType );
 			valueContext = new ValueContext() {
+				@Override
 				public Value getHibernateValue() {
 					return getPropertyMapping().getValue();
 				}
 
+				@Override
 				public Class getJpaBindableType() {
 					return getAttributeMetadata().getJavaType();
 				}
 
+				@Override
 				public ValueClassification getValueClassification() {
 					switch ( getJpaAttributeNature() ) {
 						case EMBEDDED: {
@@ -748,12 +760,14 @@ public class AttributeFactory {
 					}
 				}
 
+				@Override
 				public AttributeMetadata getAttributeMetadata() {
 					return SingularAttributeMetadataImpl.this;
 				}
 			};
 		}
 
+		@Override
 		public ValueContext getValueContext() {
 			return valueContext;
 		}
@@ -799,14 +813,17 @@ public class AttributeFactory {
 			}
 
 			this.elementValueContext = new ValueContext() {
+				@Override
 				public Value getHibernateValue() {
 					return ( (Collection) getPropertyMapping().getValue() ).getElement();
 				}
 
+				@Override
 				public Class getJpaBindableType() {
 					return elementJavaType;
 				}
 
+				@Override
 				public ValueClassification getValueClassification() {
 					switch ( PluralAttributeMetadataImpl.this.elementPersistentAttributeType ) {
 						case EMBEDDED: {
@@ -821,6 +838,7 @@ public class AttributeFactory {
 					}
 				}
 
+				@Override
 				public AttributeMetadata getAttributeMetadata() {
 					return PluralAttributeMetadataImpl.this;
 				}
@@ -829,14 +847,17 @@ public class AttributeFactory {
 			// interpret the key, if one
 			if ( keyPersistentAttributeType != null ) {
 				this.keyValueContext = new ValueContext() {
+					@Override
 					public Value getHibernateValue() {
 						return ( (Map) getPropertyMapping().getValue() ).getIndex();
 					}
 
+					@Override
 					public Class getJpaBindableType() {
 						return keyJavaType;
 					}
 
+					@Override
 					public ValueClassification getValueClassification() {
 						switch ( PluralAttributeMetadataImpl.this.keyPersistentAttributeType ) {
 							case EMBEDDED: {
@@ -851,6 +872,7 @@ public class AttributeFactory {
 						}
 					}
 
+					@Override
 					public AttributeMetadata getAttributeMetadata() {
 						return PluralAttributeMetadataImpl.this;
 					}
@@ -885,14 +907,17 @@ public class AttributeFactory {
 			}
 		}
 
+		@Override
 		public ValueContext getElementValueContext() {
 			return elementValueContext;
 		}
 
+		@Override
 		public PluralAttribute.CollectionType getAttributeCollectionType() {
 			return attributeCollectionType;
 		}
 
+		@Override
 		public ValueContext getMapKeyValueContext() {
 			return keyValueContext;
 		}

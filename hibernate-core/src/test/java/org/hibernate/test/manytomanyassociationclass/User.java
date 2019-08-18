@@ -52,6 +52,7 @@ public class User {
 			throw new IllegalArgumentException( "group cannot be null" );
 		}
 	}
+	@Override
 	public boolean equals(Object obj) {
 		if ( this == obj ) {
 			return true;
@@ -70,6 +71,7 @@ public class User {
 		}
 	}
 
+	@Override
 	public int hashCode() {
 		return ( name == null ? super.hashCode() : name.hashCode() );
 	}

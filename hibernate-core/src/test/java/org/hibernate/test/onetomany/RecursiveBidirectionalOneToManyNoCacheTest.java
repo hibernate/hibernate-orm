@@ -13,10 +13,12 @@ import org.hibernate.CacheMode;
  * @author Gail Badner
  */
 public class RecursiveBidirectionalOneToManyNoCacheTest extends AbstractRecursiveBidirectionalOneToManyTest {
+	@Override
 	public String getCacheConcurrencyStrategy() {
 			return null;
 	}
 	
+	@Override
 	protected CacheMode getSessionCacheMode() {
 			return CacheMode.IGNORE;
 	}

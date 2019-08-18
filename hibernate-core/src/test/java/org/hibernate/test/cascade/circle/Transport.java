@@ -86,6 +86,7 @@ public class Transport {
 		this.name = name;
 	}
 	
+	@Override
 	public String toString()
 	{
 		StringBuilder buffer = new StringBuilder();

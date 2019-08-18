@@ -24,10 +24,12 @@ public class UrlTypeDescriptor extends AbstractTypeDescriptor<URL> {
 		super( URL.class );
 	}
 
+	@Override
 	public String toString(URL value) {
 		return value.toExternalForm();
 	}
 
+	@Override
 	public URL fromString(String string) {
 		try {
 			return new URL( string );
@@ -38,6 +40,7 @@ public class UrlTypeDescriptor extends AbstractTypeDescriptor<URL> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(URL value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -48,6 +51,7 @@ public class UrlTypeDescriptor extends AbstractTypeDescriptor<URL> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> URL wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

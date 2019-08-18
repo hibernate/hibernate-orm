@@ -72,6 +72,7 @@ public class EnumTestEntity {
 		this.enum2 = enum2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -95,6 +96,7 @@ public class EnumTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

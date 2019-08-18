@@ -17,10 +17,12 @@ public class BasicTypeImpl<J> implements BasicTypeDescriptor<J>, Serializable {
 	private final Class<J> clazz;
 	private PersistenceType persistenceType;
 
+	@Override
 	public PersistenceType getPersistenceType() {
 		return persistenceType;
 	}
 
+	@Override
 	public Class<J> getJavaType() {
 		return clazz;
 	}

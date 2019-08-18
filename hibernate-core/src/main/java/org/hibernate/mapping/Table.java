@@ -523,6 +523,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return getPrimaryKey() != null;
 	}
 
+	@Override
 	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
 		StringBuilder buf = new StringBuilder( hasPrimaryKey() ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
 				.append( ' ' )
@@ -618,6 +619,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return buf.append( dialect.getTableTypeString() ).toString();
 	}
 
+	@Override
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		return dialect.getDropTableString( getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
 	}
@@ -764,6 +766,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		this.rowId = rowId;
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder().append( getClass().getName() )
 				.append( '(' );
@@ -876,10 +879,12 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			}
 		}
 
+		@Override
 		public int hashCode() {
 			return columns.hashCode() + referencedColumns.hashCode();
 		}
 
+		@Override
 		public boolean equals(Object other) {
 			ForeignKeyKey fkk = (ForeignKeyKey) other;
 			return fkk != null && fkk.columns.equals( columns ) && fkk.referencedColumns.equals( referencedColumns );

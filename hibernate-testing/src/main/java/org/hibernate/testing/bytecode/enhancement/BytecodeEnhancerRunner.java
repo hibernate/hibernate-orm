@@ -198,6 +198,7 @@ public class BytecodeEnhancerRunner extends Suite {
 			this.selectors = selectors;
 		}
 
+		@Override
 		public Class<?> loadClass(String name) throws ClassNotFoundException {
 			for ( EnhancementSelector selector : selectors ) {
 				if ( selector.select( name ) ) {

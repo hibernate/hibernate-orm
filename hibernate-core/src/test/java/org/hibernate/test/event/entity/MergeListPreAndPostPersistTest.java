@@ -35,6 +35,7 @@ import static org.junit.Assert.assertEquals;
 @TestForIssue( jiraKey = "HHH-9979")
 public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Order.class,
@@ -149,6 +150,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 		registry.setListeners(
 				EventType.POST_INSERT,
 				new PostInsertEventListener() {
+					@Override
 					public void onPostInsert(PostInsertEvent event) {
 						if ( Order.class.isInstance( event.getEntity() ) ) {
 							assertEquals( order, event.getEntity());
@@ -156,6 +158,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 						}
 					}
 
+					@Override
 					public boolean requiresPostCommitHanding(EntityPersister persister) {
 						return false;
 					}

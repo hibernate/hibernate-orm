@@ -63,6 +63,7 @@ public class Person {
         this.address = address;
     }
 
+	@Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Person)) return false;
@@ -76,6 +77,7 @@ public class Person {
         return true;
     }
 
+	@Override
     public int hashCode() {
         int result;
         result = id;

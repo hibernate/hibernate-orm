@@ -28,10 +28,12 @@ public class DoubleStringType implements CompositeUserType {
 		return TYPES;
 	}
 
+	@Override
 	public Class returnedClass() {
 		return String[].class;
 	}
 
+	@Override
 	public boolean equals(Object x, Object y) {
 		if ( x == y ) {
 			return true;
@@ -42,11 +44,13 @@ public class DoubleStringType implements CompositeUserType {
 		return ( (String[]) x )[0].equals( ( (String[]) y )[0] ) && ( (String[]) x )[1].equals( ( (String[]) y )[1] );
 	}
 
+	@Override
 	public int hashCode(Object x) throws HibernateException {
 		String[] a = (String[]) x;
 		return a[0].hashCode() + 31 * a[1].hashCode();
 	}
 
+	@Override
 	public Object deepCopy(Object x) {
 		if ( x == null ) {
 			return null;
@@ -58,10 +62,12 @@ public class DoubleStringType implements CompositeUserType {
 		return result;
 	}
 
+	@Override
 	public boolean isMutable() {
 		return true;
 	}
 
+	@Override
 	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 
@@ -71,6 +77,7 @@ public class DoubleStringType implements CompositeUserType {
 		return ( first == null && second == null ) ? null : new String[] {first, second};
 	}
 
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
@@ -80,18 +87,22 @@ public class DoubleStringType implements CompositeUserType {
 		StringType.INSTANCE.nullSafeSet( st, strings[1], index + 1, session );
 	}
 
+	@Override
 	public String[] getPropertyNames() {
 		return new String[] {"s1", "s2"};
 	}
 
+	@Override
 	public Type[] getPropertyTypes() {
 		return new Type[] {StringType.INSTANCE, StringType.INSTANCE};
 	}
 
+	@Override
 	public Object getPropertyValue(Object component, int property) {
 		return ( (String[]) component )[property];
 	}
 
+	@Override
 	public void setPropertyValue(
 			Object component,
 			int property,
@@ -100,6 +111,7 @@ public class DoubleStringType implements CompositeUserType {
 		( (String[]) component )[property] = (String) value;
 	}
 
+	@Override
 	public Object assemble(
 			Serializable cached,
 			SharedSessionContractImplementor session,
@@ -108,10 +120,12 @@ public class DoubleStringType implements CompositeUserType {
 		return deepCopy( cached );
 	}
 
+	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session) {
 		return (Serializable) deepCopy( value );
 	}
 
+	@Override
 	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		return original;

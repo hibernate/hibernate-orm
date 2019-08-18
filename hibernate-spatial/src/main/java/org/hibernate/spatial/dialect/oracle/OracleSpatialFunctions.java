@@ -255,6 +255,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 			super( "astext", StandardBasicTypes.STRING );
 		}
 
+		@Override
 		public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
 			final StringBuilder buf = new StringBuilder();
 			if ( args.isEmpty() ) {
@@ -284,6 +285,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 			this.sdo = sdo;
 		}
 
+		@Override
 		public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
 
 			if ( args.size() < 2 ) {
@@ -320,6 +322,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 			this( name, null, analysis, isOGCStrict );
 		}
 
+		@Override
 		public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) {
 			return isOGCStrict ? getSpatialAnalysisSQL( args, this.analysis ) : getNativeSpatialAnalysisSQL(
 					args,
@@ -340,6 +343,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 			this.sdo = dialect;
 		}
 
+		@Override
 		public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) {
 			return sdo.getSpatialAggregateSQL(
 					(String) args.get( 0 ),

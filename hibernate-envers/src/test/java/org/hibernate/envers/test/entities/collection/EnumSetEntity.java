@@ -69,6 +69,7 @@ public class EnumSetEntity {
 		this.enums2 = enums2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -86,10 +87,12 @@ public class EnumSetEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}
 
+	@Override
 	public String toString() {
 		return "ESE(id = " + id + ", enums1 = " + enums1 + ", enums2 = " + enums2 + ")";
 	}

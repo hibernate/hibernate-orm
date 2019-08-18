@@ -13,6 +13,7 @@ import org.junit.Test;
  * @author Gail Badner
  */
 public class PersistentSetNonLazyTest extends PersistentSetTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/set/MappingsNonLazy.hbm.xml" };
 	}

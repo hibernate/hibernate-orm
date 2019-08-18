@@ -30,6 +30,7 @@ public class CriteriaLiteralHandlingModeInlineShortNameUppercaseTest extends Abs
 		return config;
 	}
 
+	@Override
 	protected String expectedSQL() {
 		return "select 'abc' as col_0_0_, abstractcr0_.name as col_1_0_ from Book abstractcr0_ where abstractcr0_.id=1 and abstractcr0_.name='Vlad''s High-Performance Java Persistence'";
 	}

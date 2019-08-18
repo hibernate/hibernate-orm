@@ -51,6 +51,7 @@ public class LimitExpressionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Before
+	@Override
 	public void prepareTest() throws Exception {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
 			Person p = new Person();

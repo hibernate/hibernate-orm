@@ -31,6 +31,7 @@ public class SerObject implements Serializable {
 		this.data = data;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -48,6 +49,7 @@ public class SerObject implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (data != null ? data.hashCode() : 0);
 	}

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
  * @author Gavin King
  */
 public class IdClassTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "idclass/Customer.hbm.xml" };
 	}

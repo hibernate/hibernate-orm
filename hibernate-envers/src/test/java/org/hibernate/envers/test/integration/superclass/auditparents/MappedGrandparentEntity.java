@@ -30,6 +30,7 @@ public class MappedGrandparentEntity {
 		this.notAudited = notAudited;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -53,6 +54,7 @@ public class MappedGrandparentEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = (id != null ? id.hashCode() : 0);
 		result = 31 * result + (grandparent != null ? grandparent.hashCode() : 0);
@@ -60,6 +62,7 @@ public class MappedGrandparentEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "MappedGrandparentEntity(id = " + id + ", grandparent = " + grandparent + ", notAudited = " + notAudited + ")";
 	}

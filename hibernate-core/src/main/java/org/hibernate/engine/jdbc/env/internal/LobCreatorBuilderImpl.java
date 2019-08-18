@@ -146,6 +146,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 *
 	 * @return The LobCreator
 	 */
+	@Override
 	public LobCreator buildLobCreator(LobCreationContext lobCreationContext) {
 		return useContextualLobCreation
 				? new ContextualLobCreator( lobCreationContext )

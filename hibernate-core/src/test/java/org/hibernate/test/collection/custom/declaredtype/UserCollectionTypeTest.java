@@ -116,14 +116,17 @@ public abstract class UserCollectionTypeTest extends BaseCoreFunctionalTestCase 
 			return new PersistentHeadList( session, (IHeadList) collection );
 		}
 
+		@Override
 		public Iterator getElementsIterator(Object collection) {
 			return ( (IHeadList) collection ).iterator();
 		}
 
+		@Override
 		public boolean contains(Object collection, Object entity) {
 			return ( (IHeadList) collection ).contains(entity);
 		}
 
+		@Override
 		public Object indexOf(Object collection, Object entity) {
 			int l = ( (IHeadList) collection ).indexOf(entity);
 			if(l<0) {
@@ -147,6 +150,7 @@ public abstract class UserCollectionTypeTest extends BaseCoreFunctionalTestCase 
 			return result;
 		}
 
+		@Override
 		public Object instantiate(int anticipatedSize) {
 			return new HeadList();
 		}

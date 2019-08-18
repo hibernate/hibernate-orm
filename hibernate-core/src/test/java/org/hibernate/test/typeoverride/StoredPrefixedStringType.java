@@ -37,6 +37,7 @@ public class StoredPrefixedStringType
 
 	public static final SqlTypeDescriptor PREFIXED_VARCHAR_TYPE_DESCRIPTOR =
 			new VarcharTypeDescriptor() {
+				@Override
 				public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 					return new BasicBinder<X>( javaTypeDescriptor, this ) {
 						@Override
@@ -54,6 +55,7 @@ public class StoredPrefixedStringType
 					};
 				}
 
+				@Override
 				public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 						@Override
@@ -94,6 +96,7 @@ public class StoredPrefixedStringType
 		super( PREFIXED_VARCHAR_TYPE_DESCRIPTOR, StringType.INSTANCE.getJavaTypeDescriptor() );
 	}
 
+	@Override
 	public String getName() {
 		return StringType.INSTANCE.getName();
 	}
@@ -103,14 +106,17 @@ public class StoredPrefixedStringType
 		return true;
 	}
 
+	@Override
 	public String objectToSQLString(String value, Dialect dialect) throws Exception {
 		return StringType.INSTANCE.objectToSQLString( value, dialect );
 	}
 
+	@Override
 	public String stringToObject(String xml) throws Exception {
 		return StringType.INSTANCE.stringToObject( xml );
 	}
 
+	@Override
 	public String toString(String value) {
 		return StringType.INSTANCE.toString( value );
 	}

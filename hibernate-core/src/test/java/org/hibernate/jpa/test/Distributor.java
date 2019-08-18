@@ -38,6 +38,7 @@ public class Distributor implements Serializable {
 		this.name = name;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Distributor ) ) return false;
@@ -49,6 +50,7 @@ public class Distributor implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}

@@ -51,9 +51,11 @@ public class Order {
 		public void setOrderNumber(int orderNumber) {
 			this.orderNumber = orderNumber;
 		}
+		@Override
 		public int hashCode() {
 			return customerId.hashCode() + orderNumber;
 		}
+		@Override
 		public boolean equals(Object other) {
 			if (other instanceof Id) {
 				Id that = (Id) other;

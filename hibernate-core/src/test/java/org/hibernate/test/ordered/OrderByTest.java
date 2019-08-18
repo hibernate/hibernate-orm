@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class OrderByTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "ordered/Search.hbm.xml" };
 	}

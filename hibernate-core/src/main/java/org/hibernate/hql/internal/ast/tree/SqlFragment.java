@@ -42,6 +42,7 @@ public class SqlFragment extends Node implements ParameterContainer {
 
 	private List<ParameterSpecification> embeddedParameters;
 
+	@Override
 	public void addEmbeddedParameter(ParameterSpecification specification) {
 		if ( embeddedParameters == null ) {
 			embeddedParameters = new ArrayList<ParameterSpecification>();
@@ -49,10 +50,12 @@ public class SqlFragment extends Node implements ParameterContainer {
 		embeddedParameters.add( specification );
 	}
 
+	@Override
 	public boolean hasEmbeddedParameters() {
 		return embeddedParameters != null && ! embeddedParameters.isEmpty();
 	}
 
+	@Override
 	public ParameterSpecification[] getEmbeddedParameters() {
 		return embeddedParameters.toArray( new ParameterSpecification[ embeddedParameters.size() ] );
 	}

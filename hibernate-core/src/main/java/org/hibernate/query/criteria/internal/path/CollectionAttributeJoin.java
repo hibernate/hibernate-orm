@@ -39,6 +39,7 @@ public class CollectionAttributeJoin<O,E>
 		super( criteriaBuilder, javaType, pathSource, joinAttribute, joinType );
 	}
 
+	@Override
 	public final CollectionAttributeJoin<O,E> correlateTo(CriteriaSubqueryImpl subquery) {
 		return (CollectionAttributeJoin<O,E>) super.correlateTo( subquery );
 	}

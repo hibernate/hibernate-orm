@@ -62,9 +62,11 @@ public class Child {
 		this.position = position;
 	}
 
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}
+	@Override
 	public boolean equals(Object other) {
 		Child c = (Child) other;
 		return c.parent.getId().equals(parent.getId()) 

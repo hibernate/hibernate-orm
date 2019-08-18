@@ -101,10 +101,12 @@ public class SpecialOneToOneType extends OneToOneType {
 		super( original, superTypeEntityName );
 	}
 	
+	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}
 	
+	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
 	}
@@ -119,6 +121,7 @@ public class SpecialOneToOneType extends OneToOneType {
 		return super.getIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
 	}
 
+	@Override
 	public boolean useLHSPrimaryKey() {
 		return false;
 	}

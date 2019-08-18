@@ -95,6 +95,7 @@ public class MergeTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Order.class,

@@ -21,6 +21,7 @@ public class CollectionPropertyMapping implements PropertyMapping {
 		this.memberPersister = memberPersister;
 	}
 
+	@Override
 	public Type toType(String propertyName) throws QueryException {
 		if ( propertyName.equals(CollectionPropertyNames.COLLECTION_ELEMENTS) ) {
 			return memberPersister.getElementType();
@@ -52,6 +53,7 @@ public class CollectionPropertyMapping implements PropertyMapping {
 		}
 	}
 
+	@Override
 	public String[] toColumns(String alias, String propertyName) throws QueryException {
 		if ( propertyName.equals(CollectionPropertyNames.COLLECTION_ELEMENTS) ) {
 			return memberPersister.getElementColumnNames(alias);
@@ -109,10 +111,12 @@ public class CollectionPropertyMapping implements PropertyMapping {
 	/**
 	 * Given a property path, return the corresponding column name(s).
 	 */
+	@Override
 	public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
 		throw new UnsupportedOperationException( "References to collections must be define a SQL alias" );
 	}
 
+	@Override
 	public Type getType() {
 		//return memberPersister.getType();
 		return memberPersister.getCollectionType();

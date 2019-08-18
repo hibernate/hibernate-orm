@@ -30,6 +30,7 @@ public class OuterKey implements Serializable {
 		this.detailId = detailId;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof OuterKey)) return false;
@@ -42,6 +43,7 @@ public class OuterKey implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (master != null ? master.hashCode() : 0);

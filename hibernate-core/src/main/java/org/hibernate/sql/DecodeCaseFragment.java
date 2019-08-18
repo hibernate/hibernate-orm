@@ -17,6 +17,7 @@ import java.util.Map;
  */
 public class DecodeCaseFragment extends CaseFragment {
 
+	@Override
 	public String toFragmentString() {
 		
 		StringBuilder buf = new StringBuilder( cases.size() * 15 + 10 )

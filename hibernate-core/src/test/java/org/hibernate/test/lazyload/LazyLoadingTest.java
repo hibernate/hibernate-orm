@@ -46,6 +46,7 @@ public class LazyLoadingTest
 	private Long parentID;
 	private Long lastChildID;
 
+	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
@@ -53,6 +54,7 @@ public class LazyLoadingTest
 	}
 
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Parent.class,
@@ -63,6 +65,7 @@ public class LazyLoadingTest
 		};
 	}
 
+	@Override
 	protected void prepareTest()
 			throws Exception {
 		Session s = openSession();
@@ -147,6 +150,7 @@ public class LazyLoadingTest
 		});
 	}
 
+	@Override
 	protected boolean rebuildSessionFactoryOnError() {
 		return false;
 	}

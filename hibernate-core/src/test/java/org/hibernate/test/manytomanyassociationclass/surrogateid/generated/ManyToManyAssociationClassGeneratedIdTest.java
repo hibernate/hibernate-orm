@@ -36,6 +36,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 	}
 
 	@Test
+	@Override
 	public void testRemoveAndAddEqualElement() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		addMembership( getUser(), getGroup(), createMembership( "membership" ) );
@@ -63,6 +64,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 	}
 
 	@Test
+	@Override
 	public void testRemoveAndAddEqualCollection() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		getUser().setMemberships( new HashSet() );
@@ -92,6 +94,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 	}
 
 	@Test
+	@Override
 	public void testRemoveAndAddEqualElementNonKeyModified() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		Membership membershipNew = createMembership( "membership" );

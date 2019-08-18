@@ -171,6 +171,7 @@ public class Join implements AttributeContainer, Serializable {
 		this.inverse = leftJoin;
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + table.toString() + ')';
 	}

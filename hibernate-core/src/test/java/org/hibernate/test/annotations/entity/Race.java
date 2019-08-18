@@ -27,6 +27,7 @@ public class Race implements Length<Long> {
 		this.id = id;
 	}
 
+	@Override
 	public Long getLength() {
 		return length;
 	}

@@ -105,6 +105,7 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 			super( VarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
 		}
 
+		@Override
 		public String getName() {
 			return "noop";
 		}

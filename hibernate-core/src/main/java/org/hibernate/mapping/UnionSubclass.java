@@ -23,23 +23,28 @@ public class UnionSubclass extends Subclass implements TableOwner {
 		super( superclass, metadataBuildingContext );
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}
 
+	@Override
 	public void setTable(Table table) {
 		this.table = table;
 		getSuperclass().addSubclassTable(table);
 	}
 
+	@Override
 	public java.util.Set getSynchronizedTables() {
 		return synchronizedTables;
 	}
 	
+	@Override
 	protected Iterator getNonDuplicatedPropertyIterator() {
 		return getPropertyClosureIterator();
 	}
 
+	@Override
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate(mapping);
 		if ( key!=null && !key.isValid(mapping) ) {
@@ -52,10 +57,12 @@ public class UnionSubclass extends Subclass implements TableOwner {
 		}
 	}
 	
+	@Override
 	public Table getIdentityTable() {
 		return getTable();
 	}
 	
+	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept(this);
 	}

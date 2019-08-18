@@ -37,6 +37,7 @@ public class EnversIntegrator implements Integrator {
 
 	public static final String AUTO_REGISTER = "hibernate.envers.autoRegisterListeners";
 
+	@Override
 	public void integrate(
 			Metadata metadata,
 			SessionFactoryImplementor sessionFactory,

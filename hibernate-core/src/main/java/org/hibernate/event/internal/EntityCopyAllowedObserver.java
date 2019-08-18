@@ -37,6 +37,7 @@ public final class EntityCopyAllowedObserver implements EntityCopyObserver {
 		// do nothing.
 	}
 
+	@Override
 	public void clear() {
 		// do nothing.
 	}

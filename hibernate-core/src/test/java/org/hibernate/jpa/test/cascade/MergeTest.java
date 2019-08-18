@@ -92,6 +92,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Order.class,

@@ -24,10 +24,12 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 	public static class Struct implements java.io.Serializable {
 		String name;
 		int count;
+		@Override
 		public boolean equals(Object other) {
 			Struct s = (Struct) other;
 			return ( s.name==name || s.name.equals(name) ) && s.count==count;
 		}
+		@Override
 		public int hashCode() {
 			return count;
 		}
@@ -94,6 +96,7 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		this.x=x;
 	}
 
+	@Override
 	public boolean onSave(Session db) throws CallbackException {
 		_string = "a string";
 		_date = new Date(123);
@@ -123,58 +126,74 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		return NO_VETO;
 	}
 
+	@Override
 	public boolean onDelete(Session db) throws CallbackException {
 		return NO_VETO;
 	}
+	@Override
 	public boolean onUpdate(Session db) throws CallbackException {
 		return NO_VETO;
 	}
 
+	@Override
 	public void onLoad(Session db, Serializable id) {
 	}
 
+	@Override
 	public String getKey() {
 		return key;
 	}
+	@Override
 	public void setKey(String key) {
 		this.key = key;
 	}
 
+	@Override
 	public FooProxy getFoo() {
 		return _foo;
 	}
+	@Override
 	public void setFoo(FooProxy foo) {
 		_foo = foo;
 	}
 
+	@Override
 	public String getString() {
 		return _string;
 	}
+	@Override
 	public void setString(String string) {
 		_string = string;
 		//if (_foo!=null) _foo.setString(string);
 	}
 
+	@Override
 	public java.util.Date getDate() {
 		return _date;
 	}
+	@Override
 	public void setDate(java.util.Date date) {
 		_date = date;
 	}
 
+	@Override
 	public java.util.Date getTimestamp() {
 		return _timestamp;
 	}
+	@Override
 	public void setTimestamp(java.util.Date timestamp) {
 		_timestamp = timestamp;
 	}
 
+	@Override
 	public Integer getInteger() {
 		return _integer;
 	}
+	@Override
 	public void setInteger(Integer iinteger) {
 		_integer = iinteger;
 	}
+	@Override
 	public Long getLong() {
 		return _long;
 	}
@@ -183,80 +202,103 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 	}
 
 
+	@Override
 	public Short getShort() {
 		return _short;
 	}
+	@Override
 	public void setShort(Short sshort) {
 		_short = sshort;
 	}
+	@Override
 	public Float getFloat() {
 		return _float;
 	}
+	@Override
 	public void setFloat(Float ffloat) {
 		_float = ffloat;
 	}
+	@Override
 	public Double getDouble() {
 		return _double;
 	}
+	@Override
 	public void setDouble(Double ddouble) {
 		_double = ddouble;
 	}
+	@Override
 	public Boolean getBoolean() {
 		return _boolean;
 	}
+	@Override
 	public void setBoolean(Boolean bboolean) {
 		_boolean = bboolean;
 	}
+	@Override
 	public byte[] getBytes() {
 		return _bytes;
 	}
+	@Override
 	public void setBytes(byte[] bytes) {
 		_bytes = bytes;
 	}
+	@Override
 	public float getZero() {
 		return _zero;
 	}
+	@Override
 	public void setZero(float zero) {
 		_zero = zero;
 	}
+	@Override
 	public boolean getBool() {
 		return _bool;
 	}
+	@Override
 	public void setBool(boolean bool) {
 		_bool = bool;
 	}
 
+	@Override
 	public int getInt() {
 		return _int;
 	}
+	@Override
 	public void setInt(int iint) {
 		_int = iint;
 	}
 
+	@Override
 	public Integer getNull() {
 		return _null;
 	}
+	@Override
 	public void setNull(Integer nnull) {
 		_null = nnull;
 	}
 
+	@Override
 	public Byte getByte() {
 		return _byte;
 	}
 
+	@Override
 	public void setByte(Byte bbyte) {
 		_byte = bbyte;
 	}
 
+	@Override
 	public String toString() {
 		return this.getClass().getName() + ": " + key;
 	}
 
+	@Override
 	public void disconnect() {
 		if ( _foo!=null) _foo.disconnect();
 		_foo=null;
 	}
 
+	@Override
 	public boolean equalsFoo(Foo other) {
 		if ( _bytes!=other._bytes ) {
 			if ( _bytes==null || other._bytes==null ) return false;
@@ -290,67 +332,84 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 
 	}
 
+	@Override
 	public boolean getYesno() {
 		return yesno;
 	}
 
+	@Override
 	public void setYesno(boolean yesno) {
 		this.yesno = yesno;
 	}
 
+	@Override
 	public java.io.Serializable getBlob() {
 		return blob;
 	}
 
+	@Override
 	public void setBlob(java.io.Serializable blob) {
 		this.blob = blob;
 	}
 
+	@Override
 	public java.io.Serializable getNullBlob() {
 		return nullBlob;
 	}
 
+	@Override
 	public void setNullBlob(java.io.Serializable nullBlob) {
 		this.nullBlob = nullBlob;
 	}
 
+	@Override
 	public byte[] getBinary() {
 		return binary;
 	}
+	@Override
 	public void setBinary(byte[] binary) {
 		this.binary = binary;
 	}
 
+	@Override
 	public String[] getCustom() {
 		return custom;
 	}
 
+	@Override
 	public void setCustom(String[] custom) {
 		this.custom = custom;
 	}
 
+	@Override
 	public FooComponent getComponent() {
 		return component;
 	}
+	@Override
 	public void setComponent(FooComponent component) {
 		this.component = component;
 	}
 
+	@Override
 	public FooComponent getNullComponent() {
 		return null;
 	}
+	@Override
 	public void setNullComponent(FooComponent fc) throws Exception {
 		if (fc!=null) throw new Exception("Null component");
 	}
 
+	@Override
 	public Character getChar() {
 		return new Character(_char);
 	}
 
+	@Override
 	public void setChar(Character _char) {
 		this._char = _char.charValue();
 	}
 
+	@Override
 	public Fee getDependent() {
 		return dependent;
 	}
@@ -407,6 +466,7 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		this.versionTimestamp = versionTimestamp;
 	}
 
+	@Override
 	public void finalize() { }
 
 	public Calendar getVersionCalendar() {
@@ -417,6 +477,7 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		versionCalendar = calendar;
 	}
 
+	@Override
 	public float getFormula() {
 		return formula;
 	}

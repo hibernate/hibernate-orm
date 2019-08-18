@@ -51,6 +51,7 @@ public class EhcacheTransactionalCacheConcurrencyStrategyTest
 		settings.put( Environment.CACHE_REGION_FACTORY, "ehcache" );
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Parent.class,

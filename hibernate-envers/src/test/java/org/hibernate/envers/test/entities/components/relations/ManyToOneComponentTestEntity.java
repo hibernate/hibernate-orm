@@ -84,6 +84,7 @@ public class ManyToOneComponentTestEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "MTOCTE(id = " + id + ", comp1 = " + comp1 + ")";
 	}

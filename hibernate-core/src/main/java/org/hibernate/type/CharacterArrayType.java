@@ -21,6 +21,7 @@ public class CharacterArrayType extends AbstractSingleColumnStandardBasicType<Ch
 		super( VarcharTypeDescriptor.INSTANCE, CharacterArrayTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "wrapper-characters";
 	}

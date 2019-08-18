@@ -26,6 +26,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 		super(session);
 	}
 
+	@Override
 	Object processEntity(Object value, EntityType entityType) throws HibernateException {
 
 		if (value!=null) {

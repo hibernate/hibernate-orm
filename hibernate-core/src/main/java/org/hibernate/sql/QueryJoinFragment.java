@@ -25,10 +25,12 @@ public class QueryJoinFragment extends JoinFragment {
 		this.useThetaStyleInnerJoins = useThetaStyleInnerJoins;
 	}
 
+	@Override
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 		addJoin( tableName, alias, alias, fkColumns, pkColumns, joinType, null );
 	}
 
+	@Override
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		addJoin( tableName, alias, alias, fkColumns, pkColumns, joinType, on );
 	}
@@ -37,6 +39,7 @@ public class QueryJoinFragment extends JoinFragment {
 		addJoin( tableName, alias, alias, fkColumns, pkColumns, joinType, null );
 	}
 
+	@Override
 	public void addJoin(String tableName, String alias, String[][] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		addJoin( tableName, alias, alias, fkColumns, pkColumns, joinType, on );
 	}
@@ -67,19 +70,23 @@ public class QueryJoinFragment extends JoinFragment {
 		}
 	}
 
+	@Override
 	public String toFromFragmentString() {
 		return afterFrom.toString();
 	}
 
+	@Override
 	public String toWhereFragmentString() {
 		return afterWhere.toString();
 	}
 
+	@Override
 	public void addJoins(String fromFragment, String whereFragment) {
 		afterFrom.append( fromFragment );
 		afterWhere.append( whereFragment );
 	}
 
+	@Override
 	public JoinFragment copy() {
 		QueryJoinFragment copy = new QueryJoinFragment( dialect, useThetaStyleInnerJoins );
 		copy.afterFrom = new StringBuilder( afterFrom.toString() );
@@ -98,6 +105,7 @@ public class QueryJoinFragment extends JoinFragment {
 	}
 
 
+	@Override
 	public void addCrossJoin(String tableName, String alias) {
 		afterFrom.append( ", " )
 				.append( tableName )
@@ -105,6 +113,7 @@ public class QueryJoinFragment extends JoinFragment {
 				.append( alias );
 	}
 
+	@Override
 	public void addCondition(String alias, String[] fkColumns, String[] pkColumns) {
 		for ( int j = 0; j < fkColumns.length; j++ ) {
 			afterWhere.append( " and " )
@@ -147,6 +156,7 @@ public class QueryJoinFragment extends JoinFragment {
 	 * @param condition
 	 * @return true if the condition was added, false if it was already in the fragment.
 	 */
+	@Override
 	public boolean addCondition(String condition) {
 		// if the condition is not already there...
 		if (

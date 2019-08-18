@@ -24,6 +24,7 @@ public interface FooProxy {
 	public boolean getYesno();
 	public boolean equalsFoo(Foo arg0);
 	public void disconnect();
+	@Override
 	public String toString();
 	public void setByte(Byte arg0);
 	public Byte getByte();

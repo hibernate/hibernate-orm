@@ -33,6 +33,7 @@ import static org.junit.Assert.fail;
  */
 public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "where/hbm/LazyOneToManyNonUniqueIdWhereTest.hbm.xml" };
 	}

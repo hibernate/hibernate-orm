@@ -91,6 +91,7 @@ public class SubstringFunction
 		Helper.possibleParameter( getValue(), registry );
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		renderingContext.getFunctionStack().push( this );
 

@@ -38,6 +38,7 @@ public class JdbcTimestampWithDefaultUTCTimeZoneTest
 		connectionProvider.stop();
 	}
 
+	@Override
 	protected String expectedTimestampValue() {
 		return "2000-01-01 00:00:00.000000";
 	}

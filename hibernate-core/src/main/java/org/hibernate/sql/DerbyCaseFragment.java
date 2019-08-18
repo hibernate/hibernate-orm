@@ -20,6 +20,7 @@ public class DerbyCaseFragment extends CaseFragment {
 	 * The problem we had, was when Hibernate does a select with a case statement, for joined subclasses.
 	 * This seems to be because there was no else at the end of the case statement (other dbs seem to not mind).
 	 */
+	@Override
 	public String toFragmentString() {
 		StringBuilder buf = new StringBuilder( cases.size() * 15 + 10 );
 		buf.append( "case" ); 								//$NON-NLS-1

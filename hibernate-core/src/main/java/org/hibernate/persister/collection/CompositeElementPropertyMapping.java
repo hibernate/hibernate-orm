@@ -34,10 +34,12 @@ public class CompositeElementPropertyMapping extends AbstractPropertyMapping {
 
 	}
 
+	@Override
 	public Type getType() {
 		return compositeType;
 	}
 
+	@Override
 	protected String getEntityName() {
 		return compositeType.getName();
 	}

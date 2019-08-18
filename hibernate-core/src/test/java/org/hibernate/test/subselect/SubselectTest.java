@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class SubselectTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "subselect/Beings.hbm.xml" };
 	}

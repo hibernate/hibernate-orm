@@ -18,6 +18,7 @@ public class SerialNumberPk implements Serializable {
 	private String brand;
 	private String model;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof SerialNumberPk ) ) return false;
@@ -30,6 +31,7 @@ public class SerialNumberPk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = brand.hashCode();

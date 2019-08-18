@@ -49,6 +49,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 		};
 	}
 
+	@Override
 	protected void prepareTest() {
 		doInHibernate( this::sessionFactory, session -> {
 			Person person = new Person();

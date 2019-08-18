@@ -124,6 +124,7 @@ public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Override
 	protected void cleanupTestData() {
 		// clean up the test data
 		Session s = openSession();

@@ -29,14 +29,17 @@ public class MyOidType implements CompositeUserType {
 			StandardBasicTypes.INTEGER, StandardBasicTypes.INTEGER, StandardBasicTypes.INTEGER, StandardBasicTypes.INTEGER
 	};
 
+	@Override
 	public String[] getPropertyNames() {
 		return PROPERTY_NAMES;
 	}
 
+	@Override
 	public Type[] getPropertyTypes() {
 		return TYPES;
 	}
 
+	@Override
 	public Object getPropertyValue(Object aObject, int i) throws HibernateException {
 		MyOid dbOid = (MyOid) aObject;
 		switch ( i ) {
@@ -54,6 +57,7 @@ public class MyOidType implements CompositeUserType {
 
 	}
 
+	@Override
 	public void setPropertyValue(Object aObject, int i, Object aObject1) throws HibernateException {
 		MyOid dbOid = (MyOid) aObject;
 		switch ( i ) {
@@ -70,10 +74,12 @@ public class MyOidType implements CompositeUserType {
 		}
 	}
 
+	@Override
 	public Class returnedClass() {
 		return MyOid.class;
 	}
 
+	@Override
 	public boolean equals(Object x, Object y) throws HibernateException {
 		if ( x == y ) return true;
 		if ( x == null || y == null ) return false;
@@ -94,10 +100,12 @@ public class MyOidType implements CompositeUserType {
 
 	}
 
+	@Override
 	public int hashCode(Object aObject) throws HibernateException {
 		return aObject.hashCode();
 	}
 
+	@Override
 	public Object nullSafeGet(
 			ResultSet aResultSet, String[] names, SharedSessionContractImplementor session, Object aObject
 	) throws HibernateException, SQLException {
@@ -109,6 +117,7 @@ public class MyOidType implements CompositeUserType {
 		return new MyOid( highval, midval, lowval, other );
 	}
 
+	@Override
 	public void nullSafeSet(
 			PreparedStatement aPreparedStatement, Object value, int index, SharedSessionContractImplementor session
 	) throws HibernateException, SQLException {
@@ -127,25 +136,30 @@ public class MyOidType implements CompositeUserType {
 		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getOther(), index + 3, session );
 	}
 
+	@Override
 	public Object deepCopy(Object aObject) throws HibernateException {
 		MyOid oldOid = (MyOid) aObject;
 
 		return new MyOid( oldOid.getHigh(), oldOid.getMiddle(), oldOid.getLow(), oldOid.getOther() );
 	}
 
+	@Override
 	public boolean isMutable() {
 		return false;
 	}
 
+	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session) throws HibernateException {
 		return (Serializable) deepCopy( value );
 	}
 
+	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object aObject)
 			throws HibernateException {
 		return deepCopy( cached );
 	}
 
+	@Override
 	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object aObject2)
 			throws HibernateException {
 		// we are immutable. return original

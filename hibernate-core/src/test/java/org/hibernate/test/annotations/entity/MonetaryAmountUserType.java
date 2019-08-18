@@ -26,19 +26,23 @@ import org.hibernate.usertype.CompositeUserType;
  */
 public class MonetaryAmountUserType implements CompositeUserType {
 
+	@Override
 	public String[] getPropertyNames() {
 		return new String[]{"amount", "currency"};
 	}
 
+	@Override
 	public Type[] getPropertyTypes() {
 		return new Type[]{ StandardBasicTypes.BIG_DECIMAL, StandardBasicTypes.CURRENCY };
 	}
 
+	@Override
 	public Object getPropertyValue(Object component, int property) throws HibernateException {
 		MonetaryAmount ma = (MonetaryAmount) component;
 		return property == 0 ? ma.getAmount() : ma.getCurrency();
 	}
 
+	@Override
 	public void setPropertyValue(Object component, int property, Object value)
 			throws HibernateException {
 		MonetaryAmount ma = (MonetaryAmount) component;
@@ -50,10 +54,12 @@ public class MonetaryAmountUserType implements CompositeUserType {
 		}
 	}
 
+	@Override
 	public Class returnedClass() {
 		return MonetaryAmount.class;
 	}
 
+	@Override
 	public boolean equals(Object x, Object y) throws HibernateException {
 		if ( x == y ) return true;
 		if ( x == null || y == null ) return false;
@@ -63,10 +69,12 @@ public class MonetaryAmountUserType implements CompositeUserType {
 				mx.getCurrency().equals( my.getCurrency() );
 	}
 
+	@Override
 	public int hashCode(Object x) throws HibernateException {
 		return ( (MonetaryAmount) x ).getAmount().hashCode();
 	}
 
+	@Override
 	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 		BigDecimal amt = StandardBasicTypes.BIG_DECIMAL.nullSafeGet( rs, names[0], session);
@@ -75,6 +83,7 @@ public class MonetaryAmountUserType implements CompositeUserType {
 		return new MonetaryAmount( amt, cur );
 	}
 
+	@Override
 	public void nullSafeSet(
 			PreparedStatement st, Object value, int index,
 			SharedSessionContractImplementor session
@@ -86,25 +95,30 @@ public class MonetaryAmountUserType implements CompositeUserType {
 		StandardBasicTypes.CURRENCY.nullSafeSet( st, cur, index + 1, session );
 	}
 
+	@Override
 	public Object deepCopy(Object value) throws HibernateException {
 		MonetaryAmount ma = (MonetaryAmount) value;
 		return new MonetaryAmount( ma.getAmount(), ma.getCurrency() );
 	}
 
+	@Override
 	public boolean isMutable() {
 		return true;
 	}
 
+	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return (Serializable) deepCopy( value );
 	}
 
+	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		return deepCopy( cached );
 	}
 
+	@Override
 	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		return deepCopy( original ); //TODO: improve

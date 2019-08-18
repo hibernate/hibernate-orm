@@ -23,6 +23,7 @@ public class MaterializedBlobType extends AbstractSingleColumnStandardBasicType<
 		super( BlobTypeDescriptor.DEFAULT, PrimitiveByteArrayTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "materialized_blob";
 	}

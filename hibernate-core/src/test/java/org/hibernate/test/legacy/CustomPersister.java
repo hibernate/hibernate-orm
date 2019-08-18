@@ -74,14 +74,17 @@ public class CustomPersister implements EntityPersister {
 		this.entityMetamodel = new EntityMetamodel( model, this, creationContext );
 	}
 
+	@Override
 	public boolean hasLazyProperties() {
 		return false;
 	}
 
+	@Override
 	public boolean isInherited() {
 		return false;
 	}
 
+	@Override
 	public SessionFactoryImplementor getFactory() {
 		return factory;
 	}
@@ -105,40 +108,50 @@ public class CustomPersister implements EntityPersister {
 	public void generateEntityDefinition() {
 	}
 
+	@Override
 	public void postInstantiate() throws MappingException {}
 
+	@Override
 	public String getEntityName() {
 		return Custom.class.getName();
 	}
 
+	@Override
 	public boolean isSubclassEntityName(String entityName) {
 		return Custom.class.getName().equals(entityName);
 	}
 
+	@Override
 	public boolean hasProxy() {
 		return false;
 	}
 
+	@Override
 	public boolean hasCollections() {
 		return false;
 	}
 
+	@Override
 	public boolean hasCascades() {
 		return false;
 	}
 
+	@Override
 	public boolean isMutable() {
 		return true;
 	}
 
+	@Override
 	public boolean isSelectBeforeUpdateRequired() {
 		return false;
 	}
 
+	@Override
 	public boolean isIdentifierAssignedByInsert() {
 		return false;
 	}
 
+	@Override
 	public Boolean isTransient(Object object, SharedSessionContractImplementor session) {
 		return ( (Custom) object ).id==null;
 	}
@@ -148,9 +161,11 @@ public class CustomPersister implements EntityPersister {
 		return getPropertyValues( object );
 	}
 
+	@Override
 	public void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SharedSessionContractImplementor session) {
 	}
 
+	@Override
 	public void processUpdateGeneratedProperties(Serializable id, Object entity, Object[] state, SharedSessionContractImplementor session) {
 	}
 
@@ -236,10 +251,12 @@ public class CustomPersister implements EntityPersister {
 		( ( Custom ) entity ).id = ( String ) currentId;
 	}
 
+	@Override
 	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 		return this;
 	}
 
+	@Override
 	public int[] findDirty(
 		Object[] x,
 		Object[] y,
@@ -253,6 +270,7 @@ public class CustomPersister implements EntityPersister {
 		}
 	}
 
+	@Override
 	public int[] findModified(
 		Object[] x,
 		Object[] y,
@@ -269,6 +287,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#hasIdentifierProperty()
 	 */
+	@Override
 	public boolean hasIdentifierProperty() {
 		return true;
 	}
@@ -276,6 +295,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#isVersioned()
 	 */
+	@Override
 	public boolean isVersioned() {
 		return false;
 	}
@@ -283,6 +303,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getVersionType()
 	 */
+	@Override
 	public VersionType getVersionType() {
 		return null;
 	}
@@ -290,6 +311,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getVersionProperty()
 	 */
+	@Override
 	public int getVersionProperty() {
 		return 0;
 	}
@@ -297,6 +319,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getIdentifierGenerator()
 	 */
+	@Override
 	public IdentifierGenerator getIdentifierGenerator()
 	throws HibernateException {
 		return GENERATOR;
@@ -305,6 +328,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#load(Serializable, Object, org.hibernate.LockOptions , SharedSessionContractImplementor)
 	 */
+	@Override
 	public Object load(
 		Serializable id,
 		Object optionalObject,
@@ -322,6 +346,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#load(Serializable, Object, LockMode, SharedSessionContractImplementor)
 	 */
+	@Override
 	public Object load(
 		Serializable id,
 		Object optionalObject,
@@ -365,6 +390,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
 	 */
+	@Override
 	public void lock(
 		Serializable id,
 		Object version,
@@ -379,6 +405,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
 	 */
+	@Override
 	public void lock(
 		Serializable id,
 		Object version,
@@ -390,6 +417,7 @@ public class CustomPersister implements EntityPersister {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public void insert(
 		Serializable id,
 		Object[] fields,
@@ -400,12 +428,14 @@ public class CustomPersister implements EntityPersister {
 		INSTANCES.put(id, ( (Custom) object ).clone() );
 	}
 
+	@Override
 	public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session)
 	throws HibernateException {
 
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public void delete(
 		Serializable id,
 		Object version,
@@ -419,6 +449,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister
 	 */
+	@Override
 	public void update(
 		Serializable id,
 		Object[] fields,
@@ -443,6 +474,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getPropertyTypes()
 	 */
+	@Override
 	public Type[] getPropertyTypes() {
 		return TYPES;
 	}
@@ -450,6 +482,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getPropertyNames()
 	 */
+	@Override
 	public String[] getPropertyNames() {
 		return NAMES;
 	}
@@ -457,6 +490,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getPropertyCascadeStyles()
 	 */
+	@Override
 	public CascadeStyle[] getPropertyCascadeStyles() {
 		return null;
 	}
@@ -464,6 +498,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getIdentifierType()
 	 */
+	@Override
 	public Type getIdentifierType() {
 		return StandardBasicTypes.STRING;
 	}
@@ -471,34 +506,42 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getIdentifierPropertyName()
 	 */
+	@Override
 	public String getIdentifierPropertyName() {
 		return "id";
 	}
 
+	@Override
 	public boolean hasCache() {
 		return false;
 	}
 
+	@Override
 	public EntityDataAccess getCacheAccessStrategy() {
 		return null;
 	}
 
+	@Override
 	public boolean hasNaturalIdCache() {
 		return false;
 	}
 
+	@Override
 	public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
 		return null;
 	}
 
+	@Override
 	public String getRootEntityName() {
 		return "CUSTOMS";
 	}
 
+	@Override
 	public Serializable[] getPropertySpaces() {
 		return new String[] { "CUSTOMS" };
 	}
 
+	@Override
 	public Serializable[] getQuerySpaces() {
 		return new String[] { "CUSTOMS" };
 	}
@@ -506,14 +549,17 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getClassMetadata()
 	 */
+	@Override
 	public ClassMetadata getClassMetadata() {
 		return null;
 	}
 
+	@Override
 	public boolean[] getPropertyUpdateability() {
 		return MUTABILITY;
 	}
 
+	@Override
 	public boolean[] getPropertyCheckability() {
 		return MUTABILITY;
 	}
@@ -521,36 +567,44 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getPropertyInsertability()
 	 */
+	@Override
 	public boolean[] getPropertyInsertability() {
 		return MUTABILITY;
 	}
 
+	@Override
 	public ValueInclusion[] getPropertyInsertGenerationInclusions() {
 		return new ValueInclusion[0];
 	}
 
+	@Override
 	public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
 		return new ValueInclusion[0];
 	}
 
 
+	@Override
 	public boolean canExtractIdOutOfEntity() {
 		return true;
 	}
 
+	@Override
 	public boolean isBatchLoadable() {
 		return false;
 	}
 
+	@Override
 	public Type getPropertyType(String propertyName) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Object createProxy(Serializable id, SharedSessionContractImplementor session)
 		throws HibernateException {
 		throw new UnsupportedOperationException("no proxy for this class");
 	}
 
+	@Override
 	public Object getCurrentVersion(
 		Serializable id,
 		SharedSessionContractImplementor session)

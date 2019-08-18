@@ -22,6 +22,7 @@ import javax.persistence.ManyToOne;
 public class ShoppingBasketsPK implements Serializable {
 	private static final long serialVersionUID = 4121297376338222776L;
 
+	@Override
 	public boolean equals(Object aObj) {
 		if (aObj == this)
 			return true;
@@ -37,6 +38,7 @@ public class ShoppingBasketsPK implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int hashcode = 0;
 		if (getOwner() != null) {

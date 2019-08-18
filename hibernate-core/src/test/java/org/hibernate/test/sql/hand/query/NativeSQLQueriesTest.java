@@ -69,6 +69,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/hand/query/NativeSQLQueries.hbm.xml" };
 	}
@@ -909,6 +910,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked"})
 	private static class UpperCasedAliasToEntityMapResultTransformer extends BasicTransformerAdapter implements Serializable {
+		@Override
 		public Object transformTuple(Object[] tuple, String[] aliases) {
 			Map result = new HashMap( tuple.length );
 			for ( int i = 0; i < tuple.length; i++ ) {

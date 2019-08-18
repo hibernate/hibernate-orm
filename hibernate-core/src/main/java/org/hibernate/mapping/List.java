@@ -20,6 +20,7 @@ public class List extends IndexedCollection {
 	
 	private int baseIndex;
 
+	@Override
 	public boolean isList() {
 		return true;
 	}
@@ -36,12 +37,14 @@ public class List extends IndexedCollection {
 		super( buildingContext, owner );
 	}
 
+	@Override
 	public CollectionType getDefaultCollectionType() throws MappingException {
 		return getMetadata().getTypeResolver()
 				.getTypeFactory()
 				.list( getRole(), getReferencedPropertyName() );
 	}
 	
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

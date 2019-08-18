@@ -22,6 +22,7 @@ public class StatefulInterceptor extends EmptyInterceptor {
 
 	private List list = new ArrayList();
 	
+	@Override
 	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
 		if ( !(entity instanceof Log) ) {
 			list.add( new Log( "insert", (String) id, entity.getClass().getName() ) );
@@ -29,6 +30,7 @@ public class StatefulInterceptor extends EmptyInterceptor {
 		return false;
 	}
 
+	@Override
 	public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
 		if ( !(entity instanceof Log) ) {
 			list.add( new Log( "update", (String) id, entity.getClass().getName() ) );
@@ -36,6 +38,7 @@ public class StatefulInterceptor extends EmptyInterceptor {
 		return false;
 	}
 
+	@Override
 	public void postFlush(Iterator entities) {
 		if ( list.size()>0 ) {
 			for ( Iterator iter = list.iterator(); iter.hasNext(); ) {

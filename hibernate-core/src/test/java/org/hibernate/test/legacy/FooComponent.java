@@ -21,15 +21,18 @@ public class FooComponent implements Serializable {
 	private FooProxy parent;
 	private Baz baz;
 	
+	@Override
 	public boolean equals(Object that) {
 		FooComponent fc = (FooComponent) that;
 		return count==fc.count;
 	}
 	
+	@Override
 	public int hashCode() {
 		return count;
 	}
 	
+	@Override
 	public String toString() {
 		String result = "FooComponent: " + name + "=" + count;
 		result+="; dates=[";

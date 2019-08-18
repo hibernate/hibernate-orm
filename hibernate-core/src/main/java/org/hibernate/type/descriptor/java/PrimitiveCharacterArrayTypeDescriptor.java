@@ -29,10 +29,12 @@ public class PrimitiveCharacterArrayTypeDescriptor extends AbstractTypeDescripto
 		super( char[].class, ArrayMutabilityPlan.INSTANCE );
 	}
 
+	@Override
 	public String toString(char[] value) {
 		return new String( value );
 	}
 
+	@Override
 	public char[] fromString(String string) {
 		return string.toCharArray();
 	}
@@ -59,6 +61,7 @@ public class PrimitiveCharacterArrayTypeDescriptor extends AbstractTypeDescripto
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(char[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -81,6 +84,7 @@ public class PrimitiveCharacterArrayTypeDescriptor extends AbstractTypeDescripto
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> char[] wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

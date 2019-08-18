@@ -23,6 +23,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "reattachment/Mappings.hbm.xml" };
 	}

@@ -43,6 +43,7 @@ public class MulIdNaming implements Serializable {
 		this.id2 = id2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -63,6 +64,7 @@ public class MulIdNaming implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id1 != null ? id1.hashCode() : 0);
@@ -70,6 +72,7 @@ public class MulIdNaming implements Serializable {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "MulIdNaming(" + id1 + ", " + id2 + ")";
 	}

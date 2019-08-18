@@ -51,6 +51,7 @@ public class FromParser implements Parser {
 		JOIN_TYPES.put( "inner", JoinType.INNER_JOIN );
 	}
 
+	@Override
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 
 		// start by looking for HQL keywords...
@@ -297,6 +298,7 @@ public class FromParser implements Parser {
 
 	}
 
+	@Override
 	public void start(QueryTranslatorImpl q) {
 		entityName = null;
 		collectionName = null;
@@ -313,6 +315,7 @@ public class FromParser implements Parser {
 		joinType = JoinType.NONE;
 	}
 
+	@Override
 	public void end(QueryTranslatorImpl q) {
 		if ( afterMemberDeclarations ) {
 			//The exception throwned by the AST query translator contains the error token location, respensent by line and colum, 

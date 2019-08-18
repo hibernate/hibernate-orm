@@ -17,6 +17,7 @@ import org.hibernate.testing.RequiresDialect;
  */
 @RequiresDialect( MySQLDialect.class )
 public class MySQLCustomSQLTest extends CustomStoredProcTestSupport {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/hand/custom/mysql/Mappings.hbm.xml" };
 	}

@@ -17,14 +17,17 @@ public class GenderJavaTypeDescriptor extends AbstractTypeDescriptor<Gender> {
         super( Gender.class );
     }
 
+	@Override
     public String toString(Gender value) {
         return value == null ? null : value.name();
     }
 
+	@Override
     public Gender fromString(String string) {
         return string == null ? null : Gender.valueOf( string );
     }
 
+	@Override
     public <X> X unwrap(Gender value, Class<X> type, WrapperOptions options) {
         return CharacterTypeDescriptor.INSTANCE.unwrap(
             value == null ? null : value.getCode(),
@@ -33,6 +36,7 @@ public class GenderJavaTypeDescriptor extends AbstractTypeDescriptor<Gender> {
         );
     }
 
+	@Override
     public <X> Gender wrap(X value, WrapperOptions options) {
         return Gender.fromCode(
             CharacterTypeDescriptor.INSTANCE.wrap( value, options )

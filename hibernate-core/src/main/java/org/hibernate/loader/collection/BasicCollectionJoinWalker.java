@@ -125,6 +125,7 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 		sql = select.toStatementString();
 	}
 
+	@Override
 	protected JoinType getJoinType(
 			OuterJoinLoadable persister,
 			PropertyPath path,
@@ -155,6 +156,7 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 		return joinType;
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + collectionPersister.getRole() + ')';
 	}

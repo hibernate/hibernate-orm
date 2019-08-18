@@ -24,10 +24,12 @@ public class NullLiteralExpression<T> extends ExpressionImpl<T> implements Seria
 		super( criteriaBuilder, type );
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		if ( renderingContext.getClauseStack().getCurrent() == Clause.SELECT ) {
 			// in the select clause render the ``null` using a cast so the db analyzer/optimizer

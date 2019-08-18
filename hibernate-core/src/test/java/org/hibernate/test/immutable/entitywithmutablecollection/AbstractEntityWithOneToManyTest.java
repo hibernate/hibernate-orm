@@ -39,6 +39,7 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	private boolean isContractPartiesBidirectional;
 	private boolean isContractVariationsBidirectional;
 	private boolean isContractVersioned;
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
 	}
@@ -51,6 +52,7 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 		return true;
 	}
 
+	@Override
 	protected void prepareTest() throws Exception {
 		super.prepareTest();
 		isContractPartiesInverse = sessionFactory().getCollectionPersister( Contract.class.getName() + ".parties" ).isInverse();

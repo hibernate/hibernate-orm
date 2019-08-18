@@ -16,6 +16,7 @@ public class MySQL8ExpressionTemplate extends MySQLExpressionTemplate {
 
 	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', ST_GeomFromText('%s', %d))";
 
+	@Override
 	public String toInsertSql(TestDataElement testDataElement) {
 		String wkt = WktUtility.getWkt( testDataElement.wkt );
 		int srid = WktUtility.getSRID( testDataElement.wkt );

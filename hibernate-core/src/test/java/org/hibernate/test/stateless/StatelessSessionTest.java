@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotSame;
  * @author Gavin King
  */
 public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "stateless/Document.hbm.xml" };
 	}

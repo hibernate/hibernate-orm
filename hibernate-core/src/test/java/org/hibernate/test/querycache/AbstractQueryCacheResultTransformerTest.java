@@ -216,6 +216,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -255,6 +256,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 3, resultList.size() );
@@ -305,6 +307,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -330,17 +333,20 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithNonLazyOneToManyUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Course.class );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Course" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				assertTrue( results instanceof Course );
 				assertEquals( courseExpected, results );
@@ -354,6 +360,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithNonLazyManyToOneList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( CourseMeeting.class )
@@ -361,11 +368,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			protected Query getQuery(Session s) {
 				return s.createQuery( "from CourseMeeting order by id.day" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -383,6 +392,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithLazyAssnUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -390,12 +400,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 				}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s where s.studentNumber = :studentNumber" )
 						.setParameter( "studentNumber", shermanExpected.getStudentNumber() );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				assertTrue( results instanceof Student );
 				assertEquals( shermanExpected, results );
@@ -410,6 +422,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithLazyAssnList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class )
@@ -417,11 +430,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student order by studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -444,6 +459,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testEntityWithUnaliasedJoinFetchedLazyOneToManySingleElementList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -452,12 +468,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join fetch s.enrolments order by s.studentNumber" );
 			}
 		};
 
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -480,6 +498,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testJoinWithFetchJoinListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
@@ -488,6 +507,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -512,6 +532,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testJoinWithFetchJoinListHql() throws Exception {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
 						"from Student s left join fetch s.enrolments left join s.preferredCourse order by s.studentNumber"
@@ -519,6 +540,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -543,11 +565,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testJoinWithFetchJoinWithOwnerAndPropProjectedList() throws Exception {
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select s, s.name from Student s left join fetch s.enrolments left join s.preferredCourse order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -571,11 +595,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testJoinWithFetchJoinWithPropAndOwnerProjectedList() throws Exception {
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select s.name, s from Student s left join fetch s.enrolments left join s.preferredCourse order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -599,11 +625,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testJoinWithFetchJoinWithOwnerAndAliasedJoinedProjectedListHql() throws Exception {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select s, pc from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -631,6 +659,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testJoinWithFetchJoinWithAliasedJoinedAndOwnerProjectedListHql() throws Exception {
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
 						"select pc, s from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber"
@@ -638,6 +667,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -665,12 +695,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithAliasedJoinFetchedLazyOneToManySingleElementListHql() throws Exception {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join fetch s.enrolments e order by s.studentNumber" );
 			}
 		};
 
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -696,6 +728,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithSelectFetchedLazyOneToManySingleElementListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -704,6 +737,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -723,6 +757,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testEntityWithJoinFetchedLazyOneToManyMultiAndNullElementList() throws Exception {
 		//unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -731,6 +766,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join fetch s.addresses order by s.studentNumber" );
 			}
@@ -738,6 +774,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 
 		//aliased
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -747,6 +784,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -756,6 +794,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased3 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -765,6 +804,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased4 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -774,12 +814,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join fetch s.addresses a order by s.studentNumber" );
 			}
 		};
 
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 3, resultList.size() );
@@ -807,6 +849,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testEntityWithJoinFetchedLazyManyToOneList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -815,6 +858,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join fetch s.preferredCourse order by s.studentNumber" );
 			}
@@ -822,6 +866,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 
 		// aliased
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -831,6 +876,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -840,6 +886,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased3 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -849,6 +896,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased4 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -858,12 +906,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join fetch s.preferredCourse pCourse order by s.studentNumber" );
 			}
 		};
 
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -885,6 +935,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testEntityWithJoinFetchedLazyManyToOneUsingProjectionList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
@@ -900,6 +951,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
 						"select s.name, s from Enrolment e left join e.student s left join fetch s.preferredCourse order by s.studentNumber"
@@ -907,6 +959,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -934,6 +987,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithJoinedLazyOneToManySingleElementListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -942,6 +996,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -950,6 +1005,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -958,6 +1014,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -981,6 +1038,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithJoinedLazyOneToManyMultiAndNullListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -989,6 +1047,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -997,6 +1056,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -1005,6 +1065,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 3, resultList.size() );
@@ -1029,6 +1090,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithJoinedLazyManyToOneListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -1037,6 +1099,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -1045,6 +1108,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
@@ -1053,6 +1117,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1071,16 +1136,19 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithJoinedLazyOneToManySingleElementListHql() throws Exception {
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join s.enrolments order by s.studentNumber" );
 			}
 		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join s.enrolments e order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1101,16 +1169,19 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithJoinedLazyOneToManyMultiAndNullListHql() throws Exception {
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join s.addresses order by s.studentNumber" );
 			}
 		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "from Student s left join s.addresses a order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 3, resultList.size() );
@@ -1136,18 +1207,21 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testEntityWithJoinedLazyManyToOneListHql() throws Exception {
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
+			@Override
 			protected Query getQuery(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createQuery( "from Student s left join s.preferredCourse order by s.studentNumber" );
 			}
 		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
+			@Override
 			protected Query getQuery(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createQuery( "from Student s left join s.preferredCourse p order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1166,6 +1240,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToEntityMapOneProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection( Projections.property( "e.student" ).as( "student" ) )
@@ -1174,12 +1249,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.student as student from Enrolment e order by e.studentNumber" )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1202,6 +1279,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToEntityMapMultiProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection(
@@ -1216,12 +1294,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.student as student, e.semester as semester, e.year as year, e.course as course from Enrolment e order by e.studentNumber" )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1250,6 +1330,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToEntityMapMultiProjectionWithNullAliasList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection(
@@ -1264,12 +1345,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.student as student, e.semester, e.year, e.course as course from Enrolment e order by e.studentNumber" )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1295,6 +1378,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToEntityMapMultiAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class )
 						.setProjection(
@@ -1306,6 +1390,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
 						"select min( e.studentNumber ) as minStudentNumber, max( e.studentNumber ) as maxStudentNumber from Enrolment e" )
@@ -1313,6 +1398,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				assertTrue( results instanceof Map );
 				Map resultMap = ( Map ) results;
@@ -1327,6 +1413,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneNonEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
@@ -1335,12 +1422,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.semester from Enrolment e where e.studentNumber = :studentNumber" )
 						.setParameter( "studentNumber", shermanEnrolmentExpected.getStudentNumber() );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				assertTrue( results instanceof Short );
 				assertEquals( Short.valueOf( shermanEnrolmentExpected.getSemester() ), results );
@@ -1352,6 +1441,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneNonEntityProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
@@ -1360,11 +1450,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.semester from Enrolment e order by e.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1389,11 +1481,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		};
 		*/
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select elements(s.secretCodes) from Student s" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 3, resultList.size() );
@@ -1408,6 +1502,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class )
@@ -1416,12 +1511,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.student from Enrolment e where e.studentNumber = :studentNumber" )
 						.setParameter( "studentNumber", Long.valueOf( yogiExpected.getStudentNumber() ) );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				assertTrue( results instanceof Student );
 				Student student = ( Student ) results;
@@ -1437,6 +1534,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	public void testOneEntityProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			// should use PassThroughTransformer by default
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 						.setProjection( Projections.property( "e.student" ) )
@@ -1444,11 +1542,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.student from Enrolment e order by e.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1465,6 +1565,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class )
@@ -1479,6 +1580,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
 						"select e.student, e.semester, e.year, e.course from Enrolment e  where e.studentNumber = :studentNumber" )
@@ -1486,6 +1588,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				assertTrue( results instanceof Object[] );
 				Object shermanObjects[] = ( Object [] ) results;
@@ -1507,6 +1610,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiEntityProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
@@ -1521,11 +1625,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.student, e.semester, e.year, e.course from Enrolment e order by e.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1552,6 +1658,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiEntityProjectionAliasedList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				// should use PassThroughTransformer by default
 				return s.createCriteria( Enrolment.class, "e" )
@@ -1566,11 +1673,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select e.student as st, e.semester as sem, e.year as yr, e.course as c from Enrolment e order by e.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1597,17 +1706,20 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testSingleAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class )
 						.setProjection( Projections.min( "studentNumber" ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select min( e.studentNumber ) from Enrolment e" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				assertTrue( results instanceof Long );
 				assertEquals( Long.valueOf( yogiExpected.getStudentNumber() ), results );
@@ -1619,6 +1731,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class )
 						.setProjection(
@@ -1629,12 +1742,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
 						"select min( e.studentNumber ) as minStudentNumber, max( e.studentNumber ) as maxStudentNumber from Enrolment e" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				assertTrue( results instanceof Object[] );
 				Object[] resultObjects = ( Object[] ) results;
@@ -1648,6 +1763,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToBeanDtoOneArgList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
@@ -1658,12 +1774,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select st.name as studentName from Student st order by st.studentNumber" )
 						.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1681,6 +1799,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToBeanDtoMultiArgList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
@@ -1695,12 +1814,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select st.name as studentName, co.description as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber" )
 						.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1718,6 +1839,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiProjectionListThenApplyAliasToBean() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
@@ -1731,11 +1853,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select st.name as studentName, co.description as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				ResultTransformer transformer = Transformers.aliasToBean( StudentDTO.class );
@@ -1762,6 +1886,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToBeanDtoLiteralArgList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
@@ -1781,12 +1906,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select st.name as studentName, 'lame description' as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber" )
 						.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1804,6 +1931,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testAliasToBeanDtoWithNullAliasList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
 				.createAlias( "e.student", "st" )
@@ -1819,12 +1947,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select st.name as studentName, co.description as courseDescription from Enrolment e join e.student st join e.course co order by e.studentNumber" )
 						.setResultTransformer( Transformers.aliasToBean( StudentDTO.class ) );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1842,6 +1972,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneSelectNewNoAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) throws Exception {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection( Projections.property( "s.name" ) )
@@ -1853,11 +1984,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select new org.hibernate.test.querycache.StudentDTO(s.name) from Student s order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1875,6 +2008,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testOneSelectNewAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) throws Exception {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection( Projections.property( "s.name" ).as( "name" ))
@@ -1886,11 +2020,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select new org.hibernate.test.querycache.StudentDTO(s.name) from Student s order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1908,6 +2044,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewList() throws Exception{
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) throws Exception {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
@@ -1923,11 +2060,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select new Student(s.studentNumber, s.name) from Student s order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1945,6 +2084,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewWithLiteralList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) throws Exception {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
@@ -1961,11 +2101,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		};
 
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select new Student(555L, s.name) from Student s order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -1983,6 +2125,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewListList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
@@ -1995,11 +2138,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select new list(s.studentNumber, s.name) from Student s order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -2017,6 +2162,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewMapUsingAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
@@ -2029,11 +2175,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select new map(s.studentNumber as sNumber, s.name as sName) from Student s order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -2051,6 +2199,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectNewMapUsingAliasesWithFetchJoinList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
@@ -2060,11 +2209,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select new map(s as s, pc as pc) from Student s left join s.preferredCourse pc left join fetch s.enrolments order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -2088,6 +2239,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectAliasToEntityMapUsingAliasesWithFetchJoinList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
@@ -2096,12 +2248,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlAliasToEntityMapExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select s as s, pc as pc from Student s left join s.preferredCourse pc left join fetch s.enrolments order by s.studentNumber" )
 						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -2129,11 +2283,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMultiSelectUsingImplicitJoinWithFetchJoinListHql() throws Exception {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select s as s, s.preferredCourse as pc from Student s left join fetch s.enrolments" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				assertTrue( results instanceof Object[] );
 				Object[] yogiObjects = ( Object[] ) results;
@@ -2156,6 +2312,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testSelectNewMapUsingAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
@@ -2168,11 +2325,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select new map(s.studentNumber as sNumber, s.name as sName) from Student s order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -2190,6 +2349,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testSelectNewEntityConstructorList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
@@ -2209,11 +2369,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select new Student(s.studentNumber, s.name) from Student s order by s.studentNumber" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -2231,6 +2393,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 	@Test
 	public void testMapKeyList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			@Override
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
 						.createAlias( "s.addresses", "a" )
@@ -2238,11 +2401,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select key(s.addresses) from Student s" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -2265,11 +2430,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		};
 		*/
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select value(s.addresses) from Student s" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -2296,11 +2463,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		};
 		*/
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select entry(s.addresses) from Student s" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
@@ -2335,11 +2504,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 		};
 		*/
 		HqlExecutor hqlExecutor = new HqlExecutor() {
+			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery( "select elements(a) from Student s inner join s.addresses a" );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
+			@Override
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );

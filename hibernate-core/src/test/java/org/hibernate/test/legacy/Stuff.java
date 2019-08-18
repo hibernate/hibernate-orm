@@ -12,10 +12,12 @@ import java.util.TimeZone;
 
 public class Stuff implements Serializable {
 	
+	@Override
 	public int hashCode() {
 		return new Long(id).hashCode();
 	}
 	
+	@Override
 	public boolean equals(Object other) {
 		if ( ! (other instanceof Stuff) ) return false;
 		Stuff otherStuff = (Stuff) other;

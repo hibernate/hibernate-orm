@@ -33,6 +33,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractOneSessionTest 
 
 	private Car car1_1;
 
+	@Override
 	protected void initMappings() throws MappingException, URISyntaxException {
 		URL url = Thread.currentThread().getContextClassLoader().getResource(
 				"mappings/entityNames/oneToManyNotAudited/mappings.hbm.xml"

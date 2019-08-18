@@ -70,6 +70,7 @@ public abstract class AbstractEntity implements Serializable {
 		return true;
 	}
 
+	@Override
 	public String toString() {
 		if (id != null) {
 			return "id: '" + id + "' uuid: '" + uuid + "'";

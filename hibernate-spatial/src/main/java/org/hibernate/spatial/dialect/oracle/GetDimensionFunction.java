@@ -22,6 +22,7 @@ class GetDimensionFunction extends SDOObjectMethod {
 		super( "Get_Dims", StandardBasicTypes.INTEGER );
 	}
 
+	@Override
 	public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
 		final StringBuffer buf = new StringBuffer();
 		if ( args.isEmpty() ) {

@@ -258,6 +258,7 @@ public class TypeTest extends BaseUnitTestCase {
 			this.number = number;
 		}
 		@SuppressWarnings( {"EqualsWhichDoesntCheckParameterClass"})
+		@Override
 		public boolean equals(Object obj) {
 			return this.number == ( (SerializableImpl) obj ).number;
 		}

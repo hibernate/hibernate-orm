@@ -18,10 +18,12 @@ import org.hibernate.testing.RequiresDialect;
 public class JpaSchemaGeneratorWithoutHbm2DdlCharsetNameTest
 		extends JpaSchemaGeneratorTest {
 
+	@Override
 	public String getScriptFolderPath() {
 		return "org/hibernate/jpa/test/schemagen/iso8859/";
 	}
 
+	@Override
 	protected String encodedName() {
 		return "sch" + String.valueOf( '\uFFFD' ) +"magen-test";
 	}

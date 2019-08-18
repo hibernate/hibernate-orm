@@ -84,6 +84,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	/**
 	 * Get the associated <tt>Type</tt>
 	 */
+	@Override
 	CollectionType getCollectionType();
 	/**
 	 * Get the "key" type (the type of the foreign key)

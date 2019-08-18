@@ -255,6 +255,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	 *
 	 * @return String - The additional display text.
 	 */
+	@Override
 	public String getDisplayText() {
 		StringBuilder buf = new StringBuilder();
 		buf.append( "FromElement{" );

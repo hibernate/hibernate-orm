@@ -23,6 +23,7 @@ public class SingleTableSubclass extends Subclass {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	protected Iterator getNonDuplicatedPropertyIterator() {
 		return new JoinedIterator(
 				getSuperclass().getUnjoinedPropertyIterator(),
@@ -30,6 +31,7 @@ public class SingleTableSubclass extends Subclass {
 		);
 	}
 
+	@Override
 	protected Iterator getDiscriminatorColumnIterator() {
 		if ( isDiscriminatorInsertable() && !getDiscriminator().hasFormula() ) {
 			return getDiscriminator().getColumnIterator();
@@ -39,10 +41,12 @@ public class SingleTableSubclass extends Subclass {
 		}
 	}
 
+	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept( this );
 	}
 
+	@Override
 	public void validate(Mapping mapping) throws MappingException {
 		if ( getDiscriminator() == null ) {
 			throw new MappingException(

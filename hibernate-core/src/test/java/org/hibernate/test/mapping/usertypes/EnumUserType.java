@@ -34,6 +34,7 @@ public class EnumUserType implements UserType, ParameterizedType {
 		return that;
 	}
 
+	@Override
 	public void setParameterValues(Properties params) {
 		String enumClassName = params.getProperty( "enumClassName" );
 		if ( enumClassName == null ) {
@@ -53,10 +54,12 @@ public class EnumUserType implements UserType, ParameterizedType {
 
 	private static final int[] SQL_TYPES = {Types.CHAR};
 
+	@Override
 	public int[] sqlTypes() {
 		return SQL_TYPES;
 	}
 
+	@Override
 	public Class returnedClass() {
 		return clazz;
 	}
@@ -99,30 +102,37 @@ public class EnumUserType implements UserType, ParameterizedType {
 		nullSafeSet( preparedStatement, value, index );
 	}
 
+	@Override
 	public Object deepCopy(Object value) throws HibernateException {
 		return value;
 	}
 
+	@Override
 	public boolean isMutable() {
 		return false;
 	}
 
+	@Override
 	public Object assemble(Serializable cached, Object owner) throws HibernateException {
 		return cached;
 	}
 
+	@Override
 	public Serializable disassemble(Object value) throws HibernateException {
 		return (Serializable) value;
 	}
 
+	@Override
 	public Object replace(Object original, Object target, Object owner) throws HibernateException {
 		return original;
 	}
 
+	@Override
 	public int hashCode(Object x) throws HibernateException {
 		return x.hashCode();
 	}
 
+	@Override
 	public boolean equals(Object x, Object y) throws HibernateException {
 		if ( x == y ) {
 			return true;

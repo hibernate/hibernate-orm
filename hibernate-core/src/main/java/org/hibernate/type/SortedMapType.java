@@ -40,11 +40,13 @@ public class SortedMapType extends MapType {
 		return map;
 	}
 
+	@Override
 	public Class getReturnedClass() {
 		return java.util.SortedMap.class;
 	}
 
 	@SuppressWarnings( {"unchecked"})
+	@Override
 	public Object instantiate(int anticipatedSize) {
 		return new TreeMap(comparator);
 	}

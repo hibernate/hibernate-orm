@@ -42,6 +42,7 @@ import static org.junit.Assert.assertEquals;
 @RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9918")
 public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Order.class,
@@ -158,6 +159,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 		registry.setListeners(
 				EventType.POST_INSERT,
 				new PostInsertEventListener() {
+					@Override
 					public void onPostInsert(PostInsertEvent event) {
 						if ( Order.class.isInstance( event.getEntity() ) ) {
 							assertEquals( order, event.getEntity());
@@ -165,6 +167,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 						}
 					}
 
+					@Override
 					public boolean requiresPostCommitHanding(EntityPersister persister) {
 						return false;
 					}

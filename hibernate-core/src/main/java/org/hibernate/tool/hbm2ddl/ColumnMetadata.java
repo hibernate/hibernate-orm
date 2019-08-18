@@ -54,6 +54,7 @@ public class ColumnMetadata {
 		return isNullable;
 	}
 
+	@Override
 	public String toString() {
 		return "ColumnMetadata(" + name + ')';
 	}

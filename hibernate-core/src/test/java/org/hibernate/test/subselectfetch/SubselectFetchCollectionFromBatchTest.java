@@ -330,6 +330,7 @@ public class SubselectFetchCollectionFromBatchTest  extends BaseCoreFunctionalTe
 		s.close();
 	}
 
+	@Override
 	public Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { EmployeeGroup.class, Employee.class };
 	}

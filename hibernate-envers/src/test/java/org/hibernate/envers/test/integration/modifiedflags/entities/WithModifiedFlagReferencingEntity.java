@@ -71,6 +71,7 @@ public class WithModifiedFlagReferencingEntity {
 		this.secondReference = reference;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -91,6 +92,7 @@ public class WithModifiedFlagReferencingEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

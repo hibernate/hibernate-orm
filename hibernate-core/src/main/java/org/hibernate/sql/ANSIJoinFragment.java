@@ -26,6 +26,7 @@ public class ANSIJoinFragment extends JoinFragment {
 	 * @param pkColumns The columns (from the table being joined to) used to define the join-restriction (the ON)
 	 * @param joinType The type of join to produce (INNER, etc).
 	 */
+	@Override
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 		addJoin( tableName, alias, fkColumns, pkColumns, joinType, null );
 	}
@@ -42,6 +43,7 @@ public class ANSIJoinFragment extends JoinFragment {
 	 * @param joinType The type of join to produce (INNER, etc).
 	 * @param on Any extra join restrictions
 	 */
+	@Override
 	public void addJoin(
 			String rhsTableName,
 			String rhsAlias,
@@ -89,6 +91,7 @@ public class ANSIJoinFragment extends JoinFragment {
 
 	}
 
+	@Override
 	public void addJoin(
 			String rhsTableName,
 			String rhsAlias,

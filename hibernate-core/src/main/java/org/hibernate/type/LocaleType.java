@@ -27,6 +27,7 @@ public class LocaleType extends AbstractSingleColumnStandardBasicType<Locale>
 		super( VarcharTypeDescriptor.INSTANCE, LocaleTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "locale";
 	}
@@ -36,6 +37,7 @@ public class LocaleType extends AbstractSingleColumnStandardBasicType<Locale>
 		return true;
 	}
 
+	@Override
 	public String objectToSQLString(Locale value, Dialect dialect) throws Exception {
 		return StringType.INSTANCE.objectToSQLString( toString( value ), dialect );
 	}

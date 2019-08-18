@@ -46,6 +46,7 @@ public class JpaCompliantManyToManyImplicitNamingTest extends ManyToManyImplicit
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9390")
+	@Override
 	public void testUnidirOwnerEntityNamePrimaryTableOverride() {
 		// Category.clients: associated entity: KnownClient
 		// Category has @Entity(name="CATEGORY") @Table(name="CATEGORY_TAB")

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 
 public class LikeTest extends BaseCoreFunctionalTestCase {
+	@Override
     public String[] getMappings() {
         return new String[]{"criteria/TestObject.hbm.xml"};
     }

@@ -45,6 +45,7 @@ public class UpdatesPerformance extends AbstractPerformanceTest {
 		entityManager.getTransaction().commit();
 	}
 
+	@Override
 	protected void doTest() {
 		setup();
 

@@ -52,6 +52,7 @@ public class EmbeddableSetEntity {
 		this.componentSet = componentSet;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -69,10 +70,12 @@ public class EmbeddableSetEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}
 
+	@Override
 	public String toString() {
 		return "ESE(id = " + id + ", componentSet = " + componentSet + ')';
 	}

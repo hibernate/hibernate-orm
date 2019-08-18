@@ -23,6 +23,7 @@ public class MaterializedNClobType extends AbstractSingleColumnStandardBasicType
 		super( NClobTypeDescriptor.DEFAULT, StringTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "materialized_nclob";
 	}

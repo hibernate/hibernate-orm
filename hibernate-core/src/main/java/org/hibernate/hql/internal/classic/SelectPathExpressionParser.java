@@ -9,6 +9,7 @@ import org.hibernate.QueryException;
 
 public class SelectPathExpressionParser extends PathExpressionParser {
 
+	@Override
 	public void end(QueryTranslatorImpl q) throws QueryException {
 		if ( getCurrentProperty() != null && !q.isShallowQuery() ) {
 			// "finish off" the join
@@ -18,6 +19,7 @@ public class SelectPathExpressionParser extends PathExpressionParser {
 		super.end( q );
 	}
 
+	@Override
 	protected void setExpectingCollectionIndex() throws QueryException {
 		throw new QueryException( "illegal syntax near collection-valued path expression in select: "  + getCollectionName() );
 	}

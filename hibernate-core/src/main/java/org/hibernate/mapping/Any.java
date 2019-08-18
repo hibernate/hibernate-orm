@@ -46,6 +46,7 @@ public class Any extends SimpleValue {
 		this.identifierTypeName = identifierType;
 	}
 
+	@Override
 	public Type getType() throws MappingException {
 		final Type metaType = getMetadata().getTypeResolver().heuristicType( metaTypeName );
 
@@ -82,10 +83,12 @@ public class Any extends SimpleValue {
 		this.lazy = lazy;
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName)
 		throws MappingException {
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

@@ -78,6 +78,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 		this.compositeKeyManyToOneTargetIndices = callback.resolve();
 	}
 
+	@Override
 	protected JoinType getJoinType(
 			OuterJoinLoadable persister,
 			PropertyPath path,
@@ -109,6 +110,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 		return getJoinType( nullable, currentDepth );
 	}
 
+	@Override
 	public String getComment() {
 		return "load " + getPersister().getEntityName();
 	}
@@ -129,6 +131,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 			this.factory = factory;
 		}
 
+		@Override
 		public void associationProcessed(OuterJoinableAssociation oja, int position) {
 			associationsByAlias.put( oja.getRhsAlias(), oja );
 			positionsByAlias.put( oja.getRhsAlias(), position );

@@ -18,22 +18,27 @@ import org.hibernate.internal.util.StringHelper;
 public class EJB3NamingStrategy implements NamingStrategy, Serializable {
 	public static final NamingStrategy INSTANCE = new EJB3NamingStrategy();
 
+	@Override
 	public String classToTableName(String className) {
 		return StringHelper.unqualify( className );
 	}
 
+	@Override
 	public String propertyToColumnName(String propertyName) {
 		return StringHelper.unqualify( propertyName );
 	}
 
+	@Override
 	public String tableName(String tableName) {
 		return tableName;
 	}
 
+	@Override
 	public String columnName(String columnName) {
 		return columnName;
 	}
 
+	@Override
 	public String collectionTableName(
 			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
 			String propertyName
@@ -48,10 +53,12 @@ public class EJB3NamingStrategy implements NamingStrategy, Serializable {
 		);
 	}
 
+	@Override
 	public String joinKeyColumnName(String joinedColumn, String joinedTable) {
 		return columnName( joinedColumn );
 	}
 
+	@Override
 	public String foreignKeyColumnName(
 			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
 	) {
@@ -60,10 +67,12 @@ public class EJB3NamingStrategy implements NamingStrategy, Serializable {
 		return columnName( header + "_" + referencedColumnName );
 	}
 
+	@Override
 	public String logicalColumnName(String columnName, String propertyName) {
 		return StringHelper.isNotEmpty( columnName ) ? columnName : StringHelper.unqualify( propertyName );
 	}
 
+	@Override
 	public String logicalCollectionTableName(
 			String tableName,
 			String ownerEntityTable, String associatedEntityTable, String propertyName
@@ -82,6 +91,7 @@ public class EJB3NamingStrategy implements NamingStrategy, Serializable {
 		}
 	}
 
+	@Override
 	public String logicalCollectionColumnName(String columnName, String propertyName, String referencedColumn) {
 		return StringHelper.isNotEmpty( columnName ) ?
 				columnName :

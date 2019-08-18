@@ -52,6 +52,7 @@ class WrappedOGCFunction extends StandardSQLFunction {
 		this.isGeometryTyped = true;
 	}
 
+	@Override
 	public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
 		final StringBuilder buf = new StringBuilder();
 		buf.append( "MDSYS." ).append( getName() ).append( "(" );

@@ -188,6 +188,7 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 		@Fetch( FetchMode.JOIN )
 		private Employment employment;
 
+		@Override
 		public Employment getEmployment() {
 			return employment;
 		}
@@ -209,14 +210,17 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 		@Fetch( FetchMode.JOIN )
 		private Employment employment;
 
+		@Override
 		public Long getId() {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public Employment getEmployment() {
 			return employment;
 		}
@@ -238,14 +242,17 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 		@Fetch( FetchMode.SELECT )
 		private Employment employment;
 
+		@Override
 		public Long getId() {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public Employment getEmployment() {
 			return employment;
 		}
@@ -267,14 +274,17 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 		@Fetch( FetchMode.SELECT )
 		private Employment employment;
 
+		@Override
 		public Long getId() {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public Employment getEmployment() {
 			return employment;
 		}

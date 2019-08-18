@@ -30,6 +30,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "unionsubclass2/Person.hbm.xml" };
 	}

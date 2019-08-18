@@ -31,6 +31,7 @@ public class PersonID implements Serializable {
         this.name = name;
     }
 
+	@Override
     public boolean equals( Object obj ) {
         if ( this == obj )
             return true;
@@ -56,6 +57,7 @@ public class PersonID implements Serializable {
         return true;
     }
 
+	@Override
     public int hashCode() {
         final int PRIME = 31;
         int result = 1;
@@ -69,6 +71,7 @@ public class PersonID implements Serializable {
         return result;
     }
 
+	@Override
     public String toString() {
         return name + " | " + num;
     }

@@ -21,6 +21,7 @@ public class ContactImpl implements Contact {
 
 	@Id
 	@GeneratedValue
+	@Override
 	public Integer getId() {
 		return id;
 	}
@@ -29,6 +30,7 @@ public class ContactImpl implements Contact {
 		this.id = id;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

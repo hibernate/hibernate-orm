@@ -156,6 +156,7 @@ public class CachedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.ALL );
 		options.put( Environment.GENERATE_STATISTICS, "true" );

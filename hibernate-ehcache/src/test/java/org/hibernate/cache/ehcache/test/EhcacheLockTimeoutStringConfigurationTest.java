@@ -34,6 +34,7 @@ public class EhcacheLockTimeoutStringConfigurationTest
 		settings.put( ConfigSettings.EHCACHE_CONFIGURATION_CACHE_LOCK_TIMEOUT, "1000" );
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 			Event.class

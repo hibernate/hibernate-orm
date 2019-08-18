@@ -31,20 +31,24 @@ public class ZImpl implements Z {
 	@Id
 	@GeneratedValue
 	@Column( name = "zID" )
+	@Override
 	public Integer getZId() {
 		return zId;
 	}
 
+	@Override
 	public void setZId(Integer zId) {
 		this.zId = zId;
 	}
 
 	@ManyToOne( optional = false, targetEntity = BImpl.class, fetch = FetchType.LAZY )
 	@JoinColumn( name = "bID", referencedColumnName = "bID")
+	@Override
 	public B getB() {
 		return b;
 	}
 
+	@Override
 	public void setB(B b) {
 		this.b = b;
 	}

@@ -227,10 +227,12 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public City getCity() {
 			return city;
 		}
@@ -255,10 +257,12 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public City getCity() {
 			return city;
 		}
@@ -284,10 +288,12 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public City getCity() {
 			return city;
 		}
@@ -313,10 +319,12 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public City getCity() {
 			return city;
 		}
@@ -342,10 +350,12 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public City getCity() {
 			return city;
 		}
@@ -371,10 +381,12 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public City getCity() {
 			return city;
 		}
@@ -400,10 +412,12 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
 
+		@Override
 		public City getCity() {
 			return city;
 		}

@@ -24,6 +24,7 @@ public class ParentWithCollectionOfValues extends AbstractParentWithCollection {
 		super( name );
 	}
 	
+	@Override
 	public Child createChild(String name) {
 		return new ChildValue( name );
 	}

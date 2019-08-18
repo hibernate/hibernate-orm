@@ -18,14 +18,17 @@ import org.hibernate.testing.TestForIssue;
 @TestForIssue( jiraKey = "HHH-10972" )
 public class JpaFileSchemaGeneratorTest extends JpaSchemaGeneratorTest {
 
+	@Override
 	protected String getLoadSqlScript() {
 		return toFilePath(super.getLoadSqlScript());
 	}
 
+	@Override
 	protected String getCreateSqlScript() {
 		return toFilePath(super.getCreateSqlScript());
 	}
 
+	@Override
 	protected String getDropSqlScript() {
 		return toFilePath(super.getDropSqlScript());
 	}

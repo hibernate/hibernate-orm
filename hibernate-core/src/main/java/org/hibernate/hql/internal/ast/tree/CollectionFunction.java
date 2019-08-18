@@ -14,6 +14,7 @@ import antlr.collections.AST;
  * @author josh
  */
 public class CollectionFunction extends MethodNode implements DisplayableNode {
+	@Override
 	public void resolve(boolean inSelect) throws SemanticException {
 		initializeMethodNode( this, inSelect );
 		if ( !isCollectionPropertyMethod() ) {
@@ -26,6 +27,7 @@ public class CollectionFunction extends MethodNode implements DisplayableNode {
 		resolveCollectionProperty( expr );
 	}
 
+	@Override
 	protected void prepareSelectColumns(String[] selectColumns) {
 		// we need to strip off the embedded parens so that sql-gen does not double these up
 		String subselect = selectColumns[0].trim();

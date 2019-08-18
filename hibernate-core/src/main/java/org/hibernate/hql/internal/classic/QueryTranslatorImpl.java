@@ -195,6 +195,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 * Compile a "normal" query. This method may be called multiple
 	 * times. Subsequent invocations are no-ops.
 	 */
+	@Override
 	public synchronized void compile(
 			Map replacements,
 			boolean scalar) throws QueryException, MappingException {
@@ -209,6 +210,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 * Compile a filter. This method may be called multiple
 	 * times. Subsequent invocations are no-ops.
 	 */
+	@Override
 	public synchronized void compile(
 			String collectionRole,
 			Map replacements,

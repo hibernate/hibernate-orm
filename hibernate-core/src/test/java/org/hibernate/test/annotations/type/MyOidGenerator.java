@@ -21,6 +21,7 @@ public class MyOidGenerator implements IdentifierGenerator {
 
 	private int counter;
 
+	@Override
 	public Serializable generate(SharedSessionContractImplementor session, Object aObject) throws HibernateException {
 		counter++;
 		return new MyOid( 0, 0, 0, counter );

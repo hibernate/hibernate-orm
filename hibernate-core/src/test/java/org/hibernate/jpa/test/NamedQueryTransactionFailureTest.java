@@ -46,6 +46,7 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 	private TransactionCoordinator transactionCoordinator;
 
 	@SuppressWarnings( {"unchecked"})
+	@Override
 	protected void addConfigOptions(Map options) {
 		TransactionCoordinatorBuilder transactionCoordinatorBuilder = Mockito.mock( TransactionCoordinatorBuilder.class);
 		when(transactionCoordinatorBuilder.getDefaultConnectionHandlingMode())

@@ -34,6 +34,7 @@ public class ChildCompleteEntity extends MappedParentEntity {
 		this.child = child;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -54,12 +55,14 @@ public class ChildCompleteEntity extends MappedParentEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + (child != null ? child.hashCode() : 0);
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ChildCompleteEntity(" + super.toString() + ", child = " + child + ")";
 	}

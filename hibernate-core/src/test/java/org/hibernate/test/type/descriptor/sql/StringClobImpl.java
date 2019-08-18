@@ -29,53 +29,66 @@ public class StringClobImpl implements Clob {
 		return value;
 	}
 
+	@Override
 	public long length() throws SQLException {
 		return value.length();
 	}
 
+	@Override
 	public String getSubString(long pos, int length) throws SQLException {
 		return value.substring( (int)pos, (int)(pos+length) );
 	}
 
+	@Override
 	public Reader getCharacterStream() throws SQLException {
 		return new StringReader( value );
 	}
 
+	@Override
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
 		return new StringReader( getSubString( pos, (int)length ) );
 	}
 
+	@Override
 	public InputStream getAsciiStream() throws SQLException {
 		throw new UnsupportedOperationException( "not supported" );
 	}
 
+	@Override
 	public long position(String searchstr, long start) throws SQLException {
 		return value.indexOf( searchstr, (int)start );
 	}
 
+	@Override
 	public long position(Clob searchstr, long start) throws SQLException {
 		throw new UnsupportedOperationException( "not supported" );
 	}
 
+	@Override
 	public int setString(long pos, String str) throws SQLException {
 		throw new UnsupportedOperationException( "not supported" );
 	}
 
+	@Override
 	public int setString(long pos, String str, int offset, int len) throws SQLException {
 		throw new UnsupportedOperationException( "not supported" );
 	}
 
+	@Override
 	public OutputStream setAsciiStream(long pos) throws SQLException {
 		throw new UnsupportedOperationException( "not supported" );
 	}
 
+	@Override
 	public Writer setCharacterStream(long pos) throws SQLException {
 		throw new UnsupportedOperationException( "not supported" );
 	}
 
+	@Override
 	public void truncate(long len) throws SQLException {
 	}
 
+	@Override
 	public void free() throws SQLException {
 	}
 }

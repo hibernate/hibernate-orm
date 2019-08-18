@@ -98,6 +98,7 @@ public class SequenceInformationExtractorMariaDBDatabaseImpl extends SequenceInf
 		return sequenceInformationList;
 	}
 
+	@Override
 	protected String resultSetSequenceName(ResultSet resultSet) throws SQLException {
 		return resultSet.getString(1);
 	}

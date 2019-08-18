@@ -1009,6 +1009,7 @@ public class JoinWalker {
 
 	protected interface AssociationInitCallback {
 		AssociationInitCallback NO_CALLBACK = new AssociationInitCallback() {
+			@Override
 			public void associationProcessed(OuterJoinableAssociation oja, int position) {
 			}
 		};

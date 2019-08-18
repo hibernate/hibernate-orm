@@ -17,6 +17,7 @@ import javax.persistence.Embeddable;
 public class VegetablePk implements Serializable {
 	private String farmer;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof VegetablePk ) ) return false;
@@ -29,6 +30,7 @@ public class VegetablePk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = farmer.hashCode();

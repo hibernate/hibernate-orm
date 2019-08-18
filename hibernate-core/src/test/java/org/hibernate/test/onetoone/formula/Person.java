@@ -36,12 +36,14 @@ public class Person implements Serializable {
 		this.name = name;
 	}
 
+	@Override
 	public boolean equals(Object that) {
 		if ( !(that instanceof Person) ) return false;
 		Person person = (Person) that;
 		return person.getName().equals(name);
 	}
 	
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}

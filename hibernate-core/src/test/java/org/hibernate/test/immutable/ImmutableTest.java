@@ -41,6 +41,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		public TextAsMaterializedClobType() {
 			super(  ClobTypeDescriptor.DEFAULT, TextType.INSTANCE.getJavaTypeDescriptor() );
 		}
+		@Override
 		public String getName() {
 			return TextType.INSTANCE.getName();
 		}

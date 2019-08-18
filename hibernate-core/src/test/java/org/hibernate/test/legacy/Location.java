@@ -114,10 +114,12 @@ public class Location implements Serializable {
 		this.city = city;
 	}
 	
+	@Override
 	public boolean equals(Object other) {
 		Location l = (Location) other;
 		return l.getCity().equals(city) && l.getStreetName().equals(streetName) && l.getCountryCode().equals(countryCode) && l.getStreetNumber()==streetNumber;
 	}
+	@Override
 	public int hashCode() {
 		return streetName.hashCode();
 	}

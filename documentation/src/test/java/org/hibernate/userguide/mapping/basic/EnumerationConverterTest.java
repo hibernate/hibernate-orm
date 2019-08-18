@@ -86,6 +86,7 @@ public class EnumerationConverterTest extends BaseEntityManagerFunctionalTestCas
 	public static class GenderConverter
 			implements AttributeConverter<Gender, Character> {
 
+		@Override
 		public Character convertToDatabaseColumn( Gender value ) {
 			if ( value == null ) {
 				return null;
@@ -94,6 +95,7 @@ public class EnumerationConverterTest extends BaseEntityManagerFunctionalTestCas
 			return value.getCode();
 		}
 
+		@Override
 		public Gender convertToEntityAttribute( Character value ) {
 			if ( value == null ) {
 				return null;

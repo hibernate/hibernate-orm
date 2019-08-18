@@ -23,6 +23,7 @@ public class SqlNode extends Node {
 	 */
 	private Type dataType;
 
+	@Override
 	public void setText(String s) {
 		super.setText( s );
 		if ( s != null && s.length() > 0 && originalText == null ) {

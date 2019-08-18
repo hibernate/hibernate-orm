@@ -29,10 +29,12 @@ import static org.junit.Assert.fail;
  * @author Alex Burgel
  */
 public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "naturalid/immutable/ParentChildWithManyToOne.hbm.xml" };
 	}
 
+	@Override
     public void configure(Configuration cfg) {
         cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
         cfg.setProperty(Environment.USE_QUERY_CACHE, "true");

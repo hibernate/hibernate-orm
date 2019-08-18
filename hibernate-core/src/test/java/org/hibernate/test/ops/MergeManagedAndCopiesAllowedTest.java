@@ -40,6 +40,7 @@ import static org.junit.Assert.assertSame;
  */
 public class MergeManagedAndCopiesAllowedTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				A.class,
@@ -50,6 +51,7 @@ public class MergeManagedAndCopiesAllowedTest extends BaseCoreFunctionalTestCase
 		};
 	}
 
+	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( "hibernate.event.merge.entity_copy_observer", "allow"  );

@@ -133,6 +133,7 @@ final class CallbackRegistryImpl implements CallbackRegistryImplementor {
 		throw new PersistenceException( "Unrecognized JPA callback type [" + callbackType + "]" );
 	}
 
+	@Override
 	public void release() {
 		preCreates.clear();
 		postCreates.clear();

@@ -11,6 +11,7 @@ import org.hibernate.type.Type;
 
 public class FromPathExpressionParser extends PathExpressionParser {
 
+	@Override
 	public void end(QueryTranslatorImpl q) throws QueryException {
 		if ( !isCollectionValued() ) {
 			Type type = getPropertyType();
@@ -28,6 +29,7 @@ public class FromPathExpressionParser extends PathExpressionParser {
 		super.end( q );
 	}
 
+	@Override
 	protected void setExpectingCollectionIndex() throws QueryException {
 		throw new QueryException( "illegal syntax near collection-valued path expression in from: "  + getCollectionName() );
 	}

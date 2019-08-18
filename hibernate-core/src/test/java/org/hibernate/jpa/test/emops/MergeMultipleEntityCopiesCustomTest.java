@@ -34,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 public class MergeMultipleEntityCopiesCustomTest extends BaseEntityManagerFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked"})
+	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		options.put(

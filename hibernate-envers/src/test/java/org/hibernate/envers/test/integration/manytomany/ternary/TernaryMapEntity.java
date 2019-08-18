@@ -51,6 +51,7 @@ public class TernaryMapEntity {
 		this.map = map;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -68,10 +69,12 @@ public class TernaryMapEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}
 
+	@Override
 	public String toString() {
 		return "TME(id = " + id + ", map = " + map + ")";
 	}

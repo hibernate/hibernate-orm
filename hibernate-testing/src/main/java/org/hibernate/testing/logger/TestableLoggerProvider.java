@@ -30,6 +30,7 @@ public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider 
 	// this class is a verbatim copy of org.jboss.logging.Log4jLoggerProvider
 	// (which is a final class)
 
+	@Override
 	public Logger getLogger(final String name) {
 		Logger logger = reuseLoggerInstances.get( name );
 		if ( logger == null ) {
@@ -47,15 +48,18 @@ public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider 
 		MDC.clear();
 	}
 
+	@Override
 	public Object getMdc(String key) {
 		return MDC.get( key );
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public Map<String, Object> getMdcMap() {
 		return MDC.getContext();
 	}
 
+	@Override
 	public Object putMdc(String key, Object val) {
 		try {
 			return MDC.get( key );
@@ -65,34 +69,42 @@ public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider 
 		}
 	}
 
+	@Override
 	public void removeMdc(String key) {
 		MDC.remove( key );
 	}
 
+	@Override
 	public void clearNdc() {
 		NDC.remove();
 	}
 
+	@Override
 	public String getNdc() {
 		return NDC.get();
 	}
 
+	@Override
 	public int getNdcDepth() {
 		return NDC.getDepth();
 	}
 
+	@Override
 	public String peekNdc() {
 		return NDC.peek();
 	}
 
+	@Override
 	public String popNdc() {
 		return NDC.pop();
 	}
 
+	@Override
 	public void pushNdc(String message) {
 		NDC.push( message );
 	}
 
+	@Override
 	public void setNdcMaxDepth(int maxDepth) {
 		NDC.setMaxDepth( maxDepth );
 	}

@@ -33,6 +33,7 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 		this.persister = persister;
 	}
 
+	@Override
 	public void initialize(Serializable key, SharedSessionContractImplementor session) throws HibernateException {
 		LOG.debugf( "Initializing collection: %s using named query: %s", persister.getRole(), queryName );
 

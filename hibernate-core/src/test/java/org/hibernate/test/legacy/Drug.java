@@ -15,10 +15,12 @@ public class Drug extends org.hibernate.test.legacy.Resource {
    java.lang.String id;
 
 
+   @Override
   java.lang.String getId() {
     return id;
   }
 
+   @Override
   void  setId(java.lang.String newValue) {
     id = newValue;
   }

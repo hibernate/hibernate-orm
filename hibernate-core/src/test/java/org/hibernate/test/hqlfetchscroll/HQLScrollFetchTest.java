@@ -368,6 +368,7 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "hqlfetchscroll/ParentChild.hbm.xml" };
 	}

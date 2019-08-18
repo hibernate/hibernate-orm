@@ -69,6 +69,7 @@ public class ComponentTestEntity {
 		this.comp2 = comp2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -92,6 +93,7 @@ public class ComponentTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -100,6 +102,7 @@ public class ComponentTestEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "CTE(id = " + id + ", comp1 = " + comp1 + ", comp2 = " + comp2 + ")";
 	}

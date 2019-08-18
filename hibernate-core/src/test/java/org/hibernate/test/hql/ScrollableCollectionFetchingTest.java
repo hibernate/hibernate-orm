@@ -36,6 +36,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "hql/Animal.hbm.xml" };
 	}

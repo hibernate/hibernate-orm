@@ -51,6 +51,7 @@ import static org.junit.Assert.assertTrue;
 @RequiresDialect( value = Cache71Dialect.class )
 public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"legacy/AltSimple.hbm.xml",

@@ -24,14 +24,17 @@ public class ChildValue implements Child {
 		this.name = name;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	@Override
 	public boolean equals(Object otherChild) {
 		if ( this == otherChild ) {
 			return true;
@@ -42,6 +45,7 @@ public class ChildValue implements Child {
 		return name.equals( ( ( ChildValue ) otherChild ).name );
 	}
 
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}

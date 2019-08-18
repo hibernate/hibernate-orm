@@ -28,6 +28,7 @@ public class TimeZoneType
 		super( VarcharTypeDescriptor.INSTANCE, TimeZoneTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "timezone";
 	}
@@ -37,6 +38,7 @@ public class TimeZoneType
 		return true;
 	}
 
+	@Override
 	public String objectToSQLString(TimeZone value, Dialect dialect) throws Exception {
 		return StringType.INSTANCE.objectToSQLString( value.getID(), dialect );
 	}

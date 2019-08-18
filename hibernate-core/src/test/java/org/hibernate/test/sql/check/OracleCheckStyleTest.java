@@ -14,6 +14,7 @@ import org.hibernate.testing.RequiresDialect;
  */
 @RequiresDialect( value = Oracle9iDialect.class )
 public class OracleCheckStyleTest extends ResultCheckStyleTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/check/oracle-mappings.hbm.xml" };
 	}

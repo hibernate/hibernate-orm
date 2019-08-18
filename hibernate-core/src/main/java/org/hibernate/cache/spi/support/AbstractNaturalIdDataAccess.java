@@ -75,6 +75,7 @@ public abstract class AbstractNaturalIdDataAccess extends AbstractCachedDomainDa
 		clearCache();
 	}
 
+	@Override
 	public SoftLock lockItem(
 			SharedSessionContractImplementor session,
 			Object key,

@@ -33,6 +33,7 @@ public class DB2ExpressionTemplate implements SQLExpressionTemplate {
 
 	final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', DB2GSE.ST_GEOMETRY('%s', %d))";
 
+	@Override
 	public String toInsertSql(TestDataElement testDataElement) {
 		String wkt = WktUtility.getWkt( testDataElement.wkt );
 		int srid = WktUtility.getSRID( testDataElement.wkt );

@@ -18,6 +18,7 @@ import org.junit.Test;
  */
 public class LazyAssociationNoCascadeTest extends BaseCoreFunctionalTestCase {
 	
+	@Override
 	public String[] getMappings() {
 		return new String[] {"collection/lazynocascade/Parent.hbm.xml"};
 	}

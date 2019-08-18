@@ -53,6 +53,7 @@ public class RefIngMapKeyEntity {
 		this.data = data;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -70,10 +71,12 @@ public class RefIngMapKeyEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}
 
+	@Override
 	public String toString() {
 		return "RingMKE(id = " + id + ", data = " + data + ", reference = " + reference + ")";
 	}

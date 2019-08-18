@@ -18,10 +18,12 @@ import antlr.SemanticException;
  */
 public class CountNode extends AbstractSelectExpression implements SelectExpression {
 	
+	@Override
 	public Type getDataType() {
 		return getSessionFactoryHelper().findFunctionReturnType( getText(), null );
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}

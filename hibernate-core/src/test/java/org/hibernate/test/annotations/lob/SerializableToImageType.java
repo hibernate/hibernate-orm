@@ -25,6 +25,7 @@ public class SerializableToImageType extends AbstractSingleColumnStandardBasicTy
 		super( LongVarbinaryTypeDescriptor.INSTANCE, new SerializableTypeDescriptor<Serializable>( Serializable.class ) );
 	}
 
+	@Override
 	public String getName() {
 		// todo name these annotation types for addition to the registry
 		return null;

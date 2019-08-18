@@ -81,6 +81,7 @@ public class DenormalizedTable extends Table {
 		}
 	}
 
+	@Override
 	public Column getColumn(Identifier name) {
 		Column superColumn = super.getColumn( name );
 		if ( superColumn != null ) {

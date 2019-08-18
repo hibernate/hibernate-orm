@@ -16,6 +16,7 @@ import static org.junit.Assert.assertEquals;
  * @author stliu
  */
 public class EntityNameFromSubClassTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "entityname/Vehicle.hbm.xml" };
 	}

@@ -259,10 +259,12 @@ public class Vehicle {
 		_invoicePrice = invoicePrice;
 	}
 
+	@Override
 	public String toString() {
 		return String.valueOf( _vin );
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if ( obj == null ) {
 			return false;
@@ -277,6 +279,7 @@ public class Vehicle {
 		return false;
 	}
 
+	@Override
 	public int hashCode() {
 		return _vin.hashCode();
 	}

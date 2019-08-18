@@ -193,6 +193,7 @@ public class WhereParser implements Parser {
 		return name;
 	}
 
+	@Override
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 		String lcToken = token.toLowerCase(Locale.ROOT);
 
@@ -284,10 +285,12 @@ public class WhereParser implements Parser {
 
 	}
 
+	@Override
 	public void start(QueryTranslatorImpl q) throws QueryException {
 		token( "(", q );
 	}
 
+	@Override
 	public void end(QueryTranslatorImpl q) throws QueryException {
 		if ( expectingPathContinuation ) {
 			expectingPathContinuation = false;

@@ -25,11 +25,13 @@ public class Name implements Serializable {
    public void setNameLength(int nameLength) { this.nameLength = nameLength; }
    public void setValues(List values) { this.values = values; }
 
+   @Override
    public boolean equals(Object obj) {
       if (!(obj instanceof Name )) return false;
       Name other = (Name) obj;
       return other.id == this.id;
    }
 
+   @Override
    public int hashCode() { return id; }
 }

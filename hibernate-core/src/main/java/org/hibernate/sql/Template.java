@@ -630,6 +630,7 @@ public final class Template {
 
 	public static class NoOpColumnMapper implements ColumnMapper {
 		public static final NoOpColumnMapper INSTANCE = new NoOpColumnMapper();
+		@Override
 		public SqlValueReference[] map(String reference) {
 //			return new String[] { reference };
 			return null;
@@ -704,18 +705,22 @@ public final class Template {
 			final Dialect dialect,
 			final SQLFunctionRegistry functionRegistry) {
 		TranslationContext context = new TranslationContext() {
+			@Override
 			public SessionFactoryImplementor getSessionFactory() {
 				return sessionFactory;
 			}
 
+			@Override
 			public Dialect getDialect() {
 				return dialect;
 			}
 
+			@Override
 			public SQLFunctionRegistry getSqlFunctionRegistry() {
 				return functionRegistry;
 			}
 
+			@Override
 			public ColumnMapper getColumnMapper() {
 				return columnMapper;
 			}

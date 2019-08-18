@@ -56,6 +56,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@SuppressWarnings( {"unchecked"})
+	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( Environment.GENERATE_STATISTICS, "true" );
 		options.put( Environment.JPA_CLOSED_COMPLIANCE, "true" );

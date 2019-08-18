@@ -644,18 +644,22 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;
 		}
 
+		@Override
 		public void initialize(Serializable key, SharedSessionContractImplementor session) throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean hasCache() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public CollectionDataAccess getCacheAccessStrategy() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public CacheEntryStructure getCacheEntryStructure() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
@@ -665,6 +669,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return this;
 		}
 
+		@Override
 		public CollectionType getCollectionType() {
 			throw new NotYetImplementedException();
 		}
@@ -679,190 +684,235 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			throw new NotYetImplementedException();
 		}
 
+		@Override
 		public Type getKeyType() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Type getIndexType() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Type getElementType() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Class getElementClass() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Object readKey(ResultSet rs, String[] keyAliases, SharedSessionContractImplementor session)
 				throws HibernateException, SQLException {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Object readElement(ResultSet rs, Object owner, String[] columnAliases, SharedSessionContractImplementor session)
 				throws HibernateException, SQLException {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Object readIndex(ResultSet rs, String[] columnAliases, SharedSessionContractImplementor session)
 				throws HibernateException, SQLException {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Object readIdentifier(ResultSet rs, String columnAlias, SharedSessionContractImplementor session)
 				throws HibernateException, SQLException {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isPrimitiveArray() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isArray() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isOneToMany() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isManyToMany() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public String getManyToManyFilterFragment(String alias, Map enabledFilters) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean hasIndex() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isLazy() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isInverse() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public void remove(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public void recreate(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public void deleteRows(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public void updateRows(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public void insertRows(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public String getRole() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public EntityPersister getOwnerEntityPersister() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public IdentifierGenerator getIdentifierGenerator() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Type getIdentifierType() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean hasOrphanDelete() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean hasOrdering() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean hasManyToManyOrdering() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Serializable[] getCollectionSpaces() {
 			return new Serializable[0];  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public CollectionMetadata getCollectionMetadata() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isCascadeDeleteEnabled() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isVersioned() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isMutable() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public void postInstantiate() throws MappingException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public SessionFactoryImplementor getFactory() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public String[] getKeyColumnAliases(String suffix) {
 			return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public String[] getIndexColumnAliases(String suffix) {
 			return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public String[] getElementColumnAliases(String suffix) {
 			return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public String getIdentifierColumnAlias(String suffix) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean isExtraLazy() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public int getSize(Serializable key, SharedSessionContractImplementor session) {
 			return 0;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session) {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public boolean elementExists(Serializable key, Object element, SharedSessionContractImplementor session) {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}

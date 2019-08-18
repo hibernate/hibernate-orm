@@ -19,6 +19,7 @@ public class NodePk implements Serializable {
 	private String name;
 	private int level;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof NodePk ) ) return false;
@@ -31,6 +32,7 @@ public class NodePk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = name.hashCode();

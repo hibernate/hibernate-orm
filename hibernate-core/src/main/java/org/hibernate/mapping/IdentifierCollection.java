@@ -38,6 +38,7 @@ public abstract class IdentifierCollection extends Collection {
 	public void setIdentifier(KeyValue identifier) {
 		this.identifier = identifier;
 	}
+	@Override
 	public final boolean isIdentified() {
 		return true;
 	}
@@ -53,6 +54,7 @@ public abstract class IdentifierCollection extends Collection {
 				&& isSame( identifier, other.identifier );
 	}
 
+	@Override
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
@@ -62,6 +64,7 @@ public abstract class IdentifierCollection extends Collection {
 		// create an index on the key columns??
 	}
 
+	@Override
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate( mapping );
 

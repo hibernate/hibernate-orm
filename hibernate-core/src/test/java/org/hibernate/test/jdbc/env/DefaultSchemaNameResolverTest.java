@@ -76,6 +76,7 @@ public class DefaultSchemaNameResolverTest {
 			return cl;
 		}
 
+		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			if ( method.getName().equals( "getSchema" ) && args == null ) {
 				if ( schemaName != null ) {
@@ -108,6 +109,7 @@ public class DefaultSchemaNameResolverTest {
 			return cl;
 		}
 
+		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			if ( method.getName().equals( "executeQuery" ) && args.length == 1 && GET_CURRENT_SCHEMA_NAME_COMMAND.equals( args[0] ) ) {
 				return ResultSetProxy.generateProxy( new ResultSetProxy() );
@@ -138,6 +140,7 @@ public class DefaultSchemaNameResolverTest {
 			return cl;
 		}
 
+		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			if ( method.getName().equals( "next" ) && args == null ) {
 				return true;

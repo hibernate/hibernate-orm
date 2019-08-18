@@ -37,6 +37,7 @@ public class OrderAddress {
 		this.notifiedAddresses = notifiedAddresses;
 	}
 
+	@Override
 	public String toString() {
     return "" + orderAddressId + " - " + getDeliveryAddress() + " - " + getNotifiedAddresses();
   }

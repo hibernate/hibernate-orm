@@ -138,6 +138,7 @@ public class JoinProcessor implements SqlTokenTypes {
 			JoinSequence join = fromElement.getJoinSequence();
 			join.setSelector(
 					new JoinSequence.Selector() {
+						@Override
 						public boolean includeSubclasses(String alias) {
 							// The uber-rule here is that we need to include subclass joins if
 							// the FromElement is in any way dereferenced by a property from

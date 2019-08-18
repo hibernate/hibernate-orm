@@ -44,10 +44,12 @@ public class EmbeddableTypeImpl<J>
 		return PersistenceType.EMBEDDABLE;
 	}
 
+	@Override
 	public ManagedTypeDescriptor<?> getParent() {
 		return parent;
 	}
 
+	@Override
 	public ComponentType getHibernateType() {
 		return hibernateType;
 	}

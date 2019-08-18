@@ -37,14 +37,17 @@ public class StringValueMappingTest extends BaseUnitTestCase {
 	private final ClobTypeDescriptor clobSqlDescriptor = ClobTypeDescriptor.DEFAULT;
 
 	private final WrapperOptions wrapperOptions = new WrapperOptions() {
+		@Override
 		public boolean useStreamForLobBinding() {
 			return false;
 		}
 
+		@Override
 		public LobCreator getLobCreator() {
 			return NonContextualLobCreator.INSTANCE;
 		}
 
+		@Override
 		public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 			return sqlTypeDescriptor;
 		}

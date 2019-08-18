@@ -36,6 +36,7 @@ public class BidirectionalEntityReferenceImpl implements BidirectionalEntityRefe
 		this.propertyPath = fetchSource.getPropertyPath().append( fetchedAttribute.getName() );
 	}
 
+	@Override
 	public EntityReference getTargetEntityReference() {
 		return targetEntityReference;
 	}

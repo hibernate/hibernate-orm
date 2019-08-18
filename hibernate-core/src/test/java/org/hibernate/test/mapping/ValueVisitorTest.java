@@ -82,14 +82,17 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 
 	static public class ValueVisitorValidator implements ValueVisitor {
 
+		@Override
 		public Object accept(PrimitiveArray primitiveArray) {
 			return validate( PrimitiveArray.class, primitiveArray );
 		}
 
+		@Override
 		public Object accept(Bag bag) {
 			return validate( Bag.class, bag );
 		}
 
+		@Override
 		public Object accept(DependantValue value) {
 			return validate( DependantValue.class, value );
 		}
@@ -105,46 +108,57 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 			return null;
 		}
 
+		@Override
 		public Object accept(IdentifierBag bag) {
 			return validate( IdentifierBag.class, bag );
 		}
 
+		@Override
 		public Object accept(List list) {
 			return validate( List.class, list );
 		}
 
+		@Override
 		public Object accept(Map map) {
 			return validate( Map.class, map );
 		}
 
+		@Override
 		public Object accept(Array list) {
 			return validate( Array.class, list );
 		}
 
+		@Override
 		public Object accept(OneToMany many) {
 			return validate( OneToMany.class, many );
 		}
 
+		@Override
 		public Object accept(Set set) {
 			return validate( Set.class, set );
 		}
 
+		@Override
 		public Object accept(Any any) {
 			return validate( Any.class, any );
 		}
 
+		@Override
 		public Object accept(SimpleValue value) {
 			return validate( SimpleValue.class, value );
 		}
 
+		@Override
 		public Object accept(Component component) {
 			return validate( Component.class, component );
 		}
 
+		@Override
 		public Object accept(ManyToOne mto) {
 			return validate( ManyToOne.class, mto );
 		}
 
+		@Override
 		public Object accept(OneToOne oto) {
 			return validate( OneToOne.class, oto );
 		}

@@ -15,15 +15,18 @@ import antlr.collections.AST;
  */
 public class SelectExpressionImpl extends FromReferenceNode implements SelectExpression {
 
+	@Override
 	public void resolveIndex(AST parent) throws SemanticException {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		String text = getFromElement().renderScalarIdentifierSelect( i );
 		setText( text );
 	}
 
+	@Override
 	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate) throws SemanticException {
 		// Generated select expressions are already resolved, nothing to do.
 		return;

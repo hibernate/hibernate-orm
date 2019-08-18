@@ -55,6 +55,7 @@ public abstract class AbstractSaveEventListener
 
 	private CallbackRegistry callbackRegistry;
 
+	@Override
 	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
 		this.callbackRegistry = callbackRegistry;
 	}

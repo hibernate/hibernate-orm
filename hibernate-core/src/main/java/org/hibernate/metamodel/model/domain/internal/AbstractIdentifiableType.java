@@ -68,6 +68,7 @@ public abstract class AbstractIdentifiableType<J>
 		return (IdentifiableTypeDescriptor.InFlightAccess<J>) super.getInFlightAccess();
 	}
 
+	@Override
 	public boolean hasIdClass() {
 		return hasIdClass;
 	}

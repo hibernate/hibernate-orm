@@ -39,6 +39,7 @@ public class Component implements Serializable {
 		this.prop2 = prop2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -59,6 +60,7 @@ public class Component implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (prop1 != null ? prop1.hashCode() : 0);

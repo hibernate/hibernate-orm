@@ -14,6 +14,7 @@ public class MariaDBDialect extends MySQL5Dialect {
 		super();
 	}
 
+	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}

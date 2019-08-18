@@ -21,6 +21,7 @@ import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 public class BooleanLiteralNode extends LiteralNode implements ExpectedTypeAwareNode {
 	private Type expectedType;
 
+	@Override
 	public Type getDataType() {
 		return getExpectedType() == null ? StandardBasicTypes.BOOLEAN : getExpectedType();
 	}

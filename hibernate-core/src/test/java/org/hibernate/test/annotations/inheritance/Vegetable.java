@@ -40,6 +40,7 @@ public class Vegetable {
 		this.priceInCent = priceInCent;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Vegetable ) ) return false;
@@ -51,6 +52,7 @@ public class Vegetable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return id.hashCode();
 	}

@@ -48,6 +48,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		PersistentClass referencedPersistentClass = (PersistentClass) persistentClasses.get( referencedEntityName );
 		// TODO better error names

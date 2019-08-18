@@ -45,6 +45,7 @@ public class GenericObject implements Serializable {
 		this.version++;
 	}
 
+	@Override
 	public boolean equals(Object other) {
 		if ( this == other )
 			return true;
@@ -57,6 +58,7 @@ public class GenericObject implements Serializable {
 		return ( this.id == anObject.id );
 	}
 
+	@Override
 	public int hashCode() {
 		if ( this.id == 0 )
 			return super.hashCode();

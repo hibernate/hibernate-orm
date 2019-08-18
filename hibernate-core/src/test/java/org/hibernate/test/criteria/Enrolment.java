@@ -56,6 +56,7 @@ public class Enrolment implements Serializable {
 		this.year = year;
 	}
 	
+	@Override
 	public boolean equals(Object other) {
 		if ( !(other instanceof Enrolment) ) return false;
 		Enrolment that = (Enrolment) other;
@@ -63,6 +64,7 @@ public class Enrolment implements Serializable {
 			courseCode.equals(that.courseCode);
 	}
 	
+	@Override
 	public int hashCode() {
 		return courseCode.hashCode();
 	}

@@ -57,6 +57,7 @@ public class UpgradeLockTest extends BaseEntityManagerFunctionalTestCase {
 
 			final CountDownLatch latch = new CountDownLatch(1);
 			Thread t = new Thread( new Runnable() {
+				@Override
 				public void run() {
 					try {
 						em2.getTransaction().begin();  // start tx2

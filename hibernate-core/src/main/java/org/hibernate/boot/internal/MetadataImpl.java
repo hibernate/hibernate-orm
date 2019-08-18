@@ -140,6 +140,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
 	 */
 	@Deprecated
+	@Override
 	public TypeResolver getTypeResolver() {
 		return bootstrapContext.getTypeConfiguration().getTypeResolver();
 	}

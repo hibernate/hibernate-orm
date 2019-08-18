@@ -41,6 +41,7 @@ public class StatelessSessionConnectionTest extends BaseEntityManagerFunctionalT
         };
     }
 
+	@Override
     protected void addConfigOptions(Map options) {
         options.put( AvailableSettings.STATEMENT_BATCH_SIZE, 10 );
     }

@@ -18,6 +18,7 @@ import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
  */
 @RequiresDialect( SQLServerDialect.class )
 public class SQLServerCustomSQLTest extends CustomStoredProcTestSupport {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/hand/custom/sqlserver/Mappings.hbm.xml" };
 	}

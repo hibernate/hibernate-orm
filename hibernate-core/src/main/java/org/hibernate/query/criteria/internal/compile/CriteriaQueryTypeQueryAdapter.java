@@ -72,6 +72,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 		this.explicitParameterInfoMap = explicitParameterInfoMap;
 	}
 
+	@Override
 	public List<X> getResultList() {
 		return jpqlQuery.getResultList();
 	}
@@ -107,6 +108,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 		return jpqlQuery.isCacheable();
 	}
 
+	@Override
 	public X getSingleResult() {
 		return jpqlQuery.getSingleResult();
 	}
@@ -121,28 +123,34 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 		return jpqlQuery.getNamedParameters();
 	}
 
+	@Override
 	public int getMaxResults() {
 		return jpqlQuery.getMaxResults();
 	}
 
+	@Override
 	public QueryImplementor<X> setMaxResults(int maxResult) {
 		jpqlQuery.setMaxResults( maxResult );
 		return this;
 	}
 
+	@Override
 	public int getFirstResult() {
 		return jpqlQuery.getFirstResult();
 	}
 
+	@Override
 	public QueryImplementor<X> setFirstResult(int i) {
 		jpqlQuery.setFirstResult( i );
 		return this;
 	}
 
+	@Override
 	public Map<String, Object> getHints() {
 		return jpqlQuery.getHints();
 	}
 
+	@Override
 	public QueryImplementor<X> setHint(String name, Object value) {
 		jpqlQuery.setHint( name, value );
 		return this;
@@ -454,6 +462,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 		throw new IllegalArgumentException( "Unable to locate parameter registered at position [" + position + "]" );
 	}
 
+	@Override
 	public Parameter<?> getParameter(String name) {
 		entityManager.checkOpen( false );
 		return locateParameterByName( name );
@@ -854,6 +863,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}
 
+	@Override
 	public <T> Parameter<T> getParameter(int position, Class<T> type) {
 		throw new IllegalArgumentException( "Criteria queries do not support positioned parameters" );
 	}

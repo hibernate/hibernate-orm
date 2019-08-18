@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
  * @author Gavin King
  */
 public class OneToManyTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "onetomany/Parent.hbm.xml" };
 	}

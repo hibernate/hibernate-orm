@@ -62,6 +62,7 @@ public class MapKeyHelpers {
 			return (MapKeySource) super.getPathSource();
 		}
 
+		@Override
 		public MapKeyAttribute<K> getAttribute() {
 			return mapKeyAttribute;
 		}
@@ -86,6 +87,7 @@ public class MapKeyHelpers {
 			throw new UnsupportedOperationException( "Not yet supported!" );
 		}
 
+		@Override
 		public Bindable<K> getModel() {
 			return mapKeyAttribute;
 		}
@@ -136,11 +138,13 @@ public class MapKeyHelpers {
 			this.mapAttribute = attribute;
 		}
 
+		@Override
 		public MapAttribute<?,K,V> getAttribute() {
 			return mapAttribute;
 		}
 
 		@SuppressWarnings({ "unchecked" })
+		@Override
 		public Bindable<Map<K, V>> getModel() {
 			// TODO : ok???  the attribute is in fact bindable, but its type signature is different
 			return (Bindable<Map<K, V>>) mapAttribute;

@@ -62,6 +62,7 @@ public class PostgreSQL82Dialect extends PostgreSQL81Dialect {
 		return true;
 	}
 
+	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}

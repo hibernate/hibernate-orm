@@ -11,6 +11,7 @@ import java.util.Locale;
 
 public class StringComparator implements Comparator, Serializable {
 
+	@Override
 	public int compare(Object o1, Object o2) {
 		return ( (String) o1 ).toLowerCase(Locale.ROOT).compareTo( ( (String) o2 ).toLowerCase(Locale.ROOT) );
 	}

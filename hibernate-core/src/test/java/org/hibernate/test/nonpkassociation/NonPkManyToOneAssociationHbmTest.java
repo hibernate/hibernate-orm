@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class NonPkManyToOneAssociationHbmTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "nonpkassociation/NonPkManyToOneAssociationHbmTest.hbm.xml" };
 	}

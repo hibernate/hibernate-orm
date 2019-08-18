@@ -67,6 +67,7 @@ public class StrIntTestEntity {
 		this.number = number;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -90,6 +91,7 @@ public class StrIntTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -98,6 +100,7 @@ public class StrIntTestEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "SITE(id = " + id + ", str1 = " + str1 + ", number = " + number + ")";
 	}

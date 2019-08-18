@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
  */
 @RequiresDialect( Oracle9iDialect.class )
 public class SequenceIdentityTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public void configure(Configuration cfg) {
 		//this test makes no sense w/o the following property enabled
 		//note : this property is set to false by default in Oracle9iDialect
@@ -30,6 +31,7 @@ public class SequenceIdentityTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.USE_GET_GENERATED_KEYS, "true" );
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "generatedkeys/seqidentity/MyEntity.hbm.xml" };
 	}

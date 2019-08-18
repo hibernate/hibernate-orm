@@ -63,6 +63,7 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 			this.tuples = tuples;
 		}
 
+		@Override
 		public <X> X get(TupleElement<X> tupleElement) {
 			int index = tupleElements.indexOf( tupleElement );
 			if ( index < 0 ) {
@@ -74,6 +75,7 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 			return (X) tuples[index];
 		}
 
+		@Override
 		public Object get(String alias) {
 			int index = -1;
 			if ( alias != null ) {
@@ -98,6 +100,7 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 			return tuples[index];
 		}
 
+		@Override
 		public <X> X get(String alias, Class<X> type) {
 			final Object untyped = get( alias );
 			if ( untyped != null ) {
@@ -115,6 +118,7 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 			return (X) untyped;
 		}
 
+		@Override
 		public Object get(int i) {
 			if ( i >= tuples.length ) {
 				throw new IllegalArgumentException(
@@ -124,6 +128,7 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 			return tuples[i];
 		}
 
+		@Override
 		public <X> X get(int i, Class<X> type) {
 			final Object result = get( i );
 			if ( result != null && !type.isInstance( result ) ) {
@@ -139,11 +144,13 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 			return (X) result;
 		}
 
+		@Override
 		public Object[] toArray() {
 			// todo : make a copy?
 			return tuples;
 		}
 
+		@Override
 		public List<TupleElement<?>> getElements() {
 			return tupleElements;
 		}

@@ -32,6 +32,7 @@ import static org.junit.Assert.assertEquals;
 public class OracleSQLCallableStatementProxyTest extends
 		BaseCoreFunctionalTestCase {
 
+	@Override
 	protected void configure(Configuration configuration) {
 		configuration.setProperty(
 				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,

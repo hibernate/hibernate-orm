@@ -249,12 +249,14 @@ abstract class OracleSpatialCriterion implements Criterion {
 	 *      org.hibernate.criterion.CriteriaQuery)
 	 */
 
+	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return new TypedValue[] {
 				criteriaQuery.getTypedValue( criteria, propertyName, value )
 		};
 	}
 
+	@Override
 	public abstract String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException;
 
 }

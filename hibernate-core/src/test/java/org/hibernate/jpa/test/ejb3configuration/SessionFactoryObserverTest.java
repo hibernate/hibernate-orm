@@ -46,9 +46,11 @@ public class SessionFactoryObserverTest {
 	}
 
 	public static class GoofySessionFactoryObserver implements SessionFactoryObserver {
+		@Override
 		public void sessionFactoryCreated(SessionFactory factory) {
 		}
 
+		@Override
 		public void sessionFactoryClosed(SessionFactory factory) {
 			throw new GoofyException();
 		}

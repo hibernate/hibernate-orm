@@ -101,6 +101,7 @@ public class LikePredicate extends AbstractSimplePredicate implements Serializab
 		return pattern;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getEscapeCharacter(), registry );
 		Helper.possibleParameter( getMatchExpression(), registry );

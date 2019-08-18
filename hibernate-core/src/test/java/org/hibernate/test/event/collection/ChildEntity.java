@@ -25,10 +25,12 @@ public class ChildEntity extends ChildValue implements Entity {
 		super( name );
 	}
 
+	@Override
 	public Long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}

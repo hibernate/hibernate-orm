@@ -57,14 +57,17 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 	public static class MyEntityNameResolver implements EntityNameResolver {
 		public static final MyEntityNameResolver INSTANCE = new MyEntityNameResolver();
 
+		@Override
 		public String resolveEntityName(Object entity) {
 			return ProxyHelper.extractEntityName( entity );
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			return getClass().equals( obj.getClass() );
 		}
 
+		@Override
 		public int hashCode() {
 			return getClass().hashCode();
 		}

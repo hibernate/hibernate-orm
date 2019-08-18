@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
  */
 @TestForIssue( jiraKey = "HHH-4825" )
 public class SellCarTest extends BaseCoreFunctionalTestCase {
+	@Override
     public String[] getMappings() {
         return new String[] { "unionsubclass/alias/mapping.hbm.xml" };
     }

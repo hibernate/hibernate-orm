@@ -12,14 +12,17 @@ import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWi
  * @author Gail Badner
  */
 public class VersionedEntityWithInverseOneToManyTest extends AbstractEntityWithOneToManyTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersioned.hbm.xml" };
 	}
 
+	@Override
 	protected boolean checkUpdateCountsAfterAddingExistingElement() {
 		return false;
 	}
 
+	@Override
 	protected boolean checkUpdateCountsAfterRemovingElementWithoutDelete() {
 		return false;
 	}

@@ -16,6 +16,7 @@ public class Country {
 	private Integer id;
 	private String name;
 
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof Country)) return false;
@@ -27,6 +28,7 @@ public class Country {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}

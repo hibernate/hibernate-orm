@@ -33,6 +33,7 @@ public class CurrencyTypeDescriptor extends AbstractTypeDescriptor<Currency> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Currency value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

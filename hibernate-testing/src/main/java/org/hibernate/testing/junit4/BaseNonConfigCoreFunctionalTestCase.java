@@ -505,6 +505,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	public class RollbackWork implements Work {
+		@Override
 		public void execute(Connection connection) throws SQLException {
 			connection.rollback();
 		}

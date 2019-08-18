@@ -34,6 +34,7 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest 
 	private Person person1_1;
 	private Car car1_2;
 
+	@Override
 	protected void initMappings() throws MappingException, URISyntaxException {
 		URL url = Thread.currentThread().getContextClassLoader().getResource(
 				"mappings/entityNames/manyToManyAudited/mappings.hbm.xml"

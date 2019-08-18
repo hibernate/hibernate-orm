@@ -90,6 +90,7 @@ public class IndexedListJoinColumnBidirectionalRefEdEntity {
 		this.position = position;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -111,6 +112,7 @@ public class IndexedListJoinColumnBidirectionalRefEdEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -118,6 +120,7 @@ public class IndexedListJoinColumnBidirectionalRefEdEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "IndexedListJoinColumnBidirectionalRefEdEntity(id = " + id + ", data = " + data + ")";
 	}

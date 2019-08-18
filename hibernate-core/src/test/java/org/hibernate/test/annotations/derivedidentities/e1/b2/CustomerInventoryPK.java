@@ -22,6 +22,7 @@ public class CustomerInventoryPK implements Serializable {
 		this.customer = customer;
 	}
 
+	@Override
 	public boolean equals(Object other) {
 		if ( other == this ) {
 			return true;
@@ -34,6 +35,7 @@ public class CustomerInventoryPK implements Serializable {
 				( id != null && id.equals( cip.id ) ) ) );
 	}
 
+	@Override
 	public int hashCode() {
 		return ( id == null ? 0 : id.hashCode() ) ^ getCustomer().getId();
 	}

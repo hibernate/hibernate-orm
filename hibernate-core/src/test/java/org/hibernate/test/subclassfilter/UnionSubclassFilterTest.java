@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class UnionSubclassFilterTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public final String[] getMappings() {
 		return new String[] { "subclassfilter/union-subclass.hbm.xml" };
 	}

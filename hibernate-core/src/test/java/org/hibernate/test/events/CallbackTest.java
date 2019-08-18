@@ -97,6 +97,7 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 		private int closedCount = 0;
 		private int closingCount = 0;
 
+		@Override
 		public void sessionFactoryCreated(SessionFactory factory) {
 			creationCount++;
 		}
@@ -106,6 +107,7 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 			closingCount++;
 		}
 
+		@Override
 		public void sessionFactoryClosed(SessionFactory factory) {
 			closedCount++;
 		}
@@ -123,9 +125,11 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 			destoryCount++;
 		}
 
+		@Override
 		public void onDelete(DeleteEvent event) throws HibernateException {
 		}
 
+		@Override
 		public void onDelete(DeleteEvent event, Set transientEntities) throws HibernateException {
 		}
 	}

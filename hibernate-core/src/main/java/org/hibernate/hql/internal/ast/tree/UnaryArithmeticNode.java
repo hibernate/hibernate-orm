@@ -13,19 +13,23 @@ import antlr.SemanticException;
 
 public class UnaryArithmeticNode extends AbstractSelectExpression implements UnaryOperatorNode {
 
+	@Override
 	public Type getDataType() {
 		return ( (SqlNode) getOperand() ).getDataType();
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}
 
+	@Override
 	public void initialize() {
 		// nothing to do; even if the operand is a parameter, no way we could
 		// infer an appropriate expected type here
 	}
 
+	@Override
 	public Node getOperand() {
 		return (Node) getFirstChild();
 	}

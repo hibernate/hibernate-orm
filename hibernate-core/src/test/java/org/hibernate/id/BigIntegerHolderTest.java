@@ -11,6 +11,7 @@ import java.math.BigInteger;
  * @author Steve Ebersole
  */
 public class BigIntegerHolderTest extends AbstractHolderTest {
+	@Override
 	protected IntegralDataTypeHolder makeHolder() {
 		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( BigInteger.class );
 	}

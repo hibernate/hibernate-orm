@@ -16,6 +16,7 @@ import org.hibernate.id.IdentifierGenerator;
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
 public class FunkyIdGenerator implements IdentifierGenerator {
+	@Override
 	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		throw new FunkyException();
 	}

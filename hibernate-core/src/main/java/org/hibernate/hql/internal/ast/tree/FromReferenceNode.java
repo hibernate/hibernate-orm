@@ -109,6 +109,7 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 		resolve( generateJoin, implicitJoin, classAlias, null );
 	}
 
+	@Override
 	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent)
 			throws SemanticException {
 		resolve( generateJoin, implicitJoin, classAlias, parent, null );

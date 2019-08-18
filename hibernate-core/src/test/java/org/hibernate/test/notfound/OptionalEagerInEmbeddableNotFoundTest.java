@@ -218,6 +218,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -230,6 +231,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -272,6 +274,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -284,6 +287,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -326,6 +330,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -338,6 +343,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -380,6 +386,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -392,6 +399,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -434,6 +442,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -446,6 +455,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -488,6 +498,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -500,6 +511,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -543,6 +555,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -555,6 +568,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -597,6 +611,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -609,6 +624,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -652,6 +668,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -664,6 +681,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -707,6 +725,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -719,6 +738,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -762,6 +782,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -774,6 +795,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}
@@ -817,6 +839,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			return id;
 		}
 
+		@Override
 		public void setId(Long id) {
 			this.id = id;
 		}
@@ -829,6 +852,7 @@ public class OptionalEagerInEmbeddableNotFoundTest extends BaseCoreFunctionalTes
 			this.cityInEmbeddable = cityInEmbeddable;
 		}
 
+		@Override
 		public City getCity() {
 			return cityInEmbeddable == null ? null : cityInEmbeddable.getCity();
 		}

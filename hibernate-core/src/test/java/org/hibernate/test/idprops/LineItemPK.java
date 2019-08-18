@@ -40,6 +40,7 @@ public class LineItemPK implements Serializable {
 		this.productCode = productCode;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -60,6 +61,7 @@ public class LineItemPK implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = order.hashCode();

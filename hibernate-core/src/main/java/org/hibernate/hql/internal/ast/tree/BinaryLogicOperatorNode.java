@@ -255,6 +255,7 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 	 *
 	 * @return The left-hand operand
 	 */
+	@Override
 	public Node getLeftHandOperand() {
 		return (Node) getFirstChild();
 	}
@@ -264,10 +265,12 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 	 *
 	 * @return The right-hand operand
 	 */
+	@Override
 	public Node getRightHandOperand() {
 		return (Node) getFirstChild().getNextSibling();
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}

@@ -25,6 +25,7 @@ public abstract class AbstractReadOnlyTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
+	@Override
 	public Session openSession() {
 		Session s = super.openSession();
 		s.setCacheMode( getSessionCacheMode() );

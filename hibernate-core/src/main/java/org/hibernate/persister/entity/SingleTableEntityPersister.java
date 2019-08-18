@@ -445,46 +445,57 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Override
 	protected boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}
 
+	@Override
 	protected boolean isInverseSubclassTable(int j) {
 		return isInverseSubclassTable[j];
 	}
 
+	@Override
 	public String getDiscriminatorColumnName() {
 		return discriminatorColumnName;
 	}
 
+	@Override
 	public String getDiscriminatorColumnReaders() {
 		return discriminatorColumnReaders;
 	}
 
+	@Override
 	public String getDiscriminatorColumnReaderTemplate() {
 		return discriminatorColumnReaderTemplate;
 	}
 
+	@Override
 	protected String getDiscriminatorAlias() {
 		return discriminatorAlias;
 	}
 
+	@Override
 	protected String getDiscriminatorFormulaTemplate() {
 		return discriminatorFormulaTemplate;
 	}
 
+	@Override
 	public String getTableName() {
 		return qualifiedTableNames[0];
 	}
 
+	@Override
 	public Type getDiscriminatorType() {
 		return discriminatorType;
 	}
 
+	@Override
 	public Object getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
+	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLValue;
 	}
@@ -493,6 +504,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return subclassClosure;
 	}
 
+	@Override
 	public String getSubclassForDiscriminatorValue(Object value) {
 		if ( value == null ) {
 			return subclassesByDiscriminatorValue.get( NULL_DISCRIMINATOR );
@@ -506,6 +518,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Override
 	public Serializable[] getPropertySpaces() {
 		return spaces;
 	}
@@ -520,28 +533,34 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return discriminatorFormula;
 	}
 
+	@Override
 	protected String getTableName(int j) {
 		return qualifiedTableNames[j];
 	}
 
+	@Override
 	protected String[] getKeyColumns(int j) {
 		return keyColumnNames[j];
 	}
 
+	@Override
 	protected boolean isTableCascadeDeleteEnabled(int j) {
 		return cascadeDeleteEnabled[j];
 	}
 
+	@Override
 	protected boolean isPropertyOfTable(int property, int j) {
 		return propertyTableNumbers[property] == j;
 	}
 
+	@Override
 	protected boolean isSubclassTableSequentialSelect(int j) {
 		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
 	}
 
 	// Execute the SQL:
 
+	@Override
 	public String fromTableFragment(String name) {
 		return getTableName() + ' ' + name;
 	}
@@ -559,6 +578,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return discriminatorFilterFragment( alias, null );
 	}
 
+	@Override
 	public String oneToManyFilterFragment(String alias) throws MappingException {
 		return forceDiscriminator
 				? discriminatorFilterFragment( alias, null )
@@ -654,10 +674,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return fullDiscriminatorValues;
 	}
 
+	@Override
 	public String getSubclassPropertyTableName(int i) {
 		return subclassTableNameClosure[subclassPropertyTableNumberClosure[i]];
 	}
 
+	@Override
 	protected void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
 		if ( isDiscriminatorFormula() ) {
 			select.addFormula( name, getDiscriminatorFormulaTemplate(), getDiscriminatorAlias() );
@@ -667,18 +689,22 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbersInSelect() {
 		return propertyTableNumbers;
 	}
 
+	@Override
 	protected int getSubclassPropertyTableNumber(int i) {
 		return subclassPropertyTableNumberClosure[i];
 	}
 
+	@Override
 	public int getTableSpan() {
 		return joinSpan;
 	}
 
+	@Override
 	protected void addDiscriminatorToInsert(Insert insert) {
 
 		if ( discriminatorInsertable ) {
@@ -687,23 +713,28 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	}
 
+	@Override
 	protected int[] getSubclassColumnTableNumberClosure() {
 		return subclassColumnTableNumberClosure;
 	}
 
+	@Override
 	protected int[] getSubclassFormulaTableNumberClosure() {
 		return subclassFormulaTableNumberClosure;
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbers() {
 		return propertyTableNumbers;
 	}
 
+	@Override
 	protected boolean isSubclassPropertyDeferred(String propertyName, String entityName) {
 		return hasSequentialSelects &&
 				isSubclassTableSequentialSelect( getSubclassPropertyTableNumber( propertyName, entityName ) );
 	}
 
+	@Override
 	public boolean hasSequentialSelect() {
 		return hasSequentialSelects;
 	}
@@ -729,6 +760,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return tabnum == null ? 0 : tabnum;
 	}
 
+	@Override
 	protected String getSequentialSelect(String entityName) {
 		return sequentialSelectStringsByEntityName.get( entityName );
 	}
@@ -781,34 +813,42 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 
+	@Override
 	protected String[] getSubclassTableKeyColumns(int j) {
 		return subclassTableKeyColumnClosure[j];
 	}
 
+	@Override
 	public String getSubclassTableName(int j) {
 		return subclassTableNameClosure[j];
 	}
 
+	@Override
 	public int getSubclassTableSpan() {
 		return subclassTableNameClosure.length;
 	}
 
+	@Override
 	protected boolean isClassOrSuperclassTable(int j) {
 		return isClassOrSuperclassTable[j];
 	}
 
+	@Override
 	protected boolean isSubclassTableLazy(int j) {
 		return subclassTableIsLazyClosure[j];
 	}
 
+	@Override
 	protected boolean isNullableTable(int j) {
 		return isNullableTable[j];
 	}
 
+	@Override
 	protected boolean isNullableSubclassTable(int j) {
 		return isNullableSubclassTable[j];
 	}
 
+	@Override
 	public String getPropertyTableName(String propertyName) {
 		Integer index = getEntityMetamodel().getPropertyIndexOrNull( propertyName );
 		if ( index == null ) {
@@ -817,6 +857,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return qualifiedTableNames[propertyTableNumbers[index]];
 	}
 
+	@Override
 	protected void doPostInstantiate() {
 		if ( hasSequentialSelects ) {
 			String[] entityNames = getSubclassClosure();
@@ -830,14 +871,17 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Override
 	public boolean isMultiTable() {
 		return getTableSpan() > 1;
 	}
 
+	@Override
 	public String[] getConstraintOrderedTableNameClosure() {
 		return constraintOrderedTableNames;
 	}
 
+	@Override
 	public String[][] getContraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}

@@ -266,10 +266,12 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		}
 	}
 
+	@Override
 	protected int[] getNamedParameterLocs(String name) {
 		throw new AssertionFailure("no named parameters");
 	}
 
+	@Override
 	protected void autoDiscoverTypes(ResultSet rs) {
 		throw new AssertionFailure("Auto discover types not supported in this loader");
 	}

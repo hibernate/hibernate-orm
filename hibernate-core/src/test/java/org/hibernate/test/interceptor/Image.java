@@ -37,6 +37,7 @@ public class Image {
 		this.name = name;
 	}
 
+	@Override
 	public String toString() {
 		return "Image/" + ( details == null ? "no details" : details.toString() );
 	}
@@ -61,6 +62,7 @@ public class Image {
 			this.comment = comment;
 		}
 
+		@Override
 		public String toString() {
 			return "Details=" + perm1;
 		}

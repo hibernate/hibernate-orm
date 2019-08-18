@@ -20,6 +20,7 @@ public class EntityPropertyName implements PropertyNameGetter {
 		this.propertyName = propertyName;
 	}
 
+	@Override
 	public String get(EnversService enversService) {
 		return propertyName;
 	}

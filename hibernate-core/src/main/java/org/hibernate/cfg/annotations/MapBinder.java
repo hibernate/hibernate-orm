@@ -68,10 +68,12 @@ public class MapBinder extends CollectionBinder {
 		super( sorted );
 	}
 
+	@Override
 	public boolean isMap() {
 		return true;
 	}
 
+	@Override
 	protected Collection createCollection(PersistentClass persistentClass) {
 		return new org.hibernate.mapping.Map( getBuildingContext(), persistentClass );
 	}
@@ -92,6 +94,7 @@ public class MapBinder extends CollectionBinder {
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( buildingContext, MapBinder.this.collection ) {
+			@Override
 			public void secondPass(Map persistentClasses, Map inheritedMetas)
 					throws MappingException {
 				bindStarToManySecondPass(

@@ -33,6 +33,7 @@ public class Inner implements Serializable {
 		this.dudu = dudu;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof Inner)) return false;
@@ -44,6 +45,7 @@ public class Inner implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return (id != null ? id.hashCode() : 0);
 	}

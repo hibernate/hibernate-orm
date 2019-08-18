@@ -698,18 +698,22 @@ public class EntityBinder {
 			this.usage = usage;
 		}
 
+		@Override
 		public CacheConcurrencyStrategy usage() {
 			return usage;
 		}
 
+		@Override
 		public String region() {
 			return region;
 		}
 
+		@Override
 		public String include() {
 			return "all";
 		}
 
+		@Override
 		public Class<? extends Annotation> annotationType() {
 			return Cache.class;
 		}
@@ -732,10 +736,12 @@ public class EntityBinder {
 					: StringHelper.unqualify( entityName );
 		}
 
+		@Override
 		public String getExplicitName() {
 			return explicitName;
 		}
 
+		@Override
 		public String getLogicalName() {
 			return logicalName;
 		}
@@ -752,6 +758,7 @@ public class EntityBinder {
 			this.jpaEntityName = jpaEntityName;
 		}
 
+		@Override
 		public Identifier determineImplicitName(final MetadataBuildingContext buildingContext) {
 			return buildingContext.getBuildingOptions().getImplicitNamingStrategy().determinePrimaryTableName(
 					new ImplicitEntityNameSource() {

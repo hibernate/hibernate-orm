@@ -28,20 +28,24 @@ public class ParametrizedTestUserType implements UserType, ParameterizedType {
 	private String param1;
 	private String param2;
 
+	@Override
 	public void setParameterValues(Properties parameters) {
 		param1 = parameters.getProperty( "param1" );
 		param2 = parameters.getProperty( "param2" );
 	}
 
+	@Override
 	public Class returnedClass() {
 		return String.class;
 	}
 
+	@Override
 	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 		return StringType.INSTANCE.nullSafeGet( rs, names[0], session );
 	}
 
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( value != null ) {
@@ -59,22 +63,27 @@ public class ParametrizedTestUserType implements UserType, ParameterizedType {
 		}
 	}
 
+	@Override
 	public int[] sqlTypes() {
 		return TYPES;
 	}
 
+	@Override
 	public Object assemble(Serializable cached, Object owner) throws HibernateException {
 		return cached;
 	}
 
+	@Override
 	public Object deepCopy(Object value) throws HibernateException {
 		return value;
 	}
 
+	@Override
 	public Serializable disassemble(Object value) throws HibernateException {
 		return (Serializable) value;
 	}
 
+	@Override
 	public boolean equals(Object x, Object y) throws HibernateException {
 		//noinspection ObjectEquality
 		if ( x == y ) {
@@ -88,14 +97,17 @@ public class ParametrizedTestUserType implements UserType, ParameterizedType {
 		return x.equals( y );
 	}
 
+	@Override
 	public int hashCode(Object x) throws HibernateException {
 		return x.hashCode();
 	}
 
+	@Override
 	public boolean isMutable() {
 		return false;
 	}
 
+	@Override
 	public Object replace(Object original, Object target, Object owner) throws HibernateException {
 		return original;
 	}

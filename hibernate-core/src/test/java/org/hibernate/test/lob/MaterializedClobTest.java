@@ -17,6 +17,7 @@ import org.hibernate.testing.RequiresDialectFeature;
  */
 @RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 public class MaterializedClobTest extends LongStringTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lob/MaterializedClobMappings.hbm.xml" };
 	}

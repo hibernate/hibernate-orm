@@ -45,10 +45,12 @@ public class Classification implements Serializable, Comparable {
 		return ordinal;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		return compareTo( obj ) == 0;
 	}
 
+	@Override
 	public int compareTo(Object o) {
 		int otherOrdinal = ( ( Classification ) o ).ordinal;
 		if ( ordinal == otherOrdinal ) {
@@ -62,6 +64,7 @@ public class Classification implements Serializable, Comparable {
 		}
 	}
 
+	@Override
 	public int hashCode() {
 		return hashCode;
 	}

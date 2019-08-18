@@ -28,6 +28,7 @@ public class CharacterType
 		super( CharTypeDescriptor.INSTANCE, CharacterTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "character";
 	}
@@ -37,18 +38,22 @@ public class CharacterType
 		return new String[] { getName(), char.class.getName(), Character.class.getName() };
 	}
 
+	@Override
 	public Serializable getDefaultValue() {
 		throw new UnsupportedOperationException( "not a valid id type" );
 	}
 
+	@Override
 	public Class getPrimitiveClass() {
 		return char.class;
 	}
 
+	@Override
 	public String objectToSQLString(Character value, Dialect dialect) {
 		return '\'' + toString( value ) + '\'';
 	}
 
+	@Override
 	public Character stringToObject(String xml) {
 		return fromString( xml );
 	}

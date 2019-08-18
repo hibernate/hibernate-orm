@@ -26,6 +26,7 @@ public class SingleDomainObjectToMultipleTablesTest extends AbstractOneSessionTe
 	private long ownerId = 0;
 	private long driverId = 0;
 
+	@Override
 	protected void initMappings() throws MappingException, URISyntaxException {
 		URL url = Thread.currentThread().getContextClassLoader().getResource(
 				"mappings/entityNames/singleAssociatedAudited/mappings.hbm.xml"

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class JoinedSubclassPropertyRefTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "propertyref/inheritence/joined/Person.hbm.xml" };
 	}

@@ -29,6 +29,7 @@ public class ProxyInterceptor extends EmptyInterceptor {
 	 * @param object The presumed entity instance.
 	 * @return The entity name (pointing to the proper entity mapping).
 	 */
+	@Override
 	public String getEntityName(Object object) {
 		String entityName = ProxyHelper.extractEntityName( object );
 		if ( entityName == null ) {
@@ -49,6 +50,7 @@ public class ProxyInterceptor extends EmptyInterceptor {
 	 * @param id The identifier value for the given entity.
 	 * @return The instantiated instance.
 	 */
+	@Override
 	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) {
 		if ( entityMode == EntityMode.POJO ) {
 			if ( Customer.class.getName().equals( entityName ) ) {

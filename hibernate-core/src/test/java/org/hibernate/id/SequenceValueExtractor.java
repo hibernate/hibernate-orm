@@ -68,6 +68,7 @@ public class SequenceValueExtractor {
 		class WorkImpl implements Work {
 			private long value;
 
+			@Override
 			public void execute(Connection connection) throws SQLException {
 				Session session = (Session) sessionImpl;
 				Transaction transaction = session.beginTransaction();

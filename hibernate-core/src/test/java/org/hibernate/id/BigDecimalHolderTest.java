@@ -11,6 +11,7 @@ import java.math.BigDecimal;
  * @author Steve Ebersole
  */
 public class BigDecimalHolderTest extends AbstractHolderTest {
+	@Override
 	protected IntegralDataTypeHolder makeHolder() {
 		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( BigDecimal.class );
 	}

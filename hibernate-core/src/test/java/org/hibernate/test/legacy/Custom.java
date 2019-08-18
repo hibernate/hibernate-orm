@@ -14,6 +14,7 @@ public class Custom implements Cloneable {
 	String id;
 	private String name;
 	
+	@Override
 	public Object clone() {
 		try {
 			return super.clone();

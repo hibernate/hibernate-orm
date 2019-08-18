@@ -69,6 +69,7 @@ public class Order {
 			this.number = number;
 		}
 
+		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
@@ -81,6 +82,7 @@ public class Order {
 			return number == id.number && customer.equals( id.customer );
 		}
 
+		@Override
 		public int hashCode() {
 			int result;
 			result = customer.hashCode();

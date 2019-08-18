@@ -32,6 +32,7 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractTestStoreRetrieve<G, E extends GeomEntityLike<G>> extends SpatialFunctionalTestCase {
 
 
+	@Override
 	public void prepareTest() {
 
 	}

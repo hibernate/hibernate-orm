@@ -20,6 +20,7 @@ public class DynamicComponentTuplizer extends PojoComponentTuplizer {
 		super( component );
 	}
 
+	@Override
 	protected Instantiator buildInstantiator(Component component) {
 		return new DynamicInstantiator( component.getComponentClassName() );	//To change body of overridden methods use File | Settings | File Templates.
 	}

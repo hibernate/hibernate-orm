@@ -105,6 +105,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * @throws HibernateException Indicates problems flushing the session or
 	 * talking to the database.
 	 */
+	@Override
 	void flush() throws HibernateException;
 
 	/**
@@ -487,6 +488,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return an updated persistent instance
 	 */
+	@Override
 	Object merge(Object object);
 
 	/**
@@ -515,6 +517,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @param object a transient instance to be made persistent
 	 */
+	@Override
 	void persist(Object object);
 	/**
 	 * Make a transient instance persistent. This operation cascades to associated
@@ -612,6 +615,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @param object a persistent or detached instance
 	 */
+	@Override
 	void refresh(Object object);
 
 	/**
@@ -697,6 +701,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * saves, updates and deletions. Do not close open iterators or instances of
 	 * <tt>ScrollableResults</tt>.
 	 */
+	@Override
 	void clear();
 
 	/**
@@ -1177,6 +1182,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
 
 
+	@Override
 	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 
 	@Override

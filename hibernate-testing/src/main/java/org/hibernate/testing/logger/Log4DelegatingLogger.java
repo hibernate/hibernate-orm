@@ -48,11 +48,13 @@ public final class Log4DelegatingLogger extends Logger {
 		}
 	}
 
+	@Override
 	public boolean isEnabled(final Level level) {
 		final org.apache.log4j.Level l = translate( level );
 		return logger.isEnabledFor( l ) && l.isGreaterOrEqual( logger.getEffectiveLevel() );
 	}
 
+	@Override
 	protected void doLog(final Level level, final String loggerClassName, final Object message, final Object[] parameters, final Throwable thrown) {
 		final org.apache.log4j.Level translatedLevel = translate( level );
 		if ( interceptEnabled.get() ) {
@@ -83,6 +85,7 @@ public final class Log4DelegatingLogger extends Logger {
 		}
 	}
 
+	@Override
 	protected void doLogf(final Level level, final String loggerClassName, final String format, final Object[] parameters, final Throwable thrown) {
 		final org.apache.log4j.Level translatedLevel = translate( level );
 		if ( interceptEnabled.get() ) {

@@ -81,6 +81,7 @@ public class ListJoinColumnBidirectionalRefIngEntity {
 		this.references = references;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -102,6 +103,7 @@ public class ListJoinColumnBidirectionalRefIngEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -109,6 +111,7 @@ public class ListJoinColumnBidirectionalRefIngEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ListJoinColumnBidirectionalRefIngEntity(id = " + id + ", data = " + data + ")";
 	}

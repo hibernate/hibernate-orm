@@ -469,10 +469,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
+	@Override
 	public Session openSession() throws HibernateException {
 		return withOptions().openSession();
 	}
 
+	@Override
 	public Session openTemporarySession() throws HibernateException {
 		return withOptions()
 				.autoClose( false )
@@ -481,6 +483,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				.openSession();
 	}
 
+	@Override
 	public Session getCurrentSession() throws HibernateException {
 		if ( currentSessionContext == null ) {
 			throw new HibernateException( "No CurrentSessionContext configured!" );
@@ -498,10 +501,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return new StatelessSessionBuilderImpl( this );
 	}
 
+	@Override
 	public StatelessSession openStatelessSession() {
 		return withStatelessOptions().openStatelessSession();
 	}
 
+	@Override
 	public StatelessSession openStatelessSession(Connection connection) {
 		return withStatelessOptions().connection( connection ).openStatelessSession();
 	}
@@ -538,6 +543,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return jdbcServices;
 	}
 
+	@Override
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return null;
 	}
@@ -550,10 +556,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
 	 */
 	@Deprecated
+	@Override
 	public TypeResolver getTypeResolver() {
 		return metamodel.getTypeConfiguration().getTypeResolver();
 	}
 
+	@Override
 	public QueryPlanCache getQueryPlanCache() {
 		return queryPlanCache;
 	}
@@ -576,6 +584,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@SuppressWarnings("deprecation")
+	@Override
 	public Settings getSettings() {
 		return settings;
 	}
@@ -685,6 +694,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return sessionFactoryOptions;
 	}
 
+	@Override
 	public Interceptor getInterceptor() {
 		return sessionFactoryOptions.getInterceptor();
 	}
@@ -707,33 +717,40 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 
+	@Override
 	public Type getIdentifierType(String className) throws MappingException {
 		return getMetamodel().entityPersister( className ).getIdentifierType();
 	}
+	@Override
 	public String getIdentifierPropertyName(String className) throws MappingException {
 		return getMetamodel().entityPersister( className ).getIdentifierPropertyName();
 	}
 
+	@Override
 	public Type[] getReturnTypes(String queryString) throws HibernateException {
 		final ReturnMetadata metadata = queryPlanCache.getHQLQueryPlan( queryString, false, Collections.EMPTY_MAP )
 				.getReturnMetadata();
 		return metadata == null ? null : metadata.getReturnTypes();
 	}
 
+	@Override
 	public String[] getReturnAliases(String queryString) throws HibernateException {
 		final ReturnMetadata metadata = queryPlanCache.getHQLQueryPlan( queryString, false, Collections.EMPTY_MAP )
 				.getReturnMetadata();
 		return metadata == null ? null : metadata.getReturnAliases();
 	}
 
+	@Override
 	public ClassMetadata getClassMetadata(Class persistentClass) throws HibernateException {
 		return getClassMetadata( persistentClass.getName() );
 	}
 
+	@Override
 	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
 		return (CollectionMetadata) getMetamodel().collectionPersister( roleName );
 	}
 
+	@Override
 	public ClassMetadata getClassMetadata(String entityName) throws HibernateException {
 		return (ClassMetadata) getMetamodel().entityPersister( entityName );
 	}
@@ -743,10 +760,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		throw new UnsupportedOperationException( "org.hibernate.SessionFactory.getAllClassMetadata is no longer supported" );
 	}
 
+	@Override
 	public Map getAllCollectionMetadata() throws HibernateException {
 		throw new UnsupportedOperationException( "org.hibernate.SessionFactory.getAllCollectionMetadata is no longer supported" );
 	}
 
+	@Override
 	public Type getReferencedPropertyType(String className, String propertyName)
 		throws MappingException {
 		return getMetamodel().entityPersister( className ).getPropertyType( propertyName );
@@ -767,6 +786,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * collector release the memory.
 	 * @throws HibernateException
 	 */
+	@Override
 	public void close() throws HibernateException {
 		//This is an idempotent operation so we can do it even before the checks (it won't hurt):
 		Environment.getBytecodeProvider().resetCaches();
@@ -818,6 +838,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		serviceRegistry.destroy();
 	}
 
+	@Override
 	public CacheImplementor getCache() {
 		validateNotClosed();
 		return cacheAccess;
@@ -957,12 +978,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		getMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
 	}
 
+	@Override
 	public boolean isClosed() {
 		return isClosed;
 	}
 
 	private transient StatisticsImplementor statistics;
 
+	@Override
 	public StatisticsImplementor getStatistics() {
 		if ( statistics == null ) {
 			statistics = serviceRegistry.getService( StatisticsImplementor.class );
@@ -970,6 +993,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return statistics;
 	}
 
+	@Override
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
 		FilterDefinition def = filters.get( filterName );
 		if ( def == null ) {
@@ -978,14 +1002,17 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return def;
 	}
 
+	@Override
 	public boolean containsFetchProfileDefinition(String name) {
 		return fetchProfiles.containsKey( name );
 	}
 
+	@Override
 	public Set getDefinedFilterNames() {
 		return filters.keySet();
 	}
 
+	@Override
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
 		return identifierGenerators.get(rootEntityName);
 	}
@@ -1047,14 +1074,17 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
 	}
 
+	@Override
 	public SQLFunctionRegistry getSqlFunctionRegistry() {
 		return sqlFunctionRegistry;
 	}
 
+	@Override
 	public FetchProfile getFetchProfile(String name) {
 		return fetchProfiles.get( name );
 	}
 
+	@Override
 	public TypeHelper getTypeHelper() {
 		return typeHelper;
 	}

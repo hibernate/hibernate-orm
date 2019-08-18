@@ -503,6 +503,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			return size() > trimDownSize;
 		}
 
+		@Override
 		protected boolean removeEldestEntry(Map.Entry<HashEntry<K, V>, V> eldest) {
 			boolean aboveThreshold = isAboveThreshold();
 			if ( aboveThreshold ) {

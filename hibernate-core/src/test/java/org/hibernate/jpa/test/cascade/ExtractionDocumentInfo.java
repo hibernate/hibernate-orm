@@ -106,6 +106,7 @@ public class ExtractionDocumentInfo implements Serializable {
 		this.lastModified = lastModified;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof ExtractionDocumentInfo ) ) return false;
@@ -115,6 +116,7 @@ public class ExtractionDocumentInfo implements Serializable {
 		return id.equals( newsInfo.id );
 	}
 
+	@Override
 	public int hashCode() {
 		return id.hashCode();
 	}

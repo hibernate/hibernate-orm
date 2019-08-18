@@ -25,6 +25,7 @@ public class InsertsPerformance extends AbstractPerformanceTest {
 
 	private final static int NUMBER_INSERTS = 5000;
 
+	@Override
 	protected void doTest() {
 		for ( int i = 0; i < NUMBER_INSERTS; i++ ) {
 			newEntityManager();

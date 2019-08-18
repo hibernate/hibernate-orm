@@ -35,6 +35,7 @@ import static org.junit.Assert.assertTrue;
  */
 @SuppressWarnings( {"UnusedDeclaration"})
 public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}

@@ -81,6 +81,7 @@ public class JoinMulIdNamingRefIngEntity {
 		this.reference = reference;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -104,6 +105,7 @@ public class JoinMulIdNamingRefIngEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id1 != null ? id1.hashCode() : 0);
@@ -112,6 +114,7 @@ public class JoinMulIdNamingRefIngEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "JoinMulIdNamingRefIngEntity(id1 = " + id1 + ", id2 = " + id2 + ", data = " + data + ")";
 	}

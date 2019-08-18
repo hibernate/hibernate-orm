@@ -28,11 +28,13 @@ public class ManPk implements Serializable {
 		isElder = elder;
 	}
 
+	@Override
 	public int hashCode() {
 		//this implem sucks
 		return getFirstName().hashCode() + getLastName().hashCode() + ( isElder() ? 0 : 1 );
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		//firstName and lastName are expected to be set in this implem
 		if ( obj != null && obj instanceof ManPk ) {

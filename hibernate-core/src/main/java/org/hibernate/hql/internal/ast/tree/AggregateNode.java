@@ -28,6 +28,7 @@ public class AggregateNode extends AbstractSelectExpression implements SelectExp
 
 	private SQLFunction sqlFunction;
 
+	@Override
 	public SQLFunction getSQLFunction() {
 		return sqlFunction;
 	}
@@ -48,6 +49,7 @@ public class AggregateNode extends AbstractSelectExpression implements SelectExp
 		return sqlFunction;
 	}
 
+	@Override
 	public Type getFirstArgumentType() {
 		AST argument = getFirstChild();
 		while ( argument != null ) {
@@ -68,6 +70,7 @@ public class AggregateNode extends AbstractSelectExpression implements SelectExp
 		return getSessionFactoryHelper().findFunctionReturnType( getText(), resolveFunction(), getFirstChild() );
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}

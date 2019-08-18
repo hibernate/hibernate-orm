@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 @RunWith(BytecodeEnhancerRunner.class)
 public class LazyGroupMappedByTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { LGMB_From.class, LGMB_To.class };
 	}

@@ -30,10 +30,12 @@ public class MultiTableUpdateExecutor implements StatementExecutor {
 		this.updateHandler = strategy.buildUpdateHandler( walker.getSessionFactoryHelper().getFactory(), walker );
 	}
 
+	@Override
 	public String[] getSqlStatements() {
 		return updateHandler.getSqlStatements();
 	}
 
+	@Override
 	public int execute(QueryParameters parameters, SharedSessionContractImplementor session) throws HibernateException {
 		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, updateHandler.getTargetedQueryable() );
 

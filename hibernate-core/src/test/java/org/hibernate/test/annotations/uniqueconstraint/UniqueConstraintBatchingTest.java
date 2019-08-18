@@ -36,6 +36,7 @@ import static org.junit.Assert.fail;
 @RequiresDialect(H2Dialect.class)
 public class UniqueConstraintBatchingTest extends BaseEntityManagerFunctionalTestCase {
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Room.class,

@@ -20,6 +20,7 @@ public class Alien extends Being {
 	/**
 	 * @return Returns the species.
 	 */
+	@Override
 	public String getSpecies() {
 		return species;
 	}

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 public class DoubleFlushModDel extends AbstractFlushTest {
 	private Integer id;
 
+	@Override
 	public FlushMode getFlushMode() {
 		return FlushMode.MANUAL;
 	}

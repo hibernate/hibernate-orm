@@ -48,6 +48,7 @@ public class CollectionListeners {
 			this.listeners = listeners;
 		}
 
+		@Override
 		public void addEvent(AbstractCollectionEvent event, Listener listener) {
 			listeners.addEvent( event, listener );
 		}
@@ -60,10 +61,12 @@ public class CollectionListeners {
 		private InitializeCollectionListener(CollectionListeners listeners) {
 			this.listeners = listeners;
 		}
+		@Override
 		public void onInitializeCollection(InitializeCollectionEvent event) {
 			super.onInitializeCollection( event );
 			addEvent( event, this );
 		}
+		@Override
 		public void addEvent(AbstractCollectionEvent event, Listener listener) {
 			listeners.addEvent( event, listener );
 		}
@@ -74,6 +77,7 @@ public class CollectionListeners {
 		private PreCollectionRecreateListener(CollectionListeners listeners) {
 			super( listeners );
 		}
+		@Override
 		public void onPreRecreateCollection(PreCollectionRecreateEvent event) {
 			addEvent( event, this );
 		}
@@ -84,6 +88,7 @@ public class CollectionListeners {
 		private PostCollectionRecreateListener(CollectionListeners listeners) {
 			super( listeners );
 		}
+		@Override
 		public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
 			addEvent( event, this );
 		}
@@ -94,6 +99,7 @@ public class CollectionListeners {
 		private PreCollectionRemoveListener(CollectionListeners listeners) {
 			super( listeners );
 		}
+		@Override
 		public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
 			addEvent( event, this );
 		}
@@ -104,6 +110,7 @@ public class CollectionListeners {
 		private PostCollectionRemoveListener(CollectionListeners listeners) {
 			super( listeners );
 		}
+		@Override
 		public void onPostRemoveCollection(PostCollectionRemoveEvent event) {
 			addEvent( event, this );
 		}
@@ -114,6 +121,7 @@ public class CollectionListeners {
 		private PreCollectionUpdateListener(CollectionListeners listeners) {
 			super( listeners );
 		}
+		@Override
 		public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
 			addEvent( event, this );
 		}
@@ -124,6 +132,7 @@ public class CollectionListeners {
 		private PostCollectionUpdateListener(CollectionListeners listeners) {
 			super( listeners );
 		}
+		@Override
 		public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
 			addEvent( event, this );
 		}

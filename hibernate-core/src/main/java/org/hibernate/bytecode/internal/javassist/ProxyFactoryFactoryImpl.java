@@ -70,6 +70,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 			proxyClass = factory.createClass();
 		}
 
+		@Override
 		public Object getProxy() {
 			try {
 				final Proxy proxy = (Proxy) proxyClass.newInstance();
@@ -87,6 +88,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 	}
 
 	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
+		@Override
 		public boolean isHandled(Method m) {
 			// skip finalize methods
 			return !( m.getParameterCount() == 0 && m.getName().equals( "finalize" ) );
@@ -104,6 +106,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 		}
 
 		@SuppressWarnings("unchecked")
+		@Override
 		public Object invoke(
 				Object object,
 				Method method,

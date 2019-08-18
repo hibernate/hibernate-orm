@@ -39,11 +39,13 @@ public class SortedSetType extends SetType {
 		return set;
 	}
 
+	@Override
 	public Class getReturnedClass() {
 		return java.util.SortedSet.class;
 	}
 
 	@SuppressWarnings( {"unchecked"})
+	@Override
 	public Object instantiate(int anticipatedSize) {
 		return new TreeSet(comparator);
 	}

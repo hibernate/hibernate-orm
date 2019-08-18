@@ -21,6 +21,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class DeleteOneToOneOrphansTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "orphan/one2one/fk/reversed/unidirectional/Mapping.hbm.xml" };
 	}

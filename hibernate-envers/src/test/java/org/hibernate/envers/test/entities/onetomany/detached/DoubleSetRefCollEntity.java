@@ -82,6 +82,7 @@ public class DoubleSetRefCollEntity {
 		this.collection2 = collection2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -102,6 +103,7 @@ public class DoubleSetRefCollEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -109,6 +111,7 @@ public class DoubleSetRefCollEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "DoubleSetRefEdEntity(id = " + id + ", data = " + data + ")";
 	}

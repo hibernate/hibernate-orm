@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class HiLoSequenceTest extends BaseCoreFunctionalTestCase {
+	@Override
 	protected String[] getMappings() {
 		return new String[] { "idgen/enhanced/sequence/HiLo.hbm.xml" };
 	}

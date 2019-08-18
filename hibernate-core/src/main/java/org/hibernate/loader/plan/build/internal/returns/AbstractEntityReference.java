@@ -96,6 +96,7 @@ public abstract class AbstractEntityReference extends AbstractExpandingFetchSour
 		return identifierDescription;
 	}
 
+	@Override
 	protected CompositeAttributeFetch createCompositeAttributeFetch(
 			AttributeDefinition attributeDefinition,
 			ExpandingCompositeQuerySpace compositeQuerySpace) {

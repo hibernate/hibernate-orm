@@ -24,10 +24,12 @@ public class UUIDCharType extends AbstractSingleColumnStandardBasicType<UUID> im
 		super( VarcharTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "uuid-char";
 	}
 
+	@Override
 	public String objectToSQLString(UUID value, Dialect dialect) throws Exception {
 		return StringType.INSTANCE.objectToSQLString( value.toString(), dialect );
 	}

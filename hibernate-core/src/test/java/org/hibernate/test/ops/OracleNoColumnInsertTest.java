@@ -22,6 +22,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 @TestForIssue( jiraKey = "HHH-13104" )
 public class OracleNoColumnInsertTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 			"ops/Competition.hbm.xml"

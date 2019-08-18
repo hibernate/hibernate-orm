@@ -22,10 +22,12 @@ public class BImpl extends AImpl implements B {
 		super();
 	}
 
+	@Override
 	public Integer getBId() {
 		return bId;
 	}
 
+	@Override
 	public void setBId(Integer bId) {
 		this.bId = bId;
 	}

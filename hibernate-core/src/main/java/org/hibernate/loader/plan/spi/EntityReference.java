@@ -21,6 +21,7 @@ public interface EntityReference extends FetchSource {
 	 *
 	 * @return The UID
 	 */
+	@Override
 	public String getQuerySpaceUid();
 
 	/**

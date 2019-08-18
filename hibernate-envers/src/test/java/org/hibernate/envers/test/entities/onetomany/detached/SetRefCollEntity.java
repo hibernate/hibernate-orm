@@ -67,6 +67,7 @@ public class SetRefCollEntity {
 		this.collection = collection;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -87,6 +88,7 @@ public class SetRefCollEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -94,6 +96,7 @@ public class SetRefCollEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "SetRefEdEntity(id = " + id + ", data = " + data + ")";
 	}

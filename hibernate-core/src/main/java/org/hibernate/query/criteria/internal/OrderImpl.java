@@ -27,15 +27,18 @@ public class OrderImpl implements Order, Serializable {
 		this.ascending = ascending;
 	}
 
+	@Override
 	public Order reverse() {
 		ascending = !ascending;
 		return this;
 	}
 
+	@Override
 	public boolean isAscending() {
 		return ascending;
 	}
 
+	@Override
 	public Expression<?> getExpression() {
 		return expression;
 	}

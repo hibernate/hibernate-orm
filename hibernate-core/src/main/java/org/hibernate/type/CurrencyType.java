@@ -28,6 +28,7 @@ public class CurrencyType
 		super( VarcharTypeDescriptor.INSTANCE, CurrencyTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "currency";
 	}
@@ -37,6 +38,7 @@ public class CurrencyType
 		return true;
 	}
 
+	@Override
 	public String objectToSQLString(Currency value, Dialect dialect) throws Exception {
 		return "\'" + toString(  value ) + "\'";
 	}

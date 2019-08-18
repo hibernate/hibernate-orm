@@ -110,6 +110,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private Class returnClass;
 	private int keySize;
 
+	@Override
 	public synchronized Serializable generate(final SharedSessionContractImplementor session, Object obj) {
 		DeprecationLogger.DEPRECATION_LOGGER.deprecatedTableGenerator( getClass().getName() );
 
@@ -199,8 +200,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 			return value.makeValue();
 		}
 
-		return hiloOptimizer.generate(
-				new AccessCallback() {
+		return hiloOptimizer.generate(new AccessCallback() {
+			@Override
 					public IntegralDataTypeHolder getNextValue() {
 						return session.getTransactionCoordinator().createIsolationDelegate().delegateWork(
 								work,
@@ -254,6 +255,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	}
 
 	@SuppressWarnings({"StatementWithEmptyBody", "deprecation"})
+	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		returnClass = type.getReturnedClass();
 
@@ -376,6 +378,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	}
 
+	@Override
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
 				dialect.getCreateTableString()
@@ -386,10 +389,12 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		};
 	}
 
+	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
 		return new String[] {dialect.getDropTableString( tableName )};
 	}
 
+	@Override
 	public Object generatorKey() {
 		return tableName;
 	}

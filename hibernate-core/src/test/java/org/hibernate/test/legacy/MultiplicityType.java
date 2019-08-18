@@ -49,19 +49,23 @@ public class MultiplicityType implements CompositeUserType {
 			)
 	};
 
+	@Override
 	public String[] getPropertyNames() {
 		return PROP_NAMES;
 	}
 
+	@Override
 	public Type[] getPropertyTypes() {
 		return TYPES;
 	}
 
+	@Override
 	public int hashCode(Object x) throws HibernateException {
 		Multiplicity o = (Multiplicity) x;
 		return o.count + o.glarch.hashCode();
 	}
 
+	@Override
 	public Object getPropertyValue(Object component, int property) {
 		Multiplicity o = (Multiplicity) component;
 		return property == 0 ?
@@ -69,6 +73,7 @@ public class MultiplicityType implements CompositeUserType {
 				o.glarch;
 	}
 
+	@Override
 	public void setPropertyValue(
 			Object component,
 			int property,
@@ -87,10 +92,12 @@ public class MultiplicityType implements CompositeUserType {
 		return SQL_TYPES;
 	}
 
+	@Override
 	public Class returnedClass() {
 		return Multiplicity.class;
 	}
 
+	@Override
 	public boolean equals(Object x, Object y) {
 		Multiplicity mx = (Multiplicity) x;
 		Multiplicity my = (Multiplicity) y;
@@ -103,6 +110,7 @@ public class MultiplicityType implements CompositeUserType {
 		return mx.count == my.count && mx.glarch == my.glarch;
 	}
 
+	@Override
 	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 
@@ -119,6 +127,7 @@ public class MultiplicityType implements CompositeUserType {
 		return m;
 	}
 
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
@@ -138,6 +147,7 @@ public class MultiplicityType implements CompositeUserType {
 
 	}
 
+	@Override
 	public Object deepCopy(Object value) {
 		if ( value == null ) {
 			return null;
@@ -149,10 +159,12 @@ public class MultiplicityType implements CompositeUserType {
 		return m;
 	}
 
+	@Override
 	public boolean isMutable() {
 		return true;
 	}
 
+	@Override
 	public Object assemble(
 			Serializable cached,
 			SharedSessionContractImplementor session,
@@ -169,6 +181,7 @@ public class MultiplicityType implements CompositeUserType {
 		return m;
 	}
 
+	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( value == null ) {
@@ -181,6 +194,7 @@ public class MultiplicityType implements CompositeUserType {
 		};
 	}
 
+	@Override
 	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		return assemble( disassemble( original, session ), session, owner );

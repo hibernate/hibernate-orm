@@ -16,9 +16,11 @@ public class Contained {
 	private Collection bag = new ArrayList();
 	private Collection lazyBag = new ArrayList();
 	
+	@Override
 	public boolean equals(Object other) {
 		return id==( (Contained) other ).getId();
 	}
+	@Override
 	public int hashCode() {
 		return new Long(id).hashCode();
 	}

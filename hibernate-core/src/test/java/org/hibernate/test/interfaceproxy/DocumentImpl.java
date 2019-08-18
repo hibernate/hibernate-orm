@@ -20,6 +20,7 @@ public class DocumentImpl extends ItemImpl implements Document {
 	/**
 	 * @return Returns the created.
 	 */
+	@Override
 	public Calendar getCreated() {
 		return created;
 	}
@@ -32,6 +33,7 @@ public class DocumentImpl extends ItemImpl implements Document {
 	/**
 	 * @return Returns the modified.
 	 */
+	@Override
 	public Calendar getModified() {
 		return modified;
 	}
@@ -44,12 +46,14 @@ public class DocumentImpl extends ItemImpl implements Document {
 	/**
 	 * @return Returns the content.
 	 */
+	@Override
 	public Blob getContent() {
 		return content;
 	}
 	/**
 	 * @param content The content to set.
 	 */
+	@Override
 	public void setContent(Blob content) {
 		this.content = content;
 	}

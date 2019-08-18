@@ -49,6 +49,7 @@ public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctiona
 		return new Class[] { Parent.class, Child.class };
 	}
 
+	@Override
 	protected void addSettings(Map settings) {
 		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}

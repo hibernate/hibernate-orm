@@ -38,10 +38,12 @@ public class StringProperty implements Property {
 		this.id = id;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public String asString() {
 		return value;
 	}

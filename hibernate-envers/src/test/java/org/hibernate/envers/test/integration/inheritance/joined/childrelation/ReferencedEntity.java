@@ -49,6 +49,7 @@ public class ReferencedEntity {
 		this.id = id;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -66,10 +67,12 @@ public class ReferencedEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return id;
 	}
 
+	@Override
 	public String toString() {
 		return "ReferencedEntity(id = " + getId() + ")";
 	}

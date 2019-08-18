@@ -84,6 +84,7 @@ public class SetRefCollEntityMulId {
 		this.collection = collection;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -107,6 +108,7 @@ public class SetRefCollEntityMulId {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id1 != null ? id1.hashCode() : 0);
@@ -115,6 +117,7 @@ public class SetRefCollEntityMulId {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "SetRefCollEntityMulId(id1 = " + id1 + ", id2 = " + id2 + ", data = " + data + ")";
 	}

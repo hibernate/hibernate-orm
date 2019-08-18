@@ -19,6 +19,8 @@ public interface PersistentAttributeDescriptor<D, J> extends PersistentAttribute
 	@Override
 	ManagedTypeDescriptor<D> getDeclaringType();
 
+	@Override
 	SimpleTypeDescriptor<?> getValueGraphType();
+	@Override
 	SimpleTypeDescriptor<?> getKeyGraphType();
 }

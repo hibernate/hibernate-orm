@@ -14,11 +14,13 @@ import org.hibernate.type.Type;
 
 public class CollectionInterceptor extends EmptyInterceptor {
 
+	@Override
 	public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
 		( (User) entity ).getActions().add("updated");
 		return false;
 	}
 
+	@Override
 	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
 		( (User) entity ).getActions().add("created");
 		return false;

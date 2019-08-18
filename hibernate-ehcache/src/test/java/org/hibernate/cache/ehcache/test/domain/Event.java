@@ -68,6 +68,7 @@ public class Event {
 		person.getEvents().remove(this);
 	}
 
+	@Override
 	public String toString() {
 		return getTitle() + ": " + getDate();
 	}

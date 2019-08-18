@@ -312,6 +312,7 @@ public abstract class AbstractEntityPersister
 
 	protected abstract int[] getSubclassFormulaTableNumberClosure();
 
+	@Override
 	public abstract String getSubclassTableName(int j);
 
 	protected abstract String[] getSubclassTableKeyColumns(int j);
@@ -342,6 +343,7 @@ public abstract class AbstractEntityPersister
 
 	private static final String DISCRIMINATOR_ALIAS = "clazz_";
 
+	@Override
 	public String getDiscriminatorColumnName() {
 		return DISCRIMINATOR_ALIAS;
 	}
@@ -383,6 +385,7 @@ public abstract class AbstractEntityPersister
 		return false;
 	}
 
+	@Override
 	public boolean isSubclassEntityName(String entityName) {
 		return entityMetamodel.getSubclassEntityNames().contains( entityName );
 	}
@@ -391,6 +394,7 @@ public abstract class AbstractEntityPersister
 		return tableHasColumns;
 	}
 
+	@Override
 	public String[] getRootTableKeyColumnNames() {
 		return rootTableKeyColumnNames;
 	}
@@ -517,6 +521,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
 	public boolean hasRowId() {
 		return rowIdName != null;
 	}
@@ -988,6 +993,7 @@ public abstract class AbstractEntityPersister
 				: new StandardCacheEntryHelper( this );
 	}
 
+	@Override
 	public boolean canUseReferenceCacheEntries() {
 		return useReferenceCacheEntries;
 	}
@@ -1056,6 +1062,7 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
+	@Override
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entry = persistenceContext.getEntry( entity );
@@ -1349,14 +1356,17 @@ public abstract class AbstractEntityPersister
 		return navigableRole;
 	}
 
+	@Override
 	public Serializable[] getQuerySpaces() {
 		return getPropertySpaces();
 	}
 
+	@Override
 	public boolean isBatchLoadable() {
 		return batchSize > 1;
 	}
 
+	@Override
 	public String[] getIdentifierColumnNames() {
 		return rootTableKeyColumnNames;
 	}
@@ -1377,6 +1387,7 @@ public abstract class AbstractEntityPersister
 		return identifierAliases;
 	}
 
+	@Override
 	public String getVersionColumnName() {
 		return versionColumnName;
 	}
@@ -1402,19 +1413,23 @@ public abstract class AbstractEntityPersister
 	 * or (c) we have multiple tables holding the state of the
 	 * item.
 	 */
+	@Override
 	public boolean isCacheInvalidationRequired() {
 		return invalidateCache;
 	}
 
+	@Override
 	public boolean isLazyPropertiesCacheable() {
 		return isLazyPropertiesCacheable;
 	}
 
+	@Override
 	public String selectFragment(String alias, String suffix) {
 		return identifierSelectFragment( alias, suffix ) +
 				propertySelectFragment( alias, suffix, false );
 	}
 
+	@Override
 	public String[] getIdentifierAliases(String suffix) {
 		// NOTE: this assumes something about how propertySelectFragment is implemented by the subclass!
 		// was toUnqotedAliasStrings( getIdentifierColumnNames() ) before - now tried
@@ -1422,11 +1437,13 @@ public abstract class AbstractEntityPersister
 		return new Alias( suffix ).toAliasStrings( getIdentifierAliases() );
 	}
 
+	@Override
 	public String[] getPropertyAliases(String suffix, int i) {
 		// NOTE: this assumes something about how propertySelectFragment is implemented by the subclass!
 		return new Alias( suffix ).toUnquotedAliasStrings( propertyColumnAliases[i] );
 	}
 
+	@Override
 	public String getDiscriminatorAlias(String suffix) {
 		// NOTE: this assumes something about how propertySelectFragment is implemented by the subclass!
 		// was toUnqotedAliasStrings( getdiscriminatorColumnName() ) before - now tried
@@ -1436,6 +1453,7 @@ public abstract class AbstractEntityPersister
 				null;
 	}
 
+	@Override
 	public String identifierSelectFragment(String name, String suffix) {
 		return new SelectFragment()
 				.setSuffix( suffix )
@@ -1445,10 +1463,12 @@ public abstract class AbstractEntityPersister
 	}
 
 
+	@Override
 	public String propertySelectFragment(String tableAlias, String suffix, boolean allProperties) {
 		return propertySelectFragmentFragment( tableAlias, suffix, allProperties ).toFragmentString();
 	}
 
+	@Override
 	public SelectFragment propertySelectFragmentFragment(
 			String tableAlias,
 			String suffix,
@@ -1493,6 +1513,7 @@ public abstract class AbstractEntityPersister
 		return select;
 	}
 
+	@Override
 	public Object[] getDatabaseSnapshot(Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
@@ -1746,6 +1767,7 @@ public abstract class AbstractEntityPersister
 		return concretePropertySelectFragment(
 				alias,
 				new InclusionChecker() {
+					@Override
 					public boolean includeProperty(int propertyNumber) {
 						return includeProperty[propertyNumber];
 					}
@@ -1815,6 +1837,7 @@ public abstract class AbstractEntityPersister
 				.toStatementString();
 	}
 
+	@Override
 	public Object forceVersionIncrement(Serializable id, Object currentVersion, SharedSessionContractImplementor session) {
 		if ( !isVersioned() ) {
 			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
@@ -1884,6 +1907,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Retrieve the version number
 	 */
+	@Override
 	public Object getCurrentVersion(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
@@ -1946,6 +1970,7 @@ public abstract class AbstractEntityPersister
 		return (LockingStrategy) lockers.get( lockMode );
 	}
 
+	@Override
 	public void lock(
 			Serializable id,
 			Object version,
@@ -1955,6 +1980,7 @@ public abstract class AbstractEntityPersister
 		getLocker( lockMode ).lock( id, version, object, LockOptions.WAIT_FOREVER, session );
 	}
 
+	@Override
 	public void lock(
 			Serializable id,
 			Object version,
@@ -1964,14 +1990,17 @@ public abstract class AbstractEntityPersister
 		getLocker( lockOptions.getLockMode() ).lock( id, version, object, lockOptions.getTimeOut(), session );
 	}
 
+	@Override
 	public String getRootTableName() {
 		return getSubclassTableName( 0 );
 	}
 
+	@Override
 	public String getRootTableAlias(String drivingAlias) {
 		return drivingAlias;
 	}
 
+	@Override
 	public String[] getRootTableIdentifierColumnNames() {
 		return getRootTableKeyColumnNames();
 	}
@@ -2044,6 +2073,7 @@ public abstract class AbstractEntityPersister
 	 * SingleTableEntityPersister defines an overloaded form
 	 * which takes the entity name.
 	 */
+	@Override
 	public int getSubclassPropertyTableNumber(String propertyPath) {
 		String rootPropertyName = StringHelper.root( propertyPath );
 		Type type = propertyMapping.toType( rootPropertyName );
@@ -2073,6 +2103,7 @@ public abstract class AbstractEntityPersister
 		return index == -1 ? 0 : getSubclassPropertyTableNumber( index );
 	}
 
+	@Override
 	public Declarer getSubclassPropertyDeclarer(String propertyPath) {
 		int tableIndex = getSubclassPropertyTableNumber( propertyPath );
 		if ( tableIndex == 0 ) {
@@ -2088,6 +2119,7 @@ public abstract class AbstractEntityPersister
 
 	private DiscriminatorMetadata discriminatorMetadata;
 
+	@Override
 	public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
 		if ( discriminatorMetadata == null ) {
 			discriminatorMetadata = buildTypeDiscriminatorMetadata();
@@ -2097,10 +2129,12 @@ public abstract class AbstractEntityPersister
 
 	private DiscriminatorMetadata buildTypeDiscriminatorMetadata() {
 		return new DiscriminatorMetadata() {
+			@Override
 			public String getSqlFragment(String sqlQualificationAlias) {
 				return toColumns( sqlQualificationAlias, ENTITY_CLASS )[0];
 			}
 
+			@Override
 			public Type getResolutionType() {
 				return new DiscriminatorType( getDiscriminatorType(), AbstractEntityPersister.this );
 			}
@@ -2118,6 +2152,7 @@ public abstract class AbstractEntityPersister
 		return buf.append( tableNumber ).append( '_' ).toString();
 	}
 
+	@Override
 	public String[] toColumns(String name, final int i) {
 		final String alias = generateTableAlias( name, getSubclassPropertyTableNumber( i ) );
 		String[] cols = getSubclassPropertyColumnNames( i );
@@ -2142,6 +2177,7 @@ public abstract class AbstractEntityPersister
 		return propertySubclassNames;
 	}
 
+	@Override
 	public String[] getPropertyColumnNames(int i) {
 		return propertyColumnNames[i];
 	}
@@ -2158,30 +2194,37 @@ public abstract class AbstractEntityPersister
 		return hasFormulaProperties;
 	}
 
+	@Override
 	public FetchMode getFetchMode(int i) {
 		return subclassPropertyFetchModeClosure[i];
 	}
 
+	@Override
 	public CascadeStyle getCascadeStyle(int i) {
 		return subclassPropertyCascadeStyleClosure[i];
 	}
 
+	@Override
 	public Type getSubclassPropertyType(int i) {
 		return subclassPropertyTypeClosure[i];
 	}
 
+	@Override
 	public String getSubclassPropertyName(int i) {
 		return subclassPropertyNameClosure[i];
 	}
 
+	@Override
 	public int countSubclassProperties() {
 		return subclassPropertyTypeClosure.length;
 	}
 
+	@Override
 	public String[] getSubclassPropertyColumnNames(int i) {
 		return subclassPropertyColumnNameClosure[i];
 	}
 
+	@Override
 	public boolean isDefinedOnSubclass(int i) {
 		return propertyDefinedOnSubclass[i];
 	}
@@ -2267,6 +2310,7 @@ public abstract class AbstractEntityPersister
 		return subclassFormulaAliasClosure;
 	}
 
+	@Override
 	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
 		String[] rawAliases = (String[]) subclassPropertyAliases.get( propertyName );
 
@@ -2281,6 +2325,7 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
+	@Override
 	public String[] getSubclassPropertyColumnNames(String propertyName) {
 		//TODO: should we allow suffixes on these ?
 		return (String[]) subclassPropertyColumnNames.get( propertyName );
@@ -2383,6 +2428,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
+	@Override
 	public Object loadByUniqueKey(
 			String propertyName,
 			Object uniqueKey,
@@ -2407,6 +2453,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
 	public int getPropertyIndex(String propertyName) {
 		return entityMetamodel.getPropertyIndex( propertyName );
 	}
@@ -2964,6 +3011,7 @@ public abstract class AbstractEntityPersister
 	 * without resolving associations or collections. Question: should
 	 * this really be here, or should it be sent back to Loader?
 	 */
+	@Override
 	public Object[] hydrate(
 			final ResultSet rs,
 			final Serializable id,
@@ -3100,10 +3148,12 @@ public abstract class AbstractEntityPersister
 		}
 
 		Binder binder = new Binder() {
+			@Override
 			public void bindValues(PreparedStatement ps) throws SQLException {
 				dehydrate( null, fields, notNull, propertyColumnInsertable, 0, ps, session, false );
 			}
 
+			@Override
 			public Object getEntity() {
 				return object;
 			}
@@ -3112,6 +3162,7 @@ public abstract class AbstractEntityPersister
 		return identityDelegate.performInsert( sql, session, binder );
 	}
 
+	@Override
 	public String getIdentitySelectString() {
 		//TODO: cache this in an instvar
 		return getFactory().getDialect().getIdentityColumnSupport()
@@ -3122,6 +3173,7 @@ public abstract class AbstractEntityPersister
 				);
 	}
 
+	@Override
 	public String getSelectByUniqueKeyString(String propertyName) {
 		return new SimpleSelect( getFactory().getDialect() )
 				.setTableName( getTableName( 0 ) )
@@ -3567,6 +3619,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Update an object
 	 */
+	@Override
 	public void update(
 			final Serializable id,
 			final Object[] fields,
@@ -3685,6 +3738,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
 	public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session)
 			throws HibernateException {
 		// apply any pre-insert in-memory value generation
@@ -3710,6 +3764,7 @@ public abstract class AbstractEntityPersister
 		return id;
 	}
 
+	@Override
 	public void insert(Serializable id, Object[] fields, Object object, SharedSessionContractImplementor session) {
 		// apply any pre-insert in-memory value generation
 		preInsertInMemoryValueGeneration( fields, object, session );
@@ -3745,6 +3800,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Delete an object
 	 */
+	@Override
 	public void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session)
 			throws HibernateException {
 		final int span = getTableSpan();
@@ -3868,10 +3924,12 @@ public abstract class AbstractEntityPersister
 		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
 	}
 
+	@Override
 	public String generateFilterConditionAlias(String rootAlias) {
 		return rootAlias;
 	}
 
+	@Override
 	public String oneToManyFilterFragment(String alias) throws MappingException {
 		return "";
 	}
@@ -4188,6 +4246,7 @@ public abstract class AbstractEntityPersister
 		return new SubstituteBracketSQLQueryParser( sql, getFactory() ).process();
 	}
 
+	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
 
@@ -4293,6 +4352,7 @@ public abstract class AbstractEntityPersister
 	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
 	 * depending upon the value of the <tt>lock</tt> parameter
 	 */
+	@Override
 	public Object load(Serializable id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session) {
 		return load( id, optionalObject, new LockOptions().setLockMode( lockMode ), session );
 	}
@@ -4301,6 +4361,7 @@ public abstract class AbstractEntityPersister
 	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
 	 * depending upon the value of the <tt>lock</tt> parameter
 	 */
+	@Override
 	public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
 			throws HibernateException {
 
@@ -4378,6 +4439,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	@Override
 	public void registerAffectingFetchProfile(String fetchProfileName) {
 		affectingFetchProfileNames.add( fetchProfileName );
 	}
@@ -4444,6 +4506,7 @@ public abstract class AbstractEntityPersister
 		return true;
 	}
 
+	@Override
 	public boolean isSubclassPropertyNullable(int i) {
 		return subclassPropertyNullabilityClosure[i];
 	}
@@ -4497,6 +4560,7 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @throws HibernateException
 	 */
+	@Override
 	public int[] findDirty(Object[] currentState, Object[] previousState, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
 		int[] props = TypeHelper.findDirty(
@@ -4527,6 +4591,7 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @throws HibernateException
 	 */
+	@Override
 	public int[] findModified(Object[] old, Object[] current, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
 		int[] props = TypeHelper.findModified(
@@ -4565,10 +4630,12 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
 	public SessionFactoryImplementor getFactory() {
 		return factory;
 	}
 
+	@Override
 	public EntityMetamodel getEntityMetamodel() {
 		return entityMetamodel;
 	}
@@ -4583,10 +4650,12 @@ public abstract class AbstractEntityPersister
 		return canWriteToCache;
 	}
 
+	@Override
 	public boolean hasCache() {
 		return canWriteToCache;
 	}
 
+	@Override
 	public EntityDataAccess getCacheAccessStrategy() {
 		return cacheAccessStrategy;
 	}
@@ -4601,10 +4670,12 @@ public abstract class AbstractEntityPersister
 		return cacheEntryHelper.buildCacheEntry( entity, state, version, session );
 	}
 
+	@Override
 	public boolean hasNaturalIdCache() {
 		return naturalIdRegionAccessStrategy != null;
 	}
 
+	@Override
 	public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
 		return naturalIdRegionAccessStrategy;
 	}
@@ -4614,10 +4685,12 @@ public abstract class AbstractEntityPersister
 	}
 
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
 	public final String getEntityName() {
 		return entityMetamodel.getName();
 	}
 
+	@Override
 	public EntityType getEntityType() {
 		return entityMetamodel.getEntityType();
 	}
@@ -4626,18 +4699,22 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.isPolymorphic();
 	}
 
+	@Override
 	public boolean isInherited() {
 		return entityMetamodel.isInherited();
 	}
 
+	@Override
 	public boolean hasCascades() {
 		return entityMetamodel.hasCascades();
 	}
 
+	@Override
 	public boolean hasIdentifierProperty() {
 		return !entityMetamodel.getIdentifierProperty().isVirtual();
 	}
 
+	@Override
 	public VersionType getVersionType() {
 		return (VersionType) locateVersionType();
 	}
@@ -4648,18 +4725,22 @@ public abstract class AbstractEntityPersister
 				entityMetamodel.getVersionProperty().getType();
 	}
 
+	@Override
 	public int getVersionProperty() {
 		return entityMetamodel.getVersionPropertyIndex();
 	}
 
+	@Override
 	public boolean isVersioned() {
 		return entityMetamodel.isVersioned();
 	}
 
+	@Override
 	public boolean isIdentifierAssignedByInsert() {
 		return entityMetamodel.getIdentifierProperty().isIdentifierAssignedByInsert();
 	}
 
+	@Override
 	public boolean hasLazyProperties() {
 		return entityMetamodel.hasLazyProperties();
 	}
@@ -4674,6 +4755,7 @@ public abstract class AbstractEntityPersister
 //		}
 //	}
 
+	@Override
 	public void afterReassociate(Object entity, SharedSessionContractImplementor session) {
 		if ( getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
@@ -4729,6 +4811,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	@Override
 	public Boolean isTransient(Object entity, SharedSessionContractImplementor session) throws HibernateException {
 		final Serializable id;
 		if ( canExtractIdOutOfEntity() ) {
@@ -4775,14 +4858,17 @@ public abstract class AbstractEntityPersister
 		return null;
 	}
 
+	@Override
 	public boolean hasCollections() {
 		return entityMetamodel.hasCollections();
 	}
 
+	@Override
 	public boolean hasMutableProperties() {
 		return entityMetamodel.hasMutableProperties();
 	}
 
+	@Override
 	public boolean isMutable() {
 		return entityMetamodel.isMutable();
 	}
@@ -4791,35 +4877,43 @@ public abstract class AbstractEntityPersister
 		return ( entry == null ? isMutable() : entry.isModifiableEntity() );
 	}
 
+	@Override
 	public boolean isAbstract() {
 		return entityMetamodel.isAbstract();
 	}
 
+	@Override
 	public boolean hasSubclasses() {
 		return entityMetamodel.hasSubclasses();
 	}
 
+	@Override
 	public boolean hasProxy() {
 		// skip proxy instantiation if entity is bytecode enhanced
 		return entityMetamodel.isLazy() && !entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
+	@Override
 	public IdentifierGenerator getIdentifierGenerator() throws HibernateException {
 		return entityMetamodel.getIdentifierProperty().getIdentifierGenerator();
 	}
 
+	@Override
 	public String getRootEntityName() {
 		return entityMetamodel.getRootName();
 	}
 
+	@Override
 	public ClassMetadata getClassMetadata() {
 		return this;
 	}
 
+	@Override
 	public String getMappedSuperclass() {
 		return entityMetamodel.getSuperclass();
 	}
 
+	@Override
 	public boolean isExplicitPolymorphism() {
 		return entityMetamodel.isExplicitPolymorphism();
 	}
@@ -4836,6 +4930,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getIdentifierProperty().isEmbedded();
 	}
 
+	@Override
 	public boolean canExtractIdOutOfEntity() {
 		return hasIdentifierProperty() || hasEmbeddedCompositeIdentifier() || hasIdentifierMapper();
 	}
@@ -4844,22 +4939,27 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getIdentifierProperty().hasIdentifierMapper();
 	}
 
+	@Override
 	public String[] getKeyColumnNames() {
 		return getIdentifierColumnNames();
 	}
 
+	@Override
 	public String getName() {
 		return getEntityName();
 	}
 
+	@Override
 	public boolean isCollection() {
 		return false;
 	}
 
+	@Override
 	public boolean consumesEntityAlias() {
 		return true;
 	}
 
+	@Override
 	public boolean consumesCollectionAlias() {
 		return false;
 	}
@@ -4879,10 +4979,12 @@ public abstract class AbstractEntityPersister
 		return propertyMapping.toType( propertyName );
 	}
 
+	@Override
 	public Type getType() {
 		return entityMetamodel.getEntityType();
 	}
 
+	@Override
 	public boolean isSelectBeforeUpdateRequired() {
 		return entityMetamodel.isSelectBeforeUpdate();
 	}
@@ -4891,15 +4993,18 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getOptimisticLockStyle();
 	}
 
+	@Override
 	public Object createProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 		return entityMetamodel.getTuplizer().createProxy( id, session );
 	}
 
+	@Override
 	public String toString() {
 		return StringHelper.unqualify( getClass().getName() ) +
 				'(' + entityMetamodel.getName() + ')';
 	}
 
+	@Override
 	public final String selectFragment(
 			Joinable rhs,
 			String rhsAlias,
@@ -4910,22 +5015,27 @@ public abstract class AbstractEntityPersister
 		return selectFragment( lhsAlias, entitySuffix );
 	}
 
+	@Override
 	public boolean isInstrumented() {
 		return entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
+	@Override
 	public boolean hasInsertGeneratedProperties() {
 		return entityMetamodel.hasInsertGeneratedValues();
 	}
 
+	@Override
 	public boolean hasUpdateGeneratedProperties() {
 		return entityMetamodel.hasUpdateGeneratedValues();
 	}
 
+	@Override
 	public boolean isVersionPropertyGenerated() {
 		return isVersioned() && getEntityMetamodel().isVersionGenerated();
 	}
 
+	@Override
 	public boolean isVersionPropertyInsertable() {
 		return isVersioned() && getPropertyInsertability()[getVersionProperty()];
 	}
@@ -4935,22 +5045,27 @@ public abstract class AbstractEntityPersister
 		getEntityTuplizer().afterInitialize( entity, session );
 	}
 
+	@Override
 	public String[] getPropertyNames() {
 		return entityMetamodel.getPropertyNames();
 	}
 
+	@Override
 	public Type[] getPropertyTypes() {
 		return entityMetamodel.getPropertyTypes();
 	}
 
+	@Override
 	public boolean[] getPropertyLaziness() {
 		return entityMetamodel.getPropertyLaziness();
 	}
 
+	@Override
 	public boolean[] getPropertyUpdateability() {
 		return entityMetamodel.getPropertyUpdateability();
 	}
 
+	@Override
 	public boolean[] getPropertyCheckability() {
 		return entityMetamodel.getPropertyCheckability();
 	}
@@ -4959,6 +5074,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getNonlazyPropertyUpdateability();
 	}
 
+	@Override
 	public boolean[] getPropertyInsertability() {
 		return entityMetamodel.getPropertyInsertability();
 	}
@@ -4967,6 +5083,7 @@ public abstract class AbstractEntityPersister
 	 * @deprecated no simple, direct replacement
 	 */
 	@Deprecated
+	@Override
 	public ValueInclusion[] getPropertyInsertGenerationInclusions() {
 		return null;
 	}
@@ -4975,42 +5092,52 @@ public abstract class AbstractEntityPersister
 	 * @deprecated no simple, direct replacement
 	 */
 	@Deprecated
+	@Override
 	public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
 		return null;
 	}
 
+	@Override
 	public boolean[] getPropertyNullability() {
 		return entityMetamodel.getPropertyNullability();
 	}
 
+	@Override
 	public boolean[] getPropertyVersionability() {
 		return entityMetamodel.getPropertyVersionability();
 	}
 
+	@Override
 	public CascadeStyle[] getPropertyCascadeStyles() {
 		return entityMetamodel.getCascadeStyles();
 	}
 
+	@Override
 	public final Class getMappedClass() {
 		return getEntityTuplizer().getMappedClass();
 	}
 
+	@Override
 	public boolean implementsLifecycle() {
 		return getEntityTuplizer().isLifecycleImplementor();
 	}
 
+	@Override
 	public Class getConcreteProxyClass() {
 		return getEntityTuplizer().getConcreteProxyClass();
 	}
 
+	@Override
 	public void setPropertyValues(Object object, Object[] values) {
 		getEntityTuplizer().setPropertyValues( object, values );
 	}
 
+	@Override
 	public void setPropertyValue(Object object, int i, Object value) {
 		getEntityTuplizer().setPropertyValue( object, i, value );
 	}
 
+	@Override
 	public Object[] getPropertyValues(Object object) {
 		return getEntityTuplizer().getPropertyValues( object );
 	}
@@ -5090,6 +5217,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
 	public boolean isMultiTable() {
 		return false;
 	}
@@ -5098,11 +5226,13 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getPropertySpan();
 	}
 
+	@Override
 	public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return getEntityTuplizer().getPropertyValuesToInsert( object, mergeMap, session );
 	}
 
+	@Override
 	public void processInsertGeneratedProperties(
 			Serializable id,
 			Object entity,
@@ -5121,6 +5251,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	@Override
 	public void processUpdateGeneratedProperties(
 			Serializable id,
 			Object entity,
@@ -5239,22 +5370,27 @@ public abstract class AbstractEntityPersister
 						( matchTiming == GenerationTiming.ALWAYS && timing.includesUpdate() );
 	}
 
+	@Override
 	public String getIdentifierPropertyName() {
 		return entityMetamodel.getIdentifierProperty().getName();
 	}
 
+	@Override
 	public Type getIdentifierType() {
 		return entityMetamodel.getIdentifierProperty().getType();
 	}
 
+	@Override
 	public boolean hasSubselectLoadableCollections() {
 		return hasSubselectLoadableCollections;
 	}
 
+	@Override
 	public int[] getNaturalIdentifierProperties() {
 		return entityMetamodel.getNaturalIdentifierProperties();
 	}
 
+	@Override
 	public Object[] getNaturalIdentifierSnapshot(Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( !hasNaturalIdentifier() ) {
@@ -5524,10 +5660,12 @@ public abstract class AbstractEntityPersister
 		return concretePropertySelectFragment;
 	}
 
+	@Override
 	public boolean hasNaturalIdentifier() {
 		return entityMetamodel.hasNaturalIdentifier();
 	}
 
+	@Override
 	public void setPropertyValue(Object object, String propertyName, Object value) {
 		getEntityTuplizer().setPropertyValue( object, propertyName, value );
 	}

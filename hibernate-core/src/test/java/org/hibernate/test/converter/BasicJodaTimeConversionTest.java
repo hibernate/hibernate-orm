@@ -41,11 +41,13 @@ public class BasicJodaTimeConversionTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	public static class JodaLocalDateConverter implements AttributeConverter<LocalDate, Date> {
+		@Override
 		public Date convertToDatabaseColumn(LocalDate localDate) {
 			convertToDatabaseColumnCalled = true;
 			return localDate.toDate();
 		}
 
+		@Override
 		public LocalDate convertToEntityAttribute(Date date) {
 			convertToEntityAttributeCalled = true;
 			return LocalDate.fromDateFields( date );

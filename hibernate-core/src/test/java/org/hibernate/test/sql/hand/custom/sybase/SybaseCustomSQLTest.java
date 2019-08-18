@@ -20,6 +20,7 @@ import org.hibernate.testing.RequiresDialect;
  */
 @RequiresDialect( { SybaseDialect.class, SybaseASE15Dialect.class, Sybase11Dialect.class, SybaseAnywhereDialect.class })
 public class SybaseCustomSQLTest extends CustomStoredProcTestSupport {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "sql/hand/custom/sybase/Mappings.hbm.xml" };
 	}

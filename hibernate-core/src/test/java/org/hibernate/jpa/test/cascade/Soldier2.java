@@ -50,6 +50,7 @@ public class Soldier2 implements Serializable {
 		this.troop = troop;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Soldier2 ) ) return false;
@@ -61,6 +62,7 @@ public class Soldier2 implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}

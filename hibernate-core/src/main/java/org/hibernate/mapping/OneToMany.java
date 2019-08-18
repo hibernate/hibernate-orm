@@ -73,18 +73,22 @@ public class OneToMany implements Value {
 		this.associatedClass = associatedClass;
 	}
 
+	@Override
 	public void createForeignKey() {
 		// no foreign key element of for a one-to-many
 	}
 
+	@Override
 	public Iterator<Selectable> getColumnIterator() {
 		return associatedClass.getKey().getColumnIterator();
 	}
 
+	@Override
 	public int getColumnSpan() {
 		return associatedClass.getKey().getColumnSpan();
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.JOIN;
 	}
@@ -92,30 +96,37 @@ public class OneToMany implements Value {
 	/**
 	 * Table of the owner entity (the "one" side)
 	 */
+	@Override
 	public Table getTable() {
 		return referencingTable;
 	}
 
+	@Override
 	public Type getType() {
 		return getEntityType();
 	}
 
+	@Override
 	public boolean isNullable() {
 		return false;
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return false;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return false;
 	}
 
+	@Override
 	public boolean hasFormula() {
 		return false;
 	}
 
+	@Override
 	public boolean isValid(Mapping mapping) throws MappingException {
 		if ( referencedEntityName == null ) {
 			throw new MappingException( "one to many association must specify the referenced entity" );
@@ -134,9 +145,11 @@ public class OneToMany implements Value {
 		this.referencedEntityName = referencedEntityName == null ? null : referencedEntityName.intern();
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName) {
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept( this );
 	}
@@ -152,11 +165,13 @@ public class OneToMany implements Value {
 				&& Objects.equals( associatedClass, other.associatedClass );
 	}
 
+	@Override
 	public boolean[] getColumnInsertability() {
 		//TODO: we could just return all false...
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public boolean[] getColumnUpdateability() {
 		//TODO: we could just return all false...
 		throw new UnsupportedOperationException();

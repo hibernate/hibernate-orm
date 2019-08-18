@@ -28,6 +28,7 @@ public class FlushVisitor extends AbstractVisitor {
 		this.owner = owner;
 	}
 
+	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		
 		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {

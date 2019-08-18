@@ -114,6 +114,7 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 			super( key, jdbcCoordinator, batchSize );
 		}
 
+		@Override
 		protected void releaseStatements() {
 			createtdStatements.addAll( getStatements().values() );
 			super.releaseStatements();

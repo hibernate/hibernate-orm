@@ -34,18 +34,22 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 	public static class ClobMutabilityPlan implements MutabilityPlan<Clob> {
 		public static final ClobMutabilityPlan INSTANCE = new ClobMutabilityPlan();
 
+		@Override
 		public boolean isMutable() {
 			return false;
 		}
 
+		@Override
 		public Clob deepCopy(Clob value) {
 			return value;
 		}
 
+		@Override
 		public Serializable disassemble(Clob value) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 
+		@Override
 		public Clob assemble(Serializable cached) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
@@ -60,10 +64,12 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		return value == null ? "null" : "{clob}";
 	}
 
+	@Override
 	public String toString(Clob value) {
 		return DataHelper.extractString( value );
 	}
 
+	@Override
 	public Clob fromString(String string) {
 		return ClobProxy.generateProxy( string );
 	}
@@ -85,6 +91,7 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(final Clob value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -115,6 +122,7 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Clob wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

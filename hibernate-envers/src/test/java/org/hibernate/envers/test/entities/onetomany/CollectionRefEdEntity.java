@@ -69,6 +69,7 @@ public class CollectionRefEdEntity implements Serializable {
 		this.reffering = reffering;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -89,6 +90,7 @@ public class CollectionRefEdEntity implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -96,6 +98,7 @@ public class CollectionRefEdEntity implements Serializable {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "CollectionRefEdEntity(id = " + id + ", data = " + data + ")";
 	}

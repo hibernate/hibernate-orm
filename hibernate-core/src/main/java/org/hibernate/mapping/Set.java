@@ -32,6 +32,7 @@ public class Set extends Collection {
 		super( buildingContext, owner );
 	}
 
+	@Override
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate( mapping );
 		//for backward compatibility, disable this:
@@ -45,10 +46,12 @@ public class Set extends Collection {
 		throw new MappingException("set element mappings must have at least one non-nullable column: " + getRole() );*/
 	}
 
+	@Override
 	public boolean isSet() {
 		return true;
 	}
 
+	@Override
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
 			return getMetadata().getTypeResolver()
@@ -67,6 +70,7 @@ public class Set extends Collection {
 		}
 	}
 
+	@Override
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
@@ -98,6 +102,7 @@ public class Set extends Collection {
 		}
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

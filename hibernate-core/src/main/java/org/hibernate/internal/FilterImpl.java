@@ -46,6 +46,7 @@ public class FilterImpl implements Filter, Serializable {
 		filterName = definition.getFilterName();
 	}
 
+	@Override
 	public FilterDefinition getFilterDefinition() {
 		return definition;
 	}
@@ -55,6 +56,7 @@ public class FilterImpl implements Filter, Serializable {
 	 *
 	 * @return This filter's name.
 	 */
+	@Override
 	public String getName() {
 		return definition.getFilterName();
 	}
@@ -72,6 +74,7 @@ public class FilterImpl implements Filter, Serializable {
 	 * @throws IllegalArgumentException Indicates that either the parameter was undefined or that the type
 	 * of the passed value did not match the configured type.
 	 */
+	@Override
 	public Filter setParameter(String name, Object value) throws IllegalArgumentException {
 		// Make sure this is a defined parameter and check the incoming value type
 		// TODO: what should be the actual exception type here?
@@ -94,6 +97,7 @@ public class FilterImpl implements Filter, Serializable {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
+	@Override
 	public Filter setParameterList(String name, Collection values) throws HibernateException  {
 		// Make sure this is a defined parameter and check the incoming value type
 		if ( values == null ) {
@@ -121,6 +125,7 @@ public class FilterImpl implements Filter, Serializable {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
+	@Override
 	public Filter setParameterList(String name, Object[] values) throws IllegalArgumentException {
 		return setParameterList( name, Arrays.asList( values ) );
 	}
@@ -141,6 +146,7 @@ public class FilterImpl implements Filter, Serializable {
 	 *
 	 * @throws HibernateException If the state is not currently valid.
 	 */
+	@Override
 	public void validate() throws HibernateException {
 		// for each of the defined parameters, make sure its value
 		// has been set

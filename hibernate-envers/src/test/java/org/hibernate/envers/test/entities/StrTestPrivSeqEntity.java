@@ -60,6 +60,7 @@ public class StrTestPrivSeqEntity {
 		this.str = str;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -80,6 +81,7 @@ public class StrTestPrivSeqEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -87,6 +89,7 @@ public class StrTestPrivSeqEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "STPSE(id = " + id + ", str = " + str + ")";
 	}

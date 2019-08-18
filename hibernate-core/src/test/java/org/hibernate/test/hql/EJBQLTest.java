@@ -78,6 +78,7 @@ public class EJBQLTest extends BaseCoreFunctionalTestCase {
 		List namedParams = ASTUtil.collectChildren(
 		        ast,
 		        new ASTUtil.FilterPredicate() {
+					@Override
 			        public boolean exclude(AST n) {
 				        return n.getType() != HqlSqlTokenTypes.PARAM;
 			        }

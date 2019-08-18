@@ -18,6 +18,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	/**
 	 * Is this an abstract class?
 	 */
+	@Override
 	public boolean isAbstract();
 	/**
 	 * Is this class explicit polymorphism only?
@@ -47,6 +48,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	/**
 	 * Get the names of columns used to persist the identifier
 	 */
+	@Override
 	public String[] getIdentifierColumnNames();
 
 	/**
@@ -146,6 +148,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 		public Declarer(String name) {
 			this.name = name;
 		}
+		@Override
 		public String toString() {
 			return name;
 		}

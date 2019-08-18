@@ -70,6 +70,7 @@ public class DetachedNamingTestEntity {
 		this.collection = collection;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -90,6 +91,7 @@ public class DetachedNamingTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -97,6 +99,7 @@ public class DetachedNamingTestEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "DetachedNamingTestEntity(id = " + id + ", data = " + data + ")";
 	}

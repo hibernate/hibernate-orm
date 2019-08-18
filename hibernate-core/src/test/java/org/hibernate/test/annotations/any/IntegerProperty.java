@@ -29,10 +29,12 @@ public class IntegerProperty implements Property {
 		this.value = value;
 	}
 
+	@Override
 	public String asString() {
 		return Integer.toString(value);
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

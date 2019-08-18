@@ -77,6 +77,7 @@ public class OneToManyComponent {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "OneToManyComponent(data = " + data + ")";
 	}

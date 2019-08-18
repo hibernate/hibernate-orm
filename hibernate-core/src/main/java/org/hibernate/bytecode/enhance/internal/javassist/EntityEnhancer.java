@@ -47,6 +47,7 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 	private static final String DIRTY_TRACKER_IMPL = SimpleFieldTracker.class.getName();
 	private static final String COLLECTION_TRACKER_IMPL = SimpleCollectionTracker.class.getName();
 
+	@Override
 	public void enhance(CtClass managedCtClass) {
 		// add the ManagedEntity interface
 		managedCtClass.addInterface( loadCtClassFromClass( ManagedEntity.class ) );

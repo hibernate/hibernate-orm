@@ -18,6 +18,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class DefaultPreLoadEventListener implements PreLoadEventListener {
 	
+	@Override
 	public void onPreLoad(PreLoadEvent event) {
 		EntityPersister persister = event.getPersister();
 		event.getSession()

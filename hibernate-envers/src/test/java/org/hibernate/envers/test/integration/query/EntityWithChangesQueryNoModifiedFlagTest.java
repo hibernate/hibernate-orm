@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 @TestForIssue( jiraKey = "HHH-8058" )
 public class EntityWithChangesQueryNoModifiedFlagTest extends AbstractEntityWithChangesQueryTest {
 	@Test
+	@Override
 	public void testEntityRevisionsWithChangesQueryNoDeletions() {
 		try {
 			super.testEntityRevisionsWithChangesQueryNoDeletions();
@@ -31,6 +32,7 @@ public class EntityWithChangesQueryNoModifiedFlagTest extends AbstractEntityWith
 	}
 
 	@Test
+	@Override
 	public void testEntityRevisionsWithChangesQuery() {
 		try {
 			super.testEntityRevisionsWithChangesQuery();

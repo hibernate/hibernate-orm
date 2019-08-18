@@ -15,10 +15,12 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 public class SybaseASE15LockHintsTest extends AbstractLockHintTest {
 	public static final Dialect DIALECT = new SybaseASE15Dialect();
 
+	@Override
 	protected String getLockHintUsed() {
 		return "holdlock";
 	}
 
+	@Override
 	protected Dialect getDialectUnderTest() {
 		return DIALECT;
 	}

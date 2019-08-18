@@ -14,10 +14,12 @@ import javax.persistence.Embeddable;
 public class OwnerImpl implements Owner {
 	private String name;
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}

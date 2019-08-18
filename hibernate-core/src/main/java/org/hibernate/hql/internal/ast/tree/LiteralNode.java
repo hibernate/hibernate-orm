@@ -29,10 +29,12 @@ import antlr.SemanticException;
 public class LiteralNode extends AbstractSelectExpression implements HqlSqlTokenTypes, ExpectedTypeAwareNode {
 	private Type expectedType;
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}
 
+	@Override
 	public Type getDataType() {
 		if ( getExpectedType() != null ) {
 			return getExpectedType();

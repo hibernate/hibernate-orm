@@ -116,6 +116,7 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 		}
 	}
 
+	@Override
 	public PluralAttribute<?,X,?> getAttribute() {
 		return attribute;
 	}
@@ -136,6 +137,7 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 		throw new IllegalArgumentException( "Plural attribute paths cannot be further dereferenced" );
 	}
 
+	@Override
 	public Bindable<X> getModel() {
 		// the issue here is the parameterized type; X is the collection
 		// type (Map, Set, etc) while the "bindable" for a collection is the

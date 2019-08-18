@@ -222,6 +222,7 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
 	 */
 	@Deprecated
+	@Override
 	public TypeResolver getTypeResolver() {
 		return delegate.getTypeResolver();
 	}

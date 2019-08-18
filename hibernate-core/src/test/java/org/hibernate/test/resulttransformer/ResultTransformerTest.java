@@ -62,6 +62,7 @@ public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
 
 			private static final long serialVersionUID = -5815434828170704822L;
 
+			@Override
 			public Object transformTuple(Object[] arg0, String[] arg1)
 			{
 				// return only the PartnerA object from the query
@@ -69,6 +70,7 @@ public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
 			}
 
 			@SuppressWarnings("unchecked")
+			@Override
 			public List transformList(List arg0)
 			{
 				return arg0;

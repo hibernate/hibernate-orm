@@ -20,10 +20,12 @@ public class InetJavaTypeDescriptor extends AbstractTypeDescriptor<Inet> {
 		super( Inet.class );
 	}
 
+	@Override
 	public String toString(Inet value) {
 		return value.toString();
 	}
 
+	@Override
 	public Inet fromString(String string) {
 		return new Inet( string );
 	}
@@ -39,6 +41,7 @@ public class InetJavaTypeDescriptor extends AbstractTypeDescriptor<Inet> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Inet value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -52,6 +55,7 @@ public class InetJavaTypeDescriptor extends AbstractTypeDescriptor<Inet> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Inet wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

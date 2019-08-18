@@ -29,6 +29,7 @@ public class PersistentDefaultableList extends PersistentList implements Default
 	public PersistentDefaultableList() {
 	}
 
+	@Override
 	public String getDefaultValue() {
 		return ( ( DefaultableList ) this.list ).getDefaultValue();
 	}

@@ -97,10 +97,12 @@ public class Helper {
 	}
 
 	private static SqlExceptionHelper.WarningHandler WARNING_HANDLER = new SqlExceptionHelper.WarningHandlerLoggingSupport() {
+		@Override
 		public boolean doProcess() {
 			return log.isDebugEnabled();
 		}
 
+		@Override
 		public void prepare(SQLWarning warning) {
 			log.warningsCreatingTempTable( warning );
 		}

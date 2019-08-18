@@ -35,6 +35,7 @@ public class SerializableType<T extends Serializable> extends AbstractSingleColu
 		this.serializableClass = serializableClass;
 	}
 
+	@Override
 	public String getName() {
 		return (serializableClass==Serializable.class) ? "serializable" : serializableClass.getName();
 	}

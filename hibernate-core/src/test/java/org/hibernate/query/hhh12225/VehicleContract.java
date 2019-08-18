@@ -23,6 +23,7 @@ public class VehicleContract extends Contract {
 		getVehicles().add( vehicle );
 	}
 
+	@Override
 	public String toString() {
 		return String.valueOf( getId() );
 	}

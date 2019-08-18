@@ -33,6 +33,7 @@ public class TestStoreRetrieveUsingGeolatte extends AbstractTestStoreRetrieve<Ge
 			TestStoreRetrieveUsingGeolatte.class.getName()
 	);
 
+	@Override
 	protected HSMessageLogger getLogger() {
 		return LOG;
 	}

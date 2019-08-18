@@ -31,5 +31,6 @@ public interface NativeSQLStatement {
 	 */
 	public PreparedStatement prepare(Connection connection) throws SQLException;
 
+	@Override
 	public String toString();
 }

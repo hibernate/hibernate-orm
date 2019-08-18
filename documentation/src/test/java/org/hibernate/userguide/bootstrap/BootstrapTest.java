@@ -536,6 +536,7 @@ public class BootstrapTest {
             return ValidationMode.AUTO;
         }
 
+		@Override
         public Properties getProperties() {
             return properties;
         }

@@ -22,6 +22,7 @@ import org.hibernate.testing.FailureExpected;
                 "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
 )
 public class VersionedEntityWithInverseOneToManyJoinFailureExpectedTest extends AbstractEntityWithOneToManyTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersionedOneToManyJoin.hbm.xml" };
 	}

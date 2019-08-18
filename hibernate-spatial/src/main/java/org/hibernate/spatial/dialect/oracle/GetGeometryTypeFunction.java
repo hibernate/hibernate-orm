@@ -22,6 +22,7 @@ class GetGeometryTypeFunction extends SDOObjectMethod {
 		super( "Get_GType", StandardBasicTypes.STRING );
 	}
 
+	@Override
 	public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
 		final StringBuffer buf = new StringBuffer();
 		if ( args.isEmpty() ) {

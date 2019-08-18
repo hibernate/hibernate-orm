@@ -25,5 +25,6 @@ public interface HibernateIterator extends Iterator, AutoCloseable, Closeable {
 	 *
 	 * @throws JDBCException Indicates a problem releasing the underlying JDBC resources.
 	 */
+	@Override
 	void close() throws JDBCException;
 }

@@ -32,10 +32,12 @@ public abstract class BasicLoader extends Loader {
 		super(factory);
 	}
 
+	@Override
 	protected final EntityAliases[] getEntityAliases() {
 		return descriptors;
 	}
 
+	@Override
 	protected final CollectionAliases[] getCollectionAliases() {
 		return collectionDescriptors;
 	}
@@ -43,6 +45,7 @@ public abstract class BasicLoader extends Loader {
 	protected abstract String[] getSuffixes();
 	protected abstract String[] getCollectionSuffixes();
 
+	@Override
 	protected void postInstantiate() {
 		Loadable[] persisters = getEntityPersisters();
 		String[] suffixes = getSuffixes();

@@ -43,10 +43,12 @@ public class SizeOfPluralAttributeExpression
 		return path;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return "size(" + getPluralAttributePath().render( renderingContext ) + ")";
 	}

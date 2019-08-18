@@ -50,6 +50,7 @@ public class Mocks {
 			this.metadataProxy = metadataProxy;
 		}
 
+		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			final String methodName = method.getName();
 			if ( "getMetaData".equals( methodName ) ) {
@@ -94,6 +95,7 @@ public class Mocks {
 			this.minorVersion = minorVersion;
 		}
 
+		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			final String methodName = method.getName();
 			if ( "getDatabaseProductName".equals( methodName ) ) {

@@ -33,6 +33,7 @@ public class OrderContact {
     this.contact = contact;
   }
   
+  @Override
   public String toString() {
     return "[" + getContactId() + ":" + getContact() + "]";
   }

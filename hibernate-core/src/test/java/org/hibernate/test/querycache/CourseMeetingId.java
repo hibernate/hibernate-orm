@@ -50,6 +50,7 @@ public class CourseMeetingId implements Serializable {
 		this.location = location;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -76,6 +77,7 @@ public class CourseMeetingId implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = courseCode != null ? courseCode.hashCode() : 0;
 		result = 31 * result + ( day != null ? day.hashCode() : 0 );

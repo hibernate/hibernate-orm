@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public class AnsiTrimFunction extends TrimFunctionTemplate {
+	@Override
 	protected String render(Options options, String trimSource, SessionFactoryImplementor factory) {
 		return String.format(
 				"trim(%s %s from %s)",

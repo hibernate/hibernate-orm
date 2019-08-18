@@ -61,6 +61,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	 *
 	 * @return The key result-set column aliases.
 	 */
+	@Override
 	public String[] getSuffixedKeyAliases() {
 		return keyAliases;
 	}
@@ -70,6 +71,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	 *
 	 * @return The index result-set column aliases.
 	 */
+	@Override
 	public String[] getSuffixedIndexAliases() {
 		return indexAliases;
 	}
@@ -79,6 +81,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	 *
 	 * @return The element result-set column aliases.
 	 */
+	@Override
 	public String[] getSuffixedElementAliases() {
 		return elementAliases;
 	}
@@ -88,6 +91,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	 *
 	 * @return The identifier result-set column aliases.
 	 */
+	@Override
 	public String getSuffixedIdentifierAlias() {
 		return identifierAlias;
 	}
@@ -97,6 +101,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	 *
 	 * @return The uniqued column alias suffix.
 	 */
+	@Override
 	public String getSuffix() {
 		return suffix;
 	}

@@ -26,6 +26,7 @@ public class InsertsOneTransactionPerformance extends AbstractPerformanceTest {
 
 	private final static int NUMBER_INSERTS = 5000;
 
+	@Override
 	protected void doTest() {
 		EntityManager entityManager = getEntityManager();
 		entityManager.getTransaction().begin();

@@ -142,6 +142,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			this.connection = connection;
 		}
 
+		@Override
 		public <T> T execute(LobCreationContext.Callback<T> callback) {
 			try {
 				return callback.executeOnConnection( connection );
@@ -164,6 +165,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 		private JdbcLobBuilderImpl(boolean isSupported) {
 			this.isSupported = isSupported;
 		}
+		@Override
 		public Blob createBlob() throws SQLException {
 			if ( ! isSupported ) {
 				throw new SQLException( "not supported!" );
@@ -171,6 +173,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			return new JdbcBlob();
 		}
 
+		@Override
 		public Clob createClob() throws SQLException  {
 			if ( ! isSupported ) {
 				throw new SQLException( "not supported!" );
@@ -178,6 +181,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			return new JdbcClob();
 		}
 
+		@Override
 		public NClob createNClob() throws SQLException  {
 			if ( ! isSupported ) {
 				throw new SQLException( "not supported!" );
@@ -195,6 +199,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			this.metadata = createMetadataProxy( version );
 		}
 
+		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			// the only methods we are interested in are the LOB creation methods...
 			if ( args == null || args.length == 0 ) {
@@ -230,6 +235,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			this.jdbcVersion = jdbcVersion;
 		}
 
+		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			final String methodName = method.getName();
 			if ( "getJDBCMajorVersion".equals( methodName ) ) {
@@ -247,96 +253,120 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 	}
 
 	private class JdbcBlob implements Blob {
+		@Override
 		public long length() throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public byte[] getBytes(long pos, int length) throws SQLException {
 			return new byte[0];
 		}
 
+		@Override
 		public InputStream getBinaryStream() throws SQLException {
 			return null;
 		}
 
+		@Override
 		public long position(byte[] pattern, long start) throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public long position(Blob pattern, long start) throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public int setBytes(long pos, byte[] bytes) throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public OutputStream setBinaryStream(long pos) throws SQLException {
 			return null;
 		}
 
+		@Override
 		public void truncate(long len) throws SQLException {
 		}
 
+		@Override
 		public void free() throws SQLException {
 		}
 
+		@Override
 		public InputStream getBinaryStream(long pos, long length) throws SQLException {
 			return null;
 		}
 	}
 
 	private class JdbcClob implements Clob {
+		@Override
 		public long length() throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public String getSubString(long pos, int length) throws SQLException {
 			return null;
 		}
 
+		@Override
 		public Reader getCharacterStream() throws SQLException {
 			return null;
 		}
 
+		@Override
 		public InputStream getAsciiStream() throws SQLException {
 			return null;
 		}
 
+		@Override
 		public long position(String searchstr, long start) throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public long position(Clob searchstr, long start) throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public int setString(long pos, String str) throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public int setString(long pos, String str, int offset, int len) throws SQLException {
 			return 0;
 		}
 
+		@Override
 		public OutputStream setAsciiStream(long pos) throws SQLException {
 			return null;
 		}
 
+		@Override
 		public Writer setCharacterStream(long pos) throws SQLException {
 			return null;
 		}
 
+		@Override
 		public void truncate(long len) throws SQLException {
 		}
 
+		@Override
 		public void free() throws SQLException {
 		}
 
+		@Override
 		public Reader getCharacterStream(long pos, long length) throws SQLException {
 			return null;
 		}

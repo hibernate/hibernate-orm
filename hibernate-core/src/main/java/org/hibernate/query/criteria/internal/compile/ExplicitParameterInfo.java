@@ -35,10 +35,12 @@ public class ExplicitParameterInfo<T> implements Parameter<T> {
 		return name != null;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public Integer getPosition() {
 		return position;
 	}

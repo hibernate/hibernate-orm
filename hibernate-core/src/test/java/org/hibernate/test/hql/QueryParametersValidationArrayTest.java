@@ -85,6 +85,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 			super( StringArraySqlTypeDescriptor.INSTANCE, StringArrayTypeDescriptor.INSTANCE);
 		}
 
+		@Override
 		public String getName() {
 			return "string-array";
 		}
@@ -160,6 +161,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 			super(String[].class);
 		}
 
+		@Override
 		public boolean areEqual(String[] one, String[] another) {
 			if ( one == another ) {
 				return true;
@@ -167,6 +169,7 @@ public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctio
 			return !( one == null || another == null ) && Arrays.equals( one, another );
 		}
 
+		@Override
 		public String toString(String[] value) {
 			return Arrays.deepToString( value);
 		}

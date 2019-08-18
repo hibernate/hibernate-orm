@@ -55,10 +55,12 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 		return (MutabilityPlan<T>) SerializableMutabilityPlan.INSTANCE;
 	}
 
+	@Override
 	public String toString(T value) {
 		return PrimitiveByteArrayTypeDescriptor.INSTANCE.toString( toBytes( value ) );
 	}
 
+	@Override
 	public T fromString(String string) {
 		return fromBytes( PrimitiveByteArrayTypeDescriptor.INSTANCE.fromString( string ) );
 	}
@@ -81,6 +83,7 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -105,6 +108,7 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

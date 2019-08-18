@@ -22,6 +22,7 @@ public class TimeZoneTypeDescriptor extends AbstractTypeDescriptor<TimeZone> {
 	public static class TimeZoneComparator implements Comparator<TimeZone> {
 		public static final TimeZoneComparator INSTANCE = new TimeZoneComparator();
 
+		@Override
 		public int compare(TimeZone o1, TimeZone o2) {
 			return o1.getID().compareTo( o2.getID() );
 		}
@@ -31,10 +32,12 @@ public class TimeZoneTypeDescriptor extends AbstractTypeDescriptor<TimeZone> {
 		super( TimeZone.class );
 	}
 
+	@Override
 	public String toString(TimeZone value) {
 		return value.getID();
 	}
 
+	@Override
 	public TimeZone fromString(String string) {
 		return TimeZone.getTimeZone( string );
 	}
@@ -45,6 +48,7 @@ public class TimeZoneTypeDescriptor extends AbstractTypeDescriptor<TimeZone> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(TimeZone value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -55,6 +59,7 @@ public class TimeZoneTypeDescriptor extends AbstractTypeDescriptor<TimeZone> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> TimeZone wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

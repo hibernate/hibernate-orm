@@ -310,24 +310,29 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 	}
 
 	public static class TableDialect extends Dialect {
+		@Override
 		public boolean supportsSequences() {
 			return false;
 		}
 	}
 
 	public static class SequenceDialect extends Dialect {
+		@Override
 		public boolean supportsSequences() {
 			return true;
 		}
+		@Override
 		public boolean supportsPooledSequences() {
 			return false;
 		}
+		@Override
 		public String getSequenceNextValString(String sequenceName) throws MappingException {
 			return "";
 		}
 	}
 
 	public static class PooledSequenceDialect extends SequenceDialect {
+		@Override
 		public boolean supportsPooledSequences() {
 			return true;
 		}

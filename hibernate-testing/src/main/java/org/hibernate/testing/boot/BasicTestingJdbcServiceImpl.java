@@ -90,26 +90,32 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 		return jdbcConnectionAccess;
 	}
 
+	@Override
 	public Dialect getDialect() {
 		return dialect;
 	}
 
+	@Override
 	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
 		return jdbcEnvironment.getLobCreatorBuilder().buildLobCreator( lobCreationContext );
 	}
 
+	@Override
 	public ResultSetWrapper getResultSetWrapper() {
 		return new ResultSetWrapperImpl( serviceRegistry );
 	}
 
+	@Override
 	public SqlStatementLogger getSqlStatementLogger() {
 		return sqlStatementLogger;
 	}
 
+	@Override
 	public SqlExceptionHelper getSqlExceptionHelper() {
 		return jdbcEnvironment.getSqlExceptionHelper();
 	}
 
+	@Override
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
 		return jdbcEnvironment.getExtractedDatabaseMetaData();
 	}

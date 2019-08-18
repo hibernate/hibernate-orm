@@ -46,6 +46,7 @@ public class CompositeIdId implements Serializable {
     /* (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
      */
+	@Override
     public boolean equals(Object obj) {
         // not totally NP or type safe equals, but enough for the unittests. 
         CompositeIdId o = (CompositeIdId) obj;

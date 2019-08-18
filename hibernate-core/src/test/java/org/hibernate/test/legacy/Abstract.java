@@ -14,18 +14,22 @@ public abstract class Abstract extends Foo implements AbstractProxy {
 	private java.sql.Time time;
 	private Set abstracts;
 	
+	@Override
 	public java.sql.Time getTime() {
 		return time;
 	}
 	
+	@Override
 	public void setTime(java.sql.Time time) {
 		this.time = time;
 	}
 	
+	@Override
 	public Set getAbstracts() {
 		return abstracts;
 	}
 	
+	@Override
 	public void setAbstracts(Set abstracts) {
 		this.abstracts = abstracts;
 	}

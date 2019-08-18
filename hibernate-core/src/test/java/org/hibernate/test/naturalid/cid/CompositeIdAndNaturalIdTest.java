@@ -24,10 +24,12 @@ import static org.junit.Assert.assertNotNull;
  */
 public class CompositeIdAndNaturalIdTest extends BaseCoreFunctionalTestCase {
 
+	@Override
     public String[] getMappings() {
         return new String[] { "naturalid/cid/Account.hbm.xml" };
     }
 
+	@Override
     public void configure(Configuration cfg) {
         cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
         cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );

@@ -69,6 +69,7 @@ public class SecondaryEmbIdTestEntity {
 		this.s2 = s2;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -92,6 +93,7 @@ public class SecondaryEmbIdTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

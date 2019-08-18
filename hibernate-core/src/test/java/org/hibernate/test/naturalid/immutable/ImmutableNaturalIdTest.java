@@ -30,10 +30,12 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "naturalid/immutable/User.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );

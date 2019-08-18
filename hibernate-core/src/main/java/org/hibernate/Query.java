@@ -173,6 +173,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @see FlushMode
 	 */
+	@Override
 	FlushMode getHibernateFlushMode();
 
 	/**
@@ -185,6 +186,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see #getHibernateFlushMode()
 	 */
 	@SuppressWarnings("unchecked")
+	@Override
 	default Query<R> setHibernateFlushMode(FlushMode flushMode) {
 		setFlushMode( flushMode );
 		return this;
@@ -202,6 +204,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode} instead
 	 */
 	@Deprecated
+	@Override
 	Query<R> setFlushMode(FlushMode flushMode);
 
 	/**
@@ -212,6 +215,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return The FlushModeType in effect for this query.
 	 */
+	@Override
 	FlushModeType getFlushMode();
 
 	/**
@@ -226,6 +230,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see Session#getCacheMode()
 	 * @see CacheMode
 	 */
+	@Override
 	CacheMode getCacheMode();
 
 	/**
@@ -237,6 +242,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @see #getCacheMode()
 	 */
+	@Override
 	Query<R> setCacheMode(CacheMode cacheMode);
 
 	/**
@@ -251,6 +257,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE
 	 */
+	@Override
 	boolean isCacheable();
 
 	/**
@@ -262,6 +269,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @see #isCacheable
 	 */
+	@Override
 	Query<R> setCacheable(boolean cacheable);
 
 	/**
@@ -272,6 +280,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return The specified cache region name into which query results should be placed; {@code null} indicates
 	 * the default region.
 	 */
+	@Override
 	String getCacheRegion();
 
 	/**
@@ -284,6 +293,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @see #getCacheRegion()
 	 */
+	@Override
 	Query<R> setCacheRegion(String cacheRegion);
 
 	/**
@@ -295,6 +305,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see java.sql.Statement#getQueryTimeout()
 	 * @see java.sql.Statement#setQueryTimeout(int)
 	 */
+	@Override
 	Integer getTimeout();
 
 	/**
@@ -309,6 +320,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @see #getTimeout()
 	 */
+	@Override
 	Query<R> setTimeout(int timeout);
 
 	/**
@@ -324,6 +336,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see java.sql.Statement#getFetchSize()
 	 * @see java.sql.Statement#setFetchSize(int)
 	 */
+	@Override
 	Integer getFetchSize();
 
 	/**
@@ -335,6 +348,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @see #getFetchSize()
 	 */
+	@Override
 	Query<R> setFetchSize(int fetchSize);
 
 	/**
@@ -351,6 +365,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code true} if the entities and proxies loaded by the query will be put
 	 * in read-only mode; {@code false} otherwise (they will be modifiable)
 	 */
+	@Override
 	boolean isReadOnly();
 
 	/**
@@ -381,6 +396,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * are to be put in read-only mode; {@code false} indicates that entities and proxies
 	 * loaded by the query will be put in modifiable mode
 	 */
+	@Override
 	Query<R> setReadOnly(boolean readOnly);
 
 	/**
@@ -391,6 +407,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @deprecated (since 5.2) with no replacement; to be removed in 6.0
 	 */
 	@Deprecated
+	@Override
 	Type[] getReturnTypes();
 
 	/**
@@ -564,6 +581,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	<T> Query<R> setParameter(QueryParameter<T> parameter, T val);
 
+	@Override
 	<T> Query<R> setParameter(Parameter<T> param, T value);
 
 	/**
@@ -578,6 +596,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	@SuppressWarnings("unchecked")
+	@Override
 	Query<R> setParameter(String name, Object val);
 
 	/**
@@ -593,6 +612,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	@SuppressWarnings("unchecked")
+	@Override
 	Query<R> setParameter(int position, Object val);
 
 	/**

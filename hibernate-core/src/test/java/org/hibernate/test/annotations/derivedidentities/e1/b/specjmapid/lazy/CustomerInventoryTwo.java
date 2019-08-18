@@ -102,6 +102,7 @@ public class CustomerInventoryTwo implements Serializable,
       return version;
    }
 
+   @Override
    public int compare(CustomerInventoryTwo cdb1, CustomerInventoryTwo cdb2) {
       return cdb1.id.compareTo(cdb2.id);
    }

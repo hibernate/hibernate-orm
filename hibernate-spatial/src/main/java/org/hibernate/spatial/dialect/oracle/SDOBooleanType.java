@@ -23,6 +23,7 @@ class SDOBooleanType extends BooleanType {
 	 * <p/>
 	 * This type's name is <tt>sdo_boolean</tt>
 	 */
+	@Override
 	public String getName() {
 		return "sdo_boolean";
 	}
@@ -51,6 +52,7 @@ class SDOBooleanType extends BooleanType {
 		}
 	}
 
+	@Override
 	public String objectToSQLString(Boolean value, Dialect dialect) {
 		return value ? "'TRUE'" : "'FALSE'";
 	}

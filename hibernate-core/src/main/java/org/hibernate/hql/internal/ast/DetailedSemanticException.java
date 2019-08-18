@@ -35,6 +35,7 @@ public class DetailedSemanticException extends SemanticException {
 	 *
 	 * @return a string.
 	 */
+	@Override
 	public String toString() {
 		if ( cause == null || ( !showCauseMessage ) ) {
 			return super.toString();
@@ -48,6 +49,7 @@ public class DetailedSemanticException extends SemanticException {
 	 * Prints a stack trace.
 	 */
 	@AllowPrintStacktrace
+	@Override
 	public void printStackTrace() {
 		super.printStackTrace();
 		if ( cause != null ) {
@@ -61,6 +63,7 @@ public class DetailedSemanticException extends SemanticException {
 	 * @param s the print stream.
 	 */
 	@AllowPrintStacktrace
+	@Override
 	public void printStackTrace(PrintStream s) {
 		super.printStackTrace( s );
 		if ( cause != null ) {
@@ -74,6 +77,7 @@ public class DetailedSemanticException extends SemanticException {
 	 *
 	 * @param w the print writer.s
 	 */
+	@Override
 	public void printStackTrace(PrintWriter w) {
 		super.printStackTrace( w );
 		if ( cause != null ) {

@@ -37,10 +37,12 @@ public class MultipleCollectionEntity implements org.hibernate.test.event.collec
 	@JoinColumn(name = "MCE_ID", nullable = false)
 	private List<MultipleCollectionRefEntity2> refEntities2 = new ArrayList<MultipleCollectionRefEntity2>();
 
+	@Override
 	public Long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(Long id) {
 		this.id = id;
 	}

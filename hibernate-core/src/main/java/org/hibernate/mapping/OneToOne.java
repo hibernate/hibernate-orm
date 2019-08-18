@@ -45,10 +45,12 @@ public class OneToOne extends ToOne {
 		this.entityName = owner.getEntityName();
 	}
 
+	@Override
 	public String getPropertyName() {
 		return propertyName;
 	}
 
+	@Override
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName==null ? null : propertyName.intern();
 	}
@@ -61,6 +63,7 @@ public class OneToOne extends ToOne {
 		this.entityName = entityName==null ? null : entityName.intern();
 	}
 	
+	@Override
 	public Type getType() throws MappingException {
 		if ( getColumnIterator().hasNext() ) {
 			return getMetadata().getTypeResolver().getTypeFactory().specialOneToOne(
@@ -90,6 +93,7 @@ public class OneToOne extends ToOne {
 		}
 	}
 
+	@Override
 	public void createForeignKey() throws MappingException {
 		if ( constrained && referencedPropertyName==null) {
 			//TODO: handle the case of a foreign key to something other than the pk
@@ -97,6 +101,7 @@ public class OneToOne extends ToOne {
 		}
 	}
 
+	@Override
 	public java.util.List getConstraintColumns() {
 		ArrayList list = new ArrayList();
 		Iterator iter = identifier.getColumnIterator();
@@ -153,10 +158,12 @@ public class OneToOne extends ToOne {
 		this.identifier = identifier;
 	}
 
+	@Override
 	public boolean isNullable() {
 		return !constrained;
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

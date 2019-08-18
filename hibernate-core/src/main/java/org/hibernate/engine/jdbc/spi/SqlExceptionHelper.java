@@ -40,6 +40,7 @@ public class SqlExceptionHelper {
 
 	private static final SQLExceptionConverter DEFAULT_CONVERTER = new SQLStateConverter(
 			new ViolatedConstraintNameExtracter() {
+				@Override
 				public String extractConstraintName(SQLException e) {
 					return null;
 				}

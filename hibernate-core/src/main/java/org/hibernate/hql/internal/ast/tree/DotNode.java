@@ -54,6 +54,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	}
 
 	public static final IllegalCollectionDereferenceExceptionBuilder DEF_ILLEGAL_COLL_DEREF_EXCP_BUILDER = new IllegalCollectionDereferenceExceptionBuilder() {
+		@Override
 		public QueryException buildIllegalCollectionDereferenceException(String propertyName, FromReferenceNode lhs) {
 			String lhsPath = ASTUtil.getPathText( lhs );
 			return new QueryException( "illegal attempt to dereference collection [" + lhsPath + "] with element property reference [" + propertyName + "]" );
@@ -188,6 +189,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	}
 
 
+	@Override
 	public void resolveIndex(AST parent) throws SemanticException {
 		if ( isResolved() ) {
 			return;
@@ -196,6 +198,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		dereferenceCollection( (CollectionType) propertyType, true, true, null, parent );
 	}
 
+	@Override
 	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate)
 			throws SemanticException {
 		// If this dot has already been resolved, stop now.
@@ -732,6 +735,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		this.fetch = fetch;
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		String[] sqlColumns = getColumns();
 		ColumnHelper.generateScalarColumns( this, sqlColumns, i );

@@ -40,6 +40,7 @@ public class StudentDTO {
 		return courseDescription;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -60,6 +61,7 @@ public class StudentDTO {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = studentName != null ? studentName.hashCode() : 0;
 		result = 31 * result + ( courseDescription != null ? courseDescription.hashCode() : 0 );

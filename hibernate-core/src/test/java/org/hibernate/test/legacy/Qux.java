@@ -40,6 +40,7 @@ public class Qux implements Lifecycle {
 		stuff=s;
 	}
 
+	@Override
 	public boolean onSave(Session session) throws CallbackException {
 		created=true;
 		try {
@@ -53,6 +54,7 @@ public class Qux implements Lifecycle {
 		return NO_VETO;
 	}
 
+	@Override
 	public boolean onDelete(Session session) throws CallbackException {
 		deleted=true;
 		try {
@@ -65,6 +67,7 @@ public class Qux implements Lifecycle {
 		return NO_VETO;
 	}
 
+	@Override
 	public void onLoad(Session session, Serializable id) {
 		loaded=true;
 		this.session=session;
@@ -162,10 +165,12 @@ public class Qux implements Lifecycle {
 		this.childKey = childKey;
 	}
 
+	@Override
 	public boolean onUpdate(Session s) throws CallbackException {
 		return NO_VETO;
 	}
 
+	@Override
 	protected void finalize() { }
 
 	public Holder getHolder() {

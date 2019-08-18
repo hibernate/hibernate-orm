@@ -14,6 +14,7 @@ import org.hibernate.envers.RevisionListener;
 public class TestRevisionListener implements RevisionListener {
 	public static String data = "data0";
 
+	@Override
 	public void newRevision(Object revisionEntity) {
 		((ListenerRevEntity) revisionEntity).setData( data );
 	}

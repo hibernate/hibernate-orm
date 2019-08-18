@@ -1020,10 +1020,12 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		@ManyToOne(fetch = FetchType.LAZY)
 		private Settlement linked;
 
+		@Override
 		public Settlement getLinked() {
 			return linked;
 		}
 
+		@Override
 		public void setLinked(Settlement settlement) {
 			linked = settlement;
 		}

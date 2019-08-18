@@ -158,6 +158,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		 */
 		public static final JpaEntityNotFoundDelegate INSTANCE = new JpaEntityNotFoundDelegate();
 
+		@Override
 		public void handleEntityNotFound(String entityName, Serializable id) {
 			throw new EntityNotFoundException( "Unable to find " + entityName  + " with id " + id );
 		}
@@ -927,6 +928,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public EntityManagerFactory build() {
 		SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
 		populate( sfBuilder, standardServiceRegistry );

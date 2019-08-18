@@ -55,11 +55,13 @@ public class NullifExpression<T> extends ExpressionImpl<T> implements Serializab
 		return secondaryExpression;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getPrimaryExpression(), registry );
 		Helper.possibleParameter( getSecondaryExpression(), registry );
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return "nullif("
 				+ ( (Renderable) getPrimaryExpression() ).render( renderingContext )

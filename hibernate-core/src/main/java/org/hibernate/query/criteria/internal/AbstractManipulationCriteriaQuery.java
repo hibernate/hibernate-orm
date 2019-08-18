@@ -81,10 +81,12 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 		this.restriction = criteriaBuilder.and( restrictions );
 	}
 
+	@Override
 	public Predicate getRestriction() {
 		return restriction;
 	}
 
+	@Override
 	public <U> Subquery<U> subquery(Class<U> type) {
 		return new CriteriaSubqueryImpl<U>( criteriaBuilder(), type, this );
 	}
@@ -92,6 +94,7 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 
 	// compiling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public void validate() {
 		if ( root == null ) {
 			throw new IllegalStateException( "UPDATE/DELETE criteria must name root entity" );

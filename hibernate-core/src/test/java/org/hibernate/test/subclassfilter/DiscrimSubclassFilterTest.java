@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class DiscrimSubclassFilterTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public final String[] getMappings() {
 		return new String[] { "subclassfilter/discrim-subclass.hbm.xml" };
 	}

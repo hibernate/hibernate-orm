@@ -25,10 +25,12 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class IterateTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "iterate/Item.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );

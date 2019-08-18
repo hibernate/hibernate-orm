@@ -13,6 +13,7 @@ import java.util.Map;
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
 public class FunkyIdentifierGeneratorProvider implements org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider {
+	@Override
 	public Map<String, Class<?>> getStrategies() {
 		final HashMap<String, Class<?>> result = new HashMap<String, Class<?>>( 1 );
 		result.put( "funky", FunkyIdGenerator.class );

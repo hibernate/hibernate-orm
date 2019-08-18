@@ -37,16 +37,19 @@ public class JoinedIterator<T> implements Iterator<T> {
 		this.wrappedIterators = iteratorsToWrap;
 	}
 
+	@Override
 	public boolean hasNext() {
 		updateCurrentIterator();
 		return currentIterator.hasNext();
 	}
 
+	@Override
 	public T next() {
 		updateCurrentIterator();
 		return currentIterator.next();
 	}
 
+	@Override
 	public void remove() {
 		updateCurrentIterator();
 		lastUsedIterator.remove();

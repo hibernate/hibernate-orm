@@ -19,6 +19,7 @@ import org.hibernate.testing.TestForIssue;
 public class MergeMultipleEntityCopiesAllowedLoggedTest extends MergeMultipleEntityCopiesAllowedTest {
 
 	@SuppressWarnings( {"unchecked"})
+	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		options.put(

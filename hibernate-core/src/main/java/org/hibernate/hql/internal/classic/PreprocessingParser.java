@@ -52,6 +52,7 @@ public class PreprocessingParser implements Parser {
 		this.replacements = replacements;
 	}
 
+	@Override
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 
 		//handle quoted strings
@@ -122,11 +123,13 @@ public class PreprocessingParser implements Parser {
 
 	}
 
+	@Override
 	public void start(QueryTranslatorImpl q) throws QueryException {
 		quoted = false;
 		parser.start( q );
 	}
 
+	@Override
 	public void end(QueryTranslatorImpl q) throws QueryException {
 		if ( lastToken != null ) {
 			parser.token( lastToken, q );

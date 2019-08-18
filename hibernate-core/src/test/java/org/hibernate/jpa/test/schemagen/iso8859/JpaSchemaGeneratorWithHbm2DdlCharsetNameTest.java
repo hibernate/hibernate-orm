@@ -21,6 +21,7 @@ import org.hibernate.testing.RequiresDialect;
 public class JpaSchemaGeneratorWithHbm2DdlCharsetNameTest
 		extends JpaSchemaGeneratorTest {
 
+	@Override
 	public String getScriptFolderPath() {
 		return "org/hibernate/jpa/test/schemagen/iso8859/";
 	}

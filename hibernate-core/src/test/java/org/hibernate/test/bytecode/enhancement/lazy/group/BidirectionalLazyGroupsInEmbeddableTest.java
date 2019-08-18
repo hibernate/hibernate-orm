@@ -51,6 +51,7 @@ import org.junit.runner.RunWith;
 })
 public class BidirectionalLazyGroupsInEmbeddableTest extends BaseCoreFunctionalTestCase {
 
+	@Override
 	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Employer.class, Employee.class };
 	}
@@ -173,6 +174,7 @@ public class BidirectionalLazyGroupsInEmbeddableTest extends BaseCoreFunctionalT
 			this.employerContainer = employerContainer;
 		}
 
+		@Override
 		public int hashCode() {
 			if ( name != null ) {
 				return name.hashCode();
@@ -182,6 +184,7 @@ public class BidirectionalLazyGroupsInEmbeddableTest extends BaseCoreFunctionalT
 			}
 		}
 
+		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;

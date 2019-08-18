@@ -45,6 +45,7 @@ public class Ticket implements Serializable {
 		number = string;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Ticket ) ) return false;
@@ -56,6 +57,7 @@ public class Ticket implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return number.hashCode();
 	}

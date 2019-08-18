@@ -55,10 +55,12 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 		instantiator = buildInstantiator( component );
 	}
 
+	@Override
 	public Object getPropertyValue(Object component, int i) throws HibernateException {
 		return getters[i].get( component );
 	}
 
+	@Override
 	public Object[] getPropertyValues(Object component) throws HibernateException {
 		Object[] values = new Object[propertySpan];
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -67,10 +69,12 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 		return values;
 	}
 
+	@Override
 	public boolean isInstance(Object object) {
 		return instantiator.isInstance(object);
 	}
 
+	@Override
 	public void setPropertyValues(Object component, Object[] values) throws HibernateException {
 		for ( int i = 0; i < propertySpan; i++ ) {
 			setters[i].set( component, values[i], null );
@@ -80,26 +84,32 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 	/**
 	* This method does not populate the component parent
 	*/
+	@Override
 	public Object instantiate() throws HibernateException {
 		return instantiator.instantiate();
 	}
 
+	@Override
 	public Object getParent(Object component) {
 		return null;
 	}
 
+	@Override
 	public boolean hasParentProperty() {
 		return false;
 	}
 
+	@Override
 	public boolean isMethodOf(Method method) {
 		return false;
 	}
 
+	@Override
 	public void setParent(Object component, Object parent, SessionFactoryImplementor factory) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Getter getGetter(int i) {
 		return getters[i];
 	}

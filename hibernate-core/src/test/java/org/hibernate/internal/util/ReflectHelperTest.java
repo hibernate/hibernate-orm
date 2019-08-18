@@ -95,6 +95,7 @@ public class ReflectHelperTest {
 	}
 
 	class F extends D {
+		@Override
 		public Status getStatus(){
 			return OFF;
 		}

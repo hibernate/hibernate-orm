@@ -28,6 +28,7 @@ public class ChildPk implements Serializable {
 			})
 	public Parent parent;
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof ChildPk ) ) return false;
@@ -40,6 +41,7 @@ public class ChildPk implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = nthChild;

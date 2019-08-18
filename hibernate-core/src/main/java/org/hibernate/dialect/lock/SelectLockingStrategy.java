@@ -99,6 +99,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 		}
 	}
 
+	@Override
 	protected String generateLockString(int timeout) {
 		final SessionFactoryImplementor factory = getLockable().getFactory();
 		final LockOptions lockOptions = new LockOptions( getLockMode() );

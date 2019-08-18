@@ -34,18 +34,22 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 	public static class NClobMutabilityPlan implements MutabilityPlan<NClob> {
 		public static final NClobMutabilityPlan INSTANCE = new NClobMutabilityPlan();
 
+		@Override
 		public boolean isMutable() {
 			return false;
 		}
 
+		@Override
 		public NClob deepCopy(NClob value) {
 			return value;
 		}
 
+		@Override
 		public Serializable disassemble(NClob value) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 
+		@Override
 		public NClob assemble(Serializable cached) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
@@ -60,10 +64,12 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 		return value == null ? "null" : "{nclob}";
 	}
 
+	@Override
 	public String toString(NClob value) {
 		return DataHelper.extractString( value );
 	}
 
+	@Override
 	public NClob fromString(String string) {
 		return NClobProxy.generateProxy( string );
 	}
@@ -85,6 +91,7 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(final NClob value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -115,6 +122,7 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> NClob wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

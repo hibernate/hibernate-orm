@@ -38,6 +38,7 @@ public class Course implements Serializable {
 		this.courseMeetings = courseMeetings;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -58,6 +59,7 @@ public class Course implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = courseCode != null ? courseCode.hashCode() : 0;
 		result = 31 * result + ( description != null ? description.hashCode() : 0 );

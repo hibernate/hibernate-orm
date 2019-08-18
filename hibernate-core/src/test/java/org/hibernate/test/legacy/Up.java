@@ -33,11 +33,13 @@ public class Up implements Serializable {
 		id2 = l;
 	}
 	
+	@Override
 	public boolean equals(Object other) {
 		if ( !(other instanceof Up) ) return false;
 		Up that = (Up) other;
 		return this.id1.equals(that.id1) && this.id2==that.id2;
 	}
+	@Override
 	public int hashCode() {
 		return id1.hashCode();
 	}

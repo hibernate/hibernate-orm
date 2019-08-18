@@ -18,38 +18,47 @@ import javax.sql.DataSource;
  * @author Emmanuel Bernard
  */
 public class FakeDataSource implements DataSource {
+	@Override
 	public Connection getConnection() throws SQLException {
 		throw new FakeDataSourceException( "connection" );
 	}
 
+	@Override
 	public Connection getConnection(String username, String password) throws SQLException {
 		throw new FakeDataSourceException( "connection with password" );
 	}
 
+	@Override
 	public PrintWriter getLogWriter() throws SQLException {
 		throw new FakeDataSourceException( "getLogWriter" );
 	}
 
+	@Override
 	public void setLogWriter(PrintWriter out) throws SQLException {
 		throw new FakeDataSourceException( "setLogWriter" );
 	}
 
+	@Override
 	public void setLoginTimeout(int seconds) throws SQLException {
 		throw new FakeDataSourceException( "setLoginTimeout" );
 	}
 
+	@Override
 	public int getLoginTimeout() throws SQLException {
 		throw new FakeDataSourceException( "getLoginTimeout" );
 	}
 
+	@Override
 	public <T> T unwrap(Class<T> tClass) throws SQLException {
 		throw new UnsupportedOperationException("not yet supported");
 	}
 
+	@Override
 	public boolean isWrapperFor(Class<?> aClass) throws SQLException {
 		return false;
 	}
 
+	@Override
 	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
 		return null;
 	}

@@ -27,6 +27,7 @@ public class TransitiveParentEntity extends MappedGrandparentEntity {
 		this.parent = parent;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -47,12 +48,14 @@ public class TransitiveParentEntity extends MappedGrandparentEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + (parent != null ? parent.hashCode() : 0);
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "TransitiveParentEntity(" + super.toString() + ", parent = " + parent + ")";
 	}

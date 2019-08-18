@@ -1712,11 +1712,13 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {
+		@Override
 		public String extractConstraintName(SQLException sqle) {
 			return null;
 		}
 	};
 
+	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRACTER;
 	}

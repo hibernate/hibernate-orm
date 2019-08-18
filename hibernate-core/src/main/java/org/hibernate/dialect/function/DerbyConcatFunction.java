@@ -88,12 +88,15 @@ public class DerbyConcatFunction implements SQLFunction {
 					args.iterator(),
 					CAST_STRING_TRANSFORMER,
 					new StringJoinTemplate() {
+						@Override
 						public String getBeginning() {
 							return "varchar( ";
 						}
+						@Override
 						public String getSeparator() {
 							return " || ";
 						}
+						@Override
 						public String getEnding() {
 							return " )";
 						}
@@ -105,12 +108,15 @@ public class DerbyConcatFunction implements SQLFunction {
 					args.iterator(),
 					NO_TRANSFORM_STRING_TRANSFORMER,
 					new StringJoinTemplate() {
+						@Override
 						public String getBeginning() {
 							return "(";
 						}
+						@Override
 						public String getSeparator() {
 							return "||";
 						}
+						@Override
 						public String getEnding() {
 							return ")";
 						}

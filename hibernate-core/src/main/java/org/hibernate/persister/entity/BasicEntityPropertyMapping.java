@@ -19,26 +19,32 @@ public class BasicEntityPropertyMapping extends AbstractPropertyMapping {
 		this.persister = persister;
 	}
 	
+	@Override
 	public String[] getIdentifierColumnNames() {
 		return persister.getIdentifierColumnNames();
 	}
 	
+	@Override
 	public String[] getIdentifierColumnReaders() {
 		return persister.getIdentifierColumnReaders();
 	}
 	
+	@Override
 	public String[] getIdentifierColumnReaderTemplates() {
 		return persister.getIdentifierColumnReaderTemplates();
 	}
 
+	@Override
 	protected String getEntityName() {
 		return persister.getEntityName();
 	}
 
+	@Override
 	public Type getType() {
 		return persister.getType();
 	}
 
+	@Override
 	public String[] toColumns(final String alias, final String propertyName) throws QueryException {
 		return super.toColumns( 
 				AbstractEntityPersister.generateTableAlias(

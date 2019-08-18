@@ -19,6 +19,7 @@ public class ComparableComparator<T extends Comparable> implements Comparator<T>
 	public static final Comparator INSTANCE = new ComparableComparator();
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public int compare(Comparable one, Comparable another) {
 		return one.compareTo( another );
 	}

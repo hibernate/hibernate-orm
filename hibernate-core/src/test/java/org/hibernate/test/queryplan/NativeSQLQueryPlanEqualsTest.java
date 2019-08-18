@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
  * @author Michael Stevens
  */
 public class NativeSQLQueryPlanEqualsTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {};
 	}

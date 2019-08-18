@@ -27,6 +27,7 @@ public class MapLazyInitializer extends AbstractLazyInitializer implements Seria
 		return (Map) getImplementation();
 	}
 
+	@Override
 	public Class getPersistentClass() {
 		throw new UnsupportedOperationException("dynamic-map entity representation");
 	}

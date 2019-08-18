@@ -179,6 +179,7 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 		return (AssociationType) entityPersister.getSubclassPropertyType( index );
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
 				AnEntity.class,

@@ -25,10 +25,12 @@ import static org.junit.Assert.assertNull;
  * @author Gavin King
  */
 public class JoinedSubclassOneToOneTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "onetoone/joined/Person.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");

@@ -30,6 +30,7 @@ public class InnerKey implements Serializable {
 		this.bkey = bkey;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof InnerKey)) return false;
@@ -42,6 +43,7 @@ public class InnerKey implements Serializable {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (akey != null ? akey.hashCode() : 0);

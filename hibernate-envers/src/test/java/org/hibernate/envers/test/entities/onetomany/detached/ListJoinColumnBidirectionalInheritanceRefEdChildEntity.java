@@ -83,6 +83,7 @@ public class ListJoinColumnBidirectionalInheritanceRefEdChildEntity
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "ListJoinColumnBidirectionalInheritanceRefEdChildEntity(id = " + getId() +
 				", parentData = " + getParentData() + ", childData = " + childData + ")";

@@ -67,6 +67,7 @@ public class UnversionedOptimisticLockingFieldEntity {
 		this.optLocking = optLocking;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -87,6 +88,7 @@ public class UnversionedOptimisticLockingFieldEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

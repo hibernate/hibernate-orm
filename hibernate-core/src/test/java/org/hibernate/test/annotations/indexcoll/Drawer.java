@@ -47,6 +47,7 @@ public class Drawer {
 		this.dresses = dresses;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
 		if ( !( o instanceof Drawer ) ) return false;
@@ -58,6 +59,7 @@ public class Drawer {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return getId().hashCode();
 	}

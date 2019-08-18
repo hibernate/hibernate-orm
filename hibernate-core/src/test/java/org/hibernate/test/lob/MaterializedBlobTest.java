@@ -20,6 +20,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 		comment = "database/driver does not support expected LOB usage pattern"
 )
 public class MaterializedBlobTest extends LongByteArrayTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lob/MaterializedBlobMappings.hbm.xml" };
 	}

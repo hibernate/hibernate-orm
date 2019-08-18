@@ -75,10 +75,12 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 	}
 
+	@Override
 	public Class getMappedClass() {
 		return componentClass;
 	}
 
+	@Override
 	public Object[] getPropertyValues(Object component) throws HibernateException {
 		if ( component == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 			return new Object[propertySpan];
@@ -91,6 +93,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 	}
 
+	@Override
 	public void setPropertyValues(Object component, Object[] values) throws HibernateException {
 		if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			optimizer.getAccessOptimizer().setPropertyValues( component, values );
@@ -100,14 +103,17 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 	}
 
+	@Override
 	public Object getParent(Object component) {
 		return parentGetter.get( component );
 	}
 
+	@Override
 	public boolean hasParentProperty() {
 		return parentGetter != null;
 	}
 
+	@Override
 	public boolean isMethodOf(Method method) {
 		for ( int i = 0; i < propertySpan; i++ ) {
 			final Method getterMethod = getters[i].getMethod();
@@ -118,10 +124,12 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		return false;
 	}
 
+	@Override
 	public void setParent(Object component, Object parent, SessionFactoryImplementor factory) {
 		parentSetter.set( component, parent, factory );
 	}
 
+	@Override
 	protected Instantiator buildInstantiator(Component component) {
 		if ( component.isEmbedded() && ReflectHelper.isAbstractClass( this.componentClass ) ) {
 			return new ProxiedInstantiator( this.componentClass );
@@ -134,10 +142,12 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 	}
 
+	@Override
 	protected Getter buildGetter(Component component, Property prop) {
 		return prop.getGetter( this.componentClass );
 	}
 
+	@Override
 	protected Setter buildSetter(Component component, Property prop) {
 		return prop.getSetter( this.componentClass );
 	}
@@ -165,14 +175,17 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			}
 		}
 
+		@Override
 		public Object instantiate(Serializable id) {
 			throw new AssertionFailure( "ProxiedInstantiator can only be used to instantiate component" );
 		}
 
+		@Override
 		public Object instantiate() {
 			return factory.getProxy();
 		}
 
+		@Override
 		public boolean isInstance(Object object) {
 			return proxiedClass.isInstance( object );
 		}

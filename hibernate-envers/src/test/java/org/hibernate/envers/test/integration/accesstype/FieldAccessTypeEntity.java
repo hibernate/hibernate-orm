@@ -61,6 +61,7 @@ public class FieldAccessTypeEntity {
 		this.data = data;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -81,6 +82,7 @@ public class FieldAccessTypeEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);

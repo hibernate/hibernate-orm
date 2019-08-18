@@ -29,11 +29,13 @@ public class ExceptionInterceptor extends EmptyInterceptor {
 		this.allowSave = allowSave;
 	}
 
+	@Override
 	public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
 		throw new IllegalStateException( EXCEPTION_MESSAGE );
 	}
 
+	@Override
 	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
 		if (allowSave) return false;

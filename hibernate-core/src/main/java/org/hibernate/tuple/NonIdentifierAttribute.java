@@ -22,6 +22,7 @@ public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
 
 	public ValueGeneration getValueGenerationStrategy();
 
+	@Override
 	public boolean isNullable();
 
 	/**

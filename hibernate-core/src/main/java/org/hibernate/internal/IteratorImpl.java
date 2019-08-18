@@ -61,6 +61,7 @@ public final class IteratorImpl implements HibernateIterator {
 		postNext();
 	}
 
+	@Override
 	public void close() throws JDBCException {
 		if ( ps != null ) {
 			LOG.debug( "Closing iterator" );
@@ -92,10 +93,12 @@ public final class IteratorImpl implements HibernateIterator {
 		}
 	}
 
+	@Override
 	public boolean hasNext() {
 		return hasNext;
 	}
 
+	@Override
 	public Object next() throws HibernateException {
 		if ( !hasNext ) {
 			throw new NoSuchElementException( "No more results" );
@@ -138,6 +141,7 @@ public final class IteratorImpl implements HibernateIterator {
 		}
 	}
 
+	@Override
 	public void remove() {
 		if ( !single ) {
 			throw new UnsupportedOperationException( "Not a single column hibernate query result set" );

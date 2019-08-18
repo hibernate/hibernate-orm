@@ -46,10 +46,12 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 	private final List customQueryReturns = new ArrayList();
 
 
+	@Override
 	public String getSQL() {
 		return sql;
 	}
 
+	@Override
 	public Set getQuerySpaces() {
 		return querySpaces;
 	}
@@ -59,6 +61,7 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 		return paramValueBinders;
 	}
 
+	@Override
 	public List getCustomQueryReturns() {
 		return customQueryReturns;
 	}
@@ -212,30 +215,37 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 			this.aliasContext = aliasContext;
 		}
 
+		@Override
 		public boolean isEntityAlias(String alias) {
 			return getEntityPersisterByAlias( alias ) != null;
 		}
 
+		@Override
 		public SQLLoadable getEntityPersisterByAlias(String alias) {
 			return aliasContext.getEntityPersister( alias );
 		}
 
+		@Override
 		public String getEntitySuffixByAlias(String alias) {
 			return aliasContext.getEntitySuffix( alias );
 		}
 
+		@Override
 		public boolean isCollectionAlias(String alias) {
 			return getCollectionPersisterByAlias( alias ) != null;
 		}
 
+		@Override
 		public SQLLoadableCollection getCollectionPersisterByAlias(String alias) {
 			return aliasContext.getCollectionPersister( alias );
 		}
 
+		@Override
 		public String getCollectionSuffixByAlias(String alias) {
 			return aliasContext.getCollectionSuffix( alias );
 		}
 
+		@Override
 		public Map getPropertyResultsMapByAlias(String alias) {
 			return aliasContext.getPropertyResultsMap( alias );
 		}

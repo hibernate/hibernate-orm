@@ -853,10 +853,12 @@ public abstract class AbstractExpectationsFactory {
 
 	protected NativeSQLStatement createNativeSQLStatement(final String sql) {
 		return new NativeSQLStatement() {
+			@Override
 			public PreparedStatement prepare(Connection connection) throws SQLException {
 				return connection.prepareStatement( sql );
 			}
 
+			@Override
 			public String toString() {
 				return sql;
 			}
@@ -865,6 +867,7 @@ public abstract class AbstractExpectationsFactory {
 
 	protected NativeSQLStatement createNativeSQLStatementAllWKTParams(final String sql, final String wkt) {
 		return new NativeSQLStatement() {
+			@Override
 			public PreparedStatement prepare(Connection connection) throws SQLException {
 				PreparedStatement pstmt = connection.prepareStatement( sql );
 				for ( int i = 1; i <= numPlaceHoldersInSQL( sql ); i++ ) {
@@ -873,6 +876,7 @@ public abstract class AbstractExpectationsFactory {
 				return pstmt;
 			}
 
+			@Override
 			public String toString() {
 				return String.format( "sql; %s, wkt: %s", sql, wkt );
 			}
@@ -881,6 +885,7 @@ public abstract class AbstractExpectationsFactory {
 
 	protected NativeSQLStatement createNativeSQLStatement(final String sql, final Object[] params) {
 		return new NativeSQLStatement() {
+			@Override
 			public PreparedStatement prepare(Connection connection) throws SQLException {
 				PreparedStatement pstmt = connection.prepareStatement( sql );
 				int i = 1;
@@ -890,6 +895,7 @@ public abstract class AbstractExpectationsFactory {
 				return pstmt;
 			}
 
+			@Override
 			public String toString() {
 				return sql;
 			}

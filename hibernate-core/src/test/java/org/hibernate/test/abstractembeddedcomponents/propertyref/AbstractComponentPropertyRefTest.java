@@ -18,6 +18,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 public class AbstractComponentPropertyRefTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "abstractembeddedcomponents/propertyref/Mappings.hbm.xml" };
 	}

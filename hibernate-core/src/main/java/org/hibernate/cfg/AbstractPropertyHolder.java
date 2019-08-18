@@ -293,6 +293,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return override;
 	}
 
+	@Override
 	public ForeignKey getOverriddenForeignKey(String propertyName) {
 		ForeignKey result = getExactOverriddenForeignKey( propertyName );
 		if ( result == null && propertyName.contains( ".collection&&element." ) ) {

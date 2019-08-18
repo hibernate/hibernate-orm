@@ -61,6 +61,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 
 	protected abstract String getEntityName();
 
+	@Override
 	public Type toType(String propertyName) throws QueryException {
 		Type type = typesByPropertyPath.get( propertyName );
 		if ( type == null ) {
@@ -81,6 +82,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		return cols;
 	}
 
+	@Override
 	public String[] toColumns(String alias, String propertyName) throws QueryException {
 		//TODO: *two* hashmap lookups here is one too many...
 		String[] columns = columnsByPropertyPath.get( propertyName );
@@ -101,6 +103,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		return result;
 	}
 
+	@Override
 	public String[] toColumns(String propertyName) throws QueryException {
 		String[] columns = columnsByPropertyPath.get( propertyName );
 		if ( columns == null ) {

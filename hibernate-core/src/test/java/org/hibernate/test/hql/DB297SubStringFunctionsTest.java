@@ -166,6 +166,7 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 	private static class MostRecentStatementInspector implements StatementInspector {
 		private String mostRecentSql;
 
+		@Override
 		public String inspect(String sql) {
 			mostRecentSql = sql;
 			return sql;

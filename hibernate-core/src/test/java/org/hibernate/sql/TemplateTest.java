@@ -35,6 +35,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TemplateTest extends BaseUnitTestCase {
 	private static final PropertyMapping PROPERTY_MAPPING = new PropertyMapping() {
+		@Override
 		public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
 			if ( "sql".equals( propertyName ) ) {
 				return new String[] { "sql" };
@@ -54,20 +55,24 @@ public class TemplateTest extends BaseUnitTestCase {
 			throw new QueryException( "could not resolve property: " + propertyName );
 		}
 
+		@Override
 		public Type toType(String propertyName) throws QueryException {
 			return null;
 		}
 
+		@Override
 		public String[] toColumns(String alias, String propertyName) throws QueryException {
 			return new String[0];
 		}
 
+		@Override
 		public Type getType() {
 			return null;
 		}
 	};
 
 	private static final ColumnMapper MAPPER = new ColumnMapper() {
+		@Override
 		public SqlValueReference[] map(String reference) {
 			final String[] columnNames = PROPERTY_MAPPING.toColumns( reference );
 			final SqlValueReference[] result = new SqlValueReference[ columnNames.length ];

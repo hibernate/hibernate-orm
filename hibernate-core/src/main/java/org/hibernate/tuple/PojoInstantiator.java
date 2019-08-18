@@ -74,6 +74,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		constructor = ReflectHelper.getDefaultConstructor( mappedClass );
 	}
 
+	@Override
 	public Object instantiate() {
 		if ( isAbstract ) {
 			throw new InstantiationException( "Cannot instantiate abstract class or interface: ", mappedClass );
@@ -98,6 +99,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		return entity;
 	}
 
+	@Override
 	public Object instantiate(Serializable id) {
 		final boolean useEmbeddedIdentifierInstanceAsEntity = embeddedIdentifier &&
 				id != null &&
@@ -105,6 +107,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		return useEmbeddedIdentifierInstanceAsEntity ? id : instantiate();
 	}
 
+	@Override
 	public boolean isInstance(Object object) {
 		return mappedClass.isInstance( object );
 	}

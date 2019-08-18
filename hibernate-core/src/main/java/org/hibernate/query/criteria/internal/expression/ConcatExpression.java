@@ -58,11 +58,13 @@ public class ConcatExpression extends ExpressionImpl<String> implements Serializ
 		return string2;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getString1(), registry );
 		Helper.possibleParameter( getString2(), registry );
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return  '(' + ((Renderable) getString1() ).render( renderingContext )
 				+ " || "

@@ -19,8 +19,10 @@ public interface ParentWithCollection extends Entity {
 
 	Child createChild(String name);
 
+	@Override
 	Long getId();
 
+	@Override
 	void setId(Long id);
 
 	String getName();

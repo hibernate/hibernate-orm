@@ -132,6 +132,7 @@ public class TestExtraPhysicalTableTypes {
 			super( extractionContext );
 		}
 
+		@Override
 		public boolean isPhysicalTableType(String tableType) {
 			return super.isPhysicalTableType( tableType );
 		}

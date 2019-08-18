@@ -66,6 +66,7 @@ public class Order implements Serializable {
 			this.number = number;
 		}
 
+		@Override
 		public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
@@ -78,6 +79,7 @@ public class Order implements Serializable {
 			return number == id.number && customer.equals( id.customer );
 		}
 
+		@Override
 		public int hashCode() {
 			int result = customer.hashCode();
 			result = 31 * result + ( int ) ( number ^ ( number >>> 32 ) );

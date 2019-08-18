@@ -71,6 +71,7 @@ public class VersionsJoinTableTestEntity {
 		this.collection = collection;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -91,6 +92,7 @@ public class VersionsJoinTableTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -98,6 +100,7 @@ public class VersionsJoinTableTestEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "VersionsJoinTableTestEntity(id = " + id + ", data = " + data + ")";
 	}

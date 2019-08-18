@@ -39,6 +39,7 @@ public class IntegerPropertyValue implements PropertyValue {
 		this.value = value;
 	}
 
+	@Override
 	public String asString() {
 		return Integer.toString( value );
 	}

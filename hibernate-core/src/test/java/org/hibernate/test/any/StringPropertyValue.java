@@ -39,6 +39,7 @@ public class StringPropertyValue implements PropertyValue {
 		this.value = value;
 	}
 
+	@Override
 	public String asString() {
 		return value;
 	}

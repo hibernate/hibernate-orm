@@ -123,6 +123,7 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 	 *
 	 * @return String - The additional display text.
 	 */
+	@Override
 	public String getDisplayText() {
 		return "IntoClause{"
 				+ "entityName=" + getEntityName()

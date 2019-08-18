@@ -19,6 +19,7 @@ public class PostgisExpressionTemplate implements SQLExpressionTemplate {
 
 	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', ST_GeomFromText('%s'))";
 
+	@Override
 	public String toInsertSql(TestDataElement testDataElement) {
 		return String.format(
 				SQL_TEMPLATE,

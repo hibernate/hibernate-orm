@@ -28,6 +28,7 @@ public class LogicalAuditExpression implements AuditCriterion {
 		this.op = op;
 	}
 
+	@Override
 	public void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,

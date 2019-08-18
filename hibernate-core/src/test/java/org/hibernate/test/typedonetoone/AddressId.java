@@ -35,11 +35,13 @@ public class AddressId implements Serializable {
 	public void setCustomerId(String customerId) {
 		this.customerId = customerId;
 	}
+	@Override
 	public boolean equals(Object other) {
 		if ( !(other instanceof AddressId) ) return false;
 		AddressId add = (AddressId) other;
 		return type.equals(add.type) && customerId.equals(add.customerId);
 	}
+	@Override
 	public int hashCode() {
 		return customerId.hashCode() + type.hashCode();
 	}

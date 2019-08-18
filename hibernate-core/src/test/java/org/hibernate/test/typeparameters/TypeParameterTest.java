@@ -27,6 +27,7 @@ import org.junit.Test;
  * @author Michael Gloegl
  */
 public class TypeParameterTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"typeparameters/Typedef.hbm.xml",

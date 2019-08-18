@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 @RequiresDialect(H2Dialect.class)
 public class CriteriaLiteralHandlingModeAutoTest extends AbstractCriteriaLiteralHandlingModeTest {
 
+	@Override
 	protected String expectedSQL() {
 		return "select 'abc' as col_0_0_, abstractcr0_.name as col_1_0_ from Book abstractcr0_ where abstractcr0_.id=1 and abstractcr0_.name=?";
 	}

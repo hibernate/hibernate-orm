@@ -23,15 +23,18 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		super( superclass, metadataBuildingContext );
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}
 
+	@Override
 	public void setTable(Table table) {
 		this.table=table;
 		getSuperclass().addSubclassTable(table);
 	}
 
+	@Override
 	public KeyValue getKey() {
 		return key;
 	}
@@ -40,6 +43,7 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		this.key = key;
 	}
 
+	@Override
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate(mapping);
 		if ( key!=null && !key.isValid(mapping) ) {
@@ -52,10 +56,12 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		}
 	}
 
+	@Override
 	public Iterator getReferenceablePropertyIterator() {
 		return getPropertyIterator();
 	}
 
+	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept(this);
 	}

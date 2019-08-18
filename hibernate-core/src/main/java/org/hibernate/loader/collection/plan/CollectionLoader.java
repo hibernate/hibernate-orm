@@ -92,6 +92,7 @@ public class CollectionLoader extends AbstractLoadPlanBasedCollectionInitializer
 		return collectionPersister().getKeyType();
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + collectionPersister().getRole() + ')';
 	}

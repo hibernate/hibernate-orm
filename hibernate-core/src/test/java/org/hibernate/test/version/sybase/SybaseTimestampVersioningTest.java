@@ -32,6 +32,7 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialect( SybaseASE15Dialect.class )
 public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "version/sybase/User.hbm.xml" };
 	}

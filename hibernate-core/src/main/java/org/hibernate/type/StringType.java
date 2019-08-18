@@ -25,6 +25,7 @@ public class StringType
 		super( VarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "string";
 	}
@@ -34,14 +35,17 @@ public class StringType
 		return true;
 	}
 
+	@Override
 	public String objectToSQLString(String value, Dialect dialect) throws Exception {
 		return '\'' + value + '\'';
 	}
 
+	@Override
 	public String stringToObject(String xml) throws Exception {
 		return xml;
 	}
 
+	@Override
 	public String toString(String value) {
 		return value;
 	}

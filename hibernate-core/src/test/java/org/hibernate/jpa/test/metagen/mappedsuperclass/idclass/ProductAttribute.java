@@ -29,6 +29,7 @@ public class ProductAttribute extends AbstractAttribute implements Serializable 
 
 	@Id
 	@Column(name = "owner")
+	@Override
 	public String getOwner() {
 		return owner;
 	}
@@ -39,6 +40,7 @@ public class ProductAttribute extends AbstractAttribute implements Serializable 
 
 	@Id
 	@Column(name = "attribute_key")
+	@Override
 	public String getKey() {
 		return key;
 	}

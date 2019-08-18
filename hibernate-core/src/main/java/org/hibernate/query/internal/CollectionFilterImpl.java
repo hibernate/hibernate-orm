@@ -104,6 +104,7 @@ public class CollectionFilterImpl extends org.hibernate.query.internal.AbstractP
 	}
 
 	@SuppressWarnings("deprecation")
+	@Override
 	protected Object[] getPositionalParameterValues() {
 		final Object[] explicitParameterValues = super.getPositionalParameterValues();
 		final Object[] expandedParameterValues = new Object[ explicitParameterValues.length + 1 ];

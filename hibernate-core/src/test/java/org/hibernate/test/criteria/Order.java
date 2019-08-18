@@ -50,6 +50,7 @@ public class Order {
 		this.orderAddress = orderAddress;
 	}
 
+	@Override
 	public String toString() {
     return "" + getOrderId() + " - " + getLines();
   }

@@ -19,28 +19,35 @@ import javax.sql.DataSource;
  */
 public abstract class BaseDataSource implements DataSource {
 
+	@Override
 	public PrintWriter getLogWriter() throws SQLException {
 		return new PrintWriter( System.out );
 	}
 
+	@Override
 	public void setLogWriter(PrintWriter out) throws SQLException {
 	}
 
+	@Override
 	public void setLoginTimeout(int seconds) throws SQLException {
 	}
 
+	@Override
 	public int getLoginTimeout() throws SQLException {
 		return 0;
 	}
 
+	@Override
 	public <T> T unwrap(Class<T> tClass) throws SQLException {
 		return (T) this;
 	}
 
+	@Override
 	public boolean isWrapperFor(Class<?> aClass) throws SQLException {
 		return false;
 	}
 
+	@Override
 	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
 		return null;
 	}

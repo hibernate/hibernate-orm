@@ -20,10 +20,12 @@ public class JsonJavaTypeDescriptor extends AbstractTypeDescriptor<Json> {
 		super( Json.class );
 	}
 
+	@Override
 	public String toString(Json value) {
 		return value.toString();
 	}
 
+	@Override
 	public Json fromString(String string) {
 		return new Json( string );
 	}
@@ -39,6 +41,7 @@ public class JsonJavaTypeDescriptor extends AbstractTypeDescriptor<Json> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Json value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -52,6 +55,7 @@ public class JsonJavaTypeDescriptor extends AbstractTypeDescriptor<Json> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Json wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

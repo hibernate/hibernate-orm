@@ -11,14 +11,17 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 public final class ReverseComparator implements Comparator, Serializable {
+	@Override
 	public int compare(Object x, Object y) {
 		return - ( (Comparable) x ).compareTo(y);
 	}
 	
+	@Override
 	public boolean equals(Object obj) {
 		return obj instanceof ReverseComparator;
 	}
 	
+	@Override
 	public int hashCode() {
 		return 0;
 	}

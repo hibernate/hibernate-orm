@@ -156,6 +156,7 @@ public class CustomRevisionEntityTest extends BaseEntityManagerFunctionalTestCas
 	//tag::envers-revisionlog-RevisionListener-example[]
 	public static class CustomRevisionEntityListener implements RevisionListener {
 
+		@Override
 		public void newRevision( Object revisionEntity ) {
 			CustomRevisionEntity customRevisionEntity =
 				( CustomRevisionEntity ) revisionEntity;

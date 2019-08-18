@@ -160,6 +160,7 @@ public class PluralAttributeSourceIdBagImpl extends AbstractPluralAttributeSourc
 			return generator;
 		}
 
+		@Override
 		public Map<String, String> getParameters() {
 			return parameters;
 		}

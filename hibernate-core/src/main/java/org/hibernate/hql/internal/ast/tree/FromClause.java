@@ -315,6 +315,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 		return fromElementByTableAlias.keySet().contains( alias );
 	}
 
+	@Override
 	public String getDisplayText() {
 		return "FromClause{" +
 				"level=" + level +

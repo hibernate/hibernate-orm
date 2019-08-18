@@ -89,6 +89,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	}
 
 	@SuppressWarnings({"unchecked"})
+	@Override
 	public List list() throws AuditException {
 		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
 

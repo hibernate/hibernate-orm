@@ -110,6 +110,7 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 				.create( EnumSet.of( TargetType.DATABASE, TargetType.SCRIPT ), metadata() );
 	}
 
+	@Override
 	protected void afterMetadataSourcesApplied(MetadataSources metadataSources) {
 		metadataSources.addAnnotatedClass( TableWithComment.class );
 	}

@@ -48,6 +48,7 @@ import org.hibernate.type.AssociationType;
  */
 public class BasicCollectionPersister extends AbstractCollectionPersister {
 
+	@Override
 	public boolean isCascadeDeleteEnabled() {
 		return false;
 	}
@@ -167,15 +168,18 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return delete.toStatementString();
 	}
 
+	@Override
 	public boolean consumesEntityAlias() {
 		return false;
 	}
 
+	@Override
 	public boolean consumesCollectionAlias() {
 //		return !isOneToMany();
 		return true;
 	}
 
+	@Override
 	public boolean isOneToMany() {
 		return false;
 	}
@@ -333,6 +337,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return count;
 	}
 
+	@Override
 	public String selectFragment(
 			Joinable rhs,
 			String rhsAlias,

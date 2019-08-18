@@ -34,6 +34,7 @@ public class BabyCompleteEntity extends ChildCompleteEntity {
 		this.baby = baby;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -54,12 +55,14 @@ public class BabyCompleteEntity extends ChildCompleteEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + (baby != null ? baby.hashCode() : 0);
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "BabyCompleteEntity(" + super.toString() + ", baby = " + baby + ")";
 	}

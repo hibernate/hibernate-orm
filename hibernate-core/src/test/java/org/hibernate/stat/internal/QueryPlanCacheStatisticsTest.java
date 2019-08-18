@@ -39,6 +39,7 @@ public class QueryPlanCacheStatisticsTest extends BaseEntityManagerFunctionalTes
 		};
 	}
 
+	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( Environment.GENERATE_STATISTICS, "true" );
 	}

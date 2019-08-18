@@ -26,6 +26,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class GeoDBTestSupport extends TestSupport {
 
+	@Override
 	public DataSourceUtils createDataSourceUtil(ServiceRegistry serviceRegistry) {
 		super.createDataSourceUtil( serviceRegistry );
 		try {
@@ -39,14 +40,17 @@ public class GeoDBTestSupport extends TestSupport {
 		}
 	}
 
+	@Override
 	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
 		return TestData.fromFile( "h2geodb/test-geodb-data-set.xml" );
 	}
 
+	@Override
 	public JTSGeometryEquality createGeometryEquality() {
 		return new GeoDBGeometryEquality();
 	}
 
+	@Override
 	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		if ( dataSourceUtils instanceof GeoDBDataSourceUtils ) {
 			return new GeoDBExpectationsFactory( (GeoDBDataSourceUtils) dataSourceUtils );
@@ -56,6 +60,7 @@ public class GeoDBTestSupport extends TestSupport {
 		}
 	}
 
+	@Override
 	public SQLExpressionTemplate getSQLExpressionTemplate() {
 		return new GeoDBExpressionTemplate();
 	}

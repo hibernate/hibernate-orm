@@ -419,6 +419,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	public static class RollbackWork implements Work {
+		@Override
 		public void execute(Connection connection) throws SQLException {
 			connection.rollback();
 		}

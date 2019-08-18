@@ -47,14 +47,17 @@ public class CompositeElement implements Comparable, Serializable {
 	/**
 	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
+	@Override
 	public int compareTo(Object o) {
 		return ( (CompositeElement) o ).foo.compareTo(foo);
 	}
 	
+	@Override
 	public int hashCode() {
 		return foo.hashCode() + bar.hashCode();
 	}
 	
+	@Override
 	public boolean equals(Object that) {
 		CompositeElement ce = (CompositeElement) that;
 		return ce.bar.equals(bar) && ce.foo.equals(foo);

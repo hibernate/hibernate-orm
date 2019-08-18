@@ -27,10 +27,12 @@ public class CalendarTimeTypeDescriptor extends AbstractTypeDescriptor<Calendar>
 		super( Calendar.class, CalendarTypeDescriptor.CalendarMutabilityPlan.INSTANCE );
 	}
 
+	@Override
 	public String toString(Calendar value) {
 		return DateTypeDescriptor.INSTANCE.toString( value.getTime() );
 	}
 
+	@Override
 	public Calendar fromString(String string) {
 		Calendar result = new GregorianCalendar();
 		result.setTime( DateTypeDescriptor.INSTANCE.fromString( string ) );
@@ -66,6 +68,7 @@ public class CalendarTimeTypeDescriptor extends AbstractTypeDescriptor<Calendar>
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Calendar value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -88,6 +91,7 @@ public class CalendarTimeTypeDescriptor extends AbstractTypeDescriptor<Calendar>
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Calendar wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

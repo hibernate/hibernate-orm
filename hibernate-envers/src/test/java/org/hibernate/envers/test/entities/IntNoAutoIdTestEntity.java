@@ -50,6 +50,7 @@ public class IntNoAutoIdTestEntity {
 		this.numVal = numVal;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -71,6 +72,7 @@ public class IntNoAutoIdTestEntity {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int result;
 		result = (id != null ? id.hashCode() : 0);
@@ -78,6 +80,7 @@ public class IntNoAutoIdTestEntity {
 		return result;
 	}
 
+	@Override
 	public String toString() {
 		return "INATE(id = " + id + ", numVal = " + numVal + ")";
 	}

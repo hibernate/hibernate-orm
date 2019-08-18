@@ -18,10 +18,12 @@ public class Person extends org.hibernate.test.legacy.Party {
    java.lang.String nationalID;
 
 
+   @Override
   java.lang.String getId() {
     return id;
   }
 
+   @Override
   void  setId(java.lang.String newValue) {
     id = newValue;
   }

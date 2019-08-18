@@ -13,6 +13,7 @@ package org.hibernate.test.lob;
  * @author Gail Badner
  */
 public class ImageTest extends LongByteArrayTest {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "lob/ImageMappings.hbm.xml" };
 	}

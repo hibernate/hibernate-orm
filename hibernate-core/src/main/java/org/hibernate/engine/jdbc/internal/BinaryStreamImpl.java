@@ -30,15 +30,18 @@ public final class BinaryStreamImpl extends ByteArrayInputStream implements Bina
 		this.length = bytes.length;
 	}
 
+	@Override
 	public InputStream getInputStream() {
 		return this;
 	}
 
+	@Override
 	public byte[] getBytes() {
 		// from ByteArrayInputStream
 		return buf;
 	}
 
+	@Override
 	public long getLength() {
 		return length;
 	}

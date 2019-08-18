@@ -30,6 +30,7 @@ public class BasicPropertyAccessorTest extends BaseUnitTestCase {
 			this.it = it;
 		}
 
+		@Override
 		public String getIt() {
 			return it;
 		}
@@ -49,6 +50,7 @@ public class BasicPropertyAccessorTest extends BaseUnitTestCase {
 			this.it = it;
 		}
 
+		@Override
 		public String getIt() {
 			return it;
 		}

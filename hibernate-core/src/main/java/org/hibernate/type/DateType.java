@@ -27,6 +27,7 @@ public class DateType
 		super( org.hibernate.type.descriptor.sql.DateTypeDescriptor.INSTANCE, JdbcDateTypeDescriptor.INSTANCE );
 	}
 
+	@Override
 	public String getName() {
 		return "date";
 	}
@@ -44,6 +45,7 @@ public class DateType
 //		return true;
 //	}
 
+	@Override
 	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
 		final java.sql.Date jdbcDate = java.sql.Date.class.isInstance( value )
 				? ( java.sql.Date ) value
@@ -52,6 +54,7 @@ public class DateType
 		return StringType.INSTANCE.objectToSQLString( jdbcDate.toString(), dialect );
 	}
 
+	@Override
 	public Date stringToObject(String xml) {
 		return fromString( xml );
 	}

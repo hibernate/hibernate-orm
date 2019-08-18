@@ -25,16 +25,19 @@ public class SubqueryComparisonModifierExpression<Y>
 		implements Serializable {
 	public static enum Modifier {
 		ALL {
+			@Override
 			String rendered() {
 				return "all ";
 			}
 		},
 		SOME {
+			@Override
 			String rendered() {
 				return "some ";
 			}
 		},
 		ANY {
+			@Override
 			String rendered() {
 				return "any ";
 			}
@@ -63,10 +66,12 @@ public class SubqueryComparisonModifierExpression<Y>
 		return subquery;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do (the subquery should be handled directly, and the modified itself is not parameterized)
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return getModifier().rendered() + ( (Renderable) getSubquery() ).render( renderingContext );
 	}

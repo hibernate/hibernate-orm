@@ -10,10 +10,12 @@ public class SettlementTask extends Task<Settlement> {
 
 	private Settlement _linked;
 
+	@Override
 	public Settlement getLinked() {
 		return _linked;
 	}
 
+	@Override
 	public void setLinked(Settlement settlement) {
 		_linked = settlement;
 	}

@@ -22,11 +22,13 @@ import static org.junit.Assert.fail;
  */
 public class LazyLoadingNotFoundTest extends BaseCoreFunctionalTestCase {
 
+	@Override
     protected void configure(Configuration cfg) {
         super.configure(cfg);
         cfg.setProperty(Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true");
     }
 
+	@Override
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[]{
                 Parent.class,

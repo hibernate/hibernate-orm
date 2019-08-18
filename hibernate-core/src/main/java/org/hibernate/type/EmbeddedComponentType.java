@@ -29,10 +29,12 @@ public class EmbeddedComponentType extends ComponentType {
 		super( metamodel );
 	}
 
+	@Override
 	public boolean isEmbedded() {
 		return true;
 	}
 
+	@Override
 	public boolean isMethodOf(Method method) {
 		return componentTuplizer.isMethodOf( method );
 	}

@@ -36,10 +36,12 @@ public class DynamicMapInstantiator implements Instantiator {
 		}
 	}
 
+	@Override
 	public final Object instantiate(Serializable id) {
 		return instantiate();
 	}
 
+	@Override
 	public final Object instantiate() {
 		Map map = generateMap();
 		if ( entityName!=null ) {
@@ -48,6 +50,7 @@ public class DynamicMapInstantiator implements Instantiator {
 		return map;
 	}
 
+	@Override
 	public final boolean isInstance(Object object) {
 		if ( object instanceof Map ) {
 			if ( entityName == null ) {

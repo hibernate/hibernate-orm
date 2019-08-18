@@ -62,6 +62,7 @@ public class Television extends VideoSystem {
 	}
 
 	@PrePersist
+	@Override
 	public void prepareEntity() {
 		//override a super method annotated with the same
 		// event for it not to be called

@@ -42,6 +42,7 @@ public abstract class IndexedCollection extends Collection {
 	public void setIndex(Value index) {
 		this.index = index;
 	}
+	@Override
 	public final boolean isIndexed() {
 		return true;
 	}
@@ -57,6 +58,7 @@ public abstract class IndexedCollection extends Collection {
 				&& isSame( index, other.index );
 	}
 
+	@Override
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
@@ -90,6 +92,7 @@ public abstract class IndexedCollection extends Collection {
 		}
 	}
 
+	@Override
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate( mapping );
 

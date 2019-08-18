@@ -15,11 +15,13 @@ import org.hibernate.type.Type;
 
 public class PropertyInterceptor extends EmptyInterceptor {
 
+	@Override
 	public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
 		currentState[1] = Calendar.getInstance();
 		return true;
 	}
 
+	@Override
 	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
 		state[2] = Calendar.getInstance();
 		return true;

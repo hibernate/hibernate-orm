@@ -29,10 +29,12 @@ public class LongProperty implements Property {
         this.value = value;
     }
 
+	@Override
     public String asString() {
         return Long.toString(value);
     }
 
+	@Override
     public String getName() {
         return name;
     }

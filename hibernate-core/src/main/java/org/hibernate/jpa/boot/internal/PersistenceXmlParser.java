@@ -329,37 +329,38 @@ public class PersistenceXmlParser {
 			if ( children.item( i ).getNodeType() == Node.ELEMENT_NODE ) {
 				Element element = (Element) children.item( i );
 				String tag = element.getTagName();
-				if ( tag.equals( "non-jta-data-source" ) ) {
+				switch (tag) {
+				case "non-jta-data-source":
 					persistenceUnit.setNonJtaDataSource( extractContent( element ) );
-				}
-				else if ( tag.equals( "jta-data-source" ) ) {
+					break;
+				case "jta-data-source":
 					persistenceUnit.setJtaDataSource( extractContent( element ) );
-				}
-				else if ( tag.equals( "provider" ) ) {
+					break;
+				case "provider":
 					persistenceUnit.setProviderClassName( extractContent( element ) );
-				}
-				else if ( tag.equals( "class" ) ) {
+					break;
+				case "class":
 					persistenceUnit.addClasses( extractContent( element ) );
-				}
-				else if ( tag.equals( "mapping-file" ) ) {
+					break;
+				case "mapping-file":
 					persistenceUnit.addMappingFiles( extractContent( element ) );
-				}
-				else if ( tag.equals( "jar-file" ) ) {
+					break;
+				case "jar-file":
 					persistenceUnit.addJarFileUrl( ArchiveHelper.getURLFromPath( extractContent( element ) ) );
-				}
-				else if ( tag.equals( "exclude-unlisted-classes" ) ) {
+					break;
+				case "exclude-unlisted-classes":
 					persistenceUnit.setExcludeUnlistedClasses( extractBooleanContent(element, true) );
-				}
-				else if ( tag.equals( "delimited-identifiers" ) ) {
+					break;
+				case "delimited-identifiers":
 					persistenceUnit.setUseQuotedIdentifiers( true );
-				}
-				else if ( tag.equals( "validation-mode" ) ) {
+					break;
+				case "validation-mode":
 					persistenceUnit.setValidationMode( extractContent( element ) );
-				}
-				else if ( tag.equals( "shared-cache-mode" ) ) {
+					break;
+				case "shared-cache-mode":
 					persistenceUnit.setSharedCacheMode( extractContent( element ) );
-				}
-				else if ( tag.equals( "properties" ) ) {
+					break;
+				case "properties":
 					NodeList props = element.getChildNodes();
 					for ( int j = 0; j < props.getLength() ; j++ ) {
 						if ( props.item( j ).getNodeType() == Node.ELEMENT_NODE ) {
@@ -376,6 +377,9 @@ public class PersistenceXmlParser {
 							persistenceUnit.getProperties().put( propName, propValue );
 						}
 					}
+					break;
+				default:
+					break;
 				}
 			}
 		}

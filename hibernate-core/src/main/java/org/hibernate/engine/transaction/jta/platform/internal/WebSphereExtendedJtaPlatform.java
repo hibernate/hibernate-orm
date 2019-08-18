@@ -148,17 +148,20 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 
 					@Override
 					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-						if ( "afterCompletion".equals( method.getName() ) ) {
+						if ( null != method.getName() ) switch (method.getName()) {
+						case "afterCompletion":
 							int status = args[2].equals(Boolean.TRUE) ?
-									Status.STATUS_COMMITTED :
-									Status.STATUS_UNKNOWN;
+								Status.STATUS_COMMITTED :
+								Status.STATUS_UNKNOWN;
 							synchronization.afterCompletion(status);
-						}
-						else if ( "beforeCompletion".equals( method.getName() ) ) {
+							break;
+						case "beforeCompletion":
 							synchronization.beforeCompletion();
-						}
-						else if ( "toString".equals( method.getName() ) ) {
+							break;
+						case "toString":
 							return synchronization.toString();
+						default:
+							break;
 						}
 						return null;
 					}

@@ -327,23 +327,30 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 					LOG.tracef( "Allowing invocation [%s] to proceed to real (closed) session", methodName );
 				}
 				else if ( realSession.getTransaction().getStatus() != TransactionStatus.ACTIVE ) {
-					// limit the methods available if no transaction is active
-					if ( "beginTransaction".equals( methodName )
-							|| "getTransaction".equals( methodName )
-							|| "isTransactionInProgress".equals( methodName )
-							|| "setFlushMode".equals( methodName )
-							|| "getFactory".equals( methodName )
-							|| "getSessionFactory".equals( methodName )
-							|| "getTenantIdentifier".equals( methodName ) ) {
-						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session", methodName );
+					if ( null
+							== methodName ) {
+						throw new HibernateException( "Calling method '" + methodName + "' is not valid without an active transaction (Current status: "
+							+ realSession.getTransaction().getStatus() + ")" );
 					}
-					else if ( "reconnect".equals( methodName ) || "disconnect".equals( methodName ) ) {
+					else // limit the methods available if no transaction is active
+					switch (methodName) {
+					case "beginTransaction":
+					case "getTransaction":
+					case "isTransactionInProgress":
+					case "setFlushMode":
+					case "getFactory":
+					case "getSessionFactory":
+					case "getTenantIdentifier":
+						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session", methodName );
+						break;
+					case "reconnect":
+					case "disconnect":
 						// allow these (deprecated) methods to pass through
 						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session - deprecated methods", methodName );
-					}
-					else {
+						break;
+					default:
 						throw new HibernateException( "Calling method '" + methodName + "' is not valid without an active transaction (Current status: "
-								+ realSession.getTransaction().getStatus() + ")" );
+							+ realSession.getTransaction().getStatus() + ")" );
 					}
 				}
 				LOG.tracef( "Allowing proxy invocation [%s] to proceed to real session", methodName );

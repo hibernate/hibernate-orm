@@ -110,14 +110,15 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 				Method method1,
 				Object[] args) throws Exception {
 			final String name = method.getName();
-			if ( "toString".equals( name ) ) {
+			if ( null != name ) switch (name) {
+			case "toString":
 				return proxiedClassName + "@" + System.identityHashCode( object );
-			}
-			else if ( "equals".equals( name ) ) {
+			case "equals":
 				return proxiedObject == object;
-			}
-			else if ( "hashCode".equals( name ) ) {
+			case "hashCode":
 				return System.identityHashCode( object );
+			default:
+				break;
 			}
 
 			final boolean hasGetterSignature = method.getParameterCount() == 0

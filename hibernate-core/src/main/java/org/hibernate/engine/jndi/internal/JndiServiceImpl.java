@@ -69,19 +69,21 @@ public class JndiServiceImpl implements JndiService {
 			if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
 				// write the IntialContextFactory class and provider url to the result only if they are
 				// non-null; this allows the environmental defaults (if any) to remain in effect
-				if ( Environment.JNDI_CLASS.equals( propertyName ) ) {
+				switch (propertyName) {
+				case Environment.JNDI_CLASS:
 					if ( propertyValue != null ) {
 						jndiProperties.put( Context.INITIAL_CONTEXT_FACTORY, propertyValue );
 					}
-				}
-				else if ( Environment.JNDI_URL.equals( propertyName ) ) {
+					break;
+				case Environment.JNDI_URL:
 					if ( propertyValue != null ) {
 						jndiProperties.put( Context.PROVIDER_URL, propertyValue );
 					}
-				}
-				else {
+					break;
+				default:
 					final String passThruPropertyname = propertyName.substring( Environment.JNDI_PREFIX.length() + 1 );
 					jndiProperties.put( passThruPropertyname, propertyValue );
+					break;
 				}
 			}
 		}

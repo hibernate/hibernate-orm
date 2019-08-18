@@ -897,23 +897,21 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 		}
 
-		if ( "jta".equals( impl ) ) {
-//			if ( ! transactionFactory().compatibleWithJtaSynchronization() ) {
+		switch (impl) {
+		case "jta":
+			//			if ( ! transactionFactory().compatibleWithJtaSynchronization() ) {
 //				LOG.autoFlushWillNotWork();
 //			}
 			return new JTASessionContext( this );
-		}
-		else if ( "thread".equals( impl ) ) {
+		case "thread":
 			return new ThreadLocalSessionContext( this );
-		}
-		else if ( "managed".equals( impl ) ) {
+		case "managed":
 			return new ManagedSessionContext( this );
-		}
-		else {
+		default:
 			try {
 				Class implClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( impl );
 				return (CurrentSessionContext)
-						implClass.getConstructor( new Class[] { SessionFactoryImplementor.class } )
+					implClass.getConstructor( new Class[] { SessionFactoryImplementor.class } )
 						.newInstance( this );
 			}
 			catch( Throwable t ) {

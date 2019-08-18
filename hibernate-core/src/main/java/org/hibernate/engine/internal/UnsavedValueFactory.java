@@ -61,7 +61,7 @@ public class UnsavedValueFactory {
 			Getter identifierGetter,
 			JavaTypeDescriptor identifierJavaTypeDescriptor,
 			Constructor constructor) {
-		if ( unsavedValue == null ) {
+		if ( null == unsavedValue ) {
 			if ( identifierGetter != null && constructor != null ) {
 				// use the id value of a newly instantiated instance as the unsaved-value
 				final Serializable defaultValue = (Serializable) identifierGetter.get( instantiate( constructor ) );
@@ -75,19 +75,16 @@ public class UnsavedValueFactory {
 				return IdentifierValue.NULL;
 			}
 		}
-		else if ( "null".equals( unsavedValue ) ) {
+		else switch (unsavedValue) {
+		case "null":
 			return IdentifierValue.NULL;
-		}
-		else if ( "undefined".equals( unsavedValue ) ) {
+		case "undefined":
 			return IdentifierValue.UNDEFINED;
-		}
-		else if ( "none".equals( unsavedValue ) ) {
+		case "none":
 			return IdentifierValue.NONE;
-		}
-		else if ( "any".equals( unsavedValue ) ) {
+		case "any":
 			return IdentifierValue.ANY;
-		}
-		else {
+		default:
 			try {
 				// todo (6.0) : fixing this really needs something other than Type to be passed in
 				return new IdentifierValue( (Serializable) identifierJavaTypeDescriptor.fromString( unsavedValue ) );
@@ -120,7 +117,7 @@ public class UnsavedValueFactory {
 			VersionSupport versionSupport,
 			Constructor constructor) {
 		
-		if ( versionUnsavedValue == null ) {
+		if ( null == versionUnsavedValue ) {
 			if ( constructor!=null ) {
 				final Object defaultValue = versionGetter.get( instantiate( constructor ) );
 				// if the version of a newly instantiated object is not the same
@@ -133,16 +130,14 @@ public class UnsavedValueFactory {
 				return VersionValue.UNDEFINED;
 			}
 		}
-		else if ( "undefined".equals( versionUnsavedValue ) ) {
+		else switch (versionUnsavedValue) {
+		case "undefined":
 			return VersionValue.UNDEFINED;
-		}
-		else if ( "null".equals( versionUnsavedValue ) ) {
+		case "null":
 			return VersionValue.NULL;
-		}
-		else if ( "negative".equals( versionUnsavedValue ) ) {
+		case "negative":
 			return VersionValue.NEGATIVE;
-		}
-		else {
+		default:
 			// this should not happen since the DTD prevents it
 			throw new MappingException( "Could not parse version unsaved-value: " + versionUnsavedValue );
 		}

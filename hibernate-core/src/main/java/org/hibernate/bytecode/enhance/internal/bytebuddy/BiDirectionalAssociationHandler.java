@@ -287,41 +287,42 @@ final class BiDirectionalAssociationHandler implements Implementation {
 				@Override
 				public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
 					if ( owner.startsWith( Type.getInternalName( CodeTemplates.class ) ) ) {
-						if ( name.equals( "getter" ) ) {
+						switch (name) {
+						case "getter":
 							super.visitTypeInsn( Opcodes.CHECKCAST, targetEntity.getInternalName() );
 							super.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									targetEntity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + mappedBy,
-									Type.getMethodDescriptor( Type.getType( targetType.getDescriptor() ) ),
-									false
+								Opcodes.INVOKEVIRTUAL,
+								targetEntity.getInternalName(),
+								EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + mappedBy,
+								Type.getMethodDescriptor( Type.getType( targetType.getDescriptor() ) ),
+								false
 							);
-						}
-						else if ( name.equals( "setterSelf" ) ) {
+							break;
+						case "setterSelf":
 							super.visitInsn( Opcodes.POP );
 							super.visitTypeInsn( Opcodes.CHECKCAST, targetEntity.getInternalName() );
 							super.visitVarInsn( Opcodes.ALOAD, 0 );
 							super.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									targetEntity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + mappedBy,
-									Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( targetType.getDescriptor() ) ),
-									false
+								Opcodes.INVOKEVIRTUAL,
+								targetEntity.getInternalName(),
+								EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + mappedBy,
+								Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( targetType.getDescriptor() ) ),
+								false
 							);
-						}
-						else if ( name.equals( "setterNull" ) ) {
+							break;
+						case "setterNull":
 							super.visitInsn( Opcodes.POP );
 							super.visitTypeInsn( Opcodes.CHECKCAST, targetEntity.getInternalName() );
 							super.visitInsn( Opcodes.ACONST_NULL );
 							super.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									targetEntity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + mappedBy,
-									Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( targetType.getDescriptor() ) ),
-									false
+								Opcodes.INVOKEVIRTUAL,
+								targetEntity.getInternalName(),
+								EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + mappedBy,
+								Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( targetType.getDescriptor() ) ),
+								false
 							);
-						}
-						else {
+							break;
+						default:
 							throw new EnhancementException( "Unknown template method: " + name );
 						}
 					}

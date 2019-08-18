@@ -112,7 +112,8 @@ public class BasicFormatterImpl implements Formatter {
 				token = tokens.nextToken();
 				lcToken = token.toLowerCase(Locale.ROOT);
 
-				if ( "'".equals( token ) ) {
+				if ( null != token ) switch (token) {
+				case "'":{
 					String t;
 					do {
 						t = tokens.nextToken();
@@ -120,24 +121,28 @@ public class BasicFormatterImpl implements Formatter {
 					}
 					// cannot handle single quotes
 					while ( !"'".equals( t ) && tokens.hasMoreTokens() );
-				}
-				else if ( "\"".equals( token ) ) {
+						break;
+					}
+				case "\"":{
 					String t;
 					do {
 						t = tokens.nextToken();
 						token += t;
 					}
 					while ( !"\"".equals( t )  && tokens.hasMoreTokens() );
-				}
-				// SQL Server uses "[" and "]" to escape reserved words
-				// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
-				else if ( "[".equals( token ) ) {
+						break;
+					}
+				case "[":{
 					String t;
 					do {
 						t = tokens.nextToken();
 						token += t;
 					}
 					while ( !"]".equals( t ) && tokens.hasMoreTokens());
+						break;
+					}
+				default:
+					break;
 				}
 
 				if ( afterByOrSetOrFromOrSelect && ",".equals( token ) ) {

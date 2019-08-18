@@ -654,40 +654,51 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		boolean eventElement = false;
 		for ( Element element : elementsForProperty ) {
 			String elementName = element.getName();
-			if ( "pre-persist".equals( elementName ) ) {
+			if ( null != elementName ) switch (elementName) {
+			case "pre-persist":{
 				AnnotationDescriptor ad = new AnnotationDescriptor( PrePersist.class );
 				annotationList.add( AnnotationFactory.create( ad ) );
 				eventElement = true;
-			}
-			else if ( "pre-remove".equals( elementName ) ) {
+					break;
+				}
+			case "pre-remove":{
 				AnnotationDescriptor ad = new AnnotationDescriptor( PreRemove.class );
 				annotationList.add( AnnotationFactory.create( ad ) );
 				eventElement = true;
-			}
-			else if ( "pre-update".equals( elementName ) ) {
+					break;
+				}
+			case "pre-update":{
 				AnnotationDescriptor ad = new AnnotationDescriptor( PreUpdate.class );
 				annotationList.add( AnnotationFactory.create( ad ) );
 				eventElement = true;
-			}
-			else if ( "post-persist".equals( elementName ) ) {
+					break;
+				}
+			case "post-persist":{
 				AnnotationDescriptor ad = new AnnotationDescriptor( PostPersist.class );
 				annotationList.add( AnnotationFactory.create( ad ) );
 				eventElement = true;
-			}
-			else if ( "post-remove".equals( elementName ) ) {
+					break;
+				}
+			case "post-remove":{
 				AnnotationDescriptor ad = new AnnotationDescriptor( PostRemove.class );
 				annotationList.add( AnnotationFactory.create( ad ) );
 				eventElement = true;
-			}
-			else if ( "post-update".equals( elementName ) ) {
+					break;
+				}
+			case "post-update":{
 				AnnotationDescriptor ad = new AnnotationDescriptor( PostUpdate.class );
 				annotationList.add( AnnotationFactory.create( ad ) );
 				eventElement = true;
-			}
-			else if ( "post-load".equals( elementName ) ) {
+					break;
+				}
+			case "post-load":{
 				AnnotationDescriptor ad = new AnnotationDescriptor( PostLoad.class );
 				annotationList.add( AnnotationFactory.create( ad ) );
 				eventElement = true;
+					break;
+				}
+			default:
+				break;
 			}
 		}
 		if ( !eventElement && defaults.canUseJavaAnnotations() ) {
@@ -2108,26 +2119,47 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			for ( Object resultElementObject : resultSetMappingElement.elements() ) {
 				final Element resultElement = (Element) resultElementObject;
 
-				if ( "entity-result".equals( resultElement.getName() ) ) {
+				if ( null == resultElement.getName() ) {
+					// most likely the <result-class/> this code used to handle.  I have left the code here,
+					// but commented it out for now.  I'll just log a warning for now.
+					LOG.debug( "Encountered unrecognized sql-result-set-mapping sub-element : " + resultElement.getName() );
+					
+//					String clazzName = subelement.attributeValue( "result-class" );
+//					if ( StringHelper.isNotEmpty( clazzName ) ) {
+//						Class clazz;
+//						try {
+//							clazz = ReflectHelper.classForName(
+//									XMLContext.buildSafeClassName( clazzName, defaults ),
+//									JPAOverriddenAnnotationReader.class
+//							);
+//						}
+//						catch ( ClassNotFoundException e ) {
+//							throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
+//						}
+//						ann.setValue( "resultClass", clazz );
+//					}
+				}
+				else switch (resultElement.getName()) {
+				case "entity-result":
 					if ( entityResultAnnotations == null ) {
 						entityResultAnnotations = new ArrayList<>();
 					}
 					// process the <entity-result/>
 					entityResultAnnotations.add( buildEntityResult( resultElement, defaults, classLoaderAccess ) );
-				}
-				else if ( "column-result".equals( resultElement.getName() ) ) {
+					break;
+				case "column-result":
 					if ( columnResultAnnotations == null ) {
 						columnResultAnnotations = new ArrayList<>();
 					}
 					columnResultAnnotations.add( buildColumnResult( resultElement, defaults, classLoaderAccess ) );
-				}
-				else if ( "constructor-result".equals( resultElement.getName() ) ) {
+					break;
+				case "constructor-result":
 					if ( constructorResultAnnotations == null ) {
 						constructorResultAnnotations = new ArrayList<>();
 					}
 					constructorResultAnnotations.add( buildConstructorResult( resultElement, defaults, classLoaderAccess ) );
-				}
-				else {
+					break;
+				default:
 					// most likely the <result-class/> this code used to handle.  I have left the code here,
 					// but commented it out for now.  I'll just log a warning for now.
 					LOG.debug( "Encountered unrecognized sql-result-set-mapping sub-element : " + resultElement.getName() );
@@ -2146,6 +2178,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 //						}
 //						ann.setValue( "resultClass", clazz );
 //					}
+					break;
 				}
 			}
 
@@ -2592,18 +2625,19 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			String value = element.attributeValue( "discriminator-type" );
 			DiscriminatorType type = DiscriminatorType.STRING;
 			if ( value != null ) {
-				if ( "STRING".equals( value ) ) {
+				switch (value) {
+				case "STRING":
 					type = DiscriminatorType.STRING;
-				}
-				else if ( "CHAR".equals( value ) ) {
+					break;
+				case "CHAR":
 					type = DiscriminatorType.CHAR;
-				}
-				else if ( "INTEGER".equals( value ) ) {
+					break;
+				case "INTEGER":
 					type = DiscriminatorType.INTEGER;
-				}
-				else {
+					break;
+				default:
 					throw new AnnotationException(
-							"Unknown DiscrimiatorType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
+						"Unknown DiscrimiatorType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
 					);
 				}
 			}
@@ -2642,18 +2676,24 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			InheritanceType strategy = InheritanceType.SINGLE_TABLE;
 			if ( attr != null ) {
 				String value = attr.getValue();
-				if ( "SINGLE_TABLE".equals( value ) ) {
-					strategy = InheritanceType.SINGLE_TABLE;
-				}
-				else if ( "JOINED".equals( value ) ) {
-					strategy = InheritanceType.JOINED;
-				}
-				else if ( "TABLE_PER_CLASS".equals( value ) ) {
-					strategy = InheritanceType.TABLE_PER_CLASS;
-				}
-				else {
+				if ( null == value ) {
 					throw new AnnotationException(
-							"Unknown InheritanceType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
+						"Unknown InheritanceType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
+					);
+				}
+				else switch (value) {
+				case "SINGLE_TABLE":
+					strategy = InheritanceType.SINGLE_TABLE;
+					break;
+				case "JOINED":
+					strategy = InheritanceType.JOINED;
+					break;
+				case "TABLE_PER_CLASS":
+					strategy = InheritanceType.TABLE_PER_CLASS;
+					break;
+				default:
+					throw new AnnotationException(
+						"Unknown InheritanceType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
 					);
 				}
 			}

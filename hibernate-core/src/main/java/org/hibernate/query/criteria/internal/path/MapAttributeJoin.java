@@ -59,7 +59,7 @@ public class MapAttributeJoin<O,K,V>
 
 	@Override
 	protected FromImplementor<O, V> createCorrelationDelegate() {
-		return new MapAttributeJoin<O,K,V>(
+		return new MapAttributeJoin<>(
 				criteriaBuilder(),
 				getJavaType(),
 				(PathImplementor<O>) getParentPath(),
@@ -83,7 +83,7 @@ public class MapAttributeJoin<O,K,V>
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Path<K> key() {
-		final MapKeyHelpers.MapKeySource<K,V> mapKeySource = new MapKeyHelpers.MapKeySource<K,V>(
+		final MapKeyHelpers.MapKeySource<K,V> mapKeySource = new MapKeyHelpers.MapKeySource<>(
 				criteriaBuilder(),
 				getAttribute().getJavaType(),
 				this,
@@ -105,7 +105,7 @@ public class MapAttributeJoin<O,K,V>
 
 	@Override
 	public <T extends V> MapAttributeJoin<O, K, T> treatAs(Class<T> treatAsType) {
-		return new TreatedMapAttributeJoin<O,K,T>( this, treatAsType );
+		return new TreatedMapAttributeJoin<>( this, treatAsType );
 	}
 
 	public static class TreatedMapAttributeJoin<O, K, T> extends MapAttributeJoin<O, K, T> {

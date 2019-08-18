@@ -38,7 +38,7 @@ public class Order {
 	private OrderSupplemental supplemental;
 	private OrderSupplemental2 supplemental2;
 
-	private Set<Payment> payments = new HashSet<Payment>();
+	private Set<Payment> payments = new HashSet<>();
 
 	public Order() {
 	}

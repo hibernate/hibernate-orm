@@ -109,27 +109,27 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public CriteriaQuery<Object> createQuery() {
-		return new CriteriaQueryImpl<Object>( this, Object.class );
+		return new CriteriaQueryImpl<>( this, Object.class );
 	}
 
 	@Override
 	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass) {
-		return new CriteriaQueryImpl<T>( this, resultClass );
+		return new CriteriaQueryImpl<>( this, resultClass );
 	}
 
 	@Override
 	public CriteriaQuery<Tuple> createTupleQuery() {
-		return new CriteriaQueryImpl<Tuple>( this, Tuple.class );
+		return new CriteriaQueryImpl<>( this, Tuple.class );
 	}
 
 	@Override
 	public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity) {
-		return new CriteriaUpdateImpl<T>( this );
+		return new CriteriaUpdateImpl<>( this );
 	}
 
 	@Override
 	public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
-		return new CriteriaDeleteImpl<T>( this );
+		return new CriteriaDeleteImpl<>( this );
 	}
 
 
@@ -147,7 +147,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
      * or array-valued compound selection item.&quot;</i>
 	 */
 	void checkMultiselect(List<Selection<?>> selections) {
-		final HashSet<String> aliases = new HashSet<String>( CollectionHelper.determineProperSizing( selections.size() ) );
+		final HashSet<String> aliases = new HashSet<>( CollectionHelper.determineProperSizing( selections.size() ) );
 
 		for ( Selection<?> selection : selections ) {
 			if ( selection.isCompoundSelection() ) {
@@ -185,7 +185,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	 */
 	public CompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
 		checkMultiselect( selections );
-		return new CompoundSelectionImpl<Tuple>( this, Tuple.class, selections );
+		return new CompoundSelectionImpl<>( this, Tuple.class, selections );
 	}
 
 	@Override
@@ -215,7 +215,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	 */
 	public <Y> CompoundSelection<Y> array(Class<Y> type, List<Selection<?>> selections) {
 		checkMultiselect( selections );
-		return new CompoundSelectionImpl<Y>( this, type, selections );
+		return new CompoundSelectionImpl<>( this, type, selections );
 	}
 
 	@Override
@@ -234,7 +234,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	 */
 	public <Y> CompoundSelection<Y> construct(Class<Y> result, List<Selection<?>> selections) {
 		checkMultiselect( selections );
-		return new CompoundSelectionImpl<Y>( this, result, selections );
+		return new CompoundSelectionImpl<>( this, result, selections );
 	}
 
 
@@ -490,7 +490,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 			Expression<? extends Y> expression,
 			Y lowerBound,
 			Y upperBound) {
-		return new BetweenPredicate<Y>( this, expression, lowerBound, upperBound );
+		return new BetweenPredicate<>( this, expression, lowerBound, upperBound );
 	}
 
 	@Override
@@ -498,24 +498,24 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 			Expression<? extends Y> expression,
 			Expression<? extends Y> lowerBound,
 			Expression<? extends Y> upperBound) {
-		return new BetweenPredicate<Y>( this, expression, lowerBound, upperBound );
+		return new BetweenPredicate<>( this, expression, lowerBound, upperBound );
 	}
 
 	@Override
 	public <T> In<T> in(Expression<? extends T> expression) {
-		return new InPredicate<T>( this, expression );
+		return new InPredicate<>( this, expression );
 	}
 
 	public <T> In<T> in(Expression<? extends T> expression, Expression<? extends T>... values) {
-		return new InPredicate<T>( this, expression, values );
+		return new InPredicate<>( this, expression, values );
 	}
 
 	public <T> In<T> in(Expression<? extends T> expression, T... values) {
-		return new InPredicate<T>( this, expression, values );
+		return new InPredicate<>( this, expression, values );
 	}
 
 	public <T> In<T> in(Expression<? extends T> expression, Collection<T> values) {
-		return new InPredicate<T>( this, expression, values );
+		return new InPredicate<>( this, expression, values );
 	}
 
 	@Override
@@ -583,7 +583,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass) {
-		return new ParameterExpressionImpl<T>(
+		return new ParameterExpressionImpl<>(
 				this,
 				paramClass
 		);
@@ -591,7 +591,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass, String name) {
-		return new ParameterExpressionImpl<T>(
+		return new ParameterExpressionImpl<>(
 				this,
 				paramClass,
 				name
@@ -603,12 +603,12 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 		if ( value == null ) {
 			throw new IllegalArgumentException( "literal value cannot be null" );
 		}
-		return new LiteralExpression<T>( this, value );
+		return new LiteralExpression<>( this, value );
 	}
 
 	@Override
 	public <T> Expression<T> nullLiteral(Class<T> resultClass) {
-		return new NullLiteralExpression<T>( this, resultClass );
+		return new NullLiteralExpression<>( this, resultClass );
 	}
 
 
@@ -621,27 +621,27 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public <N extends Number> Expression<N> sum(Expression<N> x) {
-		return new AggregationFunction.SUM<N>( this, x );
+		return new AggregationFunction.SUM<>( this, x );
 	}
 
 	@Override
 	public Expression<Long> sumAsLong(Expression<Integer> x) {
-		return new AggregationFunction.SUM<Long>( this, x, Long.class );
+		return new AggregationFunction.SUM<>( this, x, Long.class );
 	}
 
 	@Override
 	public Expression<Double> sumAsDouble(Expression<Float> x) {
-		return new AggregationFunction.SUM<Double>( this, x, Double.class );
+		return new AggregationFunction.SUM<>( this, x, Double.class );
 	}
 
 	@Override
 	public <N extends Number> Expression<N> max(Expression<N> x) {
-		return new AggregationFunction.MAX<N>( this, x );
+		return new AggregationFunction.MAX<>( this, x );
 	}
 
 	@Override
 	public <N extends Number> Expression<N> min(Expression<N> x) {
-		return new AggregationFunction.MIN<N>( this, x );
+		return new AggregationFunction.MIN<>( this, x );
 	}
 
 	@Override
@@ -671,7 +671,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public <T> Expression<T> function(String name, Class<T> returnType, Expression<?>... arguments) {
-		return new ParameterizedFunctionExpression<T>( this, returnType, name, arguments );
+		return new ParameterizedFunctionExpression<>( this, returnType, name, arguments );
 	}
 
 	/**
@@ -683,12 +683,12 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	 * @return The function expression
 	 */
 	public <T> Expression<T> function(String name, Class<T> returnType) {
-		return new BasicFunctionExpression<T>( this, returnType, name );
+		return new BasicFunctionExpression<>( this, returnType, name );
 	}
 
 	@Override
 	public <N extends Number> Expression<N> abs(Expression<N> expression) {
-		return new AbsFunction<N>( this, expression );
+		return new AbsFunction<>( this, expression );
 	}
 
 	@Override
@@ -801,7 +801,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public <N extends Number> Expression<N> neg(Expression<N> expression) {
-		return new UnaryArithmeticOperation<N>(
+		return new UnaryArithmeticOperation<>(
 				this,
 				UnaryArithmeticOperation.Operation.UNARY_MINUS,
 				expression
@@ -817,7 +817,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType() );
 
-		return new BinaryArithmeticOperation<N>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.ADD,
@@ -835,7 +835,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType() );
 
-		return new BinaryArithmeticOperation<N>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.MULTIPLY,
@@ -853,7 +853,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType() );
 
-		return new BinaryArithmeticOperation<N>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.SUBTRACT,
@@ -871,7 +871,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), n.getClass() );
 
-		return new BinaryArithmeticOperation<N>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.ADD,
@@ -889,7 +889,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), n.getClass() );
 
-		return new BinaryArithmeticOperation<N>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.MULTIPLY,
@@ -907,7 +907,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), n.getClass() );
 
-		return new BinaryArithmeticOperation<N>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.SUBTRACT,
@@ -925,7 +925,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( n.getClass(), expression.getJavaType() );
 
-		return new BinaryArithmeticOperation<N>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.ADD,
@@ -961,7 +961,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( n.getClass(), expression.getJavaType() );
 
-		return new BinaryArithmeticOperation<N>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.SUBTRACT,
@@ -979,7 +979,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType(), true );
 
-		return new BinaryArithmeticOperation<Number>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.DIVIDE,
@@ -997,7 +997,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), number.getClass(), true );
 
-		return new BinaryArithmeticOperation<Number>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.DIVIDE,
@@ -1015,7 +1015,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 		final Class resultType = BinaryArithmeticOperation.determineResultType( number.getClass(), expression.getJavaType(), true );
 
-		return new BinaryArithmeticOperation<Number>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				resultType,
 				BinaryArithmeticOperation.Operation.DIVIDE,
@@ -1030,7 +1030,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 			throw new IllegalArgumentException( "arguments to mod() cannot be null" );
 		}
 
-		return new BinaryArithmeticOperation<Integer>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				Integer.class,
 				BinaryArithmeticOperation.Operation.MOD,
@@ -1045,7 +1045,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 			throw new IllegalArgumentException( "arguments to mod() cannot be null" );
 		}
 
-		return new BinaryArithmeticOperation<Integer>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				Integer.class,
 				BinaryArithmeticOperation.Operation.MOD,
@@ -1060,7 +1060,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 			throw new IllegalArgumentException( "arguments to mod() cannot be null" );
 		}
 
-		return new BinaryArithmeticOperation<Integer>(
+		return new BinaryArithmeticOperation<>(
 				this,
 				Integer.class,
 				BinaryArithmeticOperation.Operation.MOD,
@@ -1159,7 +1159,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> Expression<Y> all(Subquery<Y> subquery) {
-		return new SubqueryComparisonModifierExpression<Y>(
+		return new SubqueryComparisonModifierExpression<>(
 				this,
 				(Class<Y>) subquery.getJavaType(),
 				subquery,
@@ -1170,7 +1170,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> Expression<Y> some(Subquery<Y> subquery) {
-		return new SubqueryComparisonModifierExpression<Y>(
+		return new SubqueryComparisonModifierExpression<>(
 				this,
 				(Class<Y>) subquery.getJavaType(),
 				subquery,
@@ -1181,7 +1181,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> Expression<Y> any(Subquery<Y> subquery) {
-		return new SubqueryComparisonModifierExpression<Y>(
+		return new SubqueryComparisonModifierExpression<>(
 				this,
 				(Class<Y>) subquery.getJavaType(),
 				subquery,
@@ -1199,7 +1199,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	}
 
 	public <Y> Expression<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Expression<? extends Y> exp2) {
-		return new CoalesceExpression<Y>( this, type ).value( exp1 ).value( exp2 );
+		return new CoalesceExpression<>( this, type ).value( exp1 ).value( exp2 );
 	}
 
 	@Override
@@ -1209,7 +1209,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	}
 
 	public <Y> Expression<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Y exp2) {
-		return new CoalesceExpression<Y>( this, type ).value( exp1 ).value( exp2 );
+		return new CoalesceExpression<>( this, type ).value( exp1 ).value( exp2 );
 	}
 
 	@Override
@@ -1218,7 +1218,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	}
 
 	public <T> Coalesce<T> coalesce(Class<T> type) {
-		return new CoalesceExpression<T>( this, type );
+		return new CoalesceExpression<>( this, type );
 	}
 
 	@Override
@@ -1251,7 +1251,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	}
 
 	public <Y> Expression<Y> nullif(Class<Y> type, Expression<Y> exp1, Y exp2) {
-		return new NullifExpression<Y>( this, type, exp1, exp2 );
+		return new NullifExpression<>( this, type, exp1, exp2 );
 	}
 
 	@Override
@@ -1260,7 +1260,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	}
 
 	public <C, R> SimpleCase<C, R> selectCase(Class<R> type, Expression<? extends C> expression) {
-		return new SimpleCaseExpression<C, R>( this, type, expression );
+		return new SimpleCaseExpression<>( this, type, expression );
 	}
 
 	@Override
@@ -1269,7 +1269,7 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 	}
 
 	public <R> Case<R> selectCase(Class<R> type) {
-		return new SearchedCaseExpression<R>( this, type );
+		return new SearchedCaseExpression<>( this, type );
 	}
 
 	@Override

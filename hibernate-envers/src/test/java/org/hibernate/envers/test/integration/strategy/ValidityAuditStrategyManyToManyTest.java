@@ -78,7 +78,7 @@ public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctional
 		SetOwningEntity owningEntity = getEntityManager().find( SetOwningEntity.class, ing_id );
 		SetOwnedEntity ownedEntity = getEntityManager().find( SetOwnedEntity.class, ed_id );
 
-		owningEntity.setReferences( new HashSet<SetOwnedEntity>() );
+		owningEntity.setReferences( new HashSet<>() );
 		owningEntity.getReferences().add( ownedEntity );
 
 		em.getTransaction().commit();
@@ -154,7 +154,7 @@ public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctional
 
 	private SetOwningEntity createOwningEntity(SetOwnedEntity... owned) {
 		SetOwningEntity result = new SetOwningEntity( ing_id, "parent" );
-		result.setReferences( new HashSet<SetOwnedEntity>() );
+		result.setReferences( new HashSet<>() );
 		for ( SetOwnedEntity setOwnedEntity : owned ) {
 			result.getReferences().add( setOwnedEntity );
 		}
@@ -164,7 +164,7 @@ public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctional
 
 	private SetOwnedEntity createOwnedEntity(SetOwningEntity... owning) {
 		SetOwnedEntity result = new SetOwnedEntity( ed_id, "child" );
-		result.setReferencing( new HashSet<SetOwningEntity>() );
+		result.setReferencing( new HashSet<>() );
 		for ( SetOwningEntity setOwningEntity : owning ) {
 			result.getReferencing().add( setOwningEntity );
 		}

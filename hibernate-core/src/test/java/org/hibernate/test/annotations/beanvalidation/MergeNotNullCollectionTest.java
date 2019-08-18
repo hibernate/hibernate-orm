@@ -49,7 +49,7 @@ public class MergeNotNullCollectionTest extends BaseCoreFunctionalTestCase {
 		Child child = new Child();
 		child.id = 1L;
 
-		List<Child> children = new ArrayList<Child>();
+		List<Child> children = new ArrayList<>();
 		children.add( child );
 
 		child.setParent( parent );

@@ -57,7 +57,7 @@ public class CompoundSelectionImpl<X>
 			return null;
 		}
 		boolean foundHandlers = false;
-		ArrayList<ValueHandlerFactory.ValueHandler> valueHandlers = new ArrayList<ValueHandlerFactory.ValueHandler>();
+		ArrayList<ValueHandlerFactory.ValueHandler> valueHandlers = new ArrayList<>();
 		for ( Selection selection : getCompoundSelectionItems() ) {
 			ValueHandlerFactory.ValueHandler valueHandler = ( (TupleElementImplementor) selection ).getValueHandler();
 			valueHandlers.add( valueHandler );

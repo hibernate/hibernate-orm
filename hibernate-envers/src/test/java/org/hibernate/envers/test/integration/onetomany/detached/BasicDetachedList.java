@@ -48,7 +48,7 @@ public class BasicDetachedList extends BaseEnversJPAFunctionalTestCase {
 		em.persist( str1 );
 		em.persist( str2 );
 
-		coll1.setCollection( new ArrayList<StrTestEntity>() );
+		coll1.setCollection( new ArrayList<>() );
 		coll1.getCollection().add( str1 );
 		em.persist( coll1 );
 

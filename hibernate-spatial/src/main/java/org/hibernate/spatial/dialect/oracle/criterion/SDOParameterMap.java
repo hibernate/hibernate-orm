@@ -48,7 +48,7 @@ public class SDOParameterMap {
 	 * The querytype parameter
 	 */
 	public static final String QUERYTYPE = "querytype";
-	private Map<String, Object> params = new HashMap<String, Object>();
+	private Map<String, Object> params = new HashMap<>();
 
 	/**
 	 * Constructs an empty instance

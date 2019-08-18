@@ -57,7 +57,7 @@ public class QueryStructure<T> implements Serializable {
 
 	private boolean distinct;
 	private Selection<? extends T> selection;
-	private Set<Root<?>> roots = new LinkedHashSet<Root<?>>();
+	private Set<Root<?>> roots = new LinkedHashSet<>();
 	private Set<FromImplementor> correlationRoots;
 	private Predicate restriction;
 	private List<Expression<?>> groupings = Collections.emptyList();
@@ -68,7 +68,7 @@ public class QueryStructure<T> implements Serializable {
 	// PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Set<ParameterExpression<?>> getParameters() {
-		final Set<ParameterExpression<?>> parameters = new LinkedHashSet<ParameterExpression<?>>();
+		final Set<ParameterExpression<?>> parameters = new LinkedHashSet<>();
 		final ParameterRegistry registry = new ParameterRegistry() {
 			public void registerParameter(ParameterExpression<?> parameter) {
 				parameters.add( parameter );
@@ -132,7 +132,7 @@ public class QueryStructure<T> implements Serializable {
 	}
 
 	public <X> Root<X> from(EntityType<X> entityType) {
-		RootImpl<X> root = new RootImpl<X>( criteriaBuilder, entityType );
+		RootImpl<X> root = new RootImpl<>( criteriaBuilder, entityType );
 		roots.add( root );
 		return root;
 	}
@@ -145,7 +145,7 @@ public class QueryStructure<T> implements Serializable {
 			throw new IllegalStateException( "Query is not identified as sub-query" );
 		}
 		if ( correlationRoots == null ) {
-			correlationRoots = new HashSet<FromImplementor>();
+			correlationRoots = new HashSet<>();
 		}
 		correlationRoots.add( fromImplementor );
 	}
@@ -156,7 +156,7 @@ public class QueryStructure<T> implements Serializable {
 		}
 		final Set<Join<?, ?>> correlatedJoins;
 		if ( correlationRoots != null ) {
-			correlatedJoins = new HashSet<Join<?,?>>();
+			correlatedJoins = new HashSet<>();
 			for ( FromImplementor<?,?> correlationRoot : correlationRoots ) {
 				if (correlationRoot instanceof Join<?,?> && correlationRoot.isCorrelated()) {
 					correlatedJoins.add( (Join<?,?>) correlationRoot );
@@ -218,13 +218,13 @@ public class QueryStructure<T> implements Serializable {
 
 	public List<Subquery<?>> internalGetSubqueries() {
 		if ( subqueries == null ) {
-			subqueries = new ArrayList<Subquery<?>>();
+			subqueries = new ArrayList<>();
 		}
 		return subqueries;
 	}
 
 	public <U> Subquery<U> subquery(Class<U> subqueryType) {
-		CriteriaSubqueryImpl<U> subquery = new CriteriaSubqueryImpl<U>( criteriaBuilder, subqueryType, owner );
+		CriteriaSubqueryImpl<U> subquery = new CriteriaSubqueryImpl<>( criteriaBuilder, subqueryType, owner );
 		internalGetSubqueries().add( subquery );
 		return subquery;
 	}

@@ -110,7 +110,7 @@ public class GeoDbWkb {
 				.add( env.upperRight().getCoordinate( 0 ), env.upperRight().getCoordinate( 1 ) )
 				.add( env.lowerLeft().getCoordinate( 0 ), env.lowerLeft().getCoordinate( 1 ) )
 				.toPositionSequence();
-		return new Polygon<C2D>( ps, CoordinateReferenceSystems.PROJECTED_2D_METER );
+		return new Polygon<>( ps, CoordinateReferenceSystems.PROJECTED_2D_METER );
 	}
 
 	private static ByteBuffer toByteBuffer(Blob blob) {

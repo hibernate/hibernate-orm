@@ -23,7 +23,7 @@ public class BigDecimalDescriptorTest extends AbstractDescriptorTest<BigDecimal>
 
 	@Override
 	protected Data<BigDecimal> getTestData() {
-		return new Data<BigDecimal>( original, copy, different );
+		return new Data<>( original, copy, different );
 	}
 
 	@Override

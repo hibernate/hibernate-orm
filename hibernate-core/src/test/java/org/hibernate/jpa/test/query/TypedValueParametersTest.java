@@ -165,7 +165,7 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 				return null;
 			}
 
-			List<String> list = new ArrayList<String>();
+			List<String> list = new ArrayList<>();
 			int lastIndex = 0, index;
 
 			while ((index = string.indexOf('|', lastIndex)) != -1) {
@@ -196,7 +196,7 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 		@Override
 		@SuppressWarnings("unchecked")
 		public Object deepCopy(final Object o) throws HibernateException {
-			return o == null ? null : new ArrayList<String>((List<String>) o);
+			return o == null ? null : new ArrayList<>((List<String>) o);
 		}
 
 		@Override

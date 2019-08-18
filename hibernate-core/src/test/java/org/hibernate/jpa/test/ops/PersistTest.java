@@ -177,8 +177,8 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 		Employer er = new Employer();
 		Employee ee = new Employee();
 		em.persist( ee );
-		Collection<Employee> erColl = new ArrayList<Employee>();
-		Collection<Employer> eeColl = new ArrayList<Employer>();
+		Collection<Employee> erColl = new ArrayList<>();
+		Collection<Employer> eeColl = new ArrayList<>();
 		erColl.add( ee );
 		eeColl.add( er );
 		er.setEmployees( erColl );

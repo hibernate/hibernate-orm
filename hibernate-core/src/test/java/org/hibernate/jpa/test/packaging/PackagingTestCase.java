@@ -119,7 +119,7 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 	}
 
 	protected void addPackageToClasspath(File... files) throws MalformedURLException {
-		List<URL> urlList = new ArrayList<URL>();
+		List<URL> urlList = new ArrayList<>();
 		for ( File file : files ) {
 			urlList.add( file.toURL() );
 		}
@@ -130,7 +130,7 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 	}
 
 	protected void addPackageToClasspath(URL... urls) throws MalformedURLException {
-		List<URL> urlList = new ArrayList<URL>();
+		List<URL> urlList = new ArrayList<>();
 		urlList.addAll( Arrays.asList( urls ) );
 		URLClassLoader classLoader = new URLClassLoader(
 				urlList.toArray( new URL[urlList.size()] ), originalClassLoader

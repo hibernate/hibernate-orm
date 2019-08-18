@@ -163,7 +163,7 @@ public class BinaryArithmeticOperation<N extends Number>
 		super( criteriaBuilder, javaType );
 		this.operator = operator;
 		this.lhs = lhs;
-		this.rhs = new LiteralExpression<N>( criteriaBuilder, rhs );
+		this.rhs = new LiteralExpression<>( criteriaBuilder, rhs );
 	}
 
 	/**
@@ -183,7 +183,7 @@ public class BinaryArithmeticOperation<N extends Number>
 			Expression<? extends N> rhs) {
 		super( criteriaBuilder, javaType );
 		this.operator = operator;
-		this.lhs = new LiteralExpression<N>( criteriaBuilder, lhs );
+		this.lhs = new LiteralExpression<>( criteriaBuilder, lhs );
 		this.rhs = rhs;
 	}
 	public Operation getOperator() {

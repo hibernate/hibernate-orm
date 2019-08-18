@@ -234,7 +234,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private <T> List<T> copy(List<T> source) {
-		ArrayList<T> copy = new ArrayList<T>( source.size() );
+		ArrayList<T> copy = new ArrayList<>( source.size() );
 		copy.addAll( source );
 		return copy;
 	}

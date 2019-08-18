@@ -21,7 +21,7 @@ import javax.persistence.OneToMany;
 @Entity
 public class PoliticalParty {
 	private String name;
-	private Set<Politician> politicians = new HashSet<Politician>();
+	private Set<Politician> politicians = new HashSet<>();
 
 	@Id
 	@Column(columnDefinition = "VARCHAR(60)")

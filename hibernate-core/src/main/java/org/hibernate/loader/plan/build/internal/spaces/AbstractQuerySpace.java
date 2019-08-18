@@ -85,7 +85,7 @@ public abstract class AbstractQuerySpace implements QuerySpace {
 
 	protected List<Join> internalGetJoins() {
 		if ( joins == null ) {
-			joins = new ArrayList<Join>();
+			joins = new ArrayList<>();
 		}
 
 		return joins;

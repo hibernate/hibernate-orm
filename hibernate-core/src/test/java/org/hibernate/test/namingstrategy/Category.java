@@ -29,7 +29,7 @@ import org.hibernate.test.namingstrategy.Item;
 public class Category {
 
 	private Long id;
-	private Set<Item> items = new HashSet<Item>();
+	private Set<Item> items = new HashSet<>();
 
 	public Category() {
 	}

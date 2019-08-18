@@ -53,11 +53,11 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		fnac.setName( "Fnac" );
 		KnownClient emmanuel = new KnownClient();
 		emmanuel.setName( "Emmanuel" );
-		emmanuel.setStores( new HashSet<Store>() );
-		fnac.setCustomers( new HashSet<KnownClient>() );
+		emmanuel.setStores( new HashSet<>() );
+		fnac.setCustomers( new HashSet<>() );
 		fnac.getCustomers().add( emmanuel );
 		emmanuel.getStores().add( fnac );
-		fnac.setImplantedIn( new HashSet<City>() );
+		fnac.setImplantedIn( new HashSet<>() );
 		City paris = new City();
 		fnac.getImplantedIn().add( paris );
 		paris.setName( "Paris" );
@@ -105,8 +105,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		fnac.setName( "Fnac" );
 		Supplier emi = new Supplier();
 		emi.setName( "Emmanuel" );
-		emi.setSuppStores( new HashSet<Store>() );
-		fnac.setSuppliers( new HashSet<Supplier>() );
+		emi.setSuppStores( new HashSet<>() );
+		fnac.setSuppliers( new HashSet<>() );
 		fnac.getSuppliers().add( emi );
 		emi.getSuppStores().add( fnac );
 		s.persist( fnac );
@@ -140,9 +140,9 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		womanPk.setFirstName( "Emma" );
 		womanPk.setLastName( "Peel" );
 		woman.setId( womanPk );
-		woman.setCats( new HashSet<Cat>() );
+		woman.setCats( new HashSet<>() );
 		woman.getCats().add( cat );
-		cat.setHumanContacts( new HashSet<Woman>() );
+		cat.setHumanContacts( new HashSet<>() );
 		cat.getHumanContacts().add( woman );
 		s.persist( woman );
 		s.persist( cat );
@@ -182,8 +182,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		fnac.setName( "Fnac" );
 		Supplier emi = new Supplier();
 		emi.setName( "Emmanuel" );
-		emi.setSuppStores( new HashSet<Store>() );
-		fnac.setSuppliers( new HashSet<Supplier>() );
+		emi.setSuppStores( new HashSet<>() );
+		fnac.setSuppliers( new HashSet<>() );
 		fnac.getSuppliers().add( emi );
 		emi.getSuppStores().add( fnac );
 		s.persist( fnac );
@@ -475,19 +475,19 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		Woman w2 = new Woman();
 		w2.setId( w2pk );
 
-		Set<Woman> womens = new HashSet<Woman>();
+		Set<Woman> womens = new HashSet<>();
 		womens.add( w1 );
 		m1.setWomens( womens );
-		Set<Woman> womens2 = new HashSet<Woman>();
+		Set<Woman> womens2 = new HashSet<>();
 		womens2.add( w1 );
 		womens2.add( w2 );
 		m2.setWomens( womens2 );
 
-		Set<Man> mens = new HashSet<Man>();
+		Set<Man> mens = new HashSet<>();
 		mens.add( m1 );
 		mens.add( m2 );
 		w1.setMens( mens );
-		Set<Man> mens2 = new HashSet<Man>();
+		Set<Man> mens2 = new HashSet<>();
 		mens2.add( m2 );
 		w2.setMens( mens2 );
 
@@ -517,7 +517,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		Permission readAccess = new Permission();
 		readAccess.setPermission( "read" );
 		readAccess.setExpirationDate( new Date() );
-		Collection<Permission> coll = new ArrayList<Permission>( 2 );
+		Collection<Permission> coll = new ArrayList<>( 2 );
 		coll.add( readAccess );
 		coll.add( readAccess );
 		Group group = new Group();
@@ -548,7 +548,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		Permission writeAccess = new Permission();
 		writeAccess.setPermission( "write" );
 		writeAccess.setExpirationDate( new Date( new Date().getTime() - 10*60*1000 ) );
-		Collection<Permission> coll = new ArrayList<Permission>( 2 );
+		Collection<Permission> coll = new ArrayList<>( 2 );
 		coll.add( readAccess );
 		coll.add( writeAccess );
 		Group group = new Group();
@@ -582,7 +582,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		executeAccess.setPermission( "execute" );
 		executeAccess.setExpirationDate( new Date( new Date().getTime() - 5*60*1000 ) );
 		
-		Set<Permission> coll = new HashSet<Permission>( 3 );
+		Set<Permission> coll = new HashSet<>( 3 );
 		coll.add( readAccess );
 		coll.add( writeAccess );
 		coll.add( executeAccess );
@@ -687,8 +687,8 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		Employee e = new Employee();
 		e.setName( "Sharon" );
-		List<PhoneNumber> phoneNumbers = new ArrayList<PhoneNumber>();
-		Collection<Employee> employees = new ArrayList<Employee>();
+		List<PhoneNumber> phoneNumbers = new ArrayList<>();
+		Collection<Employee> employees = new ArrayList<>();
 		employees.add( e );
 		ContactInfo contactInfo = new ContactInfo();
 		PhoneNumber number = new PhoneNumber();
@@ -727,7 +727,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		JobInfo job = new JobInfo();
 		job.setJobDescription( "Sushi Chef" );
 		ProgramManager pm = new ProgramManager();
-		Collection<Employee> employees = new ArrayList<Employee>();
+		Collection<Employee> employees = new ArrayList<>();
 		employees.add(e);
 		pm.setManages( employees );
 		job.setPm(pm);

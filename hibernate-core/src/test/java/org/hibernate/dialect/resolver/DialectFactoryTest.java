@@ -52,7 +52,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitShortNameUse() {
-		final Map<String, String> configValues = new HashMap<String, String>();
+		final Map<String, String> configValues = new HashMap<>();
 
 		configValues.put( Environment.DIALECT, "H2" );
 		assertEquals( H2Dialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
@@ -63,7 +63,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitlySuppliedDialectClassName() {
-		final Map<String, String> configValues = new HashMap<String, String>();
+		final Map<String, String> configValues = new HashMap<>();
 
 		configValues.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
 		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );

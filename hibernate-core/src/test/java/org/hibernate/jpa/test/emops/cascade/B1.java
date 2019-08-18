@@ -52,7 +52,7 @@ public class B1 {
 
 	public Set<C1> getC1List() {
 		if ( c1List == null )
-			c1List = new HashSet<C1>();
+			c1List = new HashSet<>();
 		return c1List;
 	}
 

@@ -202,7 +202,7 @@ public class AttributeFactory {
 	private <Y> SimpleTypeDescriptor<Y> determineSimpleType(ValueContext typeContext) {
 		switch ( typeContext.getValueClassification() ) {
 			case BASIC: {
-				return new BasicTypeImpl<Y>(
+				return new BasicTypeImpl<>(
 						typeContext.getJpaBindableType(),
 						Type.PersistenceType.BASIC
 				);
@@ -222,7 +222,7 @@ public class AttributeFactory {
 					javaType = component.getComponentClass();
 				}
 
-				final EmbeddedTypeDescriptor<Y> embeddableType = new EmbeddableTypeImpl<Y>(
+				final EmbeddedTypeDescriptor<Y> embeddableType = new EmbeddableTypeImpl<>(
 						javaType,
 						typeContext.getAttributeMetadata().getOwnerType(),
 						(ComponentType) typeContext.getHibernateValue().getType(),
@@ -467,7 +467,7 @@ public class AttributeFactory {
 			// collection or entity
 			if ( type.isEntityType() ) {
 				// entity
-				return new SingularAttributeMetadataImpl<X, Y>(
+				return new SingularAttributeMetadataImpl<>(
 						attributeContext.getPropertyMapping(),
 						attributeContext.getOwnerType(),
 						member,
@@ -567,7 +567,7 @@ public class AttributeFactory {
 		}
 		else if ( attributeContext.getPropertyMapping().isComposite() ) {
 			// component
-			return new SingularAttributeMetadataImpl<X, Y>(
+			return new SingularAttributeMetadataImpl<>(
 					attributeContext.getPropertyMapping(),
 					attributeContext.getOwnerType(),
 					member,
@@ -576,7 +576,7 @@ public class AttributeFactory {
 		}
 		else {
 			// basic type
-			return new SingularAttributeMetadataImpl<X, Y>(
+			return new SingularAttributeMetadataImpl<>(
 					attributeContext.getPropertyMapping(),
 					attributeContext.getOwnerType(),
 					member,

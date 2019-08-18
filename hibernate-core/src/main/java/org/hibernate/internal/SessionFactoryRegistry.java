@@ -41,12 +41,12 @@ public class SessionFactoryRegistry {
 	/**
 	 * A map for mapping the UUID of a SessionFactory to the corresponding SessionFactory instance
 	 */
-	private final ConcurrentHashMap<String, SessionFactory> sessionFactoryMap = new ConcurrentHashMap<String, SessionFactory>();
+	private final ConcurrentHashMap<String, SessionFactory> sessionFactoryMap = new ConcurrentHashMap<>();
 
 	/**
 	 * A cross-reference for mapping a SessionFactory name to its UUID.  Not all SessionFactories get named,
 	 */
-	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<String, String>();
+	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<>();
 
 	private SessionFactoryRegistry() {
 		LOG.debugf( "Initializing SessionFactoryRegistry : %s", this );

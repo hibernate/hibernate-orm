@@ -53,13 +53,13 @@ public class ResultSetProxy<T> implements InvocationHandler {
 
 	public static ResultSet generateProxy(final String value) {
 		return generateProxy(
-				new ResultSetProxy<String>( "getString", value )
+				new ResultSetProxy<>( "getString", value )
 		);
 	}
 
 	public static ResultSet generateProxy(final Clob value) {
 		return generateProxy(
-				new ResultSetProxy<Clob>( "getClob", value )
+				new ResultSetProxy<>( "getClob", value )
 		);
 	}
 }

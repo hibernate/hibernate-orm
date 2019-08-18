@@ -63,7 +63,7 @@ public class ListAttributeJoin<O,E>
 
 	@Override
 	protected FromImplementor<O, E> createCorrelationDelegate() {
-		return new ListAttributeJoin<O,E>(
+		return new ListAttributeJoin<>(
 				criteriaBuilder(),
 				getJavaType(),
 				(PathImplementor<O>) getParentPath(),
@@ -84,7 +84,7 @@ public class ListAttributeJoin<O,E>
 
 	@Override
 	public <T extends E> ListAttributeJoin<O,T> treatAs(Class<T> treatAsType) {
-		return new TreatedListAttributeJoin<O,T>( this, treatAsType );
+		return new TreatedListAttributeJoin<>( this, treatAsType );
 	}
 
 	public static class TreatedListAttributeJoin<O,T> extends ListAttributeJoin<O, T> {

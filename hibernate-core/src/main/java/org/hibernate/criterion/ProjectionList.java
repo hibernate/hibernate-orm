@@ -20,7 +20,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class ProjectionList implements EnhancedProjection {
-	private List<Projection> elements = new ArrayList<Projection>();
+	private List<Projection> elements = new ArrayList<>();
 
 	/**
 	 * Constructs a ProjectionList
@@ -82,7 +82,7 @@ public class ProjectionList implements EnhancedProjection {
 
 	@Override
 	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		final List<Type> types = new ArrayList<Type>( getLength() );
+		final List<Type> types = new ArrayList<>( getLength() );
 		for ( Projection projection : elements ) {
 			final Type[] elemTypes = projection.getTypes( criteria, criteriaQuery );
 			Collections.addAll( types, elemTypes );
@@ -121,7 +121,7 @@ public class ProjectionList implements EnhancedProjection {
 	@Override
 	public String[] getColumnAliases(final int loc) {
 		int position = loc;
-		final List<String> result = new ArrayList<String>( getLength() );
+		final List<String> result = new ArrayList<>( getLength() );
 		for ( Projection projection : elements ) {
 			final String[] aliases = projection.getColumnAliases( position );
 			Collections.addAll( result, aliases );
@@ -133,7 +133,7 @@ public class ProjectionList implements EnhancedProjection {
 	@Override
 	public String[] getColumnAliases(final int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
 		int position = loc;
-		final List<String> result = new ArrayList<String>( getLength() );
+		final List<String> result = new ArrayList<>( getLength() );
 		for ( Projection projection : elements ) {
 			final String[] aliases = getColumnAliases( position, criteria, criteriaQuery, projection );
 			Collections.addAll( result, aliases );
@@ -193,7 +193,7 @@ public class ProjectionList implements EnhancedProjection {
 
 	@Override
 	public String[] getAliases() {
-		final List<String> result = new ArrayList<String>( getLength() );
+		final List<String> result = new ArrayList<>( getLength() );
 		for ( Projection projection : elements ) {
 			final String[] aliases = projection.getAliases();
 			Collections.addAll( result, aliases );

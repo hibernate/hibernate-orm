@@ -18,6 +18,6 @@ import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
  * @author Steve Ebersole
  */
 class PreparationContextImpl implements AbstractMultiTableBulkIdStrategyImpl.PreparationContext {
-	List<String> creationStatements = new ArrayList<String>();
-	List<String> dropStatements = new ArrayList<String>();
+	List<String> creationStatements = new ArrayList<>();
+	List<String> dropStatements = new ArrayList<>();
 }

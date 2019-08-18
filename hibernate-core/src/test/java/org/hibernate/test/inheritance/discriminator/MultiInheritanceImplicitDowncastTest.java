@@ -365,9 +365,9 @@ public class MultiInheritanceImplicitDowncastTest extends BaseCoreFunctionalTest
 		private Long id;
 		private String name;
 		private PolymorphicBase parent;
-		private List<PolymorphicBase> list = new ArrayList<PolymorphicBase>();
-		private Set<PolymorphicBase> children = new HashSet<PolymorphicBase>();
-		private Map<String, PolymorphicBase> map = new HashMap<String, PolymorphicBase>();
+		private List<PolymorphicBase> list = new ArrayList<>();
+		private Set<PolymorphicBase> children = new HashSet<>();
+		private Map<String, PolymorphicBase> map = new HashMap<>();
 
 		public PolymorphicBase() {
 		}

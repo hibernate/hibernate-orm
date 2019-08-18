@@ -28,7 +28,7 @@ public class CompoundPredicate
 		extends AbstractPredicateImpl
 		implements Serializable {
 	private BooleanOperator operator;
-	private final List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
+	private final List<Expression<Boolean>> expressions = new ArrayList<>();
 
 	/**
 	 * Constructs an empty conjunction or disjunction.

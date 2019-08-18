@@ -117,7 +117,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 		log.trace( "Building EntityManagerFactory" );
 
 		Properties properties = buildProperties();
-		ArrayList<Class> classes = new ArrayList<Class>();
+		ArrayList<Class> classes = new ArrayList<>();
 
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
 		properties.put( AvailableSettings.LOADED_CLASSES, classes );

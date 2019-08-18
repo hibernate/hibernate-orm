@@ -27,7 +27,7 @@ public class JoinFetchElementCollectionTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-8206")
 	@FailureExpected(jiraKey = "HHH-8206", message = "This is not explicitly supported, however should arguably throw an exception")
 	public void testJoinFetchesByPath() {
-		Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
+		Set<EmailAddress> emailAddresses = new HashSet<>();
 		emailAddresses.add( new EmailAddress( "test1@test.com" ) );
 		emailAddresses.add( new EmailAddress( "test2@test.com" ) );
 		emailAddresses.add( new EmailAddress( "test3@test.com" ) );
@@ -71,7 +71,7 @@ public class JoinFetchElementCollectionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-5465")
 	public void testJoinFetchElementCollection() {
-		Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
+		Set<EmailAddress> emailAddresses = new HashSet<>();
 		emailAddresses.add( new EmailAddress( "test1@test.com" ) );
 		emailAddresses.add( new EmailAddress( "test2@test.com" ) );
 		emailAddresses.add( new EmailAddress( "test3@test.com" ) );

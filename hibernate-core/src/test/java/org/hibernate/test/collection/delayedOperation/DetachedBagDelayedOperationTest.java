@@ -176,7 +176,7 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 					// because that Child was flushed without a parent before being detached
 					// along with its parent.
 					Hibernate.initialize( p.getChildren() );
-					final Set<String> childNames = new HashSet<String>(
+					final Set<String> childNames = new HashSet<>(
 							Arrays.asList( new String[] { "Yogi", "Sherman" } )
 					);
 					assertEquals( childNames.size(), p.getChildren().size() );
@@ -259,7 +259,7 @@ public class DetachedBagDelayedOperationTest extends BaseCoreFunctionalTestCase 
 					// After initialization, the collection will contain the Child that was added as a
 					// queued operation before being detached above.
 					Hibernate.initialize( pAfterDetachWithQueuedOperations.getChildren() );
-					final Set<String> childNames = new HashSet<String>(
+					final Set<String> childNames = new HashSet<>(
 							Arrays.asList( new String[] { "Yogi", "Sherman", "Zeke" } )
 					);
 					assertEquals( childNames.size(), pAfterDetachWithQueuedOperations.getChildren().size() );

@@ -32,7 +32,7 @@ public class BlobTest extends BaseEntityManagerFunctionalTestCase {
 	public void testBlobSerialization() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		Map<String,String> image = new HashMap<String, String>();
+		Map<String,String> image = new HashMap<>();
 		image.put( "meta", "metadata" );
 		image.put( "data", "imagedata" );
 		ImageReader reader = new ImageReader();

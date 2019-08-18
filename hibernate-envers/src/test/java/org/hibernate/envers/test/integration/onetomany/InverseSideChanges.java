@@ -56,7 +56,7 @@ public class InverseSideChanges extends BaseEnversJPAFunctionalTestCase {
 
 		em.persist( ing1 );
 
-		ed1.setReffering( new HashSet<SetRefIngEntity>() );
+		ed1.setReffering( new HashSet<>() );
 		ed1.getReffering().add( ing1 );
 
 		em.getTransaction().commit();

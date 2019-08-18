@@ -166,7 +166,7 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	public Set<SingularAttribute<J, ?>> getDeclaredSingularAttributes() {
-		return new HashSet<SingularAttribute<J, ?>>( declaredSingularAttributes.values() );
+		return new HashSet<>( declaredSingularAttributes.values() );
 	}
 
 	@Override
@@ -267,7 +267,7 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	public Set<PluralAttribute<J, ?, ?>> getDeclaredPluralAttributes() {
-		return new HashSet<PluralAttribute<J,?,?>>( declaredPluralAttributes.values() );
+		return new HashSet<>( declaredPluralAttributes.values() );
 	}
 
 	@Override

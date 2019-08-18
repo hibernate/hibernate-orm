@@ -25,7 +25,7 @@ public class ATable implements Serializable
 {
 	private Integer firstId;
 
-	private List<TableB> tablebs = new ArrayList<TableB>();
+	private List<TableB> tablebs = new ArrayList<>();
 	
 	public ATable()
 	{

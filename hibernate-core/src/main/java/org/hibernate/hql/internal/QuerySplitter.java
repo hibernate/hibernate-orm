@@ -66,8 +66,8 @@ public final class QuerySplitter {
 			// just especially for the trivial collection filter
 			return new String[] { query };
 		}
-		ArrayList<String> placeholders = new ArrayList<String>();
-		ArrayList<String[]> replacements = new ArrayList<String[]>();
+		ArrayList<String> placeholders = new ArrayList<>();
+		ArrayList<String[]> replacements = new ArrayList<>();
 		StringBuilder templateQuery = new StringBuilder( 40 );
 
 		int start = getStartingPositionFor( tokens, templateQuery );

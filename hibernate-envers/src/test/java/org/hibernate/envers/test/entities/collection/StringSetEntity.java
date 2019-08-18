@@ -29,7 +29,7 @@ public class StringSetEntity {
 	private Set<String> strings;
 
 	public StringSetEntity() {
-		strings = new HashSet<String>();
+		strings = new HashSet<>();
 	}
 
 	public Integer getId() {

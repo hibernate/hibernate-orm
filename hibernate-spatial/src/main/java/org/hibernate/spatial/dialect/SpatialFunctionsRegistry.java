@@ -19,7 +19,7 @@ import org.hibernate.dialect.function.SQLFunction;
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
 public abstract class SpatialFunctionsRegistry implements Iterable<Map.Entry<String, SQLFunction>>, Serializable {
-	protected final Map<String, SQLFunction> functionMap = new HashMap<String, SQLFunction>();
+	protected final Map<String, SQLFunction> functionMap = new HashMap<>();
 
 	public void put(String name, SQLFunction function) {
 		this.functionMap.put( name, function );

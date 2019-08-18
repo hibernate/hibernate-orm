@@ -16,7 +16,7 @@ import org.hibernate.tool.schema.spi.ExceptionHandler;
  * @author Steve Ebersole
  */
 public class ExceptionHandlerCollectingImpl implements ExceptionHandler {
-	private final List<CommandAcceptanceException> exceptions = new ArrayList<CommandAcceptanceException>();
+	private final List<CommandAcceptanceException> exceptions = new ArrayList<>();
 
 	public ExceptionHandlerCollectingImpl() {
 	}

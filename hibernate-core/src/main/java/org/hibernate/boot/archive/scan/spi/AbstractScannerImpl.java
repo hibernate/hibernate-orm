@@ -23,7 +23,7 @@ import org.hibernate.boot.archive.spi.JarFileEntryUrlAdjuster;
  */
 public abstract class AbstractScannerImpl implements Scanner {
 	private final ArchiveDescriptorFactory archiveDescriptorFactory;
-	private final Map<URL, ArchiveDescriptorInfo> archiveDescriptorCache = new HashMap<URL, ArchiveDescriptorInfo>();
+	private final Map<URL, ArchiveDescriptorInfo> archiveDescriptorCache = new HashMap<>();
 
 	protected AbstractScannerImpl(ArchiveDescriptorFactory archiveDescriptorFactory) {
 		this.archiveDescriptorFactory = archiveDescriptorFactory;

@@ -54,7 +54,7 @@ public abstract class ParentIndexedListJoinColumnBidirectionalRefIngEntity {
 			ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity... references) {
 		this.id = id;
 		this.data = data;
-		this.references = new ArrayList<ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity>();
+		this.references = new ArrayList<>();
 		this.references.addAll( Arrays.asList( references ) );
 	}
 

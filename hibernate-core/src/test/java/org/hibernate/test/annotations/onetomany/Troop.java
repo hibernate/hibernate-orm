@@ -62,7 +62,7 @@ public class Troop {
 	}
 
 	public void addSoldier(Soldier s) {
-		if ( soldiers == null ) soldiers = new HashSet<Soldier>();
+		if ( soldiers == null ) soldiers = new HashSet<>();
 		soldiers.add( s );
 		s.setTroop( this );
 	}

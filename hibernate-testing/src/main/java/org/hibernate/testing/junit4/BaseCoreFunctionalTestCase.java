@@ -443,7 +443,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 			List list = tmpSession.createQuery( "select o from java.lang.Object o" ).list();
 
-			Map<String,Integer> items = new HashMap<String,Integer>();
+			Map<String,Integer> items = new HashMap<>();
 			if ( !list.isEmpty() ) {
 				for ( Object element : list ) {
 					Integer l = items.get( tmpSession.getEntityName( element ) );

@@ -81,7 +81,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	private static final Map<String,String> LEGACY_CONNECTION_PROVIDER_MAPPING;
 
 	static {
-		LEGACY_CONNECTION_PROVIDER_MAPPING = new HashMap<String,String>( 5 );
+		LEGACY_CONNECTION_PROVIDER_MAPPING = new HashMap<>( 5 );
 
 		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
 				"org.hibernate.connection.DatasourceConnectionProvider",
@@ -409,7 +409,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	private static final Map<Integer, String> ISOLATION_VALUE_NICE_NAME_MAP;
 
 	static {
-		SPECIAL_PROPERTIES = new HashSet<String>();
+		SPECIAL_PROPERTIES = new HashSet<>();
 		SPECIAL_PROPERTIES.add( AvailableSettings.DATASOURCE );
 		SPECIAL_PROPERTIES.add( AvailableSettings.URL );
 		SPECIAL_PROPERTIES.add( AvailableSettings.CONNECTION_PROVIDER );
@@ -418,7 +418,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		SPECIAL_PROPERTIES.add( AvailableSettings.DRIVER );
 		SPECIAL_PROPERTIES.add( AvailableSettings.USER );
 
-		ISOLATION_VALUE_MAP = new ConcurrentHashMap<String, Integer>();
+		ISOLATION_VALUE_MAP = new ConcurrentHashMap<>();
 		ISOLATION_VALUE_MAP.put( "TRANSACTION_NONE", Connection.TRANSACTION_NONE );
 		ISOLATION_VALUE_MAP.put( "NONE", Connection.TRANSACTION_NONE );
 		ISOLATION_VALUE_MAP.put( "TRANSACTION_READ_UNCOMMITTED", Connection.TRANSACTION_READ_UNCOMMITTED );
@@ -430,14 +430,14 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		ISOLATION_VALUE_MAP.put( "TRANSACTION_SERIALIZABLE", Connection.TRANSACTION_SERIALIZABLE );
 		ISOLATION_VALUE_MAP.put( "SERIALIZABLE", Connection.TRANSACTION_SERIALIZABLE );
 
-		ISOLATION_VALUE_CONSTANT_NAME_MAP = new ConcurrentHashMap<Integer, String>();
+		ISOLATION_VALUE_CONSTANT_NAME_MAP = new ConcurrentHashMap<>();
 		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_NONE, "TRANSACTION_NONE" );
 		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_READ_UNCOMMITTED, "TRANSACTION_READ_UNCOMMITTED" );
 		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_READ_COMMITTED, "TRANSACTION_READ_COMMITTED" );
 		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_REPEATABLE_READ, "TRANSACTION_REPEATABLE_READ" );
 		ISOLATION_VALUE_CONSTANT_NAME_MAP.put( Connection.TRANSACTION_SERIALIZABLE, "TRANSACTION_SERIALIZABLE" );
 
-		ISOLATION_VALUE_NICE_NAME_MAP = new ConcurrentHashMap<Integer, String>();
+		ISOLATION_VALUE_NICE_NAME_MAP = new ConcurrentHashMap<>();
 		ISOLATION_VALUE_NICE_NAME_MAP.put( Connection.TRANSACTION_NONE, "NONE" );
 		ISOLATION_VALUE_NICE_NAME_MAP.put( Connection.TRANSACTION_READ_UNCOMMITTED, "READ_UNCOMMITTED" );
 		ISOLATION_VALUE_NICE_NAME_MAP.put( Connection.TRANSACTION_READ_COMMITTED, "READ_COMMITTED" );
@@ -451,7 +451,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	private static final Map<String, String> CONDITIONAL_PROPERTIES;
 
 	static {
-		CONDITIONAL_PROPERTIES = new HashMap<String, String>();
+		CONDITIONAL_PROPERTIES = new HashMap<>();
 		// Oracle requires that includeSynonyms=true in order for getColumns to work using a table synonym name.
 		CONDITIONAL_PROPERTIES.put( AvailableSettings.ENABLE_SYNONYMS, "includeSynonyms" );
 	}

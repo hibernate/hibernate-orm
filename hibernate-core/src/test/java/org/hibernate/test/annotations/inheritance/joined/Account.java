@@ -63,7 +63,7 @@ public class Account implements Serializable {
 
 	public void addClient(Client c) {
 		if (clients == null) {
-			clients = new HashSet<Client>();
+			clients = new HashSet<>();
 		}
 		clients.add(c);
 		c.setAccount(this);

@@ -95,7 +95,7 @@ public class CascadeManagedAndTransientTest extends BaseCoreFunctionalTestCase  
         $2to3.setDeliveryNode(n3); n3.getDeliveryTransports().add($2to3);
         $2to3.setVehicle(vehicle);
 
-        vehicle.setTransports(new HashSet<Transport>(Arrays.asList($2to3)));
+        vehicle.setTransports(new HashSet<>(Arrays.asList($2to3)));
 
         // Try to save graph of transient entities (vehicle, transport) which contains attached entities (node2, node3)
         Vehicle managedVehicle = (Vehicle) s.merge(vehicle);
@@ -122,7 +122,7 @@ public class CascadeManagedAndTransientTest extends BaseCoreFunctionalTestCase  
         Route route = new Route();
         route.setName("Route 1");
 
-        ArrayList<Node> nodes = new ArrayList<Node>();
+        ArrayList<Node> nodes = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             Node n = new Node();
             n.setName("Node " + i);
@@ -131,12 +131,12 @@ public class CascadeManagedAndTransientTest extends BaseCoreFunctionalTestCase  
             nodes.add(n);
         }
 
-        tour.setNodes(new HashSet<Node>(nodes));
-        route.setNodes(new HashSet<Node>(Arrays.asList(nodes.get(0), nodes.get(1), nodes.get(2))));
+        tour.setNodes(new HashSet<>(nodes));
+        route.setNodes(new HashSet<>(Arrays.asList(nodes.get(0), nodes.get(1), nodes.get(2))));
 
         Vehicle vehicle = new Vehicle();
         vehicle.setName("Car");
-        route.setVehicles(new HashSet<Vehicle>(Arrays.asList(vehicle)));
+        route.setVehicles(new HashSet<>(Arrays.asList(vehicle)));
         vehicle.setRoute(route);
 
         Transport $0to1 = new Transport();
@@ -151,7 +151,7 @@ public class CascadeManagedAndTransientTest extends BaseCoreFunctionalTestCase  
         $1to2.setDeliveryNode(nodes.get(2));
         $1to2.setVehicle(vehicle);
 
-        vehicle.setTransports(new HashSet<Transport>(Arrays.asList($0to1, $1to2)));
+        vehicle.setTransports(new HashSet<>(Arrays.asList($0to1, $1to2)));
 
         Session s = openSession();
         s.beginTransaction();

@@ -53,7 +53,7 @@ import org.apache.tools.ant.types.FileSet;
  * @author Gavin King
  */
 public class SchemaValidatorTask extends MatchingTask {
-	private List<FileSet> fileSets = new LinkedList<FileSet>();
+	private List<FileSet> fileSets = new LinkedList<>();
 
 	private File propertiesFile;
 	private File configurationFile;
@@ -178,7 +178,7 @@ public class SchemaValidatorTask extends MatchingTask {
 	}
 
 	private String[] collectFiles() {
-		List<String> files = new ArrayList<String>();
+		List<String> files = new ArrayList<>();
 
 		for ( Object fileSet : fileSets ) {
 			final FileSet fs = (FileSet) fileSet;

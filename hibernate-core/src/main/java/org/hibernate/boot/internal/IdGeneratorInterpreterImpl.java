@@ -85,7 +85,7 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 
 	public void addInterpreterDelegate(IdGeneratorStrategyInterpreter delegate) {
 		if ( delegates == null ) {
-			delegates = new ArrayList<IdGeneratorStrategyInterpreter>();
+			delegates = new ArrayList<>();
 		}
 		delegates.add( delegate );
 	}

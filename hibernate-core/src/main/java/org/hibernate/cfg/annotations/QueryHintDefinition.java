@@ -33,7 +33,7 @@ public class QueryHintDefinition {
 			hintsMap = Collections.emptyMap();
 		}
 		else {
-			final Map<String, Object> hintsMap = new HashMap<String, Object>();
+			final Map<String, Object> hintsMap = new HashMap<>();
 			for ( QueryHint hint : hints ) {
 				hintsMap.put( hint.name(), hint.value() );
 			}

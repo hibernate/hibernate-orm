@@ -636,7 +636,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 					tableInformation.getName().getTableName().getText()
 			);
 
-			final List<ColumnInformation> pkColumns = new ArrayList<ColumnInformation>();
+			final List<ColumnInformation> pkColumns = new ArrayList<>();
 			boolean firstPass = true;
 			Identifier pkIdentifier = null;
 
@@ -766,7 +766,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			);
 		}
 
-		final List<IndexInformation> indexes = new ArrayList<IndexInformation>();
+		final List<IndexInformation> indexes = new ArrayList<>();
 		for ( IndexInformationImpl.Builder builder : builders.values() ) {
 			IndexInformationImpl index = builder.build();
 			indexes.add( index );
@@ -856,7 +856,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			);
 		}
 
-		final List<ForeignKeyInformation> fks = new ArrayList<ForeignKeyInformation>();
+		final List<ForeignKeyInformation> fks = new ArrayList<>();
 		for ( ForeignKeyBuilder fkBuilder : fkBuilders.values() ) {
 			ForeignKeyInformation fk = fkBuilder.build();
 			fks.add( fk );
@@ -877,7 +877,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	protected static class ForeignKeyBuilderImpl implements ForeignKeyBuilder {
 		private final Identifier fkIdentifier;
-		private final List<ForeignKeyInformation.ColumnReferenceMapping> columnMappingList = new ArrayList<ForeignKeyInformation.ColumnReferenceMapping>();
+		private final List<ForeignKeyInformation.ColumnReferenceMapping> columnMappingList = new ArrayList<>();
 
 		public ForeignKeyBuilderImpl(Identifier fkIdentifier) {
 			this.fkIdentifier = fkIdentifier;

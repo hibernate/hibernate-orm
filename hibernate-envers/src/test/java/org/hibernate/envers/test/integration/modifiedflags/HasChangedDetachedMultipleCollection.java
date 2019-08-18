@@ -90,8 +90,8 @@ public class HasChangedDetachedMultipleCollection extends AbstractModifiedFlagsE
 
 		// Revision 4 - updating detached entity, no changes to collection attributes.
 		em.getTransaction().begin();
-		mce1.setRefEntities1( new ArrayList<MultipleCollectionRefEntity1>() );
-		mce1.setRefEntities2( new ArrayList<MultipleCollectionRefEntity2>() );
+		mce1.setRefEntities1( new ArrayList<>() );
+		mce1.setRefEntities2( new ArrayList<>() );
 		mce1.setText( "MultipleCollectionEntity-1-2" );
 		mce1 = em.merge( mce1 );
 		em.getTransaction().commit();
@@ -101,8 +101,8 @@ public class HasChangedDetachedMultipleCollection extends AbstractModifiedFlagsE
 
 		// No changes to detached entity (collections were empty before).
 		em.getTransaction().begin();
-		mce1.setRefEntities1( new ArrayList<MultipleCollectionRefEntity1>() );
-		mce1.setRefEntities2( new ArrayList<MultipleCollectionRefEntity2>() );
+		mce1.setRefEntities1( new ArrayList<>() );
+		mce1.setRefEntities2( new ArrayList<>() );
 		mce1 = em.merge( mce1 );
 		em.getTransaction().commit();
 

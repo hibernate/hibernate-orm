@@ -144,7 +144,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 
 		private Map<String, String> parameters() {
 			if ( parameters == null ) {
-				parameters = new HashMap<String, String>();
+				parameters = new HashMap<>();
 			}
 			return parameters;
 		}

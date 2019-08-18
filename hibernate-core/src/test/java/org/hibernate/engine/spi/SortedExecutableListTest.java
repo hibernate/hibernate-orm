@@ -106,7 +106,7 @@ public class SortedExecutableListTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		l = new ExecutableList<AnExecutable>();
+		l = new ExecutableList<>();
 	}
 
 	@After
@@ -215,7 +215,7 @@ public class SortedExecutableListTest extends BaseUnitTestCase {
 		oos.flush();
 		ByteArrayInputStream bin = new ByteArrayInputStream( baos.toByteArray() );
 		ObjectInputStream ois = new ObjectInputStream( bin );
-		l = new ExecutableList<SortedExecutableListTest.AnExecutable>();
+		l = new ExecutableList<>();
 		l.readExternal( ois );
 		
 		Assert.assertEquals( 4, l.size() );

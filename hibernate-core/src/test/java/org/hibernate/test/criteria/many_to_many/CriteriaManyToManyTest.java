@@ -97,7 +97,7 @@ public class CriteriaManyToManyTest extends BaseNonConfigCoreFunctionalTestCase 
 
 	@Test
 	public void testMappedBy() {
-		Set<Customer> customersAll = new LinkedHashSet<Customer>();
+		Set<Customer> customersAll = new LinkedHashSet<>();
 		Seller[] sellers = persist( "mappedby" );
 		customersAll.addAll( sellers[0].getSoldTo() );
 		customersAll.addAll( sellers[1].getSoldTo() );

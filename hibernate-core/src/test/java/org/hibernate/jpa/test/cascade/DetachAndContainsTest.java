@@ -40,7 +40,7 @@ public class DetachAndContainsTest extends BaseEntityManagerFunctionalTestCase {
 		em.persist( mouth );
 		em.persist( tooth );
 		tooth.mouth = mouth;
-		mouth.teeth = new ArrayList<Tooth>();
+		mouth.teeth = new ArrayList<>();
 		mouth.teeth.add( tooth );
 		em.getTransaction().commit();
 		em.close();

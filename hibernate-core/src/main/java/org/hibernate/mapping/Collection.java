@@ -71,7 +71,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private Properties typeParameters;
 	private final java.util.List filters = new ArrayList();
 	private final java.util.List manyToManyFilters = new ArrayList();
-	private final java.util.Set<String> synchronizedTables = new HashSet<String>();
+	private final java.util.Set<String> synchronizedTables = new HashSet<>();
 
 	private String customSQLInsert;
 	private boolean customInsertCallable;

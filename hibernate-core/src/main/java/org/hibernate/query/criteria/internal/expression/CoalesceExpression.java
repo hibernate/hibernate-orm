@@ -35,7 +35,7 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 			Class<T> javaType) {
 		super( criteriaBuilder, javaType );
 		this.javaType = javaType;
-		this.expressions = new ArrayList<Expression<? extends T>>();
+		this.expressions = new ArrayList<>();
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 	}
 
 	public Coalesce<T> value(T value) {
-		return value( new LiteralExpression<T>( criteriaBuilder(), value ) );
+		return value( new LiteralExpression<>( criteriaBuilder(), value ) );
 	}
 
 	@SuppressWarnings({ "unchecked" })

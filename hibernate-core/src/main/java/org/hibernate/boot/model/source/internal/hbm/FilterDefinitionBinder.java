@@ -69,7 +69,7 @@ public class FilterDefinitionBinder {
 				}
 
 				if ( parameterMap == null ) {
-					parameterMap = new HashMap<String, Type>();
+					parameterMap = new HashMap<>();
 				}
 
 				parameterMap.put(

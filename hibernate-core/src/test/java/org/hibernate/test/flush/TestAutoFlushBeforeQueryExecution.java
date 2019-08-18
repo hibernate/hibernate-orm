@@ -95,7 +95,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 
 		Set<Author> authorsOld = publisher.getAuthors();
-		publisher.setAuthors( new HashSet<Author>() );
+		publisher.setAuthors( new HashSet<>() );
 		Author author2 = new Author( );
 		author2.setName( "author2" );
 		author2.setPublisher( publisher );
@@ -169,7 +169,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 		assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 
 		Set<Author> authorsOld = publisher.getAuthors();
-		publisher.setAuthors( new HashSet<Author>() );
+		publisher.setAuthors( new HashSet<>() );
 		Author author2 = new Author( );
 		author2.setName( "author2" );
 		author2.setPublisher( publisher );

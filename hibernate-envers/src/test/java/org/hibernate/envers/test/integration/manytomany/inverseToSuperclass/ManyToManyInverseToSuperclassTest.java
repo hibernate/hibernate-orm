@@ -39,10 +39,10 @@ public class ManyToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTe
 		det1.setStr2( "detail 1" );
 
 		m1.setStr( "master" );
-		m1.setItems( new ArrayList<DetailSubclass>() );
+		m1.setItems( new ArrayList<>() );
 		m1.getItems().add( det1 );
 
-		det1.setMasters( new ArrayList<Master>() );
+		det1.setMasters( new ArrayList<>() );
 		det1.getMasters().add( m1 );
 
 		em.persist( m1 );

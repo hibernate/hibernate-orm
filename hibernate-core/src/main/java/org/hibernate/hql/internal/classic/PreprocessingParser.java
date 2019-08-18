@@ -23,7 +23,7 @@ public class PreprocessingParser implements Parser {
 	private static final Set<String> HQL_OPERATORS;
 
 	static {
-		HQL_OPERATORS = new HashSet<String>();
+		HQL_OPERATORS = new HashSet<>();
 		HQL_OPERATORS.add( "<=" );
 		HQL_OPERATORS.add( ">=" );
 		HQL_OPERATORS.add( "=>" );

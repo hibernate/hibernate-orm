@@ -57,8 +57,8 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	private ParseErrorHandler parseErrorHandler;
 	private SessionFactoryImplementor sessionFactory;
-	private LinkedList<SqlWriter> outputStack = new LinkedList<SqlWriter>();
-	private List<ParameterSpecification> collectedParameters = new ArrayList<ParameterSpecification>();
+	private LinkedList<SqlWriter> outputStack = new LinkedList<>();
+	private List<ParameterSpecification> collectedParameters = new ArrayList<>();
 
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -242,7 +242,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	 */
 	static class StandardFunctionArguments implements FunctionArgumentsCollectingWriter {
 		private int argInd;
-		private final List<String> args = new ArrayList<String>( 3 );
+		private final List<String> args = new ArrayList<>( 3 );
 
 		@Override
 		public void clause(String clause) {

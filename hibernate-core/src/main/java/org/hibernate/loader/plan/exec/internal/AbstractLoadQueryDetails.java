@@ -258,7 +258,7 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	}
 
 	protected abstract static class ReaderCollectorImpl implements ReaderCollector {
-		private final List<EntityReferenceInitializer> entityReferenceInitializers = new ArrayList<EntityReferenceInitializer>();
+		private final List<EntityReferenceInitializer> entityReferenceInitializers = new ArrayList<>();
 		private List<CollectionReferenceInitializer> arrayReferenceInitializers;
 		private List<CollectionReferenceInitializer> collectionReferenceInitializers;
 
@@ -266,13 +266,13 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 		public void add(CollectionReferenceInitializer collectionReferenceInitializer) {
 			if ( collectionReferenceInitializer.getCollectionReference().getCollectionPersister().isArray() ) {
 				if ( arrayReferenceInitializers == null ) {
-					arrayReferenceInitializers = new ArrayList<CollectionReferenceInitializer>();
+					arrayReferenceInitializers = new ArrayList<>();
 				}
 				arrayReferenceInitializers.add( collectionReferenceInitializer );
 			}
 			else {
 				if ( collectionReferenceInitializers == null ) {
-					collectionReferenceInitializers = new ArrayList<CollectionReferenceInitializer>();
+					collectionReferenceInitializers = new ArrayList<>();
 				}
 				collectionReferenceInitializers.add( collectionReferenceInitializer );
 			}

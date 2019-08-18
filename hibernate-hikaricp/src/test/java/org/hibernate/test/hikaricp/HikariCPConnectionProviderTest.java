@@ -42,7 +42,7 @@ public class HikariCPConnectionProviderTest extends BaseCoreFunctionalTestCase {
 		// For simplicity's sake, using the following in hibernate.properties:
 		// hibernate.hikari.minimumPoolSize 2
 		// hibernate.hikari.maximumPoolSize 2
-		final List<Connection> conns = new ArrayList<Connection>();
+		final List<Connection> conns = new ArrayList<>();
 		for ( int i = 0; i < 2; i++ ) {
 			Connection conn = hikariCP.getConnection();
 			assertNotNull( conn );

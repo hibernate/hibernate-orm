@@ -230,7 +230,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 
 	private void registerQuerySpaceAliases(String querySpaceUid, EntityReferenceAliases entityReferenceAliases) {
 		if ( entityReferenceAliasesMap == null ) {
-			entityReferenceAliasesMap = new HashMap<String, EntityReferenceAliases>();
+			entityReferenceAliasesMap = new HashMap<>();
 		}
 		entityReferenceAliasesMap.put( querySpaceUid, entityReferenceAliases );
 		registerSqlTableAliasMapping( querySpaceUid, entityReferenceAliases.getTableAlias() );
@@ -238,7 +238,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 
 	private void registerSqlTableAliasMapping(String querySpaceUid, String sqlTableAlias) {
 		if ( querySpaceUidToSqlTableAliasMap == null ) {
-			querySpaceUidToSqlTableAliasMap = new HashMap<String, String>();
+			querySpaceUidToSqlTableAliasMap = new HashMap<>();
 		}
 		String old = querySpaceUidToSqlTableAliasMap.put( safeInterning( querySpaceUid ), safeInterning( sqlTableAlias ) );
 		if ( old != null ) {
@@ -281,7 +281,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 
 	private void registerQuerySpaceAliases(String querySpaceUid, CollectionReferenceAliases collectionReferenceAliases) {
 		if ( collectionReferenceAliasesMap == null ) {
-			collectionReferenceAliasesMap = new HashMap<String, CollectionReferenceAliases>();
+			collectionReferenceAliasesMap = new HashMap<>();
 		}
 		collectionReferenceAliasesMap.put( querySpaceUid, collectionReferenceAliases );
 		registerSqlTableAliasMapping( querySpaceUid, collectionReferenceAliases.getCollectionTableAlias() );
@@ -294,7 +294,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 
 	public void registerCompositeQuerySpaceUidResolution(String rightHandSideUid, String leftHandSideTableAlias) {
 		if ( compositeQuerySpaceUidToSqlTableAliasMap == null ) {
-			compositeQuerySpaceUidToSqlTableAliasMap = new HashMap<String, String>();
+			compositeQuerySpaceUidToSqlTableAliasMap = new HashMap<>();
 		}
 		compositeQuerySpaceUidToSqlTableAliasMap.put( rightHandSideUid, leftHandSideTableAlias );
 	}

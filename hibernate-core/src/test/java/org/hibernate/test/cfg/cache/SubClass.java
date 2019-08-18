@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class SubClass extends BaseClass {
-	Set<Item> items = new HashSet<Item>();
+	Set<Item> items = new HashSet<>();
 
 	public Set<Item> getItems() {
 		return items;

@@ -22,7 +22,7 @@ public class Investor {
 	
 	private Long id;
 	
-	private List<Investment> investments = new ArrayList<Investment>();
+	private List<Investment> investments = new ArrayList<>();
 
 	@Id
 	public Long getId() {

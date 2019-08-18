@@ -39,7 +39,7 @@ public class JoinSequence {
 	private final boolean collectionJoinSubquery;
 
 	private final StringBuilder conditions = new StringBuilder();
-	private final List<Join> joins = new ArrayList<Join>();
+	private final List<Join> joins = new ArrayList<>();
 
 	private boolean useThetaStyle;
 	private String rootAlias;
@@ -83,7 +83,7 @@ public class JoinSequence {
 		}
 
 		if ( this.treatAsDeclarations == null ) {
-			this.treatAsDeclarations = new HashSet<String>();
+			this.treatAsDeclarations = new HashSet<>();
 		}
 
 		this.treatAsDeclarations.addAll( treatAsDeclarations );

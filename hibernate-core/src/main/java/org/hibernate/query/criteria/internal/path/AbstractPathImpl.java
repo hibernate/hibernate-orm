@@ -108,7 +108,7 @@ public abstract class AbstractPathImpl<X>
 
 	protected final void registerAttributePath(String attributeName, Path path) {
 		if ( attributePathRegistry == null ) {
-			attributePathRegistry = new HashMap<String,Path>();
+			attributePathRegistry = new HashMap<>();
 		}
 		attributePathRegistry.put( attributeName, path );
 	}
@@ -122,7 +122,7 @@ public abstract class AbstractPathImpl<X>
 
 		SingularAttributePath<Y> path = (SingularAttributePath<Y>) resolveCachedAttributePath( attribute.getName() );
 		if ( path == null ) {
-			path = new SingularAttributePath<Y>(
+			path = new SingularAttributePath<>(
 					criteriaBuilder(),
 					attribute.getJavaType(),
 					getPathSourceForSubPaths(),
@@ -146,7 +146,7 @@ public abstract class AbstractPathImpl<X>
 
 		PluralAttributePath<C> path = (PluralAttributePath<C>) resolveCachedAttributePath( attribute.getName() );
 		if ( path == null ) {
-			path = new PluralAttributePath<C>( criteriaBuilder(), this, attribute );
+			path = new PluralAttributePath<>( criteriaBuilder(), this, attribute );
 			registerAttributePath( attribute.getName(), path );
 		}
 		return path;

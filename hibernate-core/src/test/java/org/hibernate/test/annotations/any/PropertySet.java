@@ -29,7 +29,7 @@ public class PropertySet {
 	private String name;
 	private Property someProperty;
 
-	private List<Property> generalProperties = new ArrayList<Property>();
+	private List<Property> generalProperties = new ArrayList<>();
 
 	public PropertySet() {
 		super();

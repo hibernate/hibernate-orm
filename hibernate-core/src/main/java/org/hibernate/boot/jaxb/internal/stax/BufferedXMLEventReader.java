@@ -23,7 +23,7 @@ import javax.xml.stream.events.XMLEvent;
  * @author Eric Dalquist
  */
 public class BufferedXMLEventReader extends BaseXMLEventReader {
-	private final LinkedList<XMLEvent> eventBuffer = new LinkedList<XMLEvent>();
+	private final LinkedList<XMLEvent> eventBuffer = new LinkedList<>();
 	private int eventLimit;
 	private ListIterator<XMLEvent> bufferReader;
 
@@ -47,7 +47,7 @@ public class BufferedXMLEventReader extends BaseXMLEventReader {
 	 * @return A copy of the current buffer
 	 */
 	public List<XMLEvent> getBuffer() {
-		return new ArrayList<XMLEvent>(this.eventBuffer);
+		return new ArrayList<>(this.eventBuffer);
 	}
 
 	@Override

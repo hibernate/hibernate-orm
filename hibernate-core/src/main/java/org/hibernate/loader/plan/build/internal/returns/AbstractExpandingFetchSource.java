@@ -77,7 +77,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 
 	private void addFetch(Fetch fetch) {
 		if ( fetches == null ) {
-			fetches = new ArrayList<Fetch>();
+			fetches = new ArrayList<>();
 		}
 		fetches.add( fetch );
 	}
@@ -93,7 +93,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 
 	private void addBidirectionalEntityReference(BidirectionalEntityReference bidirectionalEntityReference) {
 		if ( bidirectionalEntityReferences == null ) {
-			bidirectionalEntityReferences = new ArrayList<BidirectionalEntityReference>();
+			bidirectionalEntityReferences = new ArrayList<>();
 		}
 		bidirectionalEntityReferences.add( bidirectionalEntityReference );
 	}

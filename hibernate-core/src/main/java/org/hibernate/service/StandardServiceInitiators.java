@@ -50,7 +50,7 @@ public final class StandardServiceInitiators {
 	public static final List<StandardServiceInitiator> LIST = buildStandardServiceInitiatorList();
 
 	private static List<StandardServiceInitiator> buildStandardServiceInitiatorList() {
-		final ArrayList<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();
+		final ArrayList<StandardServiceInitiator> serviceInitiators = new ArrayList<>();
 
 		serviceInitiators.add( CfgXmlAccessServiceInitiator.INSTANCE );
 		serviceInitiators.add( ConfigurationServiceInitiator.INSTANCE );

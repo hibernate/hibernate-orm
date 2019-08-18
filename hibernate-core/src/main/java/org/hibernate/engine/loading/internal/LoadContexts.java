@@ -145,7 +145,7 @@ public class LoadContexts {
 	public CollectionLoadContext getCollectionLoadContext(ResultSet resultSet) {
 		CollectionLoadContext context = null;
 		if ( collectionLoadContexts == null ) {
-			collectionLoadContexts = new IdentityHashMap<ResultSet, CollectionLoadContext>( 8 );
+			collectionLoadContexts = new IdentityHashMap<>( 8 );
 		}
 		else {
 			context = collectionLoadContexts.get(resultSet);
@@ -198,7 +198,7 @@ public class LoadContexts {
 	 */
 	void registerLoadingCollectionXRef(CollectionKey entryKey, LoadingCollectionEntry entry) {
 		if ( xrefLoadingCollectionEntries == null ) {
-			xrefLoadingCollectionEntries = new HashMap<CollectionKey,LoadingCollectionEntry>();
+			xrefLoadingCollectionEntries = new HashMap<>();
 		}
 		xrefLoadingCollectionEntries.put( entryKey, entry );
 	}
@@ -278,7 +278,7 @@ public class LoadContexts {
 	public EntityLoadContext getEntityLoadContext(ResultSet resultSet) {
 		EntityLoadContext context = null;
 		if ( entityLoadContexts == null ) {
-			entityLoadContexts = new IdentityHashMap<ResultSet, EntityLoadContext>( 8 );
+			entityLoadContexts = new IdentityHashMap<>( 8 );
 		}
 		else {
 			context = entityLoadContexts.get( resultSet );

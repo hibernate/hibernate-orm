@@ -27,7 +27,7 @@ public final class ColumnNameCache {
 	 */
 	public ColumnNameCache(int columnCount) {
 		// should *not* need to grow beyond the size of the total number of columns in the rs
-		this.columnNameToIndexCache = new ConcurrentHashMap<String, Integer>(
+		this.columnNameToIndexCache = new ConcurrentHashMap<>(
 				columnCount + (int)( columnCount * LOAD_FACTOR ) + 1,
 				LOAD_FACTOR
 		);

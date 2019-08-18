@@ -19,7 +19,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "FolderUnion")
 public class Folder extends File {
-	private Set<File> children = new HashSet<File>();
+	private Set<File> children = new HashSet<>();
 
 	Folder() {
 	}

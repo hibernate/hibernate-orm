@@ -45,9 +45,9 @@ public class ScanResultCollector {
 			throw new IllegalArgumentException( "ScanEnvironment#getExplicitlyListedMappingFiles should not return null" );
 		}
 
-		this.discoveredPackages = new HashSet<PackageDescriptor>();
-		this.discoveredClasses = new HashSet<ClassDescriptor>();
-		this.discoveredMappingFiles = new HashSet<MappingFileDescriptor>();
+		this.discoveredPackages = new HashSet<>();
+		this.discoveredClasses = new HashSet<>();
+		this.discoveredMappingFiles = new HashSet<>();
 	}
 
 	public void handleClass(ClassDescriptor classDescriptor, boolean rootUrl) {

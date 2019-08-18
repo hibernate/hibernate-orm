@@ -235,7 +235,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		// delete and recreate kittens - triggers PostCollectionRemoveEvent and PostCollectionRecreateEvent)
 		postVersion = Cat.postVersion;
 		em.getTransaction().begin();
-		cat.setKittens(new ArrayList<Kitten>());
+		cat.setKittens(new ArrayList<>());
 		em.getTransaction().commit();
 		assertEquals("Post version should have been incremented.", postVersion + 2, Cat.postVersion);
 

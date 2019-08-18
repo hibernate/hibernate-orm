@@ -18,7 +18,7 @@ public class AdvancedEntity {
 
 	private String note;
 
-	private Map<String, Object> dynamicConfiguration = new HashMap<String, Object>();
+	private Map<String, Object> dynamicConfiguration = new HashMap<>();
 
 	public Long getId() {
 		return id;

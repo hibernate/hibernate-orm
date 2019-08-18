@@ -44,7 +44,7 @@ public class NegatedPredicateWrapper extends ExpressionImpl<Boolean> implements 
 			return Collections.emptyList();
 		}
 
-		final List<Expression<Boolean>> negatedExpressions = new ArrayList<Expression<Boolean>>();
+		final List<Expression<Boolean>> negatedExpressions = new ArrayList<>();
 		for ( Expression<Boolean> expression : expressions ) {
 			if ( Predicate.class.isInstance( expression ) ) {
 				negatedExpressions.add( ( (Predicate) expression ).not() );

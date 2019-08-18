@@ -18,7 +18,7 @@ public class ManagedObject {
 	private int version;
 	private String name = "parent";
 	private String displayName = "";
-	private Set<String> members = new HashSet<String>();
+	private Set<String> members = new HashSet<>();
 
 	public ManagedObject() {
 	}

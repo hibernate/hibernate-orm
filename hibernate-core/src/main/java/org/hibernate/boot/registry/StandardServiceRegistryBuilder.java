@@ -43,7 +43,7 @@ public class StandardServiceRegistryBuilder {
 
 	private final Map settings;
 	private final List<StandardServiceInitiator> initiators = standardInitiatorList();
-	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
+	private final List<ProvidedService> providedServices = new ArrayList<>();
 
 	private boolean autoCloseRegistry = true;
 
@@ -94,7 +94,7 @@ public class StandardServiceRegistryBuilder {
 	 * @return List of standard initiators
 	 */
 	private static List<StandardServiceInitiator> standardInitiatorList() {
-		final List<StandardServiceInitiator> initiators = new ArrayList<StandardServiceInitiator>( StandardServiceInitiators.LIST.size() );
+		final List<StandardServiceInitiator> initiators = new ArrayList<>( StandardServiceInitiators.LIST.size() );
 		initiators.addAll( StandardServiceInitiators.LIST );
 		return initiators;
 	}

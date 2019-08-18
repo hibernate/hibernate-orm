@@ -29,7 +29,7 @@ import org.hibernate.annotations.CollectionType;
 @Table(name = "UC_BSC_USER")
 public class User {
 	private String userName;
-	private IMyList<Email> emailAddresses = new MyList<Email>();
+	private IMyList<Email> emailAddresses = new MyList<>();
 	private Map sessionData = new HashMap();
 
 	User() {

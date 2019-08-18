@@ -21,7 +21,7 @@ import javax.persistence.Transient;
 public class Parent {
 
     private Integer id;
-    private Set<Child> children = new HashSet<Child>();
+    private Set<Child> children = new HashSet<>();
     private int nrOfChildren;
     
     public Parent() {

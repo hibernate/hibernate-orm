@@ -26,9 +26,9 @@ public class Zoo {
 	private Long id;
 	private String name;
 	private String city;
-	private Set<Tiger> tigers = new HashSet<Tiger>();
-	private Set<Lion> lions = new HashSet<Lion>();
-	private Set<Animal> animals = new HashSet<Animal>();
+	private Set<Tiger> tigers = new HashSet<>();
+	private Set<Lion> lions = new HashSet<>();
+	private Set<Animal> animals = new HashSet<>();
 
 	@Id
 	@GeneratedValue( generator = "increment" )

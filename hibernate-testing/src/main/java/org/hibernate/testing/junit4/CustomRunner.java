@@ -176,7 +176,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		final List<FrameworkMethod> methods = super.computeTestMethods();
 
 		// Now process that full list of test methods and build our custom result
-		final List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
+		final List<FrameworkMethod> result = new ArrayList<>();
 		final boolean doValidation = Boolean.getBoolean( Helper.VALIDATE_FAILURE_EXPECTED );
 		int testCount = 0;
 

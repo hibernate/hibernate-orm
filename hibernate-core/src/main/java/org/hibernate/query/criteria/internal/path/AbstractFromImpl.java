@@ -142,7 +142,7 @@ public abstract class AbstractFromImpl<Z, X>
 		@Override
 		public void addJoin(Join<X, ?> join) {
 			if ( joins == null ) {
-				joins = new LinkedHashSet<Join<X, ?>>();
+				joins = new LinkedHashSet<>();
 			}
 			joins.add( join );
 		}
@@ -150,7 +150,7 @@ public abstract class AbstractFromImpl<Z, X>
 		@Override
 		public void addFetch(Fetch<X, ?> fetch) {
 			if ( fetches == null ) {
-				fetches = new LinkedHashSet<Fetch<X, ?>>();
+				fetches = new LinkedHashSet<>();
 			}
 			fetches.add( fetch );
 		}
@@ -160,7 +160,7 @@ public abstract class AbstractFromImpl<Z, X>
 		@Override
 		public void addJoin(Join<X, ?> join) {
 			if ( joins == null ) {
-				joins = new LinkedHashSet<Join<X, ?>>();
+				joins = new LinkedHashSet<>();
 			}
 			joins.add( join );
 		}
@@ -256,7 +256,7 @@ public abstract class AbstractFromImpl<Z, X>
 		}
 
 		final Class<Y> attributeType = attribute.getBindableJavaType();
-		return new SingularAttributeJoin<X, Y>(
+		return new SingularAttributeJoin<>(
 				criteriaBuilder(),
 				attributeType,
 				this,
@@ -291,7 +291,7 @@ public abstract class AbstractFromImpl<Z, X>
 		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
 
 		final Class<Y> attributeType = collection.getBindableJavaType();
-		return new CollectionAttributeJoin<X, Y>(
+		return new CollectionAttributeJoin<>(
 				criteriaBuilder(),
 				attributeType,
 				this,
@@ -324,7 +324,7 @@ public abstract class AbstractFromImpl<Z, X>
 		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
 
 		final Class<Y> attributeType = set.getBindableJavaType();
-		return new SetAttributeJoin<X, Y>( criteriaBuilder(), attributeType, this, set, jt );
+		return new SetAttributeJoin<>( criteriaBuilder(), attributeType, this, set, jt );
 	}
 
 	@Override
@@ -351,7 +351,7 @@ public abstract class AbstractFromImpl<Z, X>
 		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
 
 		final Class<Y> attributeType = list.getBindableJavaType();
-		return new ListAttributeJoin<X, Y>( criteriaBuilder(), attributeType, this, list, jt );
+		return new ListAttributeJoin<>( criteriaBuilder(), attributeType, this, list, jt );
 	}
 
 	@Override
@@ -378,7 +378,7 @@ public abstract class AbstractFromImpl<Z, X>
 		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
 
 		final Class<V> attributeType = map.getBindableJavaType();
-		return new MapAttributeJoin<X, K, V>( criteriaBuilder(), attributeType, this, map, jt );
+		return new MapAttributeJoin<>( criteriaBuilder(), attributeType, this, map, jt );
 	}
 
 	@Override

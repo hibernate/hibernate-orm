@@ -39,7 +39,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 
 	private DriverManagerConnectionProviderImpl delegate;
 
-	private List<Connection> nonEnlistedConnections = new ArrayList<Connection>();
+	private List<Connection> nonEnlistedConnections = new ArrayList<>();
 
 	@Override
 	public void configure(Map configurationValues) {

@@ -90,7 +90,7 @@ public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private Map<String, Object> createProperties(EntityManager em) {
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 		properties.put(
 				"javax.persistence.loadgraph",
 				createEntityGraph( em )

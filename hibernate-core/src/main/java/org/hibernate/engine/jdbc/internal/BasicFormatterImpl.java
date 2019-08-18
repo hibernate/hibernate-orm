@@ -83,8 +83,8 @@ public class BasicFormatterImpl implements Formatter {
 		boolean afterInsert;
 		int inFunction;
 		int parensSinceSelect;
-		private LinkedList<Integer> parenCounts = new LinkedList<Integer>();
-		private LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<Boolean>();
+		private LinkedList<Integer> parenCounts = new LinkedList<>();
+		private LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<>();
 
 		int indent = 1;
 

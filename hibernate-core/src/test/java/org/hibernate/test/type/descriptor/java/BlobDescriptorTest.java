@@ -37,7 +37,7 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 
 	@Override
 	protected Data<Blob> getTestData() {
-		return new Data<Blob>( original, copy, different );
+		return new Data<>( original, copy, different );
 	}
 
 	@Override

@@ -48,7 +48,7 @@ public class BasicUniMap extends BaseEnversJPAFunctionalTestCase {
 		em.persist( str1 );
 		em.persist( str2 );
 
-		coll1.setMap( new HashMap<String, StrTestEntity>() );
+		coll1.setMap( new HashMap<>() );
 		coll1.getMap().put( "1", str1 );
 		em.persist( coll1 );
 

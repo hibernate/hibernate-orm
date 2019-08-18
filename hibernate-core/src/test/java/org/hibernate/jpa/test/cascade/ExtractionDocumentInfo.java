@@ -45,7 +45,7 @@ public class ExtractionDocumentInfo implements Serializable {
 	public ExtractionDocumentInfo(Conference conference) {
 		this.conference = conference;
 		lastModified = new Date();
-		documents = new ArrayList<ExtractionDocument>();
+		documents = new ArrayList<>();
 		documents.add( new ExtractionDocument( this ) );
 	}
 

@@ -23,7 +23,7 @@ public class TestingConnectionProvider extends AbstractMultiTenantConnectionProv
 	}
 
 	public TestingConnectionProvider(NamedConnectionProviderPair... pairs) {
-		Map<String,ConnectionProvider> map = new HashMap<String, ConnectionProvider>();
+		Map<String,ConnectionProvider> map = new HashMap<>();
 		for ( NamedConnectionProviderPair pair : pairs ) {
 			map.put( pair.name, pair.connectionProvider );
 		}

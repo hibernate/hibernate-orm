@@ -153,7 +153,7 @@ public class UserCollectionTypeTest extends BaseCoreFunctionalTestCase {
 
 		private String userName;
 
-		private IHeadSetList<Email> emailAddresses = new HeadSetList<Email>();
+		private IHeadSetList<Email> emailAddresses = new HeadSetList<>();
 
 		private Map sessionData = new HashMap();
 

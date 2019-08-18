@@ -56,7 +56,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 	}
 
 	public void enhance(CtClass managedCtClass) {
-		final IdentityHashMap<String, PersistentAttributeAccessMethods> attrDescriptorMap = new IdentityHashMap<String, PersistentAttributeAccessMethods>();
+		final IdentityHashMap<String, PersistentAttributeAccessMethods> attrDescriptorMap = new IdentityHashMap<>();
 
 		for ( CtField persistentField : collectPersistentFields( managedCtClass ) ) {
 			attrDescriptorMap.put(
@@ -77,7 +77,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 	}
 
 	private CtField[] collectPersistentFields(CtClass managedCtClass) {
-		List<CtField> persistentFieldList = new ArrayList<CtField>();
+		List<CtField> persistentFieldList = new ArrayList<>();
 		for ( CtField ctField : managedCtClass.getDeclaredFields() ) {
 			// skip static fields and skip fields added by enhancement and  outer reference in inner classes
 			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
@@ -112,7 +112,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 				return collectInheritPersistentFields( managedCtSuperclass );
 			}
 			log.debugf( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass.getName() );
-			List<CtField> persistentFieldList = new ArrayList<CtField>();
+			List<CtField> persistentFieldList = new ArrayList<>();
 
 			for ( CtField ctField : managedCtSuperclass.getDeclaredFields() ) {
 				if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {

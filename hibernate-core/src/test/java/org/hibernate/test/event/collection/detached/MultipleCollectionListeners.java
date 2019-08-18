@@ -159,9 +159,9 @@ public class MultipleCollectionListeners {
 	private final PostCollectionRemoveListener postCollectionRemoveListener;
 	private final PostCollectionUpdateListener postCollectionUpdateListener;
 
-	private List<Listener> listenersCalled = new ArrayList<Listener>();
-	private List<AbstractCollectionEvent> events = new ArrayList<AbstractCollectionEvent>();
-	private List<Serializable> snapshots = new ArrayList<Serializable>();
+	private List<Listener> listenersCalled = new ArrayList<>();
+	private List<AbstractCollectionEvent> events = new ArrayList<>();
+	private List<Serializable> snapshots = new ArrayList<>();
 
 	public MultipleCollectionListeners(SessionFactory sf) {
 		preCollectionRecreateListener = new PreCollectionRecreateListener(this);

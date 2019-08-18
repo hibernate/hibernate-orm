@@ -83,9 +83,9 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 	public void testMultipleSelect() {
 		final String name = "Name";
 		final String lastName = "LastName";
-		final List<Integer> ids = new ArrayList<Integer>();
+		final List<Integer> ids = new ArrayList<>();
 		final int quantity = 10;
-		final List<DestinationEntity> destinations = new ArrayList<DestinationEntity>();
+		final List<DestinationEntity> destinations = new ArrayList<>();
 		for ( int i = 0; i < quantity; i++ ) {
 			DestinationEntity createDestination = createDestination( createFrom( name + i, lastName + i ), name + i
 					+ lastName + i );
@@ -145,9 +145,9 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 	public void testInsertMultipleValues() {
 		final String name = "Name";
 		final String lastName = "LastName";
-		final List<Integer> ids = new ArrayList<Integer>();
+		final List<Integer> ids = new ArrayList<>();
 		final int quantity = 10;
-		final List<FromEntity> froms = new ArrayList<FromEntity>();
+		final List<FromEntity> froms = new ArrayList<>();
 		for ( int i = 0; i < quantity; i++ ) {
 			FromEntity fe = createFrom( name + i, lastName + i );
 			froms.add( fe );
@@ -214,9 +214,9 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 	public void testUpdateMultipleValues() {
 		final String name = "Name";
 		final String lastName = "LastName";
-		final List<Integer> ids = new ArrayList<Integer>();
+		final List<Integer> ids = new ArrayList<>();
 		final int quantity = 10;
-		final List<DestinationEntity> destinations = new ArrayList<DestinationEntity>();
+		final List<DestinationEntity> destinations = new ArrayList<>();
 		for ( int i = 0; i < quantity; i++ ) {
 			FromEntity fe = createFrom( name + i, lastName + i );
 			DestinationEntity destination = createDestination( fe, fe.name + fe.lastName );
@@ -282,9 +282,9 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 	public void testDeleteMultipleValues() {
 		final String name = "Name";
 		final String lastName = "LastName";
-		final List<Integer> ids = new ArrayList<Integer>();
+		final List<Integer> ids = new ArrayList<>();
 		final int quantity = 10;
-		final List<DestinationEntity> destinations = new ArrayList<DestinationEntity>();
+		final List<DestinationEntity> destinations = new ArrayList<>();
 		for ( int i = 0; i < quantity; i++ ) {
 			FromEntity fe = createFrom( name + i, lastName + i );
 			DestinationEntity destination = createDestination( fe, fe.name + fe.lastName );

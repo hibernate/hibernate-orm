@@ -45,7 +45,7 @@ public class InheritanceState {
 	private InheritanceType type;
 	private boolean isEmbeddableSuperclass = false;
 	private Map<XClass, InheritanceState> inheritanceStatePerClass;
-	private List<XClass> classesToProcessForMappedSuperclass = new ArrayList<XClass>();
+	private List<XClass> classesToProcessForMappedSuperclass = new ArrayList<>();
 	private MetadataBuildingContext buildingContext;
 	private AccessType accessType;
 	private ElementsToProcess elementsToProcess;
@@ -210,7 +210,7 @@ public class InheritanceState {
 
 			accessType = determineDefaultAccessType();
 
-			ArrayList<PropertyData> elements = new ArrayList<PropertyData>();
+			ArrayList<PropertyData> elements = new ArrayList<>();
 			int idPropertyCount = 0;
 
 			for ( XClass classToProcessForMappedSuperclass : classesToProcessForMappedSuperclass ) {

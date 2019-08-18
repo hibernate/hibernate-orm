@@ -75,7 +75,7 @@ public class ComparisonPredicate
 		}
 		else {
 			N converted = (N) ValueHandlerFactory.convert( rightHandSide, type );
-			this.rightHandSide = new LiteralExpression<N>( criteriaBuilder, converted );
+			this.rightHandSide = new LiteralExpression<>( criteriaBuilder, converted );
 		}
 	}
 

@@ -184,7 +184,7 @@ public abstract class UserCollectionTypeTest extends BaseCoreFunctionalTestCase 
 	@TypeDef( name = "HeadListType", typeClass = HeadListType.class )
 	public static class User {
 		private String userName;
-		private IHeadList<Email> emailAddresses = new HeadList<Email>();
+		private IHeadList<Email> emailAddresses = new HeadList<>();
 		private Map sessionData = new HashMap();
 
 		User() {

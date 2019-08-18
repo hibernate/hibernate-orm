@@ -50,7 +50,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 public class SchemaUpdate {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaUpdate.class );
 
-	private final List<Exception> exceptions = new ArrayList<Exception>();
+	private final List<Exception> exceptions = new ArrayList<>();
 
 	boolean haltOnError = false;
 
@@ -219,8 +219,8 @@ public class SchemaUpdate {
 		String implicitNamingStrategyImplName = null;
 		String physicalNamingStrategyImplName = null;
 
-		List<String> hbmXmlFiles = new ArrayList<String>();
-		List<String> jarFiles = new ArrayList<String>();
+		List<String> hbmXmlFiles = new ArrayList<>();
+		List<String> jarFiles = new ArrayList<>();
 
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
 			final CommandLineArgs parsedArgs = new CommandLineArgs();

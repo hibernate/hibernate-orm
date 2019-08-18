@@ -23,7 +23,7 @@ import org.jboss.logging.Logger;
 public class IntegratorServiceImpl implements IntegratorService {
 	private static final Logger LOG = Logger.getLogger( IntegratorServiceImpl.class.getName() );
 
-	private final LinkedHashSet<Integrator> integrators = new LinkedHashSet<Integrator>();
+	private final LinkedHashSet<Integrator> integrators = new LinkedHashSet<>();
 
 	public IntegratorServiceImpl(LinkedHashSet<Integrator> providedIntegrators, ClassLoaderService classLoaderService) {
 		// register standard integrators.  Envers and JPA, for example, need to be handled by discovery because in

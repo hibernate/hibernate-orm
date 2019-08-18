@@ -56,7 +56,7 @@ public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder 
 
 	public NamedSQLQueryDefinitionBuilder addSynchronizedQuerySpace(String table) {
 		if ( this.querySpaces == null ) {
-			this.querySpaces = new ArrayList<String>();
+			this.querySpaces = new ArrayList<>();
 		}
 		this.querySpaces.add( table );
 		return this;
@@ -175,6 +175,6 @@ public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder 
 	private List<String> querySpacesCopy() {
 		return querySpaces == null
 				? null
-				: new ArrayList<String>( querySpaces );
+				: new ArrayList<>( querySpaces );
 	}
 }

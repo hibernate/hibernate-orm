@@ -63,12 +63,12 @@ public class M2MRelationNotAuditedTarget extends BaseEnversJPAFunctionalTestCase
 		M2MTargetNotAuditedEntity tnae1 = new M2MTargetNotAuditedEntity(
 				1,
 				"tnae1",
-				new ArrayList<UnversionedStrTestEntity>()
+				new ArrayList<>()
 		);
 		M2MTargetNotAuditedEntity tnae2 = new M2MTargetNotAuditedEntity(
 				2,
 				"tnae2",
-				new ArrayList<UnversionedStrTestEntity>()
+				new ArrayList<>()
 		);
 		tnae2.getReferences().add( uste1 );
 		tnae2.getReferences().add( uste2 );

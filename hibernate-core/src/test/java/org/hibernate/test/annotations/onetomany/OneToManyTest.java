@@ -147,7 +147,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		regularTiger.setName( "Regular Tiger" );
 		Tiger whiteTiger = new Tiger();
 		whiteTiger.setName( "White Tiger" );
-		trainer.setTrainedTigers( new HashSet<Tiger>() );
+		trainer.setTrainedTigers( new HashSet<>() );
 		s = openSession();
 		tx = s.beginTransaction();
 		s.persist( trainer );
@@ -172,7 +172,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		trainer = new Trainer();
 		trainer.setName( "new trainer" );
-		trainer.setTrainedTigers( new HashSet<Tiger>() );
+		trainer.setTrainedTigers( new HashSet<>() );
 		trainer.getTrainedTigers().add( whiteTiger );
 		try {
 			s.persist( trainer );
@@ -202,7 +202,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		regularMonkey.setName( "Regular Monkey" );
 		Monkey miniMonkey = new Monkey();
 		miniMonkey.setName( "Mini Monkey" );
-		trainer.setTrainedMonkeys( new HashSet<Monkey>() );
+		trainer.setTrainedMonkeys( new HashSet<>() );
 		s = openSession();
 		tx = s.beginTransaction();
 		s.persist( trainer );
@@ -414,7 +414,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		Customer c = new Customer();
 		s.persist( c );
 		//s.persist(t);
-		SortedSet<Ticket> tickets = new TreeSet<Ticket>( new TicketComparator() );
+		SortedSet<Ticket> tickets = new TreeSet<>( new TicketComparator() );
 		tickets.add( t );
 		tickets.add( t2 );
 		c.setTickets( tickets );

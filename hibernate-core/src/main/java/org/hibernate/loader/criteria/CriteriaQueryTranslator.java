@@ -63,13 +63,13 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	private final String rootEntityName;
 	private final String rootSQLAlias;
 
-	private final Map<Criteria, CriteriaInfoProvider> criteriaInfoMap = new LinkedHashMap<Criteria, CriteriaInfoProvider>();
-	private final Map<String, CriteriaInfoProvider> nameCriteriaInfoMap = new LinkedHashMap<String, CriteriaInfoProvider>();
-	private final Map<Criteria, String> criteriaSQLAliasMap = new HashMap<Criteria, String>();
-	private final Map<String, Criteria> aliasCriteriaMap = new HashMap<String, Criteria>();
-	private final Map<String, Criteria> associationPathCriteriaMap = new LinkedHashMap<String, Criteria>();
-	private final Map<String, JoinType> associationPathJoinTypesMap = new LinkedHashMap<String,JoinType>();
-	private final Map<String, Criterion> withClauseMap = new HashMap<String, Criterion>();
+	private final Map<Criteria, CriteriaInfoProvider> criteriaInfoMap = new LinkedHashMap<>();
+	private final Map<String, CriteriaInfoProvider> nameCriteriaInfoMap = new LinkedHashMap<>();
+	private final Map<Criteria, String> criteriaSQLAliasMap = new HashMap<>();
+	private final Map<String, Criteria> aliasCriteriaMap = new HashMap<>();
+	private final Map<String, Criteria> associationPathCriteriaMap = new LinkedHashMap<>();
+	private final Map<String, JoinType> associationPathJoinTypesMap = new LinkedHashMap<>();
+	private final Map<String, Criterion> withClauseMap = new HashMap<>();
 	private Set<String> associations;
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -329,8 +329,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			lockOptions.setAliasSpecificLockMode( getSQLAlias( subcriteria ), value );
 		}
 
-		final List<Object> values = new ArrayList<Object>();
-		final List<Type> types = new ArrayList<Type>();
+		final List<Object> values = new ArrayList<>();
+		final List<Type> types = new ArrayList<>();
 
 		final Iterator<CriteriaImpl.Subcriteria> subcriteriaIterator = rootCriteria.iterateSubcriteria();
 		while ( subcriteriaIterator.hasNext() ) {

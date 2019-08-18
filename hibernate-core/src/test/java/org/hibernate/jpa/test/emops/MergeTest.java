@@ -90,7 +90,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 		em.persist( competition );
 		em.flush();
 		em.clear();
-		List<Competitor> newComp = new ArrayList<Competitor>();
+		List<Competitor> newComp = new ArrayList<>();
 		newComp.add( competition.getCompetitors().get( 0 ) );
 		newComp.add( new Competitor() );
 		newComp.get( 0 ).setName( "Name2" );

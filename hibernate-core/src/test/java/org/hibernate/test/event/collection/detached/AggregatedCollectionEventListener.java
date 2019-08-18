@@ -50,7 +50,7 @@ public class AggregatedCollectionEventListener
 
 	private static final Logger log = Logger.getLogger( AggregatedCollectionEventListener.class );
 
-	private final List<EventEntry> eventEntryList = new ArrayList<EventEntry>();
+	private final List<EventEntry> eventEntryList = new ArrayList<>();
 
 	public void reset() {
 		eventEntryList.clear();

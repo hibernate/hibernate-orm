@@ -63,14 +63,14 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	public Map<Class, String> getCachedClasses() {
-		Map<Class, String> result = new HashMap<Class, String>();
+		Map<Class, String> result = new HashMap<>();
 		result.put( Item.class, "read-write" );
 		return result;
 	}
 
 	@Override
 	public Map<String, String> getCachedCollections() {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		result.put( Item.class.getName() + ".distributors", "read-write,"+Item.class.getName() + ".distributors" );
 		return result;
 	}
@@ -126,7 +126,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		Distributor res = new Distributor();
 		res.setName( "Bruce" );
-		item.setDistributors( new HashSet<Distributor>() );
+		item.setDistributors( new HashSet<>() );
 		item.getDistributors().add( res );
 		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
 		stats.clear();

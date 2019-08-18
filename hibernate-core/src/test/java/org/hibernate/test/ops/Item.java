@@ -19,8 +19,8 @@ public class Item {
 	private int version;
 	private String name;
 	private Category category;
-	private List<SubItem> subItemsBackref = new ArrayList<SubItem>();
-	private Set<String> colors = new HashSet<String>();
+	private List<SubItem> subItemsBackref = new ArrayList<>();
+	private Set<String> colors = new HashSet<>();
 
 	public Long getId() {
 		return id;

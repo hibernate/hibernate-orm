@@ -19,7 +19,7 @@ import org.hibernate.exception.spi.SQLExceptionConverter;
  * @author Steve Ebersole
  */
 public class StandardSQLExceptionConverter implements SQLExceptionConverter {
-	private ArrayList<SQLExceptionConversionDelegate> delegates = new ArrayList<SQLExceptionConversionDelegate>();
+	private ArrayList<SQLExceptionConversionDelegate> delegates = new ArrayList<>();
 
 	public StandardSQLExceptionConverter() {
 	}

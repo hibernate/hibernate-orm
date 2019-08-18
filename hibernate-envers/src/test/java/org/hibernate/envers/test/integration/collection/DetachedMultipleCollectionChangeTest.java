@@ -306,7 +306,7 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> auditJoinTableRows = qry.getResultList();
-		List<AuditJoinTableInfo> result = new ArrayList<AuditJoinTableInfo>( auditJoinTableRows.size() );
+		List<AuditJoinTableInfo> result = new ArrayList<>( auditJoinTableRows.size() );
 
 		for ( Object[] auditJoinTableRow : auditJoinTableRows ) {
 			Long joinColumnId = (Long) auditJoinTableRow[1];

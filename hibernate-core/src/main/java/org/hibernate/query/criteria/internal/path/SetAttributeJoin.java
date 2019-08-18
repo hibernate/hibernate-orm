@@ -60,7 +60,7 @@ public class SetAttributeJoin<O,E>
 
 	@Override
 	protected FromImplementor<O, E> createCorrelationDelegate() {
-		return new SetAttributeJoin<O,E>(
+		return new SetAttributeJoin<>(
 				criteriaBuilder(),
 				getJavaType(),
 				(PathImplementor<O>) getParentPath(),
@@ -81,7 +81,7 @@ public class SetAttributeJoin<O,E>
 
 	@Override
 	public <T extends E> SetAttributeJoin<O,T> treatAs(Class<T> treatAsType) {
-		return new TreatedSetAttributeJoin<O,T>( this, treatAsType );
+		return new TreatedSetAttributeJoin<>( this, treatAsType );
 	}
 
 	public static class TreatedSetAttributeJoin<O,T> extends SetAttributeJoin<O, T> {

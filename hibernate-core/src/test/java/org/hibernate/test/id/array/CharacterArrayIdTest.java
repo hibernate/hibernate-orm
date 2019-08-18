@@ -107,7 +107,7 @@ public class CharacterArrayIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		query = s.createQuery( "SELECT s FROM CharacterArrayIdTest$DemoEntity s" );
 		results = (List<DemoEntity>) query.list();
-		final Set<String> names = new HashSet<String>(  );
+		final Set<String> names = new HashSet<>(  );
 		for ( DemoEntity entity : results ) {
 			names.add( entity.name );
 		}

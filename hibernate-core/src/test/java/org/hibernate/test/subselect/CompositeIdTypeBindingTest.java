@@ -60,7 +60,7 @@ public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		session.beginTransaction();
 
-		List<EmployeeGroupId> parameters = new ArrayList<EmployeeGroupId>();
+		List<EmployeeGroupId> parameters = new ArrayList<>();
 		parameters.add( new EmployeeGroupId( "a", "b" ) );
 		parameters.add( new EmployeeGroupId( "c", "d" ) );
 		parameters.add( new EmployeeGroupId( "e", "f" ) );

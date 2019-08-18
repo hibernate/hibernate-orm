@@ -120,7 +120,7 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 				}
 			}
 
-			final List<String> argsToUse = new ArrayList<String>();
+			final List<String> argsToUse = new ArrayList<>();
 			argsToUse.add( trimSource );
 			argsToUse.add( trimCharacter );
 

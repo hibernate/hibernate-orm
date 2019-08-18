@@ -27,7 +27,7 @@ import org.hibernate.testing.TestForIssue;
 public class FlushTest extends BaseEntityManagerFunctionalTestCase {
 	private static Set<String> names = namesSet();
 	private static Set<String> namesSet() {
-		HashSet<String> names = new HashSet<String>();
+		HashSet<String> names = new HashSet<>();
 		names.add("Toonses");
 		names.add("Sox");
 		names.add("Winnie");
@@ -126,7 +126,7 @@ public class FlushTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private Collection<Decorate> getDecorate(EntityManager manager) {
-		Collection<Decorate> founds = new ArrayList<Decorate>();
+		Collection<Decorate> founds = new ArrayList<>();
 		Query query = manager.createQuery("SELECT o FROM Decorate o");
 		List list = query.getResultList();
 		for (Object obj : list) {

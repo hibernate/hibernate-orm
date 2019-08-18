@@ -21,13 +21,13 @@ import org.hibernate.jpa.event.spi.CallbackType;
  */
 @SuppressWarnings({"unchecked", "serial"})
 final class CallbackRegistryImpl implements CallbackRegistryImplementor {
-	private HashMap<Class, Callback[]> preCreates = new HashMap<Class, Callback[]>();
-	private HashMap<Class, Callback[]> postCreates = new HashMap<Class, Callback[]>();
-	private HashMap<Class, Callback[]> preRemoves = new HashMap<Class, Callback[]>();
-	private HashMap<Class, Callback[]> postRemoves = new HashMap<Class, Callback[]>();
-	private HashMap<Class, Callback[]> preUpdates = new HashMap<Class, Callback[]>();
-	private HashMap<Class, Callback[]> postUpdates = new HashMap<Class, Callback[]>();
-	private HashMap<Class, Callback[]> postLoads = new HashMap<Class, Callback[]>();
+	private HashMap<Class, Callback[]> preCreates = new HashMap<>();
+	private HashMap<Class, Callback[]> postCreates = new HashMap<>();
+	private HashMap<Class, Callback[]> preRemoves = new HashMap<>();
+	private HashMap<Class, Callback[]> postRemoves = new HashMap<>();
+	private HashMap<Class, Callback[]> preUpdates = new HashMap<>();
+	private HashMap<Class, Callback[]> postUpdates = new HashMap<>();
+	private HashMap<Class, Callback[]> postLoads = new HashMap<>();
 
 	@Override
 	public boolean hasRegisteredCallbacks(Class entityClass, CallbackType callbackType) {

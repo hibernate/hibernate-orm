@@ -171,9 +171,9 @@ public class WhereParser implements Parser {
 	// The following variables are stacks that keep information about each subexpression
 	// in the list of nested subexpressions we are currently processing.
 
-	private LinkedList<Boolean> nots = new LinkedList<Boolean>();           //were an odd or even number of NOTs encountered
-	private LinkedList<StringBuilder> joins = new LinkedList<StringBuilder>();          //the join string built up by compound paths inside this expression
-	private LinkedList<Boolean> booleanTests = new LinkedList<Boolean>();   //a flag indicating if the subexpression is known to be boolean
+	private LinkedList<Boolean> nots = new LinkedList<>();           //were an odd or even number of NOTs encountered
+	private LinkedList<StringBuilder> joins = new LinkedList<>();          //the join string built up by compound paths inside this expression
+	private LinkedList<Boolean> booleanTests = new LinkedList<>();   //a flag indicating if the subexpression is known to be boolean
 
 	private String getElementName(PathExpressionParser.CollectionElement element, QueryTranslatorImpl q) throws QueryException {
 		String name;

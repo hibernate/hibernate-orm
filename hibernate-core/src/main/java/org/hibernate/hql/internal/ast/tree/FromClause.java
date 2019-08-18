@@ -34,10 +34,10 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	public static final int ROOT_LEVEL = 1;
 
 	private int level = ROOT_LEVEL;
-	private Set<FromElement> fromElements = new HashSet<FromElement>();
-	private Map<String,FromElement> fromElementByClassAlias = new HashMap<String,FromElement>();
-	private Map<String,FromElement> fromElementByTableAlias = new HashMap<String,FromElement>();
-	private Map<String,FromElement> fromElementsByPath = new HashMap<String,FromElement>();
+	private Set<FromElement> fromElements = new HashSet<>();
+	private Map<String,FromElement> fromElementByClassAlias = new HashMap<>();
+	private Map<String,FromElement> fromElementByTableAlias = new HashMap<>();
+	private Map<String,FromElement> fromElementsByPath = new HashMap<>();
 
 	/**
 	 * All of the implicit FROM xxx JOIN yyy elements that are the destination of a collection.  These are created from
@@ -94,7 +94,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 
 		if ( element instanceof EntityJoinFromElement ) {
 			if ( entityJoinFromElements == null ) {
-				entityJoinFromElements = new ArrayList<EntityJoinFromElement>();
+				entityJoinFromElements = new ArrayList<>();
 			}
 			entityJoinFromElements.add( (EntityJoinFromElement) element );
 		}
@@ -338,7 +338,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 
 	private void addChild(FromClause fromClause) {
 		if ( childFromClauses == null ) {
-			childFromClauses = new HashSet<FromClause>();
+			childFromClauses = new HashSet<>();
 		}
 		childFromClauses.add( fromClause );
 	}

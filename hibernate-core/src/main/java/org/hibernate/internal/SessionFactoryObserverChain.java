@@ -20,7 +20,7 @@ public class SessionFactoryObserverChain implements SessionFactoryObserver {
 
 	public void addObserver(SessionFactoryObserver observer) {
 		if ( observers == null ) {
-			observers = new ArrayList<SessionFactoryObserver>();
+			observers = new ArrayList<>();
 		}
 		observers.add( observer );
 	}

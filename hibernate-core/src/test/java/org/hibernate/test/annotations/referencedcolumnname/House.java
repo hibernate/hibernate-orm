@@ -27,7 +27,7 @@ public class House implements Serializable {
 	private Integer id;
 	private String address;
 	private Postman postman;
-	private Set<Inhabitant> hasInhabitants = new HashSet<Inhabitant>();
+	private Set<Inhabitant> hasInhabitants = new HashSet<>();
 
 	@ManyToOne
 	@JoinColumn(referencedColumnName = "name")

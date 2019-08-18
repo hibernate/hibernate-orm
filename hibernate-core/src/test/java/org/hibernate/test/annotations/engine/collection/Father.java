@@ -36,5 +36,5 @@ public class Father {
 	@Cascade({ CascadeType.SAVE_UPDATE })
 	public List<Son> getOrderedSons() { return orderedSons; }
 	public void setOrderedSons(List<Son> orderedSons) {  this.orderedSons = orderedSons; }
-	private List<Son> orderedSons = new ArrayList<Son>( );
+	private List<Son> orderedSons = new ArrayList<>( );
 }

@@ -80,7 +80,7 @@ public class JoinTableDetachedTest extends BaseEnversJPAFunctionalTestCase {
 		// Revision 4 - replace the collection
 		em.getTransaction().begin();
 		collectionEntity = em.find( JoinTableEntity.class, collectionEntity.getId() );
-		collectionEntity.setReferences( new HashSet<StrTestEntity>() );
+		collectionEntity.setReferences( new HashSet<>() );
 		collectionEntity = em.merge( collectionEntity );
 		em.getTransaction().commit();
 
@@ -134,7 +134,7 @@ public class JoinTableDetachedTest extends BaseEnversJPAFunctionalTestCase {
 		Assert.assertEquals( collectionEntity.getReferences(), ver3.getReferences() );
 
 		// Revision 4
-		collectionEntity.setReferences( new HashSet<StrTestEntity>() );
+		collectionEntity.setReferences( new HashSet<>() );
 		JoinTableEntity ver4 = getAuditReader().find( JoinTableEntity.class, collectionEntityId, 4 );
 		Assert.assertEquals( collectionEntity, ver4 );
 		Assert.assertEquals( collectionEntity.getReferences(), ver4.getReferences() );

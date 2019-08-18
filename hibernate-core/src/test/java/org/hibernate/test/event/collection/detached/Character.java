@@ -24,7 +24,7 @@ import javax.persistence.Table;
 public class Character implements Identifiable {
 	private Integer id;
 	private String name;
-	private List<Alias> aliases = new ArrayList<Alias>();
+	private List<Alias> aliases = new ArrayList<>();
 
 	public Character() {
 	}

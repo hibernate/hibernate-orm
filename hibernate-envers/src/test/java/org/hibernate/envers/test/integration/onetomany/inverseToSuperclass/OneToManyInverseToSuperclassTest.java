@@ -42,7 +42,7 @@ public class OneToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTes
 		det1.setStr2( "detail 1" );
 
 		m1.setStr( "master" );
-		m1.setItems( new ArrayList<DetailSubclass>() );
+		m1.setItems( new ArrayList<>() );
 		m1.getItems().add( det1 );
 		det1.setParent( m1 );
 

@@ -405,10 +405,10 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 				K key, ReferenceType keyType,
 				ReferenceQueue<Object> refQueue) {
 			if ( keyType == ReferenceType.WEAK ) {
-				return new WeakKeyReference<K>( key, hash, refQueue );
+				return new WeakKeyReference<>( key, hash, refQueue );
 			}
 			if ( keyType == ReferenceType.SOFT ) {
-				return new SoftKeyReference<K>( key, hash, refQueue );
+				return new SoftKeyReference<>( key, hash, refQueue );
 			}
 
 			return key;
@@ -418,10 +418,10 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 				V value, ReferenceType valueType,
 				ReferenceQueue<Object> refQueue) {
 			if ( valueType == ReferenceType.WEAK ) {
-				return new WeakValueReference<V>( value, keyRef, hash, refQueue );
+				return new WeakValueReference<>( value, keyRef, hash, refQueue );
 			}
 			if ( valueType == ReferenceType.SOFT ) {
-				return new SoftValueReference<V>( value, keyRef, hash, refQueue );
+				return new SoftValueReference<>( value, keyRef, hash, refQueue );
 			}
 
 			return value;
@@ -578,7 +578,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		void setTable(HashEntry<K, V>[] newTable) {
 			threshold = (int) ( newTable.length * loadFactor );
 			table = newTable;
-			refQueue = new ReferenceQueue<Object>();
+			refQueue = new ReferenceQueue<>();
 		}
 
 		/**
@@ -590,7 +590,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		HashEntry<K, V> newHashEntry(K key, int hash, HashEntry<K, V> next, V value) {
-			return new HashEntry<K, V>( key, hash, next, value, keyType, valueType, refQueue );
+			return new HashEntry<>( key, hash, next, value, keyType, valueType, refQueue );
 		}
 
 		/**
@@ -890,7 +890,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 					}
 					++modCount;
 					// replace the reference queue to avoid unnecessary stale cleanups
-					refQueue = new ReferenceQueue<Object>();
+					refQueue = new ReferenceQueue<>();
 					count = 0; // write-volatile
 				}
 				finally {
@@ -965,7 +965,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		identityComparisons = options != null && options.contains( Option.IDENTITY_COMPARISONS );
 
 		for ( int i = 0; i < this.segments.length; ++i ) {
-			this.segments[i] = new Segment<K, V>(
+			this.segments[i] = new Segment<>(
 					cap, loadFactor,
 					keyType, valueType, identityComparisons
 			);

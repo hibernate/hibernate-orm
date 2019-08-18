@@ -23,7 +23,7 @@ import java.util.Set;
 @Table(name = "users")
 public class User {
 	private Long id;
-	private Set<Role> roles = new HashSet<Role>();
+	private Set<Role> roles = new HashSet<>();
 
 	@Id
 	public Long getId() {

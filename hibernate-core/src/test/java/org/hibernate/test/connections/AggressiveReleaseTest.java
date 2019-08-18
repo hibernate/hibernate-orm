@@ -234,7 +234,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		prepare();
 		Session s = getSessionUnderTest();
 
-		List<Silly> entities = new ArrayList<Silly>();
+		List<Silly> entities = new ArrayList<>();
 		for ( int i = 0; i < 10; i++ ) {
 			Other other = new Other( "other-" + i );
 			Silly silly = new Silly( "silly-" + i, other );

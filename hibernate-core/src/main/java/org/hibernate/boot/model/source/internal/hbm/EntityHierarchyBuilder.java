@@ -43,9 +43,9 @@ import org.jboss.logging.Logger;
 public class EntityHierarchyBuilder {
 	private static final Logger log = Logger.getLogger( EntityHierarchyBuilder.class );
 
-	private final List<EntityHierarchySourceImpl> entityHierarchyList = new ArrayList<EntityHierarchySourceImpl>();
+	private final List<EntityHierarchySourceImpl> entityHierarchyList = new ArrayList<>();
 
-	private final Map<String,AbstractEntitySourceImpl> entitySourceByNameMap = new HashMap<String, AbstractEntitySourceImpl>();
+	private final Map<String,AbstractEntitySourceImpl> entitySourceByNameMap = new HashMap<>();
 	private Map<String,List<ExtendsQueueEntry>> toBeLinkedQueue;
 
 	public EntityHierarchyBuilder() {
@@ -238,14 +238,14 @@ public class EntityHierarchyBuilder {
 		List<ExtendsQueueEntry> waitingList = null;
 
 		if ( toBeLinkedQueue == null ) {
-			toBeLinkedQueue = new HashMap<String, List<ExtendsQueueEntry>>();
+			toBeLinkedQueue = new HashMap<>();
 		}
 		else {
 			waitingList = toBeLinkedQueue.get( jaxbSubEntityMapping.getExtends() );
 		}
 
 		if ( waitingList == null ) {
-			waitingList = new ArrayList<ExtendsQueueEntry>();
+			waitingList = new ArrayList<>();
 			toBeLinkedQueue.put( jaxbSubEntityMapping.getExtends(), waitingList );
 		}
 

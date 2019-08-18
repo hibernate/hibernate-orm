@@ -43,7 +43,7 @@ public class NaturalIdentifier implements Criterion {
 	 * @return The value map.
 	 */
 	public Map<String, Object> getNaturalIdValues() {
-		final Map<String, Object> naturalIdValueMap = new ConcurrentHashMap<String, Object>();
+		final Map<String, Object> naturalIdValueMap = new ConcurrentHashMap<>();
 		for ( Criterion condition : conjunction.conditions() ) {
 			if ( !SimpleExpression.class.isInstance( condition ) ) {
 				continue;

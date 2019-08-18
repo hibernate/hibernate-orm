@@ -265,19 +265,19 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		NONE {
 			@Override
 			public <K, V> EvictionPolicy<K, V> make(Segment<K, V> s, int capacity, float lf) {
-				return new NullEvictionPolicy<K, V>();
+				return new NullEvictionPolicy<>();
 			}
 		},
 		LRU {
 			@Override
 			public <K, V> EvictionPolicy<K, V> make(Segment<K, V> s, int capacity, float lf) {
-				return new LRU<K, V>( s, capacity, lf, capacity * 10, lf );
+				return new LRU<>( s, capacity, lf, capacity * 10, lf );
 			}
 		},
 		LIRS {
 			@Override
 			public <K, V> EvictionPolicy<K, V> make(Segment<K, V> s, int capacity, float lf) {
-				return new LIRS<K, V>( s, capacity, capacity * 10, lf );
+				return new LIRS<>( s, capacity, capacity * 10, lf );
 			}
 		};
 
@@ -410,7 +410,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public HashEntry<K, V> createNewEntry(K key, int hash, HashEntry<K, V> next, V value) {
-			return new HashEntry<K, V>( key, hash, next, value );
+			return new HashEntry<>( key, hash, next, value );
 		}
 	}
 
@@ -434,13 +434,13 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			this.trimDownSize = capacity;
 			this.maxBatchQueueSize = maxBatchSize > MAX_BATCH_SIZE ? MAX_BATCH_SIZE : maxBatchSize;
 			this.batchThresholdFactor = batchThresholdFactor;
-			this.accessQueue = new ConcurrentLinkedQueue<HashEntry<K, V>>();
-			this.evicted = new HashSet<HashEntry<K, V>>();
+			this.accessQueue = new ConcurrentLinkedQueue<>();
+			this.evicted = new HashSet<>();
 		}
 
 		@Override
 		public Set<HashEntry<K, V>> execute() {
-			Set<HashEntry<K, V>> evictedCopy = new HashSet<HashEntry<K, V>>( evicted );
+			Set<HashEntry<K, V>> evictedCopy = new HashSet<>( evicted );
 			for ( HashEntry<K, V> e : accessQueue ) {
 				put( e, e.value );
 			}
@@ -453,7 +453,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		public Set<HashEntry<K, V>> onEntryMiss(HashEntry<K, V> e) {
 			put( e, e.value );
 			if ( !evicted.isEmpty() ) {
-				Set<HashEntry<K, V>> evictedCopy = new HashSet<HashEntry<K, V>>( evicted );
+				Set<HashEntry<K, V>> evictedCopy = new HashSet<>( evicted );
 				evicted.clear();
 				return evictedCopy;
 			}
@@ -516,7 +516,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public HashEntry<K, V> createNewEntry(K key, int hash, HashEntry<K, V> next, V value) {
-			return new HashEntry<K, V>( key, hash, next, value );
+			return new HashEntry<>( key, hash, next, value );
 		}
 	}
 
@@ -668,7 +668,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 				warmupMiss();
 			}
 			else {
-				evicted = new HashSet<HashEntry<K, V>>();
+				evicted = new HashSet<>();
 				fullMiss( evicted );
 			}
 
@@ -973,7 +973,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * and entries are evicted from the front of the queue.</li>
 		 * </ul>
 		 */
-		private final LIRSHashEntry<K, V> header = new LIRSHashEntry<K, V>( null, null, 0, null, null );
+		private final LIRSHashEntry<K, V> header = new LIRSHashEntry<>( null, null, 0, null, null );
 
 		/**
 		 * The maximum number of hot entries (L_lirs in the paper).
@@ -997,7 +997,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			this.maximumHotSize = calculateLIRSize( capacity );
 			this.maxBatchQueueSize = maxBatchSize > MAX_BATCH_SIZE ? MAX_BATCH_SIZE : maxBatchSize;
 			this.batchThresholdFactor = batchThresholdFactor;
-			this.accessQueue = new ConcurrentLinkedQueue<LIRSHashEntry<K, V>>();
+			this.accessQueue = new ConcurrentLinkedQueue<>();
 		}
 
 		private static int calculateLIRSize(int maximumSize) {
@@ -1007,7 +1007,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public Set<HashEntry<K, V>> execute() {
-			Set<HashEntry<K, V>> evicted = new HashSet<HashEntry<K, V>>();
+			Set<HashEntry<K, V>> evicted = new HashSet<>();
 			try {
 				for ( LIRSHashEntry<K, V> e : accessQueue ) {
 					if ( e.isResident() ) {
@@ -1128,7 +1128,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public HashEntry<K, V> createNewEntry(K key, int hash, HashEntry<K, V> next, V value) {
-			return new LIRSHashEntry<K, V>( this, key, hash, next, value );
+			return new LIRSHashEntry<>( this, key, hash, next, value );
 		}
 	}
 
@@ -1605,7 +1605,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					evictedCopy = singletonMap( evictedEntry.key, evictedEntry.value );
 				}
 				else {
-					evictedCopy = new HashMap<K, V>( evicted.size() );
+					evictedCopy = new HashMap<>( evicted.size() );
 					for ( HashEntry<K, V> he : evicted ) {
 						evictedCopy.put( he.key, he.value );
 					}
@@ -1677,7 +1677,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		for ( int i = 0; i < this.segments.length; ++i ) {
-			this.segments[i] = new Segment<K, V>( cap, c, DEFAULT_LOAD_FACTOR, evictionStrategy, evictionListener );
+			this.segments[i] = new Segment<>( cap, c, DEFAULT_LOAD_FACTOR, evictionStrategy, evictionListener );
 		}
 	}
 

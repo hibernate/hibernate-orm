@@ -166,7 +166,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 */
 	protected String fillAliasInSelectClause(StringBuilder sb, int offset) {
 		final String separator = System.lineSeparator();
-		final List<String> aliases = new LinkedList<String>();
+		final List<String> aliases = new LinkedList<>();
 		final int startPos = getSelectColumnsStartPosition( sb, offset );
 		int endPos = shallowIndexOfPattern( sb, FROM_PATTERN, startPos );
 
@@ -402,7 +402,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * @return list of {@code IgnoreRange} objects, never {@code null}.
 	 */
 	private static List<IgnoreRange> generateIgnoreRanges(String sql) {
-		List<IgnoreRange> ignoreRangeList = new ArrayList<IgnoreRange>();
+		List<IgnoreRange> ignoreRangeList = new ArrayList<>();
 
 		int depth = 0;
 		int start = -1;

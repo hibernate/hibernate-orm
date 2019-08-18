@@ -19,7 +19,7 @@ import org.hibernate.internal.util.StringHelper;
  * @author Brett Meyer
  */
 public class UniqueKey extends Constraint {
-	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>();
+	private java.util.Map<Column, String> columnOrderMap = new HashMap<>();
 
 	@Override
 	public String sqlConstraintString(

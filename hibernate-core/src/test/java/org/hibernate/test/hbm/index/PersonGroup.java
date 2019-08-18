@@ -14,8 +14,8 @@ import java.util.Set;
 public class PersonGroup {
 	private long id;
 	private String name;
-	private Set<Person> persons = new HashSet<Person>();
-	private Map<String, String> comments = new HashMap<String,String>();
+	private Set<Person> persons = new HashSet<>();
+	private Map<String, String> comments = new HashMap<>();
 
 	public PersonGroup(String name) {
 		this.name = name;

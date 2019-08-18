@@ -79,7 +79,7 @@ public class TypeInfo {
 	 * @return The extracted type info
 	 */
 	public static LinkedHashSet<TypeInfo> extractTypeInfo(DatabaseMetaData metaData) {
-		final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
+		final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<>();
 		try {
 			final ResultSet resultSet = metaData.getTypeInfo();
 			try {

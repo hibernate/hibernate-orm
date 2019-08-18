@@ -51,7 +51,7 @@ public class IndexedListJoinColumnBidirectionalRefIngEntity {
 			IndexedListJoinColumnBidirectionalRefEdEntity... references) {
 		this.id = id;
 		this.data = data;
-		this.references = new ArrayList<IndexedListJoinColumnBidirectionalRefEdEntity>();
+		this.references = new ArrayList<>();
 		this.references.addAll( Arrays.asList( references ) );
 	}
 

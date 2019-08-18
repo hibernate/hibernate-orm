@@ -51,7 +51,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		this.attributeConverter = attributeConverter;
 
 		this.mutabilityPlan = entityAttributeJavaTypeDescriptor.getMutabilityPlan().isMutable()
-				? new AttributeConverterMutabilityPlanImpl<T>( attributeConverter )
+				? new AttributeConverterMutabilityPlanImpl<>( attributeConverter )
 				: ImmutableMutabilityPlan.INSTANCE;
 
 		log.debug( "Created AttributeConverterTypeAdapter -> " + name );

@@ -105,18 +105,18 @@ public class InPredicate<T>
 			Collection<T> values) {
 		super( criteriaBuilder );
 		this.expression = expression;
-		this.values = new ArrayList<Expression<? extends T>>( values.size() );
+		this.values = new ArrayList<>( values.size() );
 		final Class<? extends T> javaType = expression.getJavaType();
 		ValueHandlerFactory.ValueHandler<? extends T> valueHandler = javaType != null && ValueHandlerFactory.isNumeric(javaType)
 				? ValueHandlerFactory.determineAppropriateHandler((Class<? extends T>) javaType)
-				: new ValueHandlerFactory.NoOpValueHandler<T>();
+				: new ValueHandlerFactory.NoOpValueHandler<>();
 		for ( T value : values ) {
 			if ( value instanceof Expression ) {
 				this.values.add( (Expression<T>) value );
 			}
 			else {
 				this.values.add(
-						new LiteralExpression<T>( criteriaBuilder, valueHandler.convert( value ) ) );
+						new LiteralExpression<>( criteriaBuilder, valueHandler.convert( value ) ) );
 			}
 		}
 	}
@@ -137,7 +137,7 @@ public class InPredicate<T>
 
 	@Override
 	public InPredicate<T> value(T value) {
-		return value( new LiteralExpression<T>( criteriaBuilder(), value ) );
+		return value( new LiteralExpression<>( criteriaBuilder(), value ) );
 	}
 
 	@Override

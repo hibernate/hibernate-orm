@@ -23,7 +23,7 @@ public class TestDataReader {
 		if ( fileName == null ) {
 			throw new RuntimeException( "Null testsuite-suite data file specified." );
 		}
-		List<TestDataElement> testDataElements = new ArrayList<TestDataElement>();
+		List<TestDataElement> testDataElements = new ArrayList<>();
 		SAXReader reader = new SAXReader();
 		try {
 			Document document = reader.read( getInputStream( fileName ) );

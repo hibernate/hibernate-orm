@@ -806,7 +806,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			PersistentClass referencedEntity,
 			MetadataBuildingContext context) {
 		//convenient container to find whether a column is an id one or not
-		Set<Column> idColumns = new HashSet<Column>();
+		Set<Column> idColumns = new HashSet<>();
 		Iterator idColumnsIt = referencedEntity.getKey().getColumnIterator();
 		while ( idColumnsIt.hasNext() ) {
 			idColumns.add( (Column) idColumnsIt.next() );

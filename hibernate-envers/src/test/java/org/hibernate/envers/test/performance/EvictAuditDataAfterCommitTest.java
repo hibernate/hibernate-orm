@@ -77,7 +77,7 @@ public class EvictAuditDataAfterCommitTest extends BaseEnversFunctionalTestCase 
 
 		session.getTransaction().begin();
 		ed2 = (SetRefEdEntity) session.load( SetRefEdEntity.class, ed2.getId() );
-		Set<SetRefIngEntity> reffering = new HashSet<SetRefIngEntity>();
+		Set<SetRefIngEntity> reffering = new HashSet<>();
 		reffering.add( ing1 );
 		reffering.add( ing2 );
 		ed2.setReffering( reffering );

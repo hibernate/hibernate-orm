@@ -105,7 +105,7 @@ public class ActionQueue {
 	 */
 	private static final LinkedHashMap<Class<? extends Executable>,ListProvider> EXECUTABLE_LISTS_MAP;
 	static {
-		EXECUTABLE_LISTS_MAP = new LinkedHashMap<Class<? extends Executable>,ListProvider>( 8 );
+		EXECUTABLE_LISTS_MAP = new LinkedHashMap<>( 8 );
 
 		EXECUTABLE_LISTS_MAP.put(
 				OrphanRemovalAction.class,
@@ -115,7 +115,7 @@ public class ActionQueue {
 					}
 					ExecutableList<OrphanRemovalAction> init(ActionQueue instance) {
 						// OrphanRemovalAction executables never require sorting.
-						return instance.orphanRemovals = new ExecutableList<OrphanRemovalAction>( false );
+						return instance.orphanRemovals = new ExecutableList<>( false );
 					}
 				}
 		);
@@ -127,12 +127,12 @@ public class ActionQueue {
 					}
 					ExecutableList<AbstractEntityInsertAction> init(ActionQueue instance) {
 						if ( instance.isOrderInsertsEnabled() ) {
-							return instance.insertions = new ExecutableList<AbstractEntityInsertAction>(
+							return instance.insertions = new ExecutableList<>(
 									new InsertActionSorter()
 							);
 						}
 						else {
-							return instance.insertions = new ExecutableList<AbstractEntityInsertAction>(
+							return instance.insertions = new ExecutableList<>(
 									false
 							);
 						}
@@ -146,7 +146,7 @@ public class ActionQueue {
 						return instance.updates;
 					}
 					ExecutableList<EntityUpdateAction> init(ActionQueue instance) {
-						return instance.updates = new ExecutableList<EntityUpdateAction>(
+						return instance.updates = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -159,7 +159,7 @@ public class ActionQueue {
 						return instance.collectionQueuedOps;
 					}
 					ExecutableList<QueuedOperationCollectionAction> init(ActionQueue instance) {
-						return instance.collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>(
+						return instance.collectionQueuedOps = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -172,7 +172,7 @@ public class ActionQueue {
 						return instance.collectionRemovals;
 					}
 					ExecutableList<CollectionRemoveAction> init(ActionQueue instance) {
-						return instance.collectionRemovals = new ExecutableList<CollectionRemoveAction>(
+						return instance.collectionRemovals = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -185,7 +185,7 @@ public class ActionQueue {
 						return instance.collectionUpdates;
 					}
 					ExecutableList<CollectionUpdateAction> init(ActionQueue instance) {
-						return instance.collectionUpdates = new ExecutableList<CollectionUpdateAction>(
+						return instance.collectionUpdates = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -198,7 +198,7 @@ public class ActionQueue {
 						return instance.collectionCreations;
 					}
 					ExecutableList<CollectionRecreateAction> init(ActionQueue instance) {
-						return instance.collectionCreations = new ExecutableList<CollectionRecreateAction>(
+						return instance.collectionCreations = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -212,7 +212,7 @@ public class ActionQueue {
 					}
 					ExecutableList<EntityDeleteAction> init(ActionQueue instance) {
 						// EntityDeleteAction executables never require sorting.
-						return instance.deletions = new ExecutableList<EntityDeleteAction>( false );
+						return instance.deletions = new ExecutableList<>( false );
 					}
 				}
 		);
@@ -922,7 +922,7 @@ public class ActionQueue {
 		protected SessionImplementor session;
 		// Concurrency handling required when transaction completion process is dynamically registered
 		// inside event listener (HHH-7478).
-		protected Queue<T> processes = new ConcurrentLinkedQueue<T>();
+		protected Queue<T> processes = new ConcurrentLinkedQueue<>();
 
 		private AbstractTransactionCompletionProcessQueue(SessionImplementor session) {
 			this.session = session;
@@ -967,7 +967,7 @@ public class ActionQueue {
 	 * Encapsulates behavior needed for after transaction processing
 	 */
 	private static class AfterTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<AfterTransactionCompletionProcess> {
-		private Set<String> querySpacesToInvalidate = new HashSet<String>();
+		private Set<String> querySpacesToInvalidate = new HashSet<>();
 
 		private AfterTransactionCompletionProcessQueue(SessionImplementor session) {
 			super( session );

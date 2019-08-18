@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestTools {
 	public static <T> Set<T> makeSet(T... objects) {
-		final Set<T> ret = new HashSet<T>();
+		final Set<T> ret = new HashSet<>();
 		//noinspection ManualArrayToCollectionCopy
 		for ( T o : objects ) {
 			ret.add( o );
@@ -40,7 +40,7 @@ public class TestTools {
 	}
 
 	public static Map<Object, Object> makeMap(Object... objects) {
-		final Map<Object, Object> ret = new HashMap<Object, Object>();
+		final Map<Object, Object> ret = new HashMap<>();
 		// The number of objects must be divisable by 2.
 		//noinspection ManualArrayToCollectionCopy
 		for ( int i = 0; i < objects.length; i += 2 ) {
@@ -62,7 +62,7 @@ public class TestTools {
 	}
 
 	public static List<Integer> extractRevisionNumbers(List queryResults) {
-		final List<Integer> result = new ArrayList<Integer>();
+		final List<Integer> result = new ArrayList<>();
 		for ( Object queryResult : queryResults ) {
 			result.add( ((SequenceIdRevisionEntity) ((Object[]) queryResult)[1]).getId() );
 		}
@@ -74,7 +74,7 @@ public class TestTools {
 	}
 
 	public static Set<String> extractModProperties(PersistentClass persistentClass, String suffix) {
-		final Set<String> result = new HashSet<String>();
+		final Set<String> result = new HashSet<>();
 		final Iterator iterator = persistentClass.getPropertyIterator();
 		while ( iterator.hasNext() ) {
 			final Property property = (Property) iterator.next();
@@ -95,7 +95,7 @@ public class TestTools {
 	}
 
 	public static <K,E> MapBuilder<K,E> mapBuilder() {
-		return new MashMapBuilderImpl<K,E>();
+		return new MashMapBuilderImpl<>();
 	}
 
 	public interface MapBuilder<K,E> {
@@ -105,7 +105,7 @@ public class TestTools {
 	}
 
 	private static class MashMapBuilderImpl<K,E> implements MapBuilder<K,E> {
-		private final Map<K,E> hashMap = new HashMap<K, E>();
+		private final Map<K,E> hashMap = new HashMap<>();
 
 		@Override
 		public MapBuilder<K, E> add(K key, E value) {

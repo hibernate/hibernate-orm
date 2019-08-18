@@ -47,7 +47,7 @@ public class Example implements Criterion {
 	private boolean isIgnoreCaseEnabled;
 	private MatchMode matchMode;
 
-	private final Set<String> excludedProperties = new HashSet<String>();
+	private final Set<String> excludedProperties = new HashSet<>();
 
 	/**
 	 * Create a new Example criterion instance, which includes all non-null properties by default
@@ -247,7 +247,7 @@ public class Example implements Criterion {
 		final Type[] propertyTypes = meta.getPropertyTypes();
 
 		final Object[] values = meta.getPropertyValues( exampleEntity );
-		final List<TypedValue> list = new ArrayList<TypedValue>();
+		final List<TypedValue> list = new ArrayList<>();
 		for ( int i=0; i<propertyNames.length; i++ ) {
 			final Object value = values[i];
 			final Type type = propertyTypes[i];

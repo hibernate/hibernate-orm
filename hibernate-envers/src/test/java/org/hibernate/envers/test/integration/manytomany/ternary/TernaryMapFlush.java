@@ -68,7 +68,7 @@ public class TernaryMapFlush extends BaseEnversJPAFunctionalTestCase {
 		str1 = em.find( StrTestPrivSeqEntity.class, str1.getId() );
 		int1 = em.find( IntTestPrivSeqEntity.class, int1.getId() );
 
-		map1.setMap( new HashMap<IntTestPrivSeqEntity, StrTestPrivSeqEntity>() );
+		map1.setMap( new HashMap<>() );
 
 		em.flush();
 

@@ -41,7 +41,7 @@ public class JdbcTypeFamilyInformation {
 		}
 	}
 
-	private ConcurrentHashMap<Integer,Family> typeCodeToFamilyMap = new ConcurrentHashMap<Integer, Family>();
+	private ConcurrentHashMap<Integer,Family> typeCodeToFamilyMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Will return {@code null} if no match is found.

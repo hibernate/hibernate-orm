@@ -35,7 +35,7 @@ public class ComponentMapKeyEntity {
 	private Map<Component1, ComponentTestEntity> idmap;
 
 	public ComponentMapKeyEntity() {
-		idmap = new HashMap<Component1, ComponentTestEntity>();
+		idmap = new HashMap<>();
 	}
 
 	public Integer getId() {

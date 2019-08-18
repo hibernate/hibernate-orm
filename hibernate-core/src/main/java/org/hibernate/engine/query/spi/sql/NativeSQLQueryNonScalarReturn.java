@@ -23,7 +23,7 @@ import org.hibernate.LockMode;
 public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryReturn, Serializable {
 	private final String alias;
 	private final LockMode lockMode;
-	private final Map<String,String[]> propertyResults = new HashMap<String,String[]>();
+	private final Map<String,String[]> propertyResults = new HashMap<>();
 	private final int hashCode;
 
 	/**

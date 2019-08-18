@@ -87,7 +87,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final int[] subclassFormulaTableNumberClosure;
 
 	// discriminator column
-	private final Map<Object, String> subclassesByDiscriminatorValue = new HashMap<Object, String>();
+	private final Map<Object, String> subclassesByDiscriminatorValue = new HashMap<>();
 	private final boolean forceDiscriminator;
 	private final String discriminatorColumnName;
 	private final String discriminatorColumnReaders;
@@ -104,9 +104,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[][] constraintOrderedKeyColumnNames;
 
 	//private final Map propertyTableNumbersByName = new HashMap();
-	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass = new HashMap<String, Integer>();
+	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass = new HashMap<>();
 
-	private final Map<String, String> sequentialSelectStringsByEntityName = new HashMap<String, String>();
+	private final Map<String, String> sequentialSelectStringsByEntityName = new HashMap<>();
 
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
@@ -224,13 +224,13 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final boolean lazyAvailable = isInstrumented();
 
 		boolean hasDeferred = false;
-		ArrayList<String> subclassTables = new ArrayList<String>();
-		ArrayList<String[]> joinKeyColumns = new ArrayList<String[]>();
-		ArrayList<Boolean> isConcretes = new ArrayList<Boolean>();
-		ArrayList<Boolean> isDeferreds = new ArrayList<Boolean>();
-		ArrayList<Boolean> isInverses = new ArrayList<Boolean>();
-		ArrayList<Boolean> isNullables = new ArrayList<Boolean>();
-		ArrayList<Boolean> isLazies = new ArrayList<Boolean>();
+		ArrayList<String> subclassTables = new ArrayList<>();
+		ArrayList<String[]> joinKeyColumns = new ArrayList<>();
+		ArrayList<Boolean> isConcretes = new ArrayList<>();
+		ArrayList<Boolean> isDeferreds = new ArrayList<>();
+		ArrayList<Boolean> isInverses = new ArrayList<>();
+		ArrayList<Boolean> isNullables = new ArrayList<>();
+		ArrayList<Boolean> isLazies = new ArrayList<>();
 		subclassTables.add( qualifiedTableNames[0] );
 		joinKeyColumns.add( getIdentifierColumnNames() );
 		isConcretes.add( Boolean.TRUE );
@@ -358,9 +358,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		//TODO: code duplication with JoinedSubclassEntityPersister
 
-		ArrayList<Integer> columnJoinNumbers = new ArrayList<Integer>();
-		ArrayList<Integer> formulaJoinedNumbers = new ArrayList<Integer>();
-		ArrayList<Integer> propertyJoinNumbers = new ArrayList<Integer>();
+		ArrayList<Integer> columnJoinNumbers = new ArrayList<>();
+		ArrayList<Integer> formulaJoinedNumbers = new ArrayList<>();
+		ArrayList<Integer> propertyJoinNumbers = new ArrayList<>();
 
 		iter = persistentClass.getSubclassPropertyClosureIterator();
 		while ( iter.hasNext() ) {
@@ -611,7 +611,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	private String[] decodeTreatAsRequests(Set<String> treatAsDeclarations) {
-		final List<String> values = new ArrayList<String>();
+		final List<String> values = new ArrayList<>();
 		for ( String subclass : treatAsDeclarations ) {
 			final Queryable queryable = (Queryable) getFactory().getEntityPersister( subclass );
 			if ( !queryable.isAbstract() ) {
@@ -641,7 +641,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private String[] fullDiscriminatorValues() {
 		if ( fullDiscriminatorValues == null ) {
 			// first access; build it
-			final List<String> values = new ArrayList<String>();
+			final List<String> values = new ArrayList<>();
 			for ( String subclass : getSubclassClosure() ) {
 				final Queryable queryable = (Queryable) getFactory().getEntityPersister( subclass );
 				if ( !queryable.isAbstract() ) {
@@ -741,7 +741,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		//figure out which tables need to be fetched
 		AbstractEntityPersister subclassPersister = (AbstractEntityPersister) persister;
-		HashSet<Integer> tableNumbers = new HashSet<Integer>();
+		HashSet<Integer> tableNumbers = new HashSet<>();
 		String[] props = subclassPersister.getPropertyNames();
 		String[] classes = subclassPersister.getPropertySubclassNames();
 		for ( int i = 0; i < props.length; i++ ) {
@@ -755,7 +755,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 
 		//figure out which columns are needed
-		ArrayList<Integer> columnNumbers = new ArrayList<Integer>();
+		ArrayList<Integer> columnNumbers = new ArrayList<>();
 		final int[] columnTableNumbers = getSubclassColumnTableNumberClosure();
 		for ( int i = 0; i < getSubclassColumnClosure().length; i++ ) {
 			if ( tableNumbers.contains( columnTableNumbers[i] ) ) {
@@ -764,7 +764,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 
 		//figure out which formulas are needed
-		ArrayList<Integer> formulaNumbers = new ArrayList<Integer>();
+		ArrayList<Integer> formulaNumbers = new ArrayList<>();
 		final int[] formulaTableNumbers = getSubclassColumnTableNumberClosure();
 		for ( int i = 0; i < getSubclassFormulaTemplateClosure().length; i++ ) {
 			if ( tableNumbers.contains( formulaTableNumbers[i] ) ) {

@@ -31,7 +31,7 @@ public class UpdatesPerformance extends AbstractPerformanceTest {
 
 	private Random random = new Random();
 
-	private List<Integer> ids = new ArrayList<Integer>();
+	private List<Integer> ids = new ArrayList<>();
 
 	private void setup() {
 		EntityManager entityManager = getEntityManager();

@@ -15,7 +15,7 @@ public class VehicleContract extends Contract {
 	private List<Vehicle> vehicles;
 
 	public VehicleContract() {
-		vehicles = new ArrayList<Vehicle>();
+		vehicles = new ArrayList<>();
 	}
 
 	public void addVehicle(Vehicle vehicle) {

@@ -18,7 +18,7 @@ public class Order {
     return orderId;
   }
 
-	private Set<OrderLine> orderLines = new HashSet<OrderLine>();
+	private Set<OrderLine> orderLines = new HashSet<>();
 
 	public Set<OrderLine> getLines() {
     return Collections.unmodifiableSet(orderLines);
@@ -29,7 +29,7 @@ public class Order {
 		this.orderLines.add(orderLine);
 	}
 
-	private Set<OrderContact> orderContacts = new HashSet<OrderContact>();
+	private Set<OrderContact> orderContacts = new HashSet<>();
 
 	public Set<OrderContact> getContacts() {
 		return Collections.unmodifiableSet(orderContacts);

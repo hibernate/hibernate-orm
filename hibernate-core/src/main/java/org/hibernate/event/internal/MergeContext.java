@@ -83,11 +83,11 @@ class MergeContext implements Map {
 	private final EventSource session;
 	private final EntityCopyObserver entityCopyObserver;
 
-	private Map<Object,Object> mergeToManagedEntityXref = new IdentityHashMap<Object,Object>(10);
+	private Map<Object,Object> mergeToManagedEntityXref = new IdentityHashMap<>(10);
 		// key is an entity to be merged;
 		// value is the associated managed entity (result) in the persistence context.
 
-	private Map<Object,Object> managedToMergeEntityXref = new IdentityHashMap<Object,Object>( 10 );
+	private Map<Object,Object> managedToMergeEntityXref = new IdentityHashMap<>( 10 );
 		// maintains the inverse of the mergeToManagedEntityXref for performance reasons.
 		// key is the managed entity result in the persistence context.
 		// value is the associated entity to be merged; if multiple
@@ -97,7 +97,7 @@ class MergeContext implements Map {
 
 	// TODO: merge mergeEntityToOperatedOnFlagMap into mergeToManagedEntityXref, since they have the same key.
 	//       need to check if this would hurt performance.
-	private Map<Object,Boolean> mergeEntityToOperatedOnFlagMap = new IdentityHashMap<Object,Boolean>( 10 );
+	private Map<Object,Boolean> mergeEntityToOperatedOnFlagMap = new IdentityHashMap<>( 10 );
 	    // key is a merge entity;
 	    // value is a flag indicating if the merge entity is currently in the merge process.
 

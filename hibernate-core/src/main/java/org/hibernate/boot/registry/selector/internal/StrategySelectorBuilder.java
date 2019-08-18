@@ -111,7 +111,7 @@ import org.jboss.logging.Logger;
 public class StrategySelectorBuilder {
 	private static final Logger log = Logger.getLogger( StrategySelectorBuilder.class );
 
-	private final List<StrategyRegistration> explicitStrategyRegistrations = new ArrayList<StrategyRegistration>();
+	private final List<StrategyRegistration> explicitStrategyRegistrations = new ArrayList<>();
 
 	/**
 	 * Adds an explicit (as opposed to discovered) strategy registration.
@@ -124,7 +124,7 @@ public class StrategySelectorBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> void addExplicitStrategyRegistration(Class<T> strategy, Class<? extends T> implementation, String name) {
-		addExplicitStrategyRegistration( new SimpleStrategyRegistrationImpl<T>( strategy, implementation, name ) );
+		addExplicitStrategyRegistration( new SimpleStrategyRegistrationImpl<>( strategy, implementation, name ) );
 	}
 
 	/**

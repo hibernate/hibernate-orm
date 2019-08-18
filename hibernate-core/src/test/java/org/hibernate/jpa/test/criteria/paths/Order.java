@@ -24,7 +24,7 @@ public class Order {
 	private String id;
 	private double totalPrice;
 	private LineItem sampleLineItem;
-	private Collection<LineItem> lineItems = new java.util.ArrayList<LineItem>();
+	private Collection<LineItem> lineItems = new java.util.ArrayList<>();
 
 	public Order() {
 	}

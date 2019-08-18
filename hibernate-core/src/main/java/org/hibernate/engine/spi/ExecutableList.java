@@ -88,7 +88,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 
 	public ExecutableList(int initialCapacity, boolean requiresSorting) {
 		this.sorter = null;
-		this.executables = new ArrayList<E>( initialCapacity );
+		this.executables = new ArrayList<>( initialCapacity );
 		this.querySpaces = null;
 		this.requiresSorting = requiresSorting;
 		this.sorted = requiresSorting;
@@ -111,7 +111,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 */
 	public ExecutableList(int initialCapacity, ExecutableList.Sorter<E> sorter) {
 		this.sorter = sorter;
-		this.executables = new ArrayList<E>( initialCapacity );
+		this.executables = new ArrayList<>( initialCapacity );
 		this.querySpaces = null;
 		// require sorting by default, even if sorter is null to maintain original behavior
 		this.requiresSorting = true;
@@ -129,7 +129,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 				Serializable[] propertySpaces = e.getPropertySpaces();
 				if ( propertySpaces != null && propertySpaces.length > 0 ) {
 					if( querySpaces == null ) {
-						querySpaces = new HashSet<Serializable>();
+						querySpaces = new HashSet<>();
 					}
 					Collections.addAll( querySpaces, propertySpaces );
 				}
@@ -334,7 +334,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 			this.querySpaces = null;
 		}
 		else {
-			querySpaces = new HashSet<Serializable>( CollectionHelper.determineProperSizing( numberOfQuerySpaces ) );
+			querySpaces = new HashSet<>( CollectionHelper.determineProperSizing( numberOfQuerySpaces ) );
 			for ( int i = 0; i < numberOfQuerySpaces; i++ ) {
 				querySpaces.add( in.readUTF() );
 			}

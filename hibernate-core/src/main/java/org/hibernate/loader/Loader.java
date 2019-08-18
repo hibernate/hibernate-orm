@@ -948,7 +948,7 @@ public abstract class Loader {
 				selection.getMaxRows() :
 				Integer.MAX_VALUE;
 
-		final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
+		final List<AfterLoadAction> afterLoadActions = new ArrayList<>();
 
 		final SqlStatementWrapper wrapper = executeQueryStatement( queryParameters, false, afterLoadActions, session );
 		final ResultSet rs = wrapper.getResultSet();
@@ -2887,7 +2887,7 @@ public abstract class Loader {
 			final SqlStatementWrapper wrapper = executeQueryStatement(
 					queryParameters,
 					true,
-					new ArrayList<AfterLoadAction>(),
+					new ArrayList<>(),
 					session
 			);
 			final ResultSet rs = wrapper.getResultSet();

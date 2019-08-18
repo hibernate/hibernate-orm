@@ -1109,7 +1109,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 		Query query = s.createQuery( "from LineItem l where l.id in (:idList)" );
-		List<Id> list = new ArrayList<Id>();
+		List<Id> list = new ArrayList<>();
 		list.add( new Id( "123456789", order.getId().getOrderNumber(), "4321" ) );
 		list.add( new Id( "123456789", order.getId().getOrderNumber(), "1234" ) );
 		query.setParameterList( "idList", list );
@@ -1462,7 +1462,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testJPAPositionalParameterList() {
 		Session s = openSession();
 		s.beginTransaction();
-		ArrayList<String> params = new ArrayList<String>();
+		ArrayList<String> params = new ArrayList<>();
 		params.add( "Doe" );
 		params.add( "Public" );
 		s.createQuery( "from Human where name.last in (?1)" )

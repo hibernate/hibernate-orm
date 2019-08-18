@@ -45,7 +45,7 @@ public class DataChangesDetachedSet extends BaseEnversJPAFunctionalTestCase {
 
 		em.persist( str1 );
 
-		coll1.setCollection( new HashSet<StrTestEntity>() );
+		coll1.setCollection( new HashSet<>() );
 		em.persist( coll1 );
 
 		em.getTransaction().commit();

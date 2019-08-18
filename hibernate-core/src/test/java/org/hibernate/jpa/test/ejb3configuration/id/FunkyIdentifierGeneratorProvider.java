@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class FunkyIdentifierGeneratorProvider implements org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider {
 	public Map<String, Class<?>> getStrategies() {
-		final HashMap<String, Class<?>> result = new HashMap<String, Class<?>>( 1 );
+		final HashMap<String, Class<?>> result = new HashMap<>( 1 );
 		result.put( "funky", FunkyIdGenerator.class );
 		return result;
 	}

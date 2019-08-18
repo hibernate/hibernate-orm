@@ -715,8 +715,8 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format(
 				"SELECT id, extent(geom) from %s group by id", entityName( pckg )
 		);
-		Map<Integer, Object> hsreceived = new HashMap<Integer, Object>();
-		doInSession( hql, hsreceived, new HashMap<String, Object>() );
+		Map<Integer, Object> hsreceived = new HashMap<>();
+		doInSession( hql, hsreceived, new HashMap<>() );
 	}
 
 	public <T> void retrieveHQLResultsAndCompare(Map<Integer, T> dbexpected, String hql, String geometryType) {
@@ -728,13 +728,13 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 			String hql,
 			Map<String, Object> params,
 			String geometryType) {
-		Map<Integer, T> hsreceived = new HashMap<Integer, T>();
+		Map<Integer, T> hsreceived = new HashMap<>();
 		doInSession( hql, hsreceived, params );
 		compare( dbexpected, hsreceived, geometryType );
 	}
 
 	private Map<String, Object> createQueryParams(String filterParamName, Object value) {
-		Map<String, Object> params = new HashMap<String, Object>();
+		Map<String, Object> params = new HashMap<>();
 		params.put( filterParamName, value );
 		return params;
 	}

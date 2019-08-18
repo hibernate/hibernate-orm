@@ -31,7 +31,7 @@ public class StringListEntity {
 	private List<String> strings;
 
 	public StringListEntity() {
-		strings = new ArrayList<String>();
+		strings = new ArrayList<>();
 	}
 
 	public Integer getId() {

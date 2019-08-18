@@ -392,7 +392,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		Distributor res = new Distributor();
 		res.setName( "Bruce" );
-		item.setDistributors( new HashSet<Distributor>() );
+		item.setDistributors( new HashSet<>() );
 		item.getDistributors().add( res );
 		Statistics stats = ( (HibernateEntityManagerFactory) emf ).getSessionFactory().getStatistics();
 		stats.clear();

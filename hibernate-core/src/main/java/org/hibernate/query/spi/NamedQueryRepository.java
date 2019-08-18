@@ -41,20 +41,20 @@ public class NamedQueryRepository {
 			Iterable<NamedSQLQueryDefinition> namedSqlQueryDefinitions,
 			Iterable<ResultSetMappingDefinition> namedSqlResultSetMappings,
 			Map<String, ProcedureCallMemento> namedProcedureCalls) {
-		final HashMap<String, NamedQueryDefinition> namedQueryDefinitionMap = new HashMap<String, NamedQueryDefinition>();
+		final HashMap<String, NamedQueryDefinition> namedQueryDefinitionMap = new HashMap<>();
 		for ( NamedQueryDefinition namedQueryDefinition : namedQueryDefinitions ) {
 			namedQueryDefinitionMap.put( namedQueryDefinition.getName(), namedQueryDefinition );
 		}
 		this.namedQueryDefinitionMap = Collections.unmodifiableMap( namedQueryDefinitionMap );
 
 
-		final HashMap<String, NamedSQLQueryDefinition> namedSqlQueryDefinitionMap = new HashMap<String, NamedSQLQueryDefinition>();
+		final HashMap<String, NamedSQLQueryDefinition> namedSqlQueryDefinitionMap = new HashMap<>();
 		for ( NamedSQLQueryDefinition namedSqlQueryDefinition : namedSqlQueryDefinitions ) {
 			namedSqlQueryDefinitionMap.put( namedSqlQueryDefinition.getName(), namedSqlQueryDefinition );
 		}
 		this.namedSqlQueryDefinitionMap = Collections.unmodifiableMap( namedSqlQueryDefinitionMap );
 
-		final HashMap<String, ResultSetMappingDefinition> namedSqlResultSetMappingMap = new HashMap<String, ResultSetMappingDefinition>();
+		final HashMap<String, ResultSetMappingDefinition> namedSqlResultSetMappingMap = new HashMap<>();
 		for ( ResultSetMappingDefinition resultSetMappingDefinition : namedSqlResultSetMappings ) {
 			namedSqlResultSetMappingMap.put( resultSetMappingDefinition.getName(), resultSetMappingDefinition );
 		}
@@ -145,7 +145,7 @@ public class NamedQueryRepository {
 	}
 
 	public Map<String,HibernateException> checkNamedQueries(QueryPlanCache queryPlanCache) {
-		Map<String,HibernateException> errors = new HashMap<String,HibernateException>();
+		Map<String,HibernateException> errors = new HashMap<>();
 
 		// Check named HQL queries
 		log.debugf( "Checking %s named HQL queries", namedQueryDefinitionMap.size() );

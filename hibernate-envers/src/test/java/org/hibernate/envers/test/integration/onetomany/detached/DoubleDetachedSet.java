@@ -48,11 +48,11 @@ public class DoubleDetachedSet extends BaseEnversJPAFunctionalTestCase {
 		em.persist( str1 );
 		em.persist( str2 );
 
-		coll1.setCollection( new HashSet<StrTestEntity>() );
+		coll1.setCollection( new HashSet<>() );
 		coll1.getCollection().add( str1 );
 		em.persist( coll1 );
 
-		coll1.setCollection2( new HashSet<StrTestEntity>() );
+		coll1.setCollection2( new HashSet<>() );
 		coll1.getCollection2().add( str2 );
 		em.persist( coll1 );
 

@@ -40,7 +40,7 @@ public class ConcatExpression extends ExpressionImpl<String> implements Serializ
 	}
 
 	private static Expression<String> wrap(CriteriaBuilderImpl criteriaBuilder, String string) {
-		return new LiteralExpression<String>( criteriaBuilder, string );
+		return new LiteralExpression<>( criteriaBuilder, string );
 	}
 
 	public ConcatExpression(

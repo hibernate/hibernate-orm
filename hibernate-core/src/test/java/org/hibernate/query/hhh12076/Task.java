@@ -33,8 +33,8 @@ public abstract class Task<T> {
 	private Set<Task<?>> _linkedTasks;
 
 	public Task() {
-		_children = new HashSet<Task<?>>();
-		_linkedTasks = new HashSet<Task<?>>();
+		_children = new HashSet<>();
+		_linkedTasks = new HashSet<>();
 	}
 
 	public abstract T getLinked();
@@ -90,7 +90,7 @@ public abstract class Task<T> {
 	public <X extends Task<?>> Set<X> getChildren(Class<X> ofType) {
 		Set<X> children = null;
 
-		children = new LinkedHashSet<X>();
+		children = new LinkedHashSet<>();
 		for ( Task<?> child : _children ) {
 			if ( ofType.isInstance( child ) ) {
 				children.add( (X) child );

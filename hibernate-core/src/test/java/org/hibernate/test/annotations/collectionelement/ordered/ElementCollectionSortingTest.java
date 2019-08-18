@@ -108,7 +108,7 @@ public class ElementCollectionSortingTest extends BaseCoreFunctionalTestCase {
 
 	private void checkPersonNickNames(List<String> expectedAscending, List<String> expectedDescending, Person person) {
 		// Comparing lists to verify ordering.
-		Assert.assertEquals( expectedAscending, new ArrayList<String>( person.getNickNamesAscendingNaturalSort() ) );
-		Assert.assertEquals( expectedDescending, new ArrayList<String>( person.getNickNamesDescendingNaturalSort() ) );
+		Assert.assertEquals( expectedAscending, new ArrayList<>( person.getNickNamesAscendingNaturalSort() ) );
+		Assert.assertEquals( expectedDescending, new ArrayList<>( person.getNickNamesDescendingNaturalSort() ) );
 	}
 }

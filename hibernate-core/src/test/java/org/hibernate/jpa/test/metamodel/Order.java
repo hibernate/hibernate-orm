@@ -29,7 +29,7 @@ public class Order implements java.io.Serializable {
 	private Customer customer;
 	private CreditCard creditCard;
 	private LineItem sampleLineItem;
-	private Collection<LineItem> lineItems = new java.util.ArrayList<LineItem>();
+	private Collection<LineItem> lineItems = new java.util.ArrayList<>();
 
 	private char[] domen;
 	private byte[] number;

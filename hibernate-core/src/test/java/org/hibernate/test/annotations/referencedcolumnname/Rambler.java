@@ -24,7 +24,7 @@ import javax.persistence.OneToMany;
 public class Rambler implements Serializable {
 	private Integer id;
 	private String name;
-	private Set<Bag> bags = new HashSet<Bag>();
+	private Set<Bag> bags = new HashSet<>();
 
 	public Rambler() {
 	}

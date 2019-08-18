@@ -35,7 +35,7 @@ import org.hibernate.service.ServiceRegistry;
  * @see StandardServiceRegistryBuilder
  */
 public class BootstrapServiceRegistryBuilder {
-	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
+	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<>();
 
 	private List<ClassLoader> providedClassLoaders;
 	private ClassLoaderService providedClassLoaderService;
@@ -81,7 +81,7 @@ public class BootstrapServiceRegistryBuilder {
 	 */
 	public BootstrapServiceRegistryBuilder applyClassLoader(ClassLoader classLoader) {
 		if ( providedClassLoaders == null ) {
-			providedClassLoaders = new ArrayList<ClassLoader>();
+			providedClassLoaders = new ArrayList<>();
 		}
 		providedClassLoaders.add( classLoader );
 		return this;
@@ -209,7 +209,7 @@ public class BootstrapServiceRegistryBuilder {
 		if ( providedClassLoaderService == null ) {
 			// Use a set.  As an example, in JPA, OsgiClassLoader may be in both
 			// the providedClassLoaders and the overridenClassLoader.
-			final Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+			final Set<ClassLoader> classLoaders = new HashSet<>();
 
 			if ( providedClassLoaders != null )  {
 				classLoaders.addAll( providedClassLoaders );

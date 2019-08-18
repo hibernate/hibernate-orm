@@ -33,7 +33,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 public class SearchedCaseExpression<R>
 		extends ExpressionImpl<R>
 		implements Case<R>, Serializable {
-	private List<WhenClause> whenClauses = new ArrayList<WhenClause>();
+	private List<WhenClause> whenClauses = new ArrayList<>();
 	private Expression<? extends R> otherwiseResult;
 
 	public class WhenClause {
@@ -69,7 +69,7 @@ public class SearchedCaseExpression<R>
 		final Class<R> type = result != null
 				? (Class<R>) result.getClass()
 				: getJavaType();
-		return new LiteralExpression<R>( criteriaBuilder(), type, result );
+		return new LiteralExpression<>( criteriaBuilder(), type, result );
 	}
 
 	public Case<R> when(Expression<Boolean> condition, Expression<? extends R> result) {

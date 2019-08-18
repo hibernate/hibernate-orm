@@ -300,7 +300,7 @@ public class MetamodelGraphWalker {
 		}
 	}
 
-	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<AssociationKey>();
+	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 
 	/**
 	 * Add association key to indicate the association is being visited.

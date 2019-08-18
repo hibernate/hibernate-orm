@@ -133,7 +133,7 @@ public class LazyAttributesMetadata implements Serializable {
 	}
 
 	public List<LazyAttributeDescriptor> getFetchGroupAttributeDescriptors(String groupName) {
-		final List<LazyAttributeDescriptor> list = new ArrayList<LazyAttributeDescriptor>();
+		final List<LazyAttributeDescriptor> list = new ArrayList<>();
 		for ( String attributeName : fetchGroupToAttributeMap.get( groupName ) ) {
 			list.add( lazyAttributeDescriptorMap.get( attributeName ) );
 		}

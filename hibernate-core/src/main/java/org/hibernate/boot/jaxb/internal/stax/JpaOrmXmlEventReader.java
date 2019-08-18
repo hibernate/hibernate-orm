@@ -143,7 +143,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	}
 
 	private List<Namespace> mapNamespaces(Iterator<Namespace> originalNamespaceIterator ) {
-		final List<Namespace> mappedNamespaces = new ArrayList<Namespace>();
+		final List<Namespace> mappedNamespaces = new ArrayList<>();
 
 //		final String elementNamespacePrefix = startElement.getName().getPrefix();
 //		if ( EMPTY_NAMESPACE_PREFIX.equals( elementNamespacePrefix ) ) {

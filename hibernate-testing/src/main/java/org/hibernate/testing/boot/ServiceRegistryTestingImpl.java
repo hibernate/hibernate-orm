@@ -59,11 +59,11 @@ public class ServiceRegistryTestingImpl
 	}
 
 	private static ProvidedService dialectFactoryService() {
-		return new ProvidedService<DialectFactory>( DialectFactory.class, new DialectFactoryTestingImpl() );
+		return new ProvidedService<>( DialectFactory.class, new DialectFactoryTestingImpl() );
 	}
 
 	private static ProvidedService connectionProviderService() {
-		return new ProvidedService<ConnectionProvider>(
+		return new ProvidedService<>(
 				ConnectionProvider.class,
 				ConnectionProviderBuilder.buildConnectionProvider( true )
 		);

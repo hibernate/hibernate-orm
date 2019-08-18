@@ -22,7 +22,7 @@ import javax.persistence.MapKey;
 public class Newspaper {
 	private Integer id;
 	private String name;
-	private Map<String, News> news = new HashMap<String, News>();
+	private Map<String, News> news = new HashMap<>();
 
 	@Id
 	@GeneratedValue

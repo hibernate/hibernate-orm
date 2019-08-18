@@ -48,7 +48,7 @@ public class Settlement {
 	private transient Map<Class<?>, SettlementExtension> _extensionMap;
 
 	public Settlement() {
-		_extensions = new HashSet<SettlementExtension>();
+		_extensions = new HashSet<>();
 	}
 
 	public Long getId() {
@@ -160,7 +160,7 @@ public class Settlement {
 	@SuppressWarnings("unchecked")
 	public <X extends SettlementExtension> X getExtension(Class<X> extensionType) {
 		if ( _extensionMap == null || _extensionMap.size() != _extensions.size() ) {
-			Map<Class<?>, SettlementExtension> map = new HashMap<Class<?>, SettlementExtension>( _extensions.size() );
+			Map<Class<?>, SettlementExtension> map = new HashMap<>( _extensions.size() );
 			for ( SettlementExtension extension : _extensions ) {
 				map.put( extension.getClass(), extension );
 			}

@@ -27,7 +27,7 @@ public class OrderAddress {
 		this.deliveryAddress = deliveryAddress;
 	}
 
-	private Set<Address> notifiedAddresses = new HashSet<Address>();
+	private Set<Address> notifiedAddresses = new HashSet<>();
 
 	public Set<Address> getNotifiedAddresses() {
     	return notifiedAddresses;

@@ -16,7 +16,7 @@ import javax.persistence.PreUpdate;
  * @author Emmanuel Bernard
  */
 public class CountryNameCheckerListener {
-	private List<String> countries = new ArrayList<String>();
+	private List<String> countries = new ArrayList<>();
 
 	{
 		countries.add( "France" );

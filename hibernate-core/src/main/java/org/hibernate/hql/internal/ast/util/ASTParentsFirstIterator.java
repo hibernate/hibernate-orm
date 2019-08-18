@@ -19,7 +19,7 @@ import antlr.collections.AST;
 public class ASTParentsFirstIterator implements Iterator {
 	private AST next;
 	private AST tree;
-	private LinkedList<AST> parents = new LinkedList<AST>();
+	private LinkedList<AST> parents = new LinkedList<>();
 
 	public void remove() {
 		throw new UnsupportedOperationException( "remove() is not supported" );

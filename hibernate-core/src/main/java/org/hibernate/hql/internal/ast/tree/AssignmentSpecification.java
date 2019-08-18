@@ -56,7 +56,7 @@ public class AssignmentSpecification {
 		validateLhs( lhs );
 
 		final String propertyPath = lhs.getPropertyPath();
-		Set<String> temp = new HashSet<String>();
+		Set<String> temp = new HashSet<>();
 		// yuck!
 		if ( persister instanceof UnionSubclassEntityPersister ) {
 			final String[] tables = persister.getConstraintOrderedTableNameClosure();

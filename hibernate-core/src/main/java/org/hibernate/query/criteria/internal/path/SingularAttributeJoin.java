@@ -64,7 +64,7 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 
 	@Override
 	protected FromImplementor<O, X> createCorrelationDelegate() {
-		return new SingularAttributeJoin<O,X>(
+		return new SingularAttributeJoin<>(
 				criteriaBuilder(),
 				getJavaType(),
 				getPathSource(),
@@ -112,7 +112,7 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 
 	@Override
 	public <T extends X> SingularAttributeJoin<O,T> treatAs(Class<T> treatAsType) {
-		return new TreatedSingularAttributeJoin<O,T>( this, treatAsType );
+		return new TreatedSingularAttributeJoin<>( this, treatAsType );
 	}
 
 	public static class TreatedSingularAttributeJoin<O,T> extends SingularAttributeJoin<O, T> {

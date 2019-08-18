@@ -512,7 +512,7 @@ public class CustomLoader extends Loader {
 		// the above will lead to an unworkable situation in most cases (the difference is how the driver/db
 		// handle this situation.  But if the 'aliases' variable contains duplicate names, then we have that
 		// troublesome condition, so lets throw an error.  See HHH-5992
-		final HashSet<String> aliasesSet = new HashSet<String>();
+		final HashSet<String> aliasesSet = new HashSet<>();
 		for ( String alias : aliases ) {
 			validateAlias( alias );
 			boolean alreadyExisted = !aliasesSet.add( alias );

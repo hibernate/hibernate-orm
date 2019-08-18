@@ -239,7 +239,7 @@ public class VersionedCascadeDereferencedCollectionTest extends AbstractDerefere
 		assertEquals( one.getId(), ceManiesOrig.getKey() );
 
 		// replace collection
-		one.setManies( new HashSet<Many>() );
+		one.setManies( new HashSet<>() );
 
 		s.flush();
 

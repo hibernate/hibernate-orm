@@ -12,7 +12,7 @@ import java.util.Set;
 public class OrderContact {
 
   private int contactId = 0;
-  private Set<Order> orders = new HashSet<Order>();
+  private Set<Order> orders = new HashSet<>();
   
   private String contact;
 

@@ -312,7 +312,7 @@ public class MapBinder extends CollectionBinder {
 						column.setLength( Ejb3Column.DEFAULT_COLUMN_LENGTH );
 						column.setLogicalColumnName( Collection.DEFAULT_KEY_COLUMN_NAME );
 						//TODO create an EMPTY_JOINS collection
-						column.setJoins( new HashMap<String, Join>() );
+						column.setJoins( new HashMap<>() );
 						column.setBuildingContext( buildingContext );
 						column.bind();
 						elementColumns[0] = column;

@@ -188,7 +188,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 		c2_1_id = c2_1.getId();
 		c2_2_id = c2_2.getId();
 
-		Set<Number> revisionNumbers = new HashSet<Number>();
+		Set<Number> revisionNumbers = new HashSet<>();
 		revisionNumbers.addAll( Arrays.asList( 1, 2, 3, 4, 5 ) );
 		revisions = getAuditReader().findRevisions(
 				SequenceIdRevisionEntity.class,

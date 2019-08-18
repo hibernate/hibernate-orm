@@ -20,7 +20,7 @@ import org.hibernate.annotations.Loader;
 @Entity
 public class Team {
 	private Long id;
-	private Set<Player> players = new HashSet<Player>();
+	private Set<Player> players = new HashSet<>();
 
 	@Id
 	@GeneratedValue

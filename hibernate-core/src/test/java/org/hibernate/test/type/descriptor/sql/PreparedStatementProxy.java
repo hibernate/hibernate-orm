@@ -74,7 +74,7 @@ public class PreparedStatementProxy<T> implements InvocationHandler {
 
 	public static PreparedStatement generateProxy(final String value) {
 		return generateProxy(
-				new PreparedStatementProxy<String>( "setString", value )
+				new PreparedStatementProxy<>( "setString", value )
 		);
 	}
 

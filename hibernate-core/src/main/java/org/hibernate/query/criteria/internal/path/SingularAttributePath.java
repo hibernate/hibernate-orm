@@ -79,7 +79,7 @@ public class SingularAttributePath<X> extends AbstractPathImpl<X> implements Ser
 
 	@Override
 	public <T extends X> SingularAttributePath<T> treatAs(Class<T> treatAsType) {
-		return new TreatedSingularAttributePath<T>( this, treatAsType );
+		return new TreatedSingularAttributePath<>( this, treatAsType );
 	}
 
 	public static class TreatedSingularAttributePath<T> extends SingularAttributePath<T> {

@@ -40,7 +40,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 
 	private static final Set<String> SQL_GRAMMAR_CATEGORIES = buildGrammarCategories();
 	private static Set<String> buildGrammarCategories() {
-		HashSet<String> categories = new HashSet<String>(
+		HashSet<String> categories = new HashSet<>(
 				Arrays.asList(
 						"07", 	// "dynamic SQL error"
 						"20",
@@ -56,7 +56,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 
 	private static final Set DATA_CATEGORIES = buildDataCategories();
 	private static Set<String> buildDataCategories() {
-		HashSet<String> categories = new HashSet<String>(
+		HashSet<String> categories = new HashSet<>(
 				Arrays.asList(
 						"21",	// "cardinality violation"
 						"22"	// "data exception"
@@ -67,7 +67,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 
 	private static final Set INTEGRITY_VIOLATION_CATEGORIES = buildContraintCategories();
 	private static Set<String> buildContraintCategories() {
-		HashSet<String> categories = new HashSet<String>(
+		HashSet<String> categories = new HashSet<>(
 				Arrays.asList(
 						"23",	// "integrity constraint violation"
 						"27",	// "triggered data change violation"
@@ -79,7 +79,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 
 	private static final Set CONNECTION_CATEGORIES = buildConnectionCategories();
 	private static Set<String> buildConnectionCategories() {
-		HashSet<String> categories = new HashSet<String>();
+		HashSet<String> categories = new HashSet<>();
 		categories.add(
 				"08"	// "connection exception"
 		);

@@ -414,7 +414,7 @@ class MetadataContext {
 		}
 	}
 
-	private final Set<Class> processedMetamodelClasses = new HashSet<Class>();
+	private final Set<Class> processedMetamodelClasses = new HashSet<>();
 
 	private <X> void registerAttributes(Class metamodelClass, ManagedTypeDescriptor<X> managedType) {
 		if ( !processedMetamodelClasses.add( metamodelClass ) ) {
@@ -542,6 +542,6 @@ class MetadataContext {
 	}
 
 	public Set<MappedSuperclass> getUnusedMappedSuperclasses() {
-		return new HashSet<MappedSuperclass>( knownMappedSuperclasses );
+		return new HashSet<>( knownMappedSuperclasses );
 	}
 }

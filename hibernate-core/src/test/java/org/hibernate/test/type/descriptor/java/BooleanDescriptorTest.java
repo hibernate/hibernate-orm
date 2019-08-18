@@ -23,7 +23,7 @@ public class BooleanDescriptorTest extends AbstractDescriptorTest<Boolean> {
 
 	@Override
 	protected Data<Boolean> getTestData() {
-		return new Data<Boolean>( original, copy, different );
+		return new Data<>( original, copy, different );
 	}
 
 	@Override

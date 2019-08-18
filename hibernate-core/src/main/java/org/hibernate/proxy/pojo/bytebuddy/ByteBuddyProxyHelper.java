@@ -45,7 +45,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 	public Class buildProxy(
 			final Class persistentClass,
 			final Class[] interfaces) {
-		Set<Class<?>> key = new HashSet<Class<?>>();
+		Set<Class<?>> key = new HashSet<>();
 		if ( interfaces.length == 1 ) {
 			key.add( persistentClass );
 		}

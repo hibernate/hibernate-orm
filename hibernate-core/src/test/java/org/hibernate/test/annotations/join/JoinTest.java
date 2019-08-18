@@ -143,7 +143,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.beginTransaction();
 		SysGroupsOrm g=new SysGroupsOrm();
 		SysUserOrm u=new SysUserOrm();
-		u.setGroups( new ArrayList<SysGroupsOrm>() );
+		u.setGroups( new ArrayList<>() );
 		u.getGroups().add( g );
 		s.save( g );
 		s.save( u );

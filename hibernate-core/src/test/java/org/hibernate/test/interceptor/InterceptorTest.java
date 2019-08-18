@@ -261,7 +261,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-6594" )
 	public void testPrepareStatementIntercept() {
-		final Queue<String> expectedSQLs = new LinkedList<String>();
+		final Queue<String> expectedSQLs = new LinkedList<>();
 		// Transaction 1
 		expectedSQLs.add( "insert" );
 		// Transaction 2

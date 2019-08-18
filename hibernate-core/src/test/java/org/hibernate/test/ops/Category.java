@@ -17,7 +17,7 @@ public class Category {
 	private String name;
 	private Item exampleItem;
 	private int version;
-	private Set<SubCategory> subCategories = new HashSet<SubCategory>();
+	private Set<SubCategory> subCategories = new HashSet<>();
 
 	public Long getId() {
 		return id;

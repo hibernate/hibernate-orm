@@ -21,7 +21,7 @@ import javax.persistence.ManyToOne;
 @Entity(name="EarthSky")
 public class Sky {
 	private Integer id;
-	private Set<CloudType> cloudTypes = new HashSet<CloudType>();
+	private Set<CloudType> cloudTypes = new HashSet<>();
 	private CloudType mainCloud;
 
 	@ManyToMany

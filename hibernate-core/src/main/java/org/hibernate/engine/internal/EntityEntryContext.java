@@ -102,7 +102,7 @@ public class EntityEntryContext {
 					// Create a holder for PersistenceContext-related data.
 					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
 					if ( immutableManagedEntityXref == null ) {
-						immutableManagedEntityXref = new IdentityHashMap<ManagedEntity, ImmutableManagedEntityHolder>();
+						immutableManagedEntityXref = new IdentityHashMap<>();
 					}
 					immutableManagedEntityXref.put(
 							(ManagedEntity) entity,
@@ -112,7 +112,7 @@ public class EntityEntryContext {
 			}
 			else {
 				if ( nonEnhancedEntityXref == null ) {
-					nonEnhancedEntityXref = new IdentityHashMap<Object, ManagedEntity>();
+					nonEnhancedEntityXref = new IdentityHashMap<>();
 				}
 				managedEntity = new ManagedEntityImpl( entity );
 				nonEnhancedEntityXref.put( entity, managedEntity );
@@ -450,7 +450,7 @@ public class EntityEntryContext {
 					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
 					if ( context.immutableManagedEntityXref == null ) {
 						context.immutableManagedEntityXref =
-								new IdentityHashMap<ManagedEntity, ImmutableManagedEntityHolder>();
+								new IdentityHashMap<>();
 					}
 					context.immutableManagedEntityXref.put(
 							(ManagedEntity) entity,
@@ -462,7 +462,7 @@ public class EntityEntryContext {
 			else {
 				managedEntity = new ManagedEntityImpl( entity );
 				if ( context.nonEnhancedEntityXref == null ) {
-					context.nonEnhancedEntityXref = new IdentityHashMap<Object, ManagedEntity>();
+					context.nonEnhancedEntityXref = new IdentityHashMap<>();
 				}
 				context.nonEnhancedEntityXref.put( entity, managedEntity );
 			}

@@ -52,7 +52,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	private final JdbcObserver jdbcObserver;
 
 	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
-	private final HashMap<ResultSet,Object> unassociatedResultSets = new HashMap<ResultSet,Object>();
+	private final HashMap<ResultSet,Object> unassociatedResultSets = new HashMap<>();
 
 	private ArrayList<Blob> blobs;
 	private ArrayList<Clob> clobs;
@@ -223,7 +223,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 
 			if ( resultSets == null || resultSets == EMPTY ) {
-				resultSets = new HashMap<ResultSet,Object>();
+				resultSets = new HashMap<>();
 				xref.put( statement, resultSets );
 			}
 			resultSets.put( resultSet, PRESENT );
@@ -241,7 +241,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void register(Blob blob) {
 		if ( blobs == null ) {
-			blobs = new ArrayList<Blob>();
+			blobs = new ArrayList<>();
 		}
 
 		blobs.add( blob );
@@ -259,7 +259,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void register(Clob clob) {
 		if ( clobs == null ) {
-			clobs = new ArrayList<Clob>();
+			clobs = new ArrayList<>();
 		}
 		clobs.add( clob );
 	}
@@ -277,7 +277,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void register(NClob nclob) {
 		// todo : just store them in clobs?
 		if ( nclobs == null ) {
-			nclobs = new ArrayList<NClob>();
+			nclobs = new ArrayList<>();
 		}
 		nclobs.add( nclob );
 	}

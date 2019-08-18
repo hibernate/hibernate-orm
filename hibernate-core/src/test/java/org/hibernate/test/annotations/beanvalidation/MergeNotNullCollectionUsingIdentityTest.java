@@ -57,7 +57,7 @@ public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalT
 		Parent parent = new Parent();
 		Child child = new Child();
 
-		List<Child> children = new ArrayList<Child>();
+		List<Child> children = new ArrayList<>();
 		children.add( child );
 
 		child.setParent( parent );

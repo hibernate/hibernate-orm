@@ -49,7 +49,7 @@ public class ListJoinColumnBidirectionalRefIngEntity {
 			ListJoinColumnBidirectionalRefEdEntity... references) {
 		this.id = id;
 		this.data = data;
-		this.references = new ArrayList<ListJoinColumnBidirectionalRefEdEntity>();
+		this.references = new ArrayList<>();
 		this.references.addAll( Arrays.asList( references ) );
 	}
 

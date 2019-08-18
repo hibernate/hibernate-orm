@@ -31,7 +31,7 @@ public class Person implements Serializable {
 	private Set<Name> names;
 
 	public Person() {
-		names = new HashSet<Name>();
+		names = new HashSet<>();
 	}
 
 	public Integer getId() {

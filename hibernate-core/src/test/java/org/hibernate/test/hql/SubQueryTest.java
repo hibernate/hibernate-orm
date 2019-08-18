@@ -80,7 +80,7 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 		root.rootName = "root name";
 		root.branch = new Branch();
 		root.branch.branchName = "branch";
-		root.branch.leaves = new ArrayList<Leaf>();
+		root.branch.leaves = new ArrayList<>();
 		Leaf leaf1 = new Leaf();
 		leaf1.leafName = "leaf1";
 		Leaf leaf2 = new Leaf();
@@ -95,7 +95,7 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 		otherRoot.rootName = "other root name";
 		otherRoot.branch = new Branch();
 		otherRoot.branch.branchName = "other branch";
-		otherRoot.branch.leaves = new ArrayList<Leaf>();
+		otherRoot.branch.leaves = new ArrayList<>();
 		Leaf otherLeaf1 = new Leaf();
 		otherLeaf1.leafName = "leaf1";
 		Leaf otherLeaf3 = new Leaf();

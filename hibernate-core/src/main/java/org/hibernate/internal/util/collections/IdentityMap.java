@@ -33,7 +33,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	 * @return The map
 	 */
 	public static <K,V> IdentityMap<K,V> instantiateSequenced(int size) {
-		return new IdentityMap<K,V>( new LinkedHashMap<>( size << 1, 0.6f ) );
+		return new IdentityMap<>( new LinkedHashMap<>( size << 1, 0.6f ) );
 	}
 
 	/**
@@ -63,7 +63,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	public Iterator<K> keyIterator() {
-		return new KeyIterator<K>( map.keySet().iterator() );
+		return new KeyIterator<>( map.keySet().iterator() );
 	}
 
 	@Override
@@ -97,7 +97,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	@Override
 	public V put(K key, V value) {
 		this.entryArray = null;
-		return map.put( new IdentityKey<K>( key ), value );
+		return map.put( new IdentityKey<>( key ), value );
 	}
 
 	@Override
@@ -134,9 +134,9 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	@Override
 	public Set<Entry<K,V>> entrySet() {
-		Set<Entry<K,V>> set = new HashSet<Entry<K,V>>( map.size() );
+		Set<Entry<K,V>> set = new HashSet<>( map.size() );
 		for ( Entry<IdentityKey<K>, V> entry : map.entrySet() ) {
-			set.add( new IdentityMapEntry<K,V>( entry.getKey().key, entry.getValue() ) );
+			set.add( new IdentityMapEntry<>( entry.getKey().key, entry.getValue() ) );
 		}
 		return set;
 	}

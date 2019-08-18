@@ -27,7 +27,7 @@ public class PropertyMap {
 	private Integer id;
 	private String name;
 
-	private Map<String, Property> properties = new HashMap<String, Property>();
+	private Map<String, Property> properties = new HashMap<>();
 
 	public PropertyMap(String name) {
 		this.name = name;

@@ -49,7 +49,7 @@ public class BeanValidationEventListener
 
 	private ValidatorFactory factory;
 	private ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister =
-			new ConcurrentHashMap<EntityPersister, Set<String>>();
+			new ConcurrentHashMap<>();
 	private GroupsPerOperation groupsPerOperation;
 	boolean initialized;
 
@@ -116,8 +116,8 @@ public class BeanValidationEventListener
 			final Set<ConstraintViolation<T>> constraintViolations = validator.validate( object, groups );
 			if ( constraintViolations.size() > 0 ) {
 				Set<ConstraintViolation<?>> propagatedViolations =
-						new HashSet<ConstraintViolation<?>>( constraintViolations.size() );
-				Set<String> classNames = new HashSet<String>();
+						new HashSet<>( constraintViolations.size() );
+				Set<String> classNames = new HashSet<>();
 				for ( ConstraintViolation<?> violation : constraintViolations ) {
 					LOG.trace( violation );
 					propagatedViolations.add( violation );

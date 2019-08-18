@@ -34,7 +34,7 @@ public abstract class ExpressionImpl<T>
 	public <X> Expression<X> as(Class<X> type) {
 		return type.equals( getJavaType() )
 				? (Expression<X>) this
-				: new CastFunction<X, T>( criteriaBuilder(), type, this );
+				: new CastFunction<>( criteriaBuilder(), type, this );
 	}
 
 	@Override

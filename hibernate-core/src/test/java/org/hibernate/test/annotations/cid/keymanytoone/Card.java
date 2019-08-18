@@ -34,7 +34,7 @@ public class Card implements Serializable {
 	}
 
 	Card() {
-		fields = new HashSet<CardField>();
+		fields = new HashSet<>();
 	}
 
 	public String getId() {

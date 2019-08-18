@@ -157,7 +157,7 @@ public class ArchiveHelper {
 	public static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
 		// Optimized by HHH-7835
 		int size;
-		final List<byte[]> data = new LinkedList<byte[]>();
+		final List<byte[]> data = new LinkedList<>();
 		final int bufferSize = 4096;
 		byte[] tmpByte = new byte[bufferSize];
 		int offset = 0;

@@ -31,7 +31,7 @@ public class RefEdMapKeyEntity {
 	private Map<String, RefIngMapKeyEntity> idmap;
 
 	public RefEdMapKeyEntity() {
-		idmap = new HashMap<String, RefIngMapKeyEntity>();
+		idmap = new HashMap<>();
 	}
 
 	public Integer getId() {

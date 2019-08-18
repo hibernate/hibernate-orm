@@ -173,7 +173,7 @@ public class Customer implements Serializable {
 
    public List<CustomerInventory> getInventories() {
       if (customerInventories == null){
-         customerInventories = new ArrayList<CustomerInventory>();
+         customerInventories = new ArrayList<>();
       }
       return customerInventories;
    }

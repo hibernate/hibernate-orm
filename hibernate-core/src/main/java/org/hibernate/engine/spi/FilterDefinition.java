@@ -22,7 +22,7 @@ import org.hibernate.type.Type;
 public class FilterDefinition implements Serializable {
 	private final String filterName;
 	private final String defaultFilterCondition;
-	private final Map<String, Type> parameterTypes = new HashMap<String, Type>();
+	private final Map<String, Type> parameterTypes = new HashMap<>();
 
 	/**
 	 * Construct a new FilterDefinition instance.

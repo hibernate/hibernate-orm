@@ -35,7 +35,7 @@ public class SelectValues {
 	}
 
 	private final Dialect dialect;
-	private final ArrayList<SelectValue> selectValueList = new ArrayList<SelectValue>();
+	private final ArrayList<SelectValue> selectValueList = new ArrayList<>();
 
 	public SelectValues(Dialect dialect) {
 		this.dialect = dialect;
@@ -73,7 +73,7 @@ public class SelectValues {
 
 	public String render() {
 		final StringBuilder buf = new StringBuilder( selectValueList.size() * 10 );
-		final HashSet<String> uniqueAliases = new HashSet<String>();
+		final HashSet<String> uniqueAliases = new HashSet<>();
 		boolean firstExpression = true;
 		for ( SelectValue selectValue : selectValueList ) {
 			if ( selectValue.alias != null ) {

@@ -25,7 +25,7 @@ public final class StrategyRegistrationProviderImpl implements StrategyRegistrat
 	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
 		return Collections.singletonList(
-				new SimpleStrategyRegistrationImpl<ConnectionProvider>(
+				new SimpleStrategyRegistrationImpl<>(
 						ConnectionProvider.class,
 						ProxoolConnectionProvider.class,
 						"proxool",

@@ -60,7 +60,7 @@ import org.apache.tools.ant.types.FileSet;
  * @author Rong C Ou
  */
 public class SchemaExportTask extends MatchingTask {
-	private List<FileSet> fileSets = new LinkedList<FileSet>();
+	private List<FileSet> fileSets = new LinkedList<>();
 	private File propertiesFile;
 	private File configurationFile;
 	private File outputFile;
@@ -276,7 +276,7 @@ public class SchemaExportTask extends MatchingTask {
 	}
 
 	private String[] getFiles() {
-		List<String> files = new LinkedList<String>();
+		List<String> files = new LinkedList<>();
 		for ( FileSet fileSet : fileSets ) {
 			final DirectoryScanner ds = fileSet.getDirectoryScanner( getProject() );
 			final String[] dsFiles = ds.getIncludedFiles();

@@ -165,7 +165,7 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().begin();
 
 		// Packaging arguments for use in query.
-		List<String> divisions = new ArrayList<String>( );
+		List<String> divisions = new ArrayList<>( );
 		divisions.add( "NA" );
 		divisions.add( "EU" );
 			
@@ -191,7 +191,7 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().begin();
 
 		// Packaging arguments for use in query.
-		List<String> types = new ArrayList<String>( );
+		List<String> types = new ArrayList<>( );
 		types.add( "NA" );
 		types.add( "EU" );
 

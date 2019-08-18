@@ -51,7 +51,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 
 	private EntityManager em;
 	private AuditReader auditReader;
-	private ArrayList<EntityManager> isolatedEms = new ArrayList<EntityManager>();
+	private ArrayList<EntityManager> isolatedEms = new ArrayList<>();
 
 	protected Dialect getDialect() {
 		return dialect;
@@ -121,7 +121,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	}
 
 	protected Map getConfig() {
-		Map<Object, Object> config = new HashMap<Object, Object>();
+		Map<Object, Object> config = new HashMap<>();
 
 		config.put( AvailableSettings.LOADED_CLASSES, Arrays.asList( getAnnotatedClasses() ) );
 
@@ -134,7 +134,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		}
 
 		if ( getEjb3DD().length > 0 ) {
-			ArrayList<String> dds = new ArrayList<String>();
+			ArrayList<String> dds = new ArrayList<>();
 			dds.addAll( Arrays.asList( getEjb3DD() ) );
 			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
@@ -168,11 +168,11 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	}
 
 	public Map<Class, String> getCachedClasses() {
-		return new HashMap<Class, String>();
+		return new HashMap<>();
 	}
 
 	public Map<String, String> getCachedCollections() {
-		return new HashMap<String, String>();
+		return new HashMap<>();
 	}
 
 	public String[] getEjb3DD() {

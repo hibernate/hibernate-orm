@@ -115,8 +115,8 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 		SetOwningEntity setOwningEntity1 = new SetOwningEntity( 5, "Demo Data 1" );
 		SetOwnedEntity setOwnedEntity1 = new SetOwnedEntity( 6, "Example Data 1" );
-		Set<SetOwningEntity> owning = new HashSet<SetOwningEntity>();
-		Set<SetOwnedEntity> owned = new HashSet<SetOwnedEntity>();
+		Set<SetOwningEntity> owning = new HashSet<>();
+		Set<SetOwnedEntity> owned = new HashSet<>();
 		owning.add( setOwningEntity1 );
 		owned.add( setOwnedEntity1 );
 		setOwningEntity1.setReferences( owned );
@@ -138,8 +138,8 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 		SetOwningEntity setOwningEntity2 = new SetOwningEntity( 7, "Demo Data 2" );
 		SetOwnedEntity setOwnedEntity2 = new SetOwnedEntity( 8, "Example Data 2" );
-		owning = new HashSet<SetOwningEntity>();
-		owned = new HashSet<SetOwnedEntity>();
+		owning = new HashSet<>();
+		owned = new HashSet<>();
 		owning.add( setOwningEntity2 );
 		owned.add( setOwnedEntity2 );
 		setOwningEntity2.setReferences( owned );
@@ -241,7 +241,7 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 		CollectionRefEdEntity collEd1 = new CollectionRefEdEntity( 1, "data_ed_1" );
 		CollectionRefIngEntity collIng1 = new CollectionRefIngEntity( 2, "data_ing_1", collEd1 );
-		collEd1.setReffering( new ArrayList<CollectionRefIngEntity>() );
+		collEd1.setReffering( new ArrayList<>() );
 		collEd1.getReffering().add( collIng1 );
 
 		// Revision 18 - testing one-to-many collection
@@ -267,8 +267,8 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 		ListOwnedEntity listEd1 = new ListOwnedEntity( 1, "data_ed_1" );
 		ListOwningEntity listIng1 = new ListOwningEntity( 2, "data_ing_1" );
-		listEd1.setReferencing( new ArrayList<ListOwningEntity>() );
-		listIng1.setReferences( new ArrayList<ListOwnedEntity>() );
+		listEd1.setReferencing( new ArrayList<>() );
+		listIng1.setReferences( new ArrayList<>() );
 		listEd1.getReferencing().add( listIng1 );
 		listIng1.getReferences().add( listEd1 );
 

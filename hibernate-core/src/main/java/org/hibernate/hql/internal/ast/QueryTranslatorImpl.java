@@ -463,7 +463,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	}
 	@Override
 	public List<String> collectSqlStrings() {
-		ArrayList<String> list = new ArrayList<String>();
+		ArrayList<String> list = new ArrayList<>();
 		if ( isManipulationStatement() ) {
 			String[] sqlStatements = statementExecutor.getSqlStatements();
 			Collections.addAll( list, sqlStatements );

@@ -37,8 +37,8 @@ public class TemplateRenderer {
 	public TemplateRenderer(String template) {
 		this.template = template;
 
-		final List<String> chunkList = new ArrayList<String>();
-		final List<Integer> paramList = new ArrayList<Integer>();
+		final List<String> chunkList = new ArrayList<>();
+		final List<Integer> paramList = new ArrayList<>();
 		final StringBuilder chunk = new StringBuilder( 10 );
 		final StringBuilder index = new StringBuilder( 2 );
 

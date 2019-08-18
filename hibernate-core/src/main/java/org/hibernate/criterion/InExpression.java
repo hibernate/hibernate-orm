@@ -67,7 +67,7 @@ public class InExpression implements Criterion {
 
 	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) {
-		final ArrayList<TypedValue> list = new ArrayList<TypedValue>();
+		final ArrayList<TypedValue> list = new ArrayList<>();
 		final Type type = criteriaQuery.getTypeUsingProjection( criteria, propertyName );
 		if ( type.isComponentType() ) {
 			final CompositeType compositeType = (CompositeType) type;

@@ -32,7 +32,7 @@ public class SimpleCaseExpression<C,R>
 		extends ExpressionImpl<R>
 		implements SimpleCase<C,R>, Serializable {
 	private final Expression<? extends C> expression;
-	private List<WhenClause> whenClauses = new ArrayList<WhenClause>();
+	private List<WhenClause> whenClauses = new ArrayList<>();
 	private Expression<? extends R> otherwiseResult;
 
 	public class WhenClause {
@@ -76,12 +76,12 @@ public class SimpleCaseExpression<C,R>
 		final Class<R> type = result != null
 				? (Class<R>) result.getClass()
 				: getJavaType();
-		return new LiteralExpression<R>( criteriaBuilder(), type, result );
+		return new LiteralExpression<>( criteriaBuilder(), type, result );
 	}
 
 	public SimpleCase<C, R> when(C condition, Expression<? extends R> result) {
 		WhenClause whenClause = new WhenClause(
-				new LiteralExpression<C>( criteriaBuilder(), condition ),
+				new LiteralExpression<>( criteriaBuilder(), condition ),
 				result
 		);
 		whenClauses.add( whenClause );

@@ -27,14 +27,14 @@ public class JaccPermissionDeclarations {
 
 	public void addPermissionDeclaration(GrantedPermission permissionDeclaration) {
 		if ( permissionDeclarations == null ) {
-			permissionDeclarations = new ArrayList<GrantedPermission>();
+			permissionDeclarations = new ArrayList<>();
 		}
 		permissionDeclarations.add( permissionDeclaration );
 	}
 
 	public void addPermissionDeclarations(Collection<GrantedPermission> permissionDeclarations) {
 		if ( this.permissionDeclarations == null ) {
-			this.permissionDeclarations = new ArrayList<GrantedPermission>();
+			this.permissionDeclarations = new ArrayList<>();
 		}
 		this.permissionDeclarations.addAll( permissionDeclarations );
 	}

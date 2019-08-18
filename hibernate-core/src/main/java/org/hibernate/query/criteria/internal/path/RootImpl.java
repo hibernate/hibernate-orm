@@ -50,7 +50,7 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 
 	@Override
 	protected FromImplementor<X, X> createCorrelationDelegate() {
-		return new RootImpl<X>( criteriaBuilder(), getEntityType() );
+		return new RootImpl<>( criteriaBuilder(), getEntityType() );
 	}
 
 	@Override
@@ -97,7 +97,7 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 
 	@Override
 	public <T extends X> RootImpl<T> treatAs(Class<T> treatAsType) {
-		TreatedRoot<T> treatedRoot = new TreatedRoot<T>( this, treatAsType );
+		TreatedRoot<T> treatedRoot = new TreatedRoot<>( this, treatAsType );
 		treats.add(treatedRoot);
 		return treatedRoot;
 	}

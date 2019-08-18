@@ -32,7 +32,7 @@ public class TernaryMapEntity {
 	private Map<IntTestPrivSeqEntity, StrTestPrivSeqEntity> map;
 
 	public TernaryMapEntity() {
-		map = new HashMap<IntTestPrivSeqEntity, StrTestPrivSeqEntity>();
+		map = new HashMap<>();
 	}
 
 	public Integer getId() {

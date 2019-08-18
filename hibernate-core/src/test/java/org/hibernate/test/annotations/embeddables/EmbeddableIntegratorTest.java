@@ -98,7 +98,7 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 
 	private Investor getInvestor() {
 		Investor i = new Investor();
-		List<Investment> investments = new ArrayList<Investment>();
+		List<Investment> investments = new ArrayList<>();
 		Investment i1 = new Investment();
 		i1.setAmount( new DollarValue( new BigDecimal( "100" ) ) );
 		i1.setDate( new MyDate( new Date() ) );

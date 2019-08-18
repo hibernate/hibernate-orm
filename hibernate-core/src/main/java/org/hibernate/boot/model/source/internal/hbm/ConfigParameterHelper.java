@@ -28,7 +28,7 @@ public class ConfigParameterHelper {
 			return Collections.emptyMap();
 		}
 
-		final Map<String,String> params = new HashMap<String,String>();
+		final Map<String,String> params = new HashMap<>();
 		for ( JaxbHbmConfigParameterType paramElement : paramElementList ) {
 			params.put(
 					paramElement.getName(),

@@ -59,7 +59,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	private boolean cacheable;
 	private String cacheRegion;
 	private String comment;
-	private final List<String> queryHints = new ArrayList<String>();
+	private final List<String> queryHints = new ArrayList<>();
 
 	private FlushMode flushMode;
 	private CacheMode cacheMode;

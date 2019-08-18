@@ -45,7 +45,7 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 	@Override
 	public void error(SAXParseException error) {
 		if ( this.errors == null ) {
-			errors = new ArrayList<SAXParseException>();
+			errors = new ArrayList<>();
 		}
 		errors.add( error );
 	}

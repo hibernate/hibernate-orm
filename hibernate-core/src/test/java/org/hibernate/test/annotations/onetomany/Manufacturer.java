@@ -15,7 +15,7 @@ import java.util.Set;
  */
 public class Manufacturer {
 	private Integer id;
-	private Set<Model> models = new HashSet<Model>();
+	private Set<Model> models = new HashSet<>();
 
 	public Integer getId() {
 		return id;

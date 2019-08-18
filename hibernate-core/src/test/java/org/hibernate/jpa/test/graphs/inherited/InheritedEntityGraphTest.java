@@ -52,7 +52,7 @@ public class InheritedEntityGraphTest extends BaseEntityManagerFunctionalTestCas
         EntityGraph<Foo> entityGraph = em.createEntityGraph( Foo.class );
         entityGraph.addSubgraph( "bar" );
 
-        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put( "javax.persistence.loadgraph", entityGraph );
 
         Foo result = em.find( Foo.class, foo.id, properties );
@@ -85,7 +85,7 @@ public class InheritedEntityGraphTest extends BaseEntityManagerFunctionalTestCas
         EntityGraph<Foo> entityGraph = em.createEntityGraph( Foo.class );
         entityGraph.addSubgraph( "bars" );
 
-        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put( "javax.persistence.loadgraph", entityGraph );
 
         Foo result = em.find( Foo.class, foo.id, properties );
@@ -124,7 +124,7 @@ public class InheritedEntityGraphTest extends BaseEntityManagerFunctionalTestCas
         Subgraph<Foo> subgraphFoo = entityGraph.addSubgraph( "foo" );
         subgraphFoo.addSubgraph( "bar" );
 
-        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put( "javax.persistence.loadgraph", entityGraph );
 
         Foo2 result = em.find( Foo2.class, foo2.id, properties );
@@ -163,7 +163,7 @@ public class InheritedEntityGraphTest extends BaseEntityManagerFunctionalTestCas
         Subgraph<Foo> subgraphFoo = entityGraph.addSubgraph( "foo" );
         subgraphFoo.addSubgraph( "bars" );
 
-        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put( "javax.persistence.loadgraph", entityGraph );
 
         Foo2 result = em.find( Foo2.class, foo2.id, properties );

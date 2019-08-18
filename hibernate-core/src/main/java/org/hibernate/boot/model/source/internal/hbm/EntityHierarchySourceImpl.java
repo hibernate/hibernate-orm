@@ -53,7 +53,7 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 
 	private InheritanceType hierarchyInheritanceType = InheritanceType.NO_INHERITANCE;
 
-	private Set<String> collectedEntityNames = new HashSet<String>();
+	private Set<String> collectedEntityNames = new HashSet<>();
 
 	public EntityHierarchySourceImpl(RootEntitySourceImpl rootEntitySource) {
 		this.rootEntitySource = rootEntitySource;

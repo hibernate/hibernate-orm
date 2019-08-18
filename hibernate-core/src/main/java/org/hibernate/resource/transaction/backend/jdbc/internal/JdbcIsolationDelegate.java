@@ -54,7 +54,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 					}
 				}
 
-				T result = work.accept( new WorkExecutor<T>(), connection );
+				T result = work.accept( new WorkExecutor<>(), connection );
 
 				if ( transacted ) {
 					connection.commit();

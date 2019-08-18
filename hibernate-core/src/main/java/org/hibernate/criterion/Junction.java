@@ -26,7 +26,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class Junction implements Criterion {
 	private final Nature nature;
-	private final List<Criterion> conditions = new ArrayList<Criterion>();
+	private final List<Criterion> conditions = new ArrayList<>();
 
 	protected Junction(Nature nature) {
 		this.nature = nature;
@@ -64,7 +64,7 @@ public class Junction implements Criterion {
 
 	@Override
 	public TypedValue[] getTypedValues(Criteria crit, CriteriaQuery criteriaQuery) throws HibernateException {
-		final ArrayList<TypedValue> typedValues = new ArrayList<TypedValue>();
+		final ArrayList<TypedValue> typedValues = new ArrayList<>();
 		for ( Criterion condition : conditions ) {
 			final TypedValue[] subValues = condition.getTypedValues( crit, criteriaQuery );
 			Collections.addAll( typedValues, subValues );

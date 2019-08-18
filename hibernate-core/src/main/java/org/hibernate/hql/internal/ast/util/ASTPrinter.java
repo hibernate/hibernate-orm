@@ -76,7 +76,7 @@ public final class ASTPrinter {
 	 * @param pw The print writer to which the AST should be written.
 	 */
 	public void showAst(AST ast, PrintWriter pw) {
-		ArrayList<AST> parents = new ArrayList<AST>();
+		ArrayList<AST> parents = new ArrayList<>();
 		showAst( parents, pw, ast );
 		pw.flush();
 	}
@@ -122,7 +122,7 @@ public final class ASTPrinter {
 
 		showNode( pw, ast );
 
-		ArrayList<AST> newParents = new ArrayList<AST>( parents );
+		ArrayList<AST> newParents = new ArrayList<>( parents );
 		newParents.add( ast );
 		for ( AST child = ast.getFirstChild(); child != null; child = child.getNextSibling() ) {
 			showAst( newParents, pw, child );

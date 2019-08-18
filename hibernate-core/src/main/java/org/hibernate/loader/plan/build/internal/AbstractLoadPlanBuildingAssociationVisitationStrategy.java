@@ -80,7 +80,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	private final PropertyPathStack propertyPathStack = new PropertyPathStack();
 
-	private final ArrayDeque<ExpandingFetchSource> fetchSourceStack = new ArrayDeque<ExpandingFetchSource>();
+	private final ArrayDeque<ExpandingFetchSource> fetchSourceStack = new ArrayDeque<>();
 
 	/**
 	 * Constructs an AbstractLoadPlanBuildingAssociationVisitationStrategy.
@@ -310,7 +310,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	}
 	// Collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private ArrayDeque<CollectionReference> collectionReferenceStack = new ArrayDeque<CollectionReference>();
+	private ArrayDeque<CollectionReference> collectionReferenceStack = new ArrayDeque<>();
 
 	private void pushToCollectionStack(CollectionReference collectionReference) {
 		log.trace( "Pushing collection reference to stack : " + collectionReference );
@@ -633,7 +633,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		currentPropertyPath = currentPropertyPath.getParent();
 	}
 
-	private Map<AssociationKey,FetchSource> fetchedAssociationKeySourceMap = new HashMap<AssociationKey, FetchSource>();
+	private Map<AssociationKey,FetchSource> fetchedAssociationKeySourceMap = new HashMap<>();
 
 	@Override
 	public boolean isDuplicateAssociationKey(AssociationKey associationKey) {
@@ -902,7 +902,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	 * logging output.
 	 */
 	public static class PropertyPathStack {
-		private ArrayDeque<PropertyPath> pathStack = new ArrayDeque<PropertyPath>();
+		private ArrayDeque<PropertyPath> pathStack = new ArrayDeque<>();
 
 		public void push(PropertyPath path) {
 			pathStack.addFirst( path );

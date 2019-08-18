@@ -324,7 +324,7 @@ public class DataSourceUtils {
 	 * @return map of identifier, undecoded geometry object
 	 */
 	public Map<Integer, Object> rawDbObjects(String type) {
-		Map<Integer, Object> map = new HashMap<Integer, Object>();
+		Map<Integer, Object> map = new HashMap<>();
 		Connection cn = null;
 		PreparedStatement pstmt = null;
 		ResultSet results = null;
@@ -383,7 +383,7 @@ public class DataSourceUtils {
 	 * @return map of identifier and JTS geometry
 	 */
 	public Map<Integer, Geometry> expectedGeoms(String type, TestData testData) {
-		Map<Integer, Geometry> result = new HashMap<Integer, Geometry>();
+		Map<Integer, Geometry> result = new HashMap<>();
 		WktDecoder decoder = Wkt.newDecoder();
 		for ( TestDataElement testDataElement : testData ) {
 			if ( testDataElement.type.equalsIgnoreCase( type ) ) {

@@ -41,7 +41,7 @@ public class ClauseParser implements Parser {
 
 		if ( isClauseStart ) {
 			if ( lcToken.equals( "select" ) ) {
-				selectTokens = new ArrayList<String>();
+				selectTokens = new ArrayList<>();
 				cacheSelectTokens = true;
 			}
 			else if ( lcToken.equals( "from" ) ) {

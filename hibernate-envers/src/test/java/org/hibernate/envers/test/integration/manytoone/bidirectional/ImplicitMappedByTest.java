@@ -39,7 +39,7 @@ public class ImplicitMappedByTest extends BaseEnversJPAFunctionalTestCase {
 		EntityManager em = getEntityManager();
 
 		OneToManyOwned owned = new OneToManyOwned( "data", null );
-		Set<ManyToOneOwning> referencing = new HashSet<ManyToOneOwning>();
+		Set<ManyToOneOwning> referencing = new HashSet<>();
 		ManyToOneOwning owning1 = new ManyToOneOwning( "data1", owned );
 		referencing.add( owning1 );
 		ManyToOneOwning owning2 = new ManyToOneOwning( "data2", owned );

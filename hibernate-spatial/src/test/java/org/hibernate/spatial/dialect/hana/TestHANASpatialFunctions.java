@@ -1055,7 +1055,7 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	}
 
 	private Map<String, Object> createQueryParams(String filterParamName, Object value) {
-		Map<String, Object> params = new HashMap<String, Object>();
+		Map<String, Object> params = new HashMap<>();
 		params.put( filterParamName, value );
 		return params;
 	}

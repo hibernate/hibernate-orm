@@ -194,7 +194,7 @@ public final class TypeFactory implements Serializable {
 	 * @return The built {@link SerializableType}
 	 */
 	public static <T extends Serializable> SerializableType<T> serializable(Class<T> serializableClass) {
-		return new SerializableType<T>( serializableClass );
+		return new SerializableType<>( serializableClass );
 	}
 
 

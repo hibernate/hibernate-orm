@@ -66,7 +66,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	 * @param lookupPrecedence The lookup precedence of the thread context {@code ClassLoader}
 	 */
 	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders, TcclLookupPrecedence lookupPrecedence) {
-		final LinkedHashSet<ClassLoader> orderedClassLoaderSet = new LinkedHashSet<ClassLoader>();
+		final LinkedHashSet<ClassLoader> orderedClassLoaderSet = new LinkedHashSet<>();
 
 		// first, add all provided class loaders, if any
 		if ( providedClassLoaders != null ) {
@@ -101,7 +101,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Deprecated
 	@SuppressWarnings({"UnusedDeclaration", "unchecked", "deprecation"})
 	public static ClassLoaderServiceImpl fromConfigSettings(Map configValues) {
-		final List<ClassLoader> providedClassLoaders = new ArrayList<ClassLoader>();
+		final List<ClassLoader> providedClassLoaders = new ArrayList<>();
 
 		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) configValues.get( AvailableSettings.CLASSLOADERS );
 		if ( classLoaders != null ) {
@@ -225,7 +225,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public List<URL> locateResources(String name) {
-		final ArrayList<URL> urls = new ArrayList<URL>();
+		final ArrayList<URL> urls = new ArrayList<>();
 		try {
 			final Enumeration<URL> urlEnumeration = getAggregatedClassLoader().getResources( name );
 			if ( urlEnumeration != null && urlEnumeration.hasMoreElements() ) {

@@ -31,7 +31,7 @@ public class PostLoadTest extends BaseEntityManagerFunctionalTestCase {
         Parent daddy = new Parent();
         daddy.setId(1);
         child.setDaddy(daddy);
-        Set<Child> children = new HashSet<Child>();
+        Set<Child> children = new HashSet<>();
         children.add(child);
         daddy.setChildren(children);
 

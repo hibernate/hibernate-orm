@@ -252,7 +252,7 @@ public class TestConsole {
         out.print("Flat number: ");
         a.setFlatNumber(convertStringToInteger(scanner.nextLine(), 0));
 
-        a.setPersons(new HashSet<Person>());
+        a.setPersons(new HashSet<>());
 
         return a;
     }
@@ -411,13 +411,13 @@ public class TestConsole {
             a1.setStreetName("MI6");
             a1.setHouseNumber(18);
             a1.setFlatNumber(25);
-            a1.setPersons(new HashSet<Person>());
+            a1.setPersons(new HashSet<>());
             a1.getPersons().add(p1);
 
             a2.setStreetName("Nakatomi Plaza");
             a2.setHouseNumber(10);
             a2.setFlatNumber(34);
-            a2.setPersons(new HashSet<Person>());
+            a2.setPersons(new HashSet<>());
             a2.getPersons().add(p2);
             a2.getPersons().add(p3);
 
@@ -435,7 +435,7 @@ public class TestConsole {
     }
 
     public static void main(String[] args) {
-        Map<String, String> configurationOverrides = new HashMap<String, String>();
+        Map<String, String> configurationOverrides = new HashMap<>();
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("ConsolePU", configurationOverrides);
         EntityManager entityManager = emf.createEntityManager();
 

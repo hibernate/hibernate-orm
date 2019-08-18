@@ -24,7 +24,7 @@ public class BookStore {
 
 	private Long id;
 	private String name;
-	private Set<Book> books = new HashSet<Book>();
+	private Set<Book> books = new HashSet<>();
 
 	public BookStore() {
 	}

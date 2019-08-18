@@ -125,10 +125,10 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		zoosWithSameName = new HashSet<Zoo>( 2 );
+		zoosWithSameName = new HashSet<>( 2 );
 		zoosWithSameName.add( zoo1 );
 		zoosWithSameName.add( zoo3 );
-		zoosWithSameAddress = new HashSet<Zoo>( 2 );
+		zoosWithSameAddress = new HashSet<>( 2 );
 		zoosWithSameAddress.add( zoo1 );
 		zoosWithSameAddress.add( zoo2 );
 	}
@@ -654,7 +654,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 			Zoo zoo4,
 			Set<Zoo> zoosUnordered) {
 		assertEquals( 4, results.size() );
-		Set<Zoo> zoosUnorderedCopy = ( zoosUnordered == null ? null : new HashSet<Zoo>( zoosUnordered ) );
+		Set<Zoo> zoosUnorderedCopy = ( zoosUnordered == null ? null : new HashSet<>( zoosUnordered ) );
 		checkTestOrderByResult( results.get( 0 ), zoo1, zoosUnorderedCopy );
 		checkTestOrderByResult( results.get( 1 ), zoo2, zoosUnorderedCopy );
 		checkTestOrderByResult( results.get( 2 ), zoo3, zoosUnorderedCopy );

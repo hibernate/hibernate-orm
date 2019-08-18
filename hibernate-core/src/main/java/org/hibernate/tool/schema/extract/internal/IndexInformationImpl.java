@@ -43,7 +43,7 @@ public class IndexInformationImpl implements IndexInformation {
 
 	public static class Builder {
 		private final Identifier indexIdentifier;
-		private final List<ColumnInformation> columnList = new ArrayList<ColumnInformation>();
+		private final List<ColumnInformation> columnList = new ArrayList<>();
 
 		public Builder(Identifier indexIdentifier) {
 			this.indexIdentifier = indexIdentifier;

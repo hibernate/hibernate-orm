@@ -18,7 +18,7 @@ public class EmbeddedGenericsTest extends BaseCoreFunctionalTestCase {
 	public void testWorksWithGenericEmbedded() {
 		Session session = openSession();
 		session.beginTransaction();
-		Classes.Edition<String> edition = new Classes.Edition<String>();
+		Classes.Edition<String> edition = new Classes.Edition<>();
 		edition.name = "Second";
 		Classes.Book b = new Classes.Book();
 		b.edition = edition;
@@ -38,7 +38,7 @@ public class EmbeddedGenericsTest extends BaseCoreFunctionalTestCase {
 	public void testWorksWithGenericCollectionOfElements() {
 		Session session = openSession();
 		session.beginTransaction();
-		Classes.Edition<String> edition = new Classes.Edition<String>();
+		Classes.Edition<String> edition = new Classes.Edition<>();
 		edition.name = "Second";
 		Classes.PopularBook b = new Classes.PopularBook();
 		b.editions.add( edition );

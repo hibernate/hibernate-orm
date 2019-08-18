@@ -98,7 +98,7 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 		s.persist( mouth );
 		s.persist( tooth );
 		tooth.mouth = mouth;
-		mouth.teeth = new ArrayList<Tooth>();
+		mouth.teeth = new ArrayList<>();
 		mouth.teeth.add( tooth );
 		tx.commit();
 		s.close();
@@ -130,7 +130,7 @@ public class CascadeTest extends BaseCoreFunctionalTestCase {
 		s.persist( mouth );
 		s.persist( tooth );
 		tooth.mouth = mouth;
-		mouth.teeth = new ArrayList<Tooth>();
+		mouth.teeth = new ArrayList<>();
 		mouth.teeth.add( tooth );
 		tx.commit();
 		s.close();

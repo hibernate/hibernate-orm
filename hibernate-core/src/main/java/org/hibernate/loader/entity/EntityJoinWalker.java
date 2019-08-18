@@ -120,10 +120,10 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 	private static class AssociationInitCallbackImpl implements AssociationInitCallback {
 		private final SessionFactoryImplementor factory;
 		private final HashMap<String,OuterJoinableAssociation> associationsByAlias
-				= new HashMap<String, OuterJoinableAssociation>();
-		private final HashMap<String,Integer> positionsByAlias = new HashMap<String, Integer>();
+				= new HashMap<>();
+		private final HashMap<String,Integer> positionsByAlias = new HashMap<>();
 		private final ArrayList<String> aliasesForAssociationsWithCompositesIds
-				= new ArrayList<String>();
+				= new ArrayList<>();
 
 		public AssociationInitCallbackImpl(SessionFactoryImplementor factory) {
 			this.factory = factory;
@@ -163,7 +163,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 			int[][] compositeKeyManyToOneTargetIndices = null;
 			for ( final String aliasWithCompositeId : aliasesForAssociationsWithCompositesIds ) {
 				final OuterJoinableAssociation joinWithCompositeId = associationsByAlias.get( aliasWithCompositeId );
-				final ArrayList<Integer> keyManyToOneTargetIndices = new ArrayList<Integer>();
+				final ArrayList<Integer> keyManyToOneTargetIndices = new ArrayList<>();
 				// for each association with a composite id containing key-many-to-one(s), find the bidirectional side of
 				// each key-many-to-one (if exists) to see if it is eager as well.  If so, we need to track the indices
 				EntityPersister entityPersister = null;

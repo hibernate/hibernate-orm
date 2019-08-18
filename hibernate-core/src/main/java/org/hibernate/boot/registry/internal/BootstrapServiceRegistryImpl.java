@@ -100,20 +100,20 @@ public class BootstrapServiceRegistryImpl
 			LinkedHashSet<Integrator> providedIntegrators) {
 		this.autoCloseRegistry = autoCloseRegistry;
 
-		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
+		this.classLoaderServiceBinding = new ServiceBinding<>(
 				this,
 				ClassLoaderService.class,
 				classLoaderService
 		);
 
 		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
-		this.strategySelectorBinding = new ServiceBinding<StrategySelector>(
+		this.strategySelectorBinding = new ServiceBinding<>(
 				this,
 				StrategySelector.class,
 				strategySelector
 		);
 
-		this.integratorServiceBinding = new ServiceBinding<IntegratorService>(
+		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
 				new IntegratorServiceImpl( providedIntegrators, classLoaderService )
@@ -162,19 +162,19 @@ public class BootstrapServiceRegistryImpl
 			IntegratorService integratorService) {
 		this.autoCloseRegistry = autoCloseRegistry;
 
-		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
+		this.classLoaderServiceBinding = new ServiceBinding<>(
 				this,
 				ClassLoaderService.class,
 				classLoaderService
 		);
 
-		this.strategySelectorBinding = new ServiceBinding<StrategySelector>(
+		this.strategySelectorBinding = new ServiceBinding<>(
 				this,
 				StrategySelector.class,
 				strategySelector
 		);
 
-		this.integratorServiceBinding = new ServiceBinding<IntegratorService>(
+		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
 				integratorService
@@ -274,7 +274,7 @@ public class BootstrapServiceRegistryImpl
 	@Override
 	public synchronized void registerChild(ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
-			childRegistries = new HashSet<ServiceRegistryImplementor>();
+			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
 			LOG.warnf(

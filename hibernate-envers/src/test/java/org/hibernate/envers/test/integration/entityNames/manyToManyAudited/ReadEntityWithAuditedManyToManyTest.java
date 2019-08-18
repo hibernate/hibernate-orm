@@ -55,7 +55,7 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest 
 
 		//REV 1
 		getSession().getTransaction().begin();
-		List<Person> owners = new ArrayList<Person>();
+		List<Person> owners = new ArrayList<>();
 		owners.add( pers1 );
 		owners.add( pers2 );
 		owners.add( pers3 );
@@ -66,7 +66,7 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest 
 		id_pers1 = pers1.getId();
 		id_car1 = car1.getId();
 
-		owners = new ArrayList<Person>();
+		owners = new ArrayList<>();
 		owners.add( pers2 );
 		owners.add( pers3 );
 		owners.add( pers4 );

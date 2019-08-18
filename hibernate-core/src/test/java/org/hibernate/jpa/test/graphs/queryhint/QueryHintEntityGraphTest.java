@@ -329,12 +329,12 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 			 Course course2 = new Course();
 			 course2.setName( "Part Time" );
 
-			 Set<Course> std1Courses = new HashSet<Course>();
+			 Set<Course> std1Courses = new HashSet<>();
 			 std1Courses.add( course1 );
 			 std1Courses.add( course2 );
 			 student1.setCourses( std1Courses );
 
-			 Set<Course> std2Courses = new HashSet<Course>();
+			 Set<Course> std2Courses = new HashSet<>();
 			 std2Courses.add( course2 );
 			 student2.setCourses( std2Courses );
 

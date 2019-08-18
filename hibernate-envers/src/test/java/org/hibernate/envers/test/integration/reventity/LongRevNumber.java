@@ -60,7 +60,7 @@ public class LongRevNumber extends BaseEnversJPAFunctionalTestCase {
 	public void testFindRevisions() {
 		AuditReader vr = getAuditReader();
 
-		Set<Number> revNumbers = new HashSet<Number>();
+		Set<Number> revNumbers = new HashSet<>();
 		revNumbers.add( 1l );
 		revNumbers.add( 2l );
 

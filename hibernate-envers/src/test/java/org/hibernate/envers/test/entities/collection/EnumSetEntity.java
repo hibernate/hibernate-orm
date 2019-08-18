@@ -41,8 +41,8 @@ public class EnumSetEntity {
 	private Set<E2> enums2;
 
 	public EnumSetEntity() {
-		enums1 = new HashSet<E1>();
-		enums2 = new HashSet<E2>();
+		enums1 = new HashSet<>();
+		enums2 = new HashSet<>();
 	}
 
 	public Integer getId() {

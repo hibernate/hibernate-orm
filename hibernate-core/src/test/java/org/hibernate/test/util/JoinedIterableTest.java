@@ -41,10 +41,10 @@ public class JoinedIterableTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSingleEmptyIterable() {
-		Set<String> emptyList = new HashSet<String>();
-		List<Iterable<String>> iterableSets = new ArrayList<Iterable<String>>(  );
+		Set<String> emptyList = new HashSet<>();
+		List<Iterable<String>> iterableSets = new ArrayList<>(  );
 		iterableSets.add( emptyList );
-		Iterable<String> iterable = new JoinedIterable<String>( iterableSets );
+		Iterable<String> iterable = new JoinedIterable<>( iterableSets );
 		assertFalse( iterable.iterator().hasNext() );
 		try {
 			iterable.iterator().next();
@@ -68,11 +68,11 @@ public class JoinedIterableTest extends BaseUnitTestCase {
 	@Test
 	public void testSingleIterableOfSingletonCollection() {
 		final String str = "a string";
-		Set<String> singleTonSet = new HashSet<String>( 1 );
+		Set<String> singleTonSet = new HashSet<>( 1 );
 		singleTonSet.add( str );
-		List<Iterable<String>> iterableSets = new ArrayList<Iterable<String>>(  );
+		List<Iterable<String>> iterableSets = new ArrayList<>(  );
 		iterableSets.add( singleTonSet );
-		Iterable<String> iterable = new JoinedIterable<String>( iterableSets );
+		Iterable<String> iterable = new JoinedIterable<>( iterableSets );
 		assertTrue( iterable.iterator().hasNext() );
 		assertSame( str, iterable.iterator().next() );
 		assertFalse( iterable.iterator().hasNext() );
@@ -87,7 +87,7 @@ public class JoinedIterableTest extends BaseUnitTestCase {
 			fail( "should not have entered loop because underlying iterator should have been exhausted." );
 		}
 		assertEquals( 1, singleTonSet.size() );
-		iterable = new JoinedIterable<String>( iterableSets );
+		iterable = new JoinedIterable<>( iterableSets );
 		for ( String s : iterable ) {
 			assertSame( str, s );
 			iterable.iterator().remove();
@@ -97,12 +97,12 @@ public class JoinedIterableTest extends BaseUnitTestCase {
 
 	@Test
 	public void testJoinedIterables() {
-		List<Iterable<Integer>> listOfIterables = new ArrayList<Iterable<Integer>>(  );
+		List<Iterable<Integer>> listOfIterables = new ArrayList<>(  );
 
 		List<Integer> twoElementList = Arrays.asList( 0, 1 );
 		listOfIterables.add( twoElementList );
 
-		List<Integer> emptyList = new ArrayList<Integer>(  );
+		List<Integer> emptyList = new ArrayList<>(  );
 		listOfIterables.add( emptyList );
 
 		List<Integer> oneElementList = Arrays.asList( 2 );
@@ -111,7 +111,7 @@ public class JoinedIterableTest extends BaseUnitTestCase {
 		List<Integer> threeElementList = Arrays.asList( 3, 4, 5 );
 		listOfIterables.add( threeElementList );
 
-		JoinedIterable<Integer> joinedIterable = new JoinedIterable<Integer>( listOfIterables );
+		JoinedIterable<Integer> joinedIterable = new JoinedIterable<>( listOfIterables );
 
 		int i = 0;
 		for ( Integer val : joinedIterable ) {

@@ -50,7 +50,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	private SessionFactoryImplementor entityManagerFactory;
 
 	private EntityManager em;
-	private ArrayList<EntityManager> isolatedEms = new ArrayList<EntityManager>();
+	private ArrayList<EntityManager> isolatedEms = new ArrayList<>();
 
 	protected Dialect getDialect() {
 		return dialect;
@@ -205,7 +205,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 	protected Map getConfig() {
 		Map<Object, Object> config = Environment.getProperties();
-		ArrayList<Class> classes = new ArrayList<Class>();
+		ArrayList<Class> classes = new ArrayList<>();
 
 		config.put( AvailableSettings.CLASSLOADERS, getClass().getClassLoader() );
 
@@ -218,7 +218,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 			config.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
 		}
 		if ( getEjb3DD().length > 0 ) {
-			ArrayList<String> dds = new ArrayList<String>();
+			ArrayList<String> dds = new ArrayList<>();
 			dds.addAll( Arrays.asList( getEjb3DD() ) );
 			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
@@ -237,11 +237,11 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	public Map<Class, String> getCachedClasses() {
-		return new HashMap<Class, String>();
+		return new HashMap<>();
 	}
 
 	public Map<String, String> getCachedCollections() {
-		return new HashMap<String, String>();
+		return new HashMap<>();
 	}
 
 	public String[] getEjb3DD() {

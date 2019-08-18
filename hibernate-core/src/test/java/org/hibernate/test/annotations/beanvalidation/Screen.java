@@ -26,8 +26,8 @@ public class Screen {
 	private Integer id;
 	private Button stopButton;
 	private PowerSupply powerSupply;
-	private Set<DisplayConnector> connectors = new HashSet<DisplayConnector>();
-	private Set<Color> displayColors = new HashSet<Color>();
+	private Set<DisplayConnector> connectors = new HashSet<>();
+	private Set<Color> displayColors = new HashSet<>();
 
 	@Id
 	@GeneratedValue

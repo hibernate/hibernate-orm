@@ -75,7 +75,7 @@ public class HsqlTest {
      */
 
 	public static void main(String[] argv) {
-		Map<String, String> configurationOverrides = new HashMap<String, String>();
+		Map<String, String> configurationOverrides = new HashMap<>();
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "ConsolePU", configurationOverrides );
 		EntityManager entityManager = emf.createEntityManager();
 
@@ -118,7 +118,7 @@ public class HsqlTest {
 			a1.setStreetName( "MI6" );
 			a1.setHouseNumber( 18 );
 			a1.setFlatNumber( 25 );
-			a1.setPersons( new HashSet<Person>() );
+			a1.setPersons( new HashSet<>() );
 			a1.getPersons().add( p1 );
 
 			entityManager.persist( a1 );

@@ -267,7 +267,7 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 	@Entity( name = "Customer" )
 	public static class Customer {
 		private Long id;
-		private List<Investment> investments = new ArrayList<Investment>();
+		private List<Investment> investments = new ArrayList<>();
 
 		@Id
 		public Long getId() {

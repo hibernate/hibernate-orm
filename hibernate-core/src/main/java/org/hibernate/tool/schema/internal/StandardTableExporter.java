@@ -147,7 +147,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 		applyTableTypeString( buf );
 
-		List<String> sqlStrings = new ArrayList<String>();
+		List<String> sqlStrings = new ArrayList<>();
 		sqlStrings.add( buf.toString() );
 
 		applyComments( table, tableName, sqlStrings );

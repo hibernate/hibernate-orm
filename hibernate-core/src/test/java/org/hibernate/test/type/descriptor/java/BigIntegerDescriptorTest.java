@@ -23,7 +23,7 @@ public class BigIntegerDescriptorTest extends AbstractDescriptorTest<BigInteger>
 
 	@Override
 	protected Data<BigInteger> getTestData() {
-		return new Data<BigInteger>( original, copy, different );
+		return new Data<>( original, copy, different );
 	}
 
 	@Override

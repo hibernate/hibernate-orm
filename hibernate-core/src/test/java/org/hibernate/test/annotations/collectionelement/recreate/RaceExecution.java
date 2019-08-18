@@ -48,7 +48,7 @@ public class RaceExecution {
 
 	public void arriveToPoi(Poi poi, Date time) {
 		if ( poiArrival == null ) {
-			poiArrival = new HashMap<Poi, PoiArrival>();
+			poiArrival = new HashMap<>();
 		}
 
 		PoiArrival arrival = poiArrival.get( poi );
@@ -62,7 +62,7 @@ public class RaceExecution {
 
 	public void expectedArrive(Poi poi, Date time) {
 		if ( poiArrival == null ) {
-			poiArrival = new HashMap<Poi, PoiArrival>();
+			poiArrival = new HashMap<>();
 		}
 
 		PoiArrival arrival = poiArrival.get( poi );

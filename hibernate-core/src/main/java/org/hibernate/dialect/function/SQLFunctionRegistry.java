@@ -17,7 +17,7 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class SQLFunctionRegistry {
-	private final Map<String,SQLFunction> functionMap = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
+	private final Map<String,SQLFunction> functionMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
 	/**
 	 * Constructs a SQLFunctionRegistry

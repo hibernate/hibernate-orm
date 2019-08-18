@@ -58,7 +58,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 			Class<T> returnType) {
 		super( criteriaBuilder );
 		this.returnType = returnType;
-		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
+		this.queryStructure = new QueryStructure<>( this, criteriaBuilder );
 	}
 
 	@Override
@@ -369,7 +369,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 			}
 
 			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {
-				final HashMap<String,Class> map = new HashMap<String, Class>();
+				final HashMap<String,Class> map = new HashMap<>();
 				for ( ImplicitParameterBinding implicitParameter : implicitParameterBindings ) {
 					map.put( implicitParameter.getParameterName(), implicitParameter.getJavaType() );
 				}

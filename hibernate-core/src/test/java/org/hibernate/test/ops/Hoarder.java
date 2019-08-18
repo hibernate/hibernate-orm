@@ -16,7 +16,7 @@ public class Hoarder {
 	private Long id;
 	private String name;
 	private Item favoriteItem;
-	private Set<Item> items = new HashSet<Item>();
+	private Set<Item> items = new HashSet<>();
 
 	public Long getId() {
 		return id;

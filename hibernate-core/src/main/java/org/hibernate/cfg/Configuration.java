@@ -92,8 +92,8 @@ public class Configuration {
 	// used during processing mappings
 	private ImplicitNamingStrategy implicitNamingStrategy;
 	private PhysicalNamingStrategy physicalNamingStrategy;
-	private List<BasicType> basicTypes = new ArrayList<BasicType>();
-	private List<TypeContributor> typeContributorRegistrations = new ArrayList<TypeContributor>();
+	private List<BasicType> basicTypes = new ArrayList<>();
+	private List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
 	private Map<String, NamedQueryDefinition> namedQueries;
 	private Map<String, NamedSQLQueryDefinition> namedSqlQueries;
 	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
@@ -149,11 +149,11 @@ public class Configuration {
 	protected void reset() {
 		implicitNamingStrategy = ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
 		physicalNamingStrategy = PhysicalNamingStrategyStandardImpl.INSTANCE;
-		namedQueries = new HashMap<String,NamedQueryDefinition>();
-		namedSqlQueries = new HashMap<String,NamedSQLQueryDefinition>();
-		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
-		namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>();
-		namedProcedureCallMap = new HashMap<String, NamedProcedureCallDefinition>(  );
+		namedQueries = new HashMap<>();
+		namedSqlQueries = new HashMap<>();
+		sqlResultSetMappings = new HashMap<>();
+		namedEntityGraphMap = new HashMap<>();
+		namedProcedureCallMap = new HashMap<>(  );
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 		entityTuplizerFactory = new EntityTuplizerFactory();
@@ -732,14 +732,14 @@ public class Configuration {
 
 	public void addSqlFunction(String functionName, SQLFunction function) {
 		if ( sqlFunctions == null ) {
-			sqlFunctions = new HashMap<String, SQLFunction>();
+			sqlFunctions = new HashMap<>();
 		}
 		sqlFunctions.put( functionName, function );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
 		if ( auxiliaryDatabaseObjectList == null ) {
-			auxiliaryDatabaseObjectList = new ArrayList<AuxiliaryDatabaseObject>();
+			auxiliaryDatabaseObjectList = new ArrayList<>();
 		}
 		auxiliaryDatabaseObjectList.add( object );
 	}
@@ -790,7 +790,7 @@ public class Configuration {
 
 	public void addAttributeConverter(AttributeConverterDefinition definition) {
 		if ( attributeConverterDefinitionsByClass == null ) {
-			attributeConverterDefinitionsByClass = new HashMap<Class, AttributeConverterDefinition>();
+			attributeConverterDefinitionsByClass = new HashMap<>();
 		}
 		attributeConverterDefinitionsByClass.put( definition.getAttributeConverter().getClass(), definition );
 	}

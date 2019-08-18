@@ -16,7 +16,7 @@ import java.util.Set;
 public class User {
 	private Long id;
 	private String name;
-	private Set<Group> groups = new HashSet<Group>();
+	private Set<Group> groups = new HashSet<>();
 
 	public User() {
 	}

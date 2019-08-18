@@ -16,7 +16,7 @@ public class Parent {
 	private Long id;
 
 	// LinkedHashSet used for the reason to force the specific order of elements in collection
-	private Set<BaseChild> children = new LinkedHashSet<BaseChild>();
+	private Set<BaseChild> children = new LinkedHashSet<>();
 
 	/**
 	 * @return Entity identifier.

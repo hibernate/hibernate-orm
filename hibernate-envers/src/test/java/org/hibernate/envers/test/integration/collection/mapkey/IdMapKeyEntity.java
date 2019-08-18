@@ -34,7 +34,7 @@ public class IdMapKeyEntity {
 	private Map<Integer, StrTestEntity> idmap;
 
 	public IdMapKeyEntity() {
-		idmap = new HashMap<Integer, StrTestEntity>();
+		idmap = new HashMap<>();
 	}
 
 	public Integer getId() {

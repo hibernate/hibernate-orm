@@ -25,7 +25,7 @@ public class Name implements Serializable {
 
     private String firstName;
     private String lastName;
-	private Set<Alias> aliases = new HashSet<Alias>(  );
+	private Set<Alias> aliases = new HashSet<>(  );
 
 	public Name() {
 	}

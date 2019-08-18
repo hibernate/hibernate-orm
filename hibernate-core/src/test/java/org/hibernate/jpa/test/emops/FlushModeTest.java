@@ -21,7 +21,7 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 public class FlushModeTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testCreateEMFlushMode() throws Exception {
-		Map<String, String> properties = new HashMap<String, String>();
+		Map<String, String> properties = new HashMap<>();
 		properties.put( "org.hibernate.flushMode", "manual" );
 		EntityManager em = createEntityManager( properties );
 		em.getTransaction().begin();

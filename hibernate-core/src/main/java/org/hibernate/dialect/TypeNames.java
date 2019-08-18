@@ -47,13 +47,13 @@ public final class TypeNames {
 	/**
 	 * Holds default type mappings for a typeCode.  This is the non-sized mapping
 	 */
-	private final Map<Integer, String> defaults = new HashMap<Integer, String>();
+	private final Map<Integer, String> defaults = new HashMap<>();
 
 	/**
 	 * Holds the weighted mappings for a typeCode.  The nested map is a TreeMap to sort its contents
 	 * based on the key (the weighting) to ensure proper iteration ordering during {@link #get(int, long, int, int)}
 	 */
-	private final Map<Integer, Map<Long, String>> weighted = new HashMap<Integer, Map<Long, String>>();
+	private final Map<Integer, Map<Long, String>> weighted = new HashMap<>();
 
 	/**
 	 * get default type name for specified type
@@ -121,7 +121,7 @@ public final class TypeNames {
 		Map<Long, String> map = weighted.get( integer );
 		if ( map == null ) {
 			// add new ordered map
-			map = new TreeMap<Long, String>();
+			map = new TreeMap<>();
 			weighted.put( integer, map );
 		}
 		map.put( capacity, value );

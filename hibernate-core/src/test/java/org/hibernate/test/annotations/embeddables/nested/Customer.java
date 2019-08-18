@@ -23,7 +23,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 public class Customer {
 	private Long id;
-	private List<Investment> investments = new ArrayList<Investment>();
+	private List<Investment> investments = new ArrayList<>();
 
 	@Id
 	@GeneratedValue( generator="increment" )

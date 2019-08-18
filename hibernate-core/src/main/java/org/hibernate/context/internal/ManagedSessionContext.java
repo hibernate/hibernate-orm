@@ -119,7 +119,7 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	private static Map<SessionFactory,Session> sessionMap(boolean createMap) {
 		Map<SessionFactory,Session> sessionMap = CONTEXT_TL.get();
 		if ( sessionMap == null && createMap ) {
-			sessionMap = new HashMap<SessionFactory,Session>();
+			sessionMap = new HashMap<>();
 			CONTEXT_TL.set( sessionMap );
 		}
 		return sessionMap;

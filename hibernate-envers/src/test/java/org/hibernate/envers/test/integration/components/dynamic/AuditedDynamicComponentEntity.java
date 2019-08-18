@@ -16,7 +16,7 @@ import org.hibernate.envers.Audited;
 public class AuditedDynamicComponentEntity implements Serializable {
 	private long id;
 	private String note;
-	private Map<String, Object> customFields = new HashMap<String, Object>();
+	private Map<String, Object> customFields = new HashMap<>();
 	private SimpleEntity simpleEntity;
 
 	public AuditedDynamicComponentEntity() {

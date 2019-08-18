@@ -24,7 +24,7 @@ public class Order {
 	private Integer schoolIdSort;
 	private Integer academicYear;
 
-	private List<OrderItem> itemList = new ArrayList<OrderItem>();
+	private List<OrderItem> itemList = new ArrayList<>();
 
 	public boolean equals(Object obj) {
 		return super.equals( obj );

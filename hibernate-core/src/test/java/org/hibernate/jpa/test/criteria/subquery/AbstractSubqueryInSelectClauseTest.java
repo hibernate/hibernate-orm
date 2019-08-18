@@ -55,7 +55,7 @@ public abstract class AbstractSubqueryInSelectClauseTest extends BaseEntityManag
 
 		private Integer id;
 
-		private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
+		private Map<Integer, Person> contacts = new HashMap<>();
 
 		@Id
 		@GeneratedValue
@@ -84,7 +84,7 @@ public abstract class AbstractSubqueryInSelectClauseTest extends BaseEntityManag
 
 		private Integer id;
 
-		private Map<Integer, String> localized = new HashMap<Integer, String>();
+		private Map<Integer, String> localized = new HashMap<>();
 
 		@Id
 		@GeneratedValue

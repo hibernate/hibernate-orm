@@ -58,9 +58,9 @@ public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTest
 		int eventCount = 0;
 
 		List<MultipleCollectionRefEntity1> oldRefentities1
-				= new ArrayList<MultipleCollectionRefEntity1>();
+				= new ArrayList<>();
 		List<MultipleCollectionRefEntity2> oldRefentities2
-				= new ArrayList<MultipleCollectionRefEntity2>();
+				= new ArrayList<>();
 
 		Session s = openSession();
 		s.beginTransaction();

@@ -217,7 +217,7 @@ public final class Template {
 
 			// Special processing for ANSI SQL TRIM function
 			if ( "trim".equals( lcToken ) && "(".equals( nextToken ) ) {
-				List<String> operands = new ArrayList<String>();
+				List<String> operands = new ArrayList<>();
 				StringBuilder builder = new StringBuilder();
 
 				boolean hasMoreOperands = true;

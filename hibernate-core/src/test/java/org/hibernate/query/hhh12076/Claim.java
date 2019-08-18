@@ -46,8 +46,8 @@ public class Claim {
 	 * default constructor
 	 */
 	public Claim() {
-		_extensions = new HashSet<Extension>();
-		_settlements = new HashSet<Settlement>();
+		_extensions = new HashSet<>();
+		_settlements = new HashSet<>();
 	}
 
 	public Claim getClaim() {
@@ -211,8 +211,8 @@ public class Claim {
 	@SuppressWarnings("unchecked")
 	public <X extends Extension> X getExtension(Class<X> extensionType) {
 		if ( _extensionMap == null || _extensionMap.size() != _extensions.size() ) {
-			Map<Class<?>, Extension> map = new HashMap<Class<?>, Extension>( _extensions.size() );
-			map = new HashMap<Class<?>, Extension>( _extensions.size() );
+			Map<Class<?>, Extension> map = new HashMap<>( _extensions.size() );
+			map = new HashMap<>( _extensions.size() );
 			for ( Extension extension : _extensions ) {
 				map.put( extension.getClass(), extension );
 			}

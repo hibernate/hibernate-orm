@@ -16,7 +16,7 @@ public class User implements Serializable {
 
 	private String name;
 
-	private Map<Integer, Group> groups = new HashMap<Integer, Group>();
+	private Map<Integer, Group> groups = new HashMap<>();
 
 	public User(String name, String org) {
 		this.org = org;

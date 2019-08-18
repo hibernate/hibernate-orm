@@ -162,7 +162,7 @@ public class MaximalizePropertyQuery extends BaseEnversJPAFunctionalTestCase {
 				.add( disjunction )
 				.getResultList();
 
-		Set<Integer> idsSeen = new HashSet<Integer>();
+		Set<Integer> idsSeen = new HashSet<>();
 		for ( Object o : result ) {
 			StrIntTestEntity entity = (StrIntTestEntity) o;
 			Integer id = entity.getId();

@@ -424,7 +424,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 
 	private void addDestination(FromElement fromElement) {
 		if ( destinations == null ) {
-			destinations = new LinkedList<FromElement>();
+			destinations = new LinkedList<>();
 		}
 		destinations.add( fromElement );
 	}

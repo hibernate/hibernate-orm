@@ -55,7 +55,7 @@ public class CollectionAttributeJoin<O,E>
 
 	@Override
 	protected FromImplementor<O, E> createCorrelationDelegate() {
-		return new CollectionAttributeJoin<O,E>(
+		return new CollectionAttributeJoin<>(
 				criteriaBuilder(),
 				getJavaType(),
 				(PathImplementor<O>) getParentPath(),
@@ -76,7 +76,7 @@ public class CollectionAttributeJoin<O,E>
 
 	@Override
 	public <T extends E> CollectionAttributeJoin<O,T> treatAs(Class<T> treatAsType) {
-		return new TreatedCollectionAttributeJoin<O,T>( this, treatAsType );
+		return new TreatedCollectionAttributeJoin<>( this, treatAsType );
 	}
 
 	public static class TreatedCollectionAttributeJoin<O,T> extends CollectionAttributeJoin<O, T> {

@@ -217,8 +217,8 @@ public class DriverManagerConnectionProviderImpl
 
 	public static class PooledConnections {
 
-		private final ConcurrentLinkedQueue<Connection> allConnections = new ConcurrentLinkedQueue<Connection>();
-		private final ConcurrentLinkedQueue<Connection> availableConnections = new ConcurrentLinkedQueue<Connection>();
+		private final ConcurrentLinkedQueue<Connection> allConnections = new ConcurrentLinkedQueue<>();
+		private final ConcurrentLinkedQueue<Connection> availableConnections = new ConcurrentLinkedQueue<>();
 
 		private static final CoreMessageLogger log = CoreLogging.messageLogger( DriverManagerConnectionProviderImpl.class );
 

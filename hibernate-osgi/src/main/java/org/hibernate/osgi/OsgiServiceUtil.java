@@ -27,7 +27,7 @@ public class OsgiServiceUtil implements Stoppable {
 
 	private BundleContext context;
 
-	private Map<String, ServiceTracker> serviceTrackers = new HashMap<String, ServiceTracker>();
+	private Map<String, ServiceTracker> serviceTrackers = new HashMap<>();
 
 	public OsgiServiceUtil(BundleContext context) {
 		this.context = context;
@@ -80,7 +80,7 @@ public class OsgiServiceUtil implements Stoppable {
 
 	private <T> ServiceTracker getServiceTracker(String contractClassName) {
 		if ( !serviceTrackers.containsKey( contractClassName ) ) {
-			final ServiceTracker<T, T> serviceTracker = new ServiceTracker<T, T>( context, contractClassName, null );
+			final ServiceTracker<T, T> serviceTracker = new ServiceTracker<>( context, contractClassName, null );
 			serviceTracker.open();
 			serviceTrackers.put( contractClassName, serviceTracker );
 		}

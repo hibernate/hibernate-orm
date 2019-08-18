@@ -239,7 +239,7 @@ public class UnversionedCascadeDereferencedCollectionTest extends AbstractDerefe
 		assertEquals( one.getId(), ceManiesOrig.getKey() );
 
 		// replace collection
-		one.setManies( new HashSet<Many>() );
+		one.setManies( new HashSet<>() );
 
 		s.flush();
 

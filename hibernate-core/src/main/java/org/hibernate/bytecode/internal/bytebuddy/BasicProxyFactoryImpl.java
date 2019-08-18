@@ -68,7 +68,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 	}
 
 	private TypeCache.SimpleKey getCacheKey(Class<?> superClass, Class<?>[] interfaces) {
-		Set<Class<?>> key = new HashSet<Class<?>>();
+		Set<Class<?>> key = new HashSet<>();
 		if ( superClass != null ) {
 			key.add( superClass );
 		}

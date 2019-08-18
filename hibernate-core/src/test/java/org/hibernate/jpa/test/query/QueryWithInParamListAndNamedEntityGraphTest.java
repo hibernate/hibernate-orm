@@ -42,7 +42,7 @@ public class QueryWithInParamListAndNamedEntityGraphTest extends BaseEntityManag
 		// this test works
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		Set<Long> ids = new HashSet<Long>();
+		Set<Long> ids = new HashSet<>();
 		ids.add( 1L );
 		ids.add( 2L );
 		TypedQuery<Person> query = em.createQuery( "select p from Person p where p.id  in :ids", Person.class );
@@ -69,7 +69,7 @@ public class QueryWithInParamListAndNamedEntityGraphTest extends BaseEntityManag
 		// this test fails
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		Set<Long> ids = new HashSet<Long>();
+		Set<Long> ids = new HashSet<>();
 		ids.add( 1L );
 		ids.add( 2L );
 		TypedQuery<Person> query = em.createQuery( "select p from Person p where p.id  in :ids", Person.class );

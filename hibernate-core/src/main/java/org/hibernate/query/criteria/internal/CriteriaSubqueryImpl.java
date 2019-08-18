@@ -45,7 +45,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 			CommonAbstractCriteria parent) {
 		super( criteriaBuilder, javaType);
 		this.parent = parent;
-		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
+		this.queryStructure = new QueryStructure<>( this, criteriaBuilder );
 	}
 
 	@Override
@@ -113,7 +113,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 			if ( queryStructure.getSelection() == null ) {
 				return null;
 			}
-			wrappedSelection = new SubquerySelection<T>( (ExpressionImpl<T>) queryStructure.getSelection(), this );
+			wrappedSelection = new SubquerySelection<>( (ExpressionImpl<T>) queryStructure.getSelection(), this );
 		}
 		return wrappedSelection;
 	}

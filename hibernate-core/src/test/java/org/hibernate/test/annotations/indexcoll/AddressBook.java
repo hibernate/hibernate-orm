@@ -23,9 +23,9 @@ import javax.persistence.OneToMany;
 public class AddressBook {
 	private Integer id;
 	private String owner;
-	private Map<AddressEntryPk, AddressEntry> entries = new HashMap<AddressEntryPk, AddressEntry>();
-	private Map<String, AddressEntry> lastNameEntries = new HashMap<String, AddressEntry>();
-	private Map<AlphabeticalDirectory, AddressEntry> directoryEntries = new HashMap<AlphabeticalDirectory, AddressEntry>();
+	private Map<AddressEntryPk, AddressEntry> entries = new HashMap<>();
+	private Map<String, AddressEntry> lastNameEntries = new HashMap<>();
+	private Map<AlphabeticalDirectory, AddressEntry> directoryEntries = new HashMap<>();
 
 	@Id
 	@GeneratedValue

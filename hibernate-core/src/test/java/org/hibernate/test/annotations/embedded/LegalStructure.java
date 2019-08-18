@@ -23,7 +23,7 @@ public class LegalStructure {
 	private String country;
 	private CorpType corporationType;
 	private Nationality origin;
-	private Set<Manager> topManagement = new HashSet<Manager>();
+	private Set<Manager> topManagement = new HashSet<>();
 
 	@ManyToOne
 	@JoinColumn(name = "CORP_ID")

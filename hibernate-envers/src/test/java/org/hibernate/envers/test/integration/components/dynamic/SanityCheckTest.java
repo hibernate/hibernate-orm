@@ -56,14 +56,14 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 
 	private PlainEntity getPlainEntity(ManyToOneEntity manyToOne, ManyToManyEntity manyToMany, OneToOneEntity oneToOne) {
 		PlainComponent plainComponent = new PlainComponent();
-		List<ManyToManyEntity> manyToManyEntityList = new ArrayList<ManyToManyEntity>();
+		List<ManyToManyEntity> manyToManyEntityList = new ArrayList<>();
 		manyToManyEntityList.add( manyToMany );
 		plainComponent.setManyToManyList( manyToManyEntityList );
 		plainComponent.setComponentNote( "Note" );
 		plainComponent.setOneToOneEntity( oneToOne );
 		plainComponent.setManyToOneEntity( manyToOne );
 		plainComponent.setInternalComponent( new InternalComponent( "Some val" ) );
-		ArrayList<InternalComponent> internalComponents = new ArrayList<InternalComponent>();
+		ArrayList<InternalComponent> internalComponents = new ArrayList<>();
 		internalComponents.add( new InternalComponent( "test" ) );
 		plainComponent.setInternalComponents( internalComponents );
 
@@ -135,7 +135,7 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 
 		//when
 
-		List<ManyToManyEntity> manyToManyEntities = new ArrayList<ManyToManyEntity>();
+		List<ManyToManyEntity> manyToManyEntities = new ArrayList<>();
 		manyToManyEntities.add( manyToMany );
 		try {
 			getAuditReader().createQuery()

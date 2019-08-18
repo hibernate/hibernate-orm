@@ -27,8 +27,8 @@ public class Alias implements java.io.Serializable {
 	private String id;
 	private String alias;
 	private Customer customerNoop;
-	private Collection<Customer> customersNoop = new java.util.ArrayList<Customer>();
-	private Collection<Customer> customers = new java.util.ArrayList<Customer>();
+	private Collection<Customer> customersNoop = new java.util.ArrayList<>();
+	private Collection<Customer> customers = new java.util.ArrayList<>();
 
 	public Alias() {
 	}

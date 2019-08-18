@@ -22,7 +22,7 @@ import javax.persistence.ManyToMany;
 public class Inhabitant implements Serializable {
 	private Integer id;
 	private String name;
-	private Set<House> livesIn = new HashSet<House>();
+	private Set<House> livesIn = new HashSet<>();
 
 	@Id
 	@GeneratedValue

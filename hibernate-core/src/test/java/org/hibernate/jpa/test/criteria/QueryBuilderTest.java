@@ -120,7 +120,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		Phone phone3 = new Phone( "3", "555", "0003", address );
 		Phone phone4 = new Phone( "4", "555", "0004" );
 
-		List<Phone> phones = new ArrayList<Phone>( 3 );
+		List<Phone> phones = new ArrayList<>( 3 );
 		phones.add( phone1 );
 		phones.add( phone2 );
 		phones.add( phone3 );

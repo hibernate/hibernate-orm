@@ -101,7 +101,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	private final Map joins = new LinkedHashMap();
 	private final List orderByTokens = new ArrayList();
 	private final List groupByTokens = new ArrayList();
-	private final Set<Serializable> querySpaces = new HashSet<Serializable>();
+	private final Set<Serializable> querySpaces = new HashSet<>();
 	private final Set entitiesToFetch = new HashSet();
 
 	private final Map pathAliases = new HashMap();

@@ -62,7 +62,7 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 	}
 
 	public Root<T> from(EntityType<T> entityType) {
-		root = new RootImpl<T>( criteriaBuilder, entityType, false );
+		root = new RootImpl<>( criteriaBuilder, entityType, false );
 		return root;
 	}
 
@@ -86,7 +86,7 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 	}
 
 	public <U> Subquery<U> subquery(Class<U> type) {
-		return new CriteriaSubqueryImpl<U>( criteriaBuilder(), type, this );
+		return new CriteriaSubqueryImpl<>( criteriaBuilder(), type, this );
 	}
 
 

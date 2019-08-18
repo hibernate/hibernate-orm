@@ -102,7 +102,7 @@ public class SingularAttributeSourceAnyImpl
 		this.discriminatorSource = new AnyDiscriminatorSource() {
 			private final HibernateTypeSource typeSource = new HibernateTypeSourceImpl( jaxbAnyMapping.getMetaType() );
 			private final RelationalValueSource relationalValueSource = relationalValueSources.get( 0 );
-			private final Map<String,String> valueMappings = new HashMap<String, String>();
+			private final Map<String,String> valueMappings = new HashMap<>();
 			{
 				for ( JaxbHbmAnyValueMappingType valueMapping : jaxbAnyMapping.getMetaValue() ) {
 					valueMappings.put(

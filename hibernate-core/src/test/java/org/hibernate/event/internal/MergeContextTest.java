@@ -101,7 +101,7 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
     public void testMergeToManagedEntityFillFollowedByInvertUsingPutAll() {
 		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
 
-        Map<Object,Object> input = new HashMap<Object,Object>();
+        Map<Object,Object> input = new HashMap<>();
         Object mergeEntity1 = new Simple( 1 );
 		//
         Object managedEntity1 = 1;

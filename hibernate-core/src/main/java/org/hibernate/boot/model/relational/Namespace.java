@@ -33,8 +33,8 @@ public class Namespace {
 	private final Name name;
 	private final Name physicalName;
 
-	private Map<Identifier, Table> tables = new TreeMap<Identifier, Table>();
-	private Map<Identifier, Sequence> sequences = new TreeMap<Identifier, Sequence>();
+	private Map<Identifier, Table> tables = new TreeMap<>();
+	private Map<Identifier, Sequence> sequences = new TreeMap<>();
 
 	public Namespace(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment, Name name) {
 		this.physicalNamingStrategy = physicalNamingStrategy;

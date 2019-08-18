@@ -25,7 +25,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 
 		Products p = new Products();
-		HashSet<Widgets> set = new HashSet<Widgets>();
+		HashSet<Widgets> set = new HashSet<>();
 
 		Widgets widget = new Widgets();
 		widget.setName("hammer");
@@ -69,7 +69,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 
 		BugSystem bs = new BugSystem();
-		HashSet<Bug> set = new HashSet<Bug>();
+		HashSet<Bug> set = new HashSet<>();
 
 		Bug bug = new Bug();
 		bug.setDescription("JPA-2 locking");

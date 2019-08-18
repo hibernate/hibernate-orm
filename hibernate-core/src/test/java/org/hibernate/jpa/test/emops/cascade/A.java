@@ -48,7 +48,7 @@ public class A {
 
 	public Set<B1> getB1List() {
 		if ( b1List == null )
-			b1List = new HashSet<B1>();
+			b1List = new HashSet<>();
 		return b1List;
 	}
 
@@ -58,7 +58,7 @@ public class A {
 
 	public Set<B2> getB2List() {
 		if ( b2List == null )
-			b2List = new HashSet<B2>();
+			b2List = new HashSet<>();
 		return b2List;
 	}
 
@@ -72,7 +72,7 @@ public class A {
 
 	public void setB3List(Set<B3> list) {
 		if ( b3List == null )
-			b3List = new HashSet<B3>();
+			b3List = new HashSet<>();
 		b3List = list;
 	}
 
@@ -82,7 +82,7 @@ public class A {
 
 	public void setB4List(Set<B4> list) {
 		if ( b4List == null )
-			b4List = new HashSet<B4>();
+			b4List = new HashSet<>();
 		b4List = list;
 	}
 

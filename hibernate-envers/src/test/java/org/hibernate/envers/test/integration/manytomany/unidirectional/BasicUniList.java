@@ -64,10 +64,10 @@ public class BasicUniList extends BaseEnversJPAFunctionalTestCase {
 		ed1 = em.find( StrTestEntity.class, ed1.getId() );
 		ed2 = em.find( StrTestEntity.class, ed2.getId() );
 
-		ing1.setReferences( new ArrayList<StrTestEntity>() );
+		ing1.setReferences( new ArrayList<>() );
 		ing1.getReferences().add( ed1 );
 
-		ing2.setReferences( new ArrayList<StrTestEntity>() );
+		ing2.setReferences( new ArrayList<>() );
 		ing2.getReferences().add( ed1 );
 		ing2.getReferences().add( ed2 );
 

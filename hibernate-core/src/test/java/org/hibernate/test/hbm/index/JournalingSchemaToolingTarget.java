@@ -15,7 +15,7 @@ import org.hibernate.tool.schema.internal.exec.GenerationTarget;
  * @author Steve Ebersole
  */
 public class JournalingSchemaToolingTarget implements GenerationTarget {
-	private List<String> actions = new ArrayList<String>();
+	private List<String> actions = new ArrayList<>();
 
 	public JournalingSchemaToolingTarget() {
 	}

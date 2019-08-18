@@ -210,7 +210,7 @@ public class SetHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 
 		public void addBook(Book book) {
 			if ( this.books == null ) {
-				this.books = new HashSet<Book>();
+				this.books = new HashSet<>();
 			}
 			book.setAuthor( this );
 			this.books.add( book );

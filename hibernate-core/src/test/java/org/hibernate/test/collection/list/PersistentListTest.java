@@ -80,7 +80,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 						PreparedStatement preparedStatement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
 						preparedStatement.setString( 1, "root" );
 						ResultSet resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
-						Map<String, Integer> valueMap = new HashMap<String, Integer>();
+						Map<String, Integer> valueMap = new HashMap<>();
 						while ( resultSet.next() ) {
 							final String name = resultSet.getString( 1 );
 							assertFalse( "NAME column was null", resultSet.wasNull() );
@@ -136,7 +136,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 								.addColumn( "PRD_CODE" );
 						PreparedStatement preparedStatement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
 						ResultSet resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
-						Map<String, Integer> valueMap = new HashMap<String, Integer>();
+						Map<String, Integer> valueMap = new HashMap<>();
 						while ( resultSet.next() ) {
 							final int fk = resultSet.getInt( 1 );
 							assertFalse( "Collection key (FK) column was null", resultSet.wasNull() );

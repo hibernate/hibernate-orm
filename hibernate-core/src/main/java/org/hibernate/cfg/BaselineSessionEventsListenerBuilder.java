@@ -48,7 +48,7 @@ public class BaselineSessionEventsListenerBuilder {
 	}
 
 	public List<SessionEventListener> buildBaselineList() {
-		List<SessionEventListener> list = new ArrayList<SessionEventListener>();
+		List<SessionEventListener> list = new ArrayList<>();
 		if ( logSessionMetrics && StatisticalLoggingSessionEventListener.isLoggingEnabled() ) {
 			list.add( new StatisticalLoggingSessionEventListener() );
 		}

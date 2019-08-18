@@ -182,7 +182,7 @@ public class CustomerTwo implements Serializable{
 	
 	public List<CustomerInventoryTwo> getInventories() {
 		if ( this.customerInventories == null ) {
-			this.customerInventories = new ArrayList<CustomerInventoryTwo>();
+			this.customerInventories = new ArrayList<>();
 		}
 		return this.customerInventories;
 	}

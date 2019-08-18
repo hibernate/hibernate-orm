@@ -12,7 +12,7 @@ import java.util.List;
 public class PlainComponent {
 
 	private String componentNote;
-	private List<ManyToManyEntity> manyToManyList = new ArrayList<ManyToManyEntity>();
+	private List<ManyToManyEntity> manyToManyList = new ArrayList<>();
 	private OneToOneEntity oneToOneEntity;
 	private ManyToOneEntity manyToOneEntity;
 	private InternalComponent internalComponent;

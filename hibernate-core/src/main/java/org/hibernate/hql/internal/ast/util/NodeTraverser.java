@@ -53,7 +53,7 @@ public class NodeTraverser {
 		if ( ast == null ) {
 			return;
 		}
-		Deque<AST> stack = new ArrayDeque<AST>();
+		Deque<AST> stack = new ArrayDeque<>();
 		stack.addLast( ast );
 		while ( !stack.isEmpty() ) {
 			ast = stack.removeLast();

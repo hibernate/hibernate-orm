@@ -52,7 +52,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractOneSessionTest 
 		Person pers2 = new Person( "Leandro", 29 );
 		Person pers4 = new Person( "Camomo", 15 );
 
-		List<Person> owners = new ArrayList<Person>();
+		List<Person> owners = new ArrayList<>();
 		owners.add( pers1 );
 		owners.add( pers2 );
 		Car car1 = new Car( 5, owners );
@@ -64,7 +64,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractOneSessionTest 
 		id_pers1 = pers1.getId();
 		id_car1 = car1.getId();
 
-		owners = new ArrayList<Person>();
+		owners = new ArrayList<>();
 		owners.add( pers2 );
 		owners.add( pers4 );
 		Car car2 = new Car( 27, owners );

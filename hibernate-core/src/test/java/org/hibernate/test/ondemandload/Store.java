@@ -21,7 +21,7 @@ import java.util.List;
 public class Store implements Serializable {
 	private int id;
 	private String name;
-	private List<Inventory> inventories = new ArrayList<Inventory>();
+	private List<Inventory> inventories = new ArrayList<>();
 	private int version;
 
 	protected Store() {

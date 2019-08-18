@@ -25,7 +25,7 @@ import javax.persistence.Table;
 @Table( name = "EWAEC" )
 public class EntityWithAnElementCollection {
 	private Long id;
-	private Set<String> someStrings = new HashSet<String>();
+	private Set<String> someStrings = new HashSet<>();
 
 	@Id
 	public Long getId() {

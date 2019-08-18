@@ -71,7 +71,7 @@ public class TestClassMetadata {
 
 	private void addBeforeClassOnceCallback(Method method) {
 		if ( beforeClassOnceMethods == null ) {
-			beforeClassOnceMethods = new LinkedHashSet<Method>();
+			beforeClassOnceMethods = new LinkedHashSet<>();
 		}
 		ensureAccessibility( method );
 		beforeClassOnceMethods.add( method );
@@ -88,7 +88,7 @@ public class TestClassMetadata {
 
 	private void addAfterClassOnceCallback(Method method) {
 		if ( afterClassOnceMethods == null ) {
-			afterClassOnceMethods = new LinkedHashSet<Method>();
+			afterClassOnceMethods = new LinkedHashSet<>();
 		}
 		ensureAccessibility( method );
 		afterClassOnceMethods.add( method );
@@ -96,7 +96,7 @@ public class TestClassMetadata {
 
 	private void addOnFailureCallback(Method method) {
 		if ( onFailureCallbacks == null ) {
-			onFailureCallbacks = new LinkedHashSet<Method>();
+			onFailureCallbacks = new LinkedHashSet<>();
 		}
 		ensureAccessibility( method );
 		onFailureCallbacks.add( method );
@@ -104,7 +104,7 @@ public class TestClassMetadata {
 
 	private void addOnExpectedFailureCallback(Method method) {
 		if ( onExpectedFailureCallbacks == null ) {
-			onExpectedFailureCallbacks = new LinkedHashSet<Method>();
+			onExpectedFailureCallbacks = new LinkedHashSet<>();
 		}
 		ensureAccessibility( method );
 		onExpectedFailureCallbacks.add( method );

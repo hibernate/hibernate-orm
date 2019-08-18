@@ -89,7 +89,7 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
 			}
 
-			tuplizerClassMap = new HashMap<EntityMode, String>(  );
+			tuplizerClassMap = new HashMap<>(  );
 			for ( JaxbHbmTuplizerType tuplizerBinding : jaxbEmbeddableMapping.getTuplizer() ) {
 				tuplizerClassMap.put(
 						tuplizerBinding.getEntityMode(),
@@ -98,7 +98,7 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 			}
 		}
 
-		this.attributeSources = new ArrayList<AttributeSource>();
+		this.attributeSources = new ArrayList<>();
 		AttributesHelper.processAttributes(
 				mappingDocument,
 				new AttributesHelper.Callback() {

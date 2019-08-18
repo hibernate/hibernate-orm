@@ -488,7 +488,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	@SuppressWarnings({"JavaDoc"})
 	protected final void queueOperation(DelayedOperation operation) {
 		if ( operationQueue == null ) {
-			operationQueue = new ArrayList<DelayedOperation>( 10 );
+			operationQueue = new ArrayList<>( 10 );
 		}
 		operationQueue.add( operation );
 		//needed so that we remove this collection from the second-level cache

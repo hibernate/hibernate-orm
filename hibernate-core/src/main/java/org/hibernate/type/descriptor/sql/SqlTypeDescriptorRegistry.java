@@ -40,7 +40,7 @@ public class SqlTypeDescriptorRegistry implements Serializable {
 
 	private static final Logger log = Logger.getLogger( SqlTypeDescriptorRegistry.class );
 
-	private ConcurrentHashMap<Integer,SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<Integer, SqlTypeDescriptor>();
+	private ConcurrentHashMap<Integer,SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<>();
 
 	protected SqlTypeDescriptorRegistry() {
 		addDescriptorInternal( BooleanTypeDescriptor.INSTANCE );

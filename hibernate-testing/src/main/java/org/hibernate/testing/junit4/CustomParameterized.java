@@ -58,7 +58,7 @@ public class CustomParameterized extends Suite {
 
 	private static final List<Runner> NO_RUNNERS = Collections.emptyList();
 
-	private final ArrayList<Runner> runners = new ArrayList<Runner>();
+	private final ArrayList<Runner> runners = new ArrayList<>();
 
 	/**
 	 * Only called reflectively. Do not use programmatically.
@@ -87,8 +87,8 @@ public class CustomParameterized extends Suite {
 	}
 
 	private Iterable<Object[]> allParameters(List<FrameworkMethod> parametersMethods) throws Throwable {
-		ArrayList<Iterable<Object[]>> returnedParameters = new ArrayList<Iterable<Object[]>>();
-		ArrayList<Object[]> allParameters = new ArrayList<Object[]>();
+		ArrayList<Iterable<Object[]>> returnedParameters = new ArrayList<>();
+		ArrayList<Object[]> allParameters = new ArrayList<>();
 		Object cachedInstance = null;
 		for (FrameworkMethod method : parametersMethods) {
 			Object parameters;
@@ -115,7 +115,7 @@ public class CustomParameterized extends Suite {
 				}
 			}
 			else {
-				ArrayList<Object[]> newAllParameters = new ArrayList<Object[]>();
+				ArrayList<Object[]> newAllParameters = new ArrayList<>();
 				for (Object[] prev : allParameters) {
 					for (Object[] array : parameters) {
 						Object[] next = Arrays.copyOf(prev, prev.length + array.length);
@@ -132,7 +132,7 @@ public class CustomParameterized extends Suite {
 	private List<FrameworkMethod> getParametersMethods() throws Exception {
 		List<FrameworkMethod> methods = getTestClass().getAnnotatedMethods(
 				Parameterized.Parameters.class);
-		SortedMap<Integer, FrameworkMethod> sortedMethods = new TreeMap<Integer, FrameworkMethod>();
+		SortedMap<Integer, FrameworkMethod> sortedMethods = new TreeMap<>();
 		for (FrameworkMethod each : methods) {
 			if (each.isPublic()) {
 				if (!each.isStatic()) {
@@ -156,7 +156,7 @@ public class CustomParameterized extends Suite {
 			throw new Exception("No public static parameters method on class "
 					+ getTestClass().getName());
 		}
-		return new ArrayList<FrameworkMethod>(sortedMethods.values());
+		return new ArrayList<>(sortedMethods.values());
 	}
 
 	private void createRunnersForParameters(Iterable<Object[]> allParameters, String namePattern) throws Exception {

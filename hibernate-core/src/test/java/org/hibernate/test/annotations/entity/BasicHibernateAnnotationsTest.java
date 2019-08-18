@@ -596,7 +596,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		Country country = new Country();
 		country.setName( "Middle Earth" );
 		forest.setCountry( country );
-		Set<Country> near = new HashSet<Country>();
+		Set<Country> near = new HashSet<>();
 		country = new Country();
 		country.setName("Mordor");
 		near.add(country);

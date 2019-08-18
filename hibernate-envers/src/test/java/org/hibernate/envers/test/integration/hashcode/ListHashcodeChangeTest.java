@@ -210,7 +210,7 @@ public class ListHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 
 		public void addBook(Book book) {
 			if ( this.books == null ) {
-				this.books = new ArrayList<Book>();
+				this.books = new ArrayList<>();
 			}
 			book.setAuthor( this );
 			this.books.add( book );

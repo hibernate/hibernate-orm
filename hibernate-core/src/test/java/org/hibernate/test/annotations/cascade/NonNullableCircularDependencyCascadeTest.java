@@ -31,7 +31,7 @@ public class NonNullableCircularDependencyCascadeTest extends BaseCoreFunctional
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Parent p = new Parent();
-		p.setChildren( new HashSet<Child>() );
+		p.setChildren( new HashSet<>() );
 
 		Child ch = new Child(p);
 		p.getChildren().add(ch);

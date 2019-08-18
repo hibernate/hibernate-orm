@@ -99,7 +99,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		 * should be the last one in the order (on JBossAS7 its class-loader will be org.hibernate module's class-
 		 * loader, which will not see the classes inside deployed apps.  See HHH-3078
 		 */
-		Set<Class> proxyInterfaces = new java.util.LinkedHashSet<Class>();
+		Set<Class> proxyInterfaces = new java.util.LinkedHashSet<>();
 
 		Class mappedClass = persistentClass.getMappedClass();
 		Class proxyInterface = persistentClass.getProxyInterface();

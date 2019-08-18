@@ -62,7 +62,7 @@ public class TypeDefinition implements Serializable {
 	}
 
 	private Map<String, String> extractStrings(Properties properties) {
-		final Map<String, String> parameters = new HashMap<String, String>();
+		final Map<String, String> parameters = new HashMap<>();
 
 		for ( Map.Entry entry : properties.entrySet() ) {
 			if ( String.class.isInstance( entry.getKey() )

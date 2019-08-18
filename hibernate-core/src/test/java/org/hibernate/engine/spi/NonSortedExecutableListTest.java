@@ -108,7 +108,7 @@ public class NonSortedExecutableListTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		// false indicates sorting is not required.
-		l = new ExecutableList<AnExecutable>( false );
+		l = new ExecutableList<>( false );
 	}
 
 	@After
@@ -218,7 +218,7 @@ public class NonSortedExecutableListTest extends BaseUnitTestCase {
 		oos.flush();
 		ByteArrayInputStream bin = new ByteArrayInputStream( baos.toByteArray() );
 		ObjectInputStream ois = new ObjectInputStream( bin );
-		l = new ExecutableList<NonSortedExecutableListTest.AnExecutable>( false );
+		l = new ExecutableList<>( false );
 		l.readExternal( ois );
 
 		Assert.assertEquals( 4, l.size() );

@@ -35,7 +35,7 @@ public class Top {
 
     List<Middle> getMiddles() {
         if (middles == null) {
-            middles = new ArrayList<Middle>();
+            middles = new ArrayList<>();
         }
         return middles;
     }

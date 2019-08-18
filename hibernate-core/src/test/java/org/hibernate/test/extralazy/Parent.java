@@ -15,7 +15,7 @@ public class Parent {
 
 	private String id;
 	
-	private Map <String, Child> children = new HashMap<String, Child>  ();
+	private Map <String, Child> children = new HashMap<>  ();
 
 	public void setChildren(Map <String, Child> children) {
 		this.children = children;

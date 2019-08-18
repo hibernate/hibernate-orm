@@ -35,7 +35,7 @@ public class LocalizedString implements Serializable {
 	}
 
 	private Map<String, String> variations =
-			new HashMap<String, String>( 1 );
+			new HashMap<>( 1 );
 
 	@ElementCollection
 	@MapKeyColumn(name = "language_code" )

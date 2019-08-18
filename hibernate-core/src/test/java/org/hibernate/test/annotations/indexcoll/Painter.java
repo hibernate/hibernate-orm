@@ -23,7 +23,7 @@ import javax.persistence.OneToMany;
 @Entity
 public class Painter {
 	private Integer id;
-	private Map<String, Painting> paintings = new HashMap<String, Painting>();
+	private Map<String, Painting> paintings = new HashMap<>();
 
 	@Id
 	@GeneratedValue

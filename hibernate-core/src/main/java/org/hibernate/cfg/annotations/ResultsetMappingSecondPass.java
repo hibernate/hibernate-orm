@@ -65,8 +65,8 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 
 		for (EntityResult entity : ann.entities()) {
 			//TODO parameterize lock mode?
-			List<FieldResult> properties = new ArrayList<FieldResult>();
-			List<String> propertyNames = new ArrayList<String>();
+			List<FieldResult> properties = new ArrayList<>();
+			List<String> propertyNames = new ArrayList<>();
 			for (FieldResult field : entity.fields()) {
 				//use an ArrayList cause we might have several columns per root property
 				String name = field.name();
@@ -110,8 +110,8 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				}
 			}
 
-			Set<String> uniqueReturnProperty = new HashSet<String>();
-			Map<String, ArrayList<String>> propertyResultsTmp = new HashMap<String, ArrayList<String>>();
+			Set<String> uniqueReturnProperty = new HashSet<>();
+			Map<String, ArrayList<String>> propertyResultsTmp = new HashMap<>();
 			for ( Object property : properties ) {
 				final FieldResult propertyresult = ( FieldResult ) property;
 				final String name = propertyresult.name();
@@ -134,13 +134,13 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				String key = StringHelper.root( name );
 				ArrayList<String> intermediateResults = propertyResultsTmp.get( key );
 				if ( intermediateResults == null ) {
-					intermediateResults = new ArrayList<String>();
+					intermediateResults = new ArrayList<>();
 					propertyResultsTmp.put( key, intermediateResults );
 				}
 				intermediateResults.add( quotingNormalizedColumnName );
 			}
 
-			Map<String, String[]> propertyResults = new HashMap<String,String[]>();
+			Map<String, String[]> propertyResults = new HashMap<>();
 			for ( Map.Entry<String, ArrayList<String>> entry : propertyResultsTmp.entrySet() ) {
 				propertyResults.put(
 						entry.getKey(),
@@ -176,7 +176,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		}
 
 		for ( ConstructorResult constructorResult : ann.classes() ) {
-			List<NativeSQLQueryScalarReturn> columnReturns = new ArrayList<NativeSQLQueryScalarReturn>();
+			List<NativeSQLQueryScalarReturn> columnReturns = new ArrayList<>();
 			for ( ColumnResult columnResult : constructorResult.columns() ) {
 				columnReturns.add(
 						new NativeSQLQueryScalarReturn(
@@ -204,7 +204,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 
 	private List<String> getFollowers(Iterator parentPropIter, String reducedName, String name) {
 		boolean hasFollowers = false;
-		List<String> followers = new ArrayList<String>();
+		List<String> followers = new ArrayList<>();
 		while ( parentPropIter.hasNext() ) {
 			String currentPropertyName = ( (Property) parentPropIter.next() ).getName();
 			String currentName = reducedName + '.' + currentPropertyName;

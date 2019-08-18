@@ -83,14 +83,14 @@ class PropertyContainer {
 				: defaultClassLevelAccessType;
 		assert classLevelAccessType == AccessType.FIELD || classLevelAccessType == AccessType.PROPERTY;
 
-		this.persistentAttributeMap = new TreeMap<String, XProperty>();
+		this.persistentAttributeMap = new TreeMap<>();
 
 		final List<XProperty> fields = xClass.getDeclaredProperties( AccessType.FIELD.getType() );
 		final List<XProperty> getters = xClass.getDeclaredProperties( AccessType.PROPERTY.getType() );
 
 		preFilter( fields, getters );
 
-		final Map<String,XProperty> persistentAttributesFromGetters = new HashMap<String, XProperty>();
+		final Map<String,XProperty> persistentAttributesFromGetters = new HashMap<>();
 
 		collectPersistentAttributesUsingLocalAccessType(
 				persistentAttributeMap,

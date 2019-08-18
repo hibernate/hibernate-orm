@@ -29,8 +29,8 @@ public class Workflow implements Serializable {
 
 	private Long id;
 	private Locale defaultLanguage;
-	private Set<Locale> supportedLocales = new HashSet<Locale>();
-	private Map<Locale, LocalizedEmbeddable> localized = new HashMap<Locale, LocalizedEmbeddable>();
+	private Set<Locale> supportedLocales = new HashSet<>();
+	private Map<Locale, LocalizedEmbeddable> localized = new HashMap<>();
 
 	public Workflow() {
 	}

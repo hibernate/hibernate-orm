@@ -61,7 +61,7 @@ public class CfgXmlResourceNameClosingTest extends BaseUnitTestCase {
 	}
 
 	private static class LocalClassLoaderServiceImpl extends ClassLoaderServiceImpl {
-		final List<InputStreamWrapper> openedStreams = new ArrayList<InputStreamWrapper>();
+		final List<InputStreamWrapper> openedStreams = new ArrayList<>();
 		boolean stopped = false;
 
 		@Override

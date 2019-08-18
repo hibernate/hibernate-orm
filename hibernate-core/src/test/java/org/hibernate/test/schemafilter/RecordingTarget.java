@@ -28,12 +28,12 @@ class RecordingTarget implements GenerationTarget {
 		}
 	}
 
-	private final EnumMap<Category, Set<String>> actionsByCategory = new EnumMap<Category, Set<String>>( Category.class );
+	private final EnumMap<Category, Set<String>> actionsByCategory = new EnumMap<>( Category.class );
 
 	public Set<String> getActions(Category category) {
 		Set<String> result = actionsByCategory.get( category );
 		if ( result == null ) {
-			result = new HashSet<String>();
+			result = new HashSet<>();
 			actionsByCategory.put( category, result );
 		}
 		return result;

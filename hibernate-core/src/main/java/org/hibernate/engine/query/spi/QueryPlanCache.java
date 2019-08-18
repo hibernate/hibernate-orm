@@ -299,7 +299,7 @@ public class QueryPlanCache implements Serializable {
 				filterKeys = Collections.emptySet();
 			}
 			else {
-				final Set<DynamicFilterKey> tmp = new HashSet<DynamicFilterKey>(
+				final Set<DynamicFilterKey> tmp = new HashSet<>(
 						CollectionHelper.determineProperSizing( enabledFilters ),
 						CollectionHelper.LOAD_FACTOR
 				);
@@ -350,7 +350,7 @@ public class QueryPlanCache implements Serializable {
 				parameterMetadata = Collections.emptyMap();
 			}
 			else {
-				parameterMetadata = new HashMap<String,Integer>(
+				parameterMetadata = new HashMap<>(
 						CollectionHelper.determineProperSizing( parameters ),
 						CollectionHelper.LOAD_FACTOR
 				);
@@ -411,7 +411,7 @@ public class QueryPlanCache implements Serializable {
 				this.filterNames = Collections.emptySet();
 			}
 			else {
-				final Set<String> tmp = new HashSet<String>( enabledFilters.keySet() );
+				final Set<String> tmp = new HashSet<>( enabledFilters.keySet() );
 				this.filterNames = Collections.unmodifiableSet( tmp );
 
 			}

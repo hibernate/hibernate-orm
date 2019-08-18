@@ -21,7 +21,7 @@ import org.hibernate.type.Type;
 
 class ComponentCollectionCriteriaInfoProvider implements CriteriaInfoProvider {
 	private final QueryableCollection persister;
-	private final Map<String, Type> subTypes = new HashMap<String, Type>();
+	private final Map<String, Type> subTypes = new HashMap<>();
 
 	ComponentCollectionCriteriaInfoProvider(QueryableCollection persister) {
 		this.persister = persister;

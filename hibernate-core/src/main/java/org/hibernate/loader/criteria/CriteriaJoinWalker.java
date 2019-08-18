@@ -49,9 +49,9 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	//the user visible aliases, which are unknown to the superclass,
 	//these are not the actual "physical" SQL aliases
 	private final String[] userAliases;
-	private final List<String> userAliasList = new ArrayList<String>();
-	private final List<Type> resultTypeList = new ArrayList<Type>();
-	private final List<Boolean> includeInResultRowList = new ArrayList<Boolean>();
+	private final List<String> userAliasList = new ArrayList<>();
+	private final List<Type> resultTypeList = new ArrayList<>();
+	private final List<Boolean> includeInResultRowList = new ArrayList<>();
 
 	public Type[] getResultTypes() {
 		return resultTypes;

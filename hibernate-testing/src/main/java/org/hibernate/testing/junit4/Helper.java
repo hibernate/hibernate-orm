@@ -124,7 +124,7 @@ public final class Helper {
 			Class<P> pluralAnnotationClass,
 			FrameworkMethod frameworkMethod,
 			TestClass testClass) {
-		final List<S> collection = new LinkedList<S>();
+		final List<S> collection = new LinkedList<>();
 		final S singularAnn = Helper.locateAnnotation( singularAnnotationClass, frameworkMethod, testClass );
 		if ( singularAnn != null ) {
 			collection.add( singularAnn );

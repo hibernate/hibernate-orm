@@ -21,7 +21,7 @@ import org.hibernate.annotations.AccessType;
 @Embeddable
 @AccessType("property")
 public class PersonName extends Name {
-	private Set<Alias> aliases = new HashSet<Alias>();
+	private Set<Alias> aliases = new HashSet<>();
 
 	public PersonName() {
 	}

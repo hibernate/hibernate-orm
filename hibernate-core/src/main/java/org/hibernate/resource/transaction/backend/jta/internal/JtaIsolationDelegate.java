@@ -170,7 +170,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			Connection connection = jdbcConnectionAccess().obtainConnection();
 			try {
 				// do the actual work
-				return work.accept( new WorkExecutor<T>(), connection );
+				return work.accept( new WorkExecutor<>(), connection );
 			}
 			catch (HibernateException e) {
 				throw e;

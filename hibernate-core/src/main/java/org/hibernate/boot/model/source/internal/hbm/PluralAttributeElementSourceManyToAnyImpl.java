@@ -79,7 +79,7 @@ public class PluralAttributeElementSourceManyToAnyImpl
 		this.discriminatorSource = new AnyDiscriminatorSource() {
 			private final HibernateTypeSource discriminatorTypeSource = new HibernateTypeSourceImpl( jaxbManyToAnyMapping.getMetaType() );
 			private final RelationalValueSource discriminatorRelationalValueSource = relationalValueSources.get( 0 );
-			private final Map<String,String> discriminatorValueMapping = new HashMap<String, String>();
+			private final Map<String,String> discriminatorValueMapping = new HashMap<>();
 			{
 				for ( JaxbHbmAnyValueMappingType valueMapping : jaxbManyToAnyMapping.getMetaValue() ) {
 					discriminatorValueMapping.put(

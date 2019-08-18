@@ -28,7 +28,7 @@ public class Luggage implements Serializable {
 	private String owner;
 	@Column(name = "`type`")
 	private String type;
-	private Set<Clothes> hasInside = new HashSet<Clothes>();
+	private Set<Clothes> hasInside = new HashSet<>();
 
 	public Luggage() {
 	}

@@ -66,7 +66,7 @@ public class DefaultNamingCollectionElementTest extends BaseNonConfigCoreFunctio
 		boy.getCharacters().add( Character.GENTLE );
 		boy.getCharacters().add( Character.CRAFTY );
 
-		HashMap<String,FavoriteFood> foods = new HashMap<String,FavoriteFood>();
+		HashMap<String,FavoriteFood> foods = new HashMap<>();
 		foods.put( "breakfast", FavoriteFood.PIZZA);
 		foods.put( "lunch", FavoriteFood.KUNGPAOCHICKEN);
 		foods.put( "dinner", FavoriteFood.SUSHI);

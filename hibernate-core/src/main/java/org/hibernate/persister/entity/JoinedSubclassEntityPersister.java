@@ -208,11 +208,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		final int idColumnSpan = getIdentifierColumnSpan();
 
-		ArrayList<String> tableNames = new ArrayList<String>();
-		ArrayList<String[]> keyColumns = new ArrayList<String[]>();
-		ArrayList<String[]> keyColumnReaders = new ArrayList<String[]>();
-		ArrayList<String[]> keyColumnReaderTemplates = new ArrayList<String[]>();
-		ArrayList<Boolean> cascadeDeletes = new ArrayList<Boolean>();
+		ArrayList<String> tableNames = new ArrayList<>();
+		ArrayList<String[]> keyColumns = new ArrayList<>();
+		ArrayList<String[]> keyColumnReaders = new ArrayList<>();
+		ArrayList<String[]> keyColumnReaderTemplates = new ArrayList<>();
+		ArrayList<Boolean> cascadeDeletes = new ArrayList<>();
 		Iterator tItr = persistentClass.getTableClosureIterator();
 		Iterator kItr = persistentClass.getKeyClosureIterator();
 		while ( tItr.hasNext() ) {
@@ -281,14 +281,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		naturalOrderTableKeyColumnReaderTemplates = ArrayHelper.to2DStringArray( keyColumnReaderTemplates );
 		naturalOrderCascadeDeleteEnabled = ArrayHelper.toBooleanArray( cascadeDeletes );
 
-		ArrayList<String> subclassTableNames = new ArrayList<String>();
-		ArrayList<Boolean> isConcretes = new ArrayList<Boolean>();
-		ArrayList<Boolean> isDeferreds = new ArrayList<Boolean>();
-		ArrayList<Boolean> isLazies = new ArrayList<Boolean>();
-		ArrayList<Boolean> isInverses = new ArrayList<Boolean>();
-		ArrayList<Boolean> isNullables = new ArrayList<Boolean>();
+		ArrayList<String> subclassTableNames = new ArrayList<>();
+		ArrayList<Boolean> isConcretes = new ArrayList<>();
+		ArrayList<Boolean> isDeferreds = new ArrayList<>();
+		ArrayList<Boolean> isLazies = new ArrayList<>();
+		ArrayList<Boolean> isInverses = new ArrayList<>();
+		ArrayList<Boolean> isNullables = new ArrayList<>();
 
-		keyColumns = new ArrayList<String[]>();
+		keyColumns = new ArrayList<>();
 		tItr = persistentClass.getSubclassTableClosureIterator();
 		while ( tItr.hasNext() ) {
 			Table tab = (Table) tItr.next();
@@ -646,7 +646,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// collect all the class names that indicate that the "main table" of the given PersistentClass should be
 		// included when one of the collected class names is used in TREAT
-		final Set<String> classNames = new HashSet<String>();
+		final Set<String> classNames = new HashSet<>();
 
 		final Iterator itr = persistentClass.getDirectSubclasses();
 		while ( itr.hasNext() ) {

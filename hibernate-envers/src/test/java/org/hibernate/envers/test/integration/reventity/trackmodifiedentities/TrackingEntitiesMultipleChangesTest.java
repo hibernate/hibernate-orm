@@ -77,7 +77,7 @@ public class TrackingEntitiesMultipleChangesTest extends BaseEnversJPAFunctional
 
 		Assert.assertEquals(
 				TestTools.makeSet( ste1, ste2 ),
-				new HashSet<Object>( getCrossTypeRevisionChangesReader().findEntities( 1 ) )
+				new HashSet<>( getCrossTypeRevisionChangesReader().findEntities( 1 ) )
 		);
 	}
 
@@ -88,7 +88,7 @@ public class TrackingEntitiesMultipleChangesTest extends BaseEnversJPAFunctional
 
 		Assert.assertEquals(
 				TestTools.makeSet( ste1, ste2 ),
-				new HashSet<Object>( getCrossTypeRevisionChangesReader().findEntities( 2 ) )
+				new HashSet<>( getCrossTypeRevisionChangesReader().findEntities( 2 ) )
 		);
 	}
 
@@ -98,7 +98,7 @@ public class TrackingEntitiesMultipleChangesTest extends BaseEnversJPAFunctional
 
 		Assert.assertEquals(
 				TestTools.makeSet( ste1 ),
-				new HashSet<Object>( getCrossTypeRevisionChangesReader().findEntities( 3 ) )
+				new HashSet<>( getCrossTypeRevisionChangesReader().findEntities( 3 ) )
 		);
 	}
 

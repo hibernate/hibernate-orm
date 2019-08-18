@@ -53,7 +53,7 @@ public class PreUpdateNewBidirectionalBagTest extends BaseEntityManagerFunctiona
 			tag.id = 2;
 			tag.description = "description";
 			tag.person = p;
-			final Set<Tag> tags = new HashSet<Tag>();
+			final Set<Tag> tags = new HashSet<>();
 			tags.add( tag );
 			p.tags = tags;
 			entityManager.merge( p );

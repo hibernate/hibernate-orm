@@ -62,7 +62,7 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 				}
 		);
 
-		this.primaryKeyJoinColumnSources = new ArrayList<ColumnSource>( valueSources.size() );
+		this.primaryKeyJoinColumnSources = new ArrayList<>( valueSources.size() );
 		for ( RelationalValueSource valueSource : valueSources ) {
 			primaryKeyJoinColumnSources.add( ColumnSource.class.cast( valueSource ) ) ;
 		}

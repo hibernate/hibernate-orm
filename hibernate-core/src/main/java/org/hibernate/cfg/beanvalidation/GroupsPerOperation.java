@@ -26,7 +26,7 @@ public class GroupsPerOperation {
 	private static final Class<?>[] DEFAULT_GROUPS = new Class<?>[] { Default.class };
 	private static final Class<?>[] EMPTY_GROUPS = new Class<?>[] { };
 
-	private Map<Operation, Class<?>[]> groupsPerOperation = new HashMap<Operation, Class<?>[]>(4);
+	private Map<Operation, Class<?>[]> groupsPerOperation = new HashMap<>(4);
 
 	private GroupsPerOperation() {
 	}
@@ -71,7 +71,7 @@ public class GroupsPerOperation {
 				return EMPTY_GROUPS;
 			}
 
-			List<Class<?>> groupsList = new ArrayList<Class<?>>(groupNames.length);
+			List<Class<?>> groupsList = new ArrayList<>(groupNames.length);
 			for (String groupName : groupNames) {
 				String cleanedGroupName = groupName.trim();
 				if ( cleanedGroupName.length() > 0) {

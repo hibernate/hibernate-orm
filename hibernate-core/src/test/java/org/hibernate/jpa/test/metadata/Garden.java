@@ -19,7 +19,7 @@ import javax.persistence.OneToMany;
 public class Garden {
 	private Long id;
 	private String name;
-	private List<Flower> flowers = new ArrayList<Flower>();
+	private List<Flower> flowers = new ArrayList<>();
 
 	@Id
 	@GeneratedValue

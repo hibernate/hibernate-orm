@@ -79,7 +79,7 @@ public class IndexedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 		Wardrobe w = new Wardrobe();
 		Drawer d1 = new Drawer();
 		Drawer d2 = new Drawer();
-		w.setDrawers( new ArrayList<Drawer>() );
+		w.setDrawers( new ArrayList<>() );
 		w.getDrawers().add( d1 );
 		w.getDrawers().add( d2 );
 		Session s;
@@ -122,12 +122,12 @@ public class IndexedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testJoinedTableList() throws Exception {
 		Wardrobe w = new Wardrobe();
-		w.setDrawers( new ArrayList<Drawer>() );
+		w.setDrawers( new ArrayList<>() );
 		Drawer d = new Drawer();
 		w.getDrawers().add( d );
 		Dress d1 = new Dress();
 		Dress d2 = new Dress();
-		d.setDresses( new ArrayList<Dress>() );
+		d.setDresses( new ArrayList<>() );
 		d.getDresses().add( d1 );
 		d.getDresses().add( d2 );
 		Session s;
@@ -189,7 +189,7 @@ public class IndexedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 		v4.setCodeName( "Dreamland" );
 		v4.setNumber( "4.0" );
 		v4.setSoftware( hibernate );
-		Map<String, Version> link = new HashMap<String, Version>();
+		Map<String, Version> link = new HashMap<>();
 		link.put( v1.getCodeName(), v1 );
 		link.put( v2.getCodeName(), v2 );
 		link.put( v4.getCodeName(), v4 );

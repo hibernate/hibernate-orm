@@ -26,7 +26,7 @@ import java.util.List;
 public class Alias implements Identifiable {
 	private Integer id;
 	private String alias;
-	private List<Character> characters = new ArrayList<Character>();
+	private List<Character> characters = new ArrayList<>();
 
 	public Alias() {
 	}

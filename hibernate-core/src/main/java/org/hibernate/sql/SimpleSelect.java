@@ -37,9 +37,9 @@ public class SimpleSelect {
 	private LockOptions lockOptions = new LockOptions( LockMode.READ );
 	private String comment;
 
-	private List<String> columns = new ArrayList<String>();
-	private Map<String, String> aliases = new HashMap<String, String>();
-	private List<String> whereTokens = new ArrayList<String>();
+	private List<String> columns = new ArrayList<>();
+	private Map<String, String> aliases = new HashMap<>();
+	private List<String> whereTokens = new ArrayList<>();
 
 	public SimpleSelect addColumns(String[] columnNames, String[] columnAliases) {
 		for ( int i = 0; i < columnNames.length; i++ ) {
@@ -152,7 +152,7 @@ public class SimpleSelect {
 		}
 
 		buf.append( "select " );
-		Set<String> uniqueColumns = new HashSet<String>();
+		Set<String> uniqueColumns = new HashSet<>();
 		Iterator<String> iter = columns.iterator();
 		boolean appendComma = false;
 		while ( iter.hasNext() ) {

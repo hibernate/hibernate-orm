@@ -55,8 +55,8 @@ public abstract class AbstractRevisionEntityRemovalTest extends BaseEnversJPAFun
 		em.getTransaction().begin();
 		ListOwnedEntity owned = new ListOwnedEntity( 1, "data" );
 		ListOwningEntity owning = new ListOwningEntity( 1, "data" );
-		owned.setReferencing( new ArrayList<ListOwningEntity>() );
-		owning.setReferences( new ArrayList<ListOwnedEntity>() );
+		owned.setReferencing( new ArrayList<>() );
+		owning.setReferences( new ArrayList<>() );
 		owned.getReferencing().add( owning );
 		owning.getReferences().add( owned );
 		em.persist( owned );

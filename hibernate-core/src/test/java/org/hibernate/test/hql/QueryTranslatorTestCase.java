@@ -266,7 +266,7 @@ public abstract class QueryTranslatorTestCase extends BaseCoreFunctionalTestCase
 
 	
 	private Map getTokens(String sql) {
-		Map<String,Integer> result = new TreeMap<String,Integer>();
+		Map<String,Integer> result = new TreeMap<>();
 		if ( sql == null ) {
 			return result;
 		}

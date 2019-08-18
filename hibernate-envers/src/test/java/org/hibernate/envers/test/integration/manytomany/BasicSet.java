@@ -64,10 +64,10 @@ public class BasicSet extends BaseEnversJPAFunctionalTestCase {
 		ed1 = em.find( SetOwnedEntity.class, ed1.getId() );
 		ed2 = em.find( SetOwnedEntity.class, ed2.getId() );
 
-		ing1.setReferences( new HashSet<SetOwnedEntity>() );
+		ing1.setReferences( new HashSet<>() );
 		ing1.getReferences().add( ed1 );
 
-		ing2.setReferences( new HashSet<SetOwnedEntity>() );
+		ing2.setReferences( new HashSet<>() );
 		ing2.getReferences().add( ed1 );
 		ing2.getReferences().add( ed2 );
 

@@ -166,7 +166,7 @@ public class LoadedConfig {
 
 	private void addMappingReference(MappingReference mappingReference) {
 		if ( mappingReferences == null ) {
-			mappingReferences =  new ArrayList<MappingReference>();
+			mappingReferences =  new ArrayList<>();
 		}
 
 		mappingReferences.add( mappingReference );
@@ -197,19 +197,19 @@ public class LoadedConfig {
 
 	public void addCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
 		if ( cacheRegionDefinitions == null ) {
-			cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
+			cacheRegionDefinitions = new ArrayList<>();
 		}
 		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}
 
 	public void addEventListener(EventType eventType, String listenerClass) {
 		if ( eventListenerMap == null ) {
-			eventListenerMap = new HashMap<EventType, Set<String>>();
+			eventListenerMap = new HashMap<>();
 		}
 
 		Set<String> listenerClasses = eventListenerMap.get( eventType );
 		if ( listenerClasses == null ) {
-			listenerClasses = new HashSet<String>();
+			listenerClasses = new HashSet<>();
 			eventListenerMap.put( eventType, listenerClasses );
 		}
 
@@ -218,7 +218,7 @@ public class LoadedConfig {
 
 	public JaccPermissionDeclarations getOrCreateJaccPermissions(String contextId) {
 		if ( jaccPermissionsByContextId == null ) {
-			jaccPermissionsByContextId = new HashMap<String, JaccPermissionDeclarations>();
+			jaccPermissionsByContextId = new HashMap<>();
 		}
 
 		JaccPermissionDeclarations jaccPermission = jaccPermissionsByContextId.get( contextId );
@@ -273,7 +273,7 @@ public class LoadedConfig {
 		}
 
 		if ( this.mappingReferences == null ) {
-			this.mappingReferences =  new ArrayList<MappingReference>();
+			this.mappingReferences =  new ArrayList<>();
 		}
 		this.mappingReferences.addAll( mappingReferences );
 	}
@@ -284,7 +284,7 @@ public class LoadedConfig {
 		}
 
 		if ( this.cacheRegionDefinitions == null ) {
-			this.cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
+			this.cacheRegionDefinitions = new ArrayList<>();
 		}
 		this.cacheRegionDefinitions.addAll( cacheRegionDefinitions );
 	}
@@ -295,7 +295,7 @@ public class LoadedConfig {
 		}
 
 		if ( this.jaccPermissionsByContextId == null ) {
-			this.jaccPermissionsByContextId = new HashMap<String, JaccPermissionDeclarations>();
+			this.jaccPermissionsByContextId = new HashMap<>();
 		}
 
 		for ( Map.Entry<String, JaccPermissionDeclarations> incomingEntry : jaccPermissionsByContextId.entrySet() ) {
@@ -315,13 +315,13 @@ public class LoadedConfig {
 		}
 
 		if ( this.eventListenerMap == null ) {
-			this.eventListenerMap = new HashMap<EventType, Set<String>>();
+			this.eventListenerMap = new HashMap<>();
 		}
 
 		for ( Map.Entry<EventType, Set<String>> incomingEntry : eventListenerMap.entrySet() ) {
 			Set<String> listenerClasses = this.eventListenerMap.get( incomingEntry.getKey() );
 			if ( listenerClasses == null ) {
-				listenerClasses = new HashSet<String>();
+				listenerClasses = new HashSet<>();
 				this.eventListenerMap.put( incomingEntry.getKey(), listenerClasses );
 			}
 			listenerClasses.addAll( incomingEntry.getValue() );

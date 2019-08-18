@@ -18,10 +18,10 @@ import java.util.Map;
  */
 public class ResultSetUtil {
 	public static List<Map<String,?>> extractResults(ResultSet resultSet) throws SQLException {
-		List<Map<String,?>> results = new ArrayList<Map<String, ?>>();
+		List<Map<String,?>> results = new ArrayList<>();
 
 		while ( resultSet.next() ) {
-			Map<String,Object> row = new HashMap<String, Object>();
+			Map<String,Object> row = new HashMap<>();
 			for ( int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++ ) {
 				row.put(
 						resultSet.getMetaData().getColumnLabel( i ),

@@ -92,7 +92,7 @@ public class BasicMap extends BaseEnversJPAFunctionalTestCase {
 		ed1 = em.find( MapOwnedEntity.class, ed1.getId() );
 
 		ing1.getReferences().clear();
-		ing2.setReferences( new HashMap<String, MapOwnedEntity>() );
+		ing2.setReferences( new HashMap<>() );
 		ing2.getReferences().put( "1", ed2 );
 
 		em.getTransaction().commit();

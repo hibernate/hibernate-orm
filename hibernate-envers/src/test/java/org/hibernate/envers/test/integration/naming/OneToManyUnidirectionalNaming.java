@@ -41,7 +41,7 @@ public class OneToManyUnidirectionalNaming extends BaseEnversJPAFunctionalTestCa
 		EntityManager em = getEntityManager();
 		em.getTransaction().begin();
 
-		uni1.setCollection( new HashSet<StrTestEntity>() );
+		uni1.setCollection( new HashSet<>() );
 		em.persist( uni1 );
 		em.persist( str1 );
 

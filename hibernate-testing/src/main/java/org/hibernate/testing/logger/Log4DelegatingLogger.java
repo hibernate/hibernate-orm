@@ -24,7 +24,7 @@ public final class Log4DelegatingLogger extends Logger {
 	private final org.apache.log4j.Logger logger;
 
 	// Synchronize access on the field
-	private final List<LogListener> enabledListeners = new LinkedList<LogListener>();
+	private final List<LogListener> enabledListeners = new LinkedList<>();
 	private final AtomicBoolean interceptEnabled = new AtomicBoolean( false );
 
 	Log4DelegatingLogger(final String name) {

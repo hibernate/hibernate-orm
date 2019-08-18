@@ -46,7 +46,7 @@ public class EntityNamesTest extends BaseEnversFunctionalTestCase {
 
 		// Revision 1
 		getSession().getTransaction().begin();
-		List<Person> owners = new ArrayList<Person>();
+		List<Person> owners = new ArrayList<>();
 		owners.add( pers1 );
 		owners.add( pers2 );
 		owners.add( pers3 );
@@ -56,7 +56,7 @@ public class EntityNamesTest extends BaseEnversFunctionalTestCase {
 		long person1Id = pers1.getId();
 
 		// Revision 2
-		owners = new ArrayList<Person>();
+		owners = new ArrayList<>();
 		owners.add( pers2 );
 		owners.add( pers3 );
 		owners.add( pers4 );

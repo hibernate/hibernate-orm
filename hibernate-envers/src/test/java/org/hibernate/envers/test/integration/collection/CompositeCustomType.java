@@ -37,7 +37,7 @@ public class CompositeCustomType extends BaseEnversJPAFunctionalTestCase {
 		final Component comp2 = new Component( null, 22 );
 
 		final CompositeCustomTypeSetEntity entity = new CompositeCustomTypeSetEntity();
-		entity.setComponents( new HashSet<Component>() );
+		entity.setComponents( new HashSet<>() );
 		entity.getComponents().add( comp1 );
 		entity.getComponents().add( comp2 );
 

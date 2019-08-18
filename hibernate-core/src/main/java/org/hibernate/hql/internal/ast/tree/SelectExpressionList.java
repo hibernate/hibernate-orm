@@ -22,7 +22,7 @@ import antlr.collections.AST;
  */
 public abstract class SelectExpressionList extends HqlSqlWalkerNode {
 
-	private List<Integer> parameterPositions = new ArrayList<Integer>();
+	private List<Integer> parameterPositions = new ArrayList<>();
 
 	/**
 	 * Returns an array of SelectExpressions gathered from the children of the given parent AST node.
@@ -33,7 +33,7 @@ public abstract class SelectExpressionList extends HqlSqlWalkerNode {
 		// Get the first child to be considered.  Sub-classes may do this differently in order to skip nodes that
 		// are not select expressions (e.g. DISTINCT).
 		AST firstChild = getFirstSelectExpression();
-		ArrayList<SelectExpression> list = new ArrayList<SelectExpression>();
+		ArrayList<SelectExpression> list = new ArrayList<>();
 		int p = 0;
 		for ( AST n = firstChild; n != null; n = n.getNextSibling() ) {
 			if ( n instanceof SelectExpression ) {

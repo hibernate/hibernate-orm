@@ -36,7 +36,7 @@ public class EmbeddableMapEntity {
 	private Map<String, Component3> componentMap;
 
 	public EmbeddableMapEntity() {
-		componentMap = new HashMap<String, Component3>();
+		componentMap = new HashMap<>();
 	}
 
 	public Integer getId() {

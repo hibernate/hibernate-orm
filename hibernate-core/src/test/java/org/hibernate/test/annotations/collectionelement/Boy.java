@@ -41,16 +41,16 @@ public class Boy {
 	private Integer id;
 	private String firstName;
 	private String lastName;
-	private Set<String> nickNames = new HashSet<String>();
-	private Set<String> hatedNames = new HashSet<String>();
-	private Set<String> preferredNames = new HashSet<String>();
-	private Map<String, Integer> scorePerNickName = new HashMap<String, Integer>();
-	private Map<String, Integer> scorePerPreferredName = new HashMap<String, Integer>();
+	private Set<String> nickNames = new HashSet<>();
+	private Set<String> hatedNames = new HashSet<>();
+	private Set<String> preferredNames = new HashSet<>();
+	private Map<String, Integer> scorePerNickName = new HashMap<>();
+	private Map<String, Integer> scorePerPreferredName = new HashMap<>();
 	private int[] favoriteNumbers;
-	private Set<Toy> favoriteToys = new HashSet<Toy>();
-	private Set<Character> characters = new HashSet<Character>();
-	private Map<String, FavoriteFood> foods = new HashMap<String,FavoriteFood>();
-	private Set<CountryAttitude> countryAttitudes = new HashSet<CountryAttitude>();
+	private Set<Toy> favoriteToys = new HashSet<>();
+	private Set<Character> characters = new HashSet<>();
+	private Map<String, FavoriteFood> foods = new HashMap<>();
+	private Set<CountryAttitude> countryAttitudes = new HashSet<>();
 
 	@Id
 	@GeneratedValue

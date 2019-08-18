@@ -777,7 +777,7 @@ public abstract class AbstractExpectationsFactory {
 		PreparedStatement preparedStatement = null;
 		ResultSet results = null;
 		Connection cn = null;
-		Map<Integer, T> expected = new HashMap<Integer, T>();
+		Map<Integer, T> expected = new HashMap<>();
 		try {
 			cn = createConnection();
 			preparedStatement = nativeSQLStatement.prepare( cn );

@@ -41,9 +41,9 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 
 	private Properties properties = new Properties();
 
-	private List<String> classes = new ArrayList<String>();
-	private List<String> mappingFiles = new ArrayList<String>();
-	private List<URL> jarFileUrls = new ArrayList<URL>();
+	private List<String> classes = new ArrayList<>();
+	private List<String> mappingFiles = new ArrayList<>();
+	private List<URL> jarFileUrls = new ArrayList<>();
 
 	public ParsedPersistenceXmlDescriptor(URL persistenceUnitRootUrl) {
 		this.persistenceUnitRootUrl = persistenceUnitRootUrl;

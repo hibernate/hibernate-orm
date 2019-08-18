@@ -55,7 +55,7 @@ public class PreUpdateNewUnidirectionalIdBagTest extends BaseEntityManagerFuncti
 			final Tag tag = new Tag();
 			tag.id = 2;
 			tag.description = "description";
-			final Set<Tag> tags = new HashSet<Tag>();
+			final Set<Tag> tags = new HashSet<>();
 			tags.add( tag );
 			p.tags = tags;
 			entityManager.merge( p );

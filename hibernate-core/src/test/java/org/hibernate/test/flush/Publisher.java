@@ -23,7 +23,7 @@ import org.hibernate.annotations.GenericGenerator;
 public class Publisher {
 	private Long id;
 	private String name;
-	private Set<Author> authors = new HashSet<Author>();
+	private Set<Author> authors = new HashSet<>();
 
 	public Publisher() {
 	}

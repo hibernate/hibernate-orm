@@ -25,7 +25,7 @@ public final class StrategyRegistrationProviderImpl implements StrategyRegistrat
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		final List<StrategyRegistration> strategyRegistrations = new ArrayList<StrategyRegistration>( 2 );
+		final List<StrategyRegistration> strategyRegistrations = new ArrayList<>( 2 );
 
 		strategyRegistrations.add(
 				new SimpleStrategyRegistrationImpl(

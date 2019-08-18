@@ -66,7 +66,7 @@ public class ParameterizedAttributeConverterParameterTypeTest extends BaseUnitTe
 
 		@Override
 		public List<String> convertToEntityAttribute(Integer dbData) {
-			return new ArrayList<String>(dbData);
+			return new ArrayList<>(dbData);
 		}
 	}
 	
@@ -142,7 +142,7 @@ public class ParameterizedAttributeConverterParameterTypeTest extends BaseUnitTe
 				return null;
 			}
 
-			final List<Integer> integers = new ArrayList<Integer>();
+			final List<Integer> integers = new ArrayList<>();
 			final StringTokenizer tokens = new StringTokenizer( dbData, "," );
 
 			while ( tokens.hasMoreTokens() ) {
@@ -176,7 +176,7 @@ public class ParameterizedAttributeConverterParameterTypeTest extends BaseUnitTe
 				return null;
 			}
 
-			final List<String> strings = new ArrayList<String>();
+			final List<String> strings = new ArrayList<>();
 			final StringTokenizer tokens = new StringTokenizer( dbData, "," );
 
 			while ( tokens.hasMoreTokens() ) {

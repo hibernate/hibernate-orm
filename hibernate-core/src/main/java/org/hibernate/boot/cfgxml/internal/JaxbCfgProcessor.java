@@ -227,7 +227,7 @@ public class JaxbCfgProcessor {
 
 		private StartElement withNamespace(StartElement startElement) {
 			// otherwise, wrap the start element event to provide a default namespace mapping
-			final List<Namespace> namespaces = new ArrayList<Namespace>();
+			final List<Namespace> namespaces = new ArrayList<>();
 			namespaces.add( xmlEventFactory.createNamespace( "", namespaceUri ) );
 			Iterator<?> originalNamespaces = startElement.getNamespaces();
 			while ( originalNamespaces.hasNext() ) {

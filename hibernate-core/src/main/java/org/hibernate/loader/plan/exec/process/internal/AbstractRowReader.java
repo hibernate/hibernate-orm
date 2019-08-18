@@ -58,11 +58,11 @@ public abstract class AbstractRowReader implements RowReader {
 
 	public AbstractRowReader(ReaderCollector readerCollector) {
 		if ( CollectionHelper.isNotEmpty( readerCollector.getEntityReferenceInitializers() ) ) {
-			entityReferenceInitializers = new ArrayList<EntityReferenceInitializer>(
+			entityReferenceInitializers = new ArrayList<>(
 					readerCollector.getEntityReferenceInitializers()
 			);
 			entityInitializerByEntityReference =
-					new HashMap<EntityReference, EntityReferenceInitializer>( entityReferenceInitializers.size() );
+					new HashMap<>( entityReferenceInitializers.size() );
 			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
 				entityInitializerByEntityReference.put(
 						entityReferenceInitializer.getEntityReference(),
@@ -75,11 +75,11 @@ public abstract class AbstractRowReader implements RowReader {
 			entityInitializerByEntityReference = Collections.<EntityReference,EntityReferenceInitializer>emptyMap();
 		}
 		this.arrayReferenceInitializers = CollectionHelper.isNotEmpty( readerCollector.getArrayReferenceInitializers() )
-				? new ArrayList<CollectionReferenceInitializer>( readerCollector.getArrayReferenceInitializers() )
+				? new ArrayList<>( readerCollector.getArrayReferenceInitializers() )
 				: Collections.<CollectionReferenceInitializer>emptyList();
 		this.collectionReferenceInitializers =
 				CollectionHelper.isNotEmpty ( readerCollector.getNonArrayCollectionReferenceInitializers() )
-				? new ArrayList<CollectionReferenceInitializer>( readerCollector.getNonArrayCollectionReferenceInitializers() )
+				? new ArrayList<>( readerCollector.getNonArrayCollectionReferenceInitializers() )
 				: Collections.<CollectionReferenceInitializer>emptyList();
 	}
 

@@ -32,5 +32,5 @@ public class Mother {
 	@Cascade({ CascadeType.SAVE_UPDATE })
 	public Set<Son> getSons() { return sons; }
 	public void setSons(Set<Son> sons) {  this.sons = sons; }
-	private Set<Son> sons = new HashSet<Son>();
+	private Set<Son> sons = new HashSet<>();
 }

@@ -24,7 +24,7 @@ public class ForeignKey extends Constraint {
 	private String referencedEntityName;
 	private String keyDefinition;
 	private boolean cascadeDeleteEnabled;
-	private List<Column> referencedColumns = new ArrayList<Column>();
+	private List<Column> referencedColumns = new ArrayList<>();
 	private boolean creationEnabled = true;
 
 	public ForeignKey() {

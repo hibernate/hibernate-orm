@@ -31,8 +31,8 @@ public class QuerySpacesImpl implements ExpandingQuerySpaces {
 	private static final Logger log = CoreLogging.logger( QuerySpacesImpl.class );
 
 	private final SessionFactoryImplementor sessionFactory;
-	private final List<QuerySpace> roots = new ArrayList<QuerySpace>();
-	private final Map<String,QuerySpace> querySpaceByUid = new ConcurrentHashMap<String, QuerySpace>();
+	private final List<QuerySpace> roots = new ArrayList<>();
+	private final Map<String,QuerySpace> querySpaceByUid = new ConcurrentHashMap<>();
 
 	public QuerySpacesImpl(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;

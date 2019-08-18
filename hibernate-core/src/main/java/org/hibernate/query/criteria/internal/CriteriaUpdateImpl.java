@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.Clause;
  * @author Steve Ebersole
  */
 public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> implements CriteriaUpdate<T> {
-	private List<Assignment> assignments = new ArrayList<Assignment>();
+	private List<Assignment> assignments = new ArrayList<>();
 
 	public CriteriaUpdateImpl(CriteriaBuilderImpl criteriaBuilder) {
 		super( criteriaBuilder );
@@ -89,7 +89,7 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 		if ( value == null ) {
 			throw new IllegalArgumentException( "Assignment value expression cannot be null. Did you mean to pass null as a literal?" );
 		}
-		assignments.add( new Assignment<Y>( (SingularAttributePath<Y>) attributePath, value ) );
+		assignments.add( new Assignment<>( (SingularAttributePath<Y>) attributePath, value ) );
 	}
 
 	@Override

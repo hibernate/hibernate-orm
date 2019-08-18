@@ -63,7 +63,7 @@ public class SubselectInJoinedTableTest extends BaseCoreFunctionalTestCase {
 	public static class Order {
 		private Long orderId;
 		private OrderEntry firstOrderEntry;
-		private List<OrderEntry> orderEntries = new ArrayList<OrderEntry>();
+		private List<OrderEntry> orderEntries = new ArrayList<>();
 
 		public OrderEntry getFirstOrderEntry() {
 			return firstOrderEntry;

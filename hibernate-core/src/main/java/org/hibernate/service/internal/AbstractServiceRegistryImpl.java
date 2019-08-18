@@ -121,7 +121,7 @@ public abstract class AbstractServiceRegistryImpl
 	protected <R extends Service> void createServiceBinding(ProvidedService<R> providedService) {
 		ServiceBinding<R> binding = locateServiceBinding( providedService.getServiceRole(), false );
 		if ( binding == null ) {
-			binding = new ServiceBinding<R>( this, providedService.getServiceRole(), providedService.getService() );
+			binding = new ServiceBinding<>( this, providedService.getServiceRole(), providedService.getService() );
 			serviceBindingMap.put( providedService.getServiceRole(), binding );
 		}
 		registerService( binding, providedService.getService() );
@@ -398,7 +398,7 @@ public abstract class AbstractServiceRegistryImpl
 	@Override
 	public synchronized void registerChild(ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
-			childRegistries = new HashSet<ServiceRegistryImplementor>();
+			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
 			log.warnf(

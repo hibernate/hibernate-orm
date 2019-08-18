@@ -33,11 +33,11 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	// Leave these as Sets -- addClassLoader or addBundle may be called more
 	// than once if a SF or EMF is closed and re-created.
 	// HHH-12553: must be thread-safe. Concurrent impl. would be best, but we have to retain insertion-order.
-	private Set<ClassLoader> classLoaders = Collections.synchronizedSet(new LinkedHashSet<ClassLoader>());
-	private Set<Bundle> bundles = Collections.synchronizedSet(new LinkedHashSet<Bundle>());
+	private Set<ClassLoader> classLoaders = Collections.synchronizedSet(new LinkedHashSet<>());
+	private Set<Bundle> bundles = Collections.synchronizedSet(new LinkedHashSet<>());
 
-	private ConcurrentMap<String, Class<?>> classCache = new ConcurrentHashMap<String, Class<?>>();
-	private ConcurrentMap<String, URL> resourceCache = new ConcurrentHashMap<String, URL>();
+	private ConcurrentMap<String, Class<?>> classCache = new ConcurrentHashMap<>();
+	private ConcurrentMap<String, URL> resourceCache = new ConcurrentHashMap<>();
 
 	static {
 		ClassLoader.registerAsParallelCapable();
@@ -151,7 +151,7 @@ public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Enumeration<URL> findResources(String name) {
-		final List<Enumeration<URL>> enumerations = new ArrayList<Enumeration<URL>>();
+		final List<Enumeration<URL>> enumerations = new ArrayList<>();
 
 		synchronized (bundles) {
 			for ( Bundle bundle : bundles ) {

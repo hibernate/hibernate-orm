@@ -1025,7 +1025,7 @@ public class HqlParserTest {
         // verifies the tree contains a NOT->EXISTS subtree
         class Verifier {
             public boolean verify(AST root) {
-                Stack<AST> queue = new Stack<AST>();
+                Stack<AST> queue = new Stack<>();
                 queue.push( root );
                 while ( !queue.isEmpty() ) {
                     AST parent = queue.pop();

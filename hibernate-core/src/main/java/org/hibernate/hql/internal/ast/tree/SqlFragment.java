@@ -44,7 +44,7 @@ public class SqlFragment extends Node implements ParameterContainer {
 
 	public void addEmbeddedParameter(ParameterSpecification specification) {
 		if ( embeddedParameters == null ) {
-			embeddedParameters = new ArrayList<ParameterSpecification>();
+			embeddedParameters = new ArrayList<>();
 		}
 		embeddedParameters.add( specification );
 	}

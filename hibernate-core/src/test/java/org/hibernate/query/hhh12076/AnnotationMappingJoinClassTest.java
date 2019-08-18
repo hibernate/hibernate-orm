@@ -835,7 +835,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		@SuppressWarnings("unchecked")
 		public <X extends SettlementExtension> X getExtension(Class<X> extensionType) {
 			if (extensionMap == null || extensionMap.size() != extensions.size()) {
-				Map<Class<?>, SettlementExtension> map = new HashMap<Class<?>, SettlementExtension>( extensions.size());
+				Map<Class<?>, SettlementExtension> map = new HashMap<>( extensions.size());
 				for (SettlementExtension extension : extensions ) {
 					map.put(extension.getClass(), extension);
 				}
@@ -1134,7 +1134,7 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 		public <X extends Task<?>> Set<X> getChildren(Class<X> ofType) {
 			Set<X> children = null;
 
-			children = new LinkedHashSet<X>();
+			children = new LinkedHashSet<>();
 			for (Task<?> child : this.children ) {
 				if (ofType.isInstance(child)) {
 					children.add((X) child);

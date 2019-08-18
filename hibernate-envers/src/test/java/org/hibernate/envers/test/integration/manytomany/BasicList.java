@@ -64,10 +64,10 @@ public class BasicList extends BaseEnversJPAFunctionalTestCase {
 		ed1 = em.find( ListOwnedEntity.class, ed1.getId() );
 		ed2 = em.find( ListOwnedEntity.class, ed2.getId() );
 
-		ing1.setReferences( new ArrayList<ListOwnedEntity>() );
+		ing1.setReferences( new ArrayList<>() );
 		ing1.getReferences().add( ed1 );
 
-		ing2.setReferences( new ArrayList<ListOwnedEntity>() );
+		ing2.setReferences( new ArrayList<>() );
 		ing2.getReferences().add( ed1 );
 		ing2.getReferences().add( ed2 );
 

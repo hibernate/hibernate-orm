@@ -27,8 +27,8 @@ public class Forum{
 
 	private Long id;
 	private String name;
-	protected List<Comment> posts = new ArrayList<Comment>();
-	protected List<User> users = new ArrayList<User>();
+	protected List<Comment> posts = new ArrayList<>();
+	protected List<User> users = new ArrayList<>();
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

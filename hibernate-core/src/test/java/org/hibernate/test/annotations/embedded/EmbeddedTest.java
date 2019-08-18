@@ -667,7 +667,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session s;
 		Transaction tx;
 
-		Collection<URLFavorite> urls = new ArrayList<URLFavorite>();
+		Collection<URLFavorite> urls = new ArrayList<>();
 		URLFavorite urlFavorite = new URLFavorite();
 		urlFavorite.setUrl( "http://highscalability.com/" );
 		urls.add( urlFavorite );
@@ -684,7 +684,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		urlFavorite.setUrl( "http://www.jgroups.org/" );
 		urls.add( urlFavorite );
 
-		Collection<String> ideas = new ArrayList<String>();
+		Collection<String> ideas = new ArrayList<>();
 		ideas.add( "lionheart" );
 		ideas.add( "xforms" );
 		ideas.add( "dynamic content" );

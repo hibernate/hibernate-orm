@@ -1429,7 +1429,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 			s.beginTransaction();
 			Farm farm = new Farm();
 			farm.setName( "Old McDonald Farm 'o the Earth" );
-			farm.setAccreditations( new HashSet<Farm.Accreditation>() );
+			farm.setAccreditations( new HashSet<>() );
 			farm.getAccreditations().add( Farm.Accreditation.ORGANIC );
 			farm.getAccreditations().add( Farm.Accreditation.SUSTAINABLE );
 			s.save( farm );

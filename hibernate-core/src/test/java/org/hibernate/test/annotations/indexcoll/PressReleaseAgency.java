@@ -25,7 +25,7 @@ import javax.persistence.MapKey;
 public class PressReleaseAgency {
 	private Integer id;
 	private String name;
-	private Map<Integer, News> providedNews = new HashMap<Integer, News>();
+	private Map<Integer, News> providedNews = new HashMap<>();
 
 	@Id
 	@GeneratedValue

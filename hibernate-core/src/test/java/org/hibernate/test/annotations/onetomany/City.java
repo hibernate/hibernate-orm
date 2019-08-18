@@ -72,7 +72,7 @@ class City {
 	}
 
 	public void addMainStreet(Street street) {
-		if ( mainStreets == null ) mainStreets = new ArrayList<Street>();
+		if ( mainStreets == null ) mainStreets = new ArrayList<>();
 		mainStreets.add( street );
 	}
 

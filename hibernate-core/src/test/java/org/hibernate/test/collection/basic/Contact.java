@@ -26,8 +26,8 @@ public class Contact implements Serializable {
     private static final long serialVersionUID = 1L;
     private Long id;
     private String name;
-    private Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
-    private Set<EmailAddress> emailAddresses2 = new HashSet<EmailAddress>();
+    private Set<EmailAddress> emailAddresses = new HashSet<>();
+    private Set<EmailAddress> emailAddresses2 = new HashSet<>();
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

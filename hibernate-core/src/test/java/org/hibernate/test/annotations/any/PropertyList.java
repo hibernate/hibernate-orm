@@ -30,7 +30,7 @@ public class PropertyList<T extends Property> {
 
 	private T someProperty;
 
-	private List<T> generalProperties = new ArrayList<T>();
+	private List<T> generalProperties = new ArrayList<>();
 
 	public PropertyList() {
 		super();

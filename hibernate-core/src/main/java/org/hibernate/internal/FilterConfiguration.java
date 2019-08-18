@@ -71,7 +71,7 @@ public class FilterConfiguration {
 	}
 
 	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {
-		Map<String, String> ret = new HashMap<String, String>();
+		Map<String, String> ret = new HashMap<>();
 		if ( aliasTableMap != null ) {
 			ret.putAll( aliasTableMap );
 		}

@@ -336,7 +336,7 @@ class FromElementType {
 	public void applyTreatAsDeclarations(Set<String> treatAsDeclarations) {
 		if ( treatAsDeclarations != null && !treatAsDeclarations.isEmpty() ) {
 			if ( this.treatAsDeclarations == null ) {
-				this.treatAsDeclarations = new HashSet<String>();
+				this.treatAsDeclarations = new HashSet<>();
 			}
 
 			for ( String treatAsSubclassName : treatAsDeclarations ) {

@@ -68,7 +68,7 @@ public class HibernateStatistics extends HibernateAbstractStatistics {
 	public static final String ENTITY = "entity";
 	public static final String QUERYCACHE = "query-cache";
 
-	private final Map<String, Statistics> childrenStatistics = new HashMap<String, Statistics>();
+	private final Map<String, Statistics> childrenStatistics = new HashMap<>();
 
 	public HibernateStatistics() {
 

@@ -33,7 +33,7 @@ public class EntityMapTest extends BaseCoreFunctionalTestCase {
 			Session session = openSession();
 			session.beginTransaction();
 			MapHolder mapHolder = new MapHolder();
-			mapHolder.setMap( new HashMap<MapKey, MapValue>() );
+			mapHolder.setMap( new HashMap<>() );
 			addMapEntry( session, mapHolder, "A", "1" );
 			addMapEntry( session, mapHolder, "B", "2" );
 			addMapEntry( session, mapHolder, "C", "3" );

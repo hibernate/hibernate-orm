@@ -66,8 +66,8 @@ public abstract class AbstractPerformanceTest extends AbstractEntityManagerTest 
 	}
 
 	public void test(int numberOfRuns) throws IOException {
-		List<Long> unauditedRuns = new ArrayList<Long>();
-		List<Long> auditedRuns = new ArrayList<Long>();
+		List<Long> unauditedRuns = new ArrayList<>();
+		List<Long> auditedRuns = new ArrayList<>();
 
 		init( true, null );
 		long audited = run( numberOfRuns, auditedRuns );

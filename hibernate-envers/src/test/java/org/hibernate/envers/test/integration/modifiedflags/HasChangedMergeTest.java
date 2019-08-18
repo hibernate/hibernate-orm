@@ -44,9 +44,9 @@ public class HasChangedMergeTest extends AbstractModifiedFlagsEntityTest {
 		// Revision 1 - data preparation
 		em.getTransaction().begin();
 		ListRefEdEntity parent1 = new ListRefEdEntity( 1, "initial data" );
-		parent1.setReffering( new ArrayList<ListRefIngEntity>() ); // Empty collection is not the same as null reference.
+		parent1.setReffering( new ArrayList<>() ); // Empty collection is not the same as null reference.
 		ListRefEdEntity parent2 = new ListRefEdEntity( 2, "initial data" );
-		parent2.setReffering( new ArrayList<ListRefIngEntity>() );
+		parent2.setReffering( new ArrayList<>() );
 		em.persist( parent1 );
 		em.persist( parent2 );
 		em.getTransaction().commit();

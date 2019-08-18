@@ -255,7 +255,7 @@ public class EmbeddableWithCollectionTest extends BaseEnversJPAFunctionalTestCas
 
 		public void addItem(Item item) {
 			if ( this.items == null ) {
-				this.items = new ArrayList<Item>();
+				this.items = new ArrayList<>();
 			}
 			this.items.add( item );
 		}

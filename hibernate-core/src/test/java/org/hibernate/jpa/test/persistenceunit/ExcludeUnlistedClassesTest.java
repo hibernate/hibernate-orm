@@ -48,7 +48,7 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 	public void testExcludeUnlistedClasses() {
 		// see src/test/resources/org/hibernate/jpa/test/persistenceunit/persistence.xml
 		
-		final Map<String, Object> properties = new HashMap<String, Object>();
+		final Map<String, Object> properties = new HashMap<>();
 		properties.put( AvailableSettings.RESOURCES_CLASSLOADER, new TestClassLoader() );
 		final List<ParsedPersistenceXmlDescriptor> parsedDescriptors = PersistenceXmlParser.locatePersistenceUnits(
 				properties );

@@ -15,7 +15,7 @@ import java.util.List;
 public class Order {
 	private Integer id;
 	private String code;
-	private List<LineItem> lineItems = new ArrayList<LineItem>();
+	private List<LineItem> lineItems = new ArrayList<>();
 
 	public Order() {
 	}

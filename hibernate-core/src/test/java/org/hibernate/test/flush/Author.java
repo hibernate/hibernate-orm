@@ -26,7 +26,7 @@ public class Author {
 	private Long id;
 	private String name;
 	private Publisher publisher;
-	private Set<Book> books = new HashSet<Book>();
+	private Set<Book> books = new HashSet<>();
 
 	public Author() {
 	}

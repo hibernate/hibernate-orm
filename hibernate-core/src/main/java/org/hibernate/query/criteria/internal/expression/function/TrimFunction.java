@@ -51,7 +51,7 @@ public class TrimFunction
 			Expression<String> trimSource) {
 		super( criteriaBuilder, String.class, NAME );
 		this.trimspec = trimspec;
-		this.trimCharacter = new LiteralExpression<Character>( criteriaBuilder, trimCharacter );
+		this.trimCharacter = new LiteralExpression<>( criteriaBuilder, trimCharacter );
 		this.trimSource = trimSource;
 	}
 

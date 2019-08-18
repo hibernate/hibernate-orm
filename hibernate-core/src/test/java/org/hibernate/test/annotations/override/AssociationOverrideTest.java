@@ -88,7 +88,7 @@ public class AssociationOverrideTest extends BaseNonConfigCoreFunctionalTestCase
 		phoneNumbers.add(num);
 		ci.setPhoneNumbers(phoneNumbers);
 		SocialTouchPoints socialPoints = new SocialTouchPoints();
-		List<SocialSite> sites = new ArrayList<SocialSite>();
+		List<SocialSite> sites = new ArrayList<>();
 		SocialSite site = new SocialSite();
 		site.setEmployee(employeeList);
 		site.setWebsite("www.jboss.org");

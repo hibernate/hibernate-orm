@@ -36,7 +36,7 @@ public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public void feedDatabase() {
-		List<Tag> tags = new ArrayList<Tag>();
+		List<Tag> tags = new ArrayList<>();
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

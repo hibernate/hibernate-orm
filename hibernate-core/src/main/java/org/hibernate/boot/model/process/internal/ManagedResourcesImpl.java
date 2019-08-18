@@ -28,10 +28,10 @@ import org.hibernate.cfg.AttributeConverterDefinition;
  */
 public class ManagedResourcesImpl implements ManagedResources {
 	private Map<Class, AttributeConverterInfo> attributeConverterInfoMap = new HashMap<>();
-	private Set<Class> annotatedClassReferences = new LinkedHashSet<Class>();
-	private Set<String> annotatedClassNames = new LinkedHashSet<String>();
-	private Set<String> annotatedPackageNames = new LinkedHashSet<String>();
-	private List<Binding> mappingFileBindings = new ArrayList<Binding>();
+	private Set<Class> annotatedClassReferences = new LinkedHashSet<>();
+	private Set<String> annotatedClassNames = new LinkedHashSet<>();
+	private Set<String> annotatedPackageNames = new LinkedHashSet<>();
+	private List<Binding> mappingFileBindings = new ArrayList<>();
 
 	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext bootstrapContext) {
 		final ManagedResourcesImpl impl = new ManagedResourcesImpl();

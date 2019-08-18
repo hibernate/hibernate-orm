@@ -97,7 +97,7 @@ public class FetchTest extends BaseEntityManagerFunctionalTestCase {
 		info.setLastModified( new Date() );
 		ExtractionDocument doc = new ExtractionDocument();
 		doc.setDocumentInfo( info );
-		info.setDocuments( new ArrayList<ExtractionDocument>() );
+		info.setDocuments( new ArrayList<>() );
 		info.getDocuments().add( doc );
 		doc.setBody( new byte[]{'c', 'f'} );
 		em.persist( jbwBarcelona );

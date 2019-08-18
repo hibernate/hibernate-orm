@@ -62,7 +62,7 @@ public abstract class AbstractEntitySourceImpl
 	private final AttributeRole attributeRoleBase;
 	private final AttributePath attributePathBase;
 
-	private List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<IdentifiableTypeSource>();
+	private List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<>();
 
 	private int inLineViewCount = 0;
 
@@ -126,7 +126,7 @@ public abstract class AbstractEntitySourceImpl
 			return Collections.emptyMap();
 		}
 
-		final Map<EntityMode, String> tuplizers = new HashMap<EntityMode, String>();
+		final Map<EntityMode, String> tuplizers = new HashMap<>();
 		for ( JaxbHbmTuplizerType tuplizerElement : entityElement.getTuplizer() ) {
 			tuplizers.put(
 					tuplizerElement.getEntityMode(),
@@ -204,7 +204,7 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	protected List<AttributeSource> buildAttributeSources() {
-		final List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
+		final List<AttributeSource> attributeSources = new ArrayList<>();
 
 		AttributesHelper.Callback attributeBuildingCallback = new AttributesHelper.Callback() {
 			@Override
@@ -238,7 +238,7 @@ public abstract class AbstractEntitySourceImpl
 		}
 
 		final HashMap<String,SecondaryTableSource> secondaryTableSourcesMap =
-				new HashMap<String, SecondaryTableSource>();
+				new HashMap<>();
 
 		for ( final JaxbHbmSecondaryTableType joinElement :  ( (SecondaryTableContainer) jaxbEntityMapping ).getJoin() ) {
 			final SecondaryTableSourceImpl secondaryTableSource = new SecondaryTableSourceImpl(

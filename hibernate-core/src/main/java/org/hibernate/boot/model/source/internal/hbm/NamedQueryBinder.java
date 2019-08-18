@@ -57,7 +57,7 @@ public class NamedQueryBinder {
 				final JaxbHbmQueryParamType paramTypeBinding = 
 						(JaxbHbmQueryParamType)((JAXBElement)content).getValue();
 				if ( parameterTypeMap == null ) {
-					parameterTypeMap = new HashMap<String,String>();
+					parameterTypeMap = new HashMap<>();
 				}
 				parameterTypeMap.put( paramTypeBinding.getName(), paramTypeBinding.getType() );
 			}

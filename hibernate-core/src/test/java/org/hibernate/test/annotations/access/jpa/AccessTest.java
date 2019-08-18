@@ -32,7 +32,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		User john = new User();
 		john.setFirstname( "John" );
 		john.setLastname( "Doe" );
-		List<User> friends = new ArrayList<User>();
+		List<User> friends = new ArrayList<>();
 		User friend = new User();
 		friend.setFirstname( "Jane" );
 		friend.setLastname( "Doe" );

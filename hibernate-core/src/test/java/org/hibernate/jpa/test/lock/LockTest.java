@@ -71,7 +71,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		doInJPA( this::entityManagerFactory, em -> {
-			Map<String, Object> properties = new HashMap<String, Object>();
+			Map<String, Object> properties = new HashMap<>();
 			properties.put( AvailableSettings.LOCK_TIMEOUT, 0L );
 			em.find( Lock.class, 1, LockModeType.PESSIMISTIC_WRITE, properties );
 		} );
@@ -103,7 +103,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			doInJPA( this::entityManagerFactory, entityManager -> {
 				try {
 					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
-					Map<String, Object> properties = new HashMap<String, Object>();
+					Map<String, Object> properties = new HashMap<>();
 					properties.put( AvailableSettings.LOCK_TIMEOUT, 0L );
 
 					entityManager.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
@@ -676,7 +676,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testContendedPessimisticReadLockTimeout: (BG) read write-locked entity" );
-							Map<String, Object> props = new HashMap<String, Object>();
+							Map<String, Object> props = new HashMap<>();
 							// timeout is in milliseconds
 							props.put( AvailableSettings.LOCK_TIMEOUT, 1000 );
 							try {
@@ -764,7 +764,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testContendedPessimisticWriteLockTimeout: (BG) read write-locked entity" );
-							Map<String, Object> props = new HashMap<String, Object>();
+							Map<String, Object> props = new HashMap<>();
 							// timeout is in milliseconds
 							props.put( AvailableSettings.LOCK_TIMEOUT, 1000 );
 							try {
@@ -849,7 +849,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testContendedPessimisticWriteLockNoWait: (BG) read write-locked entity" );
-							Map<String, Object> props = new HashMap<String, Object>();
+							Map<String, Object> props = new HashMap<>();
 							// timeout of zero means no wait (for lock)
 							props.put( AvailableSettings.LOCK_TIMEOUT, 0 );
 							try {
@@ -1011,7 +1011,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	public void testQueryTimeoutEMProps() throws Exception {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
-		final Map<String, Object> timeoutProps = new HashMap<String, Object>();
+		final Map<String, Object> timeoutProps = new HashMap<>();
 		timeoutProps.put( QueryHints.SPEC_HINT_TIMEOUT, 500 ); // 1 sec timeout (should round up)
 		final Lock lock = new Lock();
 
@@ -1103,7 +1103,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
-		final Map<String, Object> timeoutProps = new HashMap<String, Object>();
+		final Map<String, Object> timeoutProps = new HashMap<>();
 		timeoutProps.put( AvailableSettings.LOCK_TIMEOUT, 1000 ); // 1 second timeout
 		final Lock lock = new Lock();
 

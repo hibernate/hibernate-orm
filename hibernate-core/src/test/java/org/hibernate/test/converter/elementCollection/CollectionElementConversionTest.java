@@ -45,11 +45,11 @@ public class CollectionElementConversionTest extends BaseNonConfigCoreFunctional
 		session.getTransaction().begin();
 		Customer customer = new Customer();
 		customer.id = 1;
-		customer.set = new HashSet<Color>();
+		customer.set = new HashSet<>();
 		customer.set.add(Color.RED);
 		customer.set.add(Color.GREEN);
 		customer.set.add(Color.BLUE);
-		customer.map = new HashMap<Color, Status>();
+		customer.map = new HashMap<>();
 		customer.map.put(Color.RED, Status.INACTIVE);
 		customer.map.put(Color.GREEN, Status.ACTIVE);
 		customer.map.put(Color.BLUE, Status.PENDING);

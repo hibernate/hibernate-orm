@@ -138,13 +138,13 @@ public class JpaXsdVersionsTest {
 			return persistenceSchemaVersion;
 		}
 
-		private final List<String> mappingFileNames = new ArrayList<String>();
+		private final List<String> mappingFileNames = new ArrayList<>();
 
 		public List<String> getMappingFileNames() {
 			return mappingFileNames;
 		}
 
-		private final List<String> managedClassNames = new ArrayList<String>();
+		private final List<String> managedClassNames = new ArrayList<>();
 
 		private PersistenceUnitInfoImpl addMappingFileName(String mappingFileName) {
 			mappingFileNames.add( mappingFileName );
@@ -171,7 +171,7 @@ public class JpaXsdVersionsTest {
 			return null;
 		}
 
-		private final List<URL> jarFileUrls = new ArrayList<URL>();
+		private final List<URL> jarFileUrls = new ArrayList<>();
 
 		public List<URL> getJarFileUrls() {
 			return jarFileUrls;

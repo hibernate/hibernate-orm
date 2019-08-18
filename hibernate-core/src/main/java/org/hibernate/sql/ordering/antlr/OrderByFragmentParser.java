@@ -33,7 +33,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 
 	private final TranslationContext context;
 
-	private Set<String> columnReferences = new HashSet<String>();
+	private Set<String> columnReferences = new HashSet<>();
 
 	public OrderByFragmentParser(TokenStream lexer, TranslationContext context) {
 		super( lexer );

@@ -122,7 +122,7 @@ public class Listener extends BaseEnversJPAFunctionalTestCase {
 	public void testFindRevisions() {
 		AuditReader vr = getAuditReader();
 
-		Set<Number> revNumbers = new HashSet<Number>();
+		Set<Number> revNumbers = new HashSet<>();
 		revNumbers.add( 1 );
 		revNumbers.add( 2 );
 

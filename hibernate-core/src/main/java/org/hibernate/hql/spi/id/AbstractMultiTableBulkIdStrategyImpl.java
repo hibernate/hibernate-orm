@@ -33,7 +33,7 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 		implements MultiTableBulkIdStrategy {
 
 	private final IdTableSupport idTableSupport;
-	private Map<String,TT> idTableInfoMap = new HashMap<String, TT>();
+	private Map<String,TT> idTableInfoMap = new HashMap<>();
 
 	public AbstractMultiTableBulkIdStrategyImpl(IdTableSupport idTableSupport) {
 		this.idTableSupport = idTableSupport;

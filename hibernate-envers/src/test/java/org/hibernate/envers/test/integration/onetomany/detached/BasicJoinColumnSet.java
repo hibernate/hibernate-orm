@@ -48,7 +48,7 @@ public class BasicJoinColumnSet extends BaseEnversJPAFunctionalTestCase {
 		em.persist( str1 );
 		em.persist( str2 );
 
-		coll1.setCollection( new HashSet<StrTestEntity>() );
+		coll1.setCollection( new HashSet<>() );
 		coll1.getCollection().add( str1 );
 		em.persist( coll1 );
 

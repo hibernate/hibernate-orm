@@ -23,7 +23,7 @@ import javax.persistence.OneToMany;
 @Entity
 public class Parent {
 	private Long id;
-	private List<Child> children = new ArrayList<Child>();
+	private List<Child> children = new ArrayList<>();
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

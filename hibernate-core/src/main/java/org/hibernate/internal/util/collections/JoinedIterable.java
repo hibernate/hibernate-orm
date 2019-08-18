@@ -30,7 +30,7 @@ public class JoinedIterable<T> implements Iterable<T> {
 		if ( iterables == null ) {
 			throw new NullPointerException( "Unexpected null iterables argument" );
 		}
-		iterator = new TypeSafeJoinedIterator<T>( iterables );
+		iterator = new TypeSafeJoinedIterator<>( iterables );
 	}
 
 	public Iterator<T> iterator() {

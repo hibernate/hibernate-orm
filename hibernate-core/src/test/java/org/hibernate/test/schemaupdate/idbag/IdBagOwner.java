@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class IdBagOwner {
 	private long id;
-	private List<IdBagOwner> children = new ArrayList<IdBagOwner>();
+	private List<IdBagOwner> children = new ArrayList<>();
 
 	public long getId() {
 		return id;

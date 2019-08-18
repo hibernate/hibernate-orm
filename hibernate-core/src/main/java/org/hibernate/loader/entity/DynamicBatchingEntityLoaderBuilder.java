@@ -223,7 +223,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			// entity associated with the PC - if it does we add it to the result
 			// list immediately and remove its id from the group of ids to load.
 			boolean foundAnyManagedEntities = false;
-			final List<Serializable> nonManagedIds = new ArrayList<Serializable>();
+			final List<Serializable> nonManagedIds = new ArrayList<>();
 			for ( Serializable id : ids ) {
 				final EntityKey entityKey = new EntityKey( id, persister );
 

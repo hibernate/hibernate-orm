@@ -63,7 +63,7 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 			map.put( keyValue, embeddableValue );
 			testEntity.values = map;
 			s.save( testEntity );
-			baseTestEntity1.entities = new HashSet<TestEntity>();
+			baseTestEntity1.entities = new HashSet<>();
 			baseTestEntity1.entities.add( testEntity );
 			s.save( baseTestEntity1 );
 

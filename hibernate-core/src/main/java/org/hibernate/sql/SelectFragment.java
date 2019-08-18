@@ -21,9 +21,9 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class SelectFragment {
 	private String suffix;
-	private List<String> columns = new ArrayList<String>();
+	private List<String> columns = new ArrayList<>();
 	//private List aliases = new ArrayList();
-	private List<String> columnAliases = new ArrayList<String>();
+	private List<String> columnAliases = new ArrayList<>();
 	private String extraSelectList;
 	private String[] usedAliases;
 
@@ -127,7 +127,7 @@ public class SelectFragment {
 		Iterator<String> iter = columns.iterator();
 		Iterator<String> columnAliasIter = columnAliases.iterator();
 		//HashMap columnsUnique = new HashMap();
-		HashSet<String> columnsUnique = new HashSet<String>();
+		HashSet<String> columnsUnique = new HashSet<>();
 		if (usedAliases!=null) {
 			columnsUnique.addAll( Arrays.asList(usedAliases) );
 		}

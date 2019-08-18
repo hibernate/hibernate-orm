@@ -24,7 +24,7 @@ public class SingleLineSqlCommandExtractor implements ImportSqlCommandExtractor 
 	@Override
 	public String[] extractCommands(Reader reader) {
 		BufferedReader bufferedReader = new BufferedReader( reader );
-		List<String> statementList = new LinkedList<String>();
+		List<String> statementList = new LinkedList<>();
 		try {
 			for ( String sql = bufferedReader.readLine(); sql != null; sql = bufferedReader.readLine() ) {
 				String trimmedSql = sql.trim();

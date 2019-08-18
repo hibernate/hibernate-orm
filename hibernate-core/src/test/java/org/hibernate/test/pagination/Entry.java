@@ -11,7 +11,7 @@ import java.util.Set;
 public class Entry {
 	private int id;
 	private String name;
-	private Set<Tag> tags = new HashSet<Tag>();
+	private Set<Tag> tags = new HashSet<>();
 
 	public Entry() {
 

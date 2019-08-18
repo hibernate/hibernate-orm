@@ -335,7 +335,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 					.addColumn( "transactions_index" );
 			PreparedStatement preparedStatement = ((SessionImplementor)s).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
 			ResultSet resultSet = ((SessionImplementor)s).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
-			Map<Integer, String> valueMap = new HashMap<Integer, String>();
+			Map<Integer, String> valueMap = new HashMap<>();
 			while ( resultSet.next() ) {
 				final String code = resultSet.getString( 1 );
 				assertFalse( "code column was null", resultSet.wasNull() );

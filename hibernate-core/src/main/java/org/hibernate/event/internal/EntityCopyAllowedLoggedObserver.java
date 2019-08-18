@@ -68,7 +68,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		if ( managedToMergeEntitiesXref == null ) {
 			// This is the first time multiple representations have been found;
 			// instantiate managedToMergeEntitiesXref.
-			managedToMergeEntitiesXref = new IdentityHashMap<Object, Set<Object>>();
+			managedToMergeEntitiesXref = new IdentityHashMap<>();
 		}
 		else {
 			// Get any existing representations that have already been found.
@@ -89,7 +89,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		Integer countBeforeIncrement = 0;
 		if ( countsByEntityName == null ) {
 			// Use a TreeMap so counts can be logged by entity name in alphabetic order.
-			countsByEntityName = new TreeMap<String, Integer>();
+			countsByEntityName = new TreeMap<>();
 		}
 		else {
 			countBeforeIncrement = countsByEntityName.get( entityName );

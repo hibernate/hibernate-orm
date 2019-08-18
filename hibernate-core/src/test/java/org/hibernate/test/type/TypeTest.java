@@ -270,7 +270,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final SerializableImpl different = new SerializableImpl(2);
 
 		runBasicTests( SerializableType.INSTANCE, original, copy, different );
-		runBasicTests( new SerializableType<SerializableImpl>( SerializableImpl.class ), original, copy, different );
+		runBasicTests( new SerializableType<>( SerializableImpl.class ), original, copy, different );
 	}
 
 	@Test

@@ -18,7 +18,7 @@ import antlr.collections.AST;
  */
 public class ASTIterator implements Iterator {
 	private AST next;
-	private LinkedList<AST> parents = new LinkedList<AST>();
+	private LinkedList<AST> parents = new LinkedList<>();
 
 	/**
 	 * Constructs an Iterator for depth-first iteration of an AST

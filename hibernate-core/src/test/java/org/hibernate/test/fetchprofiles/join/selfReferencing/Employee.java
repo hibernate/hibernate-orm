@@ -34,7 +34,7 @@ public class Employee {
 
 	private Long id;
 	private Employee manager;
-	private Collection<Employee> minions = new ArrayList<Employee>();
+	private Collection<Employee> minions = new ArrayList<>();
 
 	@Id
 	public Long getId() {

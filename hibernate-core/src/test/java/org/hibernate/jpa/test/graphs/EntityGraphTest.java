@@ -73,7 +73,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		EntityGraph<Foo> fooGraph = em.createEntityGraph( Foo.class );
 		fooGraph.addAttributeNodes( "bar", "baz" );
 
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 		properties.put( "javax.persistence.loadgraph", fooGraph );
 
 		Foo result = em.find( Foo.class, foo.id, properties );
@@ -107,7 +107,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
    		EntityGraph<Bar> barGraph = em.createEntityGraph( Bar.class );
    		barGraph.addAttributeNodes("foos");
 
-   		Map<String, Object> properties = new HashMap<String, Object>();
+   		Map<String, Object> properties = new HashMap<>();
    		properties.put( "javax.persistence.loadgraph", barGraph);
 
    		Bar result = em.find( Bar.class, bar.id, properties );
@@ -147,7 +147,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         Subgraph<Bar> barGraph = fooGraph.addSubgraph("bar", Bar.class);
         barGraph.addAttributeNodes("foos");
 
-   		Map<String, Object> properties = new HashMap<String, Object>();
+   		Map<String, Object> properties = new HashMap<>();
    		properties.put( "javax.persistence.loadgraph", fooGraph );
 
    		Foo result = em.find( Foo.class, foo.id, properties );
@@ -198,7 +198,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		subSubgraph.addAttributeNodes( "managers" );
 		subSubgraph.addAttributeNodes( "friends" );
 
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 		properties.put( "javax.persistence.loadgraph", entityGraph );
 
 		Company result = em.find( Company.class, company.id, properties );
@@ -238,7 +238,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         entityGraph.addAttributeNodes( "friends" );
         entityGraph.addAttributeNodes( "managers" );
 
-        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put( "javax.persistence.loadgraph", entityGraph );
 
         Manager result = em.find( Manager.class, manager.id, properties );

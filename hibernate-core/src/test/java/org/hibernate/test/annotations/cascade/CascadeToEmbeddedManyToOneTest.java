@@ -24,7 +24,7 @@ public class CascadeToEmbeddedManyToOneTest extends BaseCoreFunctionalTestCase {
 		try {
 			final Transaction trx  = sess.beginTransaction();
 			try {
-				final Set<PersonPair> setOfPairs = new HashSet<PersonPair>();
+				final Set<PersonPair> setOfPairs = new HashSet<>();
 				setOfPairs.add(new PersonPair(new Person("PERSON NAME 1"), new Person("PERSON NAME 2")));
 				sess.persist( new CodedPairSetHolder( "CODE", setOfPairs ) );
 				sess.flush();

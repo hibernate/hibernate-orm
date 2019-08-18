@@ -25,8 +25,8 @@ public class FilterSourceImpl
 	private final String name;
 	private final String condition;
 	private final boolean autoAliasInjection;
-	private final Map<String, String> aliasTableMap = new HashMap<String, String>();
-	private final Map<String, String> aliasEntityMap = new HashMap<String, String>();
+	private final Map<String, String> aliasTableMap = new HashMap<>();
+	private final Map<String, String> aliasEntityMap = new HashMap<>();
 
 	public FilterSourceImpl(
 			MappingDocument mappingDocument,

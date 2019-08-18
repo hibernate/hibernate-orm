@@ -70,7 +70,7 @@ public class Item implements Serializable {
 	private String name;
 	private String descr;
 	private Integer intVal;
-	private Set<Distributor> distributors = new HashSet<Distributor>();
+	private Set<Distributor> distributors = new HashSet<>();
 
 	public Item() {
 	}

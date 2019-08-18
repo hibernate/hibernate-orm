@@ -79,8 +79,8 @@ public class NamedProcedureCallDefinition {
 	public ProcedureCallMemento toMemento(
 			final SessionFactoryImpl sessionFactory,
 			final Map<String,ResultSetMappingDefinition> resultSetMappingDefinitions) {
-		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
-		final Set<String> collectedQuerySpaces = new HashSet<String>();
+		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
+		final Set<String> collectedQuerySpaces = new HashSet<>();
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
@@ -175,7 +175,7 @@ public class NamedProcedureCallDefinition {
 		}
 
 		public List<ParameterMemento> toMementos(SessionFactoryImpl sessionFactory) {
-			final List<ParameterMemento> mementos = new ArrayList<ParameterMemento>();
+			final List<ParameterMemento> mementos = new ArrayList<>();
 			for ( ParameterDefinition definition : parameterDefinitions ) {
 				mementos.add(definition.toMemento( sessionFactory ));
 			}

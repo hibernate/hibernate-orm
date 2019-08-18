@@ -31,7 +31,7 @@ public class StringMapEntity {
 	private Map<String, String> strings;
 
 	public StringMapEntity() {
-		strings = new HashMap<String, String>();
+		strings = new HashMap<>();
 	}
 
 	public Integer getId() {

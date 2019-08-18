@@ -110,7 +110,7 @@ public class ListMappingTest extends BaseUnitTestCase {
 	@Table( name = "t_order" )
 	public static class Order {
 		private Integer id;
-		private List<LineItem> lineItems = new ArrayList<LineItem>();
+		private List<LineItem> lineItems = new ArrayList<>();
 
 		@Id
 		public Integer getId() {

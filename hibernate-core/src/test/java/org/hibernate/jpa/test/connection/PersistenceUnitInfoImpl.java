@@ -37,7 +37,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	private URL puRoot;
 
 	public PersistenceUnitInfoImpl(URL puRoot, String[] mappingFiles) {
-		this.mappingFiles = new ArrayList<String>( mappingFiles.length );
+		this.mappingFiles = new ArrayList<>( mappingFiles.length );
 		this.mappingFiles.addAll( Arrays.asList( mappingFiles ) );
 		this.puRoot = puRoot;
 	}
@@ -63,11 +63,11 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	}
 
 	public List<URL> getJarFileUrls() {
-		return new ArrayList<URL>();
+		return new ArrayList<>();
 	}
 
 	public List<String> getManagedClassNames() {
-		List<String> classes = new ArrayList<String>();
+		List<String> classes = new ArrayList<>();
 		classes.add( Item.class.getName() );
 		classes.add( Distributor.class.getName() );
 		classes.add( Light.class.getName() );

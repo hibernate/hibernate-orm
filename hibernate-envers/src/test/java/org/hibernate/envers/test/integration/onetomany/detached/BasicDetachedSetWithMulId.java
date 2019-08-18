@@ -54,7 +54,7 @@ public class BasicDetachedSetWithMulId extends BaseEnversJPAFunctionalTestCase {
 		em.persist( str1 );
 		em.persist( str2 );
 
-		coll1.setCollection( new HashSet<MulIdTestEntity>() );
+		coll1.setCollection( new HashSet<>() );
 		coll1.getCollection().add( str1 );
 		em.persist( coll1 );
 

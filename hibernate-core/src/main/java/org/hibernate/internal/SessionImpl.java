@@ -1224,12 +1224,12 @@ public final class SessionImpl
 
 	@Override
 	public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
-		return new IdentifierLoadAccessImpl<T>( entityClass );
+		return new IdentifierLoadAccessImpl<>( entityClass );
 	}
 
 	@Override
 	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass) {
-		return new MultiIdentifierLoadAccessImpl<T>( locateEntityPersister( entityClass ) );
+		return new MultiIdentifierLoadAccessImpl<>( locateEntityPersister( entityClass ) );
 	}
 
 	@Override
@@ -1244,7 +1244,7 @@ public final class SessionImpl
 
 	@Override
 	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass) {
-		return new NaturalIdLoadAccessImpl<T>( entityClass );
+		return new NaturalIdLoadAccessImpl<>( entityClass );
 	}
 
 	@Override
@@ -1254,7 +1254,7 @@ public final class SessionImpl
 
 	@Override
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass) {
-		return new SimpleNaturalIdLoadAccessImpl<T>( entityClass );
+		return new SimpleNaturalIdLoadAccessImpl<>( entityClass );
 	}
 
 	private void fireLoad(LoadEvent event, LoadType loadType) {
@@ -3190,7 +3190,7 @@ public final class SessionImpl
 	}
 
 	private class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
-		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
+		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<>();
 
 		private NaturalIdLoadAccessImpl(EntityPersister entityPersister) {
 			super( entityPersister );
@@ -3855,7 +3855,7 @@ public final class SessionImpl
 	@Override
 	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		checkOpen();
-		return new RootGraphImpl<T>( null, getMetamodel().entity( rootType ), getEntityManagerFactory() );
+		return new RootGraphImpl<>( null, getMetamodel().entity( rootType ), getEntityManagerFactory() );
 	}
 
 	@Override

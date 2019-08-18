@@ -37,7 +37,7 @@ public class SelectParser implements Parser {
 		COUNT_MODIFIERS.add( "*" );
 	}
 
-	private LinkedList<String> aggregateFuncTokenList = new LinkedList<String>();
+	private LinkedList<String> aggregateFuncTokenList = new LinkedList<>();
 
 	private boolean ready;
 	private boolean aggregate;

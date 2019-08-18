@@ -20,7 +20,7 @@ import org.hibernate.envers.NotAudited;
 public class NotAuditedDynamicMapComponent implements Serializable {
 	private long id;
 	private String note;
-	private Map<String, Object> customFields = new HashMap<String, Object>();
+	private Map<String, Object> customFields = new HashMap<>();
 
 	public NotAuditedDynamicMapComponent() {
 	}

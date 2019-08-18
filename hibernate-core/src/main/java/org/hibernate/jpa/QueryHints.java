@@ -114,7 +114,7 @@ public class QueryHints {
 	private static final Set<String> HINTS = buildHintsSet();
 
 	private static Set<String> buildHintsSet() {
-		HashSet<String> hints = new HashSet<String>();
+		HashSet<String> hints = new HashSet<>();
 		hints.add( HINT_TIMEOUT );
 		hints.add( SPEC_HINT_TIMEOUT );
 		hints.add( HINT_COMMENT );

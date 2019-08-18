@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Table(name = "UC_BSC_USER")
 public class UserWithUnimplementedCollection {
 	private String userName;
-	private AtomicReference<Email> emailAddresses = new AtomicReference<Email>();
+	private AtomicReference<Email> emailAddresses = new AtomicReference<>();
 	private Map sessionData = new HashMap();
 
 	UserWithUnimplementedCollection() {

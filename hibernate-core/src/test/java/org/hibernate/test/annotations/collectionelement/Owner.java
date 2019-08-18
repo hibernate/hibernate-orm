@@ -22,7 +22,7 @@ import javax.persistence.Table;
 @Table( name="OWNER_TABLE")
 public class Owner {
 	private Integer id;
-	private Set<String> elements = new HashSet<String>();
+	private Set<String> elements = new HashSet<>();
 
 	@Id
 	@GeneratedValue

@@ -20,7 +20,7 @@ import javax.persistence.OneToMany;
 @Entity
 public class Software {
 	private String name;
-	private Map<String, Version> versions = new HashMap<String, Version>();
+	private Map<String, Version> versions = new HashMap<>();
 
 	@Id
 	public String getName() {

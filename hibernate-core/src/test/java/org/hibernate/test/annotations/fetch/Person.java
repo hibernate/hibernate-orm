@@ -42,7 +42,7 @@ public class Person implements Serializable {
 	private Collection<Stay> stays;
 	private Collection<Stay> oldStays;
 	private Collection<Stay> veryOldStays;
-	private List<Stay> orderedStay = new ArrayList<Stay>();
+	private List<Stay> orderedStay = new ArrayList<>();
 
 	// constructors
 	public Person() {
@@ -143,7 +143,7 @@ public class Person implements Serializable {
 	public void addStay(Stay stay) {
 		Collection<Stay> stays = getStays();
 		if ( stays == null ) {
-			stays = new ArrayList<Stay>();
+			stays = new ArrayList<>();
 		}
 		stays.add( stay );
 
@@ -158,7 +158,7 @@ public class Person implements Serializable {
 	public void addOldStay(Stay stay) {
 		Collection<Stay> stays = getOldStays();
 		if ( stays == null ) {
-			stays = new ArrayList<Stay>();
+			stays = new ArrayList<>();
 		}
 		stays.add( stay );
 
@@ -173,7 +173,7 @@ public class Person implements Serializable {
 	public void addVeryOldStay(Stay stay) {
 		Collection<Stay> stays = getVeryOldStays();
 		if ( stays == null ) {
-			stays = new ArrayList<Stay>();
+			stays = new ArrayList<>();
 		}
 		stays.add( stay );
 

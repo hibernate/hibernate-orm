@@ -231,11 +231,11 @@ public class ActionQueue {
 	public void clear() {
 		for ( ListProvider listProvider : EXECUTABLE_LISTS_MAP.values() ) {
 			ExecutableList<?> l = listProvider.get( this );
-			if( l != null ) {
+			if ( l != null ) {
 				l.clear();
 			}
 		}
-		if( unresolvedInsertions != null ) {
+		if ( unresolvedInsertions != null ) {
 			unresolvedInsertions.clear();
 		}
 	}
@@ -267,7 +267,7 @@ public class ActionQueue {
 				LOG.tracev( "Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]", insert,
 							nonNullableTransientDependencies.toLoggableString( insert.getSession() ) );
 			}
-			if( unresolvedInsertions == null ) {
+			if ( unresolvedInsertions == null ) {
 				unresolvedInsertions = new UnresolvedEntityInsertActions();
 			}
 			unresolvedInsertions.addUnresolvedEntityInsertAction( insert, nonNullableTransientDependencies );
@@ -288,7 +288,7 @@ public class ActionQueue {
 		if ( !insert.isVeto() ) {
 			insert.makeEntityManaged();
 
-			if( unresolvedInsertions != null ) {
+			if ( unresolvedInsertions != null ) {
 				for ( AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
 					addResolvedEntityInsertAction( resolvedAction );
 				}
@@ -390,8 +390,8 @@ public class ActionQueue {
 	}
 
 	private void registerCleanupActions(Executable executable) {
-		if( executable.getBeforeTransactionCompletionProcess() != null ) {
-			if( beforeTransactionProcesses == null ) {
+		if ( executable.getBeforeTransactionCompletionProcess() != null ) {
+			if ( beforeTransactionProcesses == null ) {
 				beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 			}
 			beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
@@ -399,8 +399,8 @@ public class ActionQueue {
 		if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			invalidateSpaces( convertTimestampSpaces( executable.getPropertySpaces() ) );
 		}
-		if( executable.getAfterTransactionCompletionProcess() != null ) {
-			if( afterTransactionProcesses == null ) {
+		if ( executable.getAfterTransactionCompletionProcess() != null ) {
+			if ( afterTransactionProcesses == null ) {
 				afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 			}
 			afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
@@ -432,20 +432,20 @@ public class ActionQueue {
 	 * the first unresolved entity insert action.
 	 */
 	public void checkNoUnresolvedActionsAfterOperation() throws PropertyValueException {
-		if(unresolvedInsertions != null) {
+		if ( unresolvedInsertions != null ) {
 			unresolvedInsertions.checkNoUnresolvedActionsAfterOperation();
 		}
 	}
 
 	public void registerProcess(AfterTransactionCompletionProcess process) {
-		if( afterTransactionProcesses == null ) {
+		if ( afterTransactionProcesses == null ) {
 			afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		}
 		afterTransactionProcesses.register( process );
 	}
 
 	public void registerProcess(BeforeTransactionCompletionProcess process) {
-		if( beforeTransactionProcesses == null ) {
+		if ( beforeTransactionProcesses == null ) {
 			beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 		}
 		beforeTransactionProcesses.register( process );
@@ -493,7 +493,7 @@ public class ActionQueue {
 	}
 
 	private void prepareActions(ExecutableList<?> queue) throws HibernateException {
-		if( queue == null ) {
+		if ( queue == null ) {
 			return;
 		}
 		for ( Executable executable : queue ) {
@@ -509,7 +509,7 @@ public class ActionQueue {
 	public void afterTransactionCompletion(boolean success) {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
-			if( afterTransactionProcesses != null ) {
+			if ( afterTransactionProcesses != null ) {
 				afterTransactionProcesses.afterTransactionCompletion( success );
 			}
 		}
@@ -521,7 +521,7 @@ public class ActionQueue {
 	public void beforeTransactionCompletion() {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
-			if( beforeTransactionProcesses != null ) {
+			if ( beforeTransactionProcesses != null ) {
 				beforeTransactionProcesses.beforeTransactionCompletion();
 			}
 		}
@@ -553,7 +553,7 @@ public class ActionQueue {
 				return true;
 			}
 		}
-		if(unresolvedInsertions == null) {
+		if ( unresolvedInsertions == null ) {
 			return false;
 		}
 		return areTablesToBeUpdated( unresolvedInsertions, tables );
@@ -604,14 +604,14 @@ public class ActionQueue {
 					e.execute();
 				}
 				finally {
-					if( e.getBeforeTransactionCompletionProcess() != null ) {
-						if( beforeTransactionProcesses == null ) {
+					if ( e.getBeforeTransactionCompletionProcess() != null ) {
+						if ( beforeTransactionProcesses == null ) {
 							beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 						}
 						beforeTransactionProcesses.register( e.getBeforeTransactionCompletionProcess() );
 					}
-					if( e.getAfterTransactionCompletionProcess() != null ) {
-						if( afterTransactionProcesses == null ) {
+					if ( e.getAfterTransactionCompletionProcess() != null ) {
+						if ( afterTransactionProcesses == null ) {
 							afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 						}
 						afterTransactionProcesses.register( e.getAfterTransactionCompletionProcess() );
@@ -657,7 +657,7 @@ public class ActionQueue {
 	private void invalidateSpaces(String... spaces) {
 		if ( spaces != null && spaces.length > 0 ) {
 			for ( Serializable s : spaces ) {
-				if( afterTransactionProcesses == null ) {
+				if ( afterTransactionProcesses == null ) {
 					afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 				}
 				afterTransactionProcesses.addSpaceToInvalidate( (String) s );
@@ -691,21 +691,21 @@ public class ActionQueue {
 	}
 
 	public int numberOfCollectionRemovals() {
-		if( collectionRemovals == null ) {
+		if ( collectionRemovals == null ) {
 			return 0;
 		}
 		return collectionRemovals.size();
 	}
 
 	public int numberOfCollectionUpdates() {
-		if( collectionUpdates == null ) {
+		if ( collectionUpdates == null ) {
 			return 0;
 		}
 		return collectionUpdates.size();
 	}
 
 	public int numberOfCollectionCreations() {
-		if( collectionCreations == null ) {
+		if ( collectionCreations == null ) {
 			return 0;
 		}
 		return collectionCreations.size();
@@ -718,24 +718,24 @@ public class ActionQueue {
 	}
 
 	public int numberOfUpdates() {
-		if( updates == null ) {
+		if ( updates == null ) {
 			return 0;
 		}
 		return updates.size();
 	}
 
 	public int numberOfInsertions() {
-		if( insertions == null ) {
+		if ( insertions == null ) {
 			return 0;
 		}
 		return insertions.size();
 	}
 
 	public TransactionCompletionProcesses getTransactionCompletionProcesses() {
-		if( beforeTransactionProcesses == null ) {
+		if ( beforeTransactionProcesses == null ) {
 			beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 		}
-		if( afterTransactionProcesses == null ) {
+		if ( afterTransactionProcesses == null ) {
 			afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		}
 		return new TransactionCompletionProcesses( beforeTransactionProcesses, afterTransactionProcesses );
@@ -758,16 +758,16 @@ public class ActionQueue {
 	public void sortCollectionActions() {
 		if ( isOrderUpdatesEnabled() ) {
 			// sort the updates by fk
-			if( collectionCreations != null ) {
+			if ( collectionCreations != null ) {
 				collectionCreations.sort();
 			}
-			if( collectionUpdates != null ) {
+			if ( collectionUpdates != null ) {
 				collectionUpdates.sort();
 			}
-			if( collectionQueuedOps != null ) {
+			if ( collectionQueuedOps != null ) {
 				collectionQueuedOps.sort();
 			}
-			if( collectionRemovals != null ) {
+			if ( collectionRemovals != null ) {
 				collectionRemovals.sort();
 			}
 		}
@@ -792,16 +792,16 @@ public class ActionQueue {
 	}
 
 	public void clearFromFlushNeededCheck(int previousCollectionRemovalSize) {
-		if( collectionCreations != null ) {
+		if ( collectionCreations != null ) {
 			collectionCreations.clear();
 		}
-		if( collectionUpdates != null ) {
+		if ( collectionUpdates != null ) {
 			collectionUpdates.clear();
 		}
-		if( collectionQueuedOps != null ) {
+		if ( collectionQueuedOps != null ) {
 			collectionQueuedOps.clear();
 		}
-		if( updates != null) {
+		if ( updates != null) {
 			updates.clear();
 		}
 		// collection deletions are a special case since update() can add
@@ -835,19 +835,19 @@ public class ActionQueue {
 				rescuedEntity = initializer.getImplementation( session );
 			}
 		}
-		if( deletions != null ) {
+		if ( deletions != null ) {
 			for ( int i = 0; i < deletions.size(); i++ ) {
 				EntityDeleteAction action = deletions.get( i );
-				if (action.getInstance() == rescuedEntity) {
+				if ( action.getInstance() == rescuedEntity ) {
 					deletions.remove( i );
 					return;
 				}
 			}
 		}
-		if( orphanRemovals != null ) {
+		if ( orphanRemovals != null ) {
 			for ( int i = 0; i < orphanRemovals.size(); i++ ) {
 				EntityDeleteAction action = orphanRemovals.get( i );
-				if (action.getInstance() == rescuedEntity) {
+				if ( action.getInstance() == rescuedEntity ) {
 					orphanRemovals.remove( i );
 					return;
 				}
@@ -864,14 +864,14 @@ public class ActionQueue {
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		LOG.trace( "Serializing action-queue" );
-		if( unresolvedInsertions == null ) {
+		if ( unresolvedInsertions == null ) {
 			unresolvedInsertions = new UnresolvedEntityInsertActions();
 		}
 		unresolvedInsertions.serialize( oos );
 
 		for ( ListProvider p : EXECUTABLE_LISTS_MAP.values() ) {
 			ExecutableList<?> l = p.get( this );
-			if( l == null ) {
+			if ( l == null ) {
 				oos.writeBoolean( false );
 			}
 			else {
@@ -902,8 +902,8 @@ public class ActionQueue {
 		for ( ListProvider provider : EXECUTABLE_LISTS_MAP.values() ) {
 			ExecutableList<?> l = provider.get( rtn );
 			boolean notNull = ois.readBoolean();
-			if( notNull ) {
-				if(l == null) {
+			if ( notNull ) {
+				if ( l == null ) {
 					l = provider.init( rtn );
 				}
 				l.readExternal( ois );
@@ -1218,7 +1218,7 @@ public class ActionQueue {
 						BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
 
 						if ( batchIdentifier.hasParent( nextBatchIdentifier ) ) {
-							if( nextBatchIdentifier.hasParent( batchIdentifier ) ) {
+							if ( nextBatchIdentifier.hasParent( batchIdentifier ) ) {
 								//cycle detected, no need to continue
 								break sort;
 							}
@@ -1232,7 +1232,7 @@ public class ActionQueue {
 				}
 				sorted = true;
 			}
-			while ( !sorted && iterations <= maxIterations);
+			while ( !sorted && iterations <= maxIterations );
 
 			if ( iterations > maxIterations ) {
 				LOG.warn( "The batch containing " + latestBatches.size() + " statements could not be sorted after " + maxIterations + " iterations. " +

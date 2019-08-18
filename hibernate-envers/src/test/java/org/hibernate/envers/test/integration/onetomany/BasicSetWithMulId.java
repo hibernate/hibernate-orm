@@ -96,9 +96,7 @@ public class BasicSetWithMulId extends BaseEnversJPAFunctionalTestCase {
 	private <T> Set<T> makeSet(T... objects) {
 		Set<T> ret = new HashSet<T>();
 		//noinspection ManualArrayToCollectionCopy
-		for ( T obj : objects ) {
-			ret.add( obj );
-		}
+		ret.addAll(Arrays.asList(objects));
 		return ret;
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.osgi;
 
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
@@ -36,9 +37,7 @@ public class OSGiClassLoaderServiceImpl extends ClassLoaderServiceImpl implement
 		for ( S service : parentDiscoveredServices ) {
 			composite.add( service );
 		}
-		for ( S service : serviceImpls ) {
-			composite.add( service );
-		}
+		composite.addAll(Arrays.asList(serviceImpls));
 		return composite;
 	}
 

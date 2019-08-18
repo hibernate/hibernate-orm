@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -1525,9 +1526,7 @@ public class ModelBinder {
 			}
 		}
 
-		for ( String name : source.getSynchronizedTableNames() ) {
-			binding.getSynchronizedTables().add( name );
-		}
+		binding.getSynchronizedTables().addAll(Arrays.asList(source.getSynchronizedTableNames()));
 
 		binding.setLoaderName( source.getCustomLoaderName() );
 		if ( source.getCustomSqlInsert() != null ) {

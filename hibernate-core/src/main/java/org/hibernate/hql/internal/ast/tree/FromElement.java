@@ -345,9 +345,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		final boolean inSelect = getWalker().getStatementType() == HqlSqlTokenTypes.SELECT;
 		for ( String propertyName : propertyNames ) {
 			String[] propertyNameColumns = toColumns( table, propertyName, inSelect );
-			for ( String propertyNameColumn : propertyNameColumns ) {
-				columns.add( propertyNameColumn );
-			}
+			columns.addAll(Arrays.asList(propertyNameColumns));
 		}
 		return columns.toArray( new String[columns.size()] );
 	}

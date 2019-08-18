@@ -29,9 +29,7 @@ public class TestTools {
 	public static <T> Set<T> makeSet(T... objects) {
 		final Set<T> ret = new HashSet<T>();
 		//noinspection ManualArrayToCollectionCopy
-		for ( T o : objects ) {
-			ret.add( o );
-		}
+		ret.addAll(Arrays.asList(objects));
 		return ret;
 	}
 

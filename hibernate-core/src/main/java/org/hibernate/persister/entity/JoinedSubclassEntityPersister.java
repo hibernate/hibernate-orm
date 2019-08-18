@@ -852,9 +852,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			temp[i] = objects[n - i - 1];
 		}
 
-		for ( int i = n; i < size; i++ ) {
-			temp[i] = objects[i];
-		}
+		System.arraycopy(objects, n, temp, n, size - n);
 
 		return temp;
 	}
@@ -874,9 +872,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			temp[i] = objects[n - i - 1];
 		}
 
-		for ( int i = n; i < size; i++ ) {
-			temp[i] = objects[i];
-		}
+		System.arraycopy(objects, n, temp, n, size - n);
 
 		return temp;
 	}

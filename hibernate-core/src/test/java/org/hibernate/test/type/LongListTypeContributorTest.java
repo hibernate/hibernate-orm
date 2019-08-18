@@ -132,9 +132,7 @@ public class LongListTypeContributorTest extends BaseEntityManagerFunctionalTest
 
 		public LongList(Long... longs) {
 			super( longs.length );
-			for ( Long l : longs ) {
-				this.add( l );
-			}
+			this.addAll(Arrays.asList(longs));
 		}
 	}
 

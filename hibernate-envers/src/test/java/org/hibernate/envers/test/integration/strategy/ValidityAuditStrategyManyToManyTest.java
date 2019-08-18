@@ -155,9 +155,7 @@ public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctional
 	private SetOwningEntity createOwningEntity(SetOwnedEntity... owned) {
 		SetOwningEntity result = new SetOwningEntity( ing_id, "parent" );
 		result.setReferences( new HashSet<SetOwnedEntity>() );
-		for ( SetOwnedEntity setOwnedEntity : owned ) {
-			result.getReferences().add( setOwnedEntity );
-		}
+		result.getReferences().addAll(Arrays.asList(owned));
 
 		return result;
 	}
@@ -165,9 +163,7 @@ public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctional
 	private SetOwnedEntity createOwnedEntity(SetOwningEntity... owning) {
 		SetOwnedEntity result = new SetOwnedEntity( ed_id, "child" );
 		result.setReferencing( new HashSet<SetOwningEntity>() );
-		for ( SetOwningEntity setOwningEntity : owning ) {
-			result.getReferencing().add( setOwningEntity );
-		}
+		result.getReferencing().addAll(Arrays.asList(owning));
 
 		return result;
 	}

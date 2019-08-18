@@ -87,7 +87,7 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 		InputStream dtdStream = resolveInHibernateNamespace( path );
 		if ( dtdStream == null ) {
 			LOG.debugf( "Unable to locate [%s] on classpath", systemId );
-			if ( systemId.substring( namespace.length() ).indexOf( "2.0" ) > -1 ) {
+			if ( systemId.substring( namespace.length() ).contains("2.0") ) {
 				LOG.usingOldDtd();
 			}
 		}

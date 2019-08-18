@@ -269,7 +269,7 @@ public class CascadeStyles {
 
 		CascadeStyle style = STYLES.get( cascade );
 		if ( style == null ) {
-			if ( cascade.indexOf( "," ) > -1 ) {
+			if ( cascade.contains(",") ) {
 				return getMultipleCascadeStyle( cascade );
 			}
 			else {

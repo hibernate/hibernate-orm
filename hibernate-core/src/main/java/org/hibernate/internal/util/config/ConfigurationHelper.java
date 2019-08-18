@@ -440,7 +440,7 @@ public final class ConfigurationHelper {
 	 * @return The (possibly) interpolated property value.
 	 */
 	public static String resolvePlaceHolder(String property) {
-		if ( property.indexOf( PLACEHOLDER_START ) < 0 ) {
+		if ( !property.contains(PLACEHOLDER_START) ) {
 			return property;
 		}
 		StringBuilder buff = new StringBuilder();

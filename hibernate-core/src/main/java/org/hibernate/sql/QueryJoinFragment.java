@@ -156,8 +156,8 @@ public class QueryJoinFragment extends JoinFragment {
 		// if the condition is not already there...
 		if (
 				!StringHelper.isEmpty( condition ) &&
-				afterFrom.toString().indexOf( condition.trim() ) < 0 &&
-				afterWhere.toString().indexOf( condition.trim() ) < 0
+				!afterFrom.toString().contains(condition.trim()) &&
+				!afterWhere.toString().contains(condition.trim())
 		) {
 			if ( !condition.startsWith( " and " ) ) {
 				afterWhere.append( " and " );

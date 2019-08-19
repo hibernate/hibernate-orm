@@ -46,10 +46,18 @@ public class MetadataTask {
 	}
 	
 	public MetadataDescriptor createMetadataDescriptor() {
-		return MetadataDescriptorFactory.createNativeDescriptor(
-				this.configFile, 
-				getFiles(), 
-				getProperties());
+		switch(type) {
+			case NATIVE:
+				return MetadataDescriptorFactory.createNativeDescriptor(
+					this.configFile, 
+					getFiles(), 
+					getProperties());
+			case JPA:
+				return MetadataDescriptorFactory.createJpaDescriptor(
+					persistenceUnit, 
+					getProperties());
+			default: return null;
+		}
 	}
 	
 	private File[] getFiles() {

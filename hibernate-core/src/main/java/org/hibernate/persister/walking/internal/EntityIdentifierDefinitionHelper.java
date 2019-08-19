@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.walking.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeSource;
@@ -16,6 +17,7 @@ import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.NonEncapsulatedEntityIdentifierDefinition;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Gail Badner

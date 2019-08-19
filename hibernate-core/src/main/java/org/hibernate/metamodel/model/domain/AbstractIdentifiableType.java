@@ -269,18 +269,18 @@ public abstract class AbstractIdentifiableType<J>
 		}
 	}
 
-	@Override
-	public void visitJdbcTypes(Consumer action, TypeConfiguration typeConfiguration) {
-		id.visitJdbcTypes( action, typeConfiguration );
-
-		if ( versionAttribute != null ) {
-			versionAttribute.visitJdbcTypes( action, typeConfiguration );
-		}
-
-		visitAttributes(
-				attribute -> attribute.visitJdbcTypes( action, typeConfiguration )
-		);
-	}
+//	@Override
+//	public void visitJdbcTypes(Consumer action, TypeConfiguration typeConfiguration) {
+//		id.visitJdbcTypes( action, typeConfiguration );
+//
+//		if ( versionAttribute != null ) {
+//			versionAttribute.visitJdbcTypes( action, typeConfiguration );
+//		}
+//
+//		visitAttributes(
+//				attribute -> attribute.visitJdbcTypes( action, typeConfiguration )
+//		);
+//	}
 
 	/**
 	 * For used to retrieve the declared version when populating the static metamodel.

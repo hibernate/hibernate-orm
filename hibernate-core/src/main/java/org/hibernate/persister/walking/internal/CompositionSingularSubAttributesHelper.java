@@ -140,10 +140,6 @@ public final class CompositionSingularSubAttributesHelper {
 						if ( type.isAssociationType() ) {
 							final AssociationType aType = (AssociationType) type;
 							return new AssociationAttributeDefinition() {
-								@Override
-								public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-									return ;
-								}
 
 								@Override
 								public void visitJdbcTypes(

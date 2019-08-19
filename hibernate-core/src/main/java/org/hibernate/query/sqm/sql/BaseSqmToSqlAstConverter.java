@@ -673,7 +673,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 
 	private final Stack<Supplier<MappingModelExpressable>> inferableTypeAccessStack = new StandardStack<>(
-			() -> () -> null
+			() -> null
 	);
 
 	private void resolveSqmParameter(SqmParameter expression, MappingModelExpressable valueMapping, Consumer<JdbcParameter> jdbcParameterConsumer) {

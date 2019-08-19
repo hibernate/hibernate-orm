@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Map;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -24,11 +25,12 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V> implements MapPersistentAttribute<X, K, V> {
 	private final SqmPathSource<K> keyPathSource;
 
-	MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder) {
-		super( xceBuilder );
+	MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder, MetadataContext metadataContext) {
+		super( xceBuilder, metadataContext );
 
 		this.keyPathSource = DomainModelHelper.resolveSqmPathSource(
 				getName(),
+				getMappingRole(),
 				xceBuilder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE
 		);

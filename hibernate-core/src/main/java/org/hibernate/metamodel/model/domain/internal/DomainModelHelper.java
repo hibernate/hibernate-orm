@@ -80,12 +80,14 @@ public class DomainModelHelper {
 
 	public static <J> SqmPathSource<J> resolveSqmPathSource(
 			String name,
+			String roleName,
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType) {
 
 		if ( valueDomainType instanceof BasicDomainType ) {
 			return new BasicSqmPathSource<>(
 					name,
+					roleName,
 					(BasicDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -94,6 +96,7 @@ public class DomainModelHelper {
 		if ( valueDomainType instanceof AnyMappingDomainType ) {
 			return new AnyMappingSqmPathSource<>(
 					name,
+					roleName,
 					(AnyMappingDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -102,6 +105,7 @@ public class DomainModelHelper {
 		if ( valueDomainType instanceof EmbeddableDomainType ) {
 			return new EmbeddedSqmPathSource<>(
 					name,
+					roleName,
 					(EmbeddableDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -110,6 +114,7 @@ public class DomainModelHelper {
 		if ( valueDomainType instanceof EntityDomainType ) {
 			return new EntitySqmPathSource<>(
 					name,
+					roleName,
 					(EntityDomainType<J>) valueDomainType,
 					jpaBindableType
 			);

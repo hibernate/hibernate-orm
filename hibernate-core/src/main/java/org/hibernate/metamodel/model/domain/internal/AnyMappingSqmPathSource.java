@@ -19,9 +19,10 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	@SuppressWarnings("WeakerAccess")
 	public AnyMappingSqmPathSource(
 			String localPathName,
+			String roleName,
 			AnyMappingDomainType<J> domainType,
 			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
+		super( localPathName, roleName, domainType, jpaBindableType );
 	}
 
 	@Override

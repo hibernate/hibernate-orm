@@ -86,42 +86,42 @@ public class PluralAttributeBuilder<D, C, E, K> {
 
 		if ( Map.class.equals( attributeJtd.getJavaType() ) ) {
 			//noinspection unchecked
-			return new MapAttributeImpl<>( builder );
+			return new MapAttributeImpl<>( builder, metadataContext );
 		}
 		else if ( Set.class.equals( attributeJtd.getJavaType() ) ) {
 			//noinspection unchecked
-			return new SetAttributeImpl<>( builder );
+			return new SetAttributeImpl<>( builder, metadataContext );
 		}
 		else if ( List.class.equals( attributeJtd.getJavaType() ) ) {
 			//noinspection unchecked
-			return new ListAttributeImpl<>( builder );
+			return new ListAttributeImpl<>( builder, metadataContext );
 		}
 		else if ( Collection.class.equals( attributeJtd.getJavaType() ) ) {
 			//noinspection unchecked
-			return new BagAttributeImpl<>( builder );
+			return new BagAttributeImpl<>( builder, metadataContext );
 		}
 
 		//apply loose rules
 		if ( attributeJtd.getJavaType().isArray() ) {
 			//noinspection unchecked
-			return new ListAttributeImpl<>( builder );
+			return new ListAttributeImpl<>( builder, metadataContext );
 		}
 
 		if ( Map.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
 			//noinspection unchecked
-			return new MapAttributeImpl<>( builder );
+			return new MapAttributeImpl<>( builder, metadataContext );
 		}
 		else if ( Set.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
 			//noinspection unchecked
-			return new SetAttributeImpl<>( builder );
+			return new SetAttributeImpl<>( builder, metadataContext );
 		}
 		else if ( List.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
 			//noinspection unchecked
-			return new ListAttributeImpl<>( builder );
+			return new ListAttributeImpl<>( builder, metadataContext );
 		}
 		else if ( Collection.class.isAssignableFrom( attributeJtd.getJavaType() ) ) {
 			//noinspection unchecked
-			return new BagAttributeImpl<>( builder );
+			return new BagAttributeImpl<>( builder, metadataContext );
 		}
 
 		throw new UnsupportedOperationException( "Unknown collection: " + attributeJtd.getJavaType() );

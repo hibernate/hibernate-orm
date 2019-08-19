@@ -67,6 +67,7 @@ public class SingularAttributeImpl<D,J>
 
 		this.sqmPathSource = DomainModelHelper.resolveSqmPathSource(
 				name,
+				getMappingRole(),
 				attributeType,
 				BindableType.SINGULAR_ATTRIBUTE
 		);

@@ -9,6 +9,7 @@ package org.hibernate.persister.entity;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -41,6 +42,8 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 import org.jboss.logging.Logger;
 
 import java.io.Serializable;

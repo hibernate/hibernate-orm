@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -22,12 +23,13 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> implements ListPersistentAttribute<X, E> {
 	private final SqmPathSource<Integer> indexPathSource;
 
-	ListAttributeImpl(PluralAttributeBuilder<X, List<E>, E, ?> builder) {
-		super( builder );
+	ListAttributeImpl(PluralAttributeBuilder<X, List<E>, E, ?> builder, MetadataContext metadataContext) {
+		super( builder, metadataContext );
 
 		//noinspection unchecked
 		this.indexPathSource = (SqmPathSource) DomainModelHelper.resolveSqmPathSource(
 				getName(),
+				getMappingRole(),
 				builder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE
 		);

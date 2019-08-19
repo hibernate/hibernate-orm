@@ -30,7 +30,9 @@ public interface MappingModelExpressable<T> {
 	//
 	// todo (6.0) : IMO `Bindable` should be consumed here and `Bindable` go away
 
-	void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration);
+	default void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration){
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 
 	default Bindable getBindable() {
 		throw new NotYetImplementedFor6Exception( getClass() );

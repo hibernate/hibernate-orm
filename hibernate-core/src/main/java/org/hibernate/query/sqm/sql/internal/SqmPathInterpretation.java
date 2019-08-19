@@ -31,9 +31,9 @@ public interface SqmPathInterpretation<T> extends SqmExpressionInterpretation<T>
 
 	SqmPathSource<T> getSqmPathSource();
 
-	@Override
-	default Expression toSqlExpression(SqlAstCreationState sqlAstCreationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+//	@Override
+//	default Expression toSqlExpression(SqlAstCreationState sqlAstCreationState) {
+//		throw new NotYetImplementedFor6Exception( getClass() );
 //		final TableGroup tableGroup;
 //
 //		if ( getSqmPathSource() instanceof BasicSqmPathSource ) {
@@ -65,5 +65,5 @@ public interface SqmPathInterpretation<T> extends SqmExpressionInterpretation<T>
 //		}
 //
 //		return new SqlTuple( list, sqlAstCreationState.getExpressableType() );
-	}
+//	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collection;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -24,8 +25,8 @@ class BagAttributeImpl<X, E>
 		extends AbstractPluralAttribute<X, Collection<E>, E>
 		implements BagPersistentAttribute<X, E> {
 
-	BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder) {
-		super( xceBuilder );
+	BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder, MetadataContext metadataContext) {
+		super( xceBuilder, metadataContext );
 	}
 
 	@Override

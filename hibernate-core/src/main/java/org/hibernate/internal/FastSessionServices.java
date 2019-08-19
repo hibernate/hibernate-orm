@@ -18,6 +18,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEventListener;
@@ -85,25 +86,24 @@ final class FastSessionServices {
 	final Map<String, Object> defaultSessionProperties;
 
 	// All session events need to be iterated frequently:
-
-	private final Iterable<ClearEventListener> clearEventListeners;
-	private final Iterable<SaveOrUpdateEventListener> saveUpdateEventListeners;
-	private final Iterable<EvictEventListener> evictEventListeners;
-	private final Iterable<SaveOrUpdateEventListener> saveEventListeners;
-	private final Iterable<SaveOrUpdateEventListener> updateEventListeners;
-	private final Iterable<LockEventListener> lockEventListeners;
-	private final Iterable<PersistEventListener> persistEventListeners;
-	private final Iterable<PersistEventListener> persistOnFlushEventListeners;
-	private final Iterable<MergeEventListener> mergeEventListeners;
-	private final Iterable<DeleteEventListener> deleteEventListeners;
-	private final Iterable<LoadEventListener> loadEventListeners;
-	private final Iterable<RefreshEventListener> refreshEventListeners;
-	private final Iterable<ReplicateEventListener> replicateEventListeners;
-	private final Iterable<AutoFlushEventListener> autoFlushEventListeners;
-	private final Iterable<DirtyCheckEventListener> dirtyCheckEventListeners;
-	private final Iterable<FlushEventListener> flushEventListeners;
-	private final Iterable<InitializeCollectionEventListener> initCollectionEventListeners;
-	private final Iterable<ResolveNaturalIdEventListener> resolveNaturalIdEventListeners;
+	final EventListenerGroup<AutoFlushEventListener> eventListenerGroup_AUTO_FLUSH;
+	final EventListenerGroup<ClearEventListener> eventListenerGroup_CLEAR;
+	final EventListenerGroup<DeleteEventListener> eventListenerGroup_DELETE;
+	final EventListenerGroup<DirtyCheckEventListener> eventListenerGroup_DIRTY_CHECK;
+	final EventListenerGroup<EvictEventListener> eventListenerGroup_EVICT;
+	final EventListenerGroup<FlushEventListener> eventListenerGroup_FLUSH;
+	final EventListenerGroup<InitializeCollectionEventListener> eventListenerGroup_INIT_COLLECTION;
+	final EventListenerGroup<LoadEventListener> eventListenerGroup_LOAD;
+	final EventListenerGroup<LockEventListener> eventListenerGroup_LOCK;
+	final EventListenerGroup<MergeEventListener> eventListenerGroup_MERGE;
+	final EventListenerGroup<PersistEventListener> eventListenerGroup_PERSIST;
+	final EventListenerGroup<PersistEventListener> eventListenerGroup_PERSIST_ONFLUSH;
+	final EventListenerGroup<RefreshEventListener> eventListenerGroup_REFRESH;
+	final EventListenerGroup<ReplicateEventListener> eventListenerGroup_REPLICATE;
+	final EventListenerGroup<ResolveNaturalIdEventListener> eventListenerGroup_RESOLVE_NATURAL_ID;
+	final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_SAVE;
+	final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_SAVE_UPDATE;
+	final EventListenerGroup<SaveOrUpdateEventListener> eventListenerGroup_UPDATE;
 
 	//Intentionally Package private:
 	final boolean disallowOutOfTransactionUpdateOperations;
@@ -133,24 +133,24 @@ final class FastSessionServices {
 
 		// Pre-compute all iterators on Event listeners:
 		final EventListenerRegistry eventListenerRegistry = sr.getService( EventListenerRegistry.class );
-		this.clearEventListeners = listeners( eventListenerRegistry, EventType.CLEAR );
-		this.saveUpdateEventListeners = listeners( eventListenerRegistry, EventType.SAVE_UPDATE );
-		this.evictEventListeners = listeners( eventListenerRegistry, EventType.EVICT );
-		this.saveEventListeners = listeners( eventListenerRegistry, EventType.SAVE );
-		this.updateEventListeners = listeners( eventListenerRegistry, EventType.UPDATE );
-		this.lockEventListeners = listeners( eventListenerRegistry, EventType.LOCK );
-		this.persistEventListeners = listeners( eventListenerRegistry, EventType.PERSIST );
-		this.persistOnFlushEventListeners = listeners( eventListenerRegistry, EventType.PERSIST_ONFLUSH );
-		this.mergeEventListeners = listeners( eventListenerRegistry, EventType.MERGE );
-		this.deleteEventListeners = listeners( eventListenerRegistry, EventType.DELETE );
-		this.loadEventListeners = listeners( eventListenerRegistry, EventType.LOAD );
-		this.refreshEventListeners = listeners( eventListenerRegistry, EventType.REFRESH );
-		this.replicateEventListeners = listeners( eventListenerRegistry, EventType.REPLICATE );
-		this.autoFlushEventListeners = listeners( eventListenerRegistry, EventType.AUTO_FLUSH );
-		this.dirtyCheckEventListeners = listeners( eventListenerRegistry, EventType.DIRTY_CHECK );
-		this.flushEventListeners = listeners( eventListenerRegistry, EventType.FLUSH );
-		this.initCollectionEventListeners = listeners( eventListenerRegistry, EventType.INIT_COLLECTION );
-		this.resolveNaturalIdEventListeners = listeners( eventListenerRegistry, EventType.RESOLVE_NATURAL_ID );
+		this.eventListenerGroup_AUTO_FLUSH = listeners( eventListenerRegistry, EventType.AUTO_FLUSH );
+		this.eventListenerGroup_CLEAR = listeners( eventListenerRegistry, EventType.CLEAR );
+		this.eventListenerGroup_DELETE = listeners( eventListenerRegistry, EventType.DELETE );
+		this.eventListenerGroup_DIRTY_CHECK = listeners( eventListenerRegistry, EventType.DIRTY_CHECK );
+		this.eventListenerGroup_EVICT = listeners( eventListenerRegistry, EventType.EVICT );
+		this.eventListenerGroup_FLUSH = listeners( eventListenerRegistry, EventType.FLUSH );
+		this.eventListenerGroup_INIT_COLLECTION = listeners( eventListenerRegistry, EventType.INIT_COLLECTION );
+		this.eventListenerGroup_LOAD = listeners( eventListenerRegistry, EventType.LOAD );
+		this.eventListenerGroup_LOCK = listeners( eventListenerRegistry, EventType.LOCK );
+		this.eventListenerGroup_MERGE = listeners( eventListenerRegistry, EventType.MERGE );
+		this.eventListenerGroup_PERSIST = listeners( eventListenerRegistry, EventType.PERSIST );
+		this.eventListenerGroup_PERSIST_ONFLUSH = listeners( eventListenerRegistry, EventType.PERSIST_ONFLUSH );
+		this.eventListenerGroup_REFRESH = listeners( eventListenerRegistry, EventType.REFRESH );
+		this.eventListenerGroup_REPLICATE = listeners( eventListenerRegistry, EventType.REPLICATE );
+		this.eventListenerGroup_RESOLVE_NATURAL_ID = listeners( eventListenerRegistry, EventType.RESOLVE_NATURAL_ID );
+		this.eventListenerGroup_SAVE = listeners( eventListenerRegistry, EventType.SAVE );
+		this.eventListenerGroup_SAVE_UPDATE = listeners( eventListenerRegistry, EventType.SAVE_UPDATE );
+		this.eventListenerGroup_UPDATE = listeners( eventListenerRegistry, EventType.UPDATE );
 
 		//Other highly useful constants:
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
@@ -176,80 +176,8 @@ final class FastSessionServices {
 		this.defaultSessionEventListeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
 	}
 
-	Iterable<ClearEventListener> getClearEventListeners() {
-		return clearEventListeners;
-	}
-
-	Iterable<EvictEventListener> getEvictEventListeners() {
-		return this.evictEventListeners;
-	}
-
-	Iterable<DirtyCheckEventListener> getDirtyCheckEventListeners() {
-		return this.dirtyCheckEventListeners;
-	}
-
-	Iterable<SaveOrUpdateEventListener> getSaveUpdateEventListeners() {
-		return this.saveUpdateEventListeners;
-	}
-
-	Iterable<SaveOrUpdateEventListener> getSaveEventListeners() {
-		return this.saveEventListeners;
-	}
-
-	Iterable<SaveOrUpdateEventListener> getUpdateEventListeners() {
-		return this.updateEventListeners;
-	}
-
-	Iterable<LockEventListener> getLockEventListeners() {
-		return this.lockEventListeners;
-	}
-
-	Iterable<PersistEventListener> getPersistEventListeners() {
-		return persistEventListeners;
-	}
-
-	Iterable<FlushEventListener> getFlushEventListeners() {
-		return flushEventListeners;
-	}
-
-	Iterable<PersistEventListener> getPersistOnFlushEventListeners() {
-		return persistOnFlushEventListeners;
-	}
-
-	Iterable<InitializeCollectionEventListener> getInitCollectionEventListeners() {
-		return initCollectionEventListeners;
-	}
-
-	Iterable<LoadEventListener> getLoadEventListeners() {
-		return loadEventListeners;
-	}
-
-	Iterable<MergeEventListener> getMergeEventListeners() {
-		return mergeEventListeners;
-	}
-
-	Iterable<RefreshEventListener> getRefreshEventListeners() {
-		return refreshEventListeners;
-	}
-
-	Iterable<DeleteEventListener> getDeleteEventListeners() {
-		return deleteEventListeners;
-	}
-
-	Iterable<AutoFlushEventListener> getAutoFlushEventListeners() {
-		return autoFlushEventListeners;
-	}
-
-	Iterable<ReplicateEventListener> getReplicateEventListeners() {
-		return replicateEventListeners;
-	}
-
-	Iterable<ResolveNaturalIdEventListener> getResolveNaturalIdEventListeners() {
-		return resolveNaturalIdEventListeners;
-	}
-
-	private static <T> Iterable<T> listeners(EventListenerRegistry elr, EventType<T> type) {
-		return elr.getEventListenerGroup( type ).listeners();
+	private static <T> EventListenerGroup<T> listeners(EventListenerRegistry elr, EventType<T> type) {
+		return elr.getEventListenerGroup( type );
 	}
 
 	SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {

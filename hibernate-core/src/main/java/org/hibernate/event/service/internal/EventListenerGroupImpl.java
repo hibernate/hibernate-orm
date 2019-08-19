@@ -9,9 +9,10 @@ package org.hibernate.event.service.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -28,7 +29,10 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private final EventListenerRegistryImpl listenerRegistry;
 
 	private final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
-	private List<T> listeners;
+
+	// Performance: make sure a forEach iteration on this type is efficient; in particular we choose ArrayList
+	// so to avoid allocating iterators.
+	private ArrayList<T> listeners;
 
 	public EventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
 		this.eventType = eventType;
@@ -72,6 +76,25 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		}
 		if ( listeners != null ) {
 			listeners.clear();
+		}
+	}
+
+	@Override
+	public final <U> void fireLazyEventOnEachListener(final Supplier<U> eventSupplier, final BiConsumer<T,U> actionOnEvent) {
+		if ( listeners != null && listeners.size() != 0 ) {
+			final U event = eventSupplier.get();
+			for ( T listener : this.listeners ) {
+				actionOnEvent.accept( listener, event );
+			}
+		}
+	}
+
+	@Override
+	public final <U> void fireEventOnEachListener(final U event, final BiConsumer<T,U> actionOnEvent) {
+		if ( listeners != null ) {
+			for ( T listener : this.listeners ) {
+				actionOnEvent.accept( listener, event );
+			}
 		}
 	}
 

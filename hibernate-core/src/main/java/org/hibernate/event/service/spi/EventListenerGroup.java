@@ -7,6 +7,8 @@
 package org.hibernate.event.service.spi;
 
 import java.io.Serializable;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import org.hibernate.event.spi.EventType;
 
@@ -53,5 +55,27 @@ public interface EventListenerGroup<T> extends Serializable {
 	public void prependListeners(T... listeners);
 
 	public void clear();
+
+	/**
+	 * Fires an event on each registered event listener of this group.
+	 *
+	 * Implementation note (performance):
+	 * the first argument is a supplier so that events can avoid allocation when no listener is registered.
+	 * the second argument is specifically designed to avoid needing a capturing lambda.
+	 *
+	 * @param eventSupplier
+	 * @param actionOnEvent
+	 * @param <U> the kind of event
+	 */
+	<U> void  fireLazyEventOnEachListener(final Supplier<U> eventSupplier, final BiConsumer<T,U> actionOnEvent);
+
+	/**
+	 * Similar as {@link #fireLazyEventOnEachListener(Supplier, BiConsumer)} except it doesn't use a {{@link Supplier}}:
+	 * useful when there is no need to lazily initialize the event.
+	 * @param event
+	 * @param actionOnEvent
+	 * @param <U> the kind of event
+	 */
+	<U> void  fireEventOnEachListener(final U event, final BiConsumer<T,U> actionOnEvent);
 
 }

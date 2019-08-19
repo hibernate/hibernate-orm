@@ -120,9 +120,9 @@ public class BasicSetWithNullsDelete extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	private <T> Set<T> makeSet(T... objects) {
-		Set<T> ret = new HashSet<T>();
+		Set<T> ret = new HashSet<T>(objects.length);
 		//noinspection ManualArrayToCollectionCopy
-		ret.addAll(Arrays.asList(objects));
+		Collections.addAll(ret,objects);
 		return ret;
 	}
 

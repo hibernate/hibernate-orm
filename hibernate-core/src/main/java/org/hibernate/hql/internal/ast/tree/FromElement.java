@@ -341,13 +341,14 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		}
 
 		final String[] propertyNames = getIdentifierPropertyNames();
-		List<String> columns = new ArrayList<>();
+		ArrayList<String> columns = new ArrayList<>();
 		final boolean inSelect = getWalker().getStatementType() == HqlSqlTokenTypes.SELECT;
 		for ( String propertyName : propertyNames ) {
 			String[] propertyNameColumns = toColumns( table, propertyName, inSelect );
-			columns.addAll(Arrays.asList(propertyNameColumns));
+			columns.ensureCapacity( columns.size() + propertyNameColumns.length );
+			Collections.addAll( columns,propertyNameColumns );
 		}
-		return columns.toArray( new String[columns.size()] );
+		return columns.toArray( new String[0] );
 	}
 
 	public void setCollectionJoin(boolean collectionJoin) {

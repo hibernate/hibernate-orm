@@ -37,7 +37,7 @@ public class OSGiClassLoaderServiceImpl extends ClassLoaderServiceImpl implement
 		for ( S service : parentDiscoveredServices ) {
 			composite.add( service );
 		}
-		composite.addAll(Arrays.asList(serviceImpls));
+		Collections.addAll(composite,serviceImpls);
 		return composite;
 	}
 

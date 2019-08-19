@@ -27,9 +27,9 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestTools {
 	public static <T> Set<T> makeSet(T... objects) {
-		final Set<T> ret = new HashSet<T>();
+		final Set<T> ret = new HashSet<T>(objects.length);
 		//noinspection ManualArrayToCollectionCopy
-		ret.addAll(Arrays.asList(objects));
+		Collections.addAll(ret,objects);
 		return ret;
 	}
 

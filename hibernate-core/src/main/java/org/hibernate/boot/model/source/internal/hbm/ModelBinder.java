@@ -1526,7 +1526,7 @@ public class ModelBinder {
 			}
 		}
 
-		binding.getSynchronizedTables().addAll(Arrays.asList(source.getSynchronizedTableNames()));
+		Collections.addAll(binding.getSynchronizedTables(),source.getSynchronizedTableNames());
 
 		binding.setLoaderName( source.getCustomLoaderName() );
 		if ( source.getCustomSqlInsert() != null ) {

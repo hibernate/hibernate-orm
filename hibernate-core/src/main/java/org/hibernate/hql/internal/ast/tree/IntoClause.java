@@ -160,8 +160,8 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 			if ( persister.getIdentifierType() instanceof CompositeType ) {
 				if ( componentIds == null ) {
 					String[] propertyNames = ( (CompositeType) persister.getIdentifierType() ).getPropertyNames();
-					componentIds = new HashSet();
-					componentIds.addAll(Arrays.asList(propertyNames));
+					componentIds = new HashSet(propertyNames.length);
+					Collections.addAll(componentIds,propertyNames);
 				}
 				if ( componentIds.contains( name ) ) {
 					if ( explicitComponentIds == null ) {

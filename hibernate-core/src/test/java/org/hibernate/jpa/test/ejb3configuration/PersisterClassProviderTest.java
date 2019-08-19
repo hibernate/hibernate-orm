@@ -55,6 +55,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -657,6 +658,11 @@ public class PersisterClassProviderTest {
 		@Override
 		public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
 			return false;
+		}
+
+		@Override
+		public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+			return null;
 		}
 	}
 

@@ -142,6 +142,11 @@ public final class CompositionSingularSubAttributesHelper {
 							return new AssociationAttributeDefinition() {
 
 								@Override
+								public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+									return source.getExpressableJavaTypeDescriptor();
+								}
+
+								@Override
 								public void visitJdbcTypes(
 										Consumer action,
 										TypeConfiguration typeConfiguration) {
@@ -242,6 +247,11 @@ public final class CompositionSingularSubAttributesHelper {
 						else if ( type.isComponentType() ) {
 							return new CompositionDefinition() {
 								@Override
+								public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+									return source.getExpressableJavaTypeDescriptor();
+								}
+
+								@Override
 								public String getName() {
 									return name;
 								}
@@ -275,6 +285,11 @@ public final class CompositionSingularSubAttributesHelper {
 						}
 						else {
 							return new AttributeDefinition() {
+								@Override
+								public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+									return source.getExpressableJavaTypeDescriptor();
+								}
+
 								@Override
 								public String getName() {
 									return name;

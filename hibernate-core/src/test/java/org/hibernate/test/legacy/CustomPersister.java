@@ -56,6 +56,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 public class CustomPersister implements EntityPersister {
 
@@ -754,5 +755,10 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
 		return false;
+	}
+
+	@Override
+	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+		return getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
 	}
 }

@@ -56,6 +56,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
@@ -643,6 +644,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
 			return false;
+		}
+
+		@Override
+		public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+			return null;
 		}
 	}
 

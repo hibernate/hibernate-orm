@@ -28,6 +28,11 @@ public final class EntityIdentifierDefinitionHelper {
 
 	public static EntityIdentifierDefinition buildSimpleEncapsulatedIdentifierDefinition(final AbstractEntityPersister entityPersister) {
 		return new EncapsulatedEntityIdentifierDefinition() {
+			@Override
+			public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+				return entityPersister.getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
+			}
+
 			private final AttributeDefinitionAdapter attr = new AttributeDefinitionAdapter( entityPersister);
 
 			@Override
@@ -51,6 +56,11 @@ public final class EntityIdentifierDefinitionHelper {
 			final AbstractEntityPersister entityPersister) {
 
 		return new EncapsulatedEntityIdentifierDefinition() {
+			@Override
+			public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+				return entityPersister.getExpressableJavaTypeDescriptor();
+			}
+
 			private final CompositionDefinitionAdapter compositionDefinition = new CompositionDefinitionAdapter( entityPersister );
 
 			@Override
@@ -72,6 +82,11 @@ public final class EntityIdentifierDefinitionHelper {
 
 	public static EntityIdentifierDefinition buildNonEncapsulatedCompositeIdentifierDefinition(final AbstractEntityPersister entityPersister) {
 		return new NonEncapsulatedEntityIdentifierDefinition() {
+			@Override
+			public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+				return entityPersister.getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
+			}
+
 			private final CompositionDefinitionAdapter compositionDefinition = new CompositionDefinitionAdapter( entityPersister );
 
 			@Override
@@ -159,6 +174,11 @@ public final class EntityIdentifierDefinitionHelper {
 		protected AbstractEntityPersister getEntityPersister() {
 			return entityPersister;
 		}
+
+		@Override
+		public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+			return getEntityPersister().getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
+		}
 	}
 
 	private static class CompositionDefinitionAdapter extends AttributeDefinitionAdapter implements CompositionDefinition {
@@ -179,6 +199,11 @@ public final class EntityIdentifierDefinitionHelper {
 		@Override
 		public Iterable<AttributeDefinition> getAttributes() {
 			return  CompositionSingularSubAttributesHelper.getIdentifierSubAttributes( getEntityPersister() );
+		}
+
+		@Override
+		public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+			return getEntityPersister().getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
 		}
 	}
 }

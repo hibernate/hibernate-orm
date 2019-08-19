@@ -12,6 +12,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Represents a version property within the Hibernate runtime-metamodel.

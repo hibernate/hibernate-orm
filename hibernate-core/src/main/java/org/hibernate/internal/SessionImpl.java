@@ -725,36 +725,14 @@ public final class SessionImpl
 
 	// persistOnFlush() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public void persistOnFlush(String entityName, Object object)
-			throws HibernateException {
-		firePersistOnFlush( new PersistEvent( entityName, object, this ) );
-	}
-
-	public void persistOnFlush(Object object) throws HibernateException {
-		persist( null, object );
-	}
-
 	@Override
-	public void persistOnFlush(String entityName, Object object, Map copiedAlready)
-			throws HibernateException {
-		firePersistOnFlush( copiedAlready, new PersistEvent( entityName, object, this ) );
-	}
-
-	private void firePersistOnFlush(final Map copiedAlready, final PersistEvent event) {
+	public void persistOnFlush(String entityName, Object object, Map copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
+		PersistEvent event = new PersistEvent( entityName, object, this );
 		fastSessionServices.eventListenerGroup_PERSIST_ONFLUSH.fireEventOnEachListener( event, (l,e) -> l.onPersist( e, copiedAlready ) );
 		delayedAfterCompletion();
 	}
-
-	private void firePersistOnFlush(final PersistEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-		fastSessionServices.eventListenerGroup_PERSIST_ONFLUSH.fireEventOnEachListener( event, PersistEventListener::onPersist );
-		checkNoUnresolvedActionsAfterOperation();
-	}
-
 
 	// merge() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

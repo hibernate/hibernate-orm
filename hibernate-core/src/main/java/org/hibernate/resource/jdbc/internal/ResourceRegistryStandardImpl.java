@@ -146,13 +146,18 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		close( resultSet );
 	}
 
-	protected void closeAll(final HashMap<ResultSet,Object> resultSets) {
+	private static void closeAll(final HashMap<ResultSet,Object> resultSets) {
 		resultSets.forEach( (resultSet, o) -> close( resultSet ) );
 		resultSets.clear();
 	}
 
+	private static void releaseXref(final Statement s, final HashMap<ResultSet, Object> r) {
+		closeAll( r );
+		close( s );
+	}
+
 	@SuppressWarnings({"unchecked"})
-	public static void close(ResultSet resultSet) {
+	private static void close(final ResultSet resultSet) {
 		log.tracef( "Closing result set [%s]", resultSet );
 
 		try {
@@ -315,12 +320,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			jdbcObserver.jdbcReleaseRegistryResourcesStart();
 		}
 
-		xref.forEach(
-				(Statement s, HashMap<ResultSet,Object> r) -> {
-					closeAll( r );
-					close( s );
-				}
-		);
+		xref.forEach( ResourceRegistryStandardImpl::releaseXref );
 		xref.clear();
 
 		closeAll( unassociatedResultSets );

@@ -814,7 +814,9 @@ public final class SessionImpl
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, Set transientEntities)
 			throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		if ( log.isTraceEnabled() && persistenceContext.isRemovingOrphanBeforeUpates() ) {
+		final boolean removingOrphanBeforeUpates = persistenceContext.isRemovingOrphanBeforeUpates();
+		final boolean traceEnabled = log.isTraceEnabled();
+		if ( traceEnabled && removingOrphanBeforeUpates ) {
 			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
 		}
 		fireDelete(
@@ -822,12 +824,12 @@ public final class SessionImpl
 						entityName,
 						object,
 						isCascadeDeleteEnabled,
-						persistenceContext.isRemovingOrphanBeforeUpates(),
+						removingOrphanBeforeUpates,
 						this
 				),
 				transientEntities
 		);
-		if ( log.isTraceEnabled() && persistenceContext.isRemovingOrphanBeforeUpates() ) {
+		if ( traceEnabled && removingOrphanBeforeUpates ) {
 			logRemoveOrphanBeforeUpdates( "after continuing", entityName, object );
 		}
 	}
@@ -836,7 +838,8 @@ public final class SessionImpl
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
 		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
 		// ordering is improved.
-		if ( log.isTraceEnabled() ) {
+		final boolean traceEnabled = log.isTraceEnabled();
+		if ( traceEnabled ) {
 			logRemoveOrphanBeforeUpdates( "begin", entityName, child );
 		}
 		persistenceContext.beginRemoveOrphanBeforeUpdates();
@@ -846,7 +849,7 @@ public final class SessionImpl
 		}
 		finally {
 			persistenceContext.endRemoveOrphanBeforeUpdates();
-			if ( log.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				logRemoveOrphanBeforeUpdates( "end", entityName, child );
 			}
 		}

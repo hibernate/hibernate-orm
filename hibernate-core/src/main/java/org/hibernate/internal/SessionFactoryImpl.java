@@ -198,6 +198,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient TypeHelper typeHelper;
 
 	private final transient FastSessionServices fastSessionServices;
+	private final transient SessionBuilder defaultSessionOpenOptions;
+	private final transient SessionBuilder temporarySessionOpenOptions;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor metadata,
@@ -377,6 +379,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 			}
 
+			this.defaultSessionOpenOptions = withOptions();
+			this.temporarySessionOpenOptions = withOptions()
+					.autoClose( false )
+					.flushMode( FlushMode.MANUAL )
+					.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT );
 			this.fastSessionServices = new FastSessionServices( this );
 
 			this.observer.sessionFactoryCreated( this );
@@ -474,15 +481,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public Session openSession() throws HibernateException {
-		return withOptions().openSession();
+		return this.defaultSessionOpenOptions.openSession();
 	}
 
 	public Session openTemporarySession() throws HibernateException {
-		return withOptions()
-				.autoClose( false )
-				.flushMode( FlushMode.MANUAL )
-				.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT )
-				.openSession();
+		return this.temporarySessionOpenOptions.openSession();
 	}
 
 	public Session getCurrentSession() throws HibernateException {

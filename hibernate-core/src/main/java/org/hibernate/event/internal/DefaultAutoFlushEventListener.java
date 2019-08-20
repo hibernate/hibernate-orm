@@ -8,6 +8,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
@@ -40,10 +41,12 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			if ( flushMightBeNeeded(source) ) {
 				// Need to get the number of collection removals before flushing to executions
 				// (because flushing to executions can add collection removal actions to the action queue).
-				final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
-				flushEverythingToExecutions(event);
+				final ActionQueue actionQueue = source.getActionQueue();
+				final int oldSize = actionQueue.numberOfCollectionRemovals();
+				flushEverythingToExecutions( event );
 				if ( flushIsReallyNeeded(event, source) ) {
 					LOG.trace( "Need to execute flush" );
+					event.setFlushRequired( true );
 
 					// note: performExecutions() clears all collectionXxxxtion
 					// collections (the collection actions) in the session
@@ -58,10 +61,9 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				}
 				else {
 					LOG.trace( "Don't need to execute flush" );
-					source.getActionQueue().clearFromFlushNeededCheck( oldSize );
+					event.setFlushRequired( false );
+					actionQueue.clearFromFlushNeededCheck( oldSize );
 				}
-
-				event.setFlushRequired( flushIsReallyNeeded( event, source ) );
 			}
 		}
 		finally {

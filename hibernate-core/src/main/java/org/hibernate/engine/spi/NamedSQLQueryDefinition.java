@@ -236,7 +236,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				allQueryReturns[i] = this.queryReturns[i];
 			}
 
-			for (NativeSQLQueryReturn queryReturnsToAdd1 : queryReturnsToAdd) {
+			for ( NativeSQLQueryReturn queryReturnsToAdd1 : queryReturnsToAdd ) {
 				allQueryReturns[i] = queryReturnsToAdd1;
 				i++;
 			}

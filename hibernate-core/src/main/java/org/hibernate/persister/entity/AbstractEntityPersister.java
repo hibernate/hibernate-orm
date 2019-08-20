@@ -5264,8 +5264,8 @@ public abstract class AbstractEntityPersister
 		if ( attribute.getType() instanceof ComponentType ) {
 			final ComponentType type = (ComponentType) attribute.getType();
 			final ValueGeneration[] propertyValueGenerationStrategies = type.getPropertyValueGenerationStrategies();
-			for (ValueGeneration propertyValueGenerationStrategie : propertyValueGenerationStrategies) {
-				if (isReadRequired(propertyValueGenerationStrategie, matchTiming)) {
+			for ( ValueGeneration propertyValueGenerationStrategie : propertyValueGenerationStrategies ) {
+				if ( isReadRequired( propertyValueGenerationStrategie, matchTiming ) ) {
 					return true;
 				}
 			}

@@ -247,8 +247,8 @@ public abstract class ExternalSessionFactoryConfig {
 
 
 		String[] mappingFiles = ConfigurationHelper.toStringArray( mapResources, " ,\n\t\r\f" );
-		for (String mappingFile : mappingFiles) {
-			cfg.addResource(mappingFile);
+		for ( String mappingFile : mappingFiles ) {
+			cfg.addResource( mappingFile );
 		}
 
 		return cfg;

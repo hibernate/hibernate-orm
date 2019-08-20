@@ -530,8 +530,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			if ( "TABLE".equalsIgnoreCase( tableType ) ) {
 				return true;
 			}
-			for (String extraPhysicalTableType : extraPhysicalTableTypes) {
-				if (extraPhysicalTableType.equalsIgnoreCase(tableType)) {
+			for ( String extraPhysicalTableType : extraPhysicalTableTypes ) {
+				if ( extraPhysicalTableType.equalsIgnoreCase( tableType ) ) {
 					return true;
 				}
 			}

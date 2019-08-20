@@ -161,8 +161,8 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 				if ( componentIds == null ) {
 					String[] propertyNames = ( (CompositeType) persister.getIdentifierType() ).getPropertyNames();
 					componentIds = new HashSet();
-					for (String propertyName : propertyNames) {
-						componentIds.add(propertyName);
+					for ( String propertyName : propertyNames ) {
+						componentIds.add( propertyName );
 					}
 				}
 				if ( componentIds.contains( name ) ) {
@@ -194,7 +194,7 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 	}
 
 	private void renderColumns(String[] columnNames) {
-		for (String columnName : columnNames) {
+		for ( String columnName : columnNames ) {
 			columnSpec += columnName + ", ";
 		}
 	}

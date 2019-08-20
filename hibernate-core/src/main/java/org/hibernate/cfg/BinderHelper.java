@@ -1124,9 +1124,9 @@ public class BinderHelper {
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		Map<String,String> ret = new HashMap<>();
-		for (SqlFragmentAlias aliase : aliases) {
-			if (StringHelper.isNotEmpty(aliase.table())) {
-				ret.put(aliase.alias(), aliase.table());
+		for ( SqlFragmentAlias aliase : aliases ) {
+			if ( StringHelper.isNotEmpty( aliase.table() ) ) {
+				ret.put( aliase.alias(), aliase.table() );
 			}
 		}
 		return ret;
@@ -1134,9 +1134,9 @@ public class BinderHelper {
 	
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
 		Map<String,String> ret = new HashMap<>();
-		for (SqlFragmentAlias aliase : aliases) {
-			if (aliase.entity() != void.class) {
-				ret.put(aliase.alias(), aliase.entity().getName());
+		for ( SqlFragmentAlias aliase : aliases ) {
+			if ( aliase.entity() != void.class ) {
+				ret.put( aliase.alias(), aliase.entity().getName() );
 			}
 		}
 		return ret;

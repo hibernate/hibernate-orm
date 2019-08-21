@@ -39,6 +39,7 @@ import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
+import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -118,6 +119,7 @@ final class FastSessionServices {
 	final CacheMode initialSessionCacheMode;
 	final boolean discardOnClose;
 	final BaselineSessionEventsListenerBuilder defaultSessionEventListeners;
+	final LockOptions defaultLockOptions;
 
 	//Private fields:
 	private final Dialect dialect;
@@ -174,6 +176,13 @@ final class FastSessionServices {
 		this.discardOnClose = sessionFactoryOptions.isReleaseResourcesOnCloseEnabled();
 		this.defaultJdbcObservers = Collections.singletonList( new ConnectionObserverStatsBridge( sf ) );
 		this.defaultSessionEventListeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
+		this.defaultLockOptions = initializeDefaultLockOptions( defaultSessionProperties );
+	}
+
+	private static LockOptions initializeDefaultLockOptions(final Map<String, Object> defaultSessionProperties) {
+		LockOptions def = new LockOptions();
+		LockOptionsHelper.applyPropertiesToLockOptions( defaultSessionProperties, () -> def );
+		return def;
 	}
 
 	private static <T> EventListenerGroup<T> listeners(EventListenerRegistry elr, EventType<T> type) {

@@ -145,6 +145,7 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
@@ -207,8 +208,7 @@ public final class SessionImpl
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
-	// todo : (5.2) HEM always initialized this.  Is that really needed?
-	private LockOptions lockOptions = new LockOptions();
+	private LockOptions lockOptions;
 
 	private boolean autoClear;
 	private boolean autoClose;
@@ -248,7 +248,10 @@ public final class SessionImpl
 			statistics.openSession();
 		}
 
-		setLockOptions( this.properties == null ? fastSessionServices.defaultSessionProperties : this.properties, this.lockOptions );
+		if ( this.properties != null ) {
+			//There might be custom properties for this session that affect the LockOptions state
+			LockOptionsHelper.applyPropertiesToLockOptions( this.properties, this::getLockOptionsForWrite );
+		}
 		getSession().setCacheMode( fastSessionServices.initialSessionCacheMode );
 
 		// NOTE : pulse() already handles auto-join-ability correctly
@@ -259,9 +262,21 @@ public final class SessionImpl
 		}
 	}
 
+	private LockOptions getLockOptionsForRead() {
+		return this.lockOptions == null ? fastSessionServices.defaultLockOptions : this.lockOptions;
+	}
+
+	private LockOptions getLockOptionsForWrite() {
+		if ( this.lockOptions == null ) {
+			this.lockOptions = new LockOptions();
+		}
+		return this.lockOptions;
+	}
+
 	protected void applyQuerySettingsAndHints(Query query) {
-		if ( lockOptions.getLockMode() != LockMode.NONE ) {
-			query.setLockMode( getLockMode( lockOptions.getLockMode() ) );
+		final LockOptions lockOptionsForRead = getLockOptionsForRead();
+		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
+			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
 		}
 		final Object queryTimeout;
 		if ( ( queryTimeout = getSessionProperty( QueryHints.SPEC_HINT_TIMEOUT )  ) != null ) {
@@ -3255,57 +3270,17 @@ public final class SessionImpl
 	@Override
 	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
 		LockOptions lockOptions = new LockOptions();
-		LockOptions.copy( this.lockOptions, lockOptions );
+		if ( this.lockOptions != null ) { //otherwise the default LockOptions constructor is the same as DEFAULT_LOCK_OPTIONS
+			LockOptions.copy( this.lockOptions, lockOptions );
+		}
 		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		if ( properties != null ) {
-			setLockOptions( properties, lockOptions );
+			LockOptionsHelper.applyPropertiesToLockOptions( properties, () -> lockOptions );
 		}
 		return lockOptions;
 	}
 
-	private void setLockOptions(Map<String, Object> props, LockOptions options) {
-		Object lockScope = props.get( JPA_LOCK_SCOPE );
-		if ( lockScope instanceof String && PessimisticLockScope.valueOf( ( String ) lockScope ) == PessimisticLockScope.EXTENDED ) {
-			options.setScope( true );
-		}
-		else if ( lockScope instanceof PessimisticLockScope ) {
-			boolean extended = PessimisticLockScope.EXTENDED.equals( lockScope );
-			options.setScope( extended );
-		}
-		else if ( lockScope != null ) {
-			throw new PersistenceException( "Unable to parse " + JPA_LOCK_SCOPE + ": " + lockScope );
-		}
 
-		Object lockTimeout = props.get( JPA_LOCK_TIMEOUT );
-		int timeout = 0;
-		boolean timeoutSet = false;
-		if ( lockTimeout instanceof String ) {
-			timeout = Integer.parseInt( ( String ) lockTimeout );
-			timeoutSet = true;
-		}
-		else if ( lockTimeout instanceof Number ) {
-			timeout = ( (Number) lockTimeout ).intValue();
-			timeoutSet = true;
-		}
-		else if ( lockTimeout != null ) {
-			throw new PersistenceException( "Unable to parse " + JPA_LOCK_TIMEOUT + ": " + lockTimeout );
-		}
-
-		if ( timeoutSet ) {
-			if ( timeout == LockOptions.SKIP_LOCKED ) {
-				options.setTimeOut( LockOptions.SKIP_LOCKED );
-			}
-			else if ( timeout < 0 ) {
-				options.setTimeOut( LockOptions.WAIT_FOREVER );
-			}
-			else if ( timeout == 0 ) {
-				options.setTimeOut( LockOptions.NO_WAIT );
-			}
-			else {
-				options.setTimeOut( timeout );
-			}
-		}
-	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3572,7 +3547,7 @@ public final class SessionImpl
 			setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
 		}
 		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals(  propertyName ) ) {
-			setLockOptions( properties, this.lockOptions );
+			LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 		}
 		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName ) || JPA_SHARED_CACHE_STORE_MODE.equals(  propertyName ) ) {
 			getSession().setCacheMode(

@@ -6,15 +6,19 @@
  */
 package org.hibernate.event.service.internal;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import org.hibernate.event.service.spi.DuplicationStrategy;
+import org.hibernate.event.service.spi.EventActionWithParameter;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
@@ -23,6 +27,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
 /**
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
 class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private EventType<T> eventType;
@@ -30,9 +35,14 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
 
-	// Performance: make sure a forEach iteration on this type is efficient; in particular we choose ArrayList
-	// so to avoid allocating iterators.
-	private ArrayList<T> listeners;
+	// Performance: make sure iteration on this type is efficient; in particular we do not want to allocate iterators,
+	// not having to capture state in lambdas.
+	// So we keep the listeners in both a List (for convenience) and in an array (for iteration). Make sure
+	// their content stays in synch!
+	private T[] listeners = null;
+
+	//Update both fields when making changes!
+	private List<T> listenersAsList;
 
 	public EventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
 		this.eventType = eventType;
@@ -66,7 +76,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@Override
 	public int count() {
-		return listeners == null ? 0 : listeners.size();
+		final T[] ls = listeners;
+		return ls == null ? 0 : ls.length;
 	}
 
 	@Override
@@ -74,16 +85,16 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		if ( duplicationStrategies != null ) {
 			duplicationStrategies.clear();
 		}
-		if ( listeners != null ) {
-			listeners.clear();
-		}
+		listeners = null;
+		listenersAsList = null;
 	}
 
 	@Override
 	public final <U> void fireLazyEventOnEachListener(final Supplier<U> eventSupplier, final BiConsumer<T,U> actionOnEvent) {
-		if ( listeners != null && listeners.size() != 0 ) {
+		final T[] ls = listeners;
+		if ( ls != null && ls.length != 0 ) {
 			final U event = eventSupplier.get();
-			for ( T listener : this.listeners ) {
+			for ( T listener : ls ) {
 				actionOnEvent.accept( listener, event );
 			}
 		}
@@ -91,9 +102,20 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@Override
 	public final <U> void fireEventOnEachListener(final U event, final BiConsumer<T,U> actionOnEvent) {
-		if ( listeners != null ) {
-			for ( T listener : this.listeners ) {
+		final T[] ls = listeners;
+		if ( ls != null ) {
+			for ( T listener : ls ) {
 				actionOnEvent.accept( listener, event );
+			}
+		}
+	}
+
+	@Override
+	public <U,X> void fireEventOnEachListener(final U event, final X parameter, final EventActionWithParameter<T, U, X> actionOnEvent) {
+		final T[] ls = listeners;
+		if ( ls != null ) {
+			for ( T listener : ls ) {
+				actionOnEvent.applyEventToListener( listener, event, parameter );
 			}
 		}
 	}
@@ -105,22 +127,44 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	/**
 	 * Implementation note: should be final for performance reasons.
+	 * @deprecated this is not the most efficient way for iterating the event listeners.
+	 * See {@link #fireEventOnEachListener(Object, BiConsumer)} and co. for better alternatives.
 	 */
 	@Override
+	@Deprecated
 	public final Iterable<T> listeners() {
-		return listeners == null ? Collections.EMPTY_LIST : listeners;
+		final List<T> ls = listenersAsList;
+		return ls == null ? Collections.EMPTY_LIST : ls;
 	}
 
 	@Override
 	@SafeVarargs
 	public final void appendListeners(T... listeners) {
+		internalAppendListeners( listeners );
+		checkForArrayRefresh();
+	}
+
+	private void checkForArrayRefresh() {
+		final List<T> list = listenersAsList;
+		if ( this.listeners == null ) {
+			T[] a = (T[]) Array.newInstance( eventType.baseListenerInterface(), list.size() );
+			listeners = list.<T>toArray( a );
+		}
+	}
+
+	private void internalAppendListeners(T[] listeners) {
 		for ( T listener : listeners ) {
-			appendListener( listener );
+			internalAppendListener( listener );
 		}
 	}
 
 	@Override
 	public void appendListener(T listener) {
+		internalAppendListener( listener );
+		checkForArrayRefresh();
+	}
+
+	private void internalAppendListener(T listener) {
 		if ( listenerShouldGetAdded( listener ) ) {
 			internalAppend( listener );
 		}
@@ -129,28 +173,39 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	@Override
 	@SafeVarargs
 	public final void prependListeners(T... listeners) {
+		internalPrependListeners( listeners );
+		checkForArrayRefresh();
+	}
+
+	private void internalPrependListeners(T[] listeners) {
 		for ( T listener : listeners ) {
-			prependListener( listener );
+			internalPreprendListener( listener );
 		}
 	}
 
 	@Override
 	public void prependListener(T listener) {
+		internalPreprendListener( listener );
+		checkForArrayRefresh();
+	}
+
+	private void internalPreprendListener(T listener) {
 		if ( listenerShouldGetAdded( listener ) ) {
 			internalPrepend( listener );
 		}
 	}
 
 	private boolean listenerShouldGetAdded(T listener) {
-		if ( listeners == null ) {
-			listeners = new ArrayList<>();
+		final List<T> ts = listenersAsList;
+		if ( ts == null ) {
+			listenersAsList = new ArrayList<>();
 			return true;
 			// no need to do de-dup checks
 		}
 
 		boolean doAdd = true;
 		strategy_loop: for ( DuplicationStrategy strategy : duplicationStrategies ) {
-			final ListIterator<T> itr = listeners.listIterator();
+			final ListIterator<T> itr = ts.listIterator();
 			while ( itr.hasNext() ) {
 				final T existingListener = itr.next();
 				if ( strategy.areMatch( listener,  existingListener ) ) {
@@ -180,7 +235,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private void internalPrepend(T listener) {
 		checkAgainstBaseInterface( listener );
 		performInjections( listener );
-		listeners.add( 0, listener );
+		listenersAsList.add( 0, listener );
+		listeners = null; //Marks it for refreshing
 	}
 
 	private void performInjections(T listener) {
@@ -206,6 +262,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private void internalAppend(T listener) {
 		checkAgainstBaseInterface( listener );
 		performInjections( listener );
-		listeners.add( listener );
+		listenersAsList.add( listener );
+		listeners = null; //Marks it for refreshing
 	}
 }

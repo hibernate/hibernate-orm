@@ -724,7 +724,7 @@ public final class SessionImpl
 		try {
 			//Uses a capturing lambda in this case as we need to carry the additional Map parameter:
 			fastSessionServices.eventListenerGroup_PERSIST
-					.fireEventOnEachListener( event, (l, e) -> l.onPersist( e, copiedAlready ) );
+					.fireEventOnEachListener( event, copiedAlready, PersistEventListener::onPersist );
 		}
 		catch ( MappingException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) ) ;
@@ -745,7 +745,7 @@ public final class SessionImpl
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		PersistEvent event = new PersistEvent( entityName, object, this );
-		fastSessionServices.eventListenerGroup_PERSIST_ONFLUSH.fireEventOnEachListener( event, (l,e) -> l.onPersist( e, copiedAlready ) );
+		fastSessionServices.eventListenerGroup_PERSIST_ONFLUSH.fireEventOnEachListener( event, copiedAlready, PersistEventListener::onPersist );
 		delayedAfterCompletion();
 	}
 
@@ -793,7 +793,7 @@ public final class SessionImpl
 	private void fireMerge(final Map copiedAlready, final MergeEvent event) {
 		try {
 			pulseTransactionCoordinator();
-			fastSessionServices.eventListenerGroup_MERGE.fireEventOnEachListener( event, (l,e) -> l.onMerge( e, copiedAlready ) );
+			fastSessionServices.eventListenerGroup_MERGE.fireEventOnEachListener( event, copiedAlready, MergeEventListener::onMerge );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
@@ -904,7 +904,7 @@ public final class SessionImpl
 	private void fireDelete(final DeleteEvent event, final Set transientEntities) {
 		try{
 			pulseTransactionCoordinator();
-			fastSessionServices.eventListenerGroup_DELETE.fireEventOnEachListener( event, (l,e) -> l.onDelete( e, transientEntities ) );
+			fastSessionServices.eventListenerGroup_DELETE.fireEventOnEachListener( event, transientEntities, DeleteEventListener::onDelete );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
@@ -1179,7 +1179,7 @@ public final class SessionImpl
 	// it seems they prevent these hot methods from being inlined.
 	private void fireLoadNoChecks(final LoadEvent event, final LoadType loadType) {
 		pulseTransactionCoordinator();
-		fastSessionServices.eventListenerGroup_LOAD.fireEventOnEachListener( event, (l,e) -> l.onLoad( e, loadType ) );
+		fastSessionServices.eventListenerGroup_LOAD.fireEventOnEachListener( event, loadType, LoadEventListener::onLoad );
 	}
 
 	private void fireResolveNaturalId(final ResolveNaturalIdEvent event) {
@@ -1262,7 +1262,7 @@ public final class SessionImpl
 	private void fireRefresh(final Map refreshedAlready, final RefreshEvent event) {
 		try {
 			pulseTransactionCoordinator();
-			fastSessionServices.eventListenerGroup_REFRESH.fireEventOnEachListener( event, (l,e) -> l.onRefresh( e, refreshedAlready ) );
+			fastSessionServices.eventListenerGroup_REFRESH.fireEventOnEachListener( event, refreshedAlready, RefreshEventListener::onRefresh );
 		}
 		catch (RuntimeException e) {
 			throw getExceptionConverter().convert( e );

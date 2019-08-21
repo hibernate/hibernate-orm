@@ -7,9 +7,11 @@
 package org.hibernate.event.service.spi;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import org.hibernate.Incubating;
 import org.hibernate.event.spi.EventType;
 
 /**
@@ -35,6 +37,12 @@ public interface EventListenerGroup<T> extends Serializable {
 
 	public int count();
 
+	/**
+	 * @deprecated this is not the most efficient way for iterating the event listeners.
+	 * See {@link #fireEventOnEachListener(Object, BiConsumer)} and its overloaded variants for better alternatives.
+	 * @return
+	 */
+	@Deprecated
 	public Iterable<T> listeners();
 
 	/**
@@ -67,6 +75,7 @@ public interface EventListenerGroup<T> extends Serializable {
 	 * @param actionOnEvent
 	 * @param <U> the kind of event
 	 */
+	@Incubating
 	<U> void  fireLazyEventOnEachListener(final Supplier<U> eventSupplier, final BiConsumer<T,U> actionOnEvent);
 
 	/**
@@ -76,6 +85,10 @@ public interface EventListenerGroup<T> extends Serializable {
 	 * @param actionOnEvent
 	 * @param <U> the kind of event
 	 */
+	@Incubating
 	<U> void  fireEventOnEachListener(final U event, final BiConsumer<T,U> actionOnEvent);
+
+	@Incubating
+	<U,X> void  fireEventOnEachListener(final U event, X param, final EventActionWithParameter<T,U,X> actionOnEvent);
 
 }

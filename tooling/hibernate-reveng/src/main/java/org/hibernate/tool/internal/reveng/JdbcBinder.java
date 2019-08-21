@@ -46,6 +46,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
+import org.hibernate.tool.api.reveng.ReverseEngineeringConstants;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
@@ -72,7 +73,7 @@ public class JdbcBinder {
 
 	private ReverseEngineeringStrategy revengStrategy;
 	
-	private final boolean preferBasicCompositeIds;
+	private boolean preferBasicCompositeIds;
 	private final ServiceRegistry serviceRegistry;
 	private final String defaultCatalog;
 	private final String defaultSchema;
@@ -82,11 +83,22 @@ public class JdbcBinder {
 	 * @param configuration
 	 */
 	public JdbcBinder(ServiceRegistry serviceRegistry, Properties properties, MetadataBuildingContext mdbc, ReverseEngineeringStrategy revengStrategy, boolean preferBasicCompositeIds) {
+		this(serviceRegistry, properties, mdbc, revengStrategy);
+		this.preferBasicCompositeIds = preferBasicCompositeIds;
+	}
+	
+	/**
+	 * @param mappings
+	 * @param configuration
+	 */
+	public JdbcBinder(ServiceRegistry serviceRegistry, Properties properties, MetadataBuildingContext mdbc, ReverseEngineeringStrategy revengStrategy) {
 		this.serviceRegistry = serviceRegistry;
 		this.mdbc = mdbc;
 		this.properties = properties;
 		this.revengStrategy = revengStrategy;
-		this.preferBasicCompositeIds = preferBasicCompositeIds;
+		this.preferBasicCompositeIds = Boolean.getBoolean(
+				properties.getProperty(
+						ReverseEngineeringConstants.PREFER_BASIC_COMPOSITE_IDS));
 		this.defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		metadataCollector = mdbc.getMetadataCollector();

@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
@@ -20,7 +20,7 @@ import org.hibernate.dialect.Dialect;
 public class InsertSelect {
 	private String tableName;
 	private String comment;
-	private List columnNames = new ArrayList();
+	private ArrayList<String> columnNames = new ArrayList<>();
 	private Select select;
 
 	public InsertSelect(Dialect dialect) {
@@ -44,6 +44,7 @@ public class InsertSelect {
 	}
 
 	public InsertSelect addColumns(String[] columnNames) {
+		this.columnNames.ensureCapacity(this.columnNames.size()+columnNames.length);
 		Collections.addAll( this.columnNames,columnNames );
 		return this;
 	}
@@ -68,7 +69,7 @@ public class InsertSelect {
 		buf.append( "insert into " ).append( tableName );
 		if ( !columnNames.isEmpty() ) {
 			buf.append( " (" );
-			Iterator itr = columnNames.iterator();
+			Iterator<String> itr = columnNames.iterator();
 			while ( itr.hasNext() ) {
 				buf.append( itr.next() );
 				if ( itr.hasNext() ) {

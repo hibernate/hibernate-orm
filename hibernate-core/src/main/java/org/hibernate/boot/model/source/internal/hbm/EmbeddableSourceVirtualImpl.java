@@ -30,12 +30,7 @@ import org.hibernate.boot.model.source.spi.ToolingHintContext;
  * @author Steve Ebersole
  */
 public class EmbeddableSourceVirtualImpl extends AbstractHbmSourceNode implements EmbeddableSource {
-	private final JavaTypeDescriptor typeDescriptor = new JavaTypeDescriptor() {
-		@Override
-		public String getName() {
-			return null;
-		}
-	};
+	private final JavaTypeDescriptor typeDescriptor = () -> null;
 
 	private final AttributeRole attributeRoleBase;
 	private final AttributePath attributePathBase;

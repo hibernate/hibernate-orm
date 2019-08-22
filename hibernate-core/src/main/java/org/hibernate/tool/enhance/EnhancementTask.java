@@ -221,21 +221,7 @@ public class EnhancementTask extends Task {
 	 * Expects a directory.
 	 */
 	private void walkDir(File dir) {
-		walkDir(
-				dir,
-				new FileFilter() {
-					@Override
-					public boolean accept(File pathname) {
-						return pathname.isFile() && pathname.getName().endsWith( ".class" );
-					}
-				},
-				new FileFilter() {
-					@Override
-					public boolean accept(File pathname) {
-						return pathname.isDirectory();
-					}
-				}
-		);
+		walkDir(dir, (File pathname) -> pathname.isFile() && pathname.getName().endsWith( ".class" ), File::isDirectory);
 	}
 
 	private void walkDir(File dir, FileFilter classesFilter, FileFilter dirFilter) {

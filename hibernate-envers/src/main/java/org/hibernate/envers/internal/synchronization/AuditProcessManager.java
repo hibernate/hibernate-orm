@@ -39,24 +39,16 @@ public class AuditProcessManager {
 			auditProcess = new AuditProcess( revisionInfoGenerator, session );
 			auditProcesses.put( transaction, auditProcess );
 
-			session.getActionQueue().registerProcess(
-					new BeforeTransactionCompletionProcess() {
-						public void doBeforeTransactionCompletion(SessionImplementor session) {
-							final AuditProcess process = auditProcesses.get( transaction );
-							if ( process != null ) {
-								process.doBeforeTransactionCompletion( session );
-							}
-						}
-					}
-			);
+			session.getActionQueue().registerProcess((SessionImplementor session1) -> {
+				final AuditProcess process = auditProcesses.get( transaction );
+				if (process != null) {
+					process.doBeforeTransactionCompletion(session1);
+				}
+			});
 
-			session.getActionQueue().registerProcess(
-					new AfterTransactionCompletionProcess() {
-						public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-							auditProcesses.remove( transaction );
-						}
-					}
-			);
+			session.getActionQueue().registerProcess((boolean success, SharedSessionContractImplementor session1) -> {
+				auditProcesses.remove( transaction );
+			});
 		}
 
 		return auditProcess;

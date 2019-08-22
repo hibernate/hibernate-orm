@@ -94,23 +94,17 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 						log.debugf( "JDBC version : %s.%s", dbmd.getJDBCMajorVersion(), dbmd.getJDBCMinorVersion() );
 					}
 
-					Dialect dialect = dialectFactory.buildDialect(
-							configurationValues,
-							new DialectResolutionInfoSource() {
-								@Override
-								public DialectResolutionInfo getDialectResolutionInfo() {
-									try {
-										return new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() );
-									}
-									catch ( SQLException sqlException ) {
-										throw new HibernateException(
-												"Unable to access java.sql.DatabaseMetaData to determine appropriate Dialect to use",
-												sqlException
-										);
-									}
-								}
-							}
-					);
+					Dialect dialect = dialectFactory.buildDialect(configurationValues, () -> {
+						try {
+							return new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() );
+						}
+						catch ( SQLException sqlException ) {
+							throw new HibernateException(
+								"Unable to access java.sql.DatabaseMetaData to determine appropriate Dialect to use",
+								sqlException
+							);
+						}
+					});
 					return new JdbcEnvironmentImpl(
 							registry,
 							dialect,

@@ -60,12 +60,7 @@ class SingularAttributeSourceOneToOneImpl
 		this.referencedTypeName = oneToOneElement.getClazz() != null
 				? metadataBuildingContext().qualifyClassName( oneToOneElement.getClazz() )
 				: oneToOneElement.getEntityName();
-		final JavaTypeDescriptor referencedTypeDescriptor = new JavaTypeDescriptor() {
-			@Override
-			public String getName() {
-				return referencedTypeName;
-			}
-		};
+		final JavaTypeDescriptor referencedTypeDescriptor = () -> referencedTypeName;
 		this.typeSource = new HibernateTypeSourceImpl( referencedTypeDescriptor );
 
 		if ( StringHelper.isNotEmpty( oneToOneElement.getFormulaAttribute() ) ) {

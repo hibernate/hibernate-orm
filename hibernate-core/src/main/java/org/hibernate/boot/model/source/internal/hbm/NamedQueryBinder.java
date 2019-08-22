@@ -167,22 +167,17 @@ public class NamedQueryBinder {
 
 			final ImplicitResultSetMappingDefinition implicitResultSetMappingDefinition = implicitResultSetMappingBuilder.build();
 			builder.setResultSetRef( implicitResultSetMappingDefinition.getName() );
-			context.getMetadataCollector().addSecondPass(
-					new SecondPass() {
-						@Override
-						public void doSecondPass(Map persistentClasses) throws MappingException {
-							final ResultSetMappingDefinition resultSetMappingDefinition =
-									ResultSetMappingBinder.bind( implicitResultSetMappingDefinition, context );
-							context.getMetadataCollector().addResultSetMapping( resultSetMappingDefinition );
-							NativeSQLQueryReturn[] newQueryReturns = resultSetMappingDefinition.getQueryReturns();
-							final NamedSQLQueryDefinition queryDefinition =
-									context.getMetadataCollector().getNamedNativeQueryDefinition( queryName );
-							if ( queryDefinition != null ) {
-								queryDefinition.addQueryReturns( newQueryReturns );
-							}
-						}
-					}
-			);
+			context.getMetadataCollector().addSecondPass((Map persistentClasses) -> {
+				final ResultSetMappingDefinition resultSetMappingDefinition =
+					ResultSetMappingBinder.bind( implicitResultSetMappingDefinition, context );
+				context.getMetadataCollector().addResultSetMapping( resultSetMappingDefinition );
+				NativeSQLQueryReturn[] newQueryReturns = resultSetMappingDefinition.getQueryReturns();
+				final NamedSQLQueryDefinition queryDefinition =
+					context.getMetadataCollector().getNamedNativeQueryDefinition( queryName );
+				if ( queryDefinition != null ) {
+					queryDefinition.addQueryReturns( newQueryReturns );
+				}
+			});
 		}
 
 		context.getMetadataCollector().addNamedNativeQuery( builder.createNamedQueryDefinition() );

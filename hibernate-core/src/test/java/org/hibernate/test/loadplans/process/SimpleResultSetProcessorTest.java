@@ -66,35 +66,30 @@ public class SimpleResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 
 			final Session workSession = openSession();
 			workSession.beginTransaction();
-			workSession.doWork(
-					new Work() {
-						@Override
-						public void execute(Connection connection) throws SQLException {
-							( (SessionImplementor) workSession ).getFactory()
-									.getServiceRegistry()
-									.getService( JdbcServices.class )
-									.getSqlStatementLogger()
-									.logStatement( sql );
-							PreparedStatement ps = connection.prepareStatement( sql );
-							ps.setInt( 1, 1 );
-							ResultSet resultSet = ps.executeQuery();
-							results.addAll(
-									resultSetProcessor.extractResults(
-											resultSet,
-											(SessionImplementor) workSession,
-											new QueryParameters(),
-											Helper.parameterContext(),
-											true,
-											false,
-											null,
-											null
-									)
-							);
-							resultSet.close();
-							ps.close();
-						}
-					}
-			);
+			workSession.doWork((Connection connection) -> {
+				( (SessionImplementor) workSession ).getFactory()
+					.getServiceRegistry()
+					.getService( JdbcServices.class )
+					.getSqlStatementLogger()
+					.logStatement( sql );
+				PreparedStatement ps = connection.prepareStatement( sql );
+				ps.setInt( 1, 1 );
+				ResultSet resultSet = ps.executeQuery();
+				results.addAll(
+					resultSetProcessor.extractResults(
+						resultSet,
+						(SessionImplementor) workSession,
+						new QueryParameters(),
+						Helper.parameterContext(),
+						true,
+						false,
+						null,
+						null
+					)
+				);
+				resultSet.close();
+				ps.close();
+			});
 			assertEquals( 1, results.size() );
 			Object result = results.get( 0 );
 			assertNotNull( result );

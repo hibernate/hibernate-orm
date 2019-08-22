@@ -49,30 +49,25 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		session.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						ResultSet rs = connection.createStatement().executeQuery( "select sex from the_entity where id=1" );
-						try {
-							if ( !rs.next() ) {
-								throw new RuntimeException( "Could not locate inserted row" );
-							}
-
-							String sexDbValue = rs.getString( 1 );
-
-							if ( rs.next() ) {
-								throw new RuntimeException( "Found more than one row" );
-							}
-
-							assertEquals( Sex.UNKNOWN.name().toLowerCase( Locale.ENGLISH ), sexDbValue );
-						}
-						finally {
-							rs.close();
-						}
-					}
+		session.doWork((Connection connection) -> {
+			ResultSet rs = connection.createStatement().executeQuery( "select sex from the_entity where id=1" );
+			try {
+				if ( !rs.next() ) {
+					throw new RuntimeException( "Could not locate inserted row" );
 				}
-		);
+				
+				String sexDbValue = rs.getString( 1 );
+				
+				if ( rs.next() ) {
+					throw new RuntimeException( "Found more than one row" );
+				}
+				
+				assertEquals( Sex.UNKNOWN.name().toLowerCase( Locale.ENGLISH ), sexDbValue );
+			}
+			finally {
+				rs.close();
+			}
+		});
 		session.getTransaction().commit();
 		session.close();
 
@@ -88,14 +83,9 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 	public void testNullReplacementOnExtraction() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						connection.createStatement().execute( "insert into the_entity(id, sex) values (1, null)" );
-					}
-				}
-		);
+		session.doWork((Connection connection) -> {
+			connection.createStatement().execute( "insert into the_entity(id, sex) values (1, null)" );
+		});
 		session.getTransaction().commit();
 		session.close();
 

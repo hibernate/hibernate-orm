@@ -286,16 +286,7 @@ public class HANASpatialDialect extends HANAColumnStoreDialect implements Spatia
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-		boolean determineCrsIdFromDatabase = configurationService.getSetting(
-				DETERMINE_CRS_ID_FROM_DATABASE_PARAMETER_NAME,
-				new Converter<Boolean>() {
-
-					@Override
-					public Boolean convert(Object value) {
-						return Boolean.valueOf( value.toString() );
-					}
-
-				},
+		boolean determineCrsIdFromDatabase = configurationService.getSetting(DETERMINE_CRS_ID_FROM_DATABASE_PARAMETER_NAME, (Object value) -> Boolean.valueOf( value.toString() ),
 				Boolean.FALSE ).booleanValue();
 
 		if ( determineCrsIdFromDatabase ) {

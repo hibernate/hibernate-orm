@@ -55,20 +55,15 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return false;
 		}
 
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Boolean>() {
-					@Override
-					public Boolean run() {
-						final Setter setter = ReflectionTools.getSetter(
-								obj.getClass(),
-								propertyData,
-								getServiceRegistry()
-						);
-						setter.set( obj, value, null );
-						return true;
-					}
-				}
-		);
+		return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> {
+			final Setter setter = ReflectionTools.getSetter(
+				obj.getClass(),
+				propertyData,
+				getServiceRegistry()
+			);
+			setter.set( obj, value, null );
+			return true;
+		});
 	}
 
 	@Override
@@ -91,19 +86,14 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return hibernateProxy.getHibernateLazyInitializer().getIdentifier();
 		}
 		else {
-			return AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Getter getter = ReflectionTools.getGetter(
-									data.getClass(),
-									propertyData,
-									getServiceRegistry()
-							);
-							return getter.get( data );
-						}
-					}
-			);
+			return AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+				final Getter getter = ReflectionTools.getGetter(
+					data.getClass(),
+					propertyData,
+					getServiceRegistry()
+				);
+				return getter.get( data );
+			});
 		}
 	}
 
@@ -125,19 +115,14 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 				data.put( propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getIdentifier() );
 			}
 			else {
-				final Object value = AccessController.doPrivileged(
-						new PrivilegedAction<Object>() {
-							@Override
-							public Object run() {
-								final Getter getter = ReflectionTools.getGetter(
-										obj.getClass(),
-										propertyData,
-										getServiceRegistry()
-								);
-								return getter.get( obj );
-							}
-						}
-				);
+				final Object value = AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+					final Getter getter = ReflectionTools.getGetter(
+						obj.getClass(),
+						propertyData,
+						getServiceRegistry()
+					);
+					return getter.get( obj );
+				});
 				data.put( propertyData.getName(), value );
 			}
 		}
@@ -148,27 +133,22 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return;
 		}
 
-		AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Getter getter = ReflectionTools.getGetter(
-								objFrom.getClass(),
-								propertyData,
-								getServiceRegistry()
-						);
-
-						final Setter setter = ReflectionTools.getSetter(
-								objTo.getClass(),
-								propertyData,
-								getServiceRegistry()
-						);
-
-						setter.set( objTo, getter.get( objFrom ), null );
-						return null;
-					}
-				}
-		);
+		AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+			final Getter getter = ReflectionTools.getGetter(
+				objFrom.getClass(),
+				propertyData,
+				getServiceRegistry()
+			);
+			
+			final Setter setter = ReflectionTools.getSetter(
+				objTo.getClass(),
+				propertyData,
+				getServiceRegistry()
+			);
+			
+			setter.set( objTo, getter.get( objFrom ), null );
+			return null;
+		});
 	}
 
 	@Override

@@ -65,16 +65,13 @@ public class DefaultInitialValueTableGeneratorConfiguredTest extends BaseEntityM
 			}
 		} );
 		Session session = getOrCreateEntityManager().unwrap( Session.class );
-		session.doWork( new Work() {
-			@Override
-			public void execute(Connection connection) throws SQLException {
-				ResultSet resultSet = connection.createStatement().executeQuery(
-						"select product_id from table_identifier" );
-				resultSet.next();
-				int productIdValue = resultSet.getInt( 1 );
-				assertThat( productIdValue, is(10) );
-			}
-		} );
+		session.doWork((Connection connection) -> {
+			ResultSet resultSet = connection.createStatement().executeQuery(
+				"select product_id from table_identifier" );
+			resultSet.next();
+			int productIdValue = resultSet.getInt( 1 );
+			assertThat( productIdValue, is(10) );
+		});
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			List<Product> products = entityManager.createQuery(

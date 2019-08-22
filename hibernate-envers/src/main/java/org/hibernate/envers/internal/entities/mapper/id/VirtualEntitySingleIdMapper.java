@@ -46,19 +46,14 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 
 	@Override
 	public void mapToMapFromId(Session session, Map<String, Object> data, Object obj) {
-		final Serializable value = AccessController.doPrivileged(
-				new PrivilegedAction<Serializable>() {
-					@Override
-					public Serializable run() {
-						final Getter getter = ReflectionTools.getGetter(
-								obj.getClass(),
-								propertyData,
-								getServiceRegistry()
-						);
-						return (Serializable) getter.get( obj );
-					}
-				}
-		);
+		final Serializable value = AccessController.doPrivileged((PrivilegedAction<Serializable>) () -> {
+			final Getter getter = ReflectionTools.getGetter(
+				obj.getClass(),
+				propertyData,
+				getServiceRegistry()
+			);
+			return (Serializable) getter.get( obj );
+		});
 
 		// Either loads the entity from the session's 1LC if it already exists or potentially creates a
 		// proxy object to represent the entity by identifier so that we can reference it in the map.
@@ -77,32 +72,27 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			return false;
 		}
 
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Boolean>() {
-					@Override
-					public Boolean run() {
-						final Setter setter = ReflectionTools.getSetter(
-								obj.getClass(),
-								propertyData,
-								getServiceRegistry()
-						);
-						final Class<?> paramClass = ReflectionTools.getType(
-								obj.getClass(),
-								propertyData,
-								getServiceRegistry()
-						);
-
-						if ( paramClass != null && paramClass.equals( propertyData.getVirtualReturnClass() ) ) {
-							setter.set( obj, getAssociatedEntityIdMapper().mapToIdFromEntity( value ), null );
-						}
-						else {
-							setter.set( obj, value, null );
-						}
-
-						return true;
-					}
-				}
-		);
+		return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> {
+			final Setter setter = ReflectionTools.getSetter(
+				obj.getClass(),
+				propertyData,
+				getServiceRegistry()
+			);
+			final Class<?> paramClass = ReflectionTools.getType(
+				obj.getClass(),
+				propertyData,
+				getServiceRegistry()
+			);
+			
+			if ( paramClass != null && paramClass.equals( propertyData.getVirtualReturnClass() ) ) {
+				setter.set( obj, getAssociatedEntityIdMapper().mapToIdFromEntity( value ), null );
+			}
+			else {
+				setter.set( obj, value, null );
+			}
+			
+			return true;
+		});
 	}
 
 	@Override
@@ -116,19 +106,14 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 				data.put( propertyData.getName(), proxy.getHibernateLazyInitializer().getIdentifier() );
 			}
 			else {
-				final Object value = AccessController.doPrivileged(
-						new PrivilegedAction<Object>() {
-							@Override
-							public Object run() {
-								final Getter getter = ReflectionTools.getGetter(
-										obj.getClass(),
-										propertyData,
-										getServiceRegistry()
-								);
-								return getter.get( obj );
-							}
-						}
-				);
+				final Object value = AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+					final Getter getter = ReflectionTools.getGetter(
+						obj.getClass(),
+						propertyData,
+						getServiceRegistry()
+					);
+					return getter.get( obj );
+				});
 
 				if ( propertyData.getVirtualReturnClass().isInstance( value ) ) {
 					// The value is the primary key, need to map it via IdMapper

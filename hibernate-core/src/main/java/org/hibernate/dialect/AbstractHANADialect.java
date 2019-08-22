@@ -944,56 +944,51 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return new SQLExceptionConversionDelegate() {
-
-			@Override
-			public JDBCException convert(final SQLException sqlException, final String message, final String sql) {
-
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-
-				if ( errorCode == 131 ) {
-					// 131 - Transaction rolled back by lock wait timeout
-					return new LockTimeoutException( message, sqlException, sql );
-				}
-
-				if ( errorCode == 146 ) {
-					// 146 - Resource busy and acquire with NOWAIT specified
-					return new LockTimeoutException( message, sqlException, sql );
-				}
-
-				if ( errorCode == 132 ) {
-					// 132 - Transaction rolled back due to unavailable resource
-					return new LockAcquisitionException( message, sqlException, sql );
-				}
-
-				if ( errorCode == 133 ) {
-					// 133 - Transaction rolled back by detected deadlock
-					return new LockAcquisitionException( message, sqlException, sql );
-				}
-
-				// 259 - Invalid table name
-				// 260 - Invalid column name
-				// 261 - Invalid index name
-				// 262 - Invalid query name
-				// 263 - Invalid alias name
-				if ( errorCode == 257 || ( errorCode >= 259 && errorCode <= 263 ) ) {
-					throw new SQLGrammarException( message, sqlException, sql );
-				}
-
-				// 257 - Cannot insert NULL or update to NULL
-				// 301 - Unique constraint violated
-				// 461 - foreign key constraint violation
-				// 462 - failed on update or delete by foreign key constraint
-				// violation
-				if ( errorCode == 287 || errorCode == 301 || errorCode == 461 || errorCode == 462 ) {
-					final String constraintName = getViolatedConstraintNameExtracter()
-							.extractConstraintName( sqlException );
-
-					return new ConstraintViolationException( message, sqlException, sql, constraintName );
-				}
-
-				return null;
+		return (final SQLException sqlException, final String message, final String sql) -> {
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			
+			if ( errorCode == 131 ) {
+				// 131 - Transaction rolled back by lock wait timeout
+				return new LockTimeoutException( message, sqlException, sql );
 			}
+			
+			if ( errorCode == 146 ) {
+				// 146 - Resource busy and acquire with NOWAIT specified
+				return new LockTimeoutException( message, sqlException, sql );
+			}
+			
+			if ( errorCode == 132 ) {
+				// 132 - Transaction rolled back due to unavailable resource
+				return new LockAcquisitionException( message, sqlException, sql );
+			}
+			
+			if ( errorCode == 133 ) {
+				// 133 - Transaction rolled back by detected deadlock
+				return new LockAcquisitionException( message, sqlException, sql );
+			}
+			
+			// 259 - Invalid table name
+			// 260 - Invalid column name
+			// 261 - Invalid index name
+			// 262 - Invalid query name
+			// 263 - Invalid alias name
+			if ( errorCode == 257 || ( errorCode >= 259 && errorCode <= 263 ) ) {
+				throw new SQLGrammarException( message, sqlException, sql );
+			}
+			
+			// 257 - Cannot insert NULL or update to NULL
+			// 301 - Unique constraint violated
+			// 461 - foreign key constraint violation
+			// 462 - failed on update or delete by foreign key constraint
+			// violation
+			if ( errorCode == 287 || errorCode == 301 || errorCode == 461 || errorCode == 462 ) {
+				final String constraintName = getViolatedConstraintNameExtracter()
+					.extractConstraintName( sqlException );
+				
+				return new ConstraintViolationException( message, sqlException, sql, constraintName );
+			}
+			
+			return null;
 		};
 	}
 
@@ -1552,16 +1547,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-		int maxLobPrefetchSize = configurationService.getSetting(
-				MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME,
-				new Converter<Integer>() {
-
-					@Override
-					public Integer convert(Object value) {
-						return Integer.valueOf( value.toString() );
-					}
-
-				},
+		int maxLobPrefetchSize = configurationService.getSetting(MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME, (Object value) -> Integer.valueOf( value.toString() ),
 				Integer.valueOf( maxLobPrefetchSizeDefault ) ).intValue();
 
 		if ( this.nClobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize ) {

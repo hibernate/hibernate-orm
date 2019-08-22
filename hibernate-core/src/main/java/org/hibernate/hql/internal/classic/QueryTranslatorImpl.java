@@ -897,14 +897,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			Map.Entry me = (Map.Entry) iter.next();
 			String name = (String) me.getKey();
 			JoinSequence join = (JoinSequence) me.getValue();
-			join.setSelector(
-					new JoinSequence.Selector() {
-						@Override
-						public boolean includeSubclasses(String alias) {
-							return returnedTypes.contains( alias ) && !isShallowQuery();
-						}
-					}
-			);
+			join.setSelector((String alias) -> returnedTypes.contains( alias ) && !isShallowQuery());
 
 			if ( typeMap.containsKey( name ) ) {
 				ojf.addFragment( join.toJoinFragment( enabledFilters, true ) );

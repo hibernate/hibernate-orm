@@ -130,20 +130,10 @@ public class DerbyConcatFunction implements SQLFunction {
 		public String transform(String string);
 	}
 
-	private static final StringTransformer CAST_STRING_TRANSFORMER = new StringTransformer() {
-		@Override
-		public String transform(String string) {
-			// expectation is that incoming string is "?"
-			return "cast( ? as varchar(32672) )";
-		}
-	};
+	private static final StringTransformer CAST_STRING_TRANSFORMER = (String string) -> "cast( ? as varchar(32672) )" // expectation is that incoming string is "?"
+	;
 
-	private static final StringTransformer NO_TRANSFORM_STRING_TRANSFORMER = new StringTransformer() {
-		@Override
-		public String transform(String string) {
-			return string;
-		}
-	};
+	private static final StringTransformer NO_TRANSFORM_STRING_TRANSFORMER = (String string) -> string;
 
 	private static interface StringJoinTemplate {
 		/**

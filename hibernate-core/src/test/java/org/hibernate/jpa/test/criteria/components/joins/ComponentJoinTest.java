@@ -85,30 +85,18 @@ public class ComponentJoinTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void getResultWithStringPropertyDerivedPath() {
-		doTest(
-				new JoinBuilder() {
-					@Override
-					public Join<EmbeddedType, ManyToOneType> buildJoinToManyToOneType(Join<Entity, EmbeddedType> source) {
-						return source.join( "manyToOneType", JoinType.LEFT );
-					}
-				}
-		);
+		doTest((Join<Entity, EmbeddedType> source) -> source.join( "manyToOneType", JoinType.LEFT ));
 	}
 	
 	@Test
 	@SuppressWarnings("unchecked")
 	public void getResultWithMetamodelDerivedPath() {
-		doTest(
-				new JoinBuilder() {
-					@Override
-					public Join<EmbeddedType, ManyToOneType> buildJoinToManyToOneType(Join<Entity, EmbeddedType> source) {
-						final SingularAttribute<EmbeddedType, ManyToOneType> attr =
-								(SingularAttribute<EmbeddedType, ManyToOneType>) entityManagerFactory().getMetamodel()
-										.managedType( EmbeddedType.class )
-										.getDeclaredSingularAttribute( "manyToOneType" );
-						return source.join( attr, JoinType.LEFT );
-					}
-				}
-		);
+		doTest((Join<Entity, EmbeddedType> source) -> {
+			final SingularAttribute<EmbeddedType, ManyToOneType> attr =
+				(SingularAttribute<EmbeddedType, ManyToOneType>) entityManagerFactory().getMetamodel()
+					.managedType( EmbeddedType.class )
+					.getDeclaredSingularAttribute( "manyToOneType" );
+			return source.join( attr, JoinType.LEFT );
+		});
 	}
 }

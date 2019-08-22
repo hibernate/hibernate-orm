@@ -1711,11 +1711,7 @@ public abstract class Dialect implements ConversionContext {
 		return null;
 	}
 
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {
-		public String extractConstraintName(SQLException sqle) {
-			return null;
-		}
-	};
+	private static final ViolatedConstraintNameExtracter EXTRACTER = (SQLException sqle) -> null;
 
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRACTER;
@@ -2883,12 +2879,7 @@ public abstract class Dialect implements ConversionContext {
 		return null;
 	}
 
-	protected final BatchLoadSizingStrategy STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY = new BatchLoadSizingStrategy() {
-		@Override
-		public int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys) {
-			return 50;
-		}
-	};
+	protected final BatchLoadSizingStrategy STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY = (int numberOfKeyColumns, int numberOfKeys) -> 50;
 
 	public BatchLoadSizingStrategy getDefaultBatchLoadSizingStrategy() {
 		return STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY;

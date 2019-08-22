@@ -39,12 +39,7 @@ public class SqlExceptionHelper {
 	private final boolean logWarnings;
 
 	private static final SQLExceptionConverter DEFAULT_CONVERTER = new SQLStateConverter(
-			new ViolatedConstraintNameExtracter() {
-				public String extractConstraintName(SQLException e) {
-					return null;
-				}
-			}
-	);
+			(SQLException e) -> null);
 
 	private SQLExceptionConverter sqlExceptionConverter;
 

@@ -47,19 +47,9 @@ public class NaturalIdCacheKeyTest {
                 mockType
         });
         
-        when(mockType.getHashCode(anyObject(), eq(sessionFactoryImplementor))).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                return invocation.getArguments()[0].hashCode();
-            }
-        });
+        when(mockType.getHashCode(anyObject(), eq(sessionFactoryImplementor))).thenAnswer((InvocationOnMock invocation) -> invocation.getArguments()[0].hashCode());
         
-        when(mockType.disassemble(anyObject(), eq(sessionImplementor), eq(null))).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                return invocation.getArguments()[0];
-            }
-        });
+        when(mockType.disassemble(anyObject(), eq(sessionImplementor), eq(null))).thenAnswer((InvocationOnMock invocation) -> invocation.getArguments()[0]);
 
         final NaturalIdCacheKey key = (NaturalIdCacheKey) DefaultCacheKeysFactory.staticCreateNaturalIdKey( new Object[] {"a", "b", "c"}, entityPersister, sessionImplementor );
 

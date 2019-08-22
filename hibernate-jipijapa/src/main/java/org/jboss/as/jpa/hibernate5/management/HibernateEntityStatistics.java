@@ -81,70 +81,52 @@ public class HibernateEntityStatistics extends HibernateAbstractStatistics {
 		return null;
 	}
 
-	private Operation entityDeleteCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.EntityStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getDeleteCount() : 0 );
-		}
+	private Operation entityDeleteCount = (Object... args) -> {
+		org.hibernate.stat.EntityStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getDeleteCount() : 0 );
 	};
 
-	private Operation entityFetchCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.EntityStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getFetchCount() : 0 );
-		}
+	private Operation entityFetchCount = (Object... args) -> {
+		org.hibernate.stat.EntityStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getFetchCount() : 0 );
 	};
 
-	private Operation entityInsertCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.EntityStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getInsertCount() : 0 );
-		}
+	private Operation entityInsertCount = (Object... args) -> {
+		org.hibernate.stat.EntityStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getInsertCount() : 0 );
 	};
 
-	private Operation entityLoadCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.EntityStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getLoadCount() : 0 );
-		}
+	private Operation entityLoadCount = (Object... args) -> {
+		org.hibernate.stat.EntityStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getLoadCount() : 0 );
 	};
 
-	private Operation entityUpdateCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.EntityStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getUpdateCount() : 0 );
-		}
+	private Operation entityUpdateCount = (Object... args) -> {
+		org.hibernate.stat.EntityStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getUpdateCount() : 0 );
 	};
 
-	private Operation optimisticFailureCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.EntityStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getOptimisticFailureCount() : 0 );
-		}
+	private Operation optimisticFailureCount = (Object... args) -> {
+		org.hibernate.stat.EntityStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getOptimisticFailureCount() : 0 );
 	};
 
 	@Override

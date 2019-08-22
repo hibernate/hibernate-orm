@@ -677,12 +677,7 @@ public final class Template {
 		).injectAliases( LEGACY_ORDER_BY_ALIAS_RESOLVER );
 	}
 
-	public static final OrderByAliasResolver LEGACY_ORDER_BY_ALIAS_RESOLVER = new OrderByAliasResolver() {
-		@Override
-		public String resolveTableAlias(String columnReference) {
-			return TEMPLATE;
-		}
-	};
+	public static final OrderByAliasResolver LEGACY_ORDER_BY_ALIAS_RESOLVER = (String columnReference) -> TEMPLATE;
 
 	/**
 	 * Performs order-by template rendering allowing {@link ColumnMapper column mapping}.  An <tt>ORDER BY</tt> template

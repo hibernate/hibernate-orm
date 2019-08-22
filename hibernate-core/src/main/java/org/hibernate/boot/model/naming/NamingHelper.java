@@ -86,15 +86,7 @@ public class NamingHelper {
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
 		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort(
-				alphabeticalColumns,
-				new Comparator<Identifier>() {
-					@Override
-					public int compare(Identifier o1, Identifier o2) {
-						return o1.getCanonicalName().compareTo( o2.getCanonicalName() );
-					}
-				}
-		);
+		Arrays.sort(alphabeticalColumns, (Identifier o1, Identifier o2) -> o1.getCanonicalName().compareTo( o2.getCanonicalName() ));
 
 		for ( Identifier columnName : alphabeticalColumns ) {
 			sb.append( "column`" ).append( columnName ).append( "`" );
@@ -119,15 +111,7 @@ public class NamingHelper {
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
 		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort(
-				alphabeticalColumns,
-				new Comparator<Identifier>() {
-					@Override
-					public int compare(Identifier o1, Identifier o2) {
-						return o1.getCanonicalName().compareTo( o2.getCanonicalName() );
-					}
-				}
-		);
+		Arrays.sort(alphabeticalColumns, (Identifier o1, Identifier o2) -> o1.getCanonicalName().compareTo( o2.getCanonicalName() ));
 		for ( Identifier columnName : alphabeticalColumns ) {
 			sb.append( "column`" ).append( columnName ).append( "`" );
 		}

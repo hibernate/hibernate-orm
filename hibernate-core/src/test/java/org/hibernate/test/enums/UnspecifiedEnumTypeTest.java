@@ -76,13 +76,8 @@ public class UnspecifiedEnumTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void executeUpdateSafety(Session session, String query) {
-		session.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						connection.createStatement().execute( query );
-					}
-				}
-		);
+		session.doWork((Connection connection) -> {
+			connection.createStatement().execute( query );
+		});
 	}
 }

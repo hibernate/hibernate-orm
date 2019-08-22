@@ -105,12 +105,7 @@ class IdentifierSourceNonAggregatedCompositeImpl implements IdentifierSourceNonA
 		}
 
 		final String idClassQualifiedName = mappingDocument.qualifyClassName( className );
-		final JavaTypeDescriptor idClassTypeDescriptor = new JavaTypeDescriptor() {
-			@Override
-			public String getName() {
-				return idClassQualifiedName;
-			}
-		};
+		final JavaTypeDescriptor idClassTypeDescriptor = () -> idClassQualifiedName;
 		return new IdClassSource( idClassTypeDescriptor, rootEntitySource, mappingDocument );
 	}
 

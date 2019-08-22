@@ -3997,12 +3997,9 @@ public class FooBarTest extends LegacyTestCase {
 		final Qux qToDelete = ( Qux ) s.load( Qux.class, q.getKey() );
 
 		//register a pre commit process that will touch the collection and delete the entity
-		( ( EventSource ) s ).getActionQueue().registerProcess( new BeforeTransactionCompletionProcess() {
-			@Override
-			public void doBeforeTransactionCompletion(SessionImplementor session) {
-				qToDelete.getFums().size();
-			}
-		} );
+		( ( EventSource ) s ).getActionQueue().registerProcess((SessionImplementor session1) -> {
+			qToDelete.getFums().size();
+		});
 
 		s.delete( qToDelete );
 		boolean ok = false;

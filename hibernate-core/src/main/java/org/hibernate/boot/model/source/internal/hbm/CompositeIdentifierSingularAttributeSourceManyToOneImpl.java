@@ -56,12 +56,7 @@ public class CompositeIdentifierSingularAttributeSourceManyToOneImpl
 				? mappingDocument.qualifyClassName( keyManyToOneElement.getClazz() )
 				: keyManyToOneElement.getEntityName();
 
-		final JavaTypeDescriptor referencedTypeDescriptor = new JavaTypeDescriptor() {
-			@Override
-			public String getName() {
-				return referencedEntityName;
-			}
-		};
+		final JavaTypeDescriptor referencedTypeDescriptor = () -> referencedEntityName;
 		this.typeSource = new HibernateTypeSourceImpl( referencedTypeDescriptor );
 
 		this.valueSources = RelationalValueSourceHelper.buildValueSources(

@@ -329,15 +329,12 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 		final ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
 
-		return new ClassLoaderDelegate() {
-			@Override
-			public <T> Class<T> classForName(String className) throws ClassLoadingException {
-				try {
-					return classLoaderService.classForName( className );
-				}
-				catch (org.hibernate.boot.registry.classloading.spi.ClassLoadingException e) {
-					return StandardClassLoaderDelegateImpl.INSTANCE.classForName( className );
-				}
+		return (String className) -> {
+			try {
+				return classLoaderService.classForName( className );
+			}
+			catch (org.hibernate.boot.registry.classloading.spi.ClassLoadingException e) {
+				return StandardClassLoaderDelegateImpl.INSTANCE.classForName( className );
 			}
 		};
 	}

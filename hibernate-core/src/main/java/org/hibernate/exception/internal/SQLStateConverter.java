@@ -20,12 +20,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 public class SQLStateConverter extends StandardSQLExceptionConverter implements SQLExceptionConverter {
 	public SQLStateConverter(final ViolatedConstraintNameExtracter extracter) {
 		super();
-		final ConversionContext conversionContext = new ConversionContext() {
-			@Override
-			public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-				return extracter;
-			}
-		};
+		final ConversionContext conversionContext = () -> extracter;
 		addDelegate( new SQLStateConversionDelegate( conversionContext ) );
 	}
 }

@@ -66,25 +66,20 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 			return dataObject;
 		}
 
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						try {
-							return ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
-						}
-						catch ( InstantiationException e ) {
-							throw new AuditException( e );
-						}
-						catch ( IllegalAccessException e ) {
-							throw new AuditException( e );
-						}
-						catch ( InvocationTargetException e ) {
-							throw new AuditException( e );
-						}
-					}
-				}
-		);
+		return AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+			try {
+				return ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
+			}
+			catch ( InstantiationException e ) {
+				throw new AuditException( e );
+			}
+			catch ( IllegalAccessException e ) {
+				throw new AuditException( e );
+			}
+			catch ( InvocationTargetException e ) {
+				throw new AuditException( e );
+			}
+		});
 	}
 
 	@Override

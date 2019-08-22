@@ -534,60 +534,57 @@ public class Oracle8iDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return new SQLExceptionConversionDelegate() {
-			@Override
-			public JDBCException convert(SQLException sqlException, String message, String sql) {
-				// interpreting Oracle exceptions is much much more precise based on their specific vendor codes.
-
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-
-
-				// lock timeouts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				if ( errorCode == 30006 ) {
-					// ORA-30006: resource busy; acquire with WAIT timeout expired
-					throw new LockTimeoutException( message, sqlException, sql );
-				}
-				else if ( errorCode == 54 ) {
-					// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
-					throw new LockTimeoutException( message, sqlException, sql );
-				}
-				else if ( 4021 == errorCode ) {
-					// ORA-04021 timeout occurred while waiting to lock object
-					throw new LockTimeoutException( message, sqlException, sql );
-				}
-
-
-				// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				if ( 60 == errorCode ) {
-					// ORA-00060: deadlock detected while waiting for resource
-					return new LockAcquisitionException( message, sqlException, sql );
-				}
-				else if ( 4020 == errorCode ) {
-					// ORA-04020 deadlock detected while trying to lock object
-					return new LockAcquisitionException( message, sqlException, sql );
-				}
-
-
-				// query cancelled ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				if ( 1013 == errorCode ) {
-					// ORA-01013: user requested cancel of current operation
-					throw new QueryTimeoutException(  message, sqlException, sql );
-				}
-
-
-				// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-				if ( 1407 == errorCode ) {
-					// ORA-01407: cannot update column to NULL
-					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
-					return new ConstraintViolationException( message, sqlException, sql, constraintName );
-				}
-
-				return null;
+		return (SQLException sqlException, String message, String sql) -> {
+			// interpreting Oracle exceptions is much much more precise based on their specific vendor codes.
+			
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			
+			
+			// lock timeouts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			
+			if ( errorCode == 30006 ) {
+				// ORA-30006: resource busy; acquire with WAIT timeout expired
+				throw new LockTimeoutException( message, sqlException, sql );
 			}
+			else if ( errorCode == 54 ) {
+				// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
+				throw new LockTimeoutException( message, sqlException, sql );
+			}
+			else if ( 4021 == errorCode ) {
+				// ORA-04021 timeout occurred while waiting to lock object
+				throw new LockTimeoutException( message, sqlException, sql );
+			}
+			
+			
+			// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			
+			if ( 60 == errorCode ) {
+				// ORA-00060: deadlock detected while waiting for resource
+				return new LockAcquisitionException( message, sqlException, sql );
+			}
+			else if ( 4020 == errorCode ) {
+				// ORA-04020 deadlock detected while trying to lock object
+				return new LockAcquisitionException( message, sqlException, sql );
+			}
+			
+			
+			// query cancelled ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			
+			if ( 1013 == errorCode ) {
+				// ORA-01013: user requested cancel of current operation
+				throw new QueryTimeoutException(  message, sqlException, sql );
+			}
+			
+			
+			// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			
+			if ( 1407 == errorCode ) {
+				// ORA-01407: cannot update column to NULL
+				final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
+				return new ConstraintViolationException( message, sqlException, sql, constraintName );
+			}
+			
+			return null;
 		};
 	}
 

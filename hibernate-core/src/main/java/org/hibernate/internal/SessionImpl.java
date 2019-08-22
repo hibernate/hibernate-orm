@@ -2300,24 +2300,16 @@ public final class SessionImpl
 
 	@Override
 	public void doWork(final Work work) throws HibernateException {
-		WorkExecutorVisitable<Void> realWork = new WorkExecutorVisitable<Void>() {
-			@Override
-			public Void accept(WorkExecutor<Void> workExecutor, Connection connection) throws SQLException {
-				workExecutor.executeWork( work, connection );
-				return null;
-			}
+		WorkExecutorVisitable<Void> realWork = (WorkExecutor<Void> workExecutor, Connection connection) -> {
+			workExecutor.executeWork( work, connection );
+			return null;
 		};
 		doWork( realWork );
 	}
 
 	@Override
 	public <T> T doReturningWork(final ReturningWork<T> work) throws HibernateException {
-		WorkExecutorVisitable<T> realWork = new WorkExecutorVisitable<T>() {
-			@Override
-			public T accept(WorkExecutor<T> workExecutor, Connection connection) throws SQLException {
-				return workExecutor.executeReturningWork( work, connection );
-			}
-		};
+		WorkExecutorVisitable<T> realWork = (WorkExecutor<T> workExecutor, Connection connection) -> workExecutor.executeReturningWork( work, connection );
 		return doWork( realWork );
 	}
 

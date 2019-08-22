@@ -53,13 +53,7 @@ public class TestingJtaPlatformImpl extends AbstractJtaPlatform {
 				new com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionSynchronizationRegistryImple();
 
 		synchronizationStrategy = new SynchronizationRegistryBasedSynchronizationStrategy(
-				new SynchronizationRegistryAccess() {
-					@Override
-					public TransactionSynchronizationRegistry getSynchronizationRegistry() {
-						return synchronizationRegistry;
-					}
-				}
-		);
+				() -> synchronizationRegistry);
 	}
 
 	public static TransactionManager transactionManager() {

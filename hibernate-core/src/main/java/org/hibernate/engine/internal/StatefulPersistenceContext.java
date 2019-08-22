@@ -1963,25 +1963,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 						);
 					}
 
-					( (EventSource) session ).getActionQueue().registerProcess(
-							new AfterTransactionCompletionProcess() {
-								@Override
-								public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-									if ( success ) {
-										final boolean put = naturalIdCacheAccessStrategy.afterInsert( session, naturalIdCacheKey, id );
-										if ( put && statistics.isStatisticsEnabled() ) {
-											statistics.naturalIdCachePut(
-													StatsHelper.INSTANCE.getRootEntityRole( persister ),
-													naturalIdCacheAccessStrategy.getRegion().getName()
-											);
-										}
-									}
-									else {
-										naturalIdCacheAccessStrategy.evict( naturalIdCacheKey );
-									}
-								}
+					( (EventSource) session ).getActionQueue().registerProcess((boolean success, SharedSessionContractImplementor session1) -> {
+						if (success) {
+							final boolean put1 = naturalIdCacheAccessStrategy.afterInsert(session1, naturalIdCacheKey, id);
+							if (put1 && statistics.isStatisticsEnabled()) {
+								statistics.naturalIdCachePut(
+									StatsHelper.INSTANCE.getRootEntityRole( persister ),
+									naturalIdCacheAccessStrategy.getRegion().getName()
+								);
 							}
-					);
+						} else {
+							naturalIdCacheAccessStrategy.evict( naturalIdCacheKey );
+						}
+					});
 
 					break;
 				}
@@ -2003,32 +1997,20 @@ public class StatefulPersistenceContext implements PersistenceContext {
 						);
 					}
 
-					( (EventSource) session ).getActionQueue().registerProcess(
-							new AfterTransactionCompletionProcess() {
-								@Override
-								public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-									naturalIdCacheAccessStrategy.unlockItem( session, previousCacheKey, removalLock );
-									if (success) {
-										final boolean put = naturalIdCacheAccessStrategy.afterUpdate(
-												session,
-												naturalIdCacheKey,
-												id,
-												lock
-										);
-
-										if ( put && statistics.isStatisticsEnabled() ) {
-											statistics.naturalIdCachePut(
-													StatsHelper.INSTANCE.getRootEntityRole( persister ),
-													naturalIdCacheAccessStrategy.getRegion().getName()
-											);
-										}
-									}
-									else {
-										naturalIdCacheAccessStrategy.unlockItem( session, naturalIdCacheKey, lock );
-									}
-								}
+					( (EventSource) session ).getActionQueue().registerProcess((boolean success, SharedSessionContractImplementor session1) -> {
+						naturalIdCacheAccessStrategy.unlockItem(session1, previousCacheKey, removalLock);
+						if (success) {
+							final boolean put1 = naturalIdCacheAccessStrategy.afterUpdate(session1, naturalIdCacheKey, id, lock);
+							if (put1 && statistics.isStatisticsEnabled()) {
+								statistics.naturalIdCachePut(
+									StatsHelper.INSTANCE.getRootEntityRole( persister ),
+									naturalIdCacheAccessStrategy.getRegion().getName()
+								);
 							}
-					);
+						} else {
+							naturalIdCacheAccessStrategy.unlockItem(session1, naturalIdCacheKey, lock);
+						}
+					});
 
 					break;
 				}

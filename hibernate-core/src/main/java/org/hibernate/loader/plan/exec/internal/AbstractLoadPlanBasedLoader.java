@@ -102,16 +102,9 @@ public abstract class AbstractLoadPlanBasedLoader {
 			SqlStatementWrapper wrapper = null;
 			try {
 				wrapper = executeQueryStatement( sql, queryParameters, false, session );
-				results = loadQueryDetails.getResultSetProcessor().extractResults(
-						wrapper.getResultSet(),
+				results = loadQueryDetails.getResultSetProcessor().extractResults(wrapper.getResultSet(),
 						session,
-						queryParameters,
-						new NamedParameterContext() {
-							@Override
-							public int[] getNamedParameterLocations(String name) {
-								return AbstractLoadPlanBasedLoader.this.getNamedParameterLocs( name );
-							}
-						},
+						queryParameters, AbstractLoadPlanBasedLoader.this::getNamedParameterLocs,
 						returnProxies,
 						queryParameters.isReadOnly(),
 						forcedResultTransformer,

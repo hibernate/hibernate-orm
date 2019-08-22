@@ -646,20 +646,10 @@ public abstract class AbstractCollectionPersister
 					// actually represented by a formula.
 //					final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
 					final String formulaTemplate = formulaTemplates[i];
-					result[i] = new FormulaReference() {
-						@Override
-						public String getFormulaFragment() {
-							return formulaTemplate;
-						}
-					};
+					result[i] = (FormulaReference) () -> formulaTemplate;
 				}
 				else {
-					result[i] = new ColumnReference() {
-						@Override
-						public String getColumnName() {
-							return columnName;
-						}
-					};
+					result[i] = (ColumnReference) () -> columnName;
 				}
 				i++;
 			}

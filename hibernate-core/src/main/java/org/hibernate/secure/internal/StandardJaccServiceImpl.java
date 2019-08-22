@@ -180,11 +180,7 @@ public class StandardJaccServiceImpl implements JaccService, Configurable {
 	protected static class PrivilegedContextSubjectAccess implements ContextSubjectAccess {
 		public static final PrivilegedContextSubjectAccess INSTANCE = new PrivilegedContextSubjectAccess();
 
-		private final PrivilegedAction<Subject> privilegedAction = new PrivilegedAction<Subject>() {
-			public Subject run() {
-				return NonPrivilegedContextSubjectAccess.INSTANCE.getContextSubject();
-			}
-		};
+		private final PrivilegedAction<Subject> privilegedAction = NonPrivilegedContextSubjectAccess.INSTANCE::getContextSubject;
 
 		@Override
 		public Subject getContextSubject() {

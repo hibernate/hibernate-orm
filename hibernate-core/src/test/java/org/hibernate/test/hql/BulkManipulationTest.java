@@ -1441,18 +1441,13 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		{
 			Session s = openSession();
 			s.beginTransaction();
-			s.doWork(
-					new Work() {
-						@Override
-						public void execute(Connection connection) throws SQLException {
-							final Statement statement = connection.createStatement();
-							final ResultSet resultSet = statement.executeQuery( "select count(*) from farm_accreditations" );
-							assertTrue( resultSet.next() );
-							final int count = resultSet.getInt( 1 );
-							assertEquals( 2, count );
-						}
-					}
-			);
+			s.doWork((Connection connection) -> {
+				final Statement statement = connection.createStatement();
+				final ResultSet resultSet = statement.executeQuery( "select count(*) from farm_accreditations" );
+				assertTrue( resultSet.next() );
+				final int count = resultSet.getInt( 1 );
+				assertEquals( 2, count );
+			});
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1471,18 +1466,13 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		{
 			Session s = openSession();
 			s.beginTransaction();
-			s.doWork(
-					new Work() {
-						@Override
-						public void execute(Connection connection) throws SQLException {
-							final Statement statement = connection.createStatement();
-							final ResultSet resultSet = statement.executeQuery( "select count(*) from farm_accreditations" );
-							assertTrue( resultSet.next() );
-							final int count = resultSet.getInt( 1 );
-							assertEquals( 0, count );
-						}
-					}
-			);
+			s.doWork((Connection connection) -> {
+				final Statement statement = connection.createStatement();
+				final ResultSet resultSet = statement.executeQuery( "select count(*) from farm_accreditations" );
+				assertTrue( resultSet.next() );
+				final int count = resultSet.getInt( 1 );
+				assertEquals( 0, count );
+			});
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1508,18 +1498,13 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		{
 			Session s = openSession();
 			s.beginTransaction();
-			s.doWork(
-					new Work() {
-						@Override
-						public void execute(Connection connection) throws SQLException {
-							final Statement statement = connection.createStatement();
-							final ResultSet resultSet = statement.executeQuery( "select count(*) from human_nick_names" );
-							assertTrue( resultSet.next() );
-							final int count = resultSet.getInt( 1 );
-							assertEquals( 1, count );
-						}
-					}
-			);
+			s.doWork((Connection connection) -> {
+				final Statement statement = connection.createStatement();
+				final ResultSet resultSet = statement.executeQuery( "select count(*) from human_nick_names" );
+				assertTrue( resultSet.next() );
+				final int count = resultSet.getInt( 1 );
+				assertEquals( 1, count );
+			});
 			s.getTransaction().commit();
 			s.close();
 		}
@@ -1538,18 +1523,13 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		{
 			Session s = openSession();
 			s.beginTransaction();
-			s.doWork(
-					new Work() {
-						@Override
-						public void execute(Connection connection) throws SQLException {
-							final Statement statement = connection.createStatement();
-							final ResultSet resultSet = statement.executeQuery( "select count(*) from human_nick_names" );
-							assertTrue( resultSet.next() );
-							final int count = resultSet.getInt( 1 );
-							assertEquals( 0, count );
-						}
-					}
-			);
+			s.doWork((Connection connection) -> {
+				final Statement statement = connection.createStatement();
+				final ResultSet resultSet = statement.executeQuery( "select count(*) from human_nick_names" );
+				assertTrue( resultSet.next() );
+				final int count = resultSet.getInt( 1 );
+				assertEquals( 0, count );
+			});
 			s.getTransaction().commit();
 			s.close();
 		}

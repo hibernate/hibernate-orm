@@ -75,14 +75,7 @@ public class EJBQLTest extends BaseCoreFunctionalTestCase {
 		AST ast = ( AST ) qt.getSqlAST();
 
 		// make certain that the ejb3-positional param got recognized as a positional param
-		List namedParams = ASTUtil.collectChildren(
-		        ast,
-		        new ASTUtil.FilterPredicate() {
-			        public boolean exclude(AST n) {
-				        return n.getType() != HqlSqlTokenTypes.PARAM;
-			        }
-		        }
-		);
+		List namedParams = ASTUtil.collectChildren(ast, (AST n) -> n.getType() != HqlSqlTokenTypes.PARAM);
 		assertTrue( "ejb3 positional param not recognized as a named param", namedParams.size() > 0 );
 	}
 

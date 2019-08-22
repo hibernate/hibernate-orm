@@ -53,11 +53,9 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 				FromReferenceNode lhs);
 	}
 
-	public static final IllegalCollectionDereferenceExceptionBuilder DEF_ILLEGAL_COLL_DEREF_EXCP_BUILDER = new IllegalCollectionDereferenceExceptionBuilder() {
-		public QueryException buildIllegalCollectionDereferenceException(String propertyName, FromReferenceNode lhs) {
-			String lhsPath = ASTUtil.getPathText( lhs );
-			return new QueryException( "illegal attempt to dereference collection [" + lhsPath + "] with element property reference [" + propertyName + "]" );
-		}
+	public static final IllegalCollectionDereferenceExceptionBuilder DEF_ILLEGAL_COLL_DEREF_EXCP_BUILDER = (String propertyName1, FromReferenceNode lhs) -> {
+		String lhsPath = ASTUtil.getPathText( lhs );
+		return new QueryException("illegal attempt to dereference collection [" + lhsPath + "] with element property reference [" + propertyName1 + "]");
 	};
 	public static IllegalCollectionDereferenceExceptionBuilder ILLEGAL_COLL_DEREF_EXCP_BUILDER = DEF_ILLEGAL_COLL_DEREF_EXCP_BUILDER;
 	///////////////////////////////////////////////////////////////////////////

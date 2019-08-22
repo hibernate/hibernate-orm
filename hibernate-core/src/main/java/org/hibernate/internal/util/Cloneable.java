@@ -32,14 +32,7 @@ public class Cloneable {
 	 * @return The SessionEventListenerConfig shallow copy.
 	 */
 	public Object shallowCopy() {
-		return AccessController.doPrivileged(
-				new PrivilegedAction() {
-					@Override
-					public Object run() {
-						return copyListeners();
-					}
-				}
-		);
+		return AccessController.doPrivileged((PrivilegedAction) this::copyListeners);
 	}
 
 	/**
@@ -50,15 +43,10 @@ public class Cloneable {
 	 * is not fully configured.
 	 */
 	public void validate() throws HibernateException {
-		AccessController.doPrivileged(
-				new PrivilegedAction() {
-					@Override
-					public Object run() {
-						checkListeners();
-						return null;
-					}
-				}
-		);
+		AccessController.doPrivileged((PrivilegedAction) () -> {
+			checkListeners();
+			return null;
+		});
 
 	}
 

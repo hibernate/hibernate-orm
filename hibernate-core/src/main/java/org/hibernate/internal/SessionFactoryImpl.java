@@ -571,15 +571,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public DeserializationResolver getDeserializationResolver() {
-		return new DeserializationResolver() {
-			@Override
-			public SessionFactoryImplementor resolve() {
-				return (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
-						uuid,
-						name
-				);
-			}
-		};
+		return (DeserializationResolver) () -> (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+			uuid,
+			name
+		);
 	}
 
 	@SuppressWarnings("deprecation")

@@ -79,11 +79,7 @@ public class SQLExceptionConverterFactory {
 	 * @return The minimal converter.
 	 */
 	public static SQLExceptionConverter buildMinimalSQLExceptionConverter() {
-		return new SQLExceptionConverter() {
-			public JDBCException convert(SQLException sqlException, String message, String sql) {
-				return new GenericJDBCException( message, sqlException, sql );
-			}
-		};
+		return GenericJDBCException::new;
 	}
 
 	private static SQLExceptionConverter constructConverter(String converterClassName, ViolatedConstraintNameExtracter violatedConstraintNameExtracter) {

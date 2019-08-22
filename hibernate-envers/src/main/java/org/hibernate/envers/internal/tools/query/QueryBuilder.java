@@ -257,14 +257,7 @@ public class QueryBuilder {
 			final Iterator<Pair<String, String>> fragmentIterator = orderFragments.iterator();
 			while( fragmentIterator.hasNext() ) {
 				final Pair<String, String> fragment = fragmentIterator.next();
-				final OrderByTranslation orderByFragmentTranslation = Template.translateOrderBy(
-						fragment.getSecond(),
-						new ColumnMapper() {
-							@Override
-							public SqlValueReference[] map(String reference) throws HibernateException {
-								return new SqlValueReference[ 0 ];
-							}
-						},
+				final OrderByTranslation orderByFragmentTranslation = Template.translateOrderBy(fragment.getSecond(), (String reference) -> new SqlValueReference[ 0 ],
 						sessionFactory,
 						sessionFactory.getJdbcServices().getDialect(),
 						sessionFactory.getSqlFunctionRegistry()

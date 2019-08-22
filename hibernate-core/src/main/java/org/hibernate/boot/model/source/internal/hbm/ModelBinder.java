@@ -729,36 +729,30 @@ public class ModelBinder {
 			idValue.setTypeUsingReflection( rootEntityDescriptor.getClassName(), propertyName );
 		}
 
-		relationalObjectBinder.bindColumnsAndFormulas(
-				sourceDocument,
+		relationalObjectBinder.bindColumnsAndFormulas(sourceDocument,
 				( (RelationalValueSourceContainer) idSource.getIdentifierAttributeSource() ).getRelationalValueSources(),
 				idValue,
-				false,
-				new RelationalObjectBinder.ColumnNamingDelegate() {
-					@Override
-					public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-						context.getBuildingOptions().getImplicitNamingStrategy().determineIdentifierColumnName(
-								new ImplicitIdentifierColumnNameSource() {
-									@Override
-									public EntityNaming getEntityNaming() {
-										return hierarchySource.getRoot().getEntityNamingSource();
-									}
-
-									@Override
-									public AttributePath getIdentifierAttributePath() {
-										return idSource.getIdentifierAttributeSource().getAttributePath();
-									}
-
-									@Override
-									public MetadataBuildingContext getBuildingContext() {
-										return context;
-									}
-								}
-						);
-						return database.toIdentifier( propertyName );
-					}
-				}
-		);
+				false, (final LocalMetadataBuildingContext context) -> {
+					context.getBuildingOptions().getImplicitNamingStrategy().determineIdentifierColumnName(
+						new ImplicitIdentifierColumnNameSource() {
+							@Override
+							public EntityNaming getEntityNaming() {
+								return hierarchySource.getRoot().getEntityNamingSource();
+							}
+							
+							@Override
+							public AttributePath getIdentifierAttributePath() {
+								return idSource.getIdentifierAttributeSource().getAttributePath();
+							}
+							
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
+						}
+					);
+					return database.toIdentifier( propertyName );
+		});
 
 		if ( propertyName != null ) {
 			Property prop = new Property();
@@ -1012,18 +1006,10 @@ public class ModelBinder {
 				versionValue
 		);
 
-		relationalObjectBinder.bindColumnsAndFormulas(
-				sourceDocument,
+		relationalObjectBinder.bindColumnsAndFormulas(sourceDocument,
 				versionAttributeSource.getRelationalValueSources(),
 				versionValue,
-				false,
-				new RelationalObjectBinder.ColumnNamingDelegate() {
-					@Override
-					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-						return implicitNamingStrategy.determineBasicColumnName( versionAttributeSource );
-					}
-				}
-		);
+				false, (LocalMetadataBuildingContext context) -> implicitNamingStrategy.determineBasicColumnName( versionAttributeSource ));
 
 		Property prop = new Property();
 		prop.setValue( versionValue );
@@ -1077,20 +1063,12 @@ public class ModelBinder {
 				discriminatorValue
 		);
 
-		relationalObjectBinder.bindColumnOrFormula(
-				sourceDocument,
+		relationalObjectBinder.bindColumnOrFormula(sourceDocument,
 				hierarchySource.getDiscriminatorSource().getDiscriminatorRelationalValueSource(),
 				discriminatorValue,
-				false,
-				new RelationalObjectBinder.ColumnNamingDelegate() {
-					@Override
-					public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-						return implicitNamingStrategy.determineDiscriminatorColumnName(
-								hierarchySource.getDiscriminatorSource()
-						);
-					}
-				}
-		);
+				false, (final LocalMetadataBuildingContext context) -> implicitNamingStrategy.determineDiscriminatorColumnName(
+					hierarchySource.getDiscriminatorSource()
+				));
 
 		rootEntityDescriptor.setPolymorphic( true );
 		rootEntityDescriptor.setDiscriminatorInsertable( hierarchySource.getDiscriminatorSource().isInserted() );
@@ -1900,18 +1878,10 @@ public class ModelBinder {
 				value
 		);
 
-		relationalObjectBinder.bindColumnsAndFormulas(
-				sourceDocument,
+		relationalObjectBinder.bindColumnsAndFormulas(sourceDocument,
 				attributeSource.getRelationalValueSources(),
 				value,
-				attributeSource.areValuesNullableByDefault(),
-				new RelationalObjectBinder.ColumnNamingDelegate() {
-					@Override
-					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-						return implicitNamingStrategy.determineBasicColumnName( attributeSource );
-					}
-				}
-		);
+				attributeSource.areValuesNullableByDefault(), (LocalMetadataBuildingContext context) -> implicitNamingStrategy.determineBasicColumnName( attributeSource ));
 
 
 		prepareValueTypeViaReflection(
@@ -2405,35 +2375,19 @@ public class ModelBinder {
 			}
 		}
 
-		relationalObjectBinder.bindColumnOrFormula(
-				sourceDocument,
+		relationalObjectBinder.bindColumnOrFormula(sourceDocument,
 				anyMapping.getDiscriminatorSource().getRelationalValueSource(),
 				anyBinding,
-				true,
-				new RelationalObjectBinder.ColumnNamingDelegate() {
-					@Override
-					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-						return implicitNamingStrategy.determineAnyDiscriminatorColumnName(
-								anyMapping.getDiscriminatorSource()
-						);
-					}
-				}
-		);
+				true, (LocalMetadataBuildingContext context) -> implicitNamingStrategy.determineAnyDiscriminatorColumnName(
+					anyMapping.getDiscriminatorSource()
+				));
 
-		relationalObjectBinder.bindColumnsAndFormulas(
-				sourceDocument,
+		relationalObjectBinder.bindColumnsAndFormulas(sourceDocument,
 				anyMapping.getKeySource().getRelationalValueSources(),
 				anyBinding,
-				true,
-				new RelationalObjectBinder.ColumnNamingDelegate() {
-					@Override
-					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-						return implicitNamingStrategy.determineAnyKeyColumnName(
-								anyMapping.getKeySource()
-						);
-					}
-				}
-		);
+				true, (LocalMetadataBuildingContext context) -> implicitNamingStrategy.determineAnyKeyColumnName(
+					anyMapping.getKeySource()
+				));
 	}
 
 	private void prepareValueTypeViaReflection(
@@ -3328,18 +3282,10 @@ public class ModelBinder {
 				implicitNamingNature = ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION;
 			}
 
-			relationalObjectBinder.bindColumnsAndFormulas(
-					mappingDocument,
+			relationalObjectBinder.bindColumnsAndFormulas(mappingDocument,
 					getPluralAttributeSource().getKeySource().getRelationalValueSources(),
 					key,
-					getPluralAttributeSource().getKeySource().areValuesNullableByDefault(),
-					new RelationalObjectBinder.ColumnNamingDelegate() {
-						@Override
-						public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-							return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_KEY_COLUMN_NAME );
-						}
-					}
-			);
+					getPluralAttributeSource().getKeySource().areValuesNullableByDefault(), (final LocalMetadataBuildingContext context) -> context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_KEY_COLUMN_NAME ));
 
 			key.createForeignKey();
 			getCollectionBinding().setKey( key );
@@ -3363,18 +3309,10 @@ public class ModelBinder {
 						idBinding
 				);
 
-				relationalObjectBinder.bindColumn(
-						mappingDocument,
+				relationalObjectBinder.bindColumn(mappingDocument,
 						idSource.getColumnSource(),
 						idBinding,
-						false,
-						new RelationalObjectBinder.ColumnNamingDelegate() {
-							@Override
-							public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-								return database.toIdentifier( IdentifierCollection.DEFAULT_IDENTIFIER_COLUMN_NAME );
-							}
-						}
-				);
+						false, (LocalMetadataBuildingContext context) -> database.toIdentifier( IdentifierCollection.DEFAULT_IDENTIFIER_COLUMN_NAME ));
 
 				idBagBinding.setIdentifier( idBinding );
 
@@ -3410,18 +3348,10 @@ public class ModelBinder {
 						elementBinding
 				);
 
-				relationalObjectBinder.bindColumnsAndFormulas(
-						mappingDocument,
+				relationalObjectBinder.bindColumnsAndFormulas(mappingDocument,
 						elementSource.getRelationalValueSources(),
 						elementBinding,
-						elementSource.areValuesNullableByDefault(),
-						new RelationalObjectBinder.ColumnNamingDelegate() {
-							@Override
-							public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-								return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
-							}
-						}
-				);
+						elementSource.areValuesNullableByDefault(), (LocalMetadataBuildingContext context) -> context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME ));
 
 				getCollectionBinding().setElement( elementBinding );
 				// Collection#setWhere is used to set the "where" clause that applies to the collection table
@@ -3497,20 +3427,12 @@ public class ModelBinder {
 						getCollectionBinding().getCollectionTable()
 				);
 
-				relationalObjectBinder.bindColumnsAndFormulas(
-						getMappingDocument(),
+				relationalObjectBinder.bindColumnsAndFormulas(getMappingDocument(),
 						elementSource.getRelationalValueSources(),
 						elementBinding,
-						false,
-						new RelationalObjectBinder.ColumnNamingDelegate() {
-							@Override
-							public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-								return context.getMetadataCollector()
-										.getDatabase()
-										.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
-							}
-						}
-				);
+						false, (final LocalMetadataBuildingContext context) -> context.getMetadataCollector()
+							.getDatabase()
+							.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME ));
 
 				elementBinding.setLazy(
 						elementSource.getFetchCharacteristics()
@@ -3895,30 +3817,22 @@ public class ModelBinder {
 				indexBinding
 		);
 
-		relationalObjectBinder.bindColumnsAndFormulas(
-				mappingDocument,
+		relationalObjectBinder.bindColumnsAndFormulas(mappingDocument,
 				indexSource.getRelationalValueSources(),
 				indexBinding,
-				attributeSource.getElementSource() instanceof PluralAttributeElementSourceOneToMany,
-				new RelationalObjectBinder.ColumnNamingDelegate() {
-					@Override
-					public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-						return context.getBuildingOptions().getImplicitNamingStrategy().determineListIndexColumnName(
-								new ImplicitIndexColumnNameSource() {
-									@Override
-									public AttributePath getPluralAttributePath() {
-										return attributeSource.getAttributePath();
-									}
-
-									@Override
-									public MetadataBuildingContext getBuildingContext() {
-										return context;
-									}
-								}
-						);
+				attributeSource.getElementSource() instanceof PluralAttributeElementSourceOneToMany, (final LocalMetadataBuildingContext context) -> context.getBuildingOptions().getImplicitNamingStrategy().determineListIndexColumnName(
+					new ImplicitIndexColumnNameSource() {
+						@Override
+						public AttributePath getPluralAttributePath() {
+							return attributeSource.getAttributePath();
+						}
+						
+						@Override
+						public MetadataBuildingContext getBuildingContext() {
+							return context;
+						}
 					}
-				}
-		);
+				));
 
 		collectionBinding.setIndex( indexBinding );
 		collectionBinding.setBaseIndex( indexSource.getBase() );
@@ -3948,18 +3862,10 @@ public class ModelBinder {
 				);
 			}
 
-			relationalObjectBinder.bindColumnsAndFormulas(
-					mappingDocument,
+			relationalObjectBinder.bindColumnsAndFormulas(mappingDocument,
 					mapKeySource.getRelationalValueSources(),
 					value,
-					true,
-					new RelationalObjectBinder.ColumnNamingDelegate() {
-						@Override
-						public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-							return database.toIdentifier( IndexedCollection.DEFAULT_INDEX_COLUMN_NAME );
-						}
-					}
-			);
+					true, (LocalMetadataBuildingContext context) -> database.toIdentifier( IndexedCollection.DEFAULT_INDEX_COLUMN_NAME ));
 
 			collectionBinding.setIndex( value );
 		}
@@ -3991,30 +3897,22 @@ public class ModelBinder {
 
 			mapKeyBinding.setReferencedEntityName( mapKeySource.getReferencedEntityName() );
 
-			relationalObjectBinder.bindColumnsAndFormulas(
-					mappingDocument,
+			relationalObjectBinder.bindColumnsAndFormulas(mappingDocument,
 					mapKeySource.getRelationalValueSources(),
 					mapKeyBinding,
-					true,
-					new RelationalObjectBinder.ColumnNamingDelegate() {
-						@Override
-						public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-							return implicitNamingStrategy.determineMapKeyColumnName(
-									new ImplicitMapKeyColumnNameSource() {
-										@Override
-										public AttributePath getPluralAttributePath() {
-											return pluralAttributeSource.getAttributePath();
-										}
-
-										@Override
-										public MetadataBuildingContext getBuildingContext() {
-											return context;
-										}
-									}
-							);
+					true, (final LocalMetadataBuildingContext context) -> implicitNamingStrategy.determineMapKeyColumnName(
+						new ImplicitMapKeyColumnNameSource() {
+							@Override
+							public AttributePath getPluralAttributePath() {
+								return pluralAttributeSource.getAttributePath();
+							}
+							
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
 						}
-					}
-			);
+					));
 			collectionBinding.setIndex( mapKeyBinding );
 		}
 		else if ( pluralAttributeSource.getIndexSource() instanceof PluralAttributeMapKeyManyToAnySource ) {
@@ -4088,18 +3986,12 @@ public class ModelBinder {
 		@Override
 		public void doSecondPass(Map persistentClasses) throws org.hibernate.MappingException {
 			if ( allColumnsNamed ) {
-				relationalObjectBinder.bindColumnsAndFormulas(
-						mappingDocument,
+				relationalObjectBinder.bindColumnsAndFormulas(mappingDocument,
 						manyToOneSource.getRelationalValueSources(),
 						manyToOneBinding,
-						manyToOneSource.areValuesNullableByDefault(),
-						new RelationalObjectBinder.ColumnNamingDelegate() {
-							@Override
-							public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-								throw new AssertionFailure( "Argh!!!" );
-							}
-						}
-				);
+						manyToOneSource.areValuesNullableByDefault(), (LocalMetadataBuildingContext context) -> {
+							throw new AssertionFailure( "Argh!!!" );
+				});
 			}
 			else {
 				// Otherwise we have some dependency resolution to do in order to perform
@@ -4116,35 +4008,27 @@ public class ModelBinder {
 					);
 				}
 
-				relationalObjectBinder.bindColumnsAndFormulas(
-						mappingDocument,
+				relationalObjectBinder.bindColumnsAndFormulas(mappingDocument,
 						manyToOneSource.getRelationalValueSources(),
 						manyToOneBinding,
-						manyToOneSource.areValuesNullableByDefault(),
-						new RelationalObjectBinder.ColumnNamingDelegate() {
-							@Override
-							public Identifier determineImplicitName(final LocalMetadataBuildingContext context) {
-								return implicitNamingStrategy.determineBasicColumnName(
-										new ImplicitBasicColumnNameSource() {
-											@Override
-											public AttributePath getAttributePath() {
-												return manyToOneSource.getAttributePath();
-											}
-
-											@Override
-											public boolean isCollectionElement() {
-												return false;
-											}
-
-											@Override
-											public MetadataBuildingContext getBuildingContext() {
-												return context;
-											}
-										}
-								);
+						manyToOneSource.areValuesNullableByDefault(), (final LocalMetadataBuildingContext context) -> implicitNamingStrategy.determineBasicColumnName(
+							new ImplicitBasicColumnNameSource() {
+								@Override
+								public AttributePath getAttributePath() {
+									return manyToOneSource.getAttributePath();
+								}
+								
+								@Override
+								public boolean isCollectionElement() {
+									return false;
+								}
+								
+								@Override
+								public MetadataBuildingContext getBuildingContext() {
+									return context;
+								}
 							}
-						}
-				);
+						));
 			}
 		}
 	}

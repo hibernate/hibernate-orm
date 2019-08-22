@@ -252,27 +252,15 @@ public final class ByteBuddyState {
 			this.hibernateGeneratedMethodFilter = nameStartsWith( "$$_hibernate_" ).and( isVirtual() );
 
 			PrivilegedAction<MethodDelegation> delegateToInterceptorDispatcherMethodDelegationPrivilegedAction =
-					new PrivilegedAction<MethodDelegation>() {
-
-				@Override
-				public MethodDelegation run() {
-					return MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class );
-				}
-			};
+					() -> MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class );
 
 			this.delegateToInterceptorDispatcherMethodDelegation = System.getSecurityManager() != null
 					? AccessController.doPrivileged( delegateToInterceptorDispatcherMethodDelegationPrivilegedAction )
 					: delegateToInterceptorDispatcherMethodDelegationPrivilegedAction.run();
 
 			PrivilegedAction<FieldAccessor.PropertyConfigurable> interceptorFieldAccessorPrivilegedAction =
-					new PrivilegedAction<FieldAccessor.PropertyConfigurable>() {
-
-				@Override
-				public FieldAccessor.PropertyConfigurable run() {
-					return FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
-							.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
-				}
-			};
+					() -> FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
+						.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
 
 			this.interceptorFieldAccessor = System.getSecurityManager() != null
 					? AccessController.doPrivileged( interceptorFieldAccessorPrivilegedAction )

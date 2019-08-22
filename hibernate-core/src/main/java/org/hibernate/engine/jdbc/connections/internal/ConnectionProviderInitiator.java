@@ -213,24 +213,19 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		final Map injectionData = (Map) configurationValues.get( INJECTION_DATA );
 		if ( injectionData != null && injectionData.size() > 0 ) {
 			final ConnectionProvider theConnectionProvider = connectionProvider;
-			new BeanInfoHelper( connectionProvider.getClass() ).applyToBeanInfo(
-					connectionProvider,
-					new BeanInfoHelper.BeanInfoDelegate() {
-						public void processBeanInfo(BeanInfo beanInfo) throws Exception {
-							final PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
-							for ( PropertyDescriptor descriptor : descriptors ) {
-								final String propertyName = descriptor.getName();
-								if ( injectionData.containsKey( propertyName ) ) {
-									final Method method = descriptor.getWriteMethod();
-									method.invoke(
-											theConnectionProvider,
-											injectionData.get( propertyName )
-									);
-								}
-							}
-						}
+			new BeanInfoHelper( connectionProvider.getClass() ).applyToBeanInfo(connectionProvider, (BeanInfo beanInfo) -> {
+				final PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
+				for ( PropertyDescriptor descriptor : descriptors ) {
+					final String propertyName = descriptor.getName();
+					if ( injectionData.containsKey( propertyName ) ) {
+						final Method method = descriptor.getWriteMethod();
+						method.invoke(
+							theConnectionProvider,
+							injectionData.get( propertyName )
+						);
 					}
-			);
+				}
+			});
 		}
 
 		return connectionProvider;

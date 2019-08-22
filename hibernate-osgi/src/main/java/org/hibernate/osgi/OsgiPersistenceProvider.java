@@ -106,31 +106,16 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		settings.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
 
 		final Integrator[] integrators = osgiServiceUtil.getServiceImpls( Integrator.class );
-		final IntegratorProvider integratorProvider = new IntegratorProvider() {
-			@Override
-			public List<Integrator> getIntegrators() {
-				return Arrays.asList( integrators );
-			}
-		};
+		final IntegratorProvider integratorProvider = () -> Arrays.asList( integrators );
 		settings.put( EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER, integratorProvider );
 
 		final StrategyRegistrationProvider[] strategyRegistrationProviders = osgiServiceUtil.getServiceImpls(
 				StrategyRegistrationProvider.class );
-		final StrategyRegistrationProviderList strategyRegistrationProviderList = new StrategyRegistrationProviderList() {
-			@Override
-			public List<StrategyRegistrationProvider> getStrategyRegistrationProviders() {
-				return Arrays.asList( strategyRegistrationProviders );
-			}
-		};
+		final StrategyRegistrationProviderList strategyRegistrationProviderList = () -> Arrays.asList( strategyRegistrationProviders );
 		settings.put( EntityManagerFactoryBuilderImpl.STRATEGY_REGISTRATION_PROVIDERS, strategyRegistrationProviderList );
 
 		final TypeContributor[] typeContributors = osgiServiceUtil.getServiceImpls( TypeContributor.class );
-		final TypeContributorList typeContributorList = new TypeContributorList() {
-			@Override
-			public List<TypeContributor> getTypeContributors() {
-				return Arrays.asList( typeContributors );
-			}
-		};
+		final TypeContributorList typeContributorList = () -> Arrays.asList( typeContributors );
 		settings.put( EntityManagerFactoryBuilderImpl.TYPE_CONTRIBUTORS, typeContributorList );
 		
 		return settings;

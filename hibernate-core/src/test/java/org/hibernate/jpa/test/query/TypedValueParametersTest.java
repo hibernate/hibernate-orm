@@ -63,22 +63,16 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 
 	@Test
 	public void testNative() {
-		test(new Binder() {
-
-			public void bind(Query q) {
-				org.hibernate.Query hibernateQuery = q.unwrap(org.hibernate.Query.class);
-				hibernateQuery.setParameter("tags", Arrays.asList("important","business"), new CustomType(TagUserType.INSTANCE));
-			}
+		test((Query q) -> {
+			org.hibernate.Query hibernateQuery = q.unwrap(org.hibernate.Query.class);
+			hibernateQuery.setParameter("tags", Arrays.asList("important","business"), new CustomType(TagUserType.INSTANCE));
 		});
 	}
 
 	@Test
 	public void testJpa() {
-		test(new Binder() {
-
-			public void bind(Query q) {
-				q.setParameter("tags", new TypedParameterValue( new CustomType( TagUserType.INSTANCE), Arrays.asList("important","business")));
-			}
+		test((Query q) -> {
+			q.setParameter("tags", new TypedParameterValue( new CustomType( TagUserType.INSTANCE), Arrays.asList("important","business")));
 		});
 
 	}

@@ -45,16 +45,12 @@ public class HibernateMethodLookupDispatcher {
 	private static Set<String> authorizedClasses = ConcurrentHashMap.newKeySet();
 
 	public static Method getDeclaredMethod(Class<?> type, String name, Class<?>[] parameters) {
-		PrivilegedAction<Method> getDeclaredMethodAction = new PrivilegedAction<Method>() {
-
-			@Override
-			public Method run() {
-				try {
-					return type.getDeclaredMethod( name, parameters );
-				}
-				catch (NoSuchMethodException | SecurityException e) {
-					return null;
-				}
+		PrivilegedAction<Method> getDeclaredMethodAction = () -> {
+			try {
+				return type.getDeclaredMethod( name, parameters );
+			}
+			catch (NoSuchMethodException | SecurityException e) {
+				return null;
 			}
 		};
 
@@ -62,16 +58,12 @@ public class HibernateMethodLookupDispatcher {
 	}
 
 	public static Method getMethod(Class<?> type, String name, Class<?>[] parameters) {
-		PrivilegedAction<Method> getMethodAction = new PrivilegedAction<Method>() {
-
-			@Override
-			public Method run() {
-				try {
-					return type.getMethod( name, parameters );
-				}
-				catch (NoSuchMethodException | SecurityException e) {
-					return null;
-				}
+		PrivilegedAction<Method> getMethodAction = () -> {
+			try {
+				return type.getMethod( name, parameters );
+			}
+			catch (NoSuchMethodException | SecurityException e) {
+				return null;
 			}
 		};
 
@@ -95,41 +87,38 @@ public class HibernateMethodLookupDispatcher {
 
 	static {
 		// The action below will return the action used at runtime to retrieve the caller stack
-		PrivilegedAction<PrivilegedAction<Class<?>[]>> initializeGetCallerStackAction = new PrivilegedAction<PrivilegedAction<Class<?>[]>>() {
-			@Override
-			public PrivilegedAction<Class<?>[]> run() {
-				Class<?> stackWalkerClass = null;
+		PrivilegedAction<PrivilegedAction<Class<?>[]>> initializeGetCallerStackAction = () -> {
+			Class<?> stackWalkerClass = null;
+			try {
+				// JDK 9 introduced the StackWalker
+				stackWalkerClass = Class.forName( "java.lang.StackWalker" );
+			}
+			catch (ClassNotFoundException e) {
+				// ignore, we will deal with that later.
+			}
+			
+			if ( stackWalkerClass != null ) {
+				// We can use a stack walker
 				try {
-					// JDK 9 introduced the StackWalker
-					stackWalkerClass = Class.forName( "java.lang.StackWalker" );
+					Class<?> optionClass = Class.forName( "java.lang.StackWalker$Option" );
+					Object stackWalker = stackWalkerClass.getMethod( "getInstance", optionClass )
+						// The first one is RETAIN_CLASS_REFERENCE
+						.invoke( null, optionClass.getEnumConstants()[0] );
+					
+					Method stackWalkerWalkMethod = stackWalkerClass.getMethod( "walk", Function.class );
+					Method  stackFrameGetDeclaringClass = Class.forName( "java.lang.StackWalker$StackFrame" )
+						.getMethod( "getDeclaringClass" );
+					return new StackWalkerGetCallerStackAction(
+						stackWalker, stackWalkerWalkMethod,stackFrameGetDeclaringClass
+					);
 				}
-				catch (ClassNotFoundException e) {
-					// ignore, we will deal with that later.
+				catch (Throwable e) {
+					throw new HibernateException( "Unable to initialize the stack walker", e );
 				}
-
-				if ( stackWalkerClass != null ) {
-					// We can use a stack walker
-					try {
-						Class<?> optionClass = Class.forName( "java.lang.StackWalker$Option" );
-						Object stackWalker = stackWalkerClass.getMethod( "getInstance", optionClass )
-								// The first one is RETAIN_CLASS_REFERENCE
-								.invoke( null, optionClass.getEnumConstants()[0] );
-
-						Method stackWalkerWalkMethod = stackWalkerClass.getMethod( "walk", Function.class );
-						Method  stackFrameGetDeclaringClass = Class.forName( "java.lang.StackWalker$StackFrame" )
-								.getMethod( "getDeclaringClass" );
-						return new StackWalkerGetCallerStackAction(
-								stackWalker, stackWalkerWalkMethod,stackFrameGetDeclaringClass
-						);
-					}
-					catch (Throwable e) {
-						throw new HibernateException( "Unable to initialize the stack walker", e );
-					}
-				}
-				else {
-					// We cannot use a stack walker, default to fetching the security manager class context
-					return new SecurityManagerClassContextGetCallerStackAction();
-				}
+			}
+			else {
+				// We cannot use a stack walker, default to fetching the security manager class context
+				return new SecurityManagerClassContextGetCallerStackAction();
 			}
 		};
 
@@ -201,14 +190,9 @@ public class HibernateMethodLookupDispatcher {
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		private final Function<Stream, Object> stackFrameExtractFunction = new Function<Stream, Object>() {
-			@Override
-			public Object apply(Stream stream) {
-				return stream.map( stackFrameGetDeclaringClassFunction )
-						.limit( MAX_STACK_FRAMES )
-						.toArray( Class<?>[]::new );
-			}
-		};
+		private final Function<Stream, Object> stackFrameExtractFunction = (Stream stream) -> stream.map( stackFrameGetDeclaringClassFunction )
+			.limit( MAX_STACK_FRAMES )
+			.toArray( Class<?>[]::new );
 
 		private final Function<Object, Class<?>> stackFrameGetDeclaringClassFunction = new Function<Object, Class<?>>() {
 			@Override

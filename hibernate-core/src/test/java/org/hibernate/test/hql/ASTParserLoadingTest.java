@@ -3905,9 +3905,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		public void prepare(Query query);
 	}
 
-	private static final QueryPreparer DEFAULT_PREPARER = new QueryPreparer() {
-		public void prepare(Query query) {
-		}
+	private static final QueryPreparer DEFAULT_PREPARER = (Query query) -> {
 	};
 
 	private class SyntaxChecker {

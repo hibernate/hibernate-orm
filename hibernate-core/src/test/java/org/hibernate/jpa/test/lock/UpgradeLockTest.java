@@ -56,20 +56,18 @@ public class UpgradeLockTest extends BaseEntityManagerFunctionalTestCase {
 			lock.setName( "surname" );		   // don't end tx1 yet
 
 			final CountDownLatch latch = new CountDownLatch(1);
-			Thread t = new Thread( new Runnable() {
-				public void run() {
-					try {
-						em2.getTransaction().begin();  // start tx2
-						Lock lock2 = em2.getReference( Lock.class, id );
-						lock2.setName("renamed");	   // change entity
-					}
-					finally {
-						em2.getTransaction().commit();
-						em2.close();
-						latch.countDown();	// signal that tx2 is committed
-					}
+			Thread t = new Thread( () -> {
+				try {
+					em2.getTransaction().begin();  // start tx2
+					Lock lock2 = em2.getReference( Lock.class, id );
+					lock2.setName("renamed");	   // change entity
 				}
-			} );
+				finally {
+					em2.getTransaction().commit();
+					em2.close();
+					latch.countDown();	// signal that tx2 is committed
+				}
+			});
 
 			t.setDaemon( true );
 			t.setName("testUpgradeReadLockToOptimisticForceIncrement tx2");

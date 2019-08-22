@@ -176,31 +176,26 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 
 		final Session workSession = openSession();
 		workSession.beginTransaction();
-		workSession.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						PreparedStatement ps = connection.prepareStatement( sql );
-						callback.bind( ps );
-						ResultSet resultSet = ps.executeQuery();
-						//callback.beforeExtractResults( workSession );
-						results.addAll(
-								resultSetProcessor.extractResults(
-										resultSet,
-										(SessionImplementor) workSession,
-										callback.getQueryParameters(),
-										Helper.parameterContext(),
-										true,
-										false,
-										null,
-										null
-								)
-						);
-						resultSet.close();
-						ps.close();
-					}
-				}
-		);
+		workSession.doWork((Connection connection) -> {
+			PreparedStatement ps = connection.prepareStatement( sql );
+			callback.bind( ps );
+			ResultSet resultSet = ps.executeQuery();
+			//callback.beforeExtractResults( workSession );
+			results.addAll(
+				resultSetProcessor.extractResults(
+					resultSet,
+					(SessionImplementor) workSession,
+					callback.getQueryParameters(),
+					Helper.parameterContext(),
+					true,
+					false,
+					null,
+					null
+				)
+			);
+			resultSet.close();
+			ps.close();
+		});
 		workSession.getTransaction().commit();
 		workSession.close();
 

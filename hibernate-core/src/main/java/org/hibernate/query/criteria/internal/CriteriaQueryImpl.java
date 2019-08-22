@@ -327,27 +327,24 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 							@Override
 							public ResultMetadataValidator getResultMetadataValidator() {
-								return new HibernateEntityManagerImplementor.QueryOptions.ResultMetadataValidator() {
-									@Override
-									public void validate(Type[] returnTypes) {
-										SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
-										if ( selection != null ) {
-											if ( selection.isCompoundSelection() ) {
-												if ( returnTypes.length != selection.getCompoundSelectionItems().size() ) {
-													throw new IllegalStateException(
-															"Number of return values [" + returnTypes.length +
-																	"] did not match expected [" +
-																	selection.getCompoundSelectionItems().size() + "]"
-													);
-												}
+								return (Type[] returnTypes) -> {
+									SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
+									if ( selection != null ) {
+										if ( selection.isCompoundSelection() ) {
+											if ( returnTypes.length != selection.getCompoundSelectionItems().size() ) {
+												throw new IllegalStateException(
+													"Number of return values [" + returnTypes.length +
+														"] did not match expected [" +
+														selection.getCompoundSelectionItems().size() + "]"
+												);
 											}
-											else {
-												if ( returnTypes.length > 1 ) {
-													throw new IllegalStateException(
-															"Number of return values [" + returnTypes.length +
-																	"] did not match expected [1]"
-													);
-												}
+										}
+										else {
+											if ( returnTypes.length > 1 ) {
+												throw new IllegalStateException(
+													"Number of return values [" + returnTypes.length +
+														"] did not match expected [1]"
+												);
 											}
 										}
 									}

@@ -15,28 +15,22 @@ import static org.hibernate.engine.config.spi.ConfigurationService.Converter;
  * @author Steve Ebersole
  */
 public class StandardConverters {
-	public static final Converter<Boolean> BOOLEAN = new Converter<Boolean>() {
-		@Override
-		public Boolean convert(Object value) {
-			if ( value == null ) {
-				throw new IllegalArgumentException( "Null value passed to convert" );
-			}
-
-			return Boolean.class.isInstance( value )
-					? Boolean.class.cast( value )
-					: Boolean.parseBoolean( value.toString() );
+	public static final Converter<Boolean> BOOLEAN = (Object value) -> {
+		if ( value == null ) {
+			throw new IllegalArgumentException( "Null value passed to convert" );
 		}
+		
+		return Boolean.class.isInstance( value )
+			? Boolean.class.cast( value )
+			: Boolean.parseBoolean( value.toString() );
 	};
 
-	public static final Converter<String> STRING = new Converter<String>() {
-		@Override
-		public String convert(Object value) {
-			if ( value == null ) {
-				throw new IllegalArgumentException( "Null value passed to convert" );
-			}
-
-			return value.toString();
+	public static final Converter<String> STRING = (Object value) -> {
+		if ( value == null ) {
+			throw new IllegalArgumentException( "Null value passed to convert" );
 		}
+		
+		return value.toString();
 	};
 
 	/**

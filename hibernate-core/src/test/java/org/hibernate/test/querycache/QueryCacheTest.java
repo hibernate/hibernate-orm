@@ -689,11 +689,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		interceptor.blockOnLoad();
 
-		Future<Item> fetchedItem = executor.submit(new Callable<Item>() {
-			public Item call() throws Exception {
-				return findByDescription(sessionBuilder, "Washington");
-			}
-		});
+		Future<Item> fetchedItem = executor.submit(() -> findByDescription(sessionBuilder, "Washington"));
 
 		// wait for the onLoad listener to be called
 		interceptor.waitOnLoad();

@@ -96,21 +96,16 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 			map.put( propertyData.getBeanName(), value );
 		}
 		else {
-			AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Setter setter = ReflectionTools.getSetter(
-									targetObject.getClass(),
-									propertyData,
-									serviceRegistry
-							);
-							setter.set( targetObject, value, null );
-
-							return null;
-						}
-					}
-			);
+			AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+				final Setter setter = ReflectionTools.getSetter(
+					targetObject.getClass(),
+					propertyData,
+					serviceRegistry
+				);
+				setter.set( targetObject, value, null );
+				
+				return null;
+			});
 		}
 	}
 

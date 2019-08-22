@@ -118,118 +118,91 @@ public class HibernateQueryCacheStatistics extends HibernateAbstractStatistics {
 		return null;
 	}
 
-	private Operation queryExecutionCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.QueryStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getQueryName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getExecutionCount() : 0 );
-		}
+	private Operation queryExecutionCount = (Object... args) -> {
+		org.hibernate.stat.QueryStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getQueryName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getExecutionCount() : 0 );
 	};
 
-	private Operation queryExecutionMaximumTime = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.QueryStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getQueryName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getExecutionMaxTime() : 0 );
-		}
+	private Operation queryExecutionMaximumTime = (Object... args) -> {
+		org.hibernate.stat.QueryStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getQueryName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getExecutionMaxTime() : 0 );
 	};
 
-	private Operation queryExecutionRowCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.QueryStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getQueryName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getExecutionRowCount() : 0 );
-		}
+	private Operation queryExecutionRowCount = (Object... args) -> {
+		org.hibernate.stat.QueryStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getQueryName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getExecutionRowCount() : 0 );
 	};
 
-	private Operation queryExecutionAverageTime = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.QueryStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getQueryName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getExecutionAvgTime() : 0 );
-		}
+	private Operation queryExecutionAverageTime = (Object... args) -> {
+		org.hibernate.stat.QueryStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getQueryName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getExecutionAvgTime() : 0 );
 	};
 
-	private Operation queryExecutionMinimumTime = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.QueryStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getQueryName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getExecutionMinTime() : 0 );
-		}
+	private Operation queryExecutionMinimumTime = (Object... args) -> {
+		org.hibernate.stat.QueryStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getQueryName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getExecutionMinTime() : 0 );
 	};
 
-	private Operation queryCacheHitCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.QueryStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getQueryName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getCacheHitCount() : 0 );
-		}
+	private Operation queryCacheHitCount = (Object... args) -> {
+		org.hibernate.stat.QueryStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getQueryName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getCacheHitCount() : 0 );
 	};
 
-	private Operation queryCacheMissCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.QueryStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getQueryName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getCacheMissCount() : 0 );
-		}
+	private Operation queryCacheMissCount = (Object... args) -> {
+		org.hibernate.stat.QueryStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getQueryName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getCacheMissCount() : 0 );
 	};
 
-	private Operation queryCachePutCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.QueryStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getQueryName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getCachePutCount() : 0 );
-		}
+	private Operation queryCachePutCount = (Object... args) -> {
+		org.hibernate.stat.QueryStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getQueryName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getCachePutCount() : 0 );
 	};
 
-	private Operation showQueryName = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			String displayQueryName = getQueryName( args );
-			EntityManagerFactory entityManagerFactory = getEntityManagerFactory( args );
-			if ( displayQueryName != null && entityManagerFactory != null ) {
-				SessionFactory sessionFactory = entityManagerFactory.unwrap( SessionFactory.class );
-				// convert displayed (transformed by QueryNames) query name to original query name
-				if ( sessionFactory != null ) {
-					String[] originalQueryNames = sessionFactory.getStatistics().getQueries();
-					if ( originalQueryNames != null ) {
-						for ( String originalQueryName : originalQueryNames ) {
-							if ( QueryName.queryName( originalQueryName )
-									.getDisplayName()
-									.equals( displayQueryName ) ) {
-								return originalQueryName;
-							}
+	private Operation showQueryName = (Object... args) -> {
+		String displayQueryName = getQueryName( args );
+		EntityManagerFactory entityManagerFactory = getEntityManagerFactory( args );
+		if ( displayQueryName != null && entityManagerFactory != null ) {
+			SessionFactory sessionFactory = entityManagerFactory.unwrap( SessionFactory.class );
+			// convert displayed (transformed by QueryNames) query name to original query name
+			if ( sessionFactory != null ) {
+				String[] originalQueryNames = sessionFactory.getStatistics().getQueries();
+				if ( originalQueryNames != null ) {
+					for ( String originalQueryName : originalQueryNames ) {
+						if ( QueryName.queryName( originalQueryName )
+							.getDisplayName()
+							.equals( displayQueryName ) ) {
+							return originalQueryName;
 						}
 					}
 				}
-
 			}
-			return null;
+
 		}
+		return null;
 	};
 
 	private String getQueryName(Object... args) {

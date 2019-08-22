@@ -74,12 +74,7 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 		final String typeName = isDynamic
 				? jaxbEmbeddableMapping.getClazz()
 				: mappingDocument.qualifyClassName( jaxbEmbeddableMapping.getClazz() );
-		this.typeDescriptor = new JavaTypeDescriptor() {
-			@Override
-			public String getName() {
-				return typeName;
-			}
-		};
+		this.typeDescriptor = () -> typeName;
 
 		if ( jaxbEmbeddableMapping.getTuplizer().isEmpty() ) {
 			tuplizerClassMap = Collections.emptyMap();

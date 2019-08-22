@@ -110,46 +110,38 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNormalLoading() {
-		performWithStandardData(
-				new TestCode() {
-					public void perform(TestData data) {
-						Session session = openSession();
-						session.beginTransaction();
-						CourseOffering section = ( CourseOffering ) session.get( CourseOffering.class, data.getSectionId() );
-						assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-						assertFalse( Hibernate.isInitialized( section.getCourse() ) );
-						assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
-						assertFalse( Hibernate.isInitialized( section.getCourse().getCode().getDepartment() ) );
-						assertTrue( Hibernate.isInitialized( section.getCourse() ) );
-						assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
-						session.getTransaction().commit();
-						session.close();
-					}
-				}
-		);
+		performWithStandardData((TestData data) -> {
+			Session session1 = openSession();
+			session1.beginTransaction();
+			CourseOffering section = (CourseOffering) session1.get(CourseOffering.class, data.getSectionId());
+			assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
+			assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+			assertFalse( Hibernate.isInitialized( section.getCourse() ) );
+			assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
+			assertFalse( Hibernate.isInitialized( section.getCourse().getCode().getDepartment() ) );
+			assertTrue( Hibernate.isInitialized( section.getCourse() ) );
+			assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
+			session1.getTransaction().commit();
+			session1.close();
+		});
 	}
 
 	@Test
 	public void testNormalCriteria() {
-		performWithStandardData(
-				new TestCode() {
-					public void perform(TestData data) {
-						Session session = openSession();
-						session.beginTransaction();
-						CourseOffering section = ( CourseOffering ) session.createCriteria( CourseOffering.class ).uniqueResult();
-						assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-						assertFalse( Hibernate.isInitialized( section.getCourse() ) );
-						assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
-						assertFalse( Hibernate.isInitialized( section.getCourse().getCode().getDepartment() ) );
-						assertTrue( Hibernate.isInitialized( section.getCourse() ) );
-						assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
-						session.getTransaction().commit();
-						session.close();
-					}
-				}
-		);
+		performWithStandardData((TestData data) -> {
+			Session session1 = openSession();
+			session1.beginTransaction();
+			CourseOffering section = (CourseOffering) session1.createCriteria(CourseOffering.class).uniqueResult();
+			assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
+			assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+			assertFalse( Hibernate.isInitialized( section.getCourse() ) );
+			assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
+			assertFalse( Hibernate.isInitialized( section.getCourse().getCode().getDepartment() ) );
+			assertTrue( Hibernate.isInitialized( section.getCourse() ) );
+			assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
+			session1.getTransaction().commit();
+			session1.close();
+		});
 	}
 
 	@Test
@@ -174,125 +166,101 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testLoadManyToOneFetchProfile() {
-		performWithStandardData(
-				new TestCode() {
-					public void perform(TestData data) {
-						Session session = openSession();
-						session.beginTransaction();
-						session.enableFetchProfile( "enrollment.details" );
-						Enrollment enrollment = ( Enrollment ) session.get( Enrollment.class, data.getEnrollmentId() );
-						assertEquals( 3, sessionFactory().getStatistics().getEntityLoadCount() ); // enrollment + (section + student)
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-						assertTrue( Hibernate.isInitialized( enrollment.getOffering() ) );
-						assertTrue( Hibernate.isInitialized( enrollment.getStudent() ) );
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-						session.getTransaction().commit();
-						session.close();
-					}
-				}
-		);
+		performWithStandardData((TestData data) -> {
+			Session session1 = openSession();
+			session1.beginTransaction();
+			session1.enableFetchProfile("enrollment.details");
+			Enrollment enrollment = (Enrollment) session1.get(Enrollment.class, data.getEnrollmentId());
+			assertEquals( 3, sessionFactory().getStatistics().getEntityLoadCount() ); // enrollment + (section + student)
+			assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+			assertTrue( Hibernate.isInitialized( enrollment.getOffering() ) );
+			assertTrue( Hibernate.isInitialized( enrollment.getStudent() ) );
+			assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+			session1.getTransaction().commit();
+			session1.close();
+		});
 	}
 
 	@Test
 	public void testCriteriaManyToOneFetchProfile() {
-		performWithStandardData(
-				new TestCode() {
-					public void perform(TestData data) {
-						Session session = openSession();
-						session.beginTransaction();
-						session.enableFetchProfile( "enrollment.details" );
-						Enrollment enrollment = ( Enrollment ) session.createCriteria( Enrollment.class ).uniqueResult();
-						assertEquals( 3, sessionFactory().getStatistics().getEntityLoadCount() ); // enrollment + (section + student)
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-						assertTrue( Hibernate.isInitialized( enrollment.getOffering() ) );
-						assertTrue( Hibernate.isInitialized( enrollment.getStudent() ) );
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-						session.getTransaction().commit();
-						session.close();
-					}
-				}
-		);
+		performWithStandardData((TestData data) -> {
+			Session session1 = openSession();
+			session1.beginTransaction();
+			session1.enableFetchProfile("enrollment.details");
+			Enrollment enrollment = (Enrollment) session1.createCriteria(Enrollment.class).uniqueResult();
+			assertEquals( 3, sessionFactory().getStatistics().getEntityLoadCount() ); // enrollment + (section + student)
+			assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+			assertTrue( Hibernate.isInitialized( enrollment.getOffering() ) );
+			assertTrue( Hibernate.isInitialized( enrollment.getStudent() ) );
+			assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+			session1.getTransaction().commit();
+			session1.close();
+		});
 	}
 
 	@Test
 	public void testLoadOneToManyFetchProfile() {
-		performWithStandardData(
-				new TestCode() {
-					public void perform(TestData data) {
-						Session session = openSession();
-						session.beginTransaction();
-						session.enableFetchProfile( "offering.details" );
-						CourseOffering section = ( CourseOffering ) session.get( CourseOffering.class, data.getSectionId() );
-						assertEquals( 3, sessionFactory().getStatistics().getEntityLoadCount() ); // section + (enrollments + course)
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-						assertTrue( Hibernate.isInitialized( section.getEnrollments() ) );
-						session.getTransaction().commit();
-						session.close();
-					}
-				}
-		);
+		performWithStandardData((TestData data) -> {
+			Session session1 = openSession();
+			session1.beginTransaction();
+			session1.enableFetchProfile("offering.details");
+			CourseOffering section = (CourseOffering) session1.get(CourseOffering.class, data.getSectionId());
+			assertEquals( 3, sessionFactory().getStatistics().getEntityLoadCount() ); // section + (enrollments + course)
+			assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+			assertTrue( Hibernate.isInitialized( section.getEnrollments() ) );
+			session1.getTransaction().commit();
+			session1.close();
+		});
 	}
 
 	@Test
 	public void testLoadDeepFetchProfile() {
-		performWithStandardData(
-				new TestCode() {
-					public void perform(TestData data) {
-						Session session = openSession();
-						session.beginTransaction();
-						// enable both enrollment and offering detail profiles;
-						// then loading the section/offering should fetch the enrollment
-						// which in turn should fetch student (+ offering).
-						session.enableFetchProfile( "offering.details" );
-						session.enableFetchProfile( "enrollment.details" );
-						CourseOffering section = ( CourseOffering ) session.get( CourseOffering.class, data.getSectionId() );
-						assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() ); // section + (course + enrollments + (student))
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-						assertTrue( Hibernate.isInitialized( section.getEnrollments() ) );
-						session.getTransaction().commit();
-						session.close();
-					}
-				}
-		);
+		performWithStandardData((TestData data) -> {
+			Session session1 = openSession();
+			session1.beginTransaction();
+			// enable both enrollment and offering detail profiles;
+			// then loading the section/offering should fetch the enrollment
+			// which in turn should fetch student (+ offering).
+			session1.enableFetchProfile("offering.details");
+			session1.enableFetchProfile("enrollment.details");
+			CourseOffering section = (CourseOffering) session1.get(CourseOffering.class, data.getSectionId());
+			assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() ); // section + (course + enrollments + (student))
+			assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+			assertTrue( Hibernate.isInitialized( section.getEnrollments() ) );
+			session1.getTransaction().commit();
+			session1.close();
+		});
 	}
 
 	@Test
 	public void testLoadComponentDerefFetchProfile() {
-		performWithStandardData(
-				new TestCode() {
-					public void perform(TestData data) {
-						Session session = openSession();
-						session.beginTransaction();
-						session.enableFetchProfile( "course.details" );
-						Course course = ( Course ) session.get( Course.class, data.getCourseId() );
-						assertEquals( 2, sessionFactory().getStatistics().getEntityLoadCount() ); // course + department
-						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
-						assertTrue( Hibernate.isInitialized( course.getCode().getDepartment() ) );
-						session.getTransaction().commit();
-						session.close();
-					}
-				}
-		);
+		performWithStandardData((TestData data) -> {
+			Session session1 = openSession();
+			session1.beginTransaction();
+			session1.enableFetchProfile("course.details");
+			Course course = (Course) session1.get(Course.class, data.getCourseId());
+			assertEquals( 2, sessionFactory().getStatistics().getEntityLoadCount() ); // course + department
+			assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+			assertTrue( Hibernate.isInitialized( course.getCode().getDepartment() ) );
+			session1.getTransaction().commit();
+			session1.close();
+		});
 	}
 
 	@Test
 	public void testHQL() {
-		performWithStandardData(
-				new TestCode() {
-					public void perform(TestData data) {
-						Session session = openSession();
-						session.beginTransaction();
-						session.enableFetchProfile( "offering.details" );
-						session.enableFetchProfile( "enrollment.details" );
-						List sections = session.createQuery( "from CourseOffering" ).list();
-						int sectionCount = sections.size();
-						assertEquals( "unexpected CourseOffering count", 1, sectionCount );
-						assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() );
-						assertEquals( 2, sessionFactory().getStatistics().getEntityFetchCount() );
-						session.getTransaction().commit();
-						session.close();
-					}
-				}
-		);
+		performWithStandardData((TestData data) -> {
+			Session session1 = openSession();
+			session1.beginTransaction();
+			session1.enableFetchProfile("offering.details");
+			session1.enableFetchProfile("enrollment.details");
+			List sections = session1.createQuery("from CourseOffering").list();
+			int sectionCount = sections.size();
+			assertEquals( "unexpected CourseOffering count", 1, sectionCount );
+			assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() );
+			assertEquals( 2, sessionFactory().getStatistics().getEntityFetchCount() );
+			session1.getTransaction().commit();
+			session1.close();
+		});
 	}
 }

@@ -57,10 +57,5 @@ public class ValueHolder<T> {
 		return value;
 	}
 
-	private static final DeferredInitializer NO_DEFERRED_INITIALIZER = new DeferredInitializer() {
-		@Override
-		public Void initialize() {
-			return null;
-		}
-	};
+	private static final DeferredInitializer NO_DEFERRED_INITIALIZER = (DeferredInitializer) () -> null;
 }

@@ -102,196 +102,191 @@ public final class CompositionSingularSubAttributesHelper {
 			final CompositeType compositeType,
 			final String lhsTableName,
 			final String[] lhsColumns) {
-		return new Iterable<AttributeDefinition>() {
+		return () -> new Iterator<AttributeDefinition>() {
+			private final int numberOfAttributes = compositeType.getSubtypes().length;
+			private int currentSubAttributeNumber;
+			private int currentColumnPosition;
+			
 			@Override
-			public Iterator<AttributeDefinition> iterator() {
-				return new Iterator<AttributeDefinition>() {
-					private final int numberOfAttributes = compositeType.getSubtypes().length;
-					private int currentSubAttributeNumber;
-					private int currentColumnPosition;
-
-					@Override
-					public boolean hasNext() {
-						return currentSubAttributeNumber < numberOfAttributes;
-					}
-
-					@Override
-					public AttributeDefinition next() {
-						final int subAttributeNumber = currentSubAttributeNumber;
-						currentSubAttributeNumber++;
-
-						final String name = compositeType.getPropertyNames()[subAttributeNumber];
-						final Type type = compositeType.getSubtypes()[subAttributeNumber];
-						final FetchMode fetchMode = compositeType.getFetchMode( subAttributeNumber );
-
-						final int columnPosition = currentColumnPosition;
-						final int columnSpan = type.getColumnSpan( ownerEntityPersister.getFactory() );
-						final String[] subAttributeLhsColumns = ArrayHelper.slice( lhsColumns, columnPosition, columnSpan );
-
-
-						final boolean[] propertyNullability = compositeType.getPropertyNullability();
-						final boolean nullable = propertyNullability == null || propertyNullability[subAttributeNumber];
-
-						currentColumnPosition += columnSpan;
-
-						if ( type.isAssociationType() ) {
-							final AssociationType aType = (AssociationType) type;
-							return new AssociationAttributeDefinition() {
-								@Override
-								public AssociationKey getAssociationKey() {
-									return new AssociationKey( lhsTableName, subAttributeLhsColumns );
-								}
-
-
-								@Override
-								public AssociationNature getAssociationNature() {
-									if ( type.isAnyType() ) {
-										return AssociationNature.ANY;
-									}
-									else {
-										// cannot be a collection
-										return AssociationNature.ENTITY;
-									}
-								}
-
-								@Override
-								public EntityDefinition toEntityDefinition() {
-									if ( getAssociationNature() != AssociationNature.ENTITY ) {
-										throw new WalkingException(
-												"Cannot build EntityDefinition from non-entity-typed attribute"
-										);
-									}
-									return (EntityPersister) aType.getAssociatedJoinable( ownerEntityPersister.getFactory() );
-								}
-
-								@Override
-								public AnyMappingDefinition toAnyDefinition() {
-									if ( getAssociationNature() != AssociationNature.ANY ) {
-										throw new WalkingException(
-												"Cannot build AnyMappingDefinition from non-any-typed attribute"
-										);
-									}
-									// todo : not sure how lazy is propogated into the component for a subattribute of type any
-									return new StandardAnyTypeDefinition( (AnyType) aType, false );
-								}
-
-								@Override
-								public CollectionDefinition toCollectionDefinition() {
-									throw new WalkingException( "A collection cannot be mapped to a composite ID sub-attribute." );
-								}
-
-								@Override
-								public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
-									final FetchStyle style = FetchStrategyHelper.determineFetchStyleByMetadata(
-											fetchMode,
-											(AssociationType) type,
-											ownerEntityPersister.getFactory()
-									);
-									return new FetchStrategy(
-											FetchStrategyHelper.determineFetchTiming(
-													style,
-													getType(),
-													ownerEntityPersister.getFactory()
-											),
-											style
-									);
-								}
-
-								@Override
-								public CascadeStyle determineCascadeStyle() {
-									return CascadeStyles.NONE;
-								}
-
-								@Override
-								public HydratedCompoundValueHandler getHydratedCompoundValueExtractor() {
-									return null;
-								}
-
-								@Override
-								public String getName() {
-									return name;
-								}
-
-								@Override
-								public AssociationType getType() {
-									return aType;
-								}
-
-								@Override
-								public boolean isNullable() {
-									return nullable;
-								}
-
-								@Override
-								public AttributeSource getSource() {
-									return source;
-								}
-							};
+			public boolean hasNext() {
+				return currentSubAttributeNumber < numberOfAttributes;
+			}
+			
+			@Override
+			public AttributeDefinition next() {
+				final int subAttributeNumber = currentSubAttributeNumber;
+				currentSubAttributeNumber++;
+				
+				final String name = compositeType.getPropertyNames()[subAttributeNumber];
+				final Type type = compositeType.getSubtypes()[subAttributeNumber];
+				final FetchMode fetchMode = compositeType.getFetchMode( subAttributeNumber );
+				
+				final int columnPosition = currentColumnPosition;
+				final int columnSpan = type.getColumnSpan( ownerEntityPersister.getFactory() );
+				final String[] subAttributeLhsColumns = ArrayHelper.slice( lhsColumns, columnPosition, columnSpan );
+				
+				
+				final boolean[] propertyNullability = compositeType.getPropertyNullability();
+				final boolean nullable = propertyNullability == null || propertyNullability[subAttributeNumber];
+				
+				currentColumnPosition += columnSpan;
+				
+				if ( type.isAssociationType() ) {
+					final AssociationType aType = (AssociationType) type;
+					return new AssociationAttributeDefinition() {
+						@Override
+						public AssociationKey getAssociationKey() {
+							return new AssociationKey( lhsTableName, subAttributeLhsColumns );
 						}
-						else if ( type.isComponentType() ) {
-							return new CompositionDefinition() {
-								@Override
-								public String getName() {
-									return name;
-								}
-
-								@Override
-								public CompositeType getType() {
-									return (CompositeType) type;
-								}
-
-								@Override
-								public boolean isNullable() {
-									return nullable;
-								}
-
-								@Override
-								public AttributeSource getSource() {
-									return source;
-								}
-
-								@Override
-								public Iterable<AttributeDefinition> getAttributes() {
-									return CompositionSingularSubAttributesHelper.getSingularSubAttributes(
-											this,
-											ownerEntityPersister,
-											(CompositeType) type,
-											lhsTableName,
-											subAttributeLhsColumns
-									);
-								}
-							};
+						
+						
+						@Override
+						public AssociationNature getAssociationNature() {
+							if ( type.isAnyType() ) {
+								return AssociationNature.ANY;
+							}
+							else {
+								// cannot be a collection
+								return AssociationNature.ENTITY;
+							}
 						}
-						else {
-							return new AttributeDefinition() {
-								@Override
-								public String getName() {
-									return name;
-								}
-
-								@Override
-								public Type getType() {
-									return type;
-								}
-
-								@Override
-								public boolean isNullable() {
-									return nullable;
-								}
-
-								@Override
-								public AttributeSource getSource() {
-									return source;
-								}
-							};
+						
+						@Override
+						public EntityDefinition toEntityDefinition() {
+							if ( getAssociationNature() != AssociationNature.ENTITY ) {
+								throw new WalkingException(
+									"Cannot build EntityDefinition from non-entity-typed attribute"
+								);
+							}
+							return (EntityPersister) aType.getAssociatedJoinable( ownerEntityPersister.getFactory() );
 						}
-					}
-
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException( "Remove operation not supported here" );
-					}
-				};
+						
+						@Override
+						public AnyMappingDefinition toAnyDefinition() {
+							if ( getAssociationNature() != AssociationNature.ANY ) {
+								throw new WalkingException(
+									"Cannot build AnyMappingDefinition from non-any-typed attribute"
+								);
+							}
+							// todo : not sure how lazy is propogated into the component for a subattribute of type any
+							return new StandardAnyTypeDefinition( (AnyType) aType, false );
+						}
+						
+						@Override
+						public CollectionDefinition toCollectionDefinition() {
+							throw new WalkingException( "A collection cannot be mapped to a composite ID sub-attribute." );
+						}
+						
+						@Override
+						public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
+							final FetchStyle style = FetchStrategyHelper.determineFetchStyleByMetadata(
+								fetchMode,
+								(AssociationType) type,
+								ownerEntityPersister.getFactory()
+							);
+							return new FetchStrategy(
+								FetchStrategyHelper.determineFetchTiming(
+									style,
+									getType(),
+									ownerEntityPersister.getFactory()
+								),
+								style
+							);
+						}
+						
+						@Override
+						public CascadeStyle determineCascadeStyle() {
+							return CascadeStyles.NONE;
+						}
+						
+						@Override
+						public HydratedCompoundValueHandler getHydratedCompoundValueExtractor() {
+							return null;
+						}
+						
+						@Override
+						public String getName() {
+							return name;
+						}
+						
+						@Override
+						public AssociationType getType() {
+							return aType;
+						}
+						
+						@Override
+						public boolean isNullable() {
+							return nullable;
+						}
+						
+						@Override
+						public AttributeSource getSource() {
+							return source;
+						}
+					};
+				}
+				else if ( type.isComponentType() ) {
+					return new CompositionDefinition() {
+						@Override
+						public String getName() {
+							return name;
+						}
+						
+						@Override
+						public CompositeType getType() {
+							return (CompositeType) type;
+						}
+						
+						@Override
+						public boolean isNullable() {
+							return nullable;
+						}
+						
+						@Override
+						public AttributeSource getSource() {
+							return source;
+						}
+						
+						@Override
+						public Iterable<AttributeDefinition> getAttributes() {
+							return CompositionSingularSubAttributesHelper.getSingularSubAttributes(
+								this,
+								ownerEntityPersister,
+								(CompositeType) type,
+								lhsTableName,
+								subAttributeLhsColumns
+							);
+						}
+					};
+				}
+				else {
+					return new AttributeDefinition() {
+						@Override
+						public String getName() {
+							return name;
+						}
+						
+						@Override
+						public Type getType() {
+							return type;
+						}
+						
+						@Override
+						public boolean isNullable() {
+							return nullable;
+						}
+						
+						@Override
+						public AttributeSource getSource() {
+							return source;
+						}
+					};
+				}
+			}
+			
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException( "Remove operation not supported here" );
 			}
 		};
 	}

@@ -304,22 +304,17 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			map.put( collectionPropertyData.getBeanName(), collectionProxy );
 		}
 		else {
-			AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Setter setter = ReflectionTools.getSetter(
-									obj.getClass(),
-									collectionPropertyData,
-									enversService.getServiceRegistry()
-							);
-
-							setter.set( obj, collectionProxy, null );
-
-							return null;
-						}
-					}
-			);
+			AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+				final Setter setter = ReflectionTools.getSetter(
+					obj.getClass(),
+					collectionPropertyData,
+					enversService.getServiceRegistry()
+				);
+				
+				setter.set( obj, collectionProxy, null );
+				
+				return null;
+			});
 		}
 	}
 

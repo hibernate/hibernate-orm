@@ -39,20 +39,15 @@ public class MiddleMapKeyPropertyComponentMapper implements MiddleComponentMappe
 			final Object dataObject,
 			Number revision) {
 		// dataObject is not null, as this mapper can only be used in an index.
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Getter getter = ReflectionTools.getGetter(
-								dataObject.getClass(),
-								propertyName,
-								accessType,
-								entityInstantiator.getEnversService().getServiceRegistry()
-						);
-						return getter.get( dataObject );
-					}
-				}
-		);
+		return AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+			final Getter getter = ReflectionTools.getGetter(
+				dataObject.getClass(),
+				propertyName,
+				accessType,
+				entityInstantiator.getEnversService().getServiceRegistry()
+			);
+			return getter.get( dataObject );
+		});
 	}
 
 	@Override

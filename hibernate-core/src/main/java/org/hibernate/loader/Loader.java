@@ -280,17 +280,12 @@ public abstract class Loader {
 				}
 				lockOptions.setTimeOut( parameters.getLockOptions().getTimeOut() );
 				lockOptions.setScope( parameters.getLockOptions().getScope() );
-				afterLoadActions.add(
-						new AfterLoadAction() {
-							@Override
-							public void afterLoad(SharedSessionContractImplementor session, Object entity, Loadable persister) {
-								( (Session) session ).buildLockRequest( lockOptions ).lock(
-										persister.getEntityName(),
-										entity
-								);
-							}
-						}
-				);
+				afterLoadActions.add((AfterLoadAction) (SharedSessionContractImplementor session, Object entity, Loadable persister) -> {
+					( (Session) session ).buildLockRequest( lockOptions ).lock(
+						persister.getEntityName(),
+						entity
+					);
+				});
 				parameters.setLockOptions( new LockOptions() );
 				return true;
 			}

@@ -223,30 +223,26 @@ public class JoinProcessor implements SqlTokenTypes {
 			final FromElement fromElement = (FromElement) iter.next();
 			JoinSequence join = fromElement.getJoinSequence();
 			join.setQueryReferencedTables( queryReferencedTables );
-			join.setSelector(
-					new JoinSequence.Selector() {
-						public boolean includeSubclasses(String alias) {
-							// The uber-rule here is that we need to include subclass joins if
-							// the FromElement is in any way dereferenced by a property from
-							// the subclass table; otherwise we end up with column references
-							// qualified by a non-existent table reference in the resulting SQL...
-							boolean containsTableAlias = fromClause.containsTableAlias( alias );
-							if ( fromElement.isDereferencedBySubclassProperty() ) {
-								// TODO : or should we return 'containsTableAlias'??
-								LOG.tracev(
-										"Forcing inclusion of extra joins [alias={0}, containsTableAlias={1}]",
-										alias,
-										containsTableAlias
-								);
-								return true;
-							}
-							boolean shallowQuery = walker.isShallowQuery();
-							boolean includeSubclasses = fromElement.isIncludeSubclasses();
-							boolean subQuery = fromClause.isSubQuery();
-							return includeSubclasses && containsTableAlias && !subQuery && !shallowQuery;
-						}
-					}
-			);
+			join.setSelector((String alias) -> {
+				// The uber-rule here is that we need to include subclass joins if
+				// the FromElement is in any way dereferenced by a property from
+				// the subclass table; otherwise we end up with column references
+				// qualified by a non-existent table reference in the resulting SQL...
+				boolean containsTableAlias = fromClause.containsTableAlias( alias );
+				if ( fromElement.isDereferencedBySubclassProperty() ) {
+					// TODO : or should we return 'containsTableAlias'??
+					LOG.tracev(
+						"Forcing inclusion of extra joins [alias={0}, containsTableAlias={1}]",
+						alias,
+						containsTableAlias
+					);
+					return true;
+				}
+				boolean shallowQuery = walker.isShallowQuery();
+				boolean includeSubclasses = fromElement.isIncludeSubclasses();
+				boolean subQuery = fromClause.isSubQuery();
+				return includeSubclasses && containsTableAlias && !subQuery && !shallowQuery;
+			});
 			addJoinNodes( query, join, fromElement );
 		}
 

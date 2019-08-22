@@ -625,15 +625,10 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
         final Session s = openSession();
         s.beginTransaction();
         try {
-			s.doWork(
-					new Work() {
-						@Override
-						public void execute(Connection connection) throws SQLException {
-							Statement stmt = ((SessionImplementor)s).getJdbcCoordinator().getStatementPreparer().createStatement();
-							((SessionImplementor)s).getJdbcCoordinator().getResultSetReturn().executeUpdate( stmt, "DROP FUNCTION spLock FROM TestInterSystemsFunctionsClass" );
-						}
-					}
-			);
+			s.doWork((Connection connection) -> {
+				Statement stmt = ((SessionImplementor)s).getJdbcCoordinator().getStatementPreparer().createStatement();
+				((SessionImplementor)s).getJdbcCoordinator().getResultSetReturn().executeUpdate( stmt, "DROP FUNCTION spLock FROM TestInterSystemsFunctionsClass" );
+			});
         }
         catch (Exception ex) {
             System.out.println("as we expected stored procedure sp does not exist when we drop it");
@@ -642,31 +637,26 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 
         s.beginTransaction();
-		s.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						Statement stmt = ( (SessionImplementor) s ).getJdbcCoordinator()
-								.getStatementPreparer()
-								.createStatement();
-						String create_function = "CREATE FUNCTION SQLUser.TestInterSystemsFunctionsClass_spLock\n" +
-								"     ( INOUT pHandle %SQLProcContext, \n" +
-								"       ROWID INTEGER \n" +
-								" )\n" +
-								" FOR User.TestInterSystemsFunctionsClass " +
-								"    PROCEDURE\n" +
-								"    RETURNS INTEGER\n" +
-								"    LANGUAGE OBJECTSCRIPT\n" +
-								"    {\n" +
-								"        q 0\n" +
-								"     }";
-						( (SessionImplementor) s ).getJdbcCoordinator().getResultSetReturn().executeUpdate(
-								stmt,
-								create_function
-						);
-					}
-				}
-		);
+		s.doWork((Connection connection) -> {
+			Statement stmt = ( (SessionImplementor) s ).getJdbcCoordinator()
+				.getStatementPreparer()
+				.createStatement();
+			String create_function = "CREATE FUNCTION SQLUser.TestInterSystemsFunctionsClass_spLock\n" +
+				"     ( INOUT pHandle %SQLProcContext, \n" +
+				"       ROWID INTEGER \n" +
+				" )\n" +
+				" FOR User.TestInterSystemsFunctionsClass " +
+				"    PROCEDURE\n" +
+				"    RETURNS INTEGER\n" +
+				"    LANGUAGE OBJECTSCRIPT\n" +
+				"    {\n" +
+				"        q 0\n" +
+				"     }";
+			( (SessionImplementor) s ).getJdbcCoordinator().getResultSetReturn().executeUpdate(
+				stmt,
+				create_function
+			);
+		});
         s.getTransaction().commit();
 
         s.beginTransaction();

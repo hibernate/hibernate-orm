@@ -65,37 +65,34 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 		final Origin origin = new Origin( SourceType.OTHER, "envers" );
 //		final DOMWriter writer = new DOMWriter();
 
-		final MappingCollector mappingCollector = new MappingCollector() {
-			@Override
-			public void addDocument(Document document) throws DocumentException {
-				dump( document );
-
-				// while the commented-out code here is more efficient (well, understanding that
-				// this whole process is un-efficient)  it leads to un-decipherable messages when
-				// we get mapping mapping errors from envers output.
+		final MappingCollector mappingCollector = (Document document) -> {
+			dump( document );
+			
+			// while the commented-out code here is more efficient (well, understanding that
+			// this whole process is un-efficient)  it leads to un-decipherable messages when
+			// we get mapping mapping errors from envers output.
 //				final DOMSource domSource = new DOMSource( writer.write( document ) );
 //				domSource.setSystemId( "envers" );
 //				final Binding jaxbBinding = mappingBinder.bind( domSource, origin );
 
-				// this form at least allows us to get better error messages
-				final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				try {
-					final Writer w = new BufferedWriter( new OutputStreamWriter( baos, "UTF-8" ) );
-					final XMLWriter xw = new XMLWriter( w, new OutputFormat( " ", true ) );
-					xw.write( document );
-					w.flush();
-				}
-				catch (IOException e) {
-					throw new HibernateException( "Unable to bind Envers-generated XML", e );
-				}
+// this form at least allows us to get better error messages
+final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+try {
+	final Writer w = new BufferedWriter( new OutputStreamWriter( baos, "UTF-8" ) );
+	final XMLWriter xw = new XMLWriter( w, new OutputFormat( " ", true ) );
+	xw.write( document );
+	w.flush();
+}
+catch (IOException e) {
+	throw new HibernateException( "Unable to bind Envers-generated XML", e );
+}
 
-				ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
-				BufferedInputStream bis = new BufferedInputStream( bais );
-				final Binding jaxbBinding = mappingBinder.bind( bis, origin );
+ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
+BufferedInputStream bis = new BufferedInputStream( bais );
+final Binding jaxbBinding = mappingBinder.bind( bis, origin );
 
-				final JaxbHbmHibernateMapping jaxbRoot = (JaxbHbmHibernateMapping) jaxbBinding.getRoot();
-				additionalMappingDocuments.add( new MappingDocument( jaxbRoot, origin, buildingContext ) );
-			}
+final JaxbHbmHibernateMapping jaxbRoot = (JaxbHbmHibernateMapping) jaxbBinding.getRoot();
+additionalMappingDocuments.add( new MappingDocument( jaxbRoot, origin, buildingContext ) );
 		};
 
 		enversService.initialize( metadata, mappingCollector );

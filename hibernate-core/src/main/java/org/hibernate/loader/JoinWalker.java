@@ -1008,9 +1008,7 @@ public class JoinWalker {
 	}
 
 	protected interface AssociationInitCallback {
-		AssociationInitCallback NO_CALLBACK = new AssociationInitCallback() {
-			public void associationProcessed(OuterJoinableAssociation oja, int position) {
-			}
+		AssociationInitCallback NO_CALLBACK = (OuterJoinableAssociation oja, int position) -> {
 		};
 
 		void associationProcessed(OuterJoinableAssociation oja, int position);

@@ -33,21 +33,11 @@ public interface ColumnAliasExtractor {
 	/**
 	 * An extractor which uses {@link ResultSetMetaData#getColumnLabel}
 	 */
-	public static final ColumnAliasExtractor COLUMN_LABEL_EXTRACTOR = new ColumnAliasExtractor() {
-		@Override
-		public String extractColumnAlias(ResultSetMetaData metaData, int position) throws SQLException {
-			return metaData.getColumnLabel( position );
-		}
-	};
+	public static final ColumnAliasExtractor COLUMN_LABEL_EXTRACTOR = ResultSetMetaData::getColumnLabel;
 
 	/**
 	 * An extractor which uses {@link ResultSetMetaData#getColumnName}
 	 */
 	@SuppressWarnings("UnusedDeclaration")
-	public static final ColumnAliasExtractor COLUMN_NAME_EXTRACTOR = new ColumnAliasExtractor() {
-		@Override
-		public String extractColumnAlias(ResultSetMetaData metaData, int position) throws SQLException {
-			return metaData.getColumnName( position );
-		}
-	};
+	public static final ColumnAliasExtractor COLUMN_NAME_EXTRACTOR = ResultSetMetaData::getColumnName;
 }

@@ -90,65 +90,45 @@ public class HibernateCollectionStatistics extends HibernateAbstractStatistics {
 		return null;
 	}
 
-	private Operation showCollectionName = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			return getStatisticName( args );
-		}
+	private Operation showCollectionName = this::getStatisticName;
+
+	private Operation collectionUpdateCount = (Object... args) -> {
+		CollectionStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getUpdateCount() : 0 );
 	};
 
-	private Operation collectionUpdateCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			CollectionStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getUpdateCount() : 0 );
-		}
+	private Operation collectionRemoveCount = (Object... args) -> {
+		CollectionStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getRemoveCount() : 0 );
 	};
 
-	private Operation collectionRemoveCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			CollectionStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getRemoveCount() : 0 );
-		}
+	private Operation collectionRecreatedCount = (Object... args) -> {
+		CollectionStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getRemoveCount() : 0 );
 	};
 
-	private Operation collectionRecreatedCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			CollectionStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getRemoveCount() : 0 );
-		}
+	private Operation collectionLoadCount = (Object... args) -> {
+		CollectionStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getLoadCount() : 0 );
 	};
 
-	private Operation collectionLoadCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			CollectionStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getLoadCount() : 0 );
-		}
-	};
-
-	private Operation collectionFetchCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			CollectionStatistics statistics = getStatistics(
-					getEntityManagerFactory( args ),
-					getStatisticName( args )
-			);
-			return Long.valueOf( statistics != null ? statistics.getFetchCount() : 0 );
-		}
+	private Operation collectionFetchCount = (Object... args) -> {
+		CollectionStatistics statistics = getStatistics(
+			getEntityManagerFactory( args ),
+			getStatisticName( args )
+		);
+		return Long.valueOf( statistics != null ? statistics.getFetchCount() : 0 );
 	};
 }

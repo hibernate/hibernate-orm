@@ -67,36 +67,31 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 		// now, make sure the list-index column gotten written...
 		final Session session2 = openSession();
 		session2.beginTransaction();
-		session2.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
-						SimpleSelect select = new SimpleSelect( getDialect() )
-								.setTableName( queryableCollection.getTableName() )
-								.addColumn( "NAME" )
-								.addColumn( "LIST_INDEX" )
-								.addCondition( "NAME", "<>", "?" );
-						PreparedStatement preparedStatement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
-						preparedStatement.setString( 1, "root" );
-						ResultSet resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
-						Map<String, Integer> valueMap = new HashMap<String, Integer>();
-						while ( resultSet.next() ) {
-							final String name = resultSet.getString( 1 );
-							assertFalse( "NAME column was null", resultSet.wasNull() );
-							final int position = resultSet.getInt( 2 );
-							assertFalse( "LIST_INDEX column was null", resultSet.wasNull() );
-							valueMap.put( name, position );
-						}
-						assertEquals( 2, valueMap.size() );
-
-						// c1 should be list index 0
-						assertEquals( Integer.valueOf( 0 ), valueMap.get( "c1" ) );
-						// c2 should be list index 1
-						assertEquals( Integer.valueOf( 1 ), valueMap.get( "c2" ) );
-					}
-				}
-		);
+		session2.doWork((Connection connection) -> {
+			final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
+			SimpleSelect select = new SimpleSelect( getDialect() )
+				.setTableName( queryableCollection.getTableName() )
+				.addColumn( "NAME" )
+				.addColumn( "LIST_INDEX" )
+				.addCondition( "NAME", "<>", "?" );
+			PreparedStatement preparedStatement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
+			preparedStatement.setString( 1, "root" );
+			ResultSet resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
+			Map<String, Integer> valueMap = new HashMap<String, Integer>();
+			while ( resultSet.next() ) {
+				final String name = resultSet.getString( 1 );
+				assertFalse( "NAME column was null", resultSet.wasNull() );
+				final int position = resultSet.getInt( 2 );
+				assertFalse( "LIST_INDEX column was null", resultSet.wasNull() );
+				valueMap.put( name, position );
+			}
+			assertEquals( 2, valueMap.size() );
+			
+			// c1 should be list index 0
+			assertEquals( Integer.valueOf( 0 ), valueMap.get( "c1" ) );
+			// c2 should be list index 1
+			assertEquals( Integer.valueOf( 1 ), valueMap.get( "c2" ) );
+		});
 		session2.delete( root );
 		session2.getTransaction().commit();
 		session2.close();
@@ -124,35 +119,30 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 		// now, make sure the list-index column gotten written...
 		final Session session2 = openSession();
 		session2.beginTransaction();
-		session2.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
-						SimpleSelect select = new SimpleSelect( getDialect() )
-								.setTableName( queryableCollection.getTableName() )
-								.addColumn( "ORDER_ID" )
-								.addColumn( "INDX" )
-								.addColumn( "PRD_CODE" );
-						PreparedStatement preparedStatement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
-						ResultSet resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
-						Map<String, Integer> valueMap = new HashMap<String, Integer>();
-						while ( resultSet.next() ) {
-							final int fk = resultSet.getInt( 1 );
-							assertFalse( "Collection key (FK) column was null", resultSet.wasNull() );
-							final int indx = resultSet.getInt( 2 );
-							assertFalse( "List index column was null", resultSet.wasNull() );
-							final String prodCode = resultSet.getString( 3 );
-							assertFalse( "Prod code column was null", resultSet.wasNull() );
-							valueMap.put( prodCode, indx );
-						}
-						assertEquals( 3, valueMap.size() );
-						assertEquals( Integer.valueOf( 0 ), valueMap.get( "abc" ) );
-						assertEquals( Integer.valueOf( 1 ), valueMap.get( "def" ) );
-						assertEquals( Integer.valueOf( 2 ), valueMap.get( "ghi" ) );
-					}
-				}
-		);
+		session2.doWork((Connection connection) -> {
+			final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
+			SimpleSelect select = new SimpleSelect( getDialect() )
+				.setTableName( queryableCollection.getTableName() )
+				.addColumn( "ORDER_ID" )
+				.addColumn( "INDX" )
+				.addColumn( "PRD_CODE" );
+			PreparedStatement preparedStatement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
+			ResultSet resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
+			Map<String, Integer> valueMap = new HashMap<String, Integer>();
+			while ( resultSet.next() ) {
+				final int fk = resultSet.getInt( 1 );
+				assertFalse( "Collection key (FK) column was null", resultSet.wasNull() );
+				final int indx = resultSet.getInt( 2 );
+				assertFalse( "List index column was null", resultSet.wasNull() );
+				final String prodCode = resultSet.getString( 3 );
+				assertFalse( "Prod code column was null", resultSet.wasNull() );
+				valueMap.put( prodCode, indx );
+			}
+			assertEquals( 3, valueMap.size() );
+			assertEquals( Integer.valueOf( 0 ), valueMap.get( "abc" ) );
+			assertEquals( Integer.valueOf( 1 ), valueMap.get( "def" ) );
+			assertEquals( Integer.valueOf( 2 ), valueMap.get( "ghi" ) );
+		});
 		session2.delete( order );
 		session2.getTransaction().commit();
 		session2.close();

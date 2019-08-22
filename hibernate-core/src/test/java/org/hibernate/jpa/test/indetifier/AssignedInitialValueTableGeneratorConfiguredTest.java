@@ -65,16 +65,13 @@ public class AssignedInitialValueTableGeneratorConfiguredTest extends BaseEntity
 		} );
 
 		Session session = getOrCreateEntityManager().unwrap( Session.class );
-		session.doWork( new Work() {
-			@Override
-			public void execute(Connection connection) throws SQLException {
-				ResultSet resultSet = connection.createStatement().executeQuery(
-						"select product_id from table_identifier" );
-				resultSet.next();
-				int productIdValue = resultSet.getInt( 1 );
-				assertThat( productIdValue, is(12) );
-			}
-		} );
+		session.doWork((Connection connection) -> {
+			ResultSet resultSet = connection.createStatement().executeQuery(
+				"select product_id from table_identifier" );
+			resultSet.next();
+			int productIdValue = resultSet.getInt( 1 );
+			assertThat( productIdValue, is(12) );
+		});
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			List<Product> products = entityManager.createQuery( "from Product p order by id " ).getResultList();

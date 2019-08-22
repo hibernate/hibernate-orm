@@ -220,276 +220,177 @@ public class HibernateStatistics extends HibernateAbstractStatistics {
 		return Collections.EMPTY_LIST;
 	}
 
-	private Operation clear = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			getStatistics( getEntityManagerFactory( args ) ).clear();
-			return null;
-		}
+	private Operation clear = (Object... args) -> {
+		getStatistics( getEntityManagerFactory( args ) ).clear();
+		return null;
 	};
 
-	private Operation label = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			PathAddress pathAddress = getPathAddress( args );
-			if ( pathAddress != null ) {
-				return pathAddress.getValue( PROVIDER_LABEL );
+	private Operation label = (Object... args) -> {
+		PathAddress pathAddress = getPathAddress( args );
+		if ( pathAddress != null ) {
+			return pathAddress.getValue( PROVIDER_LABEL );
+		}
+		return "";
+	};
+
+	private Operation evictAll = (Object... args) -> {
+		Cache secondLevelCache = getEntityManagerFactory( args ).getCache();
+		if ( secondLevelCache != null ) {
+			secondLevelCache.evictAll();
+		}
+		return null;
+	};
+
+	private Operation summary = (Object... args) -> {
+		getStatistics( getEntityManagerFactory( args ) ).logSummary();
+		return null;
+	};
+
+	private Operation statisticsEnabled = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		if ( statistics != null ) {
+			if ( args.length > 0 && args[0] instanceof Boolean ) {
+				Boolean newValue = (Boolean) args[0];
+				statistics.setStatisticsEnabled( newValue.booleanValue() );
 			}
-			return "";
+			return Boolean.valueOf( statistics.isStatisticsEnabled() );
 		}
+		return null;
 	};
 
-	private Operation evictAll = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			Cache secondLevelCache = getEntityManagerFactory( args ).getCache();
-			if ( secondLevelCache != null ) {
-				secondLevelCache.evictAll();
-			}
-			return null;
-		}
+	private Operation entityDeleteCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getEntityDeleteCount() : 0 );
 	};
 
-	private Operation summary = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			getStatistics( getEntityManagerFactory( args ) ).logSummary();
-			return null;
-		}
+	private Operation collectionLoadCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getCollectionLoadCount() : 0 );
 	};
 
-	private Operation statisticsEnabled = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			if ( statistics != null ) {
-				if ( args.length > 0 && args[0] instanceof Boolean ) {
-					Boolean newValue = (Boolean) args[0];
-					statistics.setStatisticsEnabled( newValue.booleanValue() );
-				}
-				return Boolean.valueOf( statistics.isStatisticsEnabled() );
-			}
-			return null;
-		}
+	private Operation collectionFetchCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getCollectionFetchCount() : 0 );
 	};
 
-	private Operation entityDeleteCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getEntityDeleteCount() : 0 );
-		}
+	private Operation collectionRecreatedCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getCollectionRecreateCount() : 0 );
 	};
 
-	private Operation collectionLoadCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getCollectionLoadCount() : 0 );
-		}
+	private Operation collectionRemoveCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getCollectionRemoveCount() : 0 );
 	};
 
-	private Operation collectionFetchCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getCollectionFetchCount() : 0 );
-		}
+	private Operation collectionUpdateCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getCollectionUpdateCount() : 0 );
 	};
 
-	private Operation collectionRecreatedCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getCollectionRecreateCount() : 0 );
-		}
+	private Operation queryCacheHitCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getQueryCacheHitCount() : 0 );
+	};
+	private Operation queryCacheMissCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getQueryCacheMissCount() : 0 );
+	};
+	private Operation queryCachePutCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getQueryCachePutCount() : 0 );
+	};
+	private Operation queryExecutionCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getQueryExecutionCount() : 0 );
+	};
+	private Operation queryExecutionMaxTime = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getQueryExecutionMaxTime() : 0 );
+	};
+	private Operation queryExecutionMaxTimeString = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return String.valueOf( statistics != null ? statistics.getQueryExecutionMaxTimeQueryString() : 0 );
 	};
 
-	private Operation collectionRemoveCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getCollectionRemoveCount() : 0 );
-		}
+	private Operation entityFetchCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getEntityFetchCount() : 0 );
 	};
 
-	private Operation collectionUpdateCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getCollectionUpdateCount() : 0 );
-		}
+	private Operation entityInsertCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getEntityInsertCount() : 0 );
 	};
 
-	private Operation queryCacheHitCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getQueryCacheHitCount() : 0 );
-		}
-	};
-	private Operation queryCacheMissCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getQueryCacheMissCount() : 0 );
-		}
-	};
-	private Operation queryCachePutCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getQueryCachePutCount() : 0 );
-		}
-	};
-	private Operation queryExecutionCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getQueryExecutionCount() : 0 );
-		}
-	};
-	private Operation queryExecutionMaxTime = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getQueryExecutionMaxTime() : 0 );
-		}
-	};
-	private Operation queryExecutionMaxTimeString = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return String.valueOf( statistics != null ? statistics.getQueryExecutionMaxTimeQueryString() : 0 );
-		}
+	private Operation entityLoadCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getEntityLoadCount() : 0 );
 	};
 
-	private Operation entityFetchCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getEntityFetchCount() : 0 );
-		}
+	private Operation entityUpdateCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getEntityUpdateCount() : 0 );
 	};
 
-	private Operation entityInsertCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getEntityInsertCount() : 0 );
-		}
+	private Operation flushCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getFlushCount() : 0 );
 	};
 
-	private Operation entityLoadCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getEntityLoadCount() : 0 );
-		}
+	private Operation connectCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getConnectCount() : 0 );
 	};
 
-	private Operation entityUpdateCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getEntityUpdateCount() : 0 );
-		}
+	private Operation sessionCloseCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getSessionCloseCount() : 0 );
 	};
 
-	private Operation flushCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getFlushCount() : 0 );
-		}
+	private Operation sessionOpenCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getSessionOpenCount() : 0 );
 	};
 
-	private Operation connectCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getConnectCount() : 0 );
-		}
+	private Operation transactionCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getTransactionCount() : 0 );
 	};
 
-	private Operation sessionCloseCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getSessionCloseCount() : 0 );
-		}
+	private Operation transactionCompletedCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getSuccessfulTransactionCount() : 0 );
 	};
 
-	private Operation sessionOpenCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getSessionOpenCount() : 0 );
-		}
+	private Operation preparedStatementCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getPrepareStatementCount() : 0 );
 	};
 
-	private Operation transactionCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getTransactionCount() : 0 );
-		}
+	private Operation closedStatementCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getCloseStatementCount() : 0 );
 	};
 
-	private Operation transactionCompletedCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getSuccessfulTransactionCount() : 0 );
-		}
+	private Operation optimisticFailureCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getOptimisticFailureCount() : 0 );
 	};
 
-	private Operation preparedStatementCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getPrepareStatementCount() : 0 );
-		}
+	private Operation secondLevelCacheHitCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getSecondLevelCacheHitCount() : 0 );
 	};
 
-	private Operation closedStatementCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getCloseStatementCount() : 0 );
-		}
+	private Operation secondLevelCacheMissCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getSecondLevelCacheMissCount() : 0 );
 	};
 
-	private Operation optimisticFailureCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getOptimisticFailureCount() : 0 );
-		}
-	};
-
-	private Operation secondLevelCacheHitCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getSecondLevelCacheHitCount() : 0 );
-		}
-	};
-
-	private Operation secondLevelCacheMissCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getSecondLevelCacheMissCount() : 0 );
-		}
-	};
-
-	private Operation secondLevelCachePutCount = new Operation() {
-		@Override
-		public Object invoke(Object... args) {
-			org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
-			return Long.valueOf( statistics != null ? statistics.getSecondLevelCachePutCount() : 0 );
-		}
+	private Operation secondLevelCachePutCount = (Object... args) -> {
+		org.hibernate.stat.Statistics statistics = getStatistics( getEntityManagerFactory( args ) );
+		return Long.valueOf( statistics != null ? statistics.getSecondLevelCachePutCount() : 0 );
 	};
 
 }

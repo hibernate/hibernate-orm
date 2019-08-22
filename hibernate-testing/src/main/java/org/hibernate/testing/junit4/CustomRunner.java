@@ -161,14 +161,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		if ( CollectionHelper.isEmpty( computedTestMethods ) ) {
 			return;
 		}
-		Collections.sort(
-				computedTestMethods, new Comparator<FrameworkMethod>() {
-					@Override
-					public int compare(FrameworkMethod o1, FrameworkMethod o2) {
-						return o1.getName().compareTo( o2.getName() );
-					}
-				}
-		);
+		Collections.sort(computedTestMethods, (FrameworkMethod o1, FrameworkMethod o2) -> o1.getName().compareTo( o2.getName() ));
 	}
 
 	protected List<FrameworkMethod> doComputation() {

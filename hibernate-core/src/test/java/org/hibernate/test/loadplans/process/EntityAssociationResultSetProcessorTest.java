@@ -77,30 +77,25 @@ public class EntityAssociationResultSetProcessorTest extends BaseCoreFunctionalT
 
 			final Session workSession = openSession();
 			workSession.beginTransaction();
-			workSession.doWork(
-					new Work() {
-						@Override
-						public void execute(Connection connection) throws SQLException {
-							PreparedStatement ps = connection.prepareStatement( sql );
-							ps.setInt( 1, 1 );
-							ResultSet resultSet = ps.executeQuery();
-							results.addAll(
-									resultSetProcessor.extractResults(
-											resultSet,
-											(SessionImplementor) workSession,
-											new QueryParameters(),
-											Helper.parameterContext(),
-											true,
-											false,
-											null,
-											null
-									)
-							);
-							resultSet.close();
-							ps.close();
-						}
-					}
-			);
+			workSession.doWork((Connection connection) -> {
+				PreparedStatement ps = connection.prepareStatement( sql );
+				ps.setInt( 1, 1 );
+				ResultSet resultSet = ps.executeQuery();
+				results.addAll(
+					resultSetProcessor.extractResults(
+						resultSet,
+						(SessionImplementor) workSession,
+						new QueryParameters(),
+						Helper.parameterContext(),
+						true,
+						false,
+						null,
+						null
+					)
+				);
+				resultSet.close();
+				ps.close();
+			});
 			assertEquals( 1, results.size() );
 			Object result = results.get( 0 );
 			assertNotNull( result );
@@ -156,30 +151,25 @@ public class EntityAssociationResultSetProcessorTest extends BaseCoreFunctionalT
 
 			final Session workSession = openSession();
 			workSession.beginTransaction();
-			workSession.doWork(
-					new Work() {
-						@Override
-						public void execute(Connection connection) throws SQLException {
-							PreparedStatement ps = connection.prepareStatement( sql );
-							ps.setInt( 1, 0 );
-							ResultSet resultSet = ps.executeQuery();
-							results.addAll(
-									resultSetProcessor.extractResults(
-											resultSet,
-											(SessionImplementor) workSession,
-											new QueryParameters(),
-											Helper.parameterContext(),
-											true,
-											false,
-											null,
-											null
-									)
-							);
-							resultSet.close();
-							ps.close();
-						}
-					}
-			);
+			workSession.doWork((Connection connection) -> {
+				PreparedStatement ps = connection.prepareStatement( sql );
+				ps.setInt( 1, 0 );
+				ResultSet resultSet = ps.executeQuery();
+				results.addAll(
+					resultSetProcessor.extractResults(
+						resultSet,
+						(SessionImplementor) workSession,
+						new QueryParameters(),
+						Helper.parameterContext(),
+						true,
+						false,
+						null,
+						null
+					)
+				);
+				resultSet.close();
+				ps.close();
+			});
 			assertEquals( 1, results.size() );
 			Object result = results.get( 0 );
 			assertNotNull( result );

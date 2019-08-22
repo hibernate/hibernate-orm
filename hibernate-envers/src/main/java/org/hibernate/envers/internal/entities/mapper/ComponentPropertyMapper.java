@@ -118,43 +118,38 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 			return;
 		}
 
-		AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						try {
-							final Object subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
-
-							if ( isDynamicComponentMap() ) {
-								( (Map) obj ).put( propertyData.getBeanName(), subObj );
-								delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
-							}
-							else {
-								final Setter setter = ReflectionTools.getSetter(
-										obj.getClass(),
-										propertyData,
-										enversService.getServiceRegistry()
-								);
-
-								if ( isAllPropertiesNull( data ) ) {
-									// single property, but default value need not be null, so we'll set it to null anyway
-									setter.set( obj, null, null );
-								}
-								else {
-									// set the component
-									setter.set( obj, subObj, null );
-									delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
-								}
-							}
-						}
-						catch ( Exception e ) {
-							throw new AuditException( e );
-						}
-
-						return null;
+		AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+			try {
+				final Object subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
+				
+				if ( isDynamicComponentMap() ) {
+					( (Map) obj ).put( propertyData.getBeanName(), subObj );
+					delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
+				}
+				else {
+					final Setter setter = ReflectionTools.getSetter(
+						obj.getClass(),
+						propertyData,
+						enversService.getServiceRegistry()
+					);
+					
+					if ( isAllPropertiesNull( data ) ) {
+						// single property, but default value need not be null, so we'll set it to null anyway
+						setter.set( obj, null, null );
+					}
+					else {
+						// set the component
+						setter.set( obj, subObj, null );
+						delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
 					}
 				}
-		);
+			}
+			catch ( Exception e ) {
+				throw new AuditException( e );
+			}
+			
+			return null;
+		});
 	}
 
 	private boolean isAllPropertiesNull(Map data) {

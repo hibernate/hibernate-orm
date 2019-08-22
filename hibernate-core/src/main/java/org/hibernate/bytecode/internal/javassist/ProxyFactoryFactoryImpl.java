@@ -86,12 +86,8 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 		}
 	}
 
-	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
-		public boolean isHandled(Method m) {
-			// skip finalize methods
-			return !( m.getParameterCount() == 0 && m.getName().equals( "finalize" ) );
-		}
-	};
+	private static final MethodFilter FINALIZE_FILTER = (Method m) -> !( m.getParameterCount() == 0 && m.getName().equals( "finalize" ) ) // skip finalize methods
+	;
 
 	private static class PassThroughHandler implements MethodHandler {
 		private HashMap data = new HashMap();

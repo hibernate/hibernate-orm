@@ -34,12 +34,7 @@ public class JBossAppServerJtaPlatform
 
 	public JBossAppServerJtaPlatform(final JtaManager jtaManager) {
 		this.jtaManager = jtaManager;
-		this.synchronizationStrategy = new SynchronizationRegistryBasedSynchronizationStrategy( new SynchronizationRegistryAccess() {
-			@Override
-			public TransactionSynchronizationRegistry getSynchronizationRegistry() {
-				return jtaManager.getSynchronizationRegistry();
-			}
-		} );
+		this.synchronizationStrategy = new SynchronizationRegistryBasedSynchronizationStrategy( jtaManager::getSynchronizationRegistry);
 	}
 
 	@Override

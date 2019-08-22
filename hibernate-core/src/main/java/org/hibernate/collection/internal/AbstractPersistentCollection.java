@@ -159,32 +159,27 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				return true;
 			}
 			else {
-				final boolean isExtraLazy = withTemporarySessionIfNeeded(
-						new LazyInitializationWork<Boolean>() {
-							@Override
-							public Boolean doWork() {
-								final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
-
-								if ( entry != null ) {
-									final CollectionPersister persister = entry.getLoadedPersister();
-									if ( persister.isExtraLazy() ) {
-										if ( hasQueuedOperations() ) {
-											session.flush();
-										}
-										cachedSize = persister.getSize( entry.getLoadedKey(), session );
-										return true;
-									}
-									else {
-										read();
-									}
-								}
-								else{
-									throwLazyInitializationExceptionIfNotConnected();
-								}
-								return false;
+				final boolean isExtraLazy = withTemporarySessionIfNeeded(() -> {
+					final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+					
+					if ( entry != null ) {
+						final CollectionPersister persister = entry.getLoadedPersister();
+						if ( persister.isExtraLazy() ) {
+							if ( hasQueuedOperations() ) {
+								session.flush();
 							}
+							cachedSize = persister.getSize( entry.getLoadedKey(), session );
+							return true;
 						}
-				);
+						else {
+							read();
+						}
+					}
+					else{
+						throwLazyInitializationExceptionIfNotConnected();
+					}
+					return false;
+				});
 				if ( isExtraLazy ) {
 					return true;
 				}
@@ -297,25 +292,20 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	protected Boolean readIndexExistence(final Object index) {
 		if ( !initialized ) {
-			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
-					new LazyInitializationWork<Boolean>() {
-						@Override
-						public Boolean doWork() {
-							final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
-							final CollectionPersister persister = entry.getLoadedPersister();
-							if ( persister.isExtraLazy() ) {
-								if ( hasQueuedOperations() ) {
-									session.flush();
-								}
-								return persister.indexExists( entry.getLoadedKey(), index, session );
-							}
-							else {
-								read();
-							}
-							return null;
-						}
+			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(() -> {
+				final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+				final CollectionPersister persister = entry.getLoadedPersister();
+				if ( persister.isExtraLazy() ) {
+					if ( hasQueuedOperations() ) {
+						session.flush();
 					}
-			);
+					return persister.indexExists( entry.getLoadedKey(), index, session );
+				}
+				else {
+					read();
+				}
+				return null;
+			});
 			if ( extraLazyExistenceCheck != null ) {
 				return extraLazyExistenceCheck;
 			}
@@ -325,25 +315,20 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	protected Boolean readElementExistence(final Object element) {
 		if ( !initialized ) {
-			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(
-					new LazyInitializationWork<Boolean>() {
-						@Override
-						public Boolean doWork() {
-							final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
-							final CollectionPersister persister = entry.getLoadedPersister();
-							if ( persister.isExtraLazy() ) {
-								if ( hasQueuedOperations() ) {
-									session.flush();
-								}
-								return persister.elementExists( entry.getLoadedKey(), element, session );
-							}
-							else {
-								read();
-							}
-							return null;
-						}
+			final Boolean extraLazyExistenceCheck = withTemporarySessionIfNeeded(() -> {
+				final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( AbstractPersistentCollection.this );
+				final CollectionPersister persister = entry.getLoadedPersister();
+				if ( persister.isExtraLazy() ) {
+					if ( hasQueuedOperations() ) {
+						session.flush();
 					}
-			);
+					return persister.elementExists( entry.getLoadedKey(), element, session );
+				}
+				else {
+					read();
+				}
+				return null;
+			});
 			if ( extraLazyExistenceCheck != null ) {
 				return extraLazyExistenceCheck;
 			}
@@ -582,15 +567,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			return;
 		}
 
-		withTemporarySessionIfNeeded(
-				new LazyInitializationWork<Object>() {
-					@Override
-					public Object doWork() {
-						session.initializeCollection( AbstractPersistentCollection.this, writing );
-						return null;
-					}
-				}
-		);
+		withTemporarySessionIfNeeded(() -> {
+			session.initializeCollection( AbstractPersistentCollection.this, writing );
+			return null;
+		});
 	}
 
 	private void throwLazyInitializationExceptionIfNotConnected() {

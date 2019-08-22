@@ -195,15 +195,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 	public void testDialectNotFound() {
 		Map properties = Collections.EMPTY_MAP;
 		try {
-			dialectFactory.buildDialect(
-					properties,
-					new DialectResolutionInfoSource() {
-						@Override
-						public DialectResolutionInfo getDialectResolutionInfo() {
-							return TestingDialectResolutionInfo.forDatabaseInfo( "NoSuchDatabase", 666 );
-						}
-					}
-			);
+			dialectFactory.buildDialect(properties, () -> TestingDialectResolutionInfo.forDatabaseInfo( "NoSuchDatabase", 666 ));
 			fail();
 		}
 		catch ( HibernateException e ) {
@@ -236,15 +228,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 			Class expected,
 			DialectResolver resolver) {
 		dialectFactory.setDialectResolver( resolver );
-		Dialect resolved = dialectFactory.buildDialect(
-				new Properties(),
-				new DialectResolutionInfoSource() {
-					@Override
-					public DialectResolutionInfo getDialectResolutionInfo() {
-						return TestingDialectResolutionInfo.forDatabaseInfo( databaseName, driverName, majorVersion, minorVersion );
-					}
-				}
-		);
+		Dialect resolved = dialectFactory.buildDialect(new Properties(), () -> TestingDialectResolutionInfo.forDatabaseInfo( databaseName, driverName, majorVersion, minorVersion ));
 		assertEquals( expected, resolved.getClass() );
 	}
 }

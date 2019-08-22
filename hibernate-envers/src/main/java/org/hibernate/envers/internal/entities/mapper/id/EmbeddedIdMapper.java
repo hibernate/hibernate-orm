@@ -46,19 +46,14 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return;
 		}
 
-		final Object value = AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Getter getter = ReflectionTools.getGetter(
-								obj.getClass(),
-								idPropertyData,
-								getServiceRegistry()
-						);
-						return getter.get( obj );
-					}
-				}
-		);
+		final Object value = AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+			final Getter getter = ReflectionTools.getGetter(
+				obj.getClass(),
+				idPropertyData,
+				getServiceRegistry()
+			);
+			return getter.get( obj );
+		});
 
 		mapToMapFromId( data, value );
 	}
@@ -69,33 +64,28 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return false;
 		}
 
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Boolean>() {
-					@Override
-					public Boolean run() {
-						final Getter getter = ReflectionTools.getGetter( obj.getClass(), idPropertyData, getServiceRegistry() );
-						final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
-
-						try {
-							final Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
-
-							boolean ret = true;
-							for ( IdMapper idMapper : ids.values() ) {
-								ret &= idMapper.mapToEntityFromMap( subObj, data );
-							}
-
-							if ( ret ) {
-								setter.set( obj, subObj, null );
-							}
-
-							return ret;
-						}
-						catch (Exception e) {
-							throw new AuditException( e );
-						}
-					}
+		return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> {
+			final Getter getter = ReflectionTools.getGetter( obj.getClass(), idPropertyData, getServiceRegistry() );
+			final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
+			
+			try {
+				final Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
+				
+				boolean ret = true;
+				for ( IdMapper idMapper : ids.values() ) {
+					ret &= idMapper.mapToEntityFromMap( subObj, data );
 				}
-		);
+				
+				if ( ret ) {
+					setter.set( obj, subObj, null );
+				}
+				
+				return ret;
+			}
+			catch (Exception e) {
+				throw new AuditException( e );
+			}
+		});
 	}
 
 	@Override
@@ -116,19 +106,14 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return null;
 		}
 
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Getter getter = ReflectionTools.getGetter(
-								data.getClass(),
-								idPropertyData,
-								getServiceRegistry()
-						);
-						return getter.get( data );
-					}
-				}
-		);
+		return AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+			final Getter getter = ReflectionTools.getGetter(
+				data.getClass(),
+				idPropertyData,
+				getServiceRegistry()
+			);
+			return getter.get( data );
+		});
 	}
 
 	@Override

@@ -1716,18 +1716,12 @@ public abstract class AbstractEntityPersister
 		// Here we render the select column list based on the properties defined as being generated.
 		// For partial component generation, we currently just re-select the whole component
 		// rather than trying to handle the individual generated portions.
-		String selectClause = concretePropertySelectFragment(
-				getRootAlias(),
-				new InclusionChecker() {
-					@Override
-					public boolean includeProperty(int propertyNumber) {
-						final InDatabaseValueGenerationStrategy generationStrategy
-								= entityMetamodel.getInDatabaseValueGenerationStrategies()[propertyNumber];
-						return generationStrategy != null
-								&& timingsMatch( generationStrategy.getGenerationTiming(), generationTimingToMatch );
-					}
-				}
-		);
+		String selectClause = concretePropertySelectFragment(getRootAlias(), (int propertyNumber) -> {
+			final InDatabaseValueGenerationStrategy generationStrategy
+				= entityMetamodel.getInDatabaseValueGenerationStrategies()[propertyNumber];
+			return generationStrategy != null
+				&& timingsMatch( generationStrategy.getGenerationTiming(), generationTimingToMatch );
+		});
 		selectClause = selectClause.substring( 2 );
 
 		String fromClause = fromTableFragment( getRootAlias() ) +
@@ -1751,14 +1745,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected String concretePropertySelectFragment(String alias, final boolean[] includeProperty) {
-		return concretePropertySelectFragment(
-				alias,
-				new InclusionChecker() {
-					public boolean includeProperty(int propertyNumber) {
-						return includeProperty[propertyNumber];
-					}
-				}
-		);
+		return concretePropertySelectFragment(alias, (int propertyNumber) -> includeProperty[propertyNumber]);
 	}
 
 	protected String concretePropertySelectFragment(String alias, InclusionChecker inclusionChecker) {

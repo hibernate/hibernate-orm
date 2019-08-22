@@ -511,15 +511,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					false
 			);
 
-			this.implicitCacheAccessType = configService.getSetting(
-					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
-					new ConfigurationService.Converter<AccessType>() {
-						@Override
-						public AccessType convert(Object value) {
-							return AccessType.fromExternalName( value.toString() );
-						}
-					}
-			);
+			this.implicitCacheAccessType = configService.getSetting(AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, (Object value) -> AccessType.fromExternalName( value.toString() ));
 		}
 
 		@Override
@@ -651,45 +643,35 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					false
 			);
 
-			this.sharedCacheMode = configService.getSetting(
-					"javax.persistence.sharedCache.mode",
-					new ConfigurationService.Converter<SharedCacheMode>() {
-						@Override
-						public SharedCacheMode convert(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							if ( SharedCacheMode.class.isInstance( value ) ) {
-								return (SharedCacheMode) value;
-							}
-
-							return SharedCacheMode.valueOf( value.toString() );
-						}
-					},
+			this.sharedCacheMode = configService.getSetting("javax.persistence.sharedCache.mode", (Object value) -> {
+				if ( value == null ) {
+					return null;
+				}
+				
+				if ( SharedCacheMode.class.isInstance( value ) ) {
+					return (SharedCacheMode) value;
+				}
+				
+				return SharedCacheMode.valueOf( value.toString() );
+			},
 					SharedCacheMode.UNSPECIFIED
 			);
 
-			this.defaultCacheAccessType = configService.getSetting(
-					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
-					new ConfigurationService.Converter<AccessType>() {
-						@Override
-						public AccessType convert(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							if ( CacheConcurrencyStrategy.class.isInstance( value ) ) {
-								return ( (CacheConcurrencyStrategy) value ).toAccessType();
-							}
-
-							if ( AccessType.class.isInstance( value ) ) {
-								return (AccessType) value;
-							}
-
-							return AccessType.fromExternalName( value.toString() );
-						}
-					},
+			this.defaultCacheAccessType = configService.getSetting(AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, (Object value) -> {
+				if ( value == null ) {
+					return null;
+				}
+				
+				if ( CacheConcurrencyStrategy.class.isInstance( value ) ) {
+					return ( (CacheConcurrencyStrategy) value ).toAccessType();
+				}
+				
+				if ( AccessType.class.isInstance( value ) ) {
+					return (AccessType) value;
+				}
+				
+				return AccessType.fromExternalName( value.toString() );
+			},
 					// by default, see if the defined RegionFactory (if one) defines a default
 					serviceRegistry.getService( RegionFactory.class ) == null
 							? null
@@ -702,20 +684,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					false
 			);
 
-			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
-					ImplicitNamingStrategy.class,
-					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					new Callable<ImplicitNamingStrategy>() {
-						@Override
-						public ImplicitNamingStrategy call() {
-							return strategySelector.resolveDefaultableStrategy(
-									ImplicitNamingStrategy.class,
-									"default",
-									ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
-							);
-						}
-					}
-			);
+			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(ImplicitNamingStrategy.class,
+					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ), () -> strategySelector.resolveDefaultableStrategy(
+						ImplicitNamingStrategy.class,
+						"default",
+						ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
+					));
 
 			this.physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					PhysicalNamingStrategy.class,

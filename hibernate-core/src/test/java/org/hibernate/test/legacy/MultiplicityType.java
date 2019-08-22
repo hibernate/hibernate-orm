@@ -39,12 +39,9 @@ public class MultiplicityType implements CompositeUserType {
 	private static final Type[] TYPES = new Type[] {
 			IntegerType.INSTANCE,
 			new ManyToOneType(
-					new TypeFactory.TypeScope() {
-						@Override
-						public TypeConfiguration getTypeConfiguration() {
-							throw new HibernateException( "Cannot access SessionFactory from here" );
-						}
-					},
+					() -> {
+						throw new HibernateException( "Cannot access SessionFactory from here" );
+	},
 					Glarch.class.getName()
 			)
 	};

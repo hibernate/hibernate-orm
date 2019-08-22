@@ -948,126 +948,111 @@ public class AttributeFactory {
 		return false;
 	}
 
-	private final MemberResolver embeddedMemberResolver = new MemberResolver() {
-		@Override
-		public Member resolveMember(AttributeContext attributeContext) {
-			final EmbeddedTypeDescriptor embeddableType = (EmbeddedTypeDescriptor<?>) attributeContext.getOwnerType();
-			final String attributeName = attributeContext.getPropertyMapping().getName();
-
-			final Getter getter = embeddableType.getHibernateType()
-					.getComponentTuplizer()
-					.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) );
-			return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
-					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
-					: getter.getMember();
-		}
+	private final MemberResolver embeddedMemberResolver = (AttributeContext attributeContext) -> {
+		final EmbeddedTypeDescriptor embeddableType = (EmbeddedTypeDescriptor<?>) attributeContext.getOwnerType();
+		final String attributeName = attributeContext.getPropertyMapping().getName();
+		
+		final Getter getter = embeddableType.getHibernateType()
+			.getComponentTuplizer()
+			.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) );
+		return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
+			? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
+			: getter.getMember();
 	};
 
 
-	private final MemberResolver virtualIdentifierMemberResolver = new MemberResolver() {
-		@Override
-		public Member resolveMember(AttributeContext attributeContext) {
-			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
-			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
-			if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
-				throw new IllegalArgumentException( "expecting IdClass mapping" );
-			}
-			org.hibernate.type.Type type = entityMetamodel.getIdentifierProperty().getType();
-			if ( !EmbeddedComponentType.class.isInstance( type ) ) {
-				throw new IllegalArgumentException( "expecting IdClass mapping" );
-			}
-
-			final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
-			final String attributeName = attributeContext.getPropertyMapping().getName();
-
-			final Getter getter = componentType.getComponentTuplizer()
-					.getGetter( componentType.getPropertyIndex( attributeName ) );
-
-			return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
-					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
-					: getter.getMember();
+	private final MemberResolver virtualIdentifierMemberResolver = (AttributeContext attributeContext) -> {
+		final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
+		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
+			throw new IllegalArgumentException( "expecting IdClass mapping" );
 		}
+		org.hibernate.type.Type type = entityMetamodel.getIdentifierProperty().getType();
+		if ( !EmbeddedComponentType.class.isInstance( type ) ) {
+			throw new IllegalArgumentException( "expecting IdClass mapping" );
+		}
+		
+		final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
+		final String attributeName = attributeContext.getPropertyMapping().getName();
+		
+		final Getter getter = componentType.getComponentTuplizer()
+			.getGetter( componentType.getPropertyIndex( attributeName ) );
+		
+		return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
+			? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
+			: getter.getMember();
 	};
 
 	/**
 	 * A {@link Member} resolver for normal attributes.
 	 */
-	private final MemberResolver normalMemberResolver = new MemberResolver() {
-		@Override
-		public Member resolveMember(AttributeContext attributeContext) {
-			final ManagedTypeDescriptor ownerType = attributeContext.getOwnerType();
-			final Property property = attributeContext.getPropertyMapping();
-			final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
-			if ( Type.PersistenceType.EMBEDDABLE == persistenceType ) {
-				return embeddedMemberResolver.resolveMember( attributeContext );
-			}
-			else if ( Type.PersistenceType.ENTITY == persistenceType
-					|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
-				final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) ownerType;
-				final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
-				final String propertyName = property.getName();
-				final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
-				if ( index == null ) {
-					// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
-					return virtualIdentifierMemberResolver.resolveMember( attributeContext );
-				}
-				else {
-					final Getter getter = entityMetamodel.getTuplizer().getGetter( index );
-					return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
-							? new MapMember( propertyName, property.getType().getReturnedClass() )
-							: getter.getMember();
-				}
-			}
-			else {
-				throw new IllegalArgumentException( "Unexpected owner type : " + persistenceType );
-			}
+	private final MemberResolver normalMemberResolver = (AttributeContext attributeContext) -> {
+		final ManagedTypeDescriptor ownerType = attributeContext.getOwnerType();
+		final Property property = attributeContext.getPropertyMapping();
+		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
+		if ( Type.PersistenceType.EMBEDDABLE == persistenceType ) {
+			return embeddedMemberResolver.resolveMember( attributeContext );
 		}
-	};
-
-	private final MemberResolver identifierMemberResolver = new MemberResolver() {
-		@Override
-		public Member resolveMember(AttributeContext attributeContext) {
-			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
+		else if ( Type.PersistenceType.ENTITY == persistenceType
+			|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
+			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) ownerType;
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
-			if ( !attributeContext.getPropertyMapping().getName()
-					.equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
-				// this *should* indicate processing part of an IdClass...
+			final String propertyName = property.getName();
+			final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
+			if ( index == null ) {
+				// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
 				return virtualIdentifierMemberResolver.resolveMember( attributeContext );
 			}
-			final Getter getter = entityMetamodel.getTuplizer().getIdentifierGetter();
-			if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
-				return new MapMember(
-						entityMetamodel.getIdentifierProperty().getName(),
-						entityMetamodel.getIdentifierProperty().getType().getReturnedClass()
-				);
-			}
 			else {
-				return getter.getMember();
+				final Getter getter = entityMetamodel.getTuplizer().getGetter( index );
+				return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
+					? new MapMember( propertyName, property.getType().getReturnedClass() )
+					: getter.getMember();
 			}
+		}
+		else {
+			throw new IllegalArgumentException( "Unexpected owner type : " + persistenceType );
 		}
 	};
 
-	private final MemberResolver versionMemberResolver = new MemberResolver() {
-		@Override
-		public Member resolveMember(AttributeContext attributeContext) {
-			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
-			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
-			final String versionPropertyName = attributeContext.getPropertyMapping().getName();
-			if ( !versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {
-				// this should never happen, but to be safe...
-				throw new IllegalArgumentException( "Given property did not match declared version property" );
-			}
+	private final MemberResolver identifierMemberResolver = (AttributeContext attributeContext) -> {
+		final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
+		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+		if ( !attributeContext.getPropertyMapping().getName()
+			.equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
+			// this *should* indicate processing part of an IdClass...
+			return virtualIdentifierMemberResolver.resolveMember( attributeContext );
+		}
+		final Getter getter = entityMetamodel.getTuplizer().getIdentifierGetter();
+		if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
+			return new MapMember(
+				entityMetamodel.getIdentifierProperty().getName(),
+				entityMetamodel.getIdentifierProperty().getType().getReturnedClass()
+			);
+		}
+		else {
+			return getter.getMember();
+		}
+	};
 
-			final Getter getter = entityMetamodel.getTuplizer().getVersionGetter();
-			if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
-				return new MapMember(
-						versionPropertyName,
-						attributeContext.getPropertyMapping().getType().getReturnedClass()
-				);
-			}
-			else {
-				return getter.getMember();
-			}
+	private final MemberResolver versionMemberResolver = (AttributeContext attributeContext) -> {
+		final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
+		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+		final String versionPropertyName = attributeContext.getPropertyMapping().getName();
+		if ( !versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {
+			// this should never happen, but to be safe...
+			throw new IllegalArgumentException( "Given property did not match declared version property" );
+		}
+		
+		final Getter getter = entityMetamodel.getTuplizer().getVersionGetter();
+		if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
+			return new MapMember(
+				versionPropertyName,
+				attributeContext.getPropertyMapping().getType().getReturnedClass()
+			);
+		}
+		else {
+			return getter.getMember();
 		}
 	};
 }

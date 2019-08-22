@@ -59,158 +59,153 @@ public abstract class AbstractCompositionAttribute
 
 	@Override
 	public Iterable<AttributeDefinition> getAttributes() {
-		return new Iterable<AttributeDefinition>() {
+		return () -> new Iterator<AttributeDefinition>() {
+			private final int numberOfAttributes = getType().getSubtypes().length;
+			private int currentSubAttributeNumber;
+			private int currentColumnPosition = columnStartPosition;
+			
 			@Override
-			public Iterator<AttributeDefinition> iterator() {
-				return new Iterator<AttributeDefinition>() {
-					private final int numberOfAttributes = getType().getSubtypes().length;
-					private int currentSubAttributeNumber;
-					private int currentColumnPosition = columnStartPosition;
-
-					@Override
-					public boolean hasNext() {
-						return currentSubAttributeNumber < numberOfAttributes;
+			public boolean hasNext() {
+				return currentSubAttributeNumber < numberOfAttributes;
+			}
+			
+			@Override
+			public AttributeDefinition next() {
+				final int subAttributeNumber = currentSubAttributeNumber;
+				currentSubAttributeNumber++;
+				
+				final String name = getType().getPropertyNames()[subAttributeNumber];
+				final Type type = getType().getSubtypes()[subAttributeNumber];
+				
+				int columnPosition = currentColumnPosition;
+				currentColumnPosition += type.getColumnSpan( sessionFactory() );
+				
+				final CompositeType cType = getType();
+				final boolean nullable =
+					cType.getPropertyNullability() == null ||
+					cType.getPropertyNullability()[subAttributeNumber];
+				
+				if ( type.isAssociationType() ) {
+					// we build the association-key here because of the "goofiness" with 'currentColumnPosition'
+					final AssociationKey associationKey;
+					final AssociationType aType = (AssociationType) type;
+					
+					if ( aType.isAnyType() ) {
+						associationKey = new AssociationKey(
+							JoinHelper.getLHSTableName(
+								aType,
+								attributeNumber(),
+								(OuterJoinLoadable) locateOwningPersister()
+							),
+							JoinHelper.getLHSColumnNames(
+								aType,
+								attributeNumber(),
+								columnPosition,
+								(OuterJoinLoadable) locateOwningPersister(),
+								sessionFactory()
+							)
+						);
 					}
-
-					@Override
-					public AttributeDefinition next() {
-						final int subAttributeNumber = currentSubAttributeNumber;
-						currentSubAttributeNumber++;
-
-						final String name = getType().getPropertyNames()[subAttributeNumber];
-						final Type type = getType().getSubtypes()[subAttributeNumber];
-
-						int columnPosition = currentColumnPosition;
-						currentColumnPosition += type.getColumnSpan( sessionFactory() );
-
-						final CompositeType cType = getType();
-						final boolean nullable =
-								cType.getPropertyNullability() == null ||
-										cType.getPropertyNullability()[subAttributeNumber];
-
-						if ( type.isAssociationType() ) {
-							// we build the association-key here because of the "goofiness" with 'currentColumnPosition'
-							final AssociationKey associationKey;
-							final AssociationType aType = (AssociationType) type;
-
-							if ( aType.isAnyType() ) {
-								associationKey = new AssociationKey(
-										JoinHelper.getLHSTableName(
-												aType,
-												attributeNumber(),
-												(OuterJoinLoadable) locateOwningPersister()
-										),
-										JoinHelper.getLHSColumnNames(
-												aType,
-												attributeNumber(),
-												columnPosition,
-												(OuterJoinLoadable) locateOwningPersister(),
-												sessionFactory()
-										)
-								);
-							}
-							else if ( aType.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
-								final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
-
-								final String lhsTableName;
-								final String[] lhsColumnNames;
-
-								if ( joinable.isCollection() ) {
-									final QueryableCollection collectionPersister = (QueryableCollection) joinable;
-									lhsTableName = collectionPersister.getTableName();
-									lhsColumnNames = collectionPersister.getElementColumnNames();
-								}
-								else {
-									final OuterJoinLoadable entityPersister = (OuterJoinLoadable) locateOwningPersister();
-									lhsTableName = getLHSTableName( aType, attributeNumber(), entityPersister );
-									lhsColumnNames = getLHSColumnNames(
-											aType,
-											attributeNumber(),
-											columnPosition,
-											entityPersister,
-											sessionFactory()
-									);
-								}
-								associationKey = new AssociationKey( lhsTableName, lhsColumnNames );
-							}
-							else {
-								final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
-
-								associationKey = new AssociationKey(
-										joinable.getTableName(),
-										getRHSColumnNames( aType, sessionFactory() )
-								);
-							}
-
-							return new CompositeBasedAssociationAttribute(
-									AbstractCompositionAttribute.this,
-									sessionFactory(),
-									attributeNumber(),
-									name,
-									(AssociationType) type,
-									new BaselineAttributeInformation.Builder()
-											.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
-											.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
-											// todo : handle nested ValueGeneration strategies...
-											//		disallow if our strategy != NEVER
-											.setNullable( nullable )
-											.setDirtyCheckable( true )
-											.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
-											.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
-											.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
-											.createInformation(),
-									subAttributeNumber,
-									associationKey
-							);
-						}
-						else if ( type.isComponentType() ) {
-							return new CompositionBasedCompositionAttribute(
-									AbstractCompositionAttribute.this,
-									sessionFactory(),
-									attributeNumber(),
-									name,
-									(CompositeType) type,
-									columnPosition,
-									new BaselineAttributeInformation.Builder()
-											.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
-											.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
-											// todo : handle nested ValueGeneration strategies...
-											//		disallow if our strategy != NEVER
-											.setNullable( nullable )
-											.setDirtyCheckable( true )
-											.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
-											.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
-											.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
-											.createInformation()
-							);
+					else if ( aType.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
+						final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
+						
+						final String lhsTableName;
+						final String[] lhsColumnNames;
+						
+						if ( joinable.isCollection() ) {
+							final QueryableCollection collectionPersister = (QueryableCollection) joinable;
+							lhsTableName = collectionPersister.getTableName();
+							lhsColumnNames = collectionPersister.getElementColumnNames();
 						}
 						else {
-							return new CompositeBasedBasicAttribute(
-									AbstractCompositionAttribute.this,
-									sessionFactory(),
-									subAttributeNumber,
-									name,
-									type,
-									new BaselineAttributeInformation.Builder()
-											.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
-											.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
-											// todo : handle nested ValueGeneration strategies...
-											//		disallow if our strategy != NEVER
-											.setNullable( nullable )
-											.setDirtyCheckable( true )
-											.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
-											.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
-											.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
-											.createInformation()
+							final OuterJoinLoadable entityPersister = (OuterJoinLoadable) locateOwningPersister();
+							lhsTableName = getLHSTableName( aType, attributeNumber(), entityPersister );
+							lhsColumnNames = getLHSColumnNames(
+								aType,
+								attributeNumber(),
+								columnPosition,
+								entityPersister,
+								sessionFactory()
 							);
 						}
+						associationKey = new AssociationKey( lhsTableName, lhsColumnNames );
+					}
+					else {
+						final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
+						
+						associationKey = new AssociationKey(
+							joinable.getTableName(),
+							getRHSColumnNames( aType, sessionFactory() )
+						);
 					}
 
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException( "Remove operation not supported here" );
-					}
-				};
+					return new CompositeBasedAssociationAttribute(
+						AbstractCompositionAttribute.this,
+						sessionFactory(),
+						attributeNumber(),
+						name,
+						(AssociationType) type,
+						new BaselineAttributeInformation.Builder()
+							.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
+							.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
+							// todo : handle nested ValueGeneration strategies...
+							//		disallow if our strategy != NEVER
+							.setNullable( nullable )
+							.setDirtyCheckable( true )
+							.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
+							.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
+							.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
+							.createInformation(),
+						subAttributeNumber,
+						associationKey
+					);
+				}
+				else if ( type.isComponentType() ) {
+					return new CompositionBasedCompositionAttribute(
+						AbstractCompositionAttribute.this,
+						sessionFactory(),
+						attributeNumber(),
+						name,
+						(CompositeType) type,
+						columnPosition,
+						new BaselineAttributeInformation.Builder()
+							.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
+							.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
+							// todo : handle nested ValueGeneration strategies...
+							//		disallow if our strategy != NEVER
+							.setNullable( nullable )
+							.setDirtyCheckable( true )
+							.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
+							.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
+							.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
+							.createInformation()
+					);
+				}
+				else {
+					return new CompositeBasedBasicAttribute(
+						AbstractCompositionAttribute.this,
+						sessionFactory(),
+						subAttributeNumber,
+						name,
+						type,
+						new BaselineAttributeInformation.Builder()
+							.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
+							.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
+							// todo : handle nested ValueGeneration strategies...
+							//		disallow if our strategy != NEVER
+							.setNullable( nullable )
+							.setDirtyCheckable( true )
+							.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
+							.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
+							.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
+							.createInformation()
+					);
+				}
+			}
+			
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException( "Remove operation not supported here" );
 			}
 		};
 	}

@@ -212,30 +212,25 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 
 		final Session workSession = openSession();
 		workSession.beginTransaction();
-		workSession.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						PreparedStatement ps = connection.prepareStatement( sql );
-						ps.setInt( 1, 1 );
-						ResultSet resultSet = ps.executeQuery();
-						results.addAll(
-								resultSetProcessor.extractResults(
-										resultSet,
-										(SessionImplementor) workSession,
-										new QueryParameters(),
-										Helper.parameterContext(),
-										true,
-										false,
-										null,
-										null
-								)
-						);
-						resultSet.close();
-						ps.close();
-					}
-				}
-		);
+		workSession.doWork((Connection connection) -> {
+			PreparedStatement ps = connection.prepareStatement( sql );
+			ps.setInt( 1, 1 );
+			ResultSet resultSet = ps.executeQuery();
+			results.addAll(
+				resultSetProcessor.extractResults(
+					resultSet,
+					(SessionImplementor) workSession,
+					new QueryParameters(),
+					Helper.parameterContext(),
+					true,
+					false,
+					null,
+					null
+				)
+			);
+			resultSet.close();
+			ps.close();
+		});
 		workSession.getTransaction().commit();
 		workSession.close();
 		return results;

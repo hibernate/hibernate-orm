@@ -58,12 +58,7 @@ class SingularAttributeSourceManyToOneImpl
 				? mappingDocument.qualifyClassName( manyToOneElement.getClazz() )
 				: manyToOneElement.getEntityName();
 
-		final JavaTypeDescriptor referencedTypeDescriptor = new JavaTypeDescriptor() {
-			@Override
-			public String getName() {
-				return referencedTypeName;
-			}
-		};
+		final JavaTypeDescriptor referencedTypeDescriptor = () -> referencedTypeName;
 		this.typeSource = new HibernateTypeSourceImpl( referencedTypeDescriptor );
 
 		this.relationalValueSources = RelationalValueSourceHelper.buildValueSources(

@@ -85,26 +85,21 @@ public final class EventType<T> {
 	 * Maintain a map of {@link EventType} instances keyed by name for lookup by name as well as {@link #values()}
 	 * resolution.
 	 */
-	private static final Map<String,EventType> EVENT_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
-			new PrivilegedAction<Map<String, EventType>>() {
-				@Override
-				public Map<String, EventType> run() {
-					final Map<String, EventType> typeByNameMap = new HashMap<String, EventType>();
-					for ( Field field : EventType.class.getDeclaredFields() ) {
-						if ( EventType.class.isAssignableFrom( field.getType() ) ) {
-							try {
-								final EventType typeField = (EventType) field.get( null );
-								typeByNameMap.put( typeField.eventName(), typeField );
-							}
-							catch (Exception t) {
-								throw new HibernateException( "Unable to initialize EventType map", t );
-							}
-						}
-					}
-					return typeByNameMap;
+	private static final Map<String,EventType> EVENT_TYPE_BY_NAME_MAP = AccessController.doPrivileged((PrivilegedAction<Map<String, EventType>>) () -> {
+		final Map<String, EventType> typeByNameMap = new HashMap<String, EventType>();
+		for ( Field field : EventType.class.getDeclaredFields() ) {
+			if ( EventType.class.isAssignableFrom( field.getType() ) ) {
+				try {
+					final EventType typeField = (EventType) field.get( null );
+					typeByNameMap.put( typeField.eventName(), typeField );
+				}
+				catch (Exception t) {
+					throw new HibernateException( "Unable to initialize EventType map", t );
 				}
 			}
-	);
+		}
+		return typeByNameMap;
+	});
 
 	/**
 	 * Find an {@link EventType} by its name

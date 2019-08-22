@@ -119,16 +119,13 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-12505" )
 	public void testManagedResourcesAfterCoordinateScanWithCustomEnabledScanner() {
-		final Scanner scanner = new Scanner() {
-			@Override
-			public ScanResult scan(final ScanEnvironment environment, final ScanOptions options, final ScanParameters parameters) {
-				final InputStreamAccess dummyInputStreamAccess = new ByteArrayInputStreamAccess( "dummy", new byte[0] );
-				return new ScanResultImpl(
-					Collections.<PackageDescriptor>singleton( new PackageDescriptorImpl( "dummy", dummyInputStreamAccess ) ),
-					Collections.<ClassDescriptor>singleton( new ClassDescriptorImpl( "dummy", ClassDescriptor.Categorization.MODEL, dummyInputStreamAccess ) ),
-					Collections.<MappingFileDescriptor>singleton( new MappingFileDescriptorImpl( "dummy", dummyInputStreamAccess ) )
-				);
-			}
+		final Scanner scanner = (final ScanEnvironment environment, final ScanOptions options, final ScanParameters parameters) -> {
+			final InputStreamAccess dummyInputStreamAccess = new ByteArrayInputStreamAccess( "dummy", new byte[0] );
+			return new ScanResultImpl(
+				Collections.<PackageDescriptor>singleton( new PackageDescriptorImpl( "dummy", dummyInputStreamAccess ) ),
+				Collections.<ClassDescriptor>singleton( new ClassDescriptorImpl( "dummy", ClassDescriptor.Categorization.MODEL, dummyInputStreamAccess ) ),
+				Collections.<MappingFileDescriptor>singleton( new MappingFileDescriptorImpl( "dummy", dummyInputStreamAccess ) )
+			);
 		};
 		assertManagedResourcesAfterCoordinateScanWithScanner( scanner, false );
 	}

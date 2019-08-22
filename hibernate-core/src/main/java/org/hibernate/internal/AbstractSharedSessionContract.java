@@ -32,6 +32,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -136,7 +137,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected boolean waitingForAutoClose;
 
 	// transient & non-final for Serialization purposes - ugh
-	private transient SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
+	private transient SessionEventListenerManagerImpl sessionEventsManager;
 	private transient EntityNameResolver entityNameResolver;
 
 	private Integer jdbcBatchSize;
@@ -168,6 +169,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		this.interceptor = interpret( options.getInterceptor() );
 		this.jdbcTimeZone = options.getJdbcTimeZone();
+		final List<SessionEventListener> customSessionEventListener = options.getCustomSessionEventListener();
+		if ( customSessionEventListener == null ) {
+			sessionEventsManager = new SessionEventListenerManagerImpl( fastSessionServices.defaultSessionEventListeners.buildBaseline() );
+		}
+		else {
+			sessionEventsManager = new SessionEventListenerManagerImpl( customSessionEventListener.toArray( new SessionEventListener[0] ) );
+		}
 
 		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 		this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector, fastSessionServices );
@@ -1190,7 +1198,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 1 :: read back non-transient state...
 		ois.defaultReadObject();
-		sessionEventsManager = new SessionEventListenerManagerImpl();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 2 :: read back transient state...
@@ -1198,6 +1205,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		factory = SessionFactoryImpl.deserialize( ois );
 		fastSessionServices = factory.getFastSessionServices();
+		sessionEventsManager = new SessionEventListenerManagerImpl( fastSessionServices.defaultSessionEventListeners.buildBaseline() );
 		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject(), fastSessionServices );
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 

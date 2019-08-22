@@ -1156,6 +1156,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		private TimeZone jdbcTimeZone;
 		private boolean queryParametersValidationEnabled;
 
+		// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
+		// (Need a fresh build for each Session as the listener instances can't be reused across sessions)
+		// Only initialize of the builder is overriding the default.
 		private List<SessionEventListener> listeners;
 
 		//todo : expose setting
@@ -1178,9 +1181,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
 			this.jdbcTimeZone = sessionFactoryOptions.getJdbcTimeZone();
-
-			listeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder().buildBaselineList();
-			queryParametersValidationEnabled = sessionFactoryOptions.isQueryParametersValidationEnabled();
+			this.queryParametersValidationEnabled = sessionFactoryOptions.isQueryParametersValidationEnabled();
 		}
 
 
@@ -1268,20 +1269,18 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			return jdbcTimeZone;
 		}
 
+		@Override
+		public List<SessionEventListener> getCustomSessionEventListener() {
+			return listeners;
+		}
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SessionBuilder
 
 		@Override
 		public Session openSession() {
 			log.tracef( "Opening Hibernate Session.  tenant=%s", tenantIdentifier );
-			final SessionImpl session = new SessionImpl( sessionFactory, this );
-
-			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-			for ( SessionEventListener listener : listeners ) {
-				eventListenerManager.addListener( listener );
-			}
-
-			return session;
+			return new SessionImpl( sessionFactory, this );
 		}
 
 		@Override
@@ -1377,6 +1376,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		@SuppressWarnings("unchecked")
 		public T eventListeners(SessionEventListener... listeners) {
+			if ( this.listeners == null ) {
+				this.listeners = sessionFactory.getSessionFactoryOptions()
+						.getBaselineSessionEventsListenerBuilder()
+						.buildBaselineList();
+			}
 			Collections.addAll( this.listeners, listeners );
 			return (T) this;
 		}
@@ -1384,7 +1388,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		@SuppressWarnings("unchecked")
 		public T clearEventListeners() {
-			listeners.clear();
+			if ( listeners == null ) {
+				//Needs to initialize explicitly to an empty list as otherwise "null" immplies the default listeners will be applied
+				this.listeners = new ArrayList<SessionEventListener>( 3 );
+			}
+			else {
+				listeners.clear();
+			}
 			return (T) this;
 		}
 
@@ -1482,6 +1492,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public TimeZone getJdbcTimeZone() {
 			return sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
+		}
+
+		@Override
+		public List<SessionEventListener> getCustomSessionEventListener() {
+			return null;
 		}
 
 		@Override

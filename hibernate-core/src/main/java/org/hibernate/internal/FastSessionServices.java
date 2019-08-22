@@ -10,6 +10,8 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -115,6 +117,7 @@ final class FastSessionServices {
 	final boolean isJtaTransactionAccessible;
 	final CacheMode initialSessionCacheMode;
 	final boolean discardOnClose;
+	final BaselineSessionEventsListenerBuilder defaultSessionEventListeners;
 
 	//Private fields:
 	private final Dialect dialect;
@@ -126,6 +129,7 @@ final class FastSessionServices {
 		Objects.requireNonNull( sf );
 		final ServiceRegistryImplementor sr = sf.getServiceRegistry();
 		final JdbcServices jdbcServices = sf.getJdbcServices();
+		final SessionFactoryOptions sessionFactoryOptions = sf.getSessionFactoryOptions();
 
 		// Pre-compute all iterators on Event listeners:
 		final EventListenerRegistry eventListenerRegistry = sr.getService( EventListenerRegistry.class );
@@ -150,7 +154,7 @@ final class FastSessionServices {
 
 		//Other highly useful constants:
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
-		this.disallowOutOfTransactionUpdateOperations = !sf.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
+		this.disallowOutOfTransactionUpdateOperations = !sessionFactoryOptions.isAllowOutOfTransactionUpdateOperations();
 		this.useStreamForLobBinding = Environment.useStreamsForBinary() || dialect.useInputStreamToInsertBlob();
 		this.requiresMultiTenantConnectionProvider = sf.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider();
 
@@ -167,8 +171,9 @@ final class FastSessionServices {
 		this.defaultCacheStoreMode = determineCacheStoreMode( defaultSessionProperties );
 		this.defaultCacheRetrieveMode = determineCacheRetrieveMode( defaultSessionProperties );
 		this.initialSessionCacheMode = CacheModeHelper.interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
-		this.discardOnClose = sf.getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
+		this.discardOnClose = sessionFactoryOptions.isReleaseResourcesOnCloseEnabled();
 		this.defaultJdbcObservers = Collections.singletonList( new ConnectionObserverStatsBridge( sf ) );
+		this.defaultSessionEventListeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
 	}
 
 	Iterable<ClearEventListener> getClearEventListeners() {

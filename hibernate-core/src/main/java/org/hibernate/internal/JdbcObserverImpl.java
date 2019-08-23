@@ -8,25 +8,27 @@ package org.hibernate.internal;
 
 import java.sql.Connection;
 
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 
 /**
  * @author Steve Ebersole
  */
-public class JdbcObserverImpl implements JdbcObserver {
+public final class JdbcObserverImpl implements JdbcObserver {
 
-	private final SharedSessionContractImplementor session;
 	private final ConnectionObserverStatsBridge observer;
+	private final SessionEventListenerManager eventListenerManager;
+	private final SharedSessionContractImplementor session;
 
 	public JdbcObserverImpl(SharedSessionContractImplementor session, FastSessionServices fastSessionServices) {
 		this.session = session;
 		this.observer = fastSessionServices.getDefaultJdbcObserver();
+		this.eventListenerManager = session.getEventListenerManager();
 	}
 
 	@Override
 	public void jdbcConnectionAcquisitionStart() {
-
 	}
 
 	@Override
@@ -36,7 +38,6 @@ public class JdbcObserverImpl implements JdbcObserver {
 
 	@Override
 	public void jdbcConnectionReleaseStart() {
-
 	}
 
 	@Override
@@ -46,33 +47,33 @@ public class JdbcObserverImpl implements JdbcObserver {
 
 	@Override
 	public void jdbcPrepareStatementStart() {
-		session.getEventListenerManager().jdbcPrepareStatementStart();
+		eventListenerManager.jdbcPrepareStatementStart();
 	}
 
 	@Override
 	public void jdbcPrepareStatementEnd() {
 		observer.statementPrepared();
-		session.getEventListenerManager().jdbcPrepareStatementEnd();
+		eventListenerManager.jdbcPrepareStatementEnd();
 	}
 
 	@Override
 	public void jdbcExecuteStatementStart() {
-		session.getEventListenerManager().jdbcExecuteStatementStart();
+		eventListenerManager.jdbcExecuteStatementStart();
 	}
 
 	@Override
 	public void jdbcExecuteStatementEnd() {
-		session.getEventListenerManager().jdbcExecuteStatementEnd();
+		eventListenerManager.jdbcExecuteStatementEnd();
 	}
 
 	@Override
 	public void jdbcExecuteBatchStart() {
-		session.getEventListenerManager().jdbcExecuteBatchStart();
+		eventListenerManager.jdbcExecuteBatchStart();
 	}
 
 	@Override
 	public void jdbcExecuteBatchEnd() {
-		session.getEventListenerManager().jdbcExecuteBatchEnd();
+		eventListenerManager.jdbcExecuteBatchEnd();
 	}
 
 	@Override

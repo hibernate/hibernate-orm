@@ -294,7 +294,13 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				TypeMirror collectionElementType = TypeUtils.getCollectionElementType(
 						declaredType, fqNameOfReturnType, null, context
 				);
-				returnedElement = (TypeElement) context.getTypeUtils().asElement( collectionElementType );
+
+				final Element collectionElement = context.getTypeUtils().asElement( collectionElementType );
+				if ( ElementKind.TYPE_PARAMETER.equals( collectionElement.getKind() ) ) {
+					return Boolean.FALSE;
+				}
+
+				returnedElement = (TypeElement) collectionElement;
 			}
 
 			if ( type.getQualifiedName().toString().equals( returnedElement.getQualifiedName().toString() ) ) {

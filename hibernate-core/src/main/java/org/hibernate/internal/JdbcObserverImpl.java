@@ -8,7 +8,6 @@ package org.hibernate.internal;
 
 import java.sql.Connection;
 
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 
@@ -18,11 +17,11 @@ import org.hibernate.resource.jdbc.spi.JdbcObserver;
 public class JdbcObserverImpl implements JdbcObserver {
 
 	private final SharedSessionContractImplementor session;
-	private final Iterable<ConnectionObserver> observers;
+	private final ConnectionObserverStatsBridge observer;
 
 	public JdbcObserverImpl(SharedSessionContractImplementor session, FastSessionServices fastSessionServices) {
 		this.session = session;
-		this.observers = fastSessionServices.getDefaultJdbcObservers();
+		this.observer = fastSessionServices.getDefaultJdbcObserver();
 	}
 
 	@Override
@@ -32,9 +31,7 @@ public class JdbcObserverImpl implements JdbcObserver {
 
 	@Override
 	public void jdbcConnectionAcquisitionEnd(Connection connection) {
-		for ( ConnectionObserver observer : observers ) {
-			observer.physicalConnectionObtained( connection );
-		}
+		observer.physicalConnectionObtained( connection );
 	}
 
 	@Override
@@ -44,9 +41,7 @@ public class JdbcObserverImpl implements JdbcObserver {
 
 	@Override
 	public void jdbcConnectionReleaseEnd() {
-		for ( ConnectionObserver observer : observers ) {
-			observer.physicalConnectionReleased();
-		}
+		observer.physicalConnectionReleased();
 	}
 
 	@Override
@@ -56,9 +51,7 @@ public class JdbcObserverImpl implements JdbcObserver {
 
 	@Override
 	public void jdbcPrepareStatementEnd() {
-		for ( ConnectionObserver observer : observers ) {
-			observer.statementPrepared();
-		}
+		observer.statementPrepared();
 		session.getEventListenerManager().jdbcPrepareStatementEnd();
 	}
 

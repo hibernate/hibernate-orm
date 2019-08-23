@@ -125,7 +125,7 @@ final class FastSessionServices {
 	private final Dialect dialect;
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
-	private List<ConnectionObserver> defaultJdbcObservers;
+	private final ConnectionObserverStatsBridge defaultJdbcObservers;
 
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );
@@ -174,7 +174,7 @@ final class FastSessionServices {
 		this.defaultCacheRetrieveMode = determineCacheRetrieveMode( defaultSessionProperties );
 		this.initialSessionCacheMode = CacheModeHelper.interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
 		this.discardOnClose = sessionFactoryOptions.isReleaseResourcesOnCloseEnabled();
-		this.defaultJdbcObservers = Collections.singletonList( new ConnectionObserverStatsBridge( sf ) );
+		this.defaultJdbcObservers = new ConnectionObserverStatsBridge( sf );
 		this.defaultSessionEventListeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
 		this.defaultLockOptions = initializeDefaultLockOptions( defaultSessionProperties );
 	}
@@ -273,7 +273,7 @@ final class FastSessionServices {
 		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 	}
 
-	public Iterable<ConnectionObserver> getDefaultJdbcObservers() {
+	public ConnectionObserverStatsBridge getDefaultJdbcObserver() {
 		return defaultJdbcObservers;
 	}
 

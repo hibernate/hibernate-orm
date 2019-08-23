@@ -16,7 +16,6 @@ import java.util.Map;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
@@ -73,11 +72,10 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 				new PrivilegedAction<Boolean>() {
 					@Override
 					public Boolean run() {
-						final Getter getter = ReflectionTools.getGetter( obj.getClass(), idPropertyData, getServiceRegistry() );
 						final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
 
 						try {
-							final Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
+							final Object subObj = instantiateCompositeId();
 
 							boolean ret = true;
 							for ( IdMapper idMapper : ids.values() ) {

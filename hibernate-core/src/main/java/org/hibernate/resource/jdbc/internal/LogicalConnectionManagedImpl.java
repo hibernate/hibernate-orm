@@ -100,7 +100,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private Connection acquireConnectionIfNeeded() {
 		if ( physicalConnection == null ) {
 			// todo : is this the right place for these observer calls?
-			observer.jdbcConnectionAcquisitionStart();
 			try {
 				physicalConnection = jdbcConnectionAccess.obtainConnection();
 			}
@@ -186,8 +185,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			return;
 		}
 
-		// todo : is this the right place for these observer calls?
-		observer.jdbcConnectionReleaseStart();
 		try {
 			if ( !physicalConnection.isClosed() ) {
 				sqlExceptionHelper.logAndClearWarnings( physicalConnection );

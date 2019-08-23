@@ -361,10 +361,6 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			} );
 			nclobs = null;
 		}
-
-		if ( jdbcObserver != null ) {
-			jdbcObserver.jdbcReleaseRegistryResourcesEnd();
-		}
 	}
 
 	private boolean hasRegistered(final HashMap resource) {

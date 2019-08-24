@@ -52,7 +52,9 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	void prime(Set<DomainDataRegionConfig> cacheRegionConfigs);
 
 	/**
-	 * Get a cache Region by name
+	 * Get a cache Region by name. If there is both a {@link DomainDataRegion}
+	 * and a {@link QueryResultsRegion} with the specified name, then the
+	 * {@link DomainDataRegion} will be returned.
 	 *
 	 * @apiNote It is only valid to call this method after {@link #prime} has
 	 * been performed

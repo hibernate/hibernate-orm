@@ -325,7 +325,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		final CtClass targetEntity = PersistentAttributesHelper.getTargetEntityClass( managedCtClass, persistentField );
 		if ( targetEntity == null ) {
 			log.infof(
-					"Could not find type of bi-directional association for field [%s#%s]",
+					"Bi-directional association not managed for field [%s#%s]: Could not find target type",
 					managedCtClass.getName(),
 					persistentField.getName()
 			);
@@ -334,9 +334,10 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		final String mappedBy = PersistentAttributesHelper.getMappedBy( persistentField, targetEntity, enhancementContext );
 		if ( mappedBy == null || mappedBy.isEmpty() ) {
 			log.infof(
-					"Could not find bi-directional association for field [%s#%s]",
+					"Bi-directional association not managed for field [%s#%s]: Could not find target field in [%s]",
 					managedCtClass.getName(),
-					persistentField.getName()
+					persistentField.getName(),
+					targetEntity.getName()
 			);
 			return;
 		}
@@ -459,7 +460,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 			if ( PersistentAttributesHelper.isAssignable( persistentField.getType(), Map.class.getName() ) ||
 					PersistentAttributesHelper.isAssignable( targetEntity.getField( mappedBy ).getType(), Map.class.getName() ) ) {
 				log.infof(
-						"Bi-directional association for field [%s#%s] not managed: @ManyToMany in java.util.Map attribute not supported ",
+						"Bi-directional association not managed for field [%s#%s]: @ManyToMany in java.util.Map attribute not supported ",
 						managedCtClass.getName(),
 						persistentField.getName()
 				);

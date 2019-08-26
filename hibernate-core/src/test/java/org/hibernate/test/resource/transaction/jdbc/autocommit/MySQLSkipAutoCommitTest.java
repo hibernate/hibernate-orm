@@ -30,11 +30,20 @@ public class MySQLSkipAutoCommitTest extends AbstractSkipAutoCommitTest {
 		if ( getDialect() instanceof MariaDBDialect ) {
 			dataSource = ReflectionUtil.newInstance( "org.mariadb.jdbc.MariaDbDataSource" );
 		}
-		else if ( getDialect() instanceof MySQL8Dialect ) {
-			dataSource = ReflectionUtil.newInstance( "com.mysql.cj.jdbc.MysqlDataSource" );
-		}
 		else if ( getDialect() instanceof MySQLDialect ) {
-			dataSource = ReflectionUtil.newInstance( "com.mysql.jdbc.jdbc2.optional.MysqlDataSource" );
+			try {
+				// ConnectorJ 8
+				dataSource = ReflectionUtil.newInstance( "com.mysql.cj.jdbc.MysqlDataSource" );
+			}
+			catch (IllegalArgumentException e) {
+				try {
+					// ConnectorJ 5
+					dataSource = ReflectionUtil.newInstance( "com.mysql.jdbc.jdbc2.optional.MysqlDataSource" );
+				} catch (Exception e2) {
+					e2.addSuppressed( e );
+					throw e;
+				}
+			}
 		}
 		ReflectionUtil.setProperty( dataSource, "url", Environment.getProperties().getProperty( AvailableSettings.URL ) );
 		ReflectionUtil.setProperty( dataSource, "user", Environment.getProperties().getProperty( AvailableSettings.USER ) );

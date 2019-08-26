@@ -15,6 +15,7 @@ import java.sql.Types;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -54,6 +55,18 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTest<LocalTime, LocalTime
 					yearWhenPersistedWithoutHibernate,
 					monthWhenPersistedWithoutHibernate, dayWhenPersistedWithoutHibernate
 			);
+		}
+
+		@Override
+		protected Iterable<? extends ZoneId> getHibernateJdbcTimeZonesToTest() {
+			// The MariaDB Connector/J JDBC driver has a bug in ResultSet#getTime(int, Calendar)
+			// that prevents our explicit JDBC timezones from being recognized
+			// See https://hibernate.atlassian.net/browse/HHH-13581
+			// See https://jira.mariadb.org/browse/CONJ-724
+			if ( MariaDBDialect.class.isInstance( getDialect() ) ) {
+				return Collections.emptySet();
+			}
+			return super.getHibernateJdbcTimeZonesToTest();
 		}
 	}
 

@@ -34,7 +34,7 @@ import org.junit.Test;
 import org.junit.runners.Parameterized;
 
 /**
- * Tests for storage of LocalTime properties.
+ * Tests for storage of OffsetTime properties.
  */
 public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetTimeTest.EntityWithOffsetTime> {
 

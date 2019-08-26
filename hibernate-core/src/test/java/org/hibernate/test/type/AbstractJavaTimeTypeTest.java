@@ -191,7 +191,7 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 	protected final void withDefaultTimeZone(Runnable runnable) {
 		TimeZone timeZoneBefore = TimeZone.getDefault();
-		TimeZone.setDefault( TimeZone.getTimeZone( env.defaultJvmTimeZone ) );
+		TimeZone.setDefault( toTimeZone( env.defaultJvmTimeZone ) );
 		/*
 		 * Run the code in a new thread, because some libraries (looking at you, h2 JDBC driver)
 		 * cache data dependent on the default timezone in thread local variables,
@@ -221,6 +221,23 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		finally {
 			TimeZone.setDefault( timeZoneBefore );
 		}
+	}
+
+	private static TimeZone toTimeZone(ZoneId zoneId) {
+		String idString = zoneId.getId();
+		if ( idString.startsWith( "UTC+" ) || idString.startsWith( "UTC-" ) ) {
+			// Apparently TimeZone doesn't understand UTC+XXX nor UTC-XXX
+			// Using GMT+XXX or GMT-XXX as a fallback
+			idString = "GMT" + idString.substring( "UTC".length() );
+		}
+
+		TimeZone result = TimeZone.getTimeZone( idString );
+		if ( !idString.equals( result.getID() ) ) {
+			// If the timezone is not understood, getTimeZone returns GMT and the condition above is true
+			throw new IllegalStateException( "Attempting to test an unsupported timezone: " + zoneId );
+		}
+
+		return result;
 	}
 
 	protected final Class<? extends AbstractRemappingH2Dialect> getRemappingDialectClass() {

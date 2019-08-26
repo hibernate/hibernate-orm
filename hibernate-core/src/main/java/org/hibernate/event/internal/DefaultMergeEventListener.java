@@ -359,7 +359,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			Object managed,
 			EntityPersister persister,
 			EventSource source) {
-		if ( incoming instanceof HibernateProxy ) {
+		if ( managed instanceof HibernateProxy ) {
 			return source.getPersistenceContextInternal().unproxy( managed );
 		}
 

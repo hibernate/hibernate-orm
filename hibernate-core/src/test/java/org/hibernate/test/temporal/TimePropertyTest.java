@@ -9,6 +9,7 @@ package org.hibernate.test.temporal;
 import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -36,7 +37,11 @@ public class TimePropertyTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testTimeAsDate() {
 		final Entity eOrig = new Entity();
-		eOrig.tAsDate = new Time( new Date().getTime() );
+		Calendar calendar = Calendar.getInstance();
+		// See javadoc for java.sql.Time: 'The date components should be set to the "zero epoch" value of January 1, 1970 and should not be accessed'
+		// Other dates can potentially lead to errors in JDBC drivers, in particular MySQL ConnectorJ 8.x.
+		calendar.set( 1970, Calendar.JANUARY, 1 );
+		eOrig.tAsDate = new Time( calendar.getTimeInMillis() );
 
 		Session s = openSession();
 		s.getTransaction().begin();

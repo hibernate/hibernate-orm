@@ -110,8 +110,7 @@ ext {
             hsqldb:          "org.hsqldb:hsqldb:2.3.2",
             derby:           "org.apache.derby:derby:10.11.1.1",
             postgresql:      'org.postgresql:postgresql:42.2.2',
-            //Upgrade MySQL Driver only when this issue gets fixed: https://bugs.mysql.com/bug.php?id=85941
-            mysql:           'mysql:mysql-connector-java:5.1.46',
+            mysql:           'mysql:mysql-connector-java:8.0.17',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
 
             oracle:          'com.oracle.jdbc:ojdbc8:12.2.0.1',

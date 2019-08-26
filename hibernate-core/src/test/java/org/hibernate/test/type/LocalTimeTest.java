@@ -23,6 +23,7 @@ import javax.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
@@ -186,6 +187,12 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTest<LocalTime, LocalTime
 	@Override
 	@Test
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA seems to return a java.sql.Timestamp instead of a java.sql.Time")
+	@SkipForDialect(value = MySQL5Dialect.class,
+			comment = "HHH-13580 MySQL seems to store the whole timestamp, not just the time,"
+					+ " which for some timezones results in a date other than 1970-01-01 being returned"
+					+ " (typically 1969-12-31), even though the time is always right."
+					+ " Since java.sql.Time holds the whole timestamp, not just the time,"
+					+ " its equals() method ends up returning false in this test.")
 	public void writeThenNativeRead() {
 		super.writeThenNativeRead();
 	}

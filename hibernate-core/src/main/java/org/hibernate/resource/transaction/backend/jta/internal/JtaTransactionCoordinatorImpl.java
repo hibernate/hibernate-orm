@@ -62,7 +62,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	private int timeOut = -1;
 
-	private final transient List<TransactionObserver> observers;
+	private transient List<TransactionObserver> observers = null;
 
 	/**
 	 * Construct a JtaTransactionCoordinatorImpl instance.  package-protected to ensure access goes through
@@ -78,8 +78,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
-
-		this.observers = new ArrayList<>();
 
 		final JdbcSessionContext jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
 
@@ -109,9 +107,8 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		this.preferUserTransactions = preferUserTransactions;
 		this.performJtaThreadTracking = performJtaThreadTracking;
 
-		this.observers = new ArrayList<>();
-
 		if ( observers != null ) {
+			this.observers = new ArrayList<>( observers.length );
 			Collections.addAll( this.observers, observers );
 		}
 
@@ -123,11 +120,17 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	/**
 	 * Needed because while iterating the observers list and executing the before/update callbacks,
 	 * some observers might get removed from the list.
+	 * Yet try to not allocate anything for when the list is empty, as this is a common case.
 	 *
 	 * @return TransactionObserver
 	 */
 	private Iterable<TransactionObserver> observers() {
-		return new ArrayList<>( observers );
+		if ( this.observers == null ) {
+			return Collections.EMPTY_LIST;
+		}
+		else {
+			return new ArrayList<>( this.observers );
+		}
 	}
 
 	public SynchronizationCallbackCoordinator getSynchronizationCallbackCoordinator() {
@@ -388,12 +391,17 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	public void addObserver(TransactionObserver observer) {
+		if ( this.observers == null ) {
+			this.observers = new ArrayList<>( 3 ); //These lists are typically very small.
+		}
 		observers.add( observer );
 	}
 
 	@Override
 	public void removeObserver(TransactionObserver observer) {
-		observers.remove( observer );
+		if ( observers != null ) {
+			observers.remove( observer );
+		}
 	}
 
 	/**

@@ -150,9 +150,9 @@ public class EntityMetamodel implements Serializable {
 				nonAggregatedCidMapper = (CompositeType) identifierMapperComponent.getType();
 				idAttributeNames = new HashSet<>( );
 				//noinspection unchecked
-				final Iterator<Property> propertyItr = identifierMapperComponent.getPropertyIterator();
+				final Iterator<String> propertyItr = identifierMapperComponent.getPropertyIterator();
 				while ( propertyItr.hasNext() ) {
-					idAttributeNames.add( propertyItr.next().getName() );
+					idAttributeNames.add( propertyItr.next() );
 				}
 			}
 			else {

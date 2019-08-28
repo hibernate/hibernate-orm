@@ -10,7 +10,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInter
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -36,14 +35,6 @@ public interface BytecodeEnhancementMetadata {
 	boolean isEnhancedForLazyLoading();
 
 	LazyAttributesMetadata getLazyAttributesMetadata();
-
-	/**
-	 * Create an "enhancement as proxy" instance for the given entity
-	 *
-	 * @apiNote The `addEmptyEntry` parameter is used to avoid creation of `EntityEntry` instances when we
-	 * do not need them. - mainly from StatelessSession
-	 */
-	PersistentAttributeInterceptable createEnhancedProxy(EntityKey keyToLoad, boolean addEmptyEntry, SharedSessionContractImplementor session);
 
 	/**
 	 * Build and inject an interceptor instance into the enhanced entity.

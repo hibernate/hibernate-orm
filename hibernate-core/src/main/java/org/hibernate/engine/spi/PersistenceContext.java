@@ -345,12 +345,6 @@ public interface PersistenceContext {
 	Object proxyFor(Object impl) throws HibernateException;
 
 	/**
-	 * Cross between {@link #addEntity(EntityKey, Object)} and {@link #addProxy(EntityKey, Object)}
-	 * for use with enhancement-as-proxy
-	 */
-	void addEnhancedProxy(EntityKey key, PersistentAttributeInterceptable entity);
-
-	/**
 	 * Get the entity that owns this persistent collection
 	 */
 	Object getCollectionOwner(Serializable key, CollectionPersister collectionPersister)

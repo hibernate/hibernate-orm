@@ -138,12 +138,12 @@ public class BatchFetchQueue {
 			if ( batchLoadableEntityKeys == null ) {
 				batchLoadableEntityKeys = new HashMap<>( 12 );
 			}
-			final LinkedHashSet<EntityKey> keysForEntity = batchLoadableEntityKeys.computeIfAbsent(
-					key.getEntityName(),
-					k -> new LinkedHashSet<>( 8 )
-			);
-
-			keysForEntity.add( key );
+			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName());
+			if (set == null) {
+				set = new LinkedHashSet<>( 8 );
+				batchLoadableEntityKeys.put( key.getEntityName(), set);
+			}
+			set.add(key);
 		}
 	}
 	

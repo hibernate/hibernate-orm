@@ -741,11 +741,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void addEnhancedProxy(EntityKey key, PersistentAttributeInterceptable entity) {
-		entitiesByKey.put( key, entity );
-	}
-
-	@Override
 	public Object getCollectionOwner(Serializable key, CollectionPersister collectionPersister) throws MappingException {
 		// todo : we really just need to add a split in the notions of:
 		//		1) collection key

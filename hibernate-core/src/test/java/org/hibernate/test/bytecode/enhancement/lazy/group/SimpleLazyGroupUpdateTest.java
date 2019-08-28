@@ -64,7 +64,7 @@ public class SimpleLazyGroupUpdateTest extends BaseCoreFunctionalTestCase {
     @Test
     public void test() {
         doInHibernate( this::sessionFactory, s -> {
-            TestEntity entity = s.get( TestEntity.class, 1L );
+            TestEntity entity = s.load( TestEntity.class, 1L );
             assertLoaded( entity, "name" );
             assertNotLoaded( entity, "lifeStory" );
             assertNotLoaded( entity, "reallyBigString" );
@@ -76,7 +76,7 @@ public class SimpleLazyGroupUpdateTest extends BaseCoreFunctionalTestCase {
         } );
 
         doInHibernate( this::sessionFactory, s -> {
-            TestEntity entity = s.get( TestEntity.class, 1L );
+            TestEntity entity = s.load( TestEntity.class, 1L );
 
             assertLoaded( entity, "name" );
             assertNotLoaded( entity, "lifeStory" );

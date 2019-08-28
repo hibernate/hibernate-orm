@@ -16,12 +16,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -557,28 +555,8 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		TransactionUtil2.inSession( sessionFactory(), action );
 	}
 
-	public void inStatelessSession(Consumer<StatelessSession> action) {
-		log.trace( "#inSession(action)" );
-		TransactionUtil2.inStatelessSession( sessionFactory(), action );
-	}
-
-	public <R> R fromSession(Function<SessionImplementor,R> action) {
-		log.trace( "#inSession(action)" );
-		return TransactionUtil2.fromSession( sessionFactory(), action );
-	}
-
 	public void inTransaction(Consumer<SessionImplementor> action) {
 		log.trace( "#inTransaction(action)" );
 		TransactionUtil2.inTransaction( sessionFactory(), action );
-	}
-
-	public void inStatelessTransaction(Consumer<StatelessSession> action) {
-		log.trace( "#inTransaction(action)" );
-		TransactionUtil2.inStatelessTransaction( sessionFactory(), action );
-	}
-
-	public <R> R fromTransaction(Function<SessionImplementor,R> action) {
-		log.trace( "#inTransaction(action)" );
-		return TransactionUtil2.fromTransaction( sessionFactory(), action );
 	}
 }

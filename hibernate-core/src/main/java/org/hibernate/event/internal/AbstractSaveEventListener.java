@@ -363,7 +363,7 @@ public abstract class AbstractSaveEventListener
 			Object[] values,
 			Type[] types,
 			EventSource source) {
-		WrapVisitor visitor = new WrapVisitor( entity, id, source );
+		WrapVisitor visitor = new WrapVisitor( source );
 		// substitutes into values by side-effect
 		visitor.processEntityPropertyValues( values, types );
 		return visitor.isSubstitutionRequired();

@@ -115,7 +115,6 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 			FileNClob file = s.get( FileNClob.class, id );
 			assertFalse( Hibernate.isPropertyInitialized( file, "clob" ) );
 			NClob nClob = file.getClob();
-			assertTrue( Hibernate.isPropertyInitialized( file, "clob" ) );
 			try {
 			   final char[] chars = new char[(int) file.getClob().length()];
 			   nClob.getCharacterStream().read( chars );

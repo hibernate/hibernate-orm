@@ -150,8 +150,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 		instantiator = buildInstantiator( entityMetamodel, mappingInfo );
 
-//		if ( entityMetamodel.isLazy() && !entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
-		if ( entityMetamodel.isLazy() ) {
+		if ( entityMetamodel.isLazy() && !entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 			proxyFactory = buildProxyFactory( mappingInfo, idGetter, idSetter );
 			if ( proxyFactory == null ) {
 				entityMetamodel.setLazy( false );
@@ -546,9 +545,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 		for ( int j = 0; j < span; j++ ) {
 			final String propertyName = propertyNames[j];
-			// if the attribute is not lazy (bytecode sense), we can just use the value from the instance
-			// if the attribute is lazy but has been initialized we can just use the value from the instance
-			// todo : there should be a third case here when we merge transient instances
 			if ( ! lazyAttributesMetadata.isLazyAttribute( propertyName )
 					|| enhancementMetadata.isAttributeLoaded( entity, propertyName) ) {
 				result[j] = getters[j].get( entity );
@@ -557,7 +553,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 				result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 			}
 		}
-
 		return result;
 	}
 
@@ -730,8 +725,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		return instantiator;
 	}
 
-	@Override
-	public final ProxyFactory getProxyFactory() {
+	protected final ProxyFactory getProxyFactory() {
 		return proxyFactory;
 	}
 

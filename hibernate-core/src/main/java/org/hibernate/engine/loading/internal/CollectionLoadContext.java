@@ -254,7 +254,7 @@ public class CollectionLoadContext {
 			// If the owner is bytecode-enhanced and the owner's collection value is uninitialized,
 			// then go ahead and set it to the newly initialized collection.
 			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata =
-					persister.getOwnerEntityPersister().getBytecodeEnhancementMetadata();
+					persister.getOwnerEntityPersister().getInstrumentationMetadata();
 			if ( bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
 				// Lazy properties in embeddables/composites are not currently supported for embeddables (HHH-10480),
 				// so check to make sure the collection is not in an embeddable before checking to see if

@@ -16,8 +16,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
@@ -269,14 +268,22 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
+
+		// moving to multiple fetch groups, the idea of `lazyPropertiesAreUnfetched` really
+		// needs to become either:
+		// 		1) the names of all un-fetched fetch groups
+		//		2) the names of all fetched fetch groups
+		// probably (2) is best
+		//
+		// ultimately this comes from EntityEntry, although usage-search seems to show it is never updated there.
+		//
+		// also org.hibernate.persister.entity.AbstractEntityPersister.initializeLazyPropertiesFromDatastore()
+		//		needs to be re-worked
+
 		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractLazyInterceptor( entity );
-			if ( interceptor == null || interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(
-						entity,
-						getIdentifier( entity, session ),
-						session
-				);
+			final LazyAttributeLoadingInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractInterceptor( entity );
+			if ( interceptor == null ) {
+				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor( entity, session );
 			}
 			else {
 				if ( interceptor.getLinkedSession() == null ) {

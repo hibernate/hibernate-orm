@@ -14,9 +14,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
@@ -198,31 +195,6 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			// use the existing association as the hydrated state
 			processingState.registerEntityInstance( existing );
 			//context.registerHydratedEntity( entityReference, entityKey, existing );
-
-			// see if the entity is enhanced and is being used as a "proxy" (is fully uninitialized)
-			final BytecodeEnhancementMetadata enhancementMetadata = entityReference.getEntityPersister()
-					.getEntityMetamodel()
-					.getBytecodeEnhancementMetadata();
-
-			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-				final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor( existing );
-				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					final LockMode requestedLockMode = context.resolveLockMode( entityReference );
-					final LockMode lockModeToAcquire = requestedLockMode == LockMode.NONE
-							? LockMode.READ
-							: requestedLockMode;
-
-					loadFromResultSet(
-							resultSet,
-							context,
-							existing,
-							getConcreteEntityTypeName( resultSet, context, entityKey ),
-							entityKey,
-							lockModeToAcquire
-					);
-				}
-			}
-
 			return;
 		}
 

@@ -209,6 +209,15 @@ public class BasicEnhancementTest {
         public Object writeObject(Object obj, String name, Object oldValue, Object newValue) {
             return WRITE_MARKER;
         }
+
+        @Override
+        public Set<String> getInitializedLazyAttributeNames() {
+            return null;
+        }
+
+        @Override
+        public void attributeInitialized(String name) {
+        }
     }
 
     // --- //

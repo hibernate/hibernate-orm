@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Tuplizer;
 
 /**
@@ -274,8 +273,4 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @return The getter for the version property.
 	 */
 	Getter getVersionGetter();
-
-	default ProxyFactory getProxyFactory() {
-		return null;
-	}
 }

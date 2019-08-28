@@ -71,7 +71,7 @@ public class CustomPersister implements EntityPersister {
 			NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			PersisterCreationContext creationContext) {
 		this.factory = creationContext.getSessionFactory();
-		this.entityMetamodel = new EntityMetamodel( model, this, creationContext );
+		this.entityMetamodel = new EntityMetamodel( model, this, factory );
 	}
 
 	public boolean hasLazyProperties() {

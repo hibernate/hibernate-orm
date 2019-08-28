@@ -31,7 +31,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.spi.FilterKey;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
@@ -51,8 +50,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -74,7 +71,6 @@ import org.hibernate.internal.FetchingScrollableResultsImpl;
 import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -116,14 +112,12 @@ public abstract class Loader {
 	private volatile ColumnNameCache columnNameCache;
 
 	private final boolean referenceCachingEnabled;
-	private final boolean enhancementAsProxyEnabled;
 
 	private boolean isJdbc4 = true;
 
 	public Loader(SessionFactoryImplementor factory) {
 		this.factory = factory;
 		this.referenceCachingEnabled = factory.getSessionFactoryOptions().isDirectReferenceCacheEntriesEnabled();
-		this.enhancementAsProxyEnabled = factory.getSessionFactoryOptions().isEnhancementAsProxyEnabled();
 	}
 
 	/**
@@ -840,7 +834,6 @@ public abstract class Loader {
 									keys[targetIndex],
 									object,
 									lockModes[targetIndex],
-									hydratedObjects,
 									session
 							);
 						}
@@ -1527,8 +1520,7 @@ public abstract class Loader {
 
 		Object version = session.getPersistenceContext().getEntry( entity ).getVersion();
 
-		if ( version != null ) {
-			// null version means the object is in the process of being loaded somewhere else in the ResultSet
+		if ( version != null ) { //null version means the object is in the process of being loaded somewhere else in the ResultSet
 			final VersionType versionType = persister.getVersionType();
 			final Object currentVersion = versionType.nullSafeGet(
 					rs,
@@ -1563,7 +1555,7 @@ public abstract class Loader {
 			final List hydratedObjects,
 			final SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		final int cols = persisters.length;
-		final EntityAliases[] entityAliases = getEntityAliases();
+		final EntityAliases[] descriptors = getEntityAliases();
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Result row: %s", StringHelper.toString( keys ) );
@@ -1583,6 +1575,7 @@ public abstract class Loader {
 				//If the object is already loaded, return the loaded one
 				object = session.getEntityUsingInterceptor( key );
 				if ( object != null ) {
+					//its already loaded so don't need to hydrate it
 					instanceAlreadyLoaded(
 							rs,
 							i,
@@ -1590,7 +1583,6 @@ public abstract class Loader {
 							key,
 							object,
 							lockModes[i],
-							hydratedObjects,
 							session
 					);
 				}
@@ -1599,7 +1591,7 @@ public abstract class Loader {
 							rs,
 							i,
 							persisters[i],
-							entityAliases[i].getRowIdAlias(),
+							descriptors[i].getRowIdAlias(),
 							key,
 							lockModes[i],
 							optionalObjectKey,
@@ -1627,7 +1619,6 @@ public abstract class Loader {
 			final EntityKey key,
 			final Object object,
 			final LockMode requestedLockMode,
-			List hydratedObjects,
 			final SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( !persister.isInstance( object ) ) {
@@ -1638,42 +1629,7 @@ public abstract class Loader {
 			);
 		}
 
-		if ( persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() && enhancementAsProxyEnabled ) {
-			if ( "merge".equals( session.getLoadQueryInfluencers().getInternalFetchProfile() ) ) {
-				assert this instanceof CascadeEntityLoader;
-				// we are processing a merge and have found an existing "managed copy" in the
-				// session - we need to check if this copy is an enhanced-proxy and, if so,
-				// perform the hydration just as if it were "not yet loaded"
-				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) object;
-				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					hydrateEntityState(
-							rs,
-							i,
-							persister,
-							getEntityAliases()[i].getRowIdAlias(),
-							key,
-							hydratedObjects,
-							session,
-							getInstanceClass(
-									rs,
-									i,
-									persister,
-									key.getIdentifier(),
-									session
-							),
-							object,
-							requestedLockMode
-					);
-
-					// EARLY EXIT!!!
-					//		- to skip the version check
-					return;
-				}
-			}
-		}
-
-		if ( LockMode.NONE != requestedLockMode && upgradeLocks() ) {
+		if ( LockMode.NONE != requestedLockMode && upgradeLocks() ) { //no point doing this if NONE was requested
 			final EntityEntry entry = session.getPersistenceContext().getEntry( object );
 			if ( entry.getLockMode().lessThan( requestedLockMode ) ) {
 				//we only check the version when _upgrading_ lock modes
@@ -1742,33 +1698,6 @@ public abstract class Loader {
 		// (but don't yet initialize the object itself)
 		// note that we acquire LockMode.READ even if it was not requested
 		LockMode acquiredLockMode = lockMode == LockMode.NONE ? LockMode.READ : lockMode;
-		hydrateEntityState(
-				rs,
-				i,
-				persister,
-				rowIdAlias,
-				key,
-				hydratedObjects,
-				session,
-				instanceClass,
-				object,
-				acquiredLockMode
-		);
-
-		return object;
-	}
-
-	private void hydrateEntityState(
-			ResultSet rs,
-			int i,
-			Loadable persister,
-			String rowIdAlias,
-			EntityKey key,
-			List hydratedObjects,
-			SharedSessionContractImplementor session,
-			String instanceClass,
-			Object object,
-			LockMode acquiredLockMode) throws SQLException {
 		loadFromResultSet(
 				rs,
 				i,
@@ -1783,6 +1712,8 @@ public abstract class Loader {
 
 		//materialize associations (and initialize the object) later
 		hydratedObjects.add( object );
+
+		return object;
 	}
 
 	private boolean isEagerPropertyFetchEnabled(int i) {

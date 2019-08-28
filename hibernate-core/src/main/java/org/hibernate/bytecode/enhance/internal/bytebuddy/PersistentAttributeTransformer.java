@@ -101,10 +101,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 		TypeDefinition managedCtSuperclass = managedCtClass.getSuperClass();
 
-		if ( enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
-			return Collections.emptyList();
-		}
-		else if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass.asErasure() ) ) {
+		if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass.asErasure() ) ) {
 			return collectInheritPersistentFields( managedCtSuperclass, enhancementContext );
 		}
 

@@ -17,15 +17,12 @@ import org.hibernate.WrongClassException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -112,41 +109,26 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final EventSource source = event.getSession();
 		final Object original = event.getOriginal();
 
-		// NOTE : `original` is the value being merged
-
 		if ( original != null ) {
+
 			final Object entity;
 			if ( original instanceof HibernateProxy ) {
 				LazyInitializer li = ( (HibernateProxy) original ).getHibernateLazyInitializer();
 				if ( li.isUninitialized() ) {
 					LOG.trace( "Ignoring uninitialized proxy" );
 					event.setResult( source.load( li.getEntityName(), li.getIdentifier() ) );
-					//EARLY EXIT!
-					return;
+					return; //EARLY EXIT!
 				}
 				else {
 					entity = li.getImplementation();
-				}
-			}
-			else if ( original instanceof PersistentAttributeInterceptable ) {
-				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) original;
-				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
-					LOG.trace( "Ignoring uninitialized enhanced-proxy" );
-					event.setResult( source.load( proxyInterceptor.getEntityName(), (Serializable) proxyInterceptor.getIdentifier() ) );
-					//EARLY EXIT!
-					return;
-				}
-				else {
-					entity = original;
 				}
 			}
 			else {
 				entity = original;
 			}
 
-			if ( copyCache.containsKey( entity ) && ( copyCache.isOperatedOn( entity ) ) ) {
+			if ( copyCache.containsKey( entity ) &&
+					( copyCache.isOperatedOn( entity ) ) ) {
 				LOG.trace( "Already in merge process" );
 				event.setResult( entity );
 			}
@@ -228,50 +210,36 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		LOG.trace( "Merging transient instance" );
 
 		final Object entity = event.getEntity();
-		final EventSource session = event.getSession();
+		final EventSource source = event.getSession();
 
 		final String entityName = event.getEntityName();
-		final EntityPersister persister = session.getEntityPersister( entityName, entity );
+		final EntityPersister persister = source.getEntityPersister( entityName, entity );
 
-		final Serializable id = persister.hasIdentifierProperty()
-				? persister.getIdentifier( entity, session )
-				: null;
-
-		final Object copy;
-		final Object existingCopy = copyCache.get( entity );
-		if ( existingCopy != null ) {
-			persister.setIdentifier( copyCache.get( entity ), id, session );
-			copy = existingCopy;
+		final Serializable id = persister.hasIdentifierProperty() ?
+				persister.getIdentifier( entity, source ) :
+				null;
+		if ( copyCache.containsKey( entity ) ) {
+			persister.setIdentifier( copyCache.get( entity ), id, source );
 		}
 		else {
-			copy = session.instantiate( persister, id );
-
-			//before cascade!
-			( (MergeContext) copyCache ).put( entity, copy, true );
+			( (MergeContext) copyCache ).put( entity, source.instantiate( persister, id ), true ); //before cascade!
 		}
+		final Object copy = copyCache.get( entity );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
-		super.cascadeBeforeSave( session, persister, entity, copyCache );
-		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.FROM_PARENT );
+		super.cascadeBeforeSave( source, persister, entity, copyCache );
+		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.FROM_PARENT );
 
-		saveTransientEntity( copy, entityName, event.getRequestedId(), session, copyCache );
+		saveTransientEntity( copy, entityName, event.getRequestedId(), source, copyCache );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
-		super.cascadeAfterSave( session, persister, entity, copyCache );
-		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.TO_PARENT );
+		super.cascadeAfterSave( source, persister, entity, copyCache );
+		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.TO_PARENT );
 
 		event.setResult( copy );
-
-		if ( copy instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) copy;
-			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-			if ( interceptor == null ) {
-				persister.getBytecodeEnhancementMetadata().injectInterceptor( copy, id, session );
-			}
-		}
 	}
 
 	private void saveTransientEntity(
@@ -315,12 +283,11 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
 		source.getLoadQueryInfluencers().setInternalFetchProfile( "merge" );
-
 		//we must clone embedded composite identifiers, or
 		//we will get back the same instance that we pass in
-		final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType().deepCopy( id, source.getFactory() );
+		final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType()
+				.deepCopy( id, source.getFactory() );
 		final Object result = source.get( entityName, clonedIdentifier );
-
 		source.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
 
 		if ( result == null ) {
@@ -334,11 +301,9 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			entityIsTransient( event, copyCache );
 		}
 		else {
-			// before cascade!
-			( (MergeContext) copyCache ).put( entity, result, true );
+			( (MergeContext) copyCache ).put( entity, result, true ); //before cascade!
 
-			final Object target = unproxyManagedForDetachedMerging( entity, result, persister, source );
-
+			final Object target = source.getPersistenceContext().unproxy( result );
 			if ( target == entity ) {
 				throw new AssertionFailure( "entity was not detached" );
 			}
@@ -367,43 +332,6 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			event.setResult( result );
 		}
 
-	}
-
-	private Object unproxyManagedForDetachedMerging(
-			Object incoming,
-			Object managed,
-			EntityPersister persister,
-			EventSource source) {
-		if ( incoming instanceof HibernateProxy ) {
-			return source.getPersistenceContext().unproxy( managed );
-		}
-
-		if ( incoming instanceof PersistentAttributeInterceptable
-				&& persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
-				&& source.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled() ) {
-
-			final PersistentAttributeInterceptor incomingInterceptor = ( (PersistentAttributeInterceptable) incoming ).$$_hibernate_getInterceptor();
-			final PersistentAttributeInterceptor managedInterceptor = ( (PersistentAttributeInterceptable) managed ).$$_hibernate_getInterceptor();
-
-			// todo - do we need to specially handle the case where both `incoming` and `managed` are initialized, but
-			//		with different attributes initialized?
-			// 		- for now, assume we do not...
-
-			// if the managed entity is not a proxy, we can just return it
-			if ( ! ( managedInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) ) {
-				return managed;
-			}
-
-			// if the incoming entity is still a proxy there is no need to force initialization of the managed one
-			if ( incomingInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				return managed;
-			}
-
-			// otherwise, force initialization
-			persister.initializeEnhancedEntityUsedAsProxy( managed, null, source );
-		}
-
-		return managed;
 	}
 
 	private void markInterceptorDirty(final Object entity, final Object target, EntityPersister persister) {

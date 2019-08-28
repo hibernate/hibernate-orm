@@ -7,11 +7,9 @@
 package org.hibernate.tuple;
 
 import java.lang.reflect.Constructor;
-import java.util.function.Function;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -155,8 +153,7 @@ public final class PropertyFactory {
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			Property property,
-			boolean lazyAvailable,
-			Function<String,Boolean> hasSubclassChecker) {
+			boolean lazyAvailable) {
 		final Type type = property.getValue().getType();
 
 		final NonIdentifierAttributeNature nature = decode( type );
@@ -171,13 +168,6 @@ public final class PropertyFactory {
 		boolean alwaysDirtyCheck = type.isAssociationType() &&
 				( (AssociationType) type ).isAlwaysDirtyChecked();
 
-		final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
-				property,
-				lazyAvailable,
-				sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled(),
-				hasSubclassChecker
-		);
-
 		switch ( nature ) {
 			case BASIC: {
 				return new EntityBasedBasicAttribute(
@@ -187,7 +177,7 @@ public final class PropertyFactory {
 						property.getName(),
 						type,
 						new BaselineAttributeInformation.Builder()
-								.setLazy( lazy )
+								.setLazy( lazyAvailable && property.isLazy() )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
 								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
@@ -207,7 +197,7 @@ public final class PropertyFactory {
 						property.getName(),
 						(CompositeType) type,
 						new BaselineAttributeInformation.Builder()
-								.setLazy( lazy )
+								.setLazy( lazyAvailable && property.isLazy() )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
 								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
@@ -229,7 +219,7 @@ public final class PropertyFactory {
 						property.getName(),
 						(AssociationType) type,
 						new BaselineAttributeInformation.Builder()
-								.setLazy( lazy )
+								.setLazy( lazyAvailable && property.isLazy() )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
 								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
@@ -289,9 +279,7 @@ public final class PropertyFactory {
 		return new StandardProperty(
 				property.getName(),
 				type,
-				// only called for embeddable sub-attributes which are never (yet) lazy
-				//lazyAvailable && property.isLazy(),
-				false,
+				lazyAvailable && property.isLazy(),
 				property.isInsertable(),
 				property.isUpdateable(),
 				property.getValueGenerationStrategy(),

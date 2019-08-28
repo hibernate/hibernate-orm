@@ -16,7 +16,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -30,12 +29,12 @@ public class LazyAttributesMetadata implements Serializable {
 	/**
 	 * Build a LazyFetchGroupMetadata based on the attributes defined for the
 	 * PersistentClass
+	 *
+	 * @param mappedEntity The entity definition
+	 *
+	 * @return The built LazyFetchGroupMetadata
 	 */
-	public static LazyAttributesMetadata from(
-			PersistentClass mappedEntity,
-			boolean isEnhanced,
-			boolean allowEnhancementAsProxy,
-			Function<String,Boolean> hasSubclassChecker) {
+	public static LazyAttributesMetadata from(PersistentClass mappedEntity) {
 		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
@@ -45,13 +44,7 @@ public class LazyAttributesMetadata implements Serializable {
 		while ( itr.hasNext() ) {
 			i++;
 			final Property property = (Property) itr.next();
-			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
-					property,
-					isEnhanced,
-					allowEnhancementAsProxy,
-					hasSubclassChecker
-			);
-			if ( lazy ) {
+			if ( property.isLazy() ) {
 				final LazyAttributeDescriptor lazyAttributeDescriptor = LazyAttributeDescriptor.from( property, i, x++ );
 				lazyAttributeDescriptorMap.put( lazyAttributeDescriptor.getName(), lazyAttributeDescriptor );
 

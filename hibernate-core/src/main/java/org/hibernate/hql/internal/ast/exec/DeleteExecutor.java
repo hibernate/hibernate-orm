@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
@@ -63,15 +64,18 @@ public class DeleteExecutor extends BasicExecutor {
 				parameterSpecifications = new ArrayList<>();
 				idSubselectWhere = "";
 			}
-			
+
+			final boolean commentsEnabled = factory.getSessionFactoryOptions().isCommentsEnabled();
+			final MetamodelImplementor metamodel = factory.getMetamodel();
+			final boolean notSupportingTuplesInSubqueries = !dialect.supportsTuplesInSubqueries();
 			// If many-to-many, delete the FK row in the collection table.
 			for ( Type type : persister.getPropertyTypes() ) {
 				if ( type.isCollectionType() ) {
 					final CollectionType cType = (CollectionType) type;
-					final AbstractCollectionPersister cPersister = (AbstractCollectionPersister) factory.getMetamodel().collectionPersister( cType.getRole() );
+					final AbstractCollectionPersister cPersister = (AbstractCollectionPersister) metamodel.collectionPersister( cType.getRole() );
 					if ( cPersister.isManyToMany() ) {
 						if ( persister.getIdentifierColumnNames().length > 1
-								&& !dialect.supportsTuplesInSubqueries() ) {
+								&& notSupportingTuplesInSubqueries ) {
 							LOG.warn(
 									"This dialect is unable to cascade the delete into the many-to-many join table" +
 									" when the entity has multiple primary keys.  Either properly setup cascading on" +
@@ -85,7 +89,7 @@ public class DeleteExecutor extends BasicExecutor {
 							final String where = "(" + String.join( ", ", cPersister.getKeyColumnNames() )
 									+ ") in " + idSubselect;
 							final Delete delete = new Delete().setTableName( cPersister.getTableName() ).setWhere( where );
-							if ( factory.getSessionFactoryOptions().isCommentsEnabled() ) {
+							if ( commentsEnabled ) {
 								delete.setComment( "delete FKs in join table" );
 							}
 							deletes.add( delete.toStatementString() );

@@ -206,7 +206,6 @@ public class MergeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 						}
 						else {
 							final WebApplication webApplication = new WebApplication( i, "http://" + i + ".com" );
-							webApplication.setName( "name #" + i );
 							activity.setWebApplication( webApplication );
 							webApplication.getActivities().add( activity );
 							session.save( webApplication );

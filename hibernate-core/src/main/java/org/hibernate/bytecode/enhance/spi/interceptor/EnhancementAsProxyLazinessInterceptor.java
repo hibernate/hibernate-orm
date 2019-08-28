@@ -6,13 +6,11 @@
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.BytecodeLogger;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -24,7 +22,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
@@ -216,29 +213,16 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		}
 
 		if ( identifierAttributeNames.contains( attributeName ) ) {
-			// it is illegal for the identifier value to be changed.  Normally Hibernate
-			// validates this during flush.  However, here it is dangerous to just allow the
-			// new value to be set and continue on waiting for the flush for validation
-			// because this interceptor manages the entity's entry in the PC itself.  So
-			// just do the check here up-front
-			final boolean changed;
-			if ( nonAggregatedCidMapper == null ) {
-				changed = ! entityKey.getPersister().getIdentifierType().isEqual( oldValue, newValue );
-			}
-			else {
-				final int subAttrIndex = nonAggregatedCidMapper.getPropertyIndex( attributeName );
-				final Type subAttrType = nonAggregatedCidMapper.getSubtypes()[subAttrIndex];
-				changed = ! subAttrType.isEqual( oldValue, newValue );
-			}
-
-			if ( changed ) {
-				throw new HibernateException(
-						"identifier of an instance of " + entityKey.getEntityName() + " was altered from " + oldValue + " to " + newValue
-				);
-			}
-
-			// otherwise, setId has been called but passing in the same value - just pass it through
-			return newValue;
+			EnhancementHelper.performWork(
+					this,
+					(session, isTempSession) -> session.getFactory()
+							.getMetamodel()
+							.entityPersister( getEntityName() )
+							.getEntityTuplizer()
+							.getPropertyValue( target, attributeName ),
+					getEntityName(),
+					attributeName
+			);
 		}
 
 		if ( ! inLineDirtyChecking ) {

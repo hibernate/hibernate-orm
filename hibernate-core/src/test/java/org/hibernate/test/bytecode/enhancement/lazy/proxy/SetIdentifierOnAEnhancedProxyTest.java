@@ -95,11 +95,13 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 					loadedChild.setId( lastChildID );
 
-					assertEquals( 0, stats.getPrepareStatementCount() );
+					// ^ should have triggered "base fetch group" initialization which would mean a SQL select
+					assertEquals( 1, stats.getPrepareStatementCount() );
 
 					// check that the `#setName` "persisted"
 					assertThat( loadedChild.getId(), is( lastChildID ) );
-					assertEquals( 0, stats.getPrepareStatementCount() );
+					assertEquals( 1, stats.getPrepareStatementCount() );
+
 				}
 		);
 
@@ -112,6 +114,7 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 	}
 
+	@Ignore
 	@Test(expected = PersistenceException.class)
 	public void updateIdTest() {
 		final Statistics stats = sessionFactory().getStatistics();
@@ -130,11 +133,13 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 					loadedChild.setId( updatedId );
 
-					assertEquals( 0, stats.getPrepareStatementCount() );
+					// ^ should have triggered "base fetch group" initialization which would mean a SQL select
+					assertEquals( 1, stats.getPrepareStatementCount() );
 
 					// check that the `#setName` "persisted"
 					assertThat( loadedChild.getId(), is( updatedId ) );
-					assertEquals( 0, stats.getPrepareStatementCount() );
+					assertEquals( 1, stats.getPrepareStatementCount() );
+
 				}
 		);
 

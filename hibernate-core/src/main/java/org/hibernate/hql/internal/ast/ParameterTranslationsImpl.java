@@ -48,10 +48,7 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 				}
 
 				final PositionalParameterSpecification ordinalSpecification = (PositionalParameterSpecification) specification;
-				final PositionalParameterInformationImpl info = ordinalParameters.computeIfAbsent(
-						ordinalSpecification.getLabel(),
-						k -> new PositionalParameterInformationImpl( k, ordinalSpecification.getExpectedType() )
-				);
+				final PositionalParameterInformationImpl info = getPositionalParameterInfo( ordinalParameters, ordinalSpecification );
 				info.addSourceLocation( i++ );
 			}
 			else if ( NamedParameterSpecification.class.isInstance( specification ) ) {
@@ -60,10 +57,7 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 				}
 
 				final NamedParameterSpecification namedSpecification = (NamedParameterSpecification) specification;
-				final NamedParameterInformationImpl info = namedParameters.computeIfAbsent(
-						namedSpecification.getName(),
-						k -> new NamedParameterInformationImpl( k, namedSpecification.getExpectedType() )
-				);
+				final NamedParameterInformationImpl info = getNamedParameterInfo( namedParameters, namedSpecification );
 
 				/*
 					If a previous reference to the NamedParameter already exists with expected type null and the new
@@ -94,6 +88,30 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 		else {
 			this.ordinalParameters = Collections.unmodifiableMap( ordinalParameters );
 		}
+	}
+
+	private NamedParameterInformationImpl getNamedParameterInfo(
+			Map<String, NamedParameterInformationImpl> namedParameters,
+			NamedParameterSpecification namedSpecification) {
+		final String name = namedSpecification.getName();
+		NamedParameterInformationImpl namedParameterInformation = namedParameters.get( name );
+		if ( namedParameterInformation == null ) {
+			namedParameterInformation = new NamedParameterInformationImpl( name, namedSpecification.getExpectedType() );
+			namedParameters.put( name,  namedParameterInformation );
+		}
+		return namedParameterInformation;
+	}
+
+	private static PositionalParameterInformationImpl getPositionalParameterInfo(
+			Map<Integer, PositionalParameterInformationImpl> ordinalParameters,
+			PositionalParameterSpecification ordinalSpecification) {
+		final Integer label = Integer.valueOf( ordinalSpecification.getLabel() );
+		PositionalParameterInformationImpl positionalParameterInformation = ordinalParameters.get( label );
+		if ( positionalParameterInformation == null ) {
+			positionalParameterInformation = new PositionalParameterInformationImpl( label, ordinalSpecification.getExpectedType() );
+			ordinalParameters.put( label, positionalParameterInformation );
+		}
+		return positionalParameterInformation;
 	}
 
 	@Override

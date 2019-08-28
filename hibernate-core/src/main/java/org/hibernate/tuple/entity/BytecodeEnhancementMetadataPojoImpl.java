@@ -18,7 +18,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -139,17 +138,16 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 	public PersistentAttributeInterceptable createEnhancedProxy(EntityKey entityKey, boolean addEmptyEntry, SharedSessionContractImplementor session) {
 		final EntityPersister persister = entityKey.getPersister();
 		final Serializable identifier = entityKey.getIdentifier();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		// first, instantiate the entity instance to use as the proxy
 		final PersistentAttributeInterceptable entity = (PersistentAttributeInterceptable) persister.getEntityTuplizer().instantiate( identifier, session );
 
 		// add the entity (proxy) instance to the PC
-		persistenceContext.addEnhancedProxy( entityKey, entity );
+		session.getPersistenceContext().addEnhancedProxy( entityKey, entity );
 
 		// if requested, add the "holder entry" to the PC
 		if ( addEmptyEntry ) {
-			persistenceContext.addEntry(
+			session.getPersistenceContext().addEntry(
 					entity,
 					Status.MANAGED,
 					// loaded state

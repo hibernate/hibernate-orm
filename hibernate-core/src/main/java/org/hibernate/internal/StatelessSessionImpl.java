@@ -24,7 +24,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -47,7 +46,6 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 /**
  * @author Gavin King
@@ -300,13 +298,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 			// first, check to see if we can use "bytecode proxies"
 
-			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
-			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
-			if ( allowBytecodeProxy && bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
+			if ( allowBytecodeProxy
+					&& persister.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 
 				// we cannot use bytecode proxy for entities with subclasses
-				if ( !entityMetamodel.hasSubclasses() ) {
-					return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
+				if ( !persister.getEntityMetamodel().hasSubclasses() ) {
+					return persister.getBytecodeEnhancementMetadata().createEnhancedProxy( entityKey, false, this );
 				}
 			}
 

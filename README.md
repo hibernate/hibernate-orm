@@ -2,7 +2,7 @@
 
 
 Hibernate ORM is a library providing Object/Relational Mapping (ORM) support
-to applications, libraries and frameworks.
+to applications, libraries, and frameworks.
 
 It also provides an implementation of the JPA specification, which is the standard Java specification for ORM.
 
@@ -46,7 +46,7 @@ particular that are indispensable:
 
 * [Gradle User Guide](https://docs.gradle.org/current/userguide/userguide_single.html) is a typical user guide in that
 it follows a topical approach to describing all of the capabilities of Gradle.
-* [Gradle DSL Guide](https://docs.gradle.org/current/dsl/index.html) is quite unique and excellent in quickly
+* [Gradle DSL Guide](https://docs.gradle.org/current/dsl/index.html) is unique and excellent in quickly
 getting up to speed on certain aspects of Gradle.
 
 
@@ -54,7 +54,7 @@ Using the Gradle Wrapper
 ------------------------
 
 For contributors who do not otherwise use Gradle and do not want to install it, Gradle offers a very cool
-features called the wrapper.  It lets you run Gradle builds without a previously installed Gradle distro in 
+feature called the wrapper.  It lets you run Gradle builds without a previously installed Gradle distro in 
 a zero-conf manner.  Hibernate configures the Gradle wrapper for you.  If you would rather use the wrapper and 
 not install Gradle (or to make sure you use the version of Gradle intended for older builds) you would just use
 the command `gradlew` (or `gradlew.bat`) rather than `gradle` (or `gradle.bat`) in the following discussions.
@@ -80,7 +80,7 @@ sub-project and execute that task if the sub-project defines it.  To execute a t
 either:
 
 1. `cd` into that module directory and execute the task
-2. name the "task path".  For example, in order to run the tests for the _hibernate-core_ module from the root directory you could say `gradle hibernate-core:test`
+2. name the "task path".  For example, to run the tests for the _hibernate-core_ module from the root directory you could say `gradle hibernate-core:test`
 
 Common Java related tasks
 ------------------------
@@ -115,7 +115,7 @@ Coming soon...
 Using "profiles"
 ------------------------
 
-The Hibernate build defines a number of database testing "profiles" in `databases.gradle`.  These
+The Hibernate build defines several database testing "profiles" in `databases.gradle`.  These
 profiles can be activated by name using the `db` build property which can be passed either as
 a JVM system prop (`-D`) or as a Gradle project property (`-P`).  Examples below use the Gradle
 project property approach.
@@ -127,7 +127,7 @@ Use the following command:
 
     gradle clean compile -Pdb=pgsql
 
-_*NOTE : If you are running tests against a JDBC driver that is not available via Maven central (generally due to license nonsense - Oracle, DB2, etc) be sure to add these drivers to your local Maven repo cache (~/.m2/repository) or (better) add it to a personal Maven repo server*_
+_*NOTE: If you are running tests against a JDBC driver that is not available via Maven central (generally due to license nonsense - Oracle, DB2, etc) be sure to add these drivers to your local Maven repo cache (~/.m2/repository) or (better) add it to a personal Maven repo server*_
 
 Running database-specific tests from the IDE using "profiles"
 -------------------------------------------------------------

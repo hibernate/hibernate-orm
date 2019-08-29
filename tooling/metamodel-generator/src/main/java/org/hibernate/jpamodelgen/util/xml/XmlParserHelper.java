@@ -116,10 +116,12 @@ public class XmlParserHelper {
 			throw new XmlParsingException( "Unable to create stax reader", e );
 		}
 
+        // Use the same classloader loaded this class to lookup the JAXB implementation and package
+		// Since 5.4 project descriptor includes jaxb-api and jaxb-runtime as compile dependencies
 		ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 		try {
 			staxEventReader = new JpaNamespaceTransformingEventReader( staxEventReader );
-			JAXBContext jaxbContext = JAXBContext.newInstance( ObjectFactory.class );
+			JAXBContext jaxbContext = JAXBContext.newInstance( ObjectFactory.class.getPackage().getName(), getClass().getClassLoader() );
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			unmarshaller.setSchema( schema );
 			unmarshaller.setEventHandler( handler );

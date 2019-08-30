@@ -174,7 +174,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
 				InternalFetchProfile.REFRESH,
-				() -> doRefresh( event, source, object, e, persister, id )
+				() -> doRefresh( event, source, object, e, persister, id, persistenceContext )
 		);
 
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
@@ -187,7 +187,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			Object object,
 			EntityEntry e,
 			EntityPersister persister,
-			Serializable id) {
+			Serializable id,
+			PersistenceContext persistenceContext) {
 
 		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
 

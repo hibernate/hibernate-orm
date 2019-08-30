@@ -456,11 +456,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public Integer getNonJpaNativeQueryOrdinalParameterBase() {
-		return delegate().getNonJpaNativeQueryOrdinalParameterBase();
-	}
-
-	@Override
 	public SqmFunctionRegistry getSqmFunctionRegistry() {
 		return delegate().getSqmFunctionRegistry();
 	}

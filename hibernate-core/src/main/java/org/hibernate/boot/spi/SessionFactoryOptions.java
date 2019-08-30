@@ -320,16 +320,6 @@ public interface SessionFactoryOptions {
 	SqmFunctionRegistry getSqmFunctionRegistry();
 
 	/**
-	 * See {@link org.hibernate.cfg.AvailableSettings#NATIVE_QUERY_ORDINAL_PARAMETER_BASE} and
-	 * {@link org.hibernate.boot.SessionFactoryBuilder#applyNonJpaNativeQueryOrdinalParameterBase(Integer)} for details.
-	 *
-	 * @return The base integer for ordinal parameters
-	 *
-	 * @since 6.0
-	 */
-	Integer getNonJpaNativeQueryOrdinalParameterBase();
-
-	/**
 	 * Controls whether Hibernate should try to map named parameter names
 	 * specified in a {@link org.hibernate.procedure.ProcedureCall} or
 	 * {@link javax.persistence.StoredProcedureQuery} to named parameters in

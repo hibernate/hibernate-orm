@@ -140,7 +140,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					final ScrollableResults scrollableResults = session.createQuery( qry ).scroll();
 					while ( scrollableResults.next() ) {
-						System.out.println( "Got entity : " + scrollableResults.get( 0 ) );
+						System.out.println( "Got entity : " + scrollableResults.get() );
 					}
 				}
 		);
@@ -156,7 +156,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					final ScrollableResults scrollableResults = session.createQuery( qry ).scroll();
 					while ( scrollableResults.next() ) {
-						System.out.println( "Got entity : " + scrollableResults.get( 0 ) );
+						System.out.println( "Got entity : " + scrollableResults.get() );
 					}
 				}
 		);
@@ -167,7 +167,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					final ScrollableResults scrollableResults = session.createQuery( qry ).scroll();
 					while ( scrollableResults.next() ) {
-						System.out.println( "Got entity : " + scrollableResults.get( 0 ) );
+						System.out.println( "Got entity : " + scrollableResults.get() );
 					}
 				}
 		);

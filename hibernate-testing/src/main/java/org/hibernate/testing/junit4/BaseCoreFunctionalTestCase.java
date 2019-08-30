@@ -511,10 +511,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		TransactionUtil2.inTransaction( sessionFactory(), action );
 	}
 
-	protected <R> R inTransactionReturn(Function<SessionImplementor, R> function) {
-		return TransactionUtil2.inTransactionReturn( sessionFactory(), function );
-	}
-
 	protected void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
 		TransactionUtil2.inTransaction( session, action );
 	}

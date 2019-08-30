@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.Locale;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -21,6 +20,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -133,7 +133,7 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		final Query query = ss.createQuery( "from Task t join fetch t.resource join fetch t.user");
 		final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY);
 		while ( scrollableResults.next() ) {
-			Task taskRef = (Task) scrollableResults.get( 0 );
+			Task taskRef = (Task) ( (Object[]) scrollableResults.get() )[0];
 			assertTrue( Hibernate.isInitialized( taskRef ) );
 			assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
 			assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
@@ -180,7 +180,7 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user");
 					final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 					while ( scrollableResults.next() ) {
-						Task taskRef = (Task) scrollableResults.get( 0 );
+						Task taskRef = (Task) ( (Object[]) scrollableResults.get() )[0];
 						assertTrue( Hibernate.isInitialized( taskRef ) );
 						assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
 						assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
@@ -238,7 +238,7 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 		}
 		while ( scrollableResults.next() ) {
-			Producer producer = (Producer) scrollableResults.get( 0 );
+			Producer producer = (Producer) ( (Object[]) scrollableResults.get() )[0];
 			assertTrue( Hibernate.isInitialized( producer ) );
 			assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
 

@@ -85,65 +85,6 @@ public class TransactionUtil2 {
 		);
 	}
 
-	public static <R> R inTransactionReturn(SessionFactoryImplementor factory, Function<SessionImplementor, R> action) {
-		log.trace( "#inTransaction(factory, action)" );
-
-		return inSessionReturn(
-				factory,
-				session -> inTransactionReturn( session, action )
-		);
-	}
-
-	public static <R> R inTransactionReturn(SessionImplementor session, Function<SessionImplementor,R> action) {
-		log.trace( "inTransaction(session,action)" );
-
-		final Transaction txn = session.beginTransaction();
-		log.trace( "Started transaction" );
-		R result = null;
-		try {
-			log.trace( "Calling action in txn" );
-			result = action.apply( session );
-			log.trace( "Called action - in txn" );
-
-			if ( !txn.isActive() ) {
-				throw new TransactionManagementException( ACTION_COMPLETED_TXN );
-			}
-		}
-		catch (Exception e) {
-			// an error happened in the action
-			if ( ! txn.isActive() ) {
-				log.warn( ACTION_COMPLETED_TXN, e );
-			}
-			else {
-				log.trace( "Rolling back transaction due to action error" );
-				try {
-					txn.rollback();
-					log.trace( "Rolled back transaction due to action error" );
-				}
-				catch (Exception inner) {
-					log.trace( "Rolling back transaction due to action error failed; throwing original error" );
-				}
-			}
-
-			throw e;
-		}
-
-		// action completed with no errors - attempt to commit the transaction allowing
-		// 		any RollbackException to propagate.  Note that when we get here we know the
-		//		txn is active
-
-		log.trace( "Committing transaction after successful action execution" );
-		try {
-			txn.commit();
-			log.trace( "Committing transaction after successful action execution - success" );
-		}
-		catch (Exception e) {
-			log.trace( "Committing transaction after successful action execution - failure" );
-			throw e;
-		}
-		return result;
-	}
-
 	public static void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
 		log.trace( "inTransaction(session,action)" );
 

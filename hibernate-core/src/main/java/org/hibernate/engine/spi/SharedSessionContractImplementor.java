@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
 import javax.persistence.TransactionRequiredException;
-import javax.persistence.criteria.Selection;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -28,10 +27,8 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -466,18 +463,6 @@ public interface SharedSessionContractImplementor
 			) :
 			sessionJdbcBatchSize;
 	}
-
-	/**
-	 * @deprecated (since 5.2) - see deprecation note on
-	 * org.hibernate.jpa.spi.HibernateEntityManagerImplementor#createQuery(java.lang.String, java.lang.Class, javax.persistence.criteria.Selection, org.hibernate.jpa.spi.HibernateEntityManagerImplementor.QueryOptions)
-	 * @return The typed query
-	 */
-	@Deprecated
-	<T> QueryImplementor<T> createQuery(
-			String jpaqlString,
-			Class<T> resultClass,
-			Selection selection,
-			HibernateEntityManagerImplementor.QueryOptions queryOptions);
 
 	/**
 	 * This is similar to {@link #getPersistenceContext()}, with

@@ -204,7 +204,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 			Object param) {
 		assertNotEquals( 0, expected.id );
 
-		EntityMapEnum found =  inTransactionReturn(
+		EntityMapEnum found =  fromTransaction(
 				session -> {
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 					CriteriaQuery<EntityMapEnum> criteria = criteriaBuilder.createQuery( EntityMapEnum.class );

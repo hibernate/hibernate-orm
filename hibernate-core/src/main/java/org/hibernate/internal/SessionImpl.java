@@ -2999,13 +2999,12 @@ public final class SessionImpl
 	}
 
 	private LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
-		final LockOptions lockOptions = new LockOptions();
-		LockOptions.copy( this.lockOptions, this.lockOptions );
-		this.lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		final LockOptions output = this.lockOptions.makeCopy();
+		output.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		if ( properties != null ) {
-			setLockOptions( properties, this.lockOptions );
+			LockOptionsHelper.applyPropertiesToLockOptions( properties, () -> output );
 		}
-		return lockOptions;
+		return output;
 	}
 
 	@Override

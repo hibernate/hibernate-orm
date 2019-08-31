@@ -86,7 +86,7 @@ But services have other interesting characteristics as well:
 
 The `ServiceRegistry` fulfills all these needs.
 
-In a concise definition, the `ServiceRegistry` acts as a https://en.wikipedia.org/wiki/Inversion_of_control[Inversion-of-control (IoC)] container.
+In a concise definition, the `ServiceRegistry` acts as an https://en.wikipedia.org/wiki/Inversion_of_control[Inversion-of-control (IoC)] container.
 
 Why not just use an existing IoC framework? 
 The main reason was that this had to be as light-weight and as small of a footprint as possible. 

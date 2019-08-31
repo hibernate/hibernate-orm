@@ -328,7 +328,7 @@ The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyJoinCo
 [[annotations-jpa-mapkeytemporal]]
 ==== `@MapKeyTemporal`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyTemporal.html[`@MapKeyTemporal`] annotation is used to specify that the key of `java.util.Map` association is a https://javaee.github.io/javaee-spec/javadocs/javax/persistence/TemporalType.html[`@TemporalType`] (e.g. `DATE`, `TIME`, `TIMESTAMP`).
+The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/MapKeyTemporal.html[`@MapKeyTemporal`] annotation is used to specify that the key of `java.util.Map` association is an https://javaee.github.io/javaee-spec/javadocs/javax/persistence/TemporalType.html[`@TemporalType`] (e.g. `DATE`, `TIME`, `TIMESTAMP`).
 
 See the <<chapters/domain/collections.adoc#collections-map-unidirectional-example, `@MapKeyTemporal` mapping>> section for more info.
 
@@ -868,8 +868,8 @@ See the <<chapters/domain/basic_types.adoc#mapping-generated-Generated,`@Generat
 [[annotations-hibernate-generatortype]]
 ==== `@GeneratorType`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used to provide a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/ValueGenerator.html[`ValueGenerator`]
-and a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] for the currently annotated generated attribute.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used to provide an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/ValueGenerator.html[`ValueGenerator`]
+and an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] for the currently annotated generated attribute.
 
 See the <<chapters/domain/basic_types.adoc#mapping-generated-GeneratorType-example,`@GeneratorType` mapping>> section for more info.
 
@@ -1315,7 +1315,7 @@ See the <<chapters/domain/basic_types.adoc#basic-custom-type-BitSetType-mapping-
 [[annotations-hibernate-typedef]]
 ==== `@TypeDef`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDef.html[`@TypeDef`] annotation is used to specify a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] definition which can later be reused for multiple basic attribute mappings.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDef.html[`@TypeDef`] annotation is used to specify an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] definition which can later be reused for multiple basic attribute mappings.
 
 See the <<chapters/domain/basic_types.adoc#basic-custom-type-BitSetTypeDef-mapping-example, `@TypeDef` mapping>> section for more info.
 

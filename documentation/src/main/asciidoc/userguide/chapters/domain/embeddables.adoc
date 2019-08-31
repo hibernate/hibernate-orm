@@ -208,9 +208,9 @@ https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ManyToOne.html[`
 https://javaee.github.io/javaee-spec/javadocs/javax/persistence/OneToOne.html[`@OneToOne`],
 https://javaee.github.io/javaee-spec/javadocs/javax/persistence/OneToMany.html[`@OneToMany`], and
 https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ManyToMany.html[`@ManyToMany`]
-feature a https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entity association when an interface is used for the mapping.
+feature an https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entity association when an interface is used for the mapping.
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ElementCollection.html[`@ElementCollection`] association has a https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
+The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ElementCollection.html[`@ElementCollection`] association has an https://javaee.github.io/javaee-spec/javadocs/javax/persistence/ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
 
 However, for simple embeddable types, there is no such construct and so you need to use the Hibernate-specific `@Target` annotation instead.
 

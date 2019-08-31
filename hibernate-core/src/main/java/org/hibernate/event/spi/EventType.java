@@ -164,7 +164,7 @@ public final class EventType<T> {
 	 *
 	 * For the total number of types, see {@link #values()}
 	 *
-	 * @return An unique ordinal for this {@link EventType}, starting at 0 and up to the number of distinct events
+	 * @return A unique ordinal for this {@link EventType}, starting at 0 and up to the number of distinct events
 	 */
 	public int ordinal() {
 		return ordinal;

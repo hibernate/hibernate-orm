@@ -1375,7 +1375,7 @@ To mark a property as generated, use The Hibernate specific `@Generated` annotat
 ===== `@Generated` annotation
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Generated.html[`@Generated`] annotation is used so that Hibernate can fetch the currently annotated property after the entity has been persisted or updated.
-For this reason, the `@Generated` annotation accepts a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value.
+For this reason, the `@Generated` annotation accepts an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value.
 
 Considering the following entity:
 
@@ -1428,7 +1428,7 @@ include::{extrasdir}/basic/mapping-generated-Generated-update-example.sql[]
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used so that
 you can provide a custom generator to set the value of the currently annotated property.
 
-For this reason, the `@GeneratorType` annotation accepts a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value
+For this reason, the `@GeneratorType` annotation accepts an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value
 and a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerator.html[`ValueGenerator`] class type.
 
 Considering the following entity:

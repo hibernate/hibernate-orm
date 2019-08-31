@@ -152,7 +152,7 @@ By default, the maximum number of queries retained is *5000*, but you can increa
 So, if your application makes heavy use of the JPA Criteria API or if you simply have a very large number of queries, you might want to
 raise the maximum number of queries that are being stored by the `Statistics` instance.
 
-If the maximum number of queries has been reached, Hibernate uses a https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)[Least recently used (LRU)] policy
+If the maximum number of queries has been reached, Hibernate uses an https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)[Least recently used (LRU)] policy
 to make room for new query entries.
 
 [[statistics-query-plan-cache]]

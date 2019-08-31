@@ -411,7 +411,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-stream-example]
 
 [IMPORTANT]
 ====
-Just like with `ScrollableResults`, you should always close a Hibernate `Stream` either explicitly or using a https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
+Just like with `ScrollableResults`, you should always close a Hibernate `Stream` either explicitly or using an https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
 ====
 
 [[hql-case-sensitivity]]

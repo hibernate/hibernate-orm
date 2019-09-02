@@ -381,7 +381,7 @@ public enum Database {
 					case 8:
 						return new Oracle8iDialect();
 					default:
-						latestDialectInstance( this );
+						return latestDialectInstance( this );
 
 				}
 			}

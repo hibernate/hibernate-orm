@@ -18,6 +18,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Table;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -105,6 +106,7 @@ public class EmbeddedIdGenericsTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Audited
 	@Entity(name = "Trigger")
+	@Table(name = "`Trigger`")
 	public static class Trigger extends CompositeIdBaseEntity<Trigger.TriggerPK> {
 		private boolean active;
 

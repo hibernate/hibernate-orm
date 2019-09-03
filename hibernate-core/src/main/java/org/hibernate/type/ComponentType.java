@@ -35,6 +35,7 @@ import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Handles "component" mappings
@@ -43,6 +44,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  */
 public class ComponentType extends AbstractType implements CompositeType, ProcedureParameterExtractionAware {
 
+	private final TypeConfiguration typeConfiguration;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
 	private final ValueGeneration[] propertyValueGenerationStrategies;
@@ -57,16 +59,8 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	protected final EntityMode entityMode;
 	protected final ComponentTuplizer componentTuplizer;
 
-
-	/**
-	 * @deprecated Use the other contructor
-	 */
-	@Deprecated
-	public ComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
-		this( metamodel );
-	}
-
-	public ComponentType(ComponentMetamodel metamodel) {
+	public ComponentType(TypeConfiguration typeConfiguration, ComponentMetamodel metamodel) {
+		this.typeConfiguration = typeConfiguration;
 		// for now, just "re-flatten" the metamodel since this is temporary stuff anyway (HHH-1907)
 		this.isKey = metamodel.isKey();
 		this.propertySpan = metamodel.getPropertySpan();

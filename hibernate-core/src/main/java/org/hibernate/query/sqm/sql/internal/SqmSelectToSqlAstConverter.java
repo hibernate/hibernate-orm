@@ -31,8 +31,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.sql.internal.instantiation.DynamicInstantiation;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -45,7 +44,6 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -135,7 +133,8 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private DomainResultProducer resolveDomainResultProducer(SqmSelection sqmSelection) {
-		return ( (SqmExpressionInterpretation) sqmSelection.getSelectableNode() ).getDomainResultProducer( this, this );
+		SqmSelectableInterpretation<?> interpretation = (SqmSelectableInterpretation<?>) sqmSelection.getSelectableNode().accept( this );
+		return interpretation.getDomainResultProducer( this, getSqlAstCreationState() );
 	}
 
 	private int fetchDepth = 0;

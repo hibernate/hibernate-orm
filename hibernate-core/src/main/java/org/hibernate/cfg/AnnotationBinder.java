@@ -152,6 +152,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.DependantValue;
@@ -1353,9 +1354,16 @@ public final class AnnotationBinder {
 	private static void bindFilterDef(FilterDef defAnn, MetadataBuildingContext context) {
 		Map<String, org.hibernate.type.Type> params = new HashMap<>();
 		for ( ParamDef param : defAnn.parameters() ) {
-			params.put( param.name(), context.getMetadataCollector().getTypeResolver().heuristicType( param.type() ) );
+			params.put(
+					param.name(),
+					context.getMetadataCollector()
+							.getTypeConfiguration()
+							.getBasicTypeRegistry()
+							.getRegisteredType( param.type() )
+			);
 		}
-		FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
+
+		final FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
 		LOG.debugf( "Binding filter definition: %s", def.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( def );
 	}
@@ -1396,7 +1404,8 @@ public final class AnnotationBinder {
 							defAnn.name(),
 							defAnn.typeClass(),
 							null,
-							params
+							params,
+							context.getMetadataCollector().getTypeConfiguration()
 					)
 			);
 		}
@@ -1410,7 +1419,8 @@ public final class AnnotationBinder {
 							defAnn.defaultForType().getName(),
 							defAnn.typeClass(),
 							new String[]{ defAnn.defaultForType().getName() },
-							params
+							params,
+							context.getMetadataCollector().getTypeConfiguration()
 					)
 			);
 		}
@@ -1460,7 +1470,7 @@ public final class AnnotationBinder {
 			}
 			discriminatorColumn.setJoins( secondaryTables );
 			discriminatorColumn.setPropertyHolder( propertyHolder );
-			SimpleValue discriminatorColumnBinding = new SimpleValue( context, rootClass.getTable() );
+			BasicValue discriminatorColumnBinding = new BasicValue( context, rootClass.getTable() );
 			rootClass.setDiscriminator( discriminatorColumnBinding );
 			discriminatorColumn.linkWithValue( discriminatorColumnBinding );
 			discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );

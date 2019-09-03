@@ -40,8 +40,6 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	private final SimpleDomainType<B> valueType;
 	private transient Member member;
 
-	private final String mappingRole;
-
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractAttribute(
 			ManagedDomainType<D> declaringType,
@@ -57,17 +55,11 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 		this.attributeClassification = attributeClassification;
 		this.valueType = valueType;
 		this.member = member;
-
-		this.mappingRole = metadataContext.getContainerRoleStack().getCurrent() + '.' + name;
 	}
 
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	public String getMappingRole() {
-		return mappingRole;
 	}
 
 	@Override

@@ -17,6 +17,7 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A one-to-one association that maps to specific formula(s)
@@ -26,54 +27,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public class SpecialOneToOneType extends OneToOneType {
 
-	/**
-	 * @deprecated Use {@link SpecialOneToOneType#SpecialOneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String, boolean)}
-	 *  instead.
-	 */
-	@Deprecated
 	public SpecialOneToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			ForeignKeyDirection foreignKeyType, 
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String entityName,
-			String propertyName) {
-		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
-	}
-
-	/**
-	 * @deprecated Use {@link SpecialOneToOneType#SpecialOneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String, boolean)}
-	 *  instead.
-	 */
-	@Deprecated
-	public SpecialOneToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			ForeignKeyDirection foreignKeyType,
-			boolean referenceToPrimaryKey,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String entityName,
-			String propertyName) {
-		this (
-				scope,
-				referencedEntityName,
-				foreignKeyType,
-				referenceToPrimaryKey,
-				uniqueKeyPropertyName,
-				lazy,
-				unwrapProxy,
-				entityName,
-				propertyName,
-				foreignKeyType != ForeignKeyDirection.TO_PARENT
-		);
-	}
-
-	public SpecialOneToOneType(
-			TypeFactory.TypeScope scope,
+			TypeConfiguration typeConfiguration,
 			String referencedEntityName,
 			ForeignKeyDirection foreignKeyType,
 			boolean referenceToPrimaryKey, 
@@ -84,7 +39,7 @@ public class SpecialOneToOneType extends OneToOneType {
 			String propertyName,
 			boolean constrained) {
 		super(
-				scope,
+				typeConfiguration,
 				referencedEntityName, 
 				foreignKeyType,
 				referenceToPrimaryKey, 

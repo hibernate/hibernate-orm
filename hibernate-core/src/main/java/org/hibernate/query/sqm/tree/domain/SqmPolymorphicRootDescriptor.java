@@ -107,11 +107,6 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public String getMappingRole() {
-		return getHibernateEntityName();
-	}
-
-	@Override
 	public String getPathName() {
 		return getName();
 	}

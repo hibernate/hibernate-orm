@@ -63,29 +63,31 @@ public class OneToOne extends ToOne {
 	
 	public Type getType() throws MappingException {
 		if ( getColumnIterator().hasNext() ) {
-			return getMetadata().getTypeResolver().getTypeFactory().specialOneToOne(
-					getReferencedEntityName(), 
-					foreignKeyType,
-					referenceToPrimaryKey, 
-					referencedPropertyName,
+			return MappingHelper.specialOneToOne(
+					getReferencedEntityName(),
+					getForeignKeyType(),
+					isReferenceToPrimaryKey(),
+					getReferencedPropertyName(),
 					isLazy(),
 					isUnwrapProxy(),
-					entityName,
-					propertyName,
-					constrained
+					getEntityName(),
+					getPropertyName(),
+					isConstrained(),
+					getBuildingContext()
 			);
 		}
 		else {
-			return getMetadata().getTypeResolver().getTypeFactory().oneToOne(
-					getReferencedEntityName(), 
-					foreignKeyType,
-					referenceToPrimaryKey, 
-					referencedPropertyName,
+			return MappingHelper.oneToOne(
+					getReferencedEntityName(),
+					getForeignKeyType(),
+					isReferenceToPrimaryKey(),
+					getReferencedPropertyName(),
 					isLazy(),
 					isUnwrapProxy(),
 					entityName,
 					propertyName,
-					constrained
+					isConstrained(),
+					getBuildingContext()
 			);
 		}
 	}

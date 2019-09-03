@@ -1042,15 +1042,6 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	void disableFetchProfile(String name) throws UnknownProfileException;
 
 	/**
-	 * Convenience access to the {@link TypeHelper} associated with this session's {@link SessionFactory}.
-	 * <p/>
-	 * Equivalent to calling {@link #getSessionFactory()}.{@link SessionFactory#getTypeHelper getTypeHelper()}
-	 *
-	 * @return The {@link TypeHelper} associated with this session's {@link SessionFactory}
-	 */
-	TypeHelper getTypeHelper();
-
-	/**
 	 * Retrieve this session's helper/delegate for creating LOB instances.
 	 *
 	 * @return This session's LOB helper

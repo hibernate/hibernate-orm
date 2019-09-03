@@ -20,6 +20,8 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
  * @see DomainResultProducer
  * @see javax.persistence.metamodel.Bindable
  *
+ * todo (6.0) : do we need to expose ModelPartContainer here?  Only if _necessary_
+ *
  * @author Steve Ebersole
  */
 public interface ModelPart extends MappingModelExpressable {

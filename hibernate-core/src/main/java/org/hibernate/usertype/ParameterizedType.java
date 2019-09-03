@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.usertype;
+
 import java.util.Properties;
 
 /**
@@ -16,10 +17,9 @@ import java.util.Properties;
  * @author Michael Gloegl
  */
 public interface ParameterizedType {
-
 	/**
 	 * Gets called by Hibernate to pass the configured type parameters to
 	 * the implementation.
 	 */
-	public void setParameterValues(Properties parameters);
+	void setParameterValues(Properties parameters);
 }

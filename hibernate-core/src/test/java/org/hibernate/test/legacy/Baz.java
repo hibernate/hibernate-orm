@@ -121,10 +121,6 @@ public class Baz implements Named, Serializable, Comparable {
 		setIntArray( new int[] { 1,3,3,7 } );
 		setFooArray( new Foo[0] );
 		setStringArray( (String[]) list.toArray( new String[0] ) );
-		customs = new ArrayList();
-		customs.add( new String[] { "foo", "bar" } );
-		customs.add( new String[] { "A", "B" } );
-		customs.add( new String[] { "1", "2" } );
 		
 		fooSet = new HashSet();
 		components = new FooComponent[] {
@@ -164,14 +160,7 @@ public class Baz implements Named, Serializable, Comparable {
 		for (int i=0; i<10; i++) text+=text;
 		
 	}
-	
-	public List getCustoms() {
-		return customs;
-	}
-	public void setCustoms(List customs) {
-		this.customs = customs;
-	}
-	
+
 	public Set getFooSet() {
 		return fooSet;
 	}

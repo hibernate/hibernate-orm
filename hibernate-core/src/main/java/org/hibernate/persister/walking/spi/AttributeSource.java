@@ -6,11 +6,9 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.metamodel.mapping.ModelPartContainer;
-
 /**
 * @author Steve Ebersole
 */
-public interface AttributeSource extends ModelPartContainer {
+public interface AttributeSource {
 	Iterable<AttributeDefinition> getAttributes();
 }

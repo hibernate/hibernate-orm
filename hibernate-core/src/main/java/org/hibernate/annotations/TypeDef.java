@@ -22,7 +22,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see org.hibernate.type.Type
  * @see org.hibernate.usertype.UserType
- * @see org.hibernate.usertype.CompositeUserType
  *
  * @see Type
  *
@@ -39,7 +38,8 @@ public @interface TypeDef {
 	String name() default "";
 
 	/**
-	 * The type implementation class.
+	 * The FQN for the {@link org.hibernate.type.Type} or {@link org.hibernate.usertype.UserType}
+	 * implementation class
 	 */
 	Class<?> typeClass();
 

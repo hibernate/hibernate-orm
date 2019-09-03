@@ -6,9 +6,9 @@
  */
 
 /**
- * Hibernate's run-time mapping model
+ * Hibernate's run-time mapping model.
  *
- * @implNote At the moment, most of this mapping model is defined in the
+ * @implNote At the moment, this mapping model is built on top of the
  * {@link org.hibernate.persister} package.
  */
 package org.hibernate.metamodel.mapping;

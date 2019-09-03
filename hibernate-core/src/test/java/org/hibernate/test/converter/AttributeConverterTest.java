@@ -30,6 +30,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
@@ -92,7 +93,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	public void testBasicOperation() {
 
-		SimpleValue simpleValue = new SimpleValue( new MetadataBuildingContextTestingImpl() );
+		SimpleValue simpleValue = new BasicValue( new MetadataBuildingContextTestingImpl() );
 		simpleValue.setJpaAttributeConverterDescriptor(
 				new InstanceBasedConverterDescriptor(
 						new StringClobConverter(),

@@ -36,6 +36,7 @@ import org.hibernate.query.sqm.function.SqmFunction;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
+import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmExpressionInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
@@ -422,6 +423,7 @@ public abstract class BaseSqmToSqlAstConverter
 				JoinType.INNER,
 				LockMode.NONE,
 				sqlAliasBaseManager,
+				getSqlExpressionResolver(),
 				creationContext
 		);
 
@@ -544,6 +546,7 @@ public abstract class BaseSqmToSqlAstConverter
 				JoinType.INNER,
 				LockMode.NONE,
 				sqlAliasBaseManager,
+				getSqlExpressionResolver(),
 				getCreationContext()
 		);
 
@@ -567,7 +570,12 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public SqmPathInterpretation visitBasicValuedPath(SqmBasicValuedSimplePath sqmPath) {
+	public SqmPathInterpretation<?> visitBasicValuedPath(SqmBasicValuedSimplePath<?> sqmPath) {
+		return BasicValuedPathInterpretation.from( sqmPath, this, this );
+	}
+
+	@Override
+	public SqmPathInterpretation<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath sqmPath) {
 		final SqmPath<?> lhs = sqmPath.getLhs();
 		assert lhs != null;
 
@@ -575,7 +583,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public SqmPathInterpretation visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath sqmPath) {
+	public SqmPathInterpretation<?> visitEntityValuedPath(SqmEntityValuedSimplePath sqmPath) {
 		final SqmPath<?> lhs = sqmPath.getLhs();
 		assert lhs != null;
 
@@ -583,15 +591,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public SqmPathInterpretation visitEntityValuedPath(SqmEntityValuedSimplePath sqmPath) {
-		final SqmPath<?> lhs = sqmPath.getLhs();
-		assert lhs != null;
-
-		return (SqmPathInterpretation) sqmPath;
-	}
-
-	@Override
-	public SqmPathInterpretation visitPluralValuedPath(SqmPluralValuedSimplePath sqmPath) {
+	public SqmPathInterpretation<?> visitPluralValuedPath(SqmPluralValuedSimplePath sqmPath) {
 		return (SqmPathInterpretation) sqmPath;
 	}
 
@@ -613,7 +613,7 @@ public abstract class BaseSqmToSqlAstConverter
 //
 //		return new QueryLiteral(
 //				literal.getLiteralValue(),
-//				literal.getExpressableType().getSqlExpressableType( getTypeConfiguration() ),
+//				literal.getJdbcMapping().getSqlExpressableType( getTypeConfiguration() ),
 //				getCurrentClauseStack().getCurrent()
 //		);
 	}
@@ -653,9 +653,6 @@ public abstract class BaseSqmToSqlAstConverter
 		final SqmExpressable<?> nodeType = sqmExpression.getNodeType();
 
 		MappingModelExpressable valueMapping = getCreationContext().getDomainModel().resolveMappingExpressable( nodeType );
-		// alternative
-		// sqmExpression.resolveMappingExpressable( getCreationContext(), "inferableTypeAccessStack" );
-
 
 		if ( valueMapping == null ) {
 			final Supplier<MappingModelExpressable> currentExpressableSupplier = inferableTypeAccessStack.getCurrent();
@@ -774,7 +771,7 @@ public abstract class BaseSqmToSqlAstConverter
 //			return new AvgFunction(
 //					(Expression) expression.getArgument().accept( this ),
 //					expression.isDistinct(),
-//					expression.getExpressableType().getSqlExpressableType()
+//					expression.getJdbcMapping().getSqlExpressableType()
 //			);
 //		}
 //		finally {
@@ -789,7 +786,7 @@ public abstract class BaseSqmToSqlAstConverter
 //		try {
 //			return new BitLengthFunction(
 //					(Expression) function.getArgument().accept( this ),
-//					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+//					( (BasicValuedExpressableType) function.getJdbcMapping() ).getSqlExpressableType()
 //			);
 //		}
 //		finally {
@@ -804,7 +801,7 @@ public abstract class BaseSqmToSqlAstConverter
 //		try {
 //			return new CastFunction(
 //					(Expression) expression.getExpressionToCast().accept( this ),
-//					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType(),
+//					( (BasicValuedExpressableType) expression.getJdbcMapping() ).getSqlExpressableType(),
 //					expression.getExplicitSqlCastTarget()
 //			);
 //		}
@@ -876,21 +873,21 @@ public abstract class BaseSqmToSqlAstConverter
 //	@Override
 //	public CurrentDateFunction visitCurrentDateFunction(SqmCurrentDateFunction function) {
 //		return new CurrentDateFunction(
-//				( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+//				( (BasicValuedExpressableType) function.getJdbcMapping() ).getSqlExpressableType()
 //		);
 //	}
 //
 //	@Override
 //	public CurrentTimeFunction visitCurrentTimeFunction(SqmCurrentTimeFunction function) {
 //		return new CurrentTimeFunction(
-//				( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+//				( (BasicValuedExpressableType) function.getJdbcMapping() ).getSqlExpressableType()
 //		);
 //	}
 //
 //	@Override
 //	public CurrentTimestampFunction visitCurrentTimestampFunction(SqmCurrentTimestampFunction function) {
 //		return new CurrentTimestampFunction(
-//				( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+//				( (BasicValuedExpressableType) function.getJdbcMapping() ).getSqlExpressableType()
 //		);
 //	}
 //
@@ -902,7 +899,7 @@ public abstract class BaseSqmToSqlAstConverter
 //			return new ExtractFunction(
 //					(Expression) function.getUnitToExtract().accept( this ),
 //					(Expression) function.getExtractionSource().accept( this ),
-//					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+//					( (BasicValuedExpressableType) function.getJdbcMapping() ).getSqlExpressableType()
 //			);
 //		}
 //		finally {
@@ -972,7 +969,7 @@ public abstract class BaseSqmToSqlAstConverter
 //		try {
 //			return new LowerFunction(
 //					toSqlExpression( function.getArgument().accept( this ) ),
-//					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+//					( (BasicValuedExpressableType) function.getJdbcMapping() ).getSqlExpressableType()
 //			);
 //		}
 //		finally {
@@ -988,7 +985,7 @@ public abstract class BaseSqmToSqlAstConverter
 //			return new MaxFunction(
 //					toSqlExpression( expression.getArgument().accept( this ) ),
 //					expression.isDistinct(),
-//					expression.getExpressableType().getSqlExpressableType()
+//					expression.getJdbcMapping().getSqlExpressableType()
 //			);
 //		}
 //		finally {
@@ -1004,7 +1001,7 @@ public abstract class BaseSqmToSqlAstConverter
 //			return new MinFunction(
 //					toSqlExpression( expression.getArgument().accept( this ) ),
 //					expression.isDistinct(),
-//					expression.getExpressableType().getSqlExpressableType()
+//					expression.getJdbcMapping().getSqlExpressableType()
 //			);
 //		}
 //		finally {
@@ -1022,7 +1019,7 @@ public abstract class BaseSqmToSqlAstConverter
 //			return new ModFunction(
 //					dividend,
 //					divisor,
-//					( (BasicValuedExpressableType) function.getExpressableType() ).getSqlExpressableType()
+//					( (BasicValuedExpressableType) function.getJdbcMapping() ).getSqlExpressableType()
 //			);
 //		}
 //		finally {
@@ -1043,7 +1040,7 @@ public abstract class BaseSqmToSqlAstConverter
 //			return new SubstrFunction(
 //					expression.getFunctionName(),
 //					expressionList,
-//					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType()
+//					( (BasicValuedExpressableType) expression.getJdbcMapping() ).getSqlExpressableType()
 //			);
 //		}
 //		finally {
@@ -1058,7 +1055,7 @@ public abstract class BaseSqmToSqlAstConverter
 //		try {
 //			return new CastFunction(
 //					toSqlExpression( expression.getArgument().accept( this ) ),
-//					( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType(),
+//					( (BasicValuedExpressableType) expression.getJdbcMapping() ).getSqlExpressableType(),
 //					null
 //			);
 //		}
@@ -1075,7 +1072,7 @@ public abstract class BaseSqmToSqlAstConverter
 //			return new SumFunction(
 //					toSqlExpression( expression.getArgument().accept( this ) ),
 //					expression.isDistinct(),
-//					expression.getExpressableType().getSqlExpressableType()
+//					expression.getJdbcMapping().getSqlExpressableType()
 //
 //			);
 //		}
@@ -1098,7 +1095,7 @@ public abstract class BaseSqmToSqlAstConverter
 //		return new NullifFunction(
 //				(Expression) expression.getFirstArgument().accept( this ),
 //				(Expression) expression.getSecondArgument().accept( this ),
-//				( (BasicValuedExpressableType) expression.getExpressableType() ).getSqlExpressableType()
+//				( (BasicValuedExpressableType) expression.getJdbcMapping() ).getSqlExpressableType()
 //		);
 //	}
 //
@@ -1116,7 +1113,7 @@ public abstract class BaseSqmToSqlAstConverter
 //	public Object visitUpperFunction(SqmUpperFunction sqmFunction) {
 //		return new UpperFunction(
 //				toSqlExpression( sqmFunction.getArgument().accept( this ) ),
-//				( (BasicValuedExpressableType) sqmFunction.getExpressableType() ).getSqlExpressableType()
+//				( (BasicValuedExpressableType) sqmFunction.getJdbcMapping() ).getSqlExpressableType()
 //		);
 //
 //	}
@@ -1128,7 +1125,7 @@ public abstract class BaseSqmToSqlAstConverter
 //						(Expression)expression.getLeftHandOperand().accept( this ),
 //						(Expression) expression.getRightHandOperand().accept( this )
 //				),
-//				expression.getExpressableType().getSqlExpressableType()
+//				expression.getJdbcMapping().getSqlExpressableType()
 //		);
 //	}
 
@@ -1162,7 +1159,7 @@ public abstract class BaseSqmToSqlAstConverter
 				throw new NotYetImplementedFor6Exception( getClass() );
 //				return new NonStandardFunction(
 //						"mod",
-//						null, //(BasicType) extractOrmType( expression.getExpressableType() ),
+//						null, //(BasicType) extractOrmType( expression.getJdbcMapping() ),
 //						(Expression) expression.getLeftHandOperand().accept( this ),
 //						(Expression) expression.getRightHandOperand().accept( this )
 //				);

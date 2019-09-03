@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Properties;
 import java.util.Objects;
+import java.util.Properties;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.FetchMode;
@@ -60,7 +60,7 @@ import org.hibernate.usertype.DynamicParameterizedType;
  * Any value that maps to columns.
  * @author Gavin King
  */
-public class SimpleValue implements KeyValue {
+public abstract class SimpleValue implements KeyValue {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( SimpleValue.class );
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
@@ -117,6 +117,10 @@ public class SimpleValue implements KeyValue {
 	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
 		this.metadata = buildingContext.getMetadataCollector();
 		this.table = table;
+	}
+
+	public MetadataBuildingContext getBuildingContext() {
+		return buildingContext;
 	}
 
 	public MetadataImplementor getMetadata() {
@@ -197,8 +201,8 @@ public class SimpleValue implements KeyValue {
 	}
 
 	public void setTypeName(String typeName) {
-		if ( typeName != null && typeName.startsWith( AttributeConverterTypeAdapter.NAME_PREFIX ) ) {
-			final String converterClassName = typeName.substring( AttributeConverterTypeAdapter.NAME_PREFIX.length() );
+		if ( typeName != null && typeName.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX ) ) {
+			final String converterClassName = typeName.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
 			final ClassLoaderService cls = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
@@ -451,41 +455,44 @@ public class SimpleValue implements KeyValue {
 		return getColumnSpan()==getType().getColumnSpan(mapping);
 	}
 
-	public Type getType() throws MappingException {
-		if ( type != null ) {
-			return type;
-		}
-
-		if ( typeName == null ) {
-			throw new MappingException( "No type name" );
-		}
-
-		if ( typeParameters != null
-				&& Boolean.valueOf( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
-				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-			createParameterImpl();
-		}
-
-		Type result = getMetadata().getTypeConfiguration().getTypeResolver().heuristicType( typeName, typeParameters );
-		// if this is a byte[] version/timestamp, then we need to use RowVersionType
-		// instead of BinaryType (HHH-10413)
-		if ( isVersion && BinaryType.class.isInstance( result ) ) {
-			log.debug( "version is BinaryType; changing to RowVersionType" );
-			result = RowVersionType.INSTANCE;
-		}
-		if ( result == null ) {
-			String msg = "Could not determine type for: " + typeName;
-			if ( table != null ) {
-				msg += ", at table: " + table.getName();
-			}
-			if ( columns != null && columns.size() > 0 ) {
-				msg += ", for columns: " + columns;
-			}
-			throw new MappingException( msg );
-		}
-
-		return result;
-	}
+//	public Type getType() throws MappingException {
+//		if ( type != null ) {
+//			return type;
+//		}
+//
+//		if ( typeName == null ) {
+//			throw new MappingException( "No type name" );
+//		}
+//
+//		if ( typeParameters != null
+//				&& Boolean.valueOf( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
+//				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+//			createParameterImpl();
+//		}
+//
+//		Type result = getMetadata().getTypeConfiguration().getTypeResolver().heuristicType( typeName, typeParameters );
+//
+//		if ( isVersion && result instanceof BinaryType ) {
+//			// if this is a byte[] version/timestamp, then we need to use RowVersionType
+//			// instead of BinaryType (HHH-10413)
+//			// todo (6.0) - although for T/SQL databases we should use its
+//			log.debug( "version is BinaryType; changing to RowVersionType" );
+//			result = RowVersionType.INSTANCE;
+//		}
+//
+//		if ( result == null ) {
+//			String msg = "Could not determine type for: " + typeName;
+//			if ( table != null ) {
+//				msg += ", at table: " + table.getName();
+//			}
+//			if ( columns != null && columns.size() > 0 ) {
+//				msg += ", for columns: " + columns;
+//			}
+//			throw new MappingException( msg );
+//		}
+//
+//		return result;
+//	}
 
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
@@ -640,7 +647,7 @@ public class SimpleValue implements KeyValue {
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 
-		final String name = AttributeConverterTypeAdapter.NAME_PREFIX + jpaAttributeConverter.getConverterJavaTypeDescriptor().getJavaType().getName();
+		final String name = ConverterDescriptor.TYPE_NAME_PREFIX + jpaAttributeConverter.getConverterJavaTypeDescriptor().getJavaType().getName();
 		final String description = String.format(
 				"BasicType adapter for AttributeConverter<%s,%s>",
 				jpaAttributeConverter.getDomainJavaTypeDescriptor().getJavaType().getSimpleName(),
@@ -719,6 +726,10 @@ public class SimpleValue implements KeyValue {
 			array[ i++ ] = value;
 		}
 		return array;
+	}
+
+	public ConverterDescriptor getJpaAttributeConverterDescriptor() {
+		return attributeConverterDescriptor;
 	}
 
 	public void setJpaAttributeConverterDescriptor(ConverterDescriptor descriptor) {

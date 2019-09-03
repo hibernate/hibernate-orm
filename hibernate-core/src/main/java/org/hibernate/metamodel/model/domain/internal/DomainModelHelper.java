@@ -10,6 +10,7 @@ import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -19,6 +20,9 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
  * Helper containing utilities useful for domain model handling
@@ -80,14 +84,12 @@ public class DomainModelHelper {
 
 	public static <J> SqmPathSource<J> resolveSqmPathSource(
 			String name,
-			String roleName,
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType) {
 
 		if ( valueDomainType instanceof BasicDomainType ) {
 			return new BasicSqmPathSource<>(
 					name,
-					roleName,
 					(BasicDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -96,7 +98,6 @@ public class DomainModelHelper {
 		if ( valueDomainType instanceof AnyMappingDomainType ) {
 			return new AnyMappingSqmPathSource<>(
 					name,
-					roleName,
 					(AnyMappingDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -105,7 +106,6 @@ public class DomainModelHelper {
 		if ( valueDomainType instanceof EmbeddableDomainType ) {
 			return new EmbeddedSqmPathSource<>(
 					name,
-					roleName,
 					(EmbeddableDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -114,7 +114,6 @@ public class DomainModelHelper {
 		if ( valueDomainType instanceof EntityDomainType ) {
 			return new EntitySqmPathSource<>(
 					name,
-					roleName,
 					(EntityDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -123,5 +122,17 @@ public class DomainModelHelper {
 		throw new IllegalArgumentException(
 				"Unrecognized value type Java-type [" + valueDomainType.getTypeName() + "] for plural attribute value"
 		);
+	}
+
+	public static MappingModelExpressable resolveMappingModelExpressable(
+			SqmTypedNode<?> sqmNode,
+			SqlAstCreationState creationState) {
+		if ( sqmNode instanceof SqmPath ) {
+			final SqmPath sqmPath = (SqmPath) sqmNode;
+
+			return creationState.getCreationContext().getDomainModel().resolveModelPart( sqmPath.getNavigablePath() );
+		}
+
+		return creationState.getCreationContext().getDomainModel().resolveMappingExpressable( sqmNode.getNodeType() );
 	}
 }

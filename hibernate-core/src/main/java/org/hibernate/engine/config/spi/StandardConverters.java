@@ -39,6 +39,18 @@ public class StandardConverters {
 		}
 	};
 
+	public static final Converter<Integer> INTEGER = value -> {
+		if ( value == null ) {
+			throw new IllegalArgumentException( "Null value passed to convert" );
+		}
+
+		if ( value instanceof Number ) {
+			return ( (Number) value ).intValue();
+		}
+
+		return Integer.parseInt( value.toString() );
+	};
+
 	/**
 	 * Disallow direct instantiation
 	 */

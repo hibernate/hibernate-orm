@@ -11,6 +11,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.type.ArrayType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.PrimitiveType;
 
@@ -21,14 +22,6 @@ import org.hibernate.type.PrimitiveType;
  */
 public class Array extends List {
 	private String elementClassName;
-
-	/**
-	 * @deprecated Use {@link Array#Array(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Array(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
 
 	public Array(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
@@ -56,9 +49,7 @@ public class Array extends List {
 
 	@Override
 	public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
-				.array( getRole(), getReferencedPropertyName(), getElementClass() );
+		return new ArrayType( getTypeConfiguration(), getRole(), getReferencedPropertyName(), getElementClass() );
 	}
 
 	@Override

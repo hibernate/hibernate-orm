@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
@@ -19,7 +20,7 @@ import org.hibernate.sql.ast.spi.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractTableGroup implements TableGroup {
+public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
 
 	private final NavigablePath navigablePath;
 	private final TableGroupProducer producer;
@@ -27,13 +28,15 @@ public abstract class AbstractTableGroup implements TableGroup {
 
 	private Set<TableGroupJoin> tableGroupJoins;
 	private boolean isInnerJoinPossible;
+	private final SessionFactoryImplementor sessionFactory;
 
 	@SuppressWarnings("WeakerAccess")
 	public AbstractTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer producer,
-			LockMode lockMode) {
-		this( navigablePath, producer, lockMode, false );
+			LockMode lockMode,
+			SessionFactoryImplementor sessionFactory) {
+		this( navigablePath, producer, lockMode, false, sessionFactory );
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -41,12 +44,14 @@ public abstract class AbstractTableGroup implements TableGroup {
 			NavigablePath navigablePath,
 			TableGroupProducer producer,
 			LockMode lockMode,
-			boolean isInnerJoinPossible) {
+			boolean isInnerJoinPossible,
+			SessionFactoryImplementor sessionFactory) {
 		super();
 		this.navigablePath = navigablePath;
 		this.producer = producer;
 		this.lockMode = lockMode;
 		this.isInnerJoinPossible = isInnerJoinPossible;
+		this.sessionFactory = sessionFactory;
 	}
 
 	@Override
@@ -62,6 +67,11 @@ public abstract class AbstractTableGroup implements TableGroup {
 	@Override
 	public LockMode getLockMode() {
 		return lockMode;
+	}
+
+	@Override
+	protected SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
 	}
 
 	@Override
@@ -99,7 +109,7 @@ public abstract class AbstractTableGroup implements TableGroup {
 			TableReference tableBinding,
 			SqlAppender sqlAppender,
 			@SuppressWarnings("unused") SqlAstWalker walker) {
-		sqlAppender.appendSql( tableBinding.getTableName() );
+		sqlAppender.appendSql( tableBinding.getTableExpression() );
 
 		final String identificationVariable = tableBinding.getIdentificationVariable();
 		if ( identificationVariable != null ) {

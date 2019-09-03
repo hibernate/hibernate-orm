@@ -1572,6 +1572,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	private boolean isRegisteredAsBasicType(Class cl) {
-		return producer.getFactory().getTypeResolver().basic( cl.getName() ) != null;
+		return producer.getFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( cl.getName() ) != null;
 	}
 }

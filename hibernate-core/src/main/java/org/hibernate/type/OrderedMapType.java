@@ -7,21 +7,15 @@
 package org.hibernate.type;
 import java.util.LinkedHashMap;
 
+import org.hibernate.type.spi.TypeConfiguration;
+
 /**
  * A specialization of the map type, with (resultset-based) ordering.
  */
 public class OrderedMapType extends MapType {
 
-	/**
-	 * @deprecated Use the other contructor
-	 */
-	@Deprecated
-	public OrderedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		this( role, propertyRef );
-	}
-
-	public OrderedMapType(String role, String propertyRef) {
-		super( role, propertyRef );
+	public OrderedMapType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
+		super( typeConfiguration, role, propertyRef );
 	}
 
 	@Override

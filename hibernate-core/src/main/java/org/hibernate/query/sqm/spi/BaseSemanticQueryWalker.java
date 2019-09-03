@@ -184,22 +184,22 @@ public class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitBasicValuedPath(SqmBasicValuedSimplePath path) {
+	public Object visitBasicValuedPath(SqmBasicValuedSimplePath<?> path) {
 		return path;
 	}
 
 	@Override
-	public Object visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath path) {
+	public Object visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> path) {
 		return path;
 	}
 
 	@Override
-	public Object visitEntityValuedPath(SqmEntityValuedSimplePath path) {
+	public Object visitEntityValuedPath(SqmEntityValuedSimplePath<?> path) {
 		return path;
 	}
 
 	@Override
-	public Object visitPluralValuedPath(SqmPluralValuedSimplePath path) {
+	public Object visitPluralValuedPath(SqmPluralValuedSimplePath<?> path) {
 		return path;
 	}
 

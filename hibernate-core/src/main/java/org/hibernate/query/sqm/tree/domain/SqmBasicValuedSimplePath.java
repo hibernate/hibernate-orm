@@ -38,6 +38,9 @@ public class SqmBasicValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SemanticPathPart
+
 	@Override
 	public SemanticPathPart resolvePathPart(
 			String name,
@@ -46,10 +49,9 @@ public class SqmBasicValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		throw new SemanticException( "Basic-valued path [" + getNavigablePath() + "] cannot be de-referenced : " + name );
 	}
 
-	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitBasicValuedPath( this );
-	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqmPath
 
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
@@ -74,5 +76,14 @@ public class SqmBasicValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		throw new UnsupportedOperationException( "Basic-value cannot be treated (downcast)" );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Visitation
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitBasicValuedPath( this );
 	}
 }

@@ -8,7 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Objects;
 
-import org.hibernate.metamodel.mapping.SqlExpressableType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -22,8 +22,8 @@ public class SqlSelectionImpl implements SqlSelection {
 	private final Expression sqlExpression;
 	private final ValueExtractor jdbcValueExtractor;
 
-	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, SqlExpressableType sqlExpressableType) {
-		this( jdbcPosition, valuesArrayPosition, sqlExpression, sqlExpressableType.getJdbcValueExtractor() );
+	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, JdbcMapping jdbcMapping) {
+		this( jdbcPosition, valuesArrayPosition, sqlExpression, jdbcMapping.getJdbcValueExtractor() );
 	}
 
 	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, ValueExtractor jdbcValueExtractor) {

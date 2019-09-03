@@ -11,8 +11,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Objects;
+import java.util.Properties;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -27,6 +27,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.
@@ -38,7 +39,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
-	private final MetadataImplementor metadata;
+	private final MetadataBuildingContext buildingContext;
 	private PersistentClass owner;
 
 	private KeyValue key;
@@ -89,20 +90,20 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private String loaderName;
 
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
-		this(buildingContext.getMetadataCollector(), owner);
-	}
-
-	/**
-	 * @deprecated Use {@link Collection#Collection(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	protected Collection(MetadataImplementor metadata, PersistentClass owner) {
-		this.metadata = metadata;
+		this.buildingContext = buildingContext;
 		this.owner = owner;
 	}
 
+	public MetadataBuildingContext getBuildingContext() {
+		return buildingContext;
+	}
+
 	public MetadataImplementor getMetadata() {
-		return metadata;
+		return getBuildingContext().getMetadataCollector();
+	}
+
+	public TypeConfiguration getTypeConfiguration() {
+		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
 	}
 
 	@Override
@@ -382,13 +383,12 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public CollectionType getCollectionType() {
+		// todo (6.0) : hook in CollectionSemantics
 		if ( typeName == null ) {
 			return getDefaultCollectionType();
 		}
 		else {
-			return getMetadata().getTypeConfiguration().getTypeResolver()
-					.getTypeFactory()
-					.customCollection( typeName, typeParameters, role, referencedPropertyName );
+			return MappingHelper.customCollection( typeName, typeParameters, role, referencedPropertyName, getMetadata() );
 		}
 	}
 

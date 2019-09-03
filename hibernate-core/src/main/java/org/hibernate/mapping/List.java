@@ -8,8 +8,8 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ListType;
 
 /**
  * A list mapping has a primary key consisting of the key columns + index column.
@@ -24,22 +24,12 @@ public class List extends IndexedCollection {
 		return true;
 	}
 
-	/**
-	 * @deprecated Use {@link List#List(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public List(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
-
 	public List(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
 	}
 
 	public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
-				.list( getRole(), getReferencedPropertyName() );
+		return new ListType( getMetadata().getTypeConfiguration(), getRole(), getReferencedPropertyName() );
 	}
 	
 	public Object accept(ValueVisitor visitor) {

@@ -6,12 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.function.Consumer;
-
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
-
 /**
  * Something that can be expressable at the mapping model level.
  *
@@ -22,19 +16,5 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public interface MappingModelExpressable<T> {
-	JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor();
-
-	// todo (6.0) : others?
-	//  		Probably `org.hibernate.metamodel.mapping.Bindable` should be consumed here.  Or at least exposed from here
-	//
-	// todo (6.0) : IMO `Bindable` should be consumed here and `Bindable` go away
-
-	default void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration){
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	default Bindable getBindable() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+public interface MappingModelExpressable<T> extends Bindable {
 }

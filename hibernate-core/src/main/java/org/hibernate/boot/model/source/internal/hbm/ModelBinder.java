@@ -113,6 +113,7 @@ import org.hibernate.mapping.Array;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Bag;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -150,7 +151,6 @@ import org.hibernate.type.ClobType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.NClobType;
-import org.hibernate.type.TypeResolver;
 
 /**
  * Responsible for coordinating the binding of all information inside entity tags ({@code <class/>}, etc).
@@ -704,7 +704,7 @@ public class ModelBinder {
 			RootClass rootEntityDescriptor) {
 		final IdentifierSourceSimple idSource = (IdentifierSourceSimple) hierarchySource.getIdentifierSource();
 
-		final SimpleValue idValue = new SimpleValue(
+		final BasicValue idValue = new BasicValue(
 				sourceDocument,
 				rootEntityDescriptor.getTable()
 		);
@@ -999,7 +999,7 @@ public class ModelBinder {
 			RootClass rootEntityDescriptor) {
 		final VersionAttributeSource versionAttributeSource = hierarchySource.getVersionAttributeSource();
 
-		final SimpleValue versionValue = new SimpleValue(
+		final BasicValue versionValue = new BasicValue(
 				sourceDocument,
 				rootEntityDescriptor.getTable()
 		);
@@ -1061,7 +1061,7 @@ public class ModelBinder {
 			MappingDocument sourceDocument,
 			final EntityHierarchySourceImpl hierarchySource,
 			RootClass rootEntityDescriptor) {
-		final SimpleValue discriminatorValue = new SimpleValue(
+		final BasicValue discriminatorValue = new BasicValue(
 				sourceDocument,
 				rootEntityDescriptor.getTable()
 		);
@@ -1163,7 +1163,7 @@ public class ModelBinder {
 					final Property attribute = createBasicAttribute(
 							mappingDocument,
 							basicAttributeSource,
-							new SimpleValue( mappingDocument, table ),
+							new BasicValue( mappingDocument, table ),
 							entityDescriptor.getClassName()
 					);
 
@@ -1961,10 +1961,13 @@ public class ModelBinder {
 		// Resolves whether the property is LOB based on the type attribute on the attribute property source.
 		// Essentially this expects the type to map to a CLOB/NCLOB/BLOB sql type internally and compares.
 		if ( !value.isLob() && value.getTypeName() != null ) {
-			final TypeResolver typeResolver = attributeSource.getBuildingContext().getMetadataCollector().getTypeResolver();
-			final BasicType basicType = typeResolver.basic( value.getTypeName() );
+			final BasicType<?> basicType = attributeSource.getBuildingContext()
+					.getMetadataCollector()
+					.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.getRegisteredType( value.getTypeName() );
 			if ( basicType instanceof AbstractSingleColumnStandardBasicType ) {
-				if ( isLob( ( (AbstractSingleColumnStandardBasicType) basicType ).getSqlTypeDescriptor().getSqlType(), null ) ) {
+				if ( isLob( basicType.getSqlTypeDescriptor().getSqlType(), null ) ) {
 					value.makeLob();
 				}
 			}
@@ -1974,7 +1977,7 @@ public class ModelBinder {
 		// if this maps to CLOB/NCLOB/BLOB then the value will be marked as lob.
 		if ( !value.isLob() ) {
 			for ( RelationalValueSource relationalValueSource : attributeSource.getRelationalValueSources() ) {
-				if ( ColumnSource.class.isInstance( relationalValueSource ) ) {
+				if ( relationalValueSource instanceof ColumnSource ) {
 					if ( isLob( null, ( (ColumnSource) relationalValueSource ).getSqlType() ) ) {
 						value.makeLob();
 					}
@@ -2362,17 +2365,18 @@ public class ModelBinder {
 			anyBinding.setMetaType( discriminatorTypeResolution.typeName );
 			try {
 				final DiscriminatorType metaType = (DiscriminatorType) sourceDocument.getMetadataCollector()
-						.getTypeResolver()
-						.heuristicType( discriminatorTypeResolution.typeName );
+						.getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.getRegisteredType( discriminatorTypeResolution.typeName );
 
-				final HashMap anyValueBindingMap = new HashMap();
+				final HashMap discriminatorValueToEntityNameMap = new HashMap();
 				for ( Map.Entry<String,String> discriminatorValueMappings : anyMapping.getDiscriminatorSource().getValueMappings().entrySet() ) {
 					try {
 						final Object discriminatorValue = metaType.stringToObject( discriminatorValueMappings.getKey() );
 						final String mappedEntityName = sourceDocument.qualifyClassName( discriminatorValueMappings.getValue() );
 
 						//noinspection unchecked
-						anyValueBindingMap.put( discriminatorValue, mappedEntityName );
+						discriminatorValueToEntityNameMap.put( discriminatorValue, mappedEntityName );
 					}
 					catch (Exception e) {
 						throw new MappingException(
@@ -2389,7 +2393,7 @@ public class ModelBinder {
 					}
 
 				}
-				anyBinding.setMetaValues( anyValueBindingMap );
+				anyBinding.setMetaValues( discriminatorValueToEntityNameMap );
 			}
 			catch (ClassCastException e) {
 				throw new MappingException(
@@ -2410,14 +2414,9 @@ public class ModelBinder {
 				anyMapping.getDiscriminatorSource().getRelationalValueSource(),
 				anyBinding,
 				true,
-				new RelationalObjectBinder.ColumnNamingDelegate() {
-					@Override
-					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-						return implicitNamingStrategy.determineAnyDiscriminatorColumnName(
-								anyMapping.getDiscriminatorSource()
-						);
-					}
-				}
+				context -> implicitNamingStrategy.determineAnyDiscriminatorColumnName(
+						anyMapping.getDiscriminatorSource()
+				)
 		);
 
 		relationalObjectBinder.bindColumnsAndFormulas(
@@ -2425,14 +2424,9 @@ public class ModelBinder {
 				anyMapping.getKeySource().getRelationalValueSources(),
 				anyBinding,
 				true,
-				new RelationalObjectBinder.ColumnNamingDelegate() {
-					@Override
-					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-						return implicitNamingStrategy.determineAnyKeyColumnName(
-								anyMapping.getKeySource()
-						);
-					}
-				}
+				context -> implicitNamingStrategy.determineAnyKeyColumnName(
+						anyMapping.getKeySource()
+				)
 		);
 	}
 
@@ -2730,7 +2724,7 @@ public class ModelBinder {
 				attribute = createBasicAttribute(
 						sourceDocument,
 						(SingularAttributeSourceBasic) attributeSource,
-						new SimpleValue( sourceDocument, component.getTable() ),
+						new BasicValue( sourceDocument, component.getTable() ),
 						component.getComponentClassName()
 				);
 			}
@@ -3352,7 +3346,7 @@ public class ModelBinder {
 			final CollectionIdSource idSource = getPluralAttributeSource().getCollectionIdSource();
 			if ( idSource != null ) {
 				final IdentifierCollection idBagBinding = (IdentifierCollection) getCollectionBinding();
-				final SimpleValue idBinding = new SimpleValue(
+				final BasicValue idBinding = new BasicValue(
 						mappingDocument,
 						idBagBinding.getCollectionTable()
 				);
@@ -3399,7 +3393,7 @@ public class ModelBinder {
 			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceBasic ) {
 				final PluralAttributeElementSourceBasic elementSource =
 						(PluralAttributeElementSourceBasic) getPluralAttributeSource().getElementSource();
-				final SimpleValue elementBinding = new SimpleValue(
+				final BasicValue elementBinding = new BasicValue(
 						getMappingDocument(),
 						getCollectionBinding().getCollectionTable()
 				);
@@ -3884,7 +3878,7 @@ public class ModelBinder {
 		final PluralAttributeSequentialIndexSource indexSource =
 				(PluralAttributeSequentialIndexSource) attributeSource.getIndexSource();
 
-		final SimpleValue indexBinding = new SimpleValue(
+		final BasicValue indexBinding = new BasicValue(
 				mappingDocument,
 				collectionBinding.getCollectionTable()
 		);
@@ -3931,7 +3925,7 @@ public class ModelBinder {
 		if ( pluralAttributeSource.getIndexSource() instanceof PluralAttributeMapKeySourceBasic ) {
 			final PluralAttributeMapKeySourceBasic mapKeySource =
 					(PluralAttributeMapKeySourceBasic) pluralAttributeSource.getIndexSource();
-			final SimpleValue value = new SimpleValue(
+			final BasicValue value = new BasicValue(
 					mappingDocument,
 					collectionBinding.getCollectionTable()
 			);

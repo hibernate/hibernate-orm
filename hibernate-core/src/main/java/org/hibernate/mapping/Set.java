@@ -10,9 +10,11 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.OrderedSetType;
+import org.hibernate.type.SetType;
+import org.hibernate.type.SortedSetType;
 
 /**
  * A set with no nullable element columns. It will have a primary key
@@ -20,14 +22,6 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class Set extends Collection {
-	/**
-	 * @deprecated Use {@link Set#Set(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Set(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
-
 	public Set(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
 	}
@@ -51,20 +45,14 @@ public class Set extends Collection {
 
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.sortedSet( getRole(), getReferencedPropertyName(), getComparator() );
+			return new SortedSetType( getTypeConfiguration(), getRole(), getReferencedPropertyName(), getComparator() );
 		}
-		else if ( hasOrder() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.orderedSet( getRole(), getReferencedPropertyName() );
+
+		if ( hasOrder() ) {
+			return new OrderedSetType( getTypeConfiguration(), getRole(), getReferencedPropertyName() );
 		}
-		else {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.set( getRole(), getReferencedPropertyName() );
-		}
+
+		return new SetType( getTypeConfiguration(), getRole(), getReferencedPropertyName() );
 	}
 
 	void createPrimaryKey() {

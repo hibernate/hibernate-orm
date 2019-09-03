@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -131,11 +132,46 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 						fallbackDescriptor = new JavaTypeDescriptorBasicAdaptor( javaType );
 					}
 
+					// todo (6.0) : here we assume that all temporal type descriptors are registered
+					//		ahead of time.  Allow for on-the-fly temporal types?  The 2 impediments for that are:
+					//			1) How can we recognize non-JDK date/time types?
+					//			2) What is the temporal precision for the types we have deemed temporal?
+
 					return fallbackDescriptor;
 				}
 		);
 	}
 
+	public JavaTypeDescriptor<?> resolveDynamicDescriptor(String typeName) {
+		return new DynamicJtd();
+	}
+
+	private class DynamicJtd implements JavaTypeDescriptor<Map> {
+		@Override
+		public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Map fromString(String string) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <X> X unwrap(Map value, Class<X> type, WrapperOptions options) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <X> Map wrap(X value, WrapperOptions options) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Class<Map> getJavaTypeClass() {
+			return Map.class;
+		}
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

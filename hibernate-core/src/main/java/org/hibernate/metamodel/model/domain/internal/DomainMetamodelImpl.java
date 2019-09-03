@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -44,8 +43,12 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingModelCreationContext;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -58,8 +61,9 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
@@ -103,7 +107,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	// DomainMetamodel
 
 	private final Set<EntityNameResolver> entityNameResolvers = new HashSet<>();
-	private final Map<String, ModelPart> modelPartRoleMap = new HashMap<>();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -188,8 +191,31 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 				runtimeModelCreationContext
 		);
 
+		final MappingModelCreationContext mappingModelCreationContext = new MappingModelCreationContext() {
+			@Override
+			public SessionFactoryImplementor getSessionFactory() {
+				return sessionFactory;
+			}
+
+			@Override
+			public DomainMetamodel getDomainModel() {
+				return DomainMetamodelImpl.this;
+			}
+
+			@Override
+			public MetadataImplementor getBootModel() {
+				return bootModel;
+			}
+		};
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// after *all* persisters and named queries are registered
-		entityPersisterMap.values().forEach( EntityPersister::generateEntityDefinition );
+
+		MappingModelCreationProcess.process(
+				entityPersisterMap,
+				mappingModelCreationContext
+		);
 
 		for ( EntityPersister persister : entityPersisterMap.values() ) {
 			persister.postInstantiate();
@@ -226,7 +252,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 					modelCreationContext
 			);
 			entityPersisterMap.put( model.getEntityName(), cp );
-			modelPartRoleMap.put( model.getEntityName(), cp );
 
 			if ( cp.getConcreteProxyClass() != null
 					&& cp.getConcreteProxyClass().isInterface()
@@ -695,24 +720,42 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	}
 
 	@Override
-	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable) {
+	public ModelPart resolveModelPart(NavigablePath navigablePath) {
+		if ( navigablePath.getParent() == null ) {
+			// the path should name an entity
+			return resolveAsEntity( navigablePath );
+		}
+		else {
+			final ModelPartContainer lhs = resolveParentModelPart( navigablePath.getParent() );
+			return lhs.findSubPart( navigablePath.getLocalName() );
+		}
+	}
 
+	private EntityMappingType resolveAsEntity(NavigablePath navigablePath) {
+		final String unqualifiedFullPath = navigablePath.getUnqualifiedFullPath();
+		final EntityPersister descriptor = findEntityDescriptor( unqualifiedFullPath );
+
+		if ( descriptor == null ) {
+			throw new PathException( "Expected entity name, but could not resolve `" + unqualifiedFullPath + "` as entity" );
+		}
+
+		return descriptor;
+	}
+
+	private ModelPartContainer resolveParentModelPart(NavigablePath parent) {
+		if ( parent.getParent() == null ) {
+			return resolveAsEntity( parent );
+		}
+
+		return (ModelPartContainer) resolveParentModelPart( parent.getParent() ).findSubPart( parent.getLocalName() );
+	}
+
+	@Override
+	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable) {
 		if ( sqmExpressable instanceof BasicType<?> ) {
 			return (BasicType) sqmExpressable;
 		}
-		else if ( sqmExpressable instanceof SqmPathSource ) {
-			final SqmPathSource pathSource = (SqmPathSource) sqmExpressable;
-			final String role = pathSource.getMappingRole();
 
-			return modelPartRoleMap.get( role );
-
-			/*
-			"org...Person" -> EntityPersister(Person)
-			"org...Person.name" -> AttributeDescriptor(..)
-			"org...Person.name.first" -> AttributeDescriptor(..)
-			 */
-		}
-
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException( "Cannot determine proper mapping model expressable for " + sqmExpressable );
 	}
 }

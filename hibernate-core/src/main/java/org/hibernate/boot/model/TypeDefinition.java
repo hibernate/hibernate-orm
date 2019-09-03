@@ -8,11 +8,27 @@ package org.hibernate.boot.model;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.process.internal.UserTypeResolution;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.usertype.UserType;
 
 /**
  * Models the information pertaining to a custom type definition supplied by the user.  Used
@@ -30,51 +46,28 @@ import java.util.Properties;
  * @author John Verhaeg
  */
 public class TypeDefinition implements Serializable {
+	private static final AtomicInteger nameCounter = new AtomicInteger();
+
 	private final String name;
 	private final Class typeImplementorClass;
 	private final String[] registrationKeys;
-	private final Map<String, String> parameters;
+	private final Properties parameters;
+	private final TypeConfiguration typeConfiguration;
+
+	private BasicValue.Resolution<?> reusableResolution;
+
 
 	public TypeDefinition(
 			String name,
 			Class typeImplementorClass,
 			String[] registrationKeys,
-			Map<String, String> parameters) {
+			Properties parameters,
+			TypeConfiguration typeConfiguration) {
 		this.name = name;
 		this.typeImplementorClass = typeImplementorClass;
 		this.registrationKeys= registrationKeys;
-		this.parameters = parameters == null
-				? Collections.<String, String>emptyMap()
-				: Collections.unmodifiableMap( parameters );
-	}
-
-	public TypeDefinition(
-			String name,
-			Class typeImplementorClass,
-			String[] registrationKeys,
-			Properties parameters) {
-		this.name = name;
-		this.typeImplementorClass = typeImplementorClass;
-		this.registrationKeys= registrationKeys;
-		this.parameters = parameters == null
-				? Collections.<String, String>emptyMap()
-				: extractStrings( parameters );
-	}
-
-	private Map<String, String> extractStrings(Properties properties) {
-		final Map<String, String> parameters = new HashMap<String, String>();
-
-		for ( Map.Entry entry : properties.entrySet() ) {
-			if ( String.class.isInstance( entry.getKey() )
-					&& String.class.isInstance( entry.getValue() ) ) {
-				parameters.put(
-						(String) entry.getKey(),
-						(String) entry.getValue()
-				);
-			}
-		}
-
-		return parameters;
+		this.parameters = parameters;
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	public String getName() {
@@ -89,7 +82,7 @@ public class TypeDefinition implements Serializable {
 		return registrationKeys;
 	}
 
-	public Map<String, String> getParameters() {
+	public Properties getParameters() {
 		return parameters;
 	}
 
@@ -97,6 +90,212 @@ public class TypeDefinition implements Serializable {
 		Properties properties = new Properties();
 		properties.putAll( parameters );
 		return properties;
+	}
+
+	public BasicValue.Resolution<?> resolve(
+			JavaTypeDescriptor<?> explicitJtd,
+			SqlTypeDescriptor explicitStd,
+			Properties localConfigParameters,
+			MutabilityPlan explicitMutabilityPlan,
+			MetadataBuildingContext context) {
+		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
+			// we can use the re-usable resolution...
+			if ( reusableResolution == null ) {
+				final ManagedBean typeBean = context.getBootstrapContext()
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( typeImplementorClass );
+
+				final Object typeInstance = typeBean.getBeanInstance();
+
+				injectParameters( typeInstance, () -> parameters );
+
+				reusableResolution = createReusableResolution( typeInstance, name, context );
+			}
+
+			return reusableResolution;
+		}
+		else {
+			final String name = this.name + ":" + nameCounter.getAndIncrement();
+
+			final ManagedBean typeBean = context.getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class )
+					.getBean( name, typeImplementorClass );
+
+			final Object typeInstance = typeBean.getBeanInstance();
+
+			injectParameters(
+					typeInstance,
+					() -> mergeParameters( parameters, localConfigParameters )
+			);
+
+
+			return createResolution(
+					name,
+					typeInstance,
+					explicitJtd,
+					explicitStd,
+					explicitMutabilityPlan,
+					context
+			);
+		}
+	}
+
+	private static Properties mergeParameters(Properties parameters, Properties localConfigParameters) {
+		final Properties mergedParameters = new Properties();
+
+		if ( parameters != null ) {
+			mergedParameters.putAll( parameters );
+		}
+
+		if ( localConfigParameters != null && ! localConfigParameters.isEmpty() ) {
+			mergedParameters.putAll( localConfigParameters );
+		}
+
+		return mergedParameters;
+	}
+
+	private static void injectParameters(Object customType, Supplier<Properties> parameterSupplier) {
+		if ( customType instanceof ParameterizedType ) {
+			final Properties parameterValues = parameterSupplier.get();
+			if ( parameterValues != null ) {
+				( (ParameterizedType) customType ).setParameterValues( parameterValues );
+			}
+		}
+	}
+
+	public static BasicValue.Resolution<?> createReusableResolution(
+			Object namedTypeInstance,
+			String name,
+			MetadataBuildingContext buildingContext) {
+		if ( namedTypeInstance instanceof UserType ) {
+			final UserType userType = (UserType) namedTypeInstance;
+			final CustomType customType = new CustomType( userType, buildingContext.getBootstrapContext().getTypeConfiguration() );
+
+			return new UserTypeResolution( customType, null );
+		}
+		else if ( namedTypeInstance instanceof BasicType ) {
+			final BasicType resolvedBasicType = (BasicType) namedTypeInstance;
+			return new BasicValue.Resolution<Object>() {
+				@Override
+				public BasicType getResolvedBasicType() {
+					return resolvedBasicType;
+				}
+
+				@Override
+				public JavaTypeDescriptor<Object> getDomainJavaDescriptor() {
+					return resolvedBasicType.getMappedJavaTypeDescriptor();
+				}
+
+				@Override
+				public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+					return resolvedBasicType.getMappedJavaTypeDescriptor();
+				}
+
+				@Override
+				public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
+					return resolvedBasicType.getSqlTypeDescriptor();
+				}
+
+				@Override
+				public BasicValueConverter getValueConverter() {
+					return null;
+				}
+
+				@Override
+				public MutabilityPlan<Object> getMutabilityPlan() {
+					throw new NotYetImplementedFor6Exception( getClass() );
+				}
+			};
+		}
+
+		throw new IllegalArgumentException(
+				"Named type [" + namedTypeInstance + "] did not implement BasicType nor UserType"
+		);
+	}
+
+	public static BasicValue.Resolution<?> createLocalResolution(
+			String name,
+			Class typeImplementorClass,
+			JavaTypeDescriptor<?> explicitJtd,
+			SqlTypeDescriptor explicitStd,
+			MutabilityPlan explicitMutabilityPlan,
+			Properties localTypeParams,
+			MetadataBuildingContext buildingContext) {
+		name = name + ':' + nameCounter.getAndIncrement();
+
+		final ManagedBean typeBean = buildingContext.getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class )
+				.getBean( name, typeImplementorClass );
+
+		final Object typeInstance = typeBean.getBeanInstance();
+
+		injectParameters( typeInstance, () -> localTypeParams );
+
+		return createResolution(
+				name,
+				typeInstance,
+				explicitJtd,
+				explicitStd,
+				explicitMutabilityPlan,
+				buildingContext
+		);
+	}
+
+	private static BasicValue.Resolution<?> createResolution(
+			String name,
+			Object namedTypeInstance,
+			JavaTypeDescriptor<?> explicitJtd,
+			SqlTypeDescriptor explicitStd,
+			MutabilityPlan explicitMutabilityPlan,
+			MetadataBuildingContext metadataBuildingContext) {
+		if ( namedTypeInstance instanceof UserType ) {
+			return new UserTypeResolution(
+					new CustomType( (UserType) namedTypeInstance, metadataBuildingContext.getBootstrapContext().getTypeConfiguration()  ),
+					null
+			);
+		}
+		else if ( namedTypeInstance instanceof org.hibernate.type.BasicType ) {
+			final BasicType resolvedBasicType = (BasicType) namedTypeInstance;
+			return new BasicValue.Resolution<Object>() {
+				@Override
+				public BasicType getResolvedBasicType() {
+					return resolvedBasicType;
+				}
+
+				@Override
+				public JavaTypeDescriptor<Object> getDomainJavaDescriptor() {
+					return resolvedBasicType.getMappedJavaTypeDescriptor();
+				}
+
+				@Override
+				public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+					return resolvedBasicType.getMappedJavaTypeDescriptor();
+				}
+
+				@Override
+				public SqlTypeDescriptor getRelationalSqlTypeDescriptor() {
+					return resolvedBasicType.getSqlTypeDescriptor();
+				}
+
+				@Override
+				public BasicValueConverter getValueConverter() {
+					return null;
+				}
+
+				@Override
+				public MutabilityPlan<Object> getMutabilityPlan() {
+					throw new NotYetImplementedFor6Exception( getClass() );
+				}
+			};
+		}
+
+		throw new IllegalArgumentException(
+				"Named type [" + name + " : " + namedTypeInstance
+						+ "] did not implement BasicType nor UserType"
+		);
 	}
 
 	@Override

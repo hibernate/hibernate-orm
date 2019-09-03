@@ -63,7 +63,6 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 	java.io.Serializable blob;
 	java.io.Serializable nullBlob;
 	byte[] binary;
-	String[] custom;
 	FooComponent component;
 	char _char;
 	Fee dependent;
@@ -114,7 +113,6 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		s.count = 69;
 		blob = s;
 		binary = ( _string + "yada yada yada" ).getBytes();
-		custom = new String[] { "foo", "bar" };
 		component = new FooComponent("foo", 12, new Date[] { _date, _timestamp, null, new Date() }, new FooComponent("bar", 666, new Date[] { new Date(123456l), null }, null ) );
 		component.setGlarch( new Glarch() );
 		dependent = new Fee();
@@ -285,8 +283,7 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		&& ( this.yesno == other.yesno )
 		&& ( ( this.binary == other.binary ) || java.util.Arrays.equals(this.binary, other.binary) )
 		&& ( this.key.equals(other.key) )
-		&& ( this.theLocale.equals(other.theLocale) )
-		&& ( ( this.custom == other.custom ) || ( this.custom[0].equals(other.custom[0]) && this.custom[1].equals(other.custom[1]) ) );
+		&& ( this.theLocale.equals(other.theLocale) );
 
 	}
 
@@ -319,14 +316,6 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 	}
 	public void setBinary(byte[] binary) {
 		this.binary = binary;
-	}
-
-	public String[] getCustom() {
-		return custom;
-	}
-
-	public void setCustom(String[] custom) {
-		this.custom = custom;
 	}
 
 	public FooComponent getComponent() {

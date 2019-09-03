@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.SqlExpressableType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -20,7 +20,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -87,8 +86,9 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		);
 	}
 
+
 	@Override
-	public void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration) {
+	public void visitJdbcTypes(Consumer<JdbcMapping> action, TypeConfiguration typeConfiguration) {
 		// todo (6.0) : better as some form of PersistentAttribute -> org.hibernate.persister.walking.spi.AttributeDefinition resolution
 
 		final SingularPersistentAttribute<O, T> attribute = getReferencedPathSource();
@@ -101,7 +101,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 					.getMetamodel()
 					.getEntityDescriptor( entityName );
 			entityDescriptor.visitSubParts(
-					valueMapping -> valueMapping.getBindable().visitJdbcTypes(
+					valueMapping -> valueMapping.visitJdbcTypes(
 							action,
 							Clause.IRRELEVANT,
 							typeConfiguration

@@ -9,12 +9,15 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.internal.StandardBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -25,116 +28,66 @@ import org.hibernate.usertype.UserType;
 public class BasicTypeRegistry implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicTypeRegistry.class );
 
-	// TODO : analyze these sizing params; unfortunately this seems to be the only way to give a "concurrencyLevel"
-	private Map<String, BasicType> registry = new ConcurrentHashMap<>( 100, .75f, 1 );
-	private boolean locked;
-	private TypeConfiguration typeConfiguration;
+	private final TypeConfiguration typeConfiguration;
+
+	private final Map<SqlTypeDescriptor,Map<JavaTypeDescriptor<?>,BasicType<?>>> registryValues = new ConcurrentHashMap<>();
+
+	/**
+	 * TODO : analyze these sizing params; unfortunately this seems to be the only way to give a "concurrencyLevel"
+	 */
+	private Map<String, BasicType> typesByName = new ConcurrentHashMap<>( 100, .75f, 1 );
 
 	public BasicTypeRegistry(TypeConfiguration typeConfiguration){
-		this();
 		this.typeConfiguration = typeConfiguration;
 	}
 
-	public BasicTypeRegistry() {
-		register( BooleanType.INSTANCE );
-		register( NumericBooleanType.INSTANCE );
-		register( TrueFalseType.INSTANCE );
-		register( YesNoType.INSTANCE );
 
-		register( ByteType.INSTANCE );
-		register( CharacterType.INSTANCE );
-		register( ShortType.INSTANCE );
-		register( IntegerType.INSTANCE );
-		register( LongType.INSTANCE );
-		register( FloatType.INSTANCE );
-		register( DoubleType.INSTANCE );
-		register( BigDecimalType.INSTANCE );
-		register( BigIntegerType.INSTANCE );
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Access
 
-		register( StringType.INSTANCE );
-		register( StringNVarcharType.INSTANCE );
-		register( CharacterNCharType.INSTANCE );
-		register( UrlType.INSTANCE );
+	public BasicType getRegisteredType(String key) {
+		return typesByName.get( key );
+	}
 
-		register( DurationType.INSTANCE );
-		register( InstantType.INSTANCE );
-		register( LocalDateTimeType.INSTANCE );
-		register( LocalDateType.INSTANCE );
-		register( LocalTimeType.INSTANCE );
-		register( OffsetDateTimeType.INSTANCE );
-		register( OffsetTimeType.INSTANCE );
-		register( ZonedDateTimeType.INSTANCE );
-
-		register( DateType.INSTANCE );
-		register( TimeType.INSTANCE );
-		register( TimestampType.INSTANCE );
-		register( DbTimestampType.INSTANCE );
-		register( CalendarType.INSTANCE );
-		register( CalendarDateType.INSTANCE );
-
-		register( LocaleType.INSTANCE );
-		register( CurrencyType.INSTANCE );
-		register( TimeZoneType.INSTANCE );
-		register( ClassType.INSTANCE );
-		register( UUIDBinaryType.INSTANCE );
-		register( UUIDCharType.INSTANCE );
-
-		register( BinaryType.INSTANCE );
-		register( WrapperBinaryType.INSTANCE );
-		register( RowVersionType.INSTANCE );
-		register( ImageType.INSTANCE );
-		register( CharArrayType.INSTANCE );
-		register( CharacterArrayType.INSTANCE );
-		register( TextType.INSTANCE );
-		register( NTextType.INSTANCE );
-		register( BlobType.INSTANCE );
-		register( MaterializedBlobType.INSTANCE );
-		register( ClobType.INSTANCE );
-		register( NClobType.INSTANCE );
-		register( MaterializedClobType.INSTANCE );
-		register( MaterializedNClobType.INSTANCE );
-		register( SerializableType.INSTANCE );
-
-		register( ObjectType.INSTANCE );
-
-		//noinspection unchecked
-		register( new AdaptedImmutableType( DateType.INSTANCE ) );
-		//noinspection unchecked
-		register( new AdaptedImmutableType( TimeType.INSTANCE ) );
-		//noinspection unchecked
-		register( new AdaptedImmutableType( TimestampType.INSTANCE ) );
-		//noinspection unchecked
-		register( new AdaptedImmutableType( DbTimestampType.INSTANCE ) );
-		//noinspection unchecked
-		register( new AdaptedImmutableType( CalendarType.INSTANCE ) );
-		//noinspection unchecked
-		register( new AdaptedImmutableType( CalendarDateType.INSTANCE ) );
-		//noinspection unchecked
-		register( new AdaptedImmutableType( BinaryType.INSTANCE ) );
-		//noinspection unchecked
-		register( new AdaptedImmutableType( SerializableType.INSTANCE ) );
+	public BasicType getRegisteredType(Class javaType) {
+		return getRegisteredType( javaType.getName() );
 	}
 
 	/**
-	 * Constructor version used during shallow copy
-	 *
-	 * @param registeredTypes The type map to copy over
+	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
+	 * SqlTypeDescriptor combo or create (and register) one.
 	 */
-	@SuppressWarnings({"UnusedDeclaration"})
-	private BasicTypeRegistry(Map<String, BasicType> registeredTypes) {
-		registry.putAll( registeredTypes );
-		locked = true;
+	public BasicType<?> resolve(JavaTypeDescriptor<?> jtdToUse, SqlTypeDescriptor stdToUse) {
+		//noinspection unchecked
+		return resolve( jtdToUse, stdToUse, () -> new StandardBasicTypeImpl( jtdToUse, stdToUse ) );
 	}
+
+	/**
+	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
+	 * SqlTypeDescriptor combo or create (and register) one.
+	 */
+	public BasicType<?> resolve(JavaTypeDescriptor<?> jtdToUse, SqlTypeDescriptor stdToUse, Supplier<BasicType<?>> creator) {
+		final Map<JavaTypeDescriptor<?>, BasicType<?>> typeByJtdForStd = registryValues.computeIfAbsent(
+				stdToUse,
+				sqlTypeDescriptor -> new ConcurrentHashMap<>()
+		);
+
+		return typeByJtdForStd.computeIfAbsent( jtdToUse, javaDescriptor -> creator.get() );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Mutations
 
 	public void register(BasicType type) {
 		register( type, type.getRegistrationKeys() );
 	}
 
-	public void register(BasicType type, String[] keys) {
-		if ( locked ) {
-			throw new HibernateException( "Can not alter TypeRegistry at this time" );
-		}
+	public void register(BasicType type, String key) {
+		typesByName.put( key, type );
+	}
 
+	public void register(BasicType type, String... keys) {
 		if ( type == null ) {
 			throw new HibernateException( "Type to register cannot be null" );
 		}
@@ -149,41 +102,45 @@ public class BasicTypeRegistry implements Serializable {
 			if ( key == null ) {
 				continue;
 			}
+
 			//Use String#intern here as there's high chances of duplicates combined with long term usage:
 			//just running our testsuite would generate 210,000 instances for the String "java.lang.Class" alone.
 			//Incidentally this might help with map lookup efficiency too.
 			key = key.intern();
+
 			LOG.debugf( "Adding type registration %s -> %s", key, type );
-			final Type old = registry.put( key, type );
+
+			final Type old = typesByName.put( key, type );
 			if ( old != null && old != type ) {
 				LOG.typeRegistrationOverridesPrevious( key, old );
 			}
+
+			final Map<JavaTypeDescriptor<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
+					type.getSqlTypeDescriptor(),
+					sqlTypeDescriptor -> new ConcurrentHashMap<>()
+			);
+
+			//noinspection unchecked
+			mappingsForStdToUse.computeIfAbsent(
+					type.getMappedJavaTypeDescriptor(),
+					javaDescriptor -> new StandardBasicTypeImpl(
+							javaDescriptor,
+							type.getSqlTypeDescriptor()
+					)
+			);
+
 		}
 	}
 
-	public void register(UserType type, String[] keys) {
-		register( new CustomType( type, keys ) );
-	}
-
-	public void register(CompositeUserType type, String[] keys) {
-		register( new CompositeCustomType( type, keys ) );
+	public void register(UserType type, String... keys) {
+		register( new CustomType( type, keys, typeConfiguration ) );
 	}
 
 	public void unregister(String... keys) {
 		for ( String key : keys ) {
-			registry.remove( key );
+			final BasicType removed = typesByName.remove( key );
+
+
 		}
-	}
-
-	public BasicType getRegisteredType(String key) {
-		return registry.get( key );
-	}
-
-	public BasicType getRegisteredType(Class javaType) {
-		return getRegisteredType( javaType.getName() );
-	}
-
-	public BasicTypeRegistry shallowCopy() {
-		return new BasicTypeRegistry( this.registry );
 	}
 }

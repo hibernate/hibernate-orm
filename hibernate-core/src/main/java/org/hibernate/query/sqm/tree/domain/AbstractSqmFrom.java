@@ -41,6 +41,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -81,9 +82,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			String alias,
 			NodeBuilder nodeBuilder) {
 		super(
-				alias == null
-						? new NavigablePath( entityType.getHibernateEntityName() )
-						: new NavigablePath( entityType.getHibernateEntityName() + '(' + alias + ')' ),
+				SqmCreationHelper.buildRootNavigablePath( entityType.getHibernateEntityName(), alias ),
 				entityType,
 				null,
 				nodeBuilder

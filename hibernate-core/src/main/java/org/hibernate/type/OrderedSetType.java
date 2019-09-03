@@ -7,21 +7,15 @@
 package org.hibernate.type;
 import java.util.LinkedHashSet;
 
+import org.hibernate.type.spi.TypeConfiguration;
+
 /**
  * A specialization of the set type, with (resultset-based) ordering.
  */
 public class OrderedSetType extends SetType {
 
-	/**
-	 * @deprecated Use the other contructor
-	 */
-	@Deprecated
-	public OrderedSetType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		this( role, propertyRef );
-	}
-
-	public OrderedSetType(String role, String propertyRef) {
-		super( role, propertyRef );
+	public OrderedSetType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
+		super( typeConfiguration, role, propertyRef );
 	}
 
 	@Override

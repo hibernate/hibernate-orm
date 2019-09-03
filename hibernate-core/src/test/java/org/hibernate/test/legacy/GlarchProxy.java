@@ -42,9 +42,6 @@ public interface GlarchProxy {
 	public Set getProxySet();
 	public void setProxySet(Set proxySet);
 	
-	public Multiplicity getMultiple();
-	public void setMultiple(Multiplicity m);
-	
 	public Object getAny();
 	public void setAny(Object any);
 }

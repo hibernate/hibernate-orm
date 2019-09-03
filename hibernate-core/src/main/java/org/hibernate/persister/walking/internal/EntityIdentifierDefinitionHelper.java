@@ -6,8 +6,8 @@
  */
 package org.hibernate.persister.walking.internal;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
@@ -17,7 +17,6 @@ import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.NonEncapsulatedEntityIdentifierDefinition;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Gail Badner
@@ -26,13 +25,8 @@ public final class EntityIdentifierDefinitionHelper {
 	private EntityIdentifierDefinitionHelper() {
 	}
 
-	public static EntityIdentifierDefinition buildSimpleEncapsulatedIdentifierDefinition(final AbstractEntityPersister entityPersister) {
+	public static EntityIdentifierDefinition buildSimpleEncapsulatedIdentifierDefinition(final EntityPersister entityPersister) {
 		return new EncapsulatedEntityIdentifierDefinition() {
-			@Override
-			public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-				return entityPersister.getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
-			}
-
 			private final AttributeDefinitionAdapter attr = new AttributeDefinitionAdapter( entityPersister);
 
 			@Override
@@ -56,11 +50,6 @@ public final class EntityIdentifierDefinitionHelper {
 			final AbstractEntityPersister entityPersister) {
 
 		return new EncapsulatedEntityIdentifierDefinition() {
-			@Override
-			public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-				return entityPersister.getExpressableJavaTypeDescriptor();
-			}
-
 			private final CompositionDefinitionAdapter compositionDefinition = new CompositionDefinitionAdapter( entityPersister );
 
 			@Override
@@ -82,11 +71,6 @@ public final class EntityIdentifierDefinitionHelper {
 
 	public static EntityIdentifierDefinition buildNonEncapsulatedCompositeIdentifierDefinition(final AbstractEntityPersister entityPersister) {
 		return new NonEncapsulatedEntityIdentifierDefinition() {
-			@Override
-			public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-				return entityPersister.getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
-			}
-
 			private final CompositionDefinitionAdapter compositionDefinition = new CompositionDefinitionAdapter( entityPersister );
 
 			@Override
@@ -140,9 +124,9 @@ public final class EntityIdentifierDefinitionHelper {
 	}
 
 	private static class AttributeDefinitionAdapter implements AttributeDefinition {
-		private final AbstractEntityPersister entityPersister;
+		private final EntityPersister entityPersister;
 
-		AttributeDefinitionAdapter(AbstractEntityPersister entityPersister) {
+		AttributeDefinitionAdapter(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
 		}
 
@@ -171,13 +155,8 @@ public final class EntityIdentifierDefinitionHelper {
 			return "<identifier-property:" + getName() + ">";
 		}
 
-		protected AbstractEntityPersister getEntityPersister() {
+		protected EntityPersister getEntityPersister() {
 			return entityPersister;
-		}
-
-		@Override
-		public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-			return getEntityPersister().getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
 		}
 	}
 
@@ -198,12 +177,7 @@ public final class EntityIdentifierDefinitionHelper {
 
 		@Override
 		public Iterable<AttributeDefinition> getAttributes() {
-			return  CompositionSingularSubAttributesHelper.getIdentifierSubAttributes( getEntityPersister() );
-		}
-
-		@Override
-		public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-			return getEntityPersister().getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
+			return  CompositionSingularSubAttributesHelper.getIdentifierSubAttributes( (AbstractEntityPersister) getEntityPersister() );
 		}
 	}
 }

@@ -10,13 +10,11 @@ package org.hibernate.sql.ast.tree.expression;
 import java.util.Locale;
 import java.util.Objects;
 
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.mapping.SqlExpressableType;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -28,29 +26,36 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class ColumnReference implements Expression {
-	private final Identifier columnName;
-	private final SqlExpressableType sqlExpressableType;
-
-	private final TableReference tableReference;
-
-	private final String sqlFragment;
+	private final String columnExpression;
+	private final String qualifier;
+	private final JdbcMapping jdbcMapping;
 
 	public ColumnReference(
-			Identifier columnName,
-			TableReference tableReference,
-			SqlExpressableType sqlExpressableType,
+			String columnExpression,
+			String qualifier,
+			JdbcMapping jdbcMapping,
 			SessionFactoryImplementor sessionFactory) {
-		this.columnName = columnName;
-		this.tableReference = tableReference;
-		this.sqlExpressableType = sqlExpressableType;
+		this.columnExpression = columnExpression;
+		this.qualifier = qualifier;
+		this.jdbcMapping = jdbcMapping;
+	}
 
-		final String renderedColumnRef = columnName.render(
-				sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect()
-		);
+	public String getReferencedColumnName() {
+		return columnExpression;
+	}
 
-		this.sqlFragment = tableReference.getIdentificationVariable() == null
-				? renderedColumnRef
-				: tableReference.getIdentificationVariable() + '.' + renderedColumnRef;
+	public String getQualifier() {
+		return qualifier;
+	}
+
+	@Override
+	public MappingModelExpressable getExpressionType() {
+		return (MappingModelExpressable) jdbcMapping;
+	}
+
+	@Override
+	public void accept(SqlAstWalker interpreter) {
+		interpreter.visitColumnReference( this );
 	}
 
 	@Override
@@ -63,37 +68,18 @@ public class ColumnReference implements Expression {
 		// todo (6.0) : potential use for runtime database model - interpretation of table and column references
 		//		into metadata info such as java/sql type, binder, extractor
 
-		final ValueExtractor jdbcValueExtractor = sqlExpressableType.getJdbcValueExtractor();
+		final ValueExtractor jdbcValueExtractor = jdbcMapping.getJdbcValueExtractor();
 
 		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, this, jdbcValueExtractor );
-	}
-
-	public Identifier getColumnName() {
-		return columnName;
-	}
-
-	@Override
-	public void accept(SqlAstWalker interpreter) {
-		interpreter.visitColumnReference( this );
-	}
-
-	@Override
-	public MappingModelExpressable getExpressionType() {
-		return (MappingModelExpressable) sqlExpressableType;
-	}
-
-	public String renderSqlFragment() {
-		return this.sqlFragment;
 	}
 
 	@Override
 	public String toString() {
 		return String.format(
 				Locale.ROOT,
-				"%s(%s.%s)",
+				"%s(%s)",
 				getClass().getSimpleName(),
-				sqlFragment,
-				columnName.getCanonicalName()
+				columnExpression
 		);
 	}
 
@@ -105,12 +91,15 @@ public class ColumnReference implements Expression {
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		ColumnReference that = (ColumnReference) o;
-		return Objects.equals( sqlFragment, that.sqlFragment );
+
+		final ColumnReference that = (ColumnReference) o;
+		return Objects.equals( qualifier, that.qualifier )
+				&& Objects.equals( columnExpression, that.columnExpression );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( sqlFragment );
+		int hash = Objects.hash( columnExpression );
+		return qualifier == null ? hash : hash + Objects.hash( qualifier );
 	}
 }

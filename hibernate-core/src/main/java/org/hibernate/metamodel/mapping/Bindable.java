@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -17,8 +18,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Contract for things at the domain/mapping level that can be bound into a JDBC
  * query.
- *
- * `SqlAstExpressable`?  Similar to `SqmExpressable`.
  *
  * Notice that there may be more than one JDBC parameter involved here - an embedded value, e.g.
  *
@@ -36,13 +35,15 @@ public interface Bindable {
 		return value.get();
 	}
 
+	// todo (6.0) : why did I do 2 forms of JDBC-type visiting?  in-flight change?
+
 	/**
-	 * Visit all of the SqlExpressableTypes associated with this this Writeable.
+	 * Visit all of the SqlExpressableTypes associated with this this Bindable.
 	 * <p>
 	 * Used during cacheable SQL AST creation.
 	 */
 	default void visitJdbcTypes(
-			Consumer<SqlExpressableType> action,
+			Consumer<JdbcMapping> action,
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
 		throw new NotYetImplementedFor6Exception( getClass() );
@@ -146,6 +147,6 @@ public interface Bindable {
 		/**
 		 * Consume a JDBC-level value.  The JDBC type descriptor is also passed in
 		 */
-		void consume(Object value, SqlExpressableType type);
+		void consume(Object value, JdbcMapping type);
 	}
 }

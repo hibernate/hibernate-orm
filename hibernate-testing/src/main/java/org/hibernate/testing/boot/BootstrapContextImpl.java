@@ -10,13 +10,13 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -130,7 +130,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public Collection<AttributeConverterInfo> getAttributeConverters() {
+	public Collection<ConverterDescriptor> getAttributeConverters() {
 		return delegate.getAttributeConverters();
 	}
 

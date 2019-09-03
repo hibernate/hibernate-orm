@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.converter;
 
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -23,7 +24,7 @@ import org.jboss.logging.Logger;
 public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStandardBasicType<T> {
 	private static final Logger log = Logger.getLogger( AttributeConverterTypeAdapter.class );
 
-	public static final String NAME_PREFIX = "converted::";
+	public static final String NAME_PREFIX = ConverterDescriptor.TYPE_NAME_PREFIX;
 
 	private final String name;
 	private final String description;

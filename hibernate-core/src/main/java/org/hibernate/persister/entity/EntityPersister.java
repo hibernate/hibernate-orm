@@ -31,6 +31,10 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.spi.Loadable;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingModelCreationContext;
+import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -40,6 +44,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given
@@ -72,7 +77,7 @@ import org.hibernate.type.VersionType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends EntityDefinition, Loadable, RootTableGroupProducer {
+public interface EntityPersister extends EntityDefinition, InFlightEntityMappingType, Loadable, RootTableGroupProducer {
 
 	/**
 	 * The property name of the "special" identifier property in HQL
@@ -82,11 +87,15 @@ public interface EntityPersister extends EntityDefinition, Loadable, RootTableGr
 	/**
 	 * Generate the entity definition for this object. This must be done for all
 	 * entity persisters before calling {@link #postInstantiate()}.
+	 *
+	 * @deprecated The legacy "walking model" is deprecated in favor of the newer "mapping model".
+	 * This method is no longer called by Hibernate.  See {@link #prepareMappingModel} instead
 	 */
+	@Deprecated
 	void generateEntityDefinition();
 
 	/**
-	 * Finish the initialization of this object. {@link #generateEntityDefinition()}
+	 * Finish the initialization of this object. {@link #prepareMappingModel}
 	 * must be called for all entity persisters before calling this method.
 	 * <p/>
 	 * Called only once per {@link org.hibernate.SessionFactory} lifecycle,

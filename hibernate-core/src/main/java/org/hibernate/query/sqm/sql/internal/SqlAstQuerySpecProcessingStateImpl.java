@@ -6,17 +6,23 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqlAstProcessingState;
 import org.hibernate.query.sqm.sql.SqlAstQuerySpecProcessingState;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.results.internal.EmptySqlSelection;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -58,78 +64,78 @@ public class SqlAstQuerySpecProcessingStateImpl
 		return sqlSelectionMap;
 	}
 
-//	@Override
-//	public SqlSelection resolveSqlSelection(
-//			Expression expression,
-//			BasicJavaDescriptor javaTypeDescriptor,
-//			TypeConfiguration typeConfiguration) {
-//		final SqlSelection existing;
-//		if ( sqlSelectionMap == null ) {
-//			sqlSelectionMap = new HashMap<>();
-//			existing = null;
-//		}
-//		else {
-//			existing = sqlSelectionMap.get( expression );
-//		}
-//
-//		if ( existing != null ) {
-//			return existing;
-//		}
-//
-//		final SqlSelection sqlSelection = expression.createSqlSelection(
-//				nonEmptySelections + 1,
-//				sqlSelectionMap.size(),
-//				javaTypeDescriptor,
-//				typeConfiguration
-//		);
-//
-//		sqlSelectionMap.put( expression, sqlSelection );
-//
-//		if ( !( sqlSelection instanceof EmptySqlSelection ) ) {
-//			nonEmptySelections++;
-//		}
-//
-//		querySpec.getSelectClause().addSqlSelection( sqlSelection );
-//
-//		sqlSelectionConsumerSupplier.get().accept( sqlSelection );
-//
-//		return sqlSelection;
-//	}
-//
-//	@Override
-//	public SqlSelection emptySqlSelection() {
-//		final EmptySqlSelection sqlSelection = new EmptySqlSelection( sqlSelectionMap.size() );
-//		sqlSelectionMap.put( EmptyExpression.EMPTY_EXPRESSION, sqlSelection );
-//
-//		sqlSelectionConsumerSupplier.get().accept( sqlSelection );
-//
-//		return sqlSelection;
-//	}
-//
-//	public static class EmptyExpression implements Expression {
-//		@SuppressWarnings("WeakerAccess")
-//		public static final EmptyExpression EMPTY_EXPRESSION = new EmptyExpression();
-//
-//		private EmptyExpression() {
-//		}
-//
-//		@Override
-//		public SqlSelection createSqlSelection(
-//				int jdbcPosition,
-//				int valuesArrayPosition,
-//				BasicJavaDescriptor javaTypeDescriptor,
-//				TypeConfiguration typeConfiguration) {
-//			return null;
-//		}
-//
-//		@Override
-//		public SqlExpressableType getType() {
-//			return null;
-//		}
-//
-//		@Override
-//		public void accept(SqlAstWalker sqlTreeWalker) {
-//
-//		}
-//	}
+	@Override
+	public SqlSelection resolveSqlSelection(
+			Expression expression,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
+		final SqlSelection existing;
+		if ( sqlSelectionMap == null ) {
+			sqlSelectionMap = new HashMap<>();
+			existing = null;
+		}
+		else {
+			existing = sqlSelectionMap.get( expression );
+		}
+
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqlSelection sqlSelection = expression.createSqlSelection(
+				nonEmptySelections + 1,
+				sqlSelectionMap.size(),
+				javaTypeDescriptor,
+				typeConfiguration
+		);
+
+		sqlSelectionMap.put( expression, sqlSelection );
+
+		if ( !( sqlSelection instanceof EmptySqlSelection ) ) {
+			nonEmptySelections++;
+		}
+
+		querySpec.getSelectClause().addSqlSelection( sqlSelection );
+
+		sqlSelectionConsumerSupplier.get().accept( sqlSelection );
+
+		return sqlSelection;
+	}
+
+	@Override
+	public SqlSelection emptySqlSelection() {
+		final EmptySqlSelection sqlSelection = new EmptySqlSelection( sqlSelectionMap.size() );
+		sqlSelectionMap.put( EmptyExpression.EMPTY_EXPRESSION, sqlSelection );
+
+		sqlSelectionConsumerSupplier.get().accept( sqlSelection );
+
+		return sqlSelection;
+	}
+
+	public static class EmptyExpression implements Expression {
+		@SuppressWarnings("WeakerAccess")
+		public static final EmptyExpression EMPTY_EXPRESSION = new EmptyExpression();
+
+		private EmptyExpression() {
+		}
+
+		@Override
+		public SqlSelection createSqlSelection(
+				int jdbcPosition,
+				int valuesArrayPosition,
+				JavaTypeDescriptor javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return null;
+		}
+
+		@Override
+		public MappingModelExpressable getExpressionType() {
+			return null;
+		}
+
+		@Override
+		public void accept(SqlAstWalker sqlTreeWalker) {
+
+		}
+	}
 }

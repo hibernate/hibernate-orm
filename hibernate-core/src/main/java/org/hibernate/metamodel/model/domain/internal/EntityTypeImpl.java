@@ -58,11 +58,6 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public String getMappingRole() {
-		return getHibernateEntityName();
-	}
-
-	@Override
 	public String getHibernateEntityName() {
 		return super.getTypeName();
 	}

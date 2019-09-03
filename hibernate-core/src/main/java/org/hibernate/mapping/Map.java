@@ -10,21 +10,15 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.MapType;
+import org.hibernate.type.OrderedMapType;
+import org.hibernate.type.SortedMapType;
 
 /**
  * A map has a primary key consisting of
  * the key columns + index columns.
  */
 public class Map extends IndexedCollection {
-
-	/**
-	 * @deprecated Use {@link Map#Map(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Map(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
-
 	public Map(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
 	}
@@ -35,20 +29,14 @@ public class Map extends IndexedCollection {
 
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.sortedMap( getRole(), getReferencedPropertyName(), getComparator() );
+			return new SortedMapType( getTypeConfiguration(), getRole(), getReferencedPropertyName(), getComparator() );
 		}
-		else if ( hasOrder() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.orderedMap( getRole(), getReferencedPropertyName() );
+
+		if ( hasOrder() ) {
+			return new OrderedMapType( getTypeConfiguration(), getRole(), getReferencedPropertyName() );
 		}
-		else {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
-					.map( getRole(), getReferencedPropertyName() );
-		}
+
+		return new MapType( getTypeConfiguration(), getRole(), getReferencedPropertyName() );
 	}
 
 

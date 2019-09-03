@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.archive.internal.ByteArrayInputStreamAccess;
 import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
@@ -22,6 +21,7 @@ import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -165,11 +165,11 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 		assertEquals( 1, scanEnvironment.getExplicitlyListedClassNames().size() );
 		assertEquals( "a.b.C", scanEnvironment.getExplicitlyListedClassNames().get( 0 ) );
 
-		assertEquals( 1, managedResources.getAttributeConverterDefinitions().size() );
-		AttributeConverterInfo attributeConverterInfo = managedResources.getAttributeConverterDefinitions()
+		assertEquals( 1, managedResources.getAttributeConverterDescriptors().size() );
+		ConverterDescriptor attributeConverterInfo = managedResources.getAttributeConverterDescriptors()
 				.iterator()
 				.next();
-		assertEquals( IntegerToVarcharConverter.class, attributeConverterInfo.getConverterClass() );
+		assertEquals( IntegerToVarcharConverter.class, attributeConverterInfo.getAttributeConverterClass() );
 	}
 
 	/**
@@ -186,7 +186,7 @@ public class ScanningCoordinatorTest extends BaseUnitTestCase {
 		assertEquals( 1, scanEnvironment.getExplicitlyListedClassNames().size() );
 		assertEquals( "a.b.C", scanEnvironment.getExplicitlyListedClassNames().get(0) );
 
-		assertEquals( true, managedResources.getAttributeConverterDefinitions().isEmpty() );
+		assertEquals( true, managedResources.getAttributeConverterDescriptors().isEmpty() );
 		assertEquals( true, managedResources.getAnnotatedClassReferences().isEmpty() );
 		assertEquals( expectedIsManagedResourcesEmpty, managedResources.getAnnotatedClassNames().isEmpty() );
 		assertEquals( expectedIsManagedResourcesEmpty, managedResources.getAnnotatedPackageNames().isEmpty() );

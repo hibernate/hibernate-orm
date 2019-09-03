@@ -64,6 +64,6 @@ public interface SqmPathInterpretation<T> extends SqmExpressionInterpretation<T>
 //			return (Expression) list.get( 0 );
 //		}
 //
-//		return new SqlTuple( list, sqlAstCreationState.getExpressableType() );
+//		return new SqlTuple( list, sqlAstCreationState.getJdbcMapping() );
 //	}
 }

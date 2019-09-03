@@ -12,7 +12,6 @@ import java.util.Objects;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
 
 /**
@@ -23,7 +22,7 @@ import org.hibernate.type.Type;
 public class Any extends SimpleValue {
 	private String identifierTypeName;
 	private String metaTypeName = "string";
-	private Map metaValues;
+	private Map<Object,String> metaValueToEntityNameMap;
 	private boolean lazy = true;
 
 	/**
@@ -47,12 +46,15 @@ public class Any extends SimpleValue {
 	}
 
 	public Type getType() throws MappingException {
-		final Type metaType = getMetadata().getTypeResolver().heuristicType( metaTypeName );
+		final Type metaType = getMetadata().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( metaTypeName );
+		final Type identifierType = getMetadata().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( identifierTypeName );
 
-		return getMetadata().getTypeResolver().getTypeFactory().any(
-				metaValues == null ? metaType : new MetaType( metaValues, metaType ),
-				getMetadata().getTypeResolver().heuristicType( identifierTypeName ),
-				isLazy()
+		return MappingHelper.anyMapping(
+				metaType,
+				identifierType,
+				metaValueToEntityNameMap,
+				isLazy(),
+				getBuildingContext()
 		);
 	}
 
@@ -67,11 +69,12 @@ public class Any extends SimpleValue {
 	}
 
 	public Map getMetaValues() {
-		return metaValues;
+		return metaValueToEntityNameMap;
 	}
 
-	public void setMetaValues(Map metaValues) {
-		this.metaValues = metaValues;
+	public void setMetaValues(Map metaValueToEntityNameMap) {
+		//noinspection unchecked
+		this.metaValueToEntityNameMap = metaValueToEntityNameMap;
 	}
 
 	public boolean isLazy() {
@@ -99,7 +102,7 @@ public class Any extends SimpleValue {
 		return super.isSame( other )
 				&& Objects.equals( identifierTypeName, other.identifierTypeName )
 				&& Objects.equals( metaTypeName, other.metaTypeName )
-				&& Objects.equals( metaValues, other.metaValues )
+				&& Objects.equals( metaValueToEntityNameMap, other.metaValueToEntityNameMap )
 				&& lazy == other.lazy;
 	}
 }

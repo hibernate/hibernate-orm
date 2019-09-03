@@ -70,7 +70,6 @@ public interface MetadataBuildingOptions {
 	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType)}</li>
 	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType, String[])}</li>
 	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.UserType, java.lang.String[])}</li>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.CompositeUserType, java.lang.String[])}</li>
 	 * </ul>
 	 *
 	 * @return The BasicType registrations
@@ -257,36 +256,4 @@ public interface MetadataBuildingOptions {
 	default boolean isXmlMappingEnabled() {
 		return true;
 	}
-
-	/**
-	 * Access to any SQL functions explicitly registered with the MetadataBuilder.  This
-	 * does not include Dialect defined functions, etc.
-	 *
-	 * @return The SQLFunctions registered through MetadataBuilder
-	 *
-	 *  @deprecated  Use {@link BootstrapContext#getSqlFunctions()} instead.
-	 */
-	@Deprecated
-	Map<String,SQLFunction> getSqlFunctions();
-
-	/**
-	 * Access to any AuxiliaryDatabaseObject explicitly registered with the MetadataBuilder.  This
-	 * does not include AuxiliaryDatabaseObject defined in mappings.
-	 *
-	 * @return The AuxiliaryDatabaseObject registered through MetadataBuilder
-	 *
-	 * @deprecated Use {@link BootstrapContext#getAuxiliaryDatabaseObjectList()} instead.
-	 */
-	@Deprecated
-	List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
-
-	/**
-	 * Access to collected AttributeConverter definitions.
-	 *
-	 * @return The AttributeConverterInfo registered through MetadataBuilder
-	 *
-	 * @deprecated Use {@link BootstrapContext#getAttributeConverters()} instead
-	 */
-	@Deprecated
-	List<AttributeConverterInfo> getAttributeConverters();
 }

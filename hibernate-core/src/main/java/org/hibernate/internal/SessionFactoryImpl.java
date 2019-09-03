@@ -49,7 +49,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
-import org.hibernate.TypeHelper;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -118,7 +117,6 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -135,7 +133,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -197,8 +194,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
 
-	private final transient TypeHelper typeHelper;
-
 	private final transient FastSessionServices fastSessionServices;
 	private final transient SessionBuilder defaultSessionOpenOptions;
 	private final transient SessionBuilder temporarySessionOpenOptions;
@@ -254,8 +249,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		for ( SessionFactoryObserver sessionFactoryObserver : options.getSessionFactoryObservers() ) {
 			this.observer.addObserver( sessionFactoryObserver );
 		}
-
-		this.typeHelper = new TypeLocatorImpl( bootMetamodel.getTypeConfiguration().getTypeResolver() );
 
 		this.filters = new HashMap<>();
 		this.filters.putAll( bootMetamodel.getFilterDefinitions() );
@@ -598,18 +591,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return null;
-	}
-
-	/**
-	 * Retrieve the {@link Type} resolver associated with this factory.
-	 *
-	 * @return The type resolver
-	 *
-	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
-	 */
-	@Deprecated
-	public TypeResolver getTypeResolver() {
-		return metamodel.getTypeConfiguration().getTypeResolver();
 	}
 
 	@Override
@@ -1044,10 +1025,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public FetchProfile getFetchProfile(String name) {
 		return fetchProfiles.get( name );
-	}
-
-	public TypeHelper getTypeHelper() {
-		return typeHelper;
 	}
 
 	@Override

@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -112,10 +111,5 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 	@Override
 	public String toString() {
 		return "Attribute(name=" + getName() + ", type=" + getType().getName() + " [" + loggableMetadata() + "])";
-	}
-
-	@Override
-	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-		return source().getExpressableJavaTypeDescriptor();
 	}
 }

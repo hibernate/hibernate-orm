@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -26,8 +27,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
+import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
@@ -44,28 +47,41 @@ public class CustomType
 		implements IdentifierType, DiscriminatorType, VersionType, BasicType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
 
 	private final UserType userType;
-	private final String name;
-	private final int[] types;
-	private final Size[] dictatedSizes;
-	private final Size[] defaultSizes;
-	private final boolean customLogging;
 	private final String[] registrationKeys;
 
-	public CustomType(UserType userType) throws MappingException {
-		this( userType, ArrayHelper.EMPTY_STRING_ARRAY );
+	private final String name;
+
+	private final JavaTypeDescriptor mappedJavaTypeDescriptor;
+	private final SqlTypeDescriptor sqlTypeDescriptor;
+
+	private final Size dictatedSize;
+	private final Size defaultSize;
+
+	private final boolean customLogging;
+
+	public CustomType(UserType userType, TypeConfiguration typeConfiguration) throws MappingException {
+		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
 	}
 
-	public CustomType(UserType userType, String[] registrationKeys) throws MappingException {
+	public CustomType(UserType userType, String[] registrationKeys, TypeConfiguration typeConfiguration) throws MappingException {
 		this.userType = userType;
 		this.name = userType.getClass().getName();
-		this.types = userType.sqlTypes();
-		this.dictatedSizes = Sized.class.isInstance( userType )
-				? ( (Sized) userType ).dictatedSizes()
-				: new Size[ types.length ];
-		this.defaultSizes = Sized.class.isInstance( userType )
-				? ( (Sized) userType ).defaultSizes()
-				: new Size[ types.length ];
-		this.customLogging = LoggableUserType.class.isInstance( userType );
+
+		//noinspection unchecked
+		this.mappedJavaTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( userType.returnedClass() );
+		this.sqlTypeDescriptor = typeConfiguration.getSqlTypeDescriptorRegistry().getDescriptor( userType.sqlTypes()[0] );
+
+		if ( userType instanceof Sized ) {
+			final Sized sized = (Sized) userType;
+			this.dictatedSize = sized.dictatedSizes()[0];
+			this.defaultSize = sized.defaultSizes()[0];
+		}
+		else {
+			this.dictatedSize = null;
+			this.defaultSize = null;
+		}
+
+		this.customLogging = userType instanceof LoggableUserType;
 		this.registrationKeys = registrationKeys;
 	}
 
@@ -80,22 +96,22 @@ public class CustomType
 
 	@Override
 	public int[] sqlTypes(Mapping pi) {
-		return types;
+		return new int[] { sqlTypeDescriptor.getSqlType() };
 	}
 
 	@Override
 	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return dictatedSizes;
+		return new Size[] {dictatedSize};
 	}
 
 	@Override
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return defaultSizes;
+		return new Size[] {defaultSize};
 	}
 
 	@Override
 	public int getColumnSpan(Mapping session) {
-		return types.length;
+		return 1;
 	}
 
 	@Override
@@ -358,11 +374,21 @@ public class CustomType
 
 	@Override
 	public Class getJavaType() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return mappedJavaTypeDescriptor.getJavaType();
+	}
+
+	@Override
+	public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+		return mappedJavaTypeDescriptor;
 	}
 
 	@Override
 	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return getMappedJavaTypeDescriptor();
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getMappedJavaTypeDescriptor();
 	}
 }

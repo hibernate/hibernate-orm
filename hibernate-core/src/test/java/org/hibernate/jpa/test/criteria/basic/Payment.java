@@ -8,23 +8,17 @@ package org.hibernate.jpa.test.criteria.basic;
 
 import java.math.BigDecimal;
 import java.util.Date;
-
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Column;
-
-import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 
 /**
  * @author Francois Gerodez
  */
 @Entity
 @Table(name = "crit_basic_payment")
-@TypeDef(name = "paymentDate", typeClass = Date3Type.class)
 public class Payment {
 
 	private Long id;
@@ -49,8 +43,7 @@ public class Payment {
 		this.amount = amount;
 	}
 
-	@Type(type = "paymentDate")
-	@Columns(columns = { @Column(name = "YEARPAYMENT"), @Column(name = "MONTHPAYMENT"), @Column(name = "DAYPAYMENT") })
+	@Column( name = "payment_date" )
 	public Date getDate() {
 		return date;
 	}

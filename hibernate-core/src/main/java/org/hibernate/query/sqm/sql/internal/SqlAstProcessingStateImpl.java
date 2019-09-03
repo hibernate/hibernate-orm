@@ -7,10 +7,13 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.query.sqm.sql.ConversionException;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqlAstProcessingState;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
@@ -18,6 +21,8 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Implementation of ProcessingState used on its own as the impl for
@@ -30,6 +35,8 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 	private final SqlAstCreationState creationState;
 	private final Supplier<Clause> currentClauseAccess;
 	private final Supplier<Consumer<Expression>> resolvedExpressionConsumerAccess;
+
+	private final Map<String,Expression> expressionMap = new HashMap<>();
 
 	public SqlAstProcessingStateImpl(
 			SqlAstProcessingState parentState,
@@ -69,17 +76,21 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 		return Collections.emptyMap();
 	}
 
-//	@Override
-//	public Expression resolveSqlExpression(
-//			ColumnReferenceQualifier qualifier,
-//			QualifiableSqlExpressable sqlSelectable) {
-//		final Expression expression = normalize( qualifier.qualify( sqlSelectable ) );
-//		final Consumer<Expression> expressionConsumer = resolvedExpressionConsumerAccess.get();
-//		if ( expressionConsumer != null ) {
-//			expressionConsumer.accept( expression );
-//		}
-//		return expression;
-//	}
+	@Override
+	public Expression resolveSqlExpression(
+			String key,
+			Function<SqlAstProcessingState,Expression> creator) {
+		final Expression expression = expressionMap.computeIfAbsent(
+				key,
+				s -> creator.apply( this )
+		);
+
+		final Expression result = normalize( expression );
+
+		resolvedExpressionConsumerAccess.get().accept( result );
+
+		return result;
+	}
 
 	@SuppressWarnings("WeakerAccess")
 	protected Expression normalize(Expression expression) {
@@ -113,16 +124,16 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 //		return expression;
 //	}
 
-//	@Override
-//	public SqlSelection resolveSqlSelection(
-//			Expression expression,
-//			BasicJavaDescriptor javaTypeDescriptor,
-//			TypeConfiguration typeConfiguration) {
-//		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
-//	}
-//
-//	@Override
-//	public SqlSelection emptySqlSelection() {
-//		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
-//	}
+	@Override
+	public SqlSelection resolveSqlSelection(
+			Expression expression,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
+		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
+	}
+
+	@Override
+	public SqlSelection emptySqlSelection() {
+		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
+	}
 }

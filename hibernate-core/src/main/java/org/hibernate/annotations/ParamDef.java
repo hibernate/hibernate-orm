@@ -25,9 +25,12 @@ public @interface ParamDef {
 	String name();
 
 	/**
-	 * The type being defined,  Typically this is the fully-qualified name of the {@link org.hibernate.type.Type},
-	 * {@link org.hibernate.usertype.UserType} or {@link org.hibernate.usertype.CompositeUserType} implementation
-	 * class.
+	 * The type to be used for the parameter.  See {@link Type#type} for a list of
+	 * expected values
+	 *
+	 *
+	 *
+	 *
 	 */
 	String type();
 }

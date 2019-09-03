@@ -6,7 +6,10 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * Describes the context in which the process of building Metadata out of MetadataSources occurs.
@@ -20,6 +23,7 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
  */
 public interface MetadataBuildingContext {
 	BootstrapContext getBootstrapContext();
+
 	/**
 	 * Access to the options specified by the {@link org.hibernate.boot.MetadataBuilder}
 	 *
@@ -57,4 +61,10 @@ public interface MetadataBuildingContext {
 	 * @return
 	 */
 	ObjectNameNormalizer getObjectNameNormalizer();
+
+	default int getPreferredSqlTypeCodeForBoolean() {
+		return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( getBootstrapContext().getServiceRegistry() );
+	}
+
+	TypeDefinitionRegistry getTypeDefinitionRegistry();
 }

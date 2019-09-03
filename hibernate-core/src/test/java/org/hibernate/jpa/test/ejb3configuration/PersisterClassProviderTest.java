@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
@@ -41,6 +42,10 @@ import org.hibernate.jpa.test.SettingsGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -661,7 +666,37 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+		public void linkWithSuperType(MappingModelCreationProcess creationProcess) {
+
+		}
+
+		@Override
+		public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
+
+		}
+
+		@Override
+		public EntityIdentifierMapping getIdentifierMapping() {
+			return null;
+		}
+
+		@Override
+		public EntityVersionMapping getVersionMapping() {
+			return null;
+		}
+
+		@Override
+		public java.util.Collection<AttributeMapping> getAttributeMappings() {
+			return null;
+		}
+
+		@Override
+		public void visitAttributeMappings(Consumer<AttributeMapping> action) {
+
+		}
+
+		@Override
+		public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
 			return null;
 		}
 	}

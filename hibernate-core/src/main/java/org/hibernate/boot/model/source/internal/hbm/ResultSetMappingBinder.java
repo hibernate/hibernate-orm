@@ -93,13 +93,10 @@ public abstract class ResultSetMappingBinder {
 		final String typeName = rtnSource.getType();
 		Type type = null;
 		if ( typeName != null ) {
-			type = context.getMetadataCollector().getTypeResolver().heuristicType( typeName );
+			type = context.getMetadataCollector().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( typeName );
 			if ( type == null ) {
 				throw new MappingException(
-						String.format(
-								"Unable to resolve type [%s] specified for native query scalar return",
-								typeName
-						),
+						String.format( "Unable to resolve type [%s] specified for native query scalar return", typeName ),
 						context.getOrigin()
 				);
 			}

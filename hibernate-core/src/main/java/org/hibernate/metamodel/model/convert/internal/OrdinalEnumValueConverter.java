@@ -11,11 +11,9 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -30,7 +28,7 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
 	private final SqlTypeDescriptor sqlTypeDescriptor;
-	private final BasicJavaDescriptor<Integer> relationalJavaDescriptor;
+	private final JavaTypeDescriptor<Integer> relationalJavaDescriptor;
 
 	private transient ValueExtractor<Integer> valueExtractor;
 	private transient ValueBinder<Integer> valueBinder;
@@ -38,7 +36,7 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 	public OrdinalEnumValueConverter(
 			EnumJavaTypeDescriptor<E> enumJavaDescriptor,
 			SqlTypeDescriptor sqlTypeDescriptor,
-			BasicJavaDescriptor<Integer> relationalJavaDescriptor) {
+			JavaTypeDescriptor<Integer> relationalJavaDescriptor) {
 		this.enumJavaDescriptor = enumJavaDescriptor;
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
 		this.relationalJavaDescriptor = relationalJavaDescriptor;

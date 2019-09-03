@@ -62,10 +62,6 @@
         	<column name="`any_id_of_object`"/>
         	<column name="`any_class_of_object`"/>
         </property>
-        <property name="multiple" type="org.hibernate.test.legacy.MultiplicityType">
-        	<column name="count_"/>
-        	<column name="glarch_"/>
-        </property>
     </class>
 
 </hibernate-mapping>

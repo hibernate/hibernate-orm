@@ -9,7 +9,6 @@ package org.hibernate.boot.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
@@ -18,7 +17,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -52,13 +50,11 @@ import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataBuilderInitializer;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
@@ -73,7 +69,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.jandex.IndexView;
@@ -256,13 +251,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyBasicType(UserType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyBasicType(CompositeUserType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
 		return this;
 	}
 
@@ -284,12 +273,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public void contributeType(UserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
-	}
-
-	@Override
-	public void contributeType(CompositeUserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
 	}
 
 	@Override
@@ -343,95 +327,43 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverterDefinition definition) {
-		this.bootstrapContext.addAttributeConverterInfo( definition );
+	public MetadataBuilder applyAttributeConverter(ConverterDescriptor descriptor) {
+		this.bootstrapContext.addAttributeConverterDescriptor( descriptor );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		this.bootstrapContext.addAttributeConverterInfo(
-				new AttributeConverterInfo() {
-					@Override
-					public Class<? extends AttributeConverter> getConverterClass() {
-						return attributeConverterClass;
-					}
-
-					@Override
-					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new ClassBasedConverterDescriptor(
-								attributeConverterClass,
-								null,
-								context.getBootstrapContext().getClassmateContext()
-						);
-					}
-				}
+	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
+		bootstrapContext.addAttributeConverterDescriptor(
+				new ClassBasedConverterDescriptor( attributeConverterClass, bootstrapContext.getClassmateContext() )
 		);
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		this.bootstrapContext.addAttributeConverterInfo(
-				new AttributeConverterInfo() {
-					@Override
-					public Class<? extends AttributeConverter> getConverterClass() {
-						return attributeConverterClass;
-					}
-
-					@Override
-					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new ClassBasedConverterDescriptor(
-								attributeConverterClass,
-								autoApply,
-								context.getBootstrapContext().getClassmateContext()
-						);
-					}
-				}
+	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply) {
+		this.bootstrapContext.addAttributeConverterDescriptor(
+				new ClassBasedConverterDescriptor(
+						attributeConverterClass,
+						autoApply,
+						bootstrapContext.getClassmateContext()
+				)
 		);
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter) {
-		this.bootstrapContext.addAttributeConverterInfo(
-				new AttributeConverterInfo() {
-					@Override
-					public Class<? extends AttributeConverter> getConverterClass() {
-						return attributeConverter.getClass();
-					}
-
-					@Override
-					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new InstanceBasedConverterDescriptor(
-								attributeConverter,
-								null,
-								context.getBootstrapContext().getClassmateContext()
-						);
-					}
-				}
+	public <O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter) {
+		bootstrapContext.addAttributeConverterDescriptor(
+				new InstanceBasedConverterDescriptor( attributeConverter, bootstrapContext.getClassmateContext() )
 		);
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
-		this.bootstrapContext.addAttributeConverterInfo(
-				new AttributeConverterInfo() {
-					@Override
-					public Class<? extends AttributeConverter> getConverterClass() {
-						return attributeConverter.getClass();
-					}
-
-					@Override
-					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new InstanceBasedConverterDescriptor(
-								attributeConverter,
-								autoApply,
-								context.getBootstrapContext().getClassmateContext()
-						);
-					}
-				}
+		bootstrapContext.addAttributeConverterDescriptor(
+				new InstanceBasedConverterDescriptor( attributeConverter, autoApply, bootstrapContext.getClassmateContext() )
 		);
 		return this;
 	}
@@ -885,21 +817,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public List<MetadataSourceType> getSourceProcessOrdering() {
 			return sourceProcessOrdering;
-		}
-
-		@Override
-		public Map<String, SQLFunction> getSqlFunctions() {
-			return bootstrapContext.getSqlFunctions();
-		}
-
-		@Override
-		public List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-			return new ArrayList<>( bootstrapContext.getAuxiliaryDatabaseObjectList());
-		}
-
-		@Override
-		public List<AttributeConverterInfo> getAttributeConverters() {
-			return new ArrayList<>( bootstrapContext.getAttributeConverters() );
 		}
 
 		@Override

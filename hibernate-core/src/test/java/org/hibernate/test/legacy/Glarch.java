@@ -33,7 +33,6 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	private int derivedVersion;
 	private Object any;
 	private int x;
-	private Multiplicity multiple;
 
 	public int getX() {
 		return x;
@@ -192,20 +191,6 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	 */
 	public void setAny(Object any) {
 		this.any = any;
-	}
-
-	/**
-	 * @return
-	 */
-	public Multiplicity getMultiple() {
-		return multiple;
-	}
-
-	/**
-	 * @param multiplicity
-	 */
-	public void setMultiple(Multiplicity multiplicity) {
-		multiple = multiplicity;
 	}
 
 	public String getName() {

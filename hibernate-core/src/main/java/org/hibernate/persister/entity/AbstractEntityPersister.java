@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -23,6 +24,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -34,11 +39,11 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -112,6 +117,7 @@ import org.hibernate.loader.spi.Loader;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
 import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -121,7 +127,16 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -132,6 +147,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -142,11 +158,13 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -163,6 +181,7 @@ import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
@@ -171,6 +190,8 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -1110,36 +1131,46 @@ public abstract class AbstractEntityPersister
 			org.hibernate.sql.ast.JoinType tableReferenceJoinType,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
-		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase );
+		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase, sqlExpressionResolver );
 
 		final List<TableReferenceJoin> joins = new ArrayList<>(  );
-		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableReferenceJoinType, joins::add );
+		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableReferenceJoinType, joins::add, sqlExpressionResolver );
 
 		return new StandardTableGroup(
 				navigablePath,
 				this,
 				lockMode,
 				primaryTableReference,
-				joins
+				joins,
+				getFactory()
 		);
 	}
 
-	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
-		return new TableReference( getRootTableName(), sqlAliasBase.generateNewAlias(), false );
+	protected TableReference resolvePrimaryTableReference(
+			SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver sqlExpressionResolver) {
+		// todo (6.0) : temporary
+		return new TableReference(
+				getRootTableName(),
+				sqlAliasBase.generateNewAlias(),
+				false,
+				getFactory()
+		);
 	}
 
 	private void resolveTableReferenceJoins(
 			TableReference rootTableReference,
 			SqlAliasBase sqlAliasBase,
 			org.hibernate.sql.ast.JoinType joinType,
-			Consumer<TableReferenceJoin> collector) {
-
+			Consumer<TableReferenceJoin> collector,
+			SqlExpressionResolver sqlExpressionResolver) {
 		for ( int i = 0; i < getSubclassTableSpan(); i++ ) {
 			collector.accept(
-					createTableReferenceJoin( i, rootTableReference, joinType, sqlAliasBase )
+					createTableReferenceJoin( i, rootTableReference, joinType, sqlAliasBase, sqlExpressionResolver )
 			);
 		}
 	}
@@ -1148,55 +1179,109 @@ public abstract class AbstractEntityPersister
 			int subClassTablePosition,
 			TableReference rootTableReference,
 			org.hibernate.sql.ast.JoinType joinType,
-			SqlAliasBase sqlAliasBase) {
+			SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver sqlExpressionResolver) {
 		final boolean nullable = isNullableSubclassTable( subClassTablePosition );
 
 		final TableReference joinedTableReference = new TableReference(
 				getSubclassTableName( subClassTablePosition ),
 				sqlAliasBase.generateNewAlias(),
-				nullable
+				nullable,
+				getFactory()
 		);
 
 		return new TableReferenceJoin(
 				nullable ? org.hibernate.sql.ast.JoinType.LEFT : joinType,
 				joinedTableReference,
-				generateJoinPredicate( rootTableReference, joinedTableReference, subClassTablePosition )
+				generateJoinPredicate( rootTableReference, joinedTableReference, subClassTablePosition, sqlExpressionResolver )
 		);
 	}
 
 	private Predicate generateJoinPredicate(
 			TableReference rootTableReference,
 			TableReference joinedTableReference,
-			int subClassTablePosition) {
+			int subClassTablePosition,
+			SqlExpressionResolver sqlExpressionResolver) {
+		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
+
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
 
 		final String[] rootPkColumnNames = getKeyColumnNames();
 		final String[] fkColumnNames = getSubclassTableKeyColumns( subClassTablePosition );
 
 		assert rootPkColumnNames.length == fkColumnNames.length;
+		assert rootPkColumnNames.length == identifierMapping.getJdbcTypeCount( factory.getTypeConfiguration() );
 
-		for ( int i = 0; i < rootPkColumnNames.length; i++ ) {
-			final String rootPkColumnName = rootPkColumnNames[i];
-			final String fkColumnName = fkColumnNames[i];
+		identifierMapping.visitJdbcTypes(
+				new Consumer<JdbcMapping>() {
+					private int columnIndex;
 
-			conjunction.add(
-					new ComparisonPredicate(
-							new ColumnReference( Identifier.toIdentifier( rootPkColumnName ), rootTableReference, null, getFactory() ),
-							ComparisonOperator.EQUAL,
-							new ColumnReference( Identifier.toIdentifier( fkColumnName ), joinedTableReference, null, getFactory() )
-					)
-			);
-		}
+					@Override
+					public void accept(JdbcMapping jdbcMapping) {
+						final String rootPkColumnName = rootPkColumnNames[ columnIndex ];
+						final Expression pkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+								SqlExpressionResolver.createColumnReferenceKey(
+										rootTableReference.getTableExpression(),
+										rootPkColumnName
+								),
+								sqlAstProcessingState -> new ColumnReference(
+										rootPkColumnName,
+										rootTableReference.getIdentificationVariable(),
+										jdbcMapping,
+										getFactory()
+								)
+						);
+
+						final String fkColumnName = fkColumnNames[ columnIndex ];
+						final Expression fkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+								SqlExpressionResolver.createColumnReferenceKey(
+										joinedTableReference.getTableExpression(),
+										fkColumnName
+								),
+								sqlAstProcessingState -> new ColumnReference(
+										fkColumnName,
+										joinedTableReference.getIdentificationVariable(),
+										jdbcMapping,
+										getFactory()
+								)
+						);
+
+						conjunction.add( new ComparisonPredicate( pkColumnExpression, ComparisonOperator.EQUAL, fkColumnExpression ) );
+
+						columnIndex++;
+					}
+				},
+				Clause.IRRELEVANT,
+				getFactory().getTypeConfiguration()
+		);
 
 		return conjunction;
 	}
 
 	@Override
 	public ModelPart findSubPart(String name) {
-		for ( AttributeDefinition attributeDefinition : attributeDefinitions ) {
-			if ( attributeDefinition.getName().equals( name ) ) {
-				return attributeDefinition;
+		LOG.tracef( "#findSubPart(`%s`)", name );
+
+		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
+		if ( declaredAttribute != null ) {
+			return declaredAttribute;
+		}
+
+		if ( superMappingType != null ) {
+			final ModelPart superDefinedAttribute = superMappingType.findSubPart( name );
+			if ( superDefinedAttribute != null ) {
+				return superDefinedAttribute;
 			}
+		}
+
+		if ( subclassMappingTypes != null && ! subclassMappingTypes.isEmpty() ) {
+			for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
+				final ModelPart subDefinedAttribute = subMappingType.findSubPart( name );
+				if ( subDefinedAttribute != null ) {
+					return subDefinedAttribute;
+				}
+			}
+
 		}
 
 		return null;
@@ -1206,10 +1291,7 @@ public abstract class AbstractEntityPersister
 	public void visitSubParts(Consumer<ModelPart> consumer) {
 		consumer.accept( entityIdentifierDefinition );
 
-		for ( AttributeDefinition attributeDefinition : attributeDefinitions ) {
-			consumer.accept( attributeDefinition );
-		}
-
+		declaredAttributeMappings.values().forEach( consumer );
 	}
 
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {
@@ -1892,11 +1974,6 @@ public abstract class AbstractEntityPersister
 				.setOuterJoins( "", "" )
 				.setWhereClause( whereClause )
 				.toStatementString();
-	}
-
-	@Override
-	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-		return getEntityKeyDefinition().getExpressableJavaTypeDescriptor();
 	}
 
 	protected interface InclusionChecker {
@@ -5849,10 +5926,187 @@ public abstract class AbstractEntityPersister
 	}
 
 
-	// EntityDefinition impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// org.hibernate.metamodel.mapping.EntityMappingType
+
+	private JavaTypeDescriptor javaTypeDescriptor;
+
+	private EntityMappingType superMappingType;
+	private SortedMap<String, EntityMappingType> subclassMappingTypes;
+
+	private EntityIdentifierMapping identifierMapping;
+	private EntityVersionMapping versionMapping;
+
+	private SortedMap<String, AttributeMapping> declaredAttributeMappings = new TreeMap<>();
+
+	@Override
+	public void linkWithSuperType(MappingModelCreationProcess creationProcess) {
+		if ( getMappedSuperclass() == null ) {
+			return;
+		}
+
+		this.superMappingType = creationProcess.getEntityPersister( getMappedSuperclass() );
+		( (InFlightEntityMappingType) superMappingType ).linkWithSubType( this, creationProcess );
+	}
+
+	@Override
+	public void linkWithSubType(EntityMappingType sub, MappingModelCreationProcess creationProcess) {
+		subclassMappingTypes.put( sub.getEntityName(), sub );
+	}
+
+	@Override
+	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
+		if ( identifierMapping != null ) {
+			return;
+		}
+
+		final TypeConfiguration typeConfiguration = creationProcess.getCreationContext()
+				.getSessionFactory()
+				.getTypeConfiguration();
+		final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+
+		if ( getConcreteProxyClass() != null ) {
+			//noinspection unchecked
+			javaTypeDescriptor = jtdRegistry.getDescriptor( getConcreteProxyClass() );
+		}
+		else if ( getMappedClass() == null || getMappedClass() == Map.class ) {
+			javaTypeDescriptor = jtdRegistry.resolveDynamicDescriptor( getEntityName() );
+		}
+		else {
+			//noinspection unchecked
+			javaTypeDescriptor = jtdRegistry.getDescriptor( getMappedClass() );
+		}
+
+		// todo (6.0) : should we create these only on root?
+
+		identifierMapping = creationProcess.processSubPart(
+				EntityIdentifierMapping.ROLE_LOCAL_NAME,
+				(role, creationProcess1) -> generateIdentifierMapping( creationProcess )
+		);
+
+		if ( getVersionType() == null ) {
+			versionMapping = null;
+		}
+		else {
+			final int versionPropertyIndex = getVersionProperty();
+			final String versionPropertyName = getPropertyNames()[ versionPropertyIndex ];
+
+			versionMapping = creationProcess.processSubPart(
+					versionPropertyName,
+					(role, creationProcess1) -> generateVersionMapping( this, creationProcess )
+			);
+		}
+
+		final PersistentClass bootEntityDescriptor = creationProcess.getCreationContext()
+				.getBootModel()
+				.getEntityBinding( getEntityName() );
+
+
+		final EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
+
+		for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
+			final NonIdentifierAttribute runtimeAttrDefinition = currentEntityMetamodel.getProperties()[i];
+			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
+
+			declaredAttributeMappings.put(
+					runtimeAttrDefinition.getName(),
+					generateNonIdAttributeMapping( runtimeAttrDefinition, bootProperty, creationProcess )
+			);
+		}
+	}
+
+	private EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess) {
+		final Type idType = getIdentifierType();
+
+		if ( idType instanceof CompositeType ) {
+			final CompositeType cidType = (CompositeType) idType;
+			if ( !cidType.isEmbedded() ) {
+				return MappingModelCreationHelper.buildEncapsulatedCompositeIdentifierMapping( this );
+			}
+
+			return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping( this );
+		}
+
+		return MappingModelCreationHelper.buildSimpleIdentifierMapping(
+				this,
+				getRootTableName(),
+				rootTableKeyColumnNames[0],
+				(BasicType) idType,
+				creationProcess
+		);
+	}
+
+	private static EntityVersionMapping generateVersionMapping(
+			EntityPersister entityPersister,
+			MappingModelCreationProcess creationProcess) {
+		throw new NotYetImplementedFor6Exception( AbstractEntityPersister.class );
+	}
+
+	private AttributeMapping generateNonIdAttributeMapping(
+			NonIdentifierAttribute tupleAttrDefinition,
+			Property bootProperty,
+			MappingModelCreationProcess creationProcess) {
+		final String attrName = tupleAttrDefinition.getName();
+		final Type attrType = tupleAttrDefinition.getType();
+
+		final int propertyIndex = getPropertyIndex( attrName );
+		final String tableExpression = getPropertyTableName( attrName );
+		final String[] attrColumnNames = getPropertyColumnNames( propertyIndex );
+
+		if ( attrType instanceof BasicType ) {
+			return new BasicValuedSingularAttributeMapping(
+					attrName,
+					tableExpression,
+					attrColumnNames[0],
+					( (BasicValue) bootProperty.getValue() ).resolve().getValueConverter(),
+					(BasicType) attrType,
+					(BasicType) attrType
+			);
+		}
+
+		// todo (6.0) : for now ignore any non basic-typed attributes
+
+		return null;
+	}
+
+	@Override
+	public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+		return javaTypeDescriptor;
+	}
+
+	@Override
+	public EntityPersister getEntityPersister() {
+		return this;
+	}
+
+	@Override
+	public EntityIdentifierMapping getIdentifierMapping() {
+		return identifierMapping;
+	}
+
+	@Override
+	public EntityVersionMapping getVersionMapping() {
+		return versionMapping;
+	}
+
+	@Override
+	public Collection<AttributeMapping> getAttributeMappings() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void visitAttributeMappings(Consumer<AttributeMapping> action) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// EntityDefinition impl (walking model - deprecated)
 
 	private EntityIdentifierDefinition entityIdentifierDefinition;
-	private Iterable<AttributeDefinition> attributeDefinitions;
+	private SortedSet<AttributeDefinition> attributeDefinitions = new TreeSet<>(
+			Comparator.comparing( AttributeDefinition::getName )
+	);
 
 	@Override
 	public void generateEntityDefinition() {
@@ -5860,10 +6114,7 @@ public abstract class AbstractEntityPersister
 		collectAttributeDefinitions();
 	}
 
-	@Override
-	public EntityPersister getEntityPersister() {
-		return this;
-	}
+
 
 	@Override
 	public EntityIdentifierDefinition getEntityKeyDefinition() {
@@ -5975,7 +6226,7 @@ public abstract class AbstractEntityPersister
 				continue;
 			}
 			try {
-				final EntityPersister subClassEntityPersister = factory.getEntityPersister( subClassEntityName );
+				final EntityPersister subClassEntityPersister = factory.getMetamodel().getEntityDescriptor( subClassEntityName );
 				collectAttributeDefinitions( attributeDefinitionsByName, subClassEntityPersister.getEntityMetamodel() );
 			}
 			catch (MappingException e) {
@@ -6020,9 +6271,6 @@ public abstract class AbstractEntityPersister
 //			}
 //		}
 
-		this.attributeDefinitions = Collections.unmodifiableList(
-				new ArrayList<>( attributeDefinitionsByName.values() )
-		);
 //		// todo : leverage the attribute definitions housed on EntityMetamodel
 //		// 		for that to work, we'd have to be able to walk our super entity persister(s)
 //		this.attributeDefinitions = new Iterable<AttributeDefinition>() {

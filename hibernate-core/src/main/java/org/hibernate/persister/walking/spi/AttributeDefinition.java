@@ -6,14 +6,13 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.type.Type;
 
 /**
  * Descriptor for
  * @author Steve Ebersole
  */
-public interface AttributeDefinition extends ModelPart {
+public interface AttributeDefinition {
 	AttributeSource getSource();
 	String getName();
 	Type getType();

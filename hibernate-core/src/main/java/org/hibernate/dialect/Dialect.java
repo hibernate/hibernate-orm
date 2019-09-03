@@ -3018,6 +3018,13 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	public int getPreferredSqlTypeCodeForBoolean() {
+		// BIT is the safest option as most databases do not support a
+		// boolean data-type.  And BIT happens to be the JDBC recommended
+		// mapping
+		return Types.BIT;
+	}
+
 	/**
 	 * Escape String literal.
 	 *

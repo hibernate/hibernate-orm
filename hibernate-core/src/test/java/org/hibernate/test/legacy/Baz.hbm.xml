@@ -151,16 +151,7 @@
 			<index column="bazind"/>
 			<one-to-many class="org.hibernate.test.legacy.Fee"/>
 		</list>
-		
-		<list name="customs">
-			<key column="id_"/>
-			<index column="indx"/>
-			<element type="org.hibernate.test.legacy.DoubleStringType">
-				<column name="first_"/>
-				<column name="second_"/>
-			</element>
-		</list>
-	
+
 		<list name="topComponents" table="topcomponents">
 			<!--cache-->
 			<key column="id_"/>

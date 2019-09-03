@@ -16,7 +16,7 @@ public class SqmCreationHelper {
 	public static NavigablePath buildRootNavigablePath(String base, String alias) {
 		return alias == null
 				? new NavigablePath( base )
-				: new NavigablePath( base + '(' + alias + ')' );
+				: new NavigablePath( base, alias );
 	}
 
 	public static NavigablePath buildSubNavigablePath(NavigablePath lhs, String base, String alias) {

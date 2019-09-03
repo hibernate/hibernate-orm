@@ -14,19 +14,12 @@ import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.spi.TypeConfiguration;
 
 public class ListType extends CollectionType {
 
-	/**
-	 * @deprecated Use the other contructor
-	 */
-	@Deprecated
-	public ListType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		this( role, propertyRef );
-	}
-
-	public ListType(String role, String propertyRef) {
-		super( role, propertyRef );
+	public ListType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
+		super( typeConfiguration, role, propertyRef );
 	}
 
 	@Override

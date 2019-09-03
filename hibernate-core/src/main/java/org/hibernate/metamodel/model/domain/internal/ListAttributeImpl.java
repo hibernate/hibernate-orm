@@ -29,7 +29,6 @@ class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> imp
 		//noinspection unchecked
 		this.indexPathSource = (SqmPathSource) DomainModelHelper.resolveSqmPathSource(
 				getName(),
-				getMappingRole(),
 				builder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE
 		);

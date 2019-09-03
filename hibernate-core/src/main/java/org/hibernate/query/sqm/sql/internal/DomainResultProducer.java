@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.sql.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.SqlExpressableType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -48,7 +48,7 @@ public interface DomainResultProducer<T> {
 	 *
 	 * Used during cacheable SQL AST creation.
 	 */
-	default void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration) {
+	default void visitJdbcTypes(Consumer<JdbcMapping> action, TypeConfiguration typeConfiguration) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

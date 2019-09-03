@@ -60,6 +60,11 @@ public abstract class BaseSqmUnitTest
 	}
 
 	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory();
+	}
+
+	@Override
 	public MetamodelImplementor getDomainModel() {
 		return sessionFactory().getMetamodel();
 	}

@@ -38,6 +38,13 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	NavigablePath getNavigablePath();
 
 	/**
+	 * The mapping model role this path represents.
+	 *
+	 * @see org.hibernate.metamodel.spi.DomainMetamodel#getModelPartByRole
+	 */
+	String getMappingRole();
+
+	/**
 	 * The path source that this path refers to (and that most likely
 	 * created it).
 	 *

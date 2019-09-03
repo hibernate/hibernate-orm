@@ -9,14 +9,13 @@ package org.hibernate.query.sqm.tree.from;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.SqlExpressableType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -118,13 +117,13 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 	}
 
 	@Override
-	public void visitJdbcTypes(Consumer<SqlExpressableType> action, TypeConfiguration typeConfiguration) {
+	public void visitJdbcTypes(Consumer<JdbcMapping> action, TypeConfiguration typeConfiguration) {
 		final String entityName = getReferencedPathSource().getHibernateEntityName();
 		final EntityPersister entityDescriptor = typeConfiguration.getSessionFactory()
 				.getMetamodel()
 				.getEntityDescriptor( entityName );
 		entityDescriptor.visitSubParts(
-				valueMapping -> valueMapping.getBindable().visitJdbcTypes(
+				valueMapping -> valueMapping.visitJdbcTypes(
 						action,
 						Clause.IRRELEVANT,
 						typeConfiguration

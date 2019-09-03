@@ -164,21 +164,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctions() {
-		return delegate.getSqlFunctions();
-	}
-
-	@Override
-	public List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-		return delegate.getAuxiliaryDatabaseObjectList();
-	}
-
-	@Override
-	public List<AttributeConverterInfo> getAttributeConverters() {
-		return delegate.getAttributeConverters();
-	}
-
-	@Override
 	public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
 		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
 			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( jpaOrmXmlPersistenceUnitDefaults );

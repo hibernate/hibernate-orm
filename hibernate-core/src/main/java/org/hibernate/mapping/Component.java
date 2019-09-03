@@ -29,8 +29,9 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 
 /**
  * The mapping for a component, composite element,
@@ -226,9 +227,12 @@ public class Component extends SimpleValue implements MetaAttributable {
 							this,
 							getMetadata().getMetadataBuildingOptions()
 					);
-					final TypeFactory factory = getMetadata().getTypeConfiguration().getTypeResolver().getTypeFactory();
-					localType = isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
-					type = localType;
+
+					localType = isEmbedded()
+							? new EmbeddedComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel )
+							: new ComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel );
+
+					this.type = localType;
 				}
 			}
 		}

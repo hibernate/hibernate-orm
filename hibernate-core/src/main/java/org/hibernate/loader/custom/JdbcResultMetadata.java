@@ -15,6 +15,8 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Simplified access to JDBC ResultSetMetaData
@@ -74,39 +76,22 @@ class JdbcResultMetadata {
 			length = resultSetMetaData.getColumnDisplaySize( columnPos );
 		}
 
-		String hibernateTypeName;
-
-		//Get the contributed Hibernate Type first
-		Set<String> hibernateTypeNames = factory.getMetamodel()
-				.getTypeConfiguration()
-				.getJdbcToHibernateTypeContributionMap()
-				.get( columnType );
-
-		//If the user has not supplied any JDBC Type to Hibernate Type mapping, use the Dialect-based mapping
-		if ( hibernateTypeNames != null && !hibernateTypeNames.isEmpty() ) {
-			if ( hibernateTypeNames.size() > 1 ) {
-				throw new HibernateException(
-						String.format(
-								"There are multiple Hibernate types: [%s] registered for the [%d] JDBC type code",
-								String.join( ", ", hibernateTypeNames ),
-								columnType
-						) );
-			}
-			else {
-				hibernateTypeName = hibernateTypeNames.iterator().next();
-			}
-		}
-		else {
-			hibernateTypeName = factory.getDialect().getHibernateTypeName(
-					columnType,
-					length,
-					precision,
-					scale
-			);
-		}
-
-		return factory.getTypeResolver().heuristicType(
-				hibernateTypeName
+		final String hibernateTypeName = factory.getDialect().getHibernateTypeName(
+				columnType,
+				length,
+				precision,
+				scale
 		);
+
+		if ( hibernateTypeName != null ) {
+			return factory.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( hibernateTypeName );
+		}
+
+		final SqlTypeDescriptor columnSqlTypeDescriptor = factory.getTypeConfiguration()
+				.getSqlTypeDescriptorRegistry()
+				.getDescriptor( columnType );
+		final BasicJavaDescriptor<Object> relationalJtd = columnSqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( factory.getTypeConfiguration() );
+
+		return factory.getTypeConfiguration().getBasicTypeRegistry().resolve( relationalJtd, columnSqlTypeDescriptor );
 	}
 }

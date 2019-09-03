@@ -6,6 +6,13 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import java.util.function.Function;
+
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
+
 /**
  * Resolution of a SqlSelection reference for a given SqlSelectable.  Some
  * SqlSelectable are required to be qualified (e.g. a Column) - this is indicated
@@ -24,25 +31,23 @@ package org.hibernate.query.sqm.sql;
  * @author Steve Ebersole
  */
 public interface SqlExpressionResolver {
-//	/**
-//	 * Given a qualifier + a qualifiable SqlExpressable, resolve the
-//	 * (Sql)Expression reference.
-//	 */
-//	Expression resolveSqlExpression(ColumnReferenceQualifier qualifier, QualifiableSqlExpressable sqlSelectable);
-//
-//	/**
-//	 * Given a SqlExpressable not needing to be qualified, resolve the
-//	 * (Sql)Expression reference.
-//	 */
-//	Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable);
-//
-//	/**
-//	 * Resolve the SqlSelection for the given expression
-//	 */
-//	SqlSelection resolveSqlSelection(
-//			Expression expression,
-//			JavaTypeDescriptor javaTypeDescriptor,
-//			TypeConfiguration typeConfiguration);
-//
-//	SqlSelection emptySqlSelection();
+	/**
+	 * Given a qualifier + a qualifiable SqlExpressable, resolve the
+	 * (Sql)Expression reference.
+	 */
+	Expression resolveSqlExpression(String key, Function<SqlAstProcessingState,Expression> creator);
+
+	static String createColumnReferenceKey(String tableExpression, String columnExpression) {
+		return tableExpression + '.' + columnExpression;
+	}
+
+	/**
+	 * Resolve the SqlSelection for the given expression
+	 */
+	SqlSelection resolveSqlSelection(
+			Expression expression,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration);
+
+	SqlSelection emptySqlSelection();
 }

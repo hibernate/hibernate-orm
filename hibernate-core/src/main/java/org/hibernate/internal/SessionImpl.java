@@ -60,7 +60,6 @@ import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
-import org.hibernate.TypeHelper;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
@@ -1878,11 +1877,6 @@ public final class SessionImpl
 	@Override
 	public void disableFetchProfile(String name) throws UnknownProfileException {
 		loadQueryInfluencers.disableFetchProfile( name );
-	}
-
-	@Override
-	public TypeHelper getTypeHelper() {
-		return getSessionFactory().getTypeHelper();
 	}
 
 	@Override

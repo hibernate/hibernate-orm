@@ -10,6 +10,7 @@ import java.util.Collection;
 
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.cfg.AttributeConverterDefinition;
 
 /**
@@ -32,7 +33,7 @@ public interface ManagedResources {
 	 *
 	 * @return The AttributeConverter definitions.
 	 */
-	Collection<AttributeConverterInfo> getAttributeConverterDefinitions();
+	Collection<ConverterDescriptor> getAttributeConverterDescriptors();
 
 	/**
 	 * Informational access to any entity and component classes in the user domain model known by Class

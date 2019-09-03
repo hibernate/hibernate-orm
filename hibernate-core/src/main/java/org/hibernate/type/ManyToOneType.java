@@ -33,61 +33,21 @@ public class ManyToOneType extends EntityType {
 
 	/**
 	 * Creates a many-to-one association type with the given referenced entity.
-	 *
-	 * @param scope The scope for this instance.
-	 * @param referencedEntityName The name iof the referenced entity
 	 */
-	public ManyToOneType(TypeFactory.TypeScope scope, String referencedEntityName) {
-		this( scope, referencedEntityName, false );
+	public ManyToOneType(TypeConfiguration typeConfiguration, String referencedEntityName) {
+		this( typeConfiguration, referencedEntityName, false );
 	}
 
 	/**
 	 * Creates a many-to-one association type with the given referenced entity and the
 	 * given laziness characteristic
-	 *
-	 * @param scope The scope for this instance.
-	 * @param referencedEntityName The name iof the referenced entity
-	 * @param lazy Should the association be handled lazily
 	 */
-	public ManyToOneType(TypeFactory.TypeScope scope, String referencedEntityName, boolean lazy) {
-		this( scope, referencedEntityName, true, null, lazy, true, false, false );
-	}
-
-
-	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, boolean, boolean ) } instead.
-	 */
-	@Deprecated
-	public ManyToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean isEmbeddedInXML,
-			boolean ignoreNotFound,
-			boolean isLogicalOneToOne) {
-		this( scope, referencedEntityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne );
-	}
-
-	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, String, boolean, boolean, boolean, boolean ) } instead.
-	 */
-	@Deprecated
-	public ManyToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			boolean referenceToPrimaryKey,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean ignoreNotFound,
-			boolean isLogicalOneToOne) {
-		this( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, null, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne );
+	public ManyToOneType(TypeConfiguration typeConfiguration, String referencedEntityName, boolean lazy) {
+		this( typeConfiguration, referencedEntityName, true, null, null, lazy, true, false, false );
 	}
 
 	public ManyToOneType(
-			TypeFactory.TypeScope scope,
+			TypeConfiguration typeConfiguration,
 			String referencedEntityName,
 			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
@@ -96,7 +56,7 @@ public class ManyToOneType extends EntityType {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
-		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		super( typeConfiguration, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.propertyName = propertyName;
 		this.ignoreNotFound = ignoreNotFound;
 		this.isLogicalOneToOne = isLogicalOneToOne;
@@ -110,7 +70,7 @@ public class ManyToOneType extends EntityType {
 	}
 
 	public ManyToOneType(String name, TypeConfiguration typeConfiguration) {
-		this( () -> typeConfiguration, name );
+		this( typeConfiguration, name );
 	}
 
 	@Override

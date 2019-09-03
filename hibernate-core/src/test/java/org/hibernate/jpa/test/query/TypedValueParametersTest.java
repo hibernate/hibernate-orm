@@ -66,8 +66,13 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 		test(new Binder() {
 
 			public void bind(Query q) {
+				final CustomType customType = new CustomType(
+						TagUserType.INSTANCE,
+						entityManagerFactory().getTypeConfiguration()
+				);
+
 				org.hibernate.query.Query hibernateQuery = q.unwrap(org.hibernate.query.Query.class);
-				hibernateQuery.setParameter("tags", Arrays.asList("important","business"), new CustomType(TagUserType.INSTANCE));
+				hibernateQuery.setParameter( "tags", Arrays.asList("important","business"), customType );
 			}
 		});
 	}
@@ -77,7 +82,11 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 		test(new Binder() {
 
 			public void bind(Query q) {
-				q.setParameter("tags", new TypedParameterValue( new CustomType( TagUserType.INSTANCE), Arrays.asList("important","business")));
+				final CustomType customType = new CustomType(
+						TagUserType.INSTANCE,
+						entityManagerFactory().getTypeConfiguration()
+				);
+				q.setParameter("tags", new TypedParameterValue( customType, Arrays.asList("important","business")));
 			}
 		});
 

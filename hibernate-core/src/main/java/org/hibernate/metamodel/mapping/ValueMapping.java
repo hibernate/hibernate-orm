@@ -7,11 +7,6 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.Locale;
-import java.util.function.Consumer;
-
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.type.Type;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Describes a mapping related to any part of the app's domain model - e.g.
@@ -24,6 +19,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface ValueMapping extends MappingModelExpressable {
+	/**
+	 * Descriptor for the type of this mapping
+	 */
+	MappingType getMappedTypeDescriptor();
 
 	/**
 	 * Treat operation.  Asks the ValueMapping to treat itself as the

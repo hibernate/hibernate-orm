@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.internal;
 
+import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
@@ -23,6 +24,7 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	private final MappingDefaults mappingDefaults;
 	private final InFlightMetadataCollector metadataCollector;
 	private final ObjectNameNormalizer objectNameNormalizer;
+	private final TypeDefinitionRegistry typeDefinitionRegistry;
 
 	public MetadataBuildingContextRootImpl(
 			BootstrapContext bootstrapContext,
@@ -38,6 +40,7 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 				return MetadataBuildingContextRootImpl.this;
 			}
 		};
+		this.typeDefinitionRegistry = new TypeDefinitionRegistry();
 	}
 
 	@Override
@@ -68,5 +71,10 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	@Override
 	public ObjectNameNormalizer getObjectNameNormalizer() {
 		return objectNameNormalizer;
+	}
+
+	@Override
+	public TypeDefinitionRegistry getTypeDefinitionRegistry() {
+		return typeDefinitionRegistry;
 	}
 }

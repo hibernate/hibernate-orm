@@ -2181,16 +2181,6 @@ public abstract class AbstractCollectionPersister
 				}
 				return new CompositeCollectionElementDefinition() {
 					@Override
-					public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-						return ( (EmbeddableDomainType) getType() ).getExpressableJavaTypeDescriptor();
-					}
-
-					@Override
-					public void visitJdbcTypes(Consumer action, TypeConfiguration typeConfiguration) {
-						throw new NotYetImplementedFor6Exception( getClass() );
-					}
-
-					@Override
 					public String getName() {
 						return "index";
 					}
@@ -2272,27 +2262,6 @@ public abstract class AbstractCollectionPersister
 				}
 
 				return new CompositeCollectionElementDefinition() {
-					@Override
-					public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
-						return ( (EmbeddableDomainType) getType() ).getExpressableJavaTypeDescriptor();
-					}
-
-					@Override
-					public void visitJdbcTypes(Consumer action, TypeConfiguration typeConfiguration) {
-						throw new NotYetImplementedFor6Exception( getClass() );
-					}
-
-					@Override
-					public void visitSubParts(Consumer<ModelPart> consumer) {
-						throw new NotYetImplementedFor6Exception( getClass() );
-
-					}
-
-					@Override
-					public ModelPart findSubPart(String name) {
-						throw new NotYetImplementedFor6Exception( getClass() );
-					}
-
 					@Override
 					public String getName() {
 						return "";

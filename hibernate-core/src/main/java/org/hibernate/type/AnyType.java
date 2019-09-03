@@ -34,9 +34,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Handles "any" mappings
@@ -44,20 +46,13 @@ import org.hibernate.proxy.LazyInitializer;
  * @author Gavin King
  */
 public class AnyType extends AbstractType implements CompositeType, AssociationType {
-	private final TypeFactory.TypeScope scope;
+	private final TypeConfiguration typeConfiguration;
 	private final Type identifierType;
 	private final Type discriminatorType;
 	private final boolean eager;
 
-	/**
-	 * Intended for use only from legacy {@link ObjectType} type definition
-	 */
-	protected AnyType(Type discriminatorType, Type identifierType) {
-		this( null, discriminatorType, identifierType, true );
-	}
-
-	public AnyType(TypeFactory.TypeScope scope, Type discriminatorType, Type identifierType, boolean lazy) {
-		this.scope = scope;
+	public AnyType(TypeConfiguration typeConfiguration, Type discriminatorType, Type identifierType, boolean lazy) {
+		this.typeConfiguration = typeConfiguration;
 		this.discriminatorType = discriminatorType;
 		this.identifierType = identifierType;
 		this.eager = !lazy;
@@ -165,7 +160,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	private EntityPersister guessEntityPersister(Object object) {
-		if ( scope == null ) {
+		if ( typeConfiguration == null ) {
 			return null;
 		}
 
@@ -182,7 +177,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		if ( entityName == null ) {
-			for ( EntityNameResolver resolver : scope.getTypeConfiguration().getSessionFactory().getMetamodel().getEntityNameResolvers() ) {
+			for ( EntityNameResolver resolver : typeConfiguration.getSessionFactory().getMetamodel().getEntityNameResolvers() ) {
 				entityName = resolver.resolveEntityName( entity );
 				if ( entityName != null ) {
 					break;
@@ -195,7 +190,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			entityName = object.getClass().getName();
 		}
 
-		return scope.getTypeConfiguration().getSessionFactory().getMetamodel().entityPersister( entityName );
+		return typeConfiguration.getSessionFactory().getMetamodel().entityPersister( entityName );
 	}
 
 	@Override
@@ -311,11 +306,14 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		if ( value == null ) {
 			return "null";
 		}
+
 		if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( value ) ) {
 			return  "<uninitialized>";
 		}
-		Class valueClass = HibernateProxyHelper.getClassWithoutInitializingProxy( value );
-		return factory.getTypeHelper().entity( valueClass ).toLoggableString( value, factory );
+
+		final Class valueClass = HibernateProxyHelper.getClassWithoutInitializingProxy( value );
+		final EntityPersister descriptor = factory.getDomainModel().getEntityDescriptor( valueClass );
+		return MessageHelper.infoString( descriptor, value, factory );
 	}
 
 	@Override

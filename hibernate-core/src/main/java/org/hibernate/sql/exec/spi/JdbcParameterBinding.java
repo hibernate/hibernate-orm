@@ -6,12 +6,12 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import org.hibernate.metamodel.mapping.SqlExpressableType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 
 /**
  * @author Steve Ebersole
  */
 public interface JdbcParameterBinding {
-	SqlExpressableType getBindType();
+	JdbcMapping getBindType();
 	Object getBindValue();
 }

@@ -27,6 +27,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Base for types which map associations to persistent entities.
@@ -35,7 +36,7 @@ import org.hibernate.proxy.HibernateProxy;
  */
 public abstract class EntityType extends AbstractType implements AssociationType {
 
-	private final TypeFactory.TypeScope scope;
+	private final TypeConfiguration typeConfiguration;
 	private final String associatedEntityName;
 	protected final String uniqueKeyPropertyName;
 	private final boolean eager;
@@ -61,49 +62,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 	/**
 	 * Constructs the requested entity type mapping.
-	 *
-	 * @param scope The type scope
-	 * @param entityName The name of the associated entity.
-	 * @param uniqueKeyPropertyName The property-ref name, or null if we
-	 * reference the PK of the associated entity.
-	 * @param eager Is eager fetching enabled.
-	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
-	 * says to return the "implementation target" of lazy prooxies; typically only possible
-	 * with lazy="no-proxy".
-	 *
-	 * @deprecated Use {@link #EntityType(org.hibernate.type.TypeFactory.TypeScope, String, boolean, String, boolean, boolean)} instead.
-	 */
-	@Deprecated
-	protected EntityType(
-			TypeFactory.TypeScope scope,
-			String entityName,
-			String uniqueKeyPropertyName,
-			boolean eager,
-			boolean unwrapProxy) {
-		this( scope, entityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, eager, unwrapProxy );
-	}
-
-	/**
-	 * Constructs the requested entity type mapping.
-	 *
-	 * @param scope The type scope
-	 * @param entityName The name of the associated entity.
-	 * @param referenceToPrimaryKey True if association references a primary key.
-	 * @param uniqueKeyPropertyName The property-ref name, or null if we
-	 * reference the PK of the associated entity.
-	 * @param eager Is eager fetching enabled.
-	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
-	 * says to return the "implementation target" of lazy prooxies; typically only possible
-	 * with lazy="no-proxy".
 	 */
 	protected EntityType(
-			TypeFactory.TypeScope scope,
+			TypeConfiguration typeConfiguration,
 			String entityName,
 			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean unwrapProxy) {
-		this.scope = scope;
+		this.typeConfiguration = typeConfiguration;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 		this.eager = eager;
@@ -112,7 +79,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	protected EntityType(EntityType original, String superTypeEntityName) {
-		this.scope = original.scope;
+		this.typeConfiguration = original.typeConfiguration;
 		this.associatedEntityName = superTypeEntityName;
 		this.uniqueKeyPropertyName = original.uniqueKeyPropertyName;
 		this.eager = original.eager;
@@ -120,8 +87,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
 	}
 
-	protected TypeFactory.TypeScope scope() {
-		return scope;
+	protected TypeConfiguration scope() {
+		return typeConfiguration;
 	}
 
 	/**
@@ -252,7 +219,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return ReflectHelper.classForName( entityName );
 		}
 		catch (ClassNotFoundException cnfe) {
-			return this.scope.getTypeConfiguration().getSessionFactory().getMetamodel().entityPersister( entityName ).
+			return typeConfiguration.getSessionFactory().getMetamodel().entityPersister( entityName ).
 					getEntityTuplizer().getMappedClass();
 		}
 	}

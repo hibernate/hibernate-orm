@@ -46,6 +46,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.sql.results.spi.LoadingCollectionEntry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -68,15 +69,8 @@ public abstract class CollectionType extends AbstractType implements Association
 	// TODO initialize it at constructor time
 	private volatile CollectionPersister persister;
 
-	/**
-	 * @deprecated Use the other contructor
-	 */
-	@Deprecated
-	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName) {
-		this( role, foreignKeyPropertyName );
-	}
 
-	public CollectionType(String role, String foreignKeyPropertyName) {
+	public CollectionType(TypeConfiguration typeConfiguration, String role, String foreignKeyPropertyName) {
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;
 	}

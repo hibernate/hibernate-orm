@@ -43,8 +43,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * incompatible changes to classes or interfaces in that
  * package.
  *
- * @see CompositeUserType for more complex cases
  * @see org.hibernate.type.Type
+ * @see org.hibernate.type.CustomType
+ *
  * @author Gavin King
  */
 public interface UserType {

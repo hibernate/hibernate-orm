@@ -38,9 +38,7 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
-import org.hibernate.type.TypeResolver;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
@@ -85,40 +83,20 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
 
-	// temporarily needed to support deprecations
-	private final transient TypeFactory typeFactory;
-	private final transient TypeResolver typeResolver;
-
 	public TypeConfiguration() {
 		this.scope = new Scope( this );
 
 		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
 		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
 
-		this.basicTypeRegistry = new BasicTypeRegistry();
-
-		this.typeFactory = new TypeFactory( this );
-		this.typeResolver = new TypeResolver( this, typeFactory );
+		this.basicTypeRegistry = new BasicTypeRegistry( this );
+		StandardBasicTypes.prime( this );
 
 		TypeConfigurationRegistry.INSTANCE.registerTypeConfiguration( this );
 	}
 
 	public String getUuid() {
 		return uuid;
-	}
-
-	/**
-	 * Temporarily needed to support deprecations
-	 *
-	 * Retrieve the {@link Type} resolver associated with this factory.
-	 *
-	 * @return The type resolver
-	 *
-	 * @deprecated (since 5.3) No replacement, access to and handling of Types will be much different in 6.0
-	 */
-	@Deprecated
-	public TypeResolver getTypeResolver(){
-		return typeResolver;
 	}
 
 	public BasicTypeRegistry getBasicTypeRegistry() {

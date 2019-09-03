@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -26,10 +27,7 @@ import org.junit.jupiter.api.Test;
  */
 @SuppressWarnings("WeakerAccess")
 @DomainModel(
-		standardModels = {
-				StandardDomainModel.GAMBIT,
-				StandardDomainModel.CONTACTS
-		}
+		annotatedClasses = org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity.class
 )
 @ServiceRegistry(
 		settings = @ServiceRegistry.Setting(
@@ -43,9 +41,10 @@ public class SmokeTests {
 	public void testSimpleHql(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor query = session.createQuery( "select c.name.first from Contact c" );
-					final HqlQueryImplementor<?> hqlQuery = (HqlQueryImplementor<?>) query;
-					final SqmSelectStatement sqmStatement = (SqmSelectStatement) hqlQuery.getSqmStatement();
+					final QueryImplementor<String> query = session.createQuery( "select e.name from SimpleEntity e", String.class );
+					final HqlQueryImplementor<String> hqlQuery = (HqlQueryImplementor<String>) query;
+					//noinspection unchecked
+					final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();
 
 					final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
 							hqlQuery.getQueryOptions(),
@@ -56,6 +55,7 @@ public class SmokeTests {
 					);
 
 					final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqmStatement );
+					final SelectStatement sqlAst = interpretation.getSqlAst();
 				}
 		);
 	}

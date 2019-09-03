@@ -77,11 +77,6 @@
 
 		<property name="formula" formula="int_/2"/>
 
-		<property name="custom" type="org.hibernate.test.legacy.DoubleStringType" access="field">
-				<column name="first_name" length="66"/>
-				<column name="surname" length="66"/>
-		</property>
-
 		<component name="component">
 			<property name="count" column="count_" type="int" not-null="true"/>
 			<property name="name">

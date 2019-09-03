@@ -268,13 +268,6 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 */
 	boolean containsFetchProfileDefinition(String name);
 
-	/**
-	 * Retrieve this factory's {@link TypeHelper}.
-	 *
-	 * @return The factory's {@link TypeHelper}
-	 */
-	TypeHelper getTypeHelper();
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecations

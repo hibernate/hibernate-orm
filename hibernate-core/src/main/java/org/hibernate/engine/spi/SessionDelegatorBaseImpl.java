@@ -41,7 +41,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
-import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -1020,11 +1019,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void disableFetchProfile(String name) throws UnknownProfileException {
 		delegate.disableFetchProfile( name );
-	}
-
-	@Override
-	public TypeHelper getTypeHelper() {
-		return delegate.getTypeHelper();
 	}
 
 	@Override

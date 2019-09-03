@@ -150,6 +150,11 @@ public class AttributeFactory {
 			Property property) {
 		LOG.trace( "Building identifier attribute [" + ownerType.getTypeName() + "." + property.getName() + "]" );
 
+		// ownerType = Entity(Person)
+		// MetadataContext#containerRoleStack -> Person
+
+		// id-attribute = "id"
+
 		final SingularAttributeMetadata<X, Y> attributeMetadata = (SingularAttributeMetadata) determineAttributeMetadata(
 				wrap( ownerType, property ),
 				identifierMemberResolver

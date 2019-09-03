@@ -18,7 +18,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see org.hibernate.type.Type
  * @see org.hibernate.usertype.UserType
- * @see org.hibernate.usertype.CompositeUserType
  *
  * @see TypeDef
  *
@@ -29,10 +28,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Type {
 	/**
-	 * The Hibernate type name.  Usually the fully qualified name of an implementation class for
-	 * {@link org.hibernate.type.Type}, {@link org.hibernate.usertype.UserType} or
-	 * {@link org.hibernate.usertype.CompositeUserType}.  May also refer to a type definition by name
-	 * {@link TypeDef#name()}
+	 * The Hibernate type name.  This should be one of: <ul>
+	 *     <li>Registration key for a basic type (see {@link org.hibernate.type.BasicTypeRegistry)}</li>
+	 *     <li>Type-definition name (see {@link TypeDef#name()})</li>
+	 *     <li>FQN for a {@link org.hibernate.type.Type} implementation class</li>
+	 *     <li>FQN for a {@link org.hibernate.usertype.UserType} implementation class</li>
+	 * </ul>
 	 */
 	String type();
 

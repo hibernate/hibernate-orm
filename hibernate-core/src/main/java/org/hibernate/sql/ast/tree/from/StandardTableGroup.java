@@ -7,10 +7,10 @@
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
@@ -27,8 +27,9 @@ public class StandardTableGroup extends AbstractTableGroup {
 			RootTableGroupProducer tableGroupProducer,
 			LockMode lockMode,
 			TableReference primaryTableReference,
-			List<TableReferenceJoin> tableJoins) {
-		super( navigablePath, tableGroupProducer, lockMode );
+			List<TableReferenceJoin> tableJoins,
+			SessionFactoryImplementor sessionFactory) {
+		super( navigablePath, tableGroupProducer, lockMode, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.tableJoins = tableJoins;
 	}
@@ -58,9 +59,9 @@ public class StandardTableGroup extends AbstractTableGroup {
 
 	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
-		nameCollector.accept( primaryTableReference.getTableName() );
+		nameCollector.accept( getPrimaryTableReference().getTableExpression() );
 		for ( TableReferenceJoin tableReferenceJoin : tableJoins ) {
-			nameCollector.accept( tableReferenceJoin.getJoinedTableReference().getTableName() );
+			nameCollector.accept( tableReferenceJoin.getJoinedTableReference().getTableExpression() );
 		}
 	}
 

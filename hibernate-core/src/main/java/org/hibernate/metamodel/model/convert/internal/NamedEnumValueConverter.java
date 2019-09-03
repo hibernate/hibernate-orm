@@ -12,11 +12,9 @@ import java.io.Serializable;
 import java.sql.Types;
 import java.util.Locale;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -30,7 +28,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 public class NamedEnumValueConverter<E extends Enum> implements EnumValueConverter<E,String>, Serializable {
 	private final EnumJavaTypeDescriptor<E> domainTypeDescriptor;
 	private final SqlTypeDescriptor sqlTypeDescriptor;
-	private final BasicJavaDescriptor<String> relationalTypeDescriptor;
+	private final JavaTypeDescriptor<String> relationalTypeDescriptor;
 
 	private transient ValueExtractor<String> valueExtractor;
 	private transient ValueBinder<String> valueBinder;
@@ -38,7 +36,7 @@ public class NamedEnumValueConverter<E extends Enum> implements EnumValueConvert
 	public NamedEnumValueConverter(
 			EnumJavaTypeDescriptor<E> domainTypeDescriptor,
 			SqlTypeDescriptor sqlTypeDescriptor,
-			BasicJavaDescriptor<String> relationalTypeDescriptor) {
+			JavaTypeDescriptor<String> relationalTypeDescriptor) {
 		this.domainTypeDescriptor = domainTypeDescriptor;
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
 		this.relationalTypeDescriptor = relationalTypeDescriptor;

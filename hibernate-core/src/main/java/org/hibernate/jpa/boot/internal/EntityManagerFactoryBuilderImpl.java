@@ -35,6 +35,8 @@ import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -53,7 +55,6 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -210,7 +211,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		configure( standardServiceRegistry, mergedSettings );
 
 		final MetadataSources metadataSources = new MetadataSources( bsr );
-		List<AttributeConverterDefinition> attributeConverterDefinitions = populate(
+		List<ConverterDescriptor> attributeConverterDefinitions = populate(
 				metadataSources,
 				mergedSettings,
 				standardServiceRegistry
@@ -743,7 +744,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@SuppressWarnings("unchecked")
-	protected List<AttributeConverterDefinition> populate(
+	protected List<ConverterDescriptor> populate(
 			MetadataSources metadataSources,
 			MergedSettings mergedSettings,
 			StandardServiceRegistry ssr) {
@@ -788,17 +789,19 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //			}
 //		}
 
-		List<AttributeConverterDefinition> attributeConverterDefinitions = null;
+		List<ConverterDescriptor> converterDescriptors = null;
 
 		// add any explicit Class references passed in
 		final List<Class> loadedAnnotatedClasses = (List<Class>) configurationValues.remove( AvailableSettings.LOADED_CLASSES );
 		if ( loadedAnnotatedClasses != null ) {
 			for ( Class cls : loadedAnnotatedClasses ) {
 				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
-					if ( attributeConverterDefinitions == null ) {
-						attributeConverterDefinitions = new ArrayList<>();
+					if ( converterDescriptors == null ) {
+						converterDescriptors = new ArrayList<>();
 					}
-					attributeConverterDefinitions.add( AttributeConverterDefinition.from( (Class<? extends AttributeConverter>) cls ) );
+					converterDescriptors.add(
+							new ClassBasedConverterDescriptor( cls, metamodelBuilder.getBootstrapContext().getClassmateContext() )
+					);
 				}
 				else {
 					metadataSources.addAnnotatedClass( cls );
@@ -820,14 +823,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			explicitOrmXmlList.forEach( metadataSources::addResource );
 		}
 
-		return attributeConverterDefinitions;
+		return converterDescriptors;
 	}
 
 	protected void populate(
 			MetadataBuilder metamodelBuilder,
 			MergedSettings mergedSettings,
 			StandardServiceRegistry ssr,
-			List<AttributeConverterDefinition> attributeConverterDefinitions) {
+			List<ConverterDescriptor> converterDescriptors) {
 		( (MetadataBuilderImplementor) metamodelBuilder ).getBootstrapContext().markAsJpaBootstrap();
 
 		if ( persistenceUnit.getTempClassLoader() != null ) {
@@ -853,8 +856,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			typeContributorList.getTypeContributors().forEach( metamodelBuilder::applyTypes );
 		}
 
-		if ( attributeConverterDefinitions != null ) {
-			attributeConverterDefinitions.forEach( metamodelBuilder::applyAttributeConverter );
+		if ( converterDescriptors != null ) {
+			converterDescriptors.forEach( metamodelBuilder::applyAttributeConverter );
 		}
 	}
 

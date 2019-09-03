@@ -12,8 +12,6 @@ public interface FooProxy {
 	public FooComponent getNullComponent();
 	public void setComponent(FooComponent arg0);
 	public FooComponent getComponent();
-	public void setCustom(String[] arg0);
-	public String[] getCustom();
 	public void setBinary(byte[] arg0);
 	public byte[] getBinary();
 	public void setNullBlob(java.io.Serializable arg0);

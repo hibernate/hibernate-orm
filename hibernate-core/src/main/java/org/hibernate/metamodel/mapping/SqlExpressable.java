@@ -17,5 +17,5 @@ public interface SqlExpressable {
 	 * Any thing that is expressable at the SQL AST level
 	 * would be of basic type.
 	 */
-	SqlExpressableType getExpressableType();
+	JdbcMapping getJdbcMapping();
 }

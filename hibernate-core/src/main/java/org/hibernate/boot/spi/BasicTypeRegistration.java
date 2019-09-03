@@ -7,9 +7,8 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
-import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -28,12 +27,8 @@ public class BasicTypeRegistration {
 		this.registrationKeys = registrationKeys;
 	}
 
-	public BasicTypeRegistration(UserType type, String[] keys) {
-		this( new CustomType( type, keys ), keys );
-	}
-
-	public BasicTypeRegistration(CompositeUserType type, String[] keys) {
-		this( new CompositeCustomType( type, keys ), keys );
+	public BasicTypeRegistration(UserType type, String[] keys, TypeConfiguration typeConfiguration) {
+		this( new CustomType( type, keys, typeConfiguration ), keys );
 	}
 
 	public BasicType getBasicType() {

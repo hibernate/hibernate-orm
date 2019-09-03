@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.type;
 
@@ -32,39 +32,29 @@ public class CustomCollectionType extends CollectionType {
 	private final UserCollectionType userType;
 	private final boolean customLogging;
 
-	/**
-	 * @deprecated Use the other contructor
-	 */
-	@Deprecated
 	public CustomCollectionType(
-			TypeFactory.TypeScope typeScope,
-			Class userTypeClass,
+			Class<? extends UserCollectionType> userTypeClass,
 			String role,
-			String foreignKeyPropertyName) {
-		this( userTypeClass, role, foreignKeyPropertyName );
-	}
+			String foreignKeyPropertyName,
+			TypeConfiguration typeConfiguration) {
+		super( typeConfiguration, role, foreignKeyPropertyName );
 
-	public CustomCollectionType(
-			Class userTypeClass,
-			String role,
-			String foreignKeyPropertyName) {
-		super( role, foreignKeyPropertyName );
-		userType = createUserCollectionType( userTypeClass );
-		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
-	}
-
-	private static UserCollectionType createUserCollectionType(Class userTypeClass) {
 		if ( !UserCollectionType.class.isAssignableFrom( userTypeClass ) ) {
 			throw new MappingException( "Custom type does not implement UserCollectionType: " + userTypeClass.getName() );
 		}
 
+		userType = createUserCollectionType( userTypeClass );
+		customLogging = userType instanceof LoggableUserType;
+	}
+
+	private static UserCollectionType createUserCollectionType(Class<? extends UserCollectionType> userTypeClass) {
 		try {
-			return ( UserCollectionType ) userTypeClass.newInstance();
+			return userTypeClass.newInstance();
 		}
-		catch ( InstantiationException ie ) {
+		catch (InstantiationException ie) {
 			throw new MappingException( "Cannot instantiate custom type: " + userTypeClass.getName() );
 		}
-		catch ( IllegalAccessException iae ) {
+		catch (IllegalAccessException iae) {
 			throw new MappingException( "IllegalAccessException trying to instantiate custom type: " + userTypeClass.getName() );
 		}
 	}

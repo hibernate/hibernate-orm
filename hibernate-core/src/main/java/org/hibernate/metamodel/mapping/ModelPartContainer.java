@@ -17,22 +17,19 @@ import org.hibernate.NotYetImplementedFor6Exception;
  */
 public interface ModelPartContainer extends ModelPart {
 	/**
-	 * Find a sub-ValueMapping by name
+	 * Find a sub part by name.
+	 *
+	 * @see EntityMappingType#findSubPart
+	 * @see EntityMappingType#findSubPartStrictly
 	 */
 	default ModelPart findSubPart(String name){
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	/**
-	 * Visit all of this container's sub-ValueMappings
+	 * Visit all of this container's sub parts
 	 */
 	default void visitSubParts(Consumer<ModelPart> consumer){
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
-
-	// todo (6.0) : consider for SQM -> SQL conversion :
-	//		````
-	// 		ColumnReferenceQualifier resolveColumnReferenceQualifier(String name);
-	//		````
-	// 	 - the one concern to that is properly handling needing the join versus not needing it wrt joinable fk references
 }

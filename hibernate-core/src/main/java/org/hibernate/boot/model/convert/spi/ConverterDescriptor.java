@@ -18,6 +18,8 @@ import com.fasterxml.classmate.ResolvedType;
  * @author Steve Ebersole
  */
 public interface ConverterDescriptor {
+	String TYPE_NAME_PREFIX = "converted::";
+
 	/**
 	 * The AttributeConverter class
 	 */

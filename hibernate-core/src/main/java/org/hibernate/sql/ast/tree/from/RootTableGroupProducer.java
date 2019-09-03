@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.from;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -29,5 +30,6 @@ public interface RootTableGroupProducer extends TableGroupProducer, ModelPartCon
 			JoinType tableReferenceJoinType,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);
 }

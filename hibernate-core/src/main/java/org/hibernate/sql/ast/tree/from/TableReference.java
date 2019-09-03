@@ -9,8 +9,10 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -20,22 +22,28 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
  *
  * @author Steve Ebersole
  */
-public class TableReference implements SqlAstNode {
-	private final String tableName;
+public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
+	private final String tableExpression;
 	private final String identificationVariable;
 
 	private final boolean isOptional;
+	private final SessionFactoryImplementor sessionFactory;
 
-	private final Map<Identifier, ColumnReference> columnReferenceResolutionMap = new HashMap<>();
+	private final Map<String, ColumnReference> columnReferenceResolutionMap = new HashMap<>();
 
-	public TableReference(String tableName, String identificationVariable, boolean isOptional) {
-		this.tableName = tableName;
+	public TableReference(
+			String tableExpression,
+			String identificationVariable,
+			boolean isOptional,
+			SessionFactoryImplementor sessionFactory) {
+		this.tableExpression = tableExpression;
 		this.identificationVariable = identificationVariable;
 		this.isOptional = isOptional;
+		this.sessionFactory = sessionFactory;
 	}
 
-	public String getTableName() {
-		return tableName;
+	public String getTableExpression() {
+		return tableExpression;
 	}
 
 	public String getIdentificationVariable() {
@@ -51,50 +59,43 @@ public class TableReference implements SqlAstNode {
 		sqlTreeWalker.visitTableReference( this );
 	}
 
-//	@Override
-//	public TableReference locateTableReference(Table table) {
-//		if ( table.equals( getTableName() ) ) {
-//			return this;
-//		}
-//		return null;
-//	}
-//
-//	@Override
-//	public ColumnReference resolveColumnReference(Column column) {
-//		final ColumnReference existing = columnReferenceResolutionMap.get( column );
-//		if ( existing != null ) {
-//			return existing;
-//		}
-//
-//		final ColumnReference columnReference = new ColumnReference( this, column );
-//		columnReferenceResolutionMap.put( column, columnReference );
-//		return columnReference;
-//	}
-//
-//	@Override
-//	public ColumnReference resolveColumnReference(String columnName) {
-//		return resolveColumnReference( getTableName().getColumn( columnName ) );
-//	}
-//
-//	@Override
-//	public Column resolveColumn(String columnName) {
-//		return getTableName().getColumn( columnName );
-//	}
-//
-//	@Override
-//	public Expression qualify(QualifiableSqlExpressable sqlSelectable) {
-//		assert sqlSelectable instanceof Column;
-//		return resolveColumnReference( (Column) sqlSelectable );
-//	}
-//
-//	@Override
-//	public String toLoggableFragment() {
-//		return getTableName().toLoggableFragment() + "(" + getIdentificationVariable() + ')';
-//	}
+	@Override
+	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
+		throw new UnsupportedOperationException( "Cannot create a TableReference relative to a TableReference" );
+	}
+
+	@Override
+	public TableReference resolveTableReference(String tableExpression) {
+		if ( tableExpression.equals( getTableExpression() ) ) {
+			return this;
+		}
+		return null;
+	}
+
+	@Override
+	public ColumnReference resolveColumnReference(String tableExpression, String columnExpression, Supplier<ColumnReference> creator) {
+		final ColumnReference existing = resolveColumnReference( tableExpression, columnExpression );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final ColumnReference columnReference = creator.get();
+		columnReferenceResolutionMap.put( columnExpression, columnReference );
+		return columnReference;
+	}
+
+	@Override
+	public ColumnReference resolveColumnReference(String tableExpression, String columnExpression) {
+		if ( ! tableExpression.equals( getTableExpression() ) ) {
+			throw new HibernateException( "Attempt to resolve ColumnReference relative to a table other than the referenced table" );
+		}
+
+		return columnReferenceResolutionMap.get( columnExpression );
+	}
 
 	@Override
 	public String toString() {
-		return getTableName() + "(" + getIdentificationVariable() + ')';
+		return getTableExpression() + "(" + getIdentificationVariable() + ')';
 	}
 
 	@Override

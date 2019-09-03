@@ -72,11 +72,23 @@ public class EnumType<T extends Enum>
 	public static final String NAMED = "useNamed";
 	public static final String TYPE = "type";
 
-	private Class enumClass;
+	private Class<T> enumClass;
 
 	private EnumValueConverter enumValueConverter;
 
 	private TypeConfiguration typeConfiguration;
+
+	public EnumType() {
+	}
+
+	public EnumType(
+			Class<T> enumClass,
+			EnumValueConverter enumValueConverter,
+			TypeConfiguration typeConfiguration) {
+		this.enumClass = enumClass;
+		this.enumValueConverter = enumValueConverter;
+		this.typeConfiguration = typeConfiguration;
+	}
 
 	@Override
 	public void setParameterValues(Properties parameters) {

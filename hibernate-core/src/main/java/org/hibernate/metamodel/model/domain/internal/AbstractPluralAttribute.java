@@ -53,7 +53,6 @@ public abstract class AbstractPluralAttribute<D,C,E>
 
 		this.elementPathSource = DomainModelHelper.resolveSqmPathSource(
 				getName(),
-				getMappingRole(),
 				builder.getValueType(),
 				BindableType.PLURAL_ATTRIBUTE
 		);
@@ -62,11 +61,6 @@ public abstract class AbstractPluralAttribute<D,C,E>
 	@Override
 	public String getPathName() {
 		return getName();
-	}
-
-	@Override
-	public String getMappingRole() {
-		return super.getMappingRole();
 	}
 
 	@Override

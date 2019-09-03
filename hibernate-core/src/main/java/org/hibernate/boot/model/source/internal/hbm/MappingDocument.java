@@ -20,6 +20,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
+import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.source.internal.OverriddenMappingDefaults;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
@@ -51,6 +52,8 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	private final ToolingHintContext toolingHintContext;
 
+	private final TypeDefinitionRegistry typeDefinitionRegistry;
+
 
 	public MappingDocument(
 			JaxbHbmHibernateMapping documentRoot,
@@ -74,6 +77,8 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 				.build();
 
 		this.toolingHintContext = Helper.collectToolingHints( null, documentRoot );
+
+		this.typeDefinitionRegistry = new TypeDefinitionRegistry( rootBuildingContext.getTypeDefinitionRegistry() );
 	}
 
 	public JaxbHbmHibernateMapping getDocumentRoot() {
@@ -151,6 +156,11 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	@Override
 	public ObjectNameNormalizer getObjectNameNormalizer() {
 		return rootBuildingContext.getObjectNameNormalizer();
+	}
+
+	@Override
+	public TypeDefinitionRegistry getTypeDefinitionRegistry() {
+		return typeDefinitionRegistry;
 	}
 
 	@Override

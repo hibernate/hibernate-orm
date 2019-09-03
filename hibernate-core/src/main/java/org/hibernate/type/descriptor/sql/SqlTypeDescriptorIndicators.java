@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.sql;
 
 import java.sql.Types;
 import javax.persistence.EnumType;
+import javax.persistence.TemporalType;
 
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -45,6 +46,13 @@ public interface SqlTypeDescriptorIndicators {
 	 */
 	default EnumType getEnumeratedType() {
 		return EnumType.ORDINAL;
+	}
+
+	/**
+	 * For temporal type mappings, what precision was requested?
+	 */
+	default TemporalType getTemporalPrecision() {
+		return null;
 	}
 
 	/**

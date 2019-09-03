@@ -8,7 +8,6 @@ package org.hibernate.tuple.entity;
 
 import java.io.Serializable;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -38,12 +37,11 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			PersistentClass persistentClass,
 			Set<String> identifierAttributeNames,
 			CompositeType nonAggregatedCidMapper,
-			boolean allowEnhancementAsProxy,
-			Function<String,Boolean> hasSubclassChecker) {
+			boolean allowEnhancementAsProxy) {
 		final Class mappedClass = persistentClass.getMappedClass();
 		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( mappedClass );
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
-				? LazyAttributesMetadata.from( persistentClass, true, allowEnhancementAsProxy, hasSubclassChecker )
+				? LazyAttributesMetadata.from( persistentClass, true, allowEnhancementAsProxy )
 				: LazyAttributesMetadata.nonEnhanced( persistentClass.getEntityName() );
 
 		return new BytecodeEnhancementMetadataPojoImpl(

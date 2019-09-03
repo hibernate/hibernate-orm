@@ -16,7 +16,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -34,8 +33,7 @@ public class LazyAttributesMetadata implements Serializable {
 	public static LazyAttributesMetadata from(
 			PersistentClass mappedEntity,
 			boolean isEnhanced,
-			boolean allowEnhancementAsProxy,
-			Function<String,Boolean> hasSubclassChecker) {
+			boolean allowEnhancementAsProxy) {
 		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
@@ -48,8 +46,7 @@ public class LazyAttributesMetadata implements Serializable {
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					property,
 					isEnhanced,
-					allowEnhancementAsProxy,
-					hasSubclassChecker
+					allowEnhancementAsProxy
 			);
 			if ( lazy ) {
 				final LazyAttributeDescriptor lazyAttributeDescriptor = LazyAttributeDescriptor.from( property, i, x++ );

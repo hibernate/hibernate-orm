@@ -556,7 +556,7 @@ public abstract class AbstractEntityPersister
 			this.naturalIdRegionAccessStrategy = null;
 		}
 
-		this.entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext );
+		this.entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext.getSessionFactory() );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
 
 		if ( entityMetamodel.isMutable() ) {
@@ -692,14 +692,7 @@ public abstract class AbstractEntityPersister
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
-					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled(),
-					associatedEntityName -> {
-						final PersistentClass bootEntityDescriptor = creationContext.getMetadata().getEntityBinding( associatedEntityName );
-						if ( bootEntityDescriptor == null ) {
-							return false;
-						}
-						return bootEntityDescriptor.hasSubclasses();
-					}
+					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled()
 			);
 
 			if ( lazy ) {
@@ -775,14 +768,7 @@ public abstract class AbstractEntityPersister
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					entityMetamodel.isInstrumented(),
-					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled(),
-					associatedEntityName -> {
-						final PersistentClass bootEntityDescriptor = creationContext.getMetadata().getEntityBinding( associatedEntityName );
-						if ( bootEntityDescriptor == null ) {
-							return false;
-						}
-						return bootEntityDescriptor.hasSubclasses();
-					}
+					creationContext.getSessionFactory().getSessionFactoryOptions().isEnhancementAsProxyEnabled()
 			);
 			while ( colIter.hasNext() ) {
 				Selectable thing = (Selectable) colIter.next();

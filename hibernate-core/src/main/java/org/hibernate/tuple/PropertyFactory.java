@@ -7,7 +7,6 @@
 package org.hibernate.tuple;
 
 import java.lang.reflect.Constructor;
-import java.util.function.Function;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -155,8 +154,7 @@ public final class PropertyFactory {
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			Property property,
-			boolean lazyAvailable,
-			Function<String,Boolean> hasSubclassChecker) {
+			boolean lazyAvailable) {
 		final Type type = property.getValue().getType();
 
 		final NonIdentifierAttributeNature nature = decode( type );
@@ -174,8 +172,7 @@ public final class PropertyFactory {
 		final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 				property,
 				lazyAvailable,
-				sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled(),
-				hasSubclassChecker
+				sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled()
 		);
 
 		switch ( nature ) {

@@ -271,8 +271,7 @@ public abstract class BaseSqmToSqlAstConverter
 						processingStateStack.getCurrent(),
 						this,
 						currentClauseStack::getCurrent,
-						() -> (expression) -> {},
-						() -> sqlQuerySpec.getSelectClause()::addSqlSelection
+						() -> (expression) -> {}
 				)
 		);
 

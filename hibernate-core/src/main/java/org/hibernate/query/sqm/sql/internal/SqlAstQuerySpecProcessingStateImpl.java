@@ -33,18 +33,14 @@ public class SqlAstQuerySpecProcessingStateImpl
 
 	private final QuerySpec querySpec;
 
-	private final Supplier<Consumer<SqlSelection>> sqlSelectionConsumerSupplier;
-
 	public SqlAstQuerySpecProcessingStateImpl(
 			QuerySpec querySpec,
 			SqlAstProcessingState parent,
 			SqlAstCreationState creationState,
 			Supplier<Clause> currentClauseAccess,
-			Supplier<Consumer<Expression>> resolvedExpressionConsumerAccess,
-			Supplier<Consumer<SqlSelection>> sqlSelectionConsumerSupplier) {
+			Supplier<Consumer<Expression>> resolvedExpressionConsumerAccess) {
 		super( parent, creationState, currentClauseAccess, resolvedExpressionConsumerAccess );
 		this.querySpec = querySpec;
-		this.sqlSelectionConsumerSupplier = sqlSelectionConsumerSupplier;
 	}
 
 	@Override
@@ -97,8 +93,6 @@ public class SqlAstQuerySpecProcessingStateImpl
 
 		querySpec.getSelectClause().addSqlSelection( sqlSelection );
 
-		sqlSelectionConsumerSupplier.get().accept( sqlSelection );
-
 		return sqlSelection;
 	}
 
@@ -106,9 +100,6 @@ public class SqlAstQuerySpecProcessingStateImpl
 	public SqlSelection emptySqlSelection() {
 		final EmptySqlSelection sqlSelection = new EmptySqlSelection( sqlSelectionMap.size() );
 		sqlSelectionMap.put( EmptyExpression.EMPTY_EXPRESSION, sqlSelection );
-
-		sqlSelectionConsumerSupplier.get().accept( sqlSelection );
-
 		return sqlSelection;
 	}
 

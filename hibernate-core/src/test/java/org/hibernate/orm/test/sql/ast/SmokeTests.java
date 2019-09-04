@@ -13,14 +13,21 @@ import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 
-import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -56,6 +63,24 @@ public class SmokeTests {
 
 					final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqmStatement );
 					final SelectStatement sqlAst = interpretation.getSqlAst();
+
+					final FromClause fromClause = sqlAst.getQuerySpec().getFromClause();
+					assertThat( fromClause.getRoots().size(), is( 1 ) );
+					final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
+					assertThat( rootTableGroup.hasTableGroupJoins(), is( false ) );
+					assertThat( rootTableGroup.getPrimaryTableReference(), notNullValue() );
+					assertThat( rootTableGroup.getPrimaryTableReference().getTableExpression(), is( "mapping_simple_entity" ) );
+
+					// `s` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
+					// the query the base becomes `s1`.  The primary table reference is always suffixed as `_0`
+					assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "s1_0" ) );
+
+					final SelectClause selectClause = sqlAst.getQuerySpec().getSelectClause();
+					assertThat( selectClause.getSqlSelections().size(), is( 1 ) ) ;
+					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( 0 );
+					assertThat( sqlSelection.getJdbcResultSetIndex(), is( 1 ) );
+					assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
+					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
 				}
 		);
 	}

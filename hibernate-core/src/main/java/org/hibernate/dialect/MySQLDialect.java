@@ -603,4 +603,10 @@ public class MySQLDialect extends Dialect {
 	protected String escapeLiteral(String literal) {
 		return ESCAPE_PATTERN.matcher( super.escapeLiteral( literal ) ).replaceAll( ESCAPE_PATTERN_REPLACEMENT );
 	}
+
+	@Override
+	public boolean supportsSelectAliasInGroupByClause() {
+		return true;
+	}
+
 }

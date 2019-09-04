@@ -643,4 +643,10 @@ public class PostgreSQL81Dialect extends Dialect {
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return false;
 	}
+
+	@Override
+	public boolean supportsSelectAliasInGroupByClause() {
+		return true;
+	}
+
 }

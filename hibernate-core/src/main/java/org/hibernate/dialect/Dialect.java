@@ -3048,4 +3048,9 @@ public abstract class Dialect implements ConversionContext {
 	protected String prependComment(String sql, String comment) {
 		return  "/* " + comment + " */ " + sql;
 	}
+
+	public boolean supportsSelectAliasInGroupByClause() {
+		return false;
+	}
+
 }

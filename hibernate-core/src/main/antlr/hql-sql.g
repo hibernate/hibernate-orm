@@ -237,6 +237,10 @@ tokens
 		return false;
 	}
 
+	protected boolean isGroupExpressionResultVariableRef(AST ident) throws SemanticException {
+		return false;
+	}
+
 	protected void handleResultVariableRef(AST resultVariableRef) throws SemanticException {
 	}
 
@@ -394,7 +398,7 @@ resultVariableRef!
 	;
 
 groupClause
-	: #(GROUP { handleClauseStart( GROUP ); } (expr [ null ])+ ( #(HAVING logicalExpr) )? ) {
+	: #(GROUP { handleClauseStart( GROUP ); } ({ isGroupExpressionResultVariableRef( _t ) }? resultVariableRef | expr [ null ])+ ( #(HAVING logicalExpr) )? ) {
 		handleClauseEnd();
 	}
 	;

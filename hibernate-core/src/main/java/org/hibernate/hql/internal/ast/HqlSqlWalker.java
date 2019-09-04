@@ -1268,6 +1268,18 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	@Override
+	protected boolean isGroupExpressionResultVariableRef(AST groupExpressionNode) throws SemanticException {
+		// Aliases are not sensible in subqueries
+		if ( getDialect().supportsSelectAliasInGroupByClause() &&
+				!isSubQuery() &&
+				groupExpressionNode.getType() == IDENT &&
+				selectExpressionsByResultVariable.containsKey( groupExpressionNode.getText() ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	@Override
 	protected void handleResultVariableRef(AST resultVariableRef) throws SemanticException {
 		if ( isSubQuery() ) {
 			throw new SemanticException(

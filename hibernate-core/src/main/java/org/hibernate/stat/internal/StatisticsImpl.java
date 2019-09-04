@@ -564,7 +564,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
-					final Region region = cache.getRegion( s );
+					final Region region = cache.getDomainDataRegion( s );
 
 					if ( region == null ) {
 						throw new IllegalArgumentException( "Unknown cache region : " + s );
@@ -609,7 +609,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
-					Region region = cache.getRegion( s );
+					Region region = cache.getDomainDataRegion( s );
 
 					if ( region == null ) {
 

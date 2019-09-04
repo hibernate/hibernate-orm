@@ -377,7 +377,9 @@ public class OsgiIntegrationTest {
 		Class impl = sfi.getServiceRegistry().getService( StrategySelector.class ).selectStrategyImplementor( Calendar.class, TestStrategyRegistrationProvider.GREGORIAN );
 		assertNotNull( impl );
 
-		BasicType basicType = sfi.getTypeResolver().basic( TestTypeContributor.NAME );
+		BasicType basicType = sfi.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType( TestTypeContributor.NAME );
 		assertNotNull( basicType );
 	}
 

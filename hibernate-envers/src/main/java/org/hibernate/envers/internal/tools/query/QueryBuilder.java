@@ -321,7 +321,7 @@ public class QueryBuilder {
 				query.setParameter(
 						paramValue.getKey(),
 						paramValue.getValue(),
-						new CustomType( new RevisionTypeType() )
+						new CustomType( new RevisionTypeType(), sessionFactory.getTypeConfiguration() )
 				);
 			}
 			else {

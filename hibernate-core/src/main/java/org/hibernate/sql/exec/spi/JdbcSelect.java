@@ -6,18 +6,49 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import org.hibernate.sql.results.spi.JdbcValuesMappingDescriptor;
+import java.util.List;
+import java.util.Set;
+
+import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 
 /**
  * Executable JDBC command
  *
  * @author Steve Ebersole
  */
-public interface JdbcSelect extends JdbcOperation {
-	/**
-	 * Retrieve the descriptor for performing the mapping
-	 * of the JDBC ResultSet back to object query results.
-	 */
-	JdbcValuesMappingDescriptor getResultSetMapping();
+public class JdbcSelect implements JdbcOperation {
+	private final String sql;
+	private final List<JdbcParameterBinder> parameterBinders;
+	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
+	private final Set<String> affectedTableNames;
 
+	public JdbcSelect(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Set<String> affectedTableNames) {
+		this.sql = sql;
+		this.parameterBinders = parameterBinders;
+		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
+		this.affectedTableNames = affectedTableNames;
+	}
+
+	@Override
+	public String getSql() {
+		return sql;
+	}
+
+	@Override
+	public List<JdbcParameterBinder> getParameterBinders() {
+		return parameterBinders;
+	}
+
+	@Override
+	public Set<String> getAffectedTableNames() {
+		return affectedTableNames;
+	}
+
+	public JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
+		return jdbcValuesMappingProducer;
+	}
 }

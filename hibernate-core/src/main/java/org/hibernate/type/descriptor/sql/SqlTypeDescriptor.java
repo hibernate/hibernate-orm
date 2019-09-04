@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.sql;
 
 import java.io.Serializable;
 
+import org.hibernate.sql.ast.spi.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
@@ -46,7 +47,13 @@ public interface SqlTypeDescriptor extends Serializable {
 		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getSqlType() )
 		);
+	}
 
+	/**
+	 * todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
+	 */
+	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		return (value, dialect, session) -> value.toString();
 	}
 
 	/**

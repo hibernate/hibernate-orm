@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.spi.SqlAstWalker;
  *
  * @author Steve Ebersole
  */
-public class QueryLiteral extends AbstractLiteral {
+public class QueryLiteral<T> extends AbstractLiteral<T> {
 	public QueryLiteral(Object value, MappingModelExpressable expressableType, Clause clause) {
 		super( value, expressableType, clause );
 	}

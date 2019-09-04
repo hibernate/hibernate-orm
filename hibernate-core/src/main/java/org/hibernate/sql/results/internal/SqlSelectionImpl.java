@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal;
 import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -52,10 +53,10 @@ public class SqlSelectionImpl implements SqlSelection {
 		return valuesArrayPosition;
 	}
 
-//	@Override
-//	public void accept(SqlAstWalker interpreter) {
-//		sqlExpression.accept( interpreter );
-//	}
+	@Override
+	public void accept(SqlAstWalker interpreter) {
+		sqlExpression.accept( interpreter );
+	}
 
 	@Override
 	public boolean equals(Object o) {

@@ -40,7 +40,7 @@ public class ColumnReference implements Expression {
 		this.jdbcMapping = jdbcMapping;
 	}
 
-	public String getReferencedColumnName() {
+	public String getReferencedColumnExpression() {
 		return columnExpression;
 	}
 
@@ -101,5 +101,13 @@ public class ColumnReference implements Expression {
 	public int hashCode() {
 		int hash = Objects.hash( columnExpression );
 		return qualifier == null ? hash : hash + Objects.hash( qualifier );
+	}
+
+	public String renderSqlFragment(SessionFactoryImplementor sessionFactory) {
+		if ( getQualifier() != null ) {
+			return getQualifier() + '.' + getReferencedColumnExpression();
+		}
+
+		return getReferencedColumnExpression();
 	}
 }

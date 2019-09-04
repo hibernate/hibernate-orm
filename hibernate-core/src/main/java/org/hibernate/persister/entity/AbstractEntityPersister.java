@@ -1168,7 +1168,7 @@ public abstract class AbstractEntityPersister
 			org.hibernate.sql.ast.JoinType joinType,
 			Consumer<TableReferenceJoin> collector,
 			SqlExpressionResolver sqlExpressionResolver) {
-		for ( int i = 0; i < getSubclassTableSpan(); i++ ) {
+		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
 			collector.accept(
 					createTableReferenceJoin( i, rootTableReference, joinType, sqlAliasBase, sqlExpressionResolver )
 			);

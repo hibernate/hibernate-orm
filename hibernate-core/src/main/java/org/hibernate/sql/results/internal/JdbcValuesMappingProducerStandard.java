@@ -29,7 +29,7 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 	private final JdbcValuesMapping resolvedMapping;
 
 
-	public JdbcValuesMappingProducerStandard(Set<SqlSelection> sqlSelections, List<DomainResult> domainResults) {
+	public JdbcValuesMappingProducerStandard(List<SqlSelection> sqlSelections, List<DomainResult> domainResults) {
 		resolvedMapping = new StandardJdbcValuesMapping( sqlSelections, domainResults );
 	}
 

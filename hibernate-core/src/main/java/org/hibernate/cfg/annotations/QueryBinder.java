@@ -144,7 +144,7 @@ public abstract class QueryBinder {
 
 		final String registrationName = queryAnn.name();
 
-		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
+		//ResultSetMappingDefinition mappingDefinition = mappings.getJdbcValuesMappingProducer( queryAnn.resultSetMapping() );
 		if ( BinderHelper.isEmptyAnnotationValue( registrationName ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
@@ -222,7 +222,7 @@ public abstract class QueryBinder {
 
 		final String registrationName = queryAnn.name();
 
-		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
+		//ResultSetMappingDefinition mappingDefinition = mappings.getJdbcValuesMappingProducer( queryAnn.resultSetMapping() );
 		if ( BinderHelper.isEmptyAnnotationValue( registrationName ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}

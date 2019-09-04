@@ -6,9 +6,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import java.util.List;
-
-import org.hibernate.sql.results.spi.JdbcValuesMappingDescriptor;
+import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 
 /**
  * An anonymous call block (sometimes called an anonymous procedure) to be executed
@@ -24,5 +22,5 @@ public interface JdbcAnonBlock extends JdbcOperation {
 	 * define multiple such mappings which are (unclearly) intended to describe the mapping
 	 * for each ResultSet (in order) returned from the call.
 	 */
-	List<JdbcValuesMappingDescriptor> getResultSetMappings();
+	JdbcValuesMappingProducer getJdbcValuesMappingProducer();
 }

@@ -22,18 +22,18 @@ import org.hibernate.sql.results.spi.JdbcValuesMapping;
  * @author Steve Ebersole
  */
 public class StandardJdbcValuesMapping implements JdbcValuesMapping {
-	private final Set<SqlSelection> sqlSelections;
+	private final List<SqlSelection> sqlSelections;
 	private final List<DomainResult> domainResults;
 
 	public StandardJdbcValuesMapping(
-			Set<SqlSelection> sqlSelections,
+			List<SqlSelection> sqlSelections,
 			List<DomainResult> domainResults) {
 		this.sqlSelections = sqlSelections;
 		this.domainResults = domainResults;
 	}
 
 	@Override
-	public Set<SqlSelection> getSqlSelections() {
+	public List<SqlSelection> getSqlSelections() {
 		return sqlSelections;
 	}
 

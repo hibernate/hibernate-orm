@@ -48,6 +48,8 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 		this.converter = converter;
 		this.delegate = delegate;
 		this.intermediateJavaTypeDescriptor = intermediateJavaTypeDescriptor;
+
+		throw new UnsupportedOperationException(  );
 	}
 
 	@Override

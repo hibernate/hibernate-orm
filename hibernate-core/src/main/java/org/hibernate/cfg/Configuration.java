@@ -30,7 +30,6 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.ClassmateContext;
-import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
@@ -44,6 +43,10 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.NamedHqlQueryDefinition;
+import org.hibernate.boot.spi.NamedNativeQueryDefinition;
+import org.hibernate.boot.spi.NamedProcedureCallDefinition;
+import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
@@ -51,9 +54,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
-import org.hibernate.query.sql.spi.ResultSetMappingDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.BasicType;
@@ -97,10 +97,10 @@ public class Configuration {
 	private List<BasicType> basicTypes = new ArrayList<>();
 	private List<UserTypeRegistration> userTypeRegistrations;
 	private List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
-	private Map<String, NamedHqlQueryMementoImpl> namedQueries;
-	private Map<String, NamedNativeQueryMemento> namedSqlQueries;
-	private Map<String, NamedProcedureCallDefinitionImpl> namedProcedureCallMap;
-	private Map<String, ResultSetMappingDescriptor> sqlResultSetMappings;
+	private Map<String, NamedHqlQueryDefinition> namedQueries;
+	private Map<String, NamedNativeQueryDefinition> namedSqlQueries;
+	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
+	private Map<String, NamedResultSetMappingDefinition> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
 	private Map<String, SQLFunction> sqlFunctions;
@@ -848,11 +848,11 @@ public class Configuration {
 	}
 
 
-	public Map<String, NamedHqlQueryMementoImpl> getNamedQueries() {
+	public Map<String, NamedHqlQueryDefinition> getNamedQueries() {
 		return namedQueries;
 	}
 
-	public Map<String, NamedProcedureCallDefinitionImpl> getNamedProcedureCallMap() {
+	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
 		return namedProcedureCallMap;
 	}
 

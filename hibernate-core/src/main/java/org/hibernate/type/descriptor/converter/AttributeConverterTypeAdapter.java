@@ -56,6 +56,8 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 				: ImmutableMutabilityPlan.INSTANCE;
 
 		log.debug( "Created AttributeConverterTypeAdapter -> " + name );
+
+		throw new UnsupportedOperationException(  );
 	}
 
 	@Override

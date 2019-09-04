@@ -82,10 +82,9 @@ import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.spi.JdbcValuesMappingDescriptor;
+import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.Type;
 
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 
@@ -350,7 +349,7 @@ public class NativeQueryImpl<R>
 		SelectQueryPlan<R> queryPlan = null;
 
 
-		final JdbcValuesMappingDescriptor resultSetMapping = resolveResultMapping();
+		final JdbcValuesMappingProducer resultSetMapping = getJdbcValuesMappingProducer();
 		final RowTransformer rowTransformer = resolveRowTransformer();
 
 		final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
@@ -374,7 +373,7 @@ public class NativeQueryImpl<R>
 		return queryPlan;
 	}
 
-	private JdbcValuesMappingDescriptor resolveResultMapping() {
+	private JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
 		// todo (6.0) - need to resolve SqlSelections as well as resolving ResultBuilders and FetchBuilders into QueryResult trees
 		// 		also need to account for the edge case where the user passed just the
 		//		query string and no mappings (see ResultSetMappingUndefinedImpl)
@@ -387,7 +386,7 @@ public class NativeQueryImpl<R>
 		throw new NotYetImplementedFor6Exception(  );
 	}
 
-	private SelectInterpretationsKey generateSelectInterpretationsKey(JdbcValuesMappingDescriptor resultSetMapping) {
+	private SelectInterpretationsKey generateSelectInterpretationsKey(JdbcValuesMappingProducer resultSetMapping) {
 		if ( !isCacheable( this ) ) {
 			return null;
 		}
@@ -431,8 +430,8 @@ public class NativeQueryImpl<R>
 			}
 
 			@Override
-			public JdbcValuesMappingDescriptor getResultSetMapping() {
-				return NativeQueryImpl.this.resolveResultMapping();
+			public JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
+				return NativeQueryImpl.this.getJdbcValuesMappingProducer();
 			}
 
 			@Override

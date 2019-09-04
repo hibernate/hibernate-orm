@@ -27,8 +27,8 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractLiteral
-		implements JdbcParameterBinder, Expression, DomainResultProducer {
+public abstract class AbstractLiteral<T>
+		implements JdbcParameterBinder, Expression, DomainResultProducer<T> {
 	private final Object value;
 	private final MappingModelExpressable type;
 	private final Clause clause;

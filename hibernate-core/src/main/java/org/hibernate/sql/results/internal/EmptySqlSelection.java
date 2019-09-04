@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.descriptor.EmptyJdbcValueExtractor;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -33,5 +34,10 @@ public class EmptySqlSelection implements SqlSelection {
 	@Override
 	public int getValuesArrayPosition() {
 		return position;
+	}
+
+	@Override
+	public void accept(SqlAstWalker sqlAstWalker) {
+		throw new UnsupportedOperationException( "Unexpected call to render empty EmptySqlSelection" );
 	}
 }

@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -28,6 +29,10 @@ public class FromClause implements SqlAstNode {
 
 	public void addRoot(TableGroup tableGroup) {
 		roots.add( tableGroup );
+	}
+
+	public void visitRoots(Consumer<TableGroup> action) {
+		roots.forEach( action );
 	}
 
 	@Override

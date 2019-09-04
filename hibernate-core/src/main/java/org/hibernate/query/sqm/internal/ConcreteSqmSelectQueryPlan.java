@@ -16,6 +16,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.internal.util.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -25,8 +26,10 @@ import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.sql.ast.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
@@ -140,37 +143,34 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public List<R> performList(ExecutionContext executionContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		if ( jdbcSelect == null ) {
+			// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
+			//		- this is similar to the plan for loaders
+			final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
+					executionContext.getQueryOptions(),
+					domainParameterXref,
+					executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+					executionContext.getLoadQueryInfluencers(),
+					executionContext.getSession().getFactory()
+			);
+			final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqm );
+			jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
+					interpretation.getSqlAst(),
+					executionContext.getSession().getFactory()
+			);
 
-//		if ( jdbcSelect == null ) {
-//			// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
-//			//		- this is similar to the plan for loaders
-//			final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
-//					executionContext.getQueryOptions(),
-//					domainParameterXref,
-//					executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-//					executionContext.getLoadQueryInfluencers(),
-//					executionContext.getSession().getFactory()
-//			);
-//			final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqm );
-//			jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
-//					interpretation,
-//					executionContext.getSession().getSessionFactory()
-//			);
-//
-//			this.jdbcParamsXref = SqmConsumeHelper.generateJdbcParamsXref( domainParameterXref, interpretation );
-//		}
+			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref( domainParameterXref, () -> interpretation.getJdbcParamsBySqmParam() );
+		}
 
-//
-//		final JdbcParameterBindings jdbcParameterBindings = QueryHelper.createJdbcParameterBindings(
-//				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-//				domainParameterXref,
-//				jdbcParamsXref,
-//				executionContext.getSession()
-//		);
-//
+
+		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+				domainParameterXref,
+				jdbcParamsXref,
+				executionContext.getSession()
+		);
+
 //		try {
 //			// todo (6.0) : make these executors resolvable to allow plugging in custom ones.
 //			//		Dialect?
@@ -184,6 +184,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 //		finally {
 //			domainParameterXref.clearExpansions();
 //		}
+
+
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 //	private SqmSelectToSqlAstConverter getSqmSelectToSqlAstConverter(ExecutionContext executionContext) {

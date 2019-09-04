@@ -108,7 +108,11 @@ public class SqmSelectToSqlAstConverter
 	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
 		final QuerySpec querySpec = visitQuerySpec( statement.getQuerySpec() );
 
-		return new SelectStatement( querySpec, domainResults );
+		return new SelectStatement(
+				querySpec,
+				domainResults,
+				getFromClauseIndex().getAffectedTableNames()
+		);
 	}
 
 

@@ -31,6 +31,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.hql.SemanticQueryProducer;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -276,6 +277,10 @@ public interface SessionFactoryOptions {
 
 	default LiteralHandlingMode getCriteriaLiteralHandlingMode() {
 		return LiteralHandlingMode.AUTO;
+	}
+
+	default QueryLiteralRendering getQueryLiteralRenderingMode() {
+		return getCriteriaLiteralHandlingMode().getCounterpart();
 	}
 
 	JpaCompliance getJpaCompliance();

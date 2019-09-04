@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.select;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -18,12 +19,15 @@ import org.hibernate.sql.results.spi.DomainResult;
 public class SelectStatement implements Statement {
 	private final QuerySpec querySpec;
 	private final List<DomainResult> domainResults;
+	private final Set<String> affectedTableExpressions;
 
 	public SelectStatement(
 			QuerySpec querySpec,
-			List<DomainResult> domainResults) {
+			List<DomainResult> domainResults,
+			Set<String> affectedTableExpressions) {
 		this.querySpec = querySpec;
-		this.domainResults = domainResults;
+		this.domainResults = Collections.unmodifiableList( domainResults );
+		this.affectedTableExpressions = Collections.unmodifiableSet( affectedTableExpressions );
 	}
 
 	public QuerySpec getQuerySpec() {
@@ -31,6 +35,10 @@ public class SelectStatement implements Statement {
 	}
 
 	public List<DomainResult> getDomainResultDescriptors() {
-		return Collections.unmodifiableList( domainResults );
+		return domainResults;
+	}
+
+	public Set<String> getAffectedTableExpressions() {
+		return affectedTableExpressions;
 	}
 }

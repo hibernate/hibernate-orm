@@ -11,25 +11,24 @@ import java.util.Objects;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretationCache;
-import org.hibernate.sql.results.spi.JdbcValuesMappingDescriptor;
+import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 
 /**
  * @author Steve Ebersole
  */
 public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	private final String sql;
-	private final JdbcValuesMappingDescriptor resultSetMapping;
-
+	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
 	private final TupleTransformer tupleTransformer;
 	private final ResultListTransformer resultListTransformer;
 
 	public SelectInterpretationsKey(
 			String sql,
-			JdbcValuesMappingDescriptor resultSetMapping,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			TupleTransformer tupleTransformer,
 			ResultListTransformer resultListTransformer) {
 		this.sql = sql;
-		this.resultSetMapping = resultSetMapping;
+		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.tupleTransformer = tupleTransformer;
 		this.resultListTransformer = resultListTransformer;
 	}
@@ -46,7 +45,7 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 		SelectInterpretationsKey that = (SelectInterpretationsKey) o;
 
 		return sql.equals( that.sql )
-				&& Objects.equals( resultSetMapping, that.resultSetMapping )
+				&& Objects.equals( jdbcValuesMappingProducer, that.jdbcValuesMappingProducer )
 				&& Objects.equals( tupleTransformer, that.tupleTransformer )
 				&& Objects.equals( resultListTransformer, that.resultListTransformer );
 
@@ -55,7 +54,7 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	@Override
 	public int hashCode() {
 		int result = sql.hashCode();
-		result = 31 * result + resultSetMapping.hashCode();
+		result = 31 * result + jdbcValuesMappingProducer.hashCode();
 		result = 31 * result + ( tupleTransformer != null ? tupleTransformer.hashCode() : 0 );
 		result = 31 * result + ( resultListTransformer != null ? resultListTransformer.hashCode() : 0 );
 		return result;

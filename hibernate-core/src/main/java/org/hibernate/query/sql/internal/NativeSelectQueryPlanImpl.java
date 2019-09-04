@@ -23,7 +23,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.results.spi.JdbcValuesMappingDescriptor;
+import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
@@ -35,14 +35,14 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 	private final List<QueryParameterImplementor<?>> parameterList;
 
-	private final JdbcValuesMappingDescriptor resultSetMapping;
+	private final JdbcValuesMappingProducer resultSetMapping;
 	private final RowTransformer<R> rowTransformer;
 
 	public NativeSelectQueryPlanImpl(
 			String sql,
 			Set<String> affectedTableNames,
 			List<QueryParameterImplementor<?>> parameterList,
-			JdbcValuesMappingDescriptor resultSetMapping,
+			JdbcValuesMappingProducer resultSetMapping,
 			RowTransformer<R> rowTransformer) {
 		this.sql = sql;
 		this.affectedTableNames = affectedTableNames;

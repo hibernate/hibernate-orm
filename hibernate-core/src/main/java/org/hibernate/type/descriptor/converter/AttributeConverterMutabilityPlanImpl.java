@@ -25,6 +25,8 @@ public class AttributeConverterMutabilityPlanImpl<T> extends MutableMutabilityPl
 
 	public AttributeConverterMutabilityPlanImpl(JpaAttributeConverter converter) {
 		this.converter = converter;
+
+		throw new UnsupportedOperationException(  );
 	}
 
 	@Override

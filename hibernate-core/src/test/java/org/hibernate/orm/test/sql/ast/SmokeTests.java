@@ -6,24 +6,36 @@
  */
 package org.hibernate.orm.test.sql.ast;
 
+import java.util.List;
+import java.util.Map;
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.sql.ast.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -61,27 +73,52 @@ public class SmokeTests {
 							scope.getSessionFactory()
 					);
 
-					final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqmStatement );
-					final SelectStatement sqlAst = interpretation.getSqlAst();
+					final SqmSelectInterpretation sqmInterpretation = sqmConverter.interpret( sqmStatement );
+					final SelectStatement sqlAst = sqmInterpretation.getSqlAst();
 
-					final FromClause fromClause = sqlAst.getQuerySpec().getFromClause();
-					assertThat( fromClause.getRoots().size(), is( 1 ) );
-					final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
-					assertThat( rootTableGroup.hasTableGroupJoins(), is( false ) );
-					assertThat( rootTableGroup.getPrimaryTableReference(), notNullValue() );
-					assertThat( rootTableGroup.getPrimaryTableReference().getTableExpression(), is( "mapping_simple_entity" ) );
+					checkSqmInterpretation( sqlAst );
 
-					// `s` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
-					// the query the base becomes `s1`.  The primary table reference is always suffixed as `_0`
-					assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "s1_0" ) );
+					final JdbcSelect jdbcSelectOperation = SqlAstSelectToJdbcSelectConverter.interpret(
+							sqlAst,
+							session.getSessionFactory()
+					);
 
-					final SelectClause selectClause = sqlAst.getQuerySpec().getSelectClause();
-					assertThat( selectClause.getSqlSelections().size(), is( 1 ) ) ;
-					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( 0 );
-					assertThat( sqlSelection.getJdbcResultSetIndex(), is( 1 ) );
-					assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
-					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
+					assertThat( jdbcSelectOperation.getSql(), is( "select s1_0.name from mapping_simple_entity as s1_0" ) );
+
+					final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqmStatement );
+					final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> paramsXref = SqmUtil.generateJdbcParamsXref(
+							domainParameterXref,
+							() -> sqmInterpretation.getJdbcParamsBySqmParam()
+					);
+
+					// try to execute the Query...
+//					final List<String> names = query.list();
 				}
 		);
+	}
+
+	private void checkSqmInterpretation(SelectStatement sqlAst) {
+		final FromClause fromClause = sqlAst.getQuerySpec().getFromClause();
+		assertThat( fromClause.getRoots().size(), is( 1 ) );
+
+		final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
+		assertThat( rootTableGroup.getPrimaryTableReference(), notNullValue() );
+		assertThat( rootTableGroup.getPrimaryTableReference().getTableExpression(), is( "mapping_simple_entity" ) );
+
+		assertThat( rootTableGroup.getTableReferenceJoins().size(), is( 0 ) );
+
+		assertThat( rootTableGroup.hasTableGroupJoins(), is( false ) );
+
+
+		// `s` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
+		// the query the base becomes `s1`.  The primary table reference is always suffixed as `_0`
+		assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "s1_0" ) );
+
+		final SelectClause selectClause = sqlAst.getQuerySpec().getSelectClause();
+		assertThat( selectClause.getSqlSelections().size(), is( 1 ) ) ;
+		final SqlSelection sqlSelection = selectClause.getSqlSelections().get( 0 );
+		assertThat( sqlSelection.getJdbcResultSetIndex(), is( 1 ) );
+		assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
+		assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
 	}
 }

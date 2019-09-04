@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.sql.results.spi.JdbcValuesMappingDescriptor;
+import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
@@ -27,7 +27,7 @@ public interface NativeSelectQueryDefinition<R> {
 	 */
 	List<QueryParameterImplementor<?>> getQueryParameterList();
 
-	JdbcValuesMappingDescriptor getResultSetMapping();
+	JdbcValuesMappingProducer getJdbcValuesMappingProducer();
 
 	Set<String> getAffectedTableNames();
 

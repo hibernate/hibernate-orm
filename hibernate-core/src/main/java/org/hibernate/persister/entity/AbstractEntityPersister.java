@@ -137,6 +137,7 @@ import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapp
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -6056,14 +6057,38 @@ public abstract class AbstractEntityPersister
 		final String[] attrColumnNames = getPropertyColumnNames( propertyIndex );
 
 		if ( attrType instanceof BasicType ) {
-			return new BasicValuedSingularAttributeMapping(
-					attrName,
-					tableExpression,
-					attrColumnNames[0],
-					( (BasicValue) bootProperty.getValue() ).resolve().getValueConverter(),
-					(BasicType) attrType,
-					(BasicType) attrType
-			);
+			final BasicValue.Resolution<?> resolution = ( (BasicValue) bootProperty.getValue() ).resolve();
+			final BasicValueConverter valueConverter = resolution.getValueConverter();
+
+			if ( valueConverter != null ) {
+				// we want to "decompose" the "type" into its various pieces as expected by the mapping
+				assert valueConverter.getRelationalJavaDescriptor() == resolution.getRelationalJavaDescriptor();
+
+				final BasicType<?> mappingBasicType = creationProcess.getCreationContext()
+						.getDomainModel()
+						.getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.resolve( valueConverter.getRelationalJavaDescriptor(), resolution.getRelationalSqlTypeDescriptor() );
+
+				return new BasicValuedSingularAttributeMapping(
+						attrName,
+						tableExpression,
+						attrColumnNames[0],
+						valueConverter,
+						mappingBasicType,
+						mappingBasicType.getJdbcMapping()
+				);
+			}
+			else {
+				return new BasicValuedSingularAttributeMapping(
+						attrName,
+						tableExpression,
+						attrColumnNames[0],
+						null,
+						(BasicType) attrType,
+						(BasicType) attrType
+				);
+			}
 		}
 
 		// todo (6.0) : for now ignore any non basic-typed attributes

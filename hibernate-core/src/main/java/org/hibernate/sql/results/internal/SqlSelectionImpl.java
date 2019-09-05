@@ -9,29 +9,42 @@ package org.hibernate.sql.results.internal;
 import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
 
 /**
+ * @asciidoc
+ *
+ * ````
+ * @Entity
+ * class MyEntity {
+ *     ...
+ *     @Column( name = "the_column", ... )
+ *     public String getTheColumn() { ... }
+ *
+ *     @Convert( ... )
+ *     @Column( name = "the_column", ... )
+ *     ConvertedType getTheConvertedColumn() { ... }
+ *
+ * }
+ * ````
+ *
  * @author Steve Ebersole
  */
 public class SqlSelectionImpl implements SqlSelection {
 	private final int jdbcPosition;
 	private final int valuesArrayPosition;
 	private final Expression sqlExpression;
-	private final ValueExtractor jdbcValueExtractor;
+	private final JdbcMapping jdbcMapping;
 
 	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, JdbcMapping jdbcMapping) {
-		this( jdbcPosition, valuesArrayPosition, sqlExpression, jdbcMapping.getJdbcValueExtractor() );
-	}
-
-	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, ValueExtractor jdbcValueExtractor) {
 		this.jdbcPosition = jdbcPosition;
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.sqlExpression = sqlExpression;
-		this.jdbcValueExtractor = jdbcValueExtractor;
+		this.jdbcMapping = jdbcMapping;
 	}
 
 	public Expression getWrappedSqlExpression() {
@@ -40,7 +53,9 @@ public class SqlSelectionImpl implements SqlSelection {
 
 	@Override
 	public ValueExtractor getJdbcValueExtractor() {
-		return jdbcValueExtractor;
+		return ( (SqlExpressable) sqlExpression.getExpressionType() ).getJdbcMapping().getJdbcValueExtractor();
+//		return jdbcValueExtractor;
+//		return jdbcMapping.getJdbcValueExtractor();
 	}
 
 	@Override

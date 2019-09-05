@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
+import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -82,6 +83,21 @@ public class SmokeTests {
 					List<String> simpleEntities = query.list();
 					assertThat( simpleEntities.size(), is( 1 ) );
 					assertThat( simpleEntities.get( 0 ), is( "Fab" ) );
+				}
+		);
+	}
+
+	@Test
+	public void testSelectGenderHql(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<Gender> query = session.createQuery(
+							"select e.gender from SimpleEntity e",
+							Gender.class
+					);
+					List<Gender> simpleEntities = query.list();
+					assertThat( simpleEntities.size(), is( 1 ) );
+					assertThat( simpleEntities.get( 0 ), is( FEMALE ) );
 				}
 		);
 	}

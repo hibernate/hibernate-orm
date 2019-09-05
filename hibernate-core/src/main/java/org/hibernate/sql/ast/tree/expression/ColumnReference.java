@@ -68,9 +68,7 @@ public class ColumnReference implements Expression {
 		// todo (6.0) : potential use for runtime database model - interpretation of table and column references
 		//		into metadata info such as java/sql type, binder, extractor
 
-		final ValueExtractor jdbcValueExtractor = jdbcMapping.getJdbcValueExtractor();
-
-		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, this, jdbcValueExtractor );
+		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, this, jdbcMapping );
 	}
 
 	@Override

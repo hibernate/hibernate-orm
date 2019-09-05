@@ -29,6 +29,7 @@ public interface JdbcMapping {
 	 */
 	SqlTypeDescriptor getSqlTypeDescriptor();
 
+
 	/**
 	 * The strategy for extracting values of this expressable
 	 * type from JDBC ResultSets, CallableStatements, etc

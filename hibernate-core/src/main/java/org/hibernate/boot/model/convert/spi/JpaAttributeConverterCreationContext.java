@@ -8,6 +8,7 @@ package org.hibernate.boot.model.convert.spi;
 
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Access to information that implementors of
@@ -18,5 +19,9 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
  */
 public interface JpaAttributeConverterCreationContext {
 	ManagedBeanRegistry getManagedBeanRegistry();
-	JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry();
+	TypeConfiguration getTypeConfiguration();
+
+	default JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
+		return getTypeConfiguration().getJavaTypeDescriptorRegistry();
+	}
 }

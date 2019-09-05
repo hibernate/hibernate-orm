@@ -44,8 +44,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.BinaryType;
-import org.hibernate.type.RowVersionType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
@@ -54,6 +52,7 @@ import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.LobTypeMappings;
 import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -579,8 +578,8 @@ public abstract class SimpleValue implements KeyValue {
 					}
 
 					@Override
-					public org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
-						return metadata.getTypeConfiguration().getJavaTypeDescriptorRegistry();
+					public TypeConfiguration getTypeConfiguration() {
+						return getMetadata().getTypeConfiguration();
 					}
 				}
 		);

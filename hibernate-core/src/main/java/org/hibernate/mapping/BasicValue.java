@@ -42,7 +42,6 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.RowVersionTypeDescriptor;
 import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -239,8 +238,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 			}
 
 			@Override
-			public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
-				return typeConfiguration.getJavaTypeDescriptorRegistry();
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
 			}
 		};
 
@@ -408,8 +407,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 								}
 
 								@Override
-								public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
-									return typeConfiguration.getJavaTypeDescriptorRegistry();
+								public TypeConfiguration getTypeConfiguration() {
+									return typeConfiguration;
 								}
 							}
 					)

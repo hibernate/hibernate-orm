@@ -13,6 +13,8 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.Service;
+import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
+import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
 /**
  * Contract for services around JDBC operations.  These represent shared resources, aka not varied by session/use.
@@ -75,4 +77,11 @@ public interface JdbcServices extends Service {
 	 * @return The ResultSet wrapper.
 	 */
 	ResultSetWrapper getResultSetWrapper();
+
+	/**
+	 * Access the executor for {@link org.hibernate.sql.exec.spi.JdbcSelect} operations
+	 */
+	default JdbcSelectExecutor getJdbcSelectExecutor() {
+		return JdbcSelectExecutorStandardImpl.INSTANCE;
+	}
 }

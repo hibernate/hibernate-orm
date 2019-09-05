@@ -6,15 +6,13 @@
  */
 package org.hibernate.internal;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.Loader;
+import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.spi.JdbcValues;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
@@ -24,17 +22,26 @@ import org.hibernate.sql.results.spi.RowReader;
  */
 public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 	private R currentRow;
+
 	private int currentPosition;
 	private Integer maxPosition;
 
 	public FetchingScrollableResultsImpl(
-			ResultSet rs,
-			PreparedStatement ps,
-			SharedSessionContractImplementor sess,
-			Loader loader,
-			QueryParameters queryParameters,
-			RowReader<R> rowReader) {
-		super( rs, ps, sess, loader, queryParameters, rowReader );
+			JdbcValues jdbcValues,
+			JdbcValuesSourceProcessingOptions processingOptions,
+			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			SharedSessionContractImplementor persistenceContext) {
+		super(
+				jdbcValues,
+				processingOptions,
+				jdbcValuesSourceProcessingState,
+				rowProcessingState,
+				rowReader,
+				persistenceContext
+		);
+		this.maxPosition = jdbcValuesSourceProcessingState.getQueryOptions().getEffectiveLimit().getMaxRows();
 	}
 
 	@Override
@@ -150,38 +157,40 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public boolean last() {
-		boolean more = false;
-		if ( maxPosition != null ) {
-			if ( currentPosition > maxPosition ) {
-				more = previous();
-			}
-			for ( int i = currentPosition; i < maxPosition; i++ ) {
-				more = next();
-			}
-		}
-		else {
-			try {
-				if ( isResultSetEmpty() || getResultSet().isAfterLast() ) {
-					// should not be able to reach last without maxPosition being set
-					// unless there are no results
-					return false;
-				}
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-				while ( !getResultSet().isAfterLast() ) {
-					more = next();
-				}
-			}
-			catch (SQLException e) {
-				throw getSession().getFactory().getSQLExceptionHelper().convert(
-						e,
-						"exception calling isAfterLast()"
-				);
-			}
-		}
-
-		afterScrollOperation();
-
-		return more;
+//		boolean more = false;
+//		if ( maxPosition != null ) {
+//			if ( currentPosition > maxPosition ) {
+//				more = previous();
+//			}
+//			for ( int i = currentPosition; i < maxPosition; i++ ) {
+//				more = next();
+//			}
+//		}
+//		else {
+//			try {
+//				if ( isResultSetEmpty() || getResultSet().isAfterLast() ) {
+//					// should not be able to reach last without maxPosition being set
+//					// unless there are no results
+//					return false;
+//				}
+//
+//				while ( !getResultSet().isAfterLast() ) {
+//					more = next();
+//				}
+//			}
+//			catch (SQLException e) {
+//				throw getSession().getFactory().getSQLExceptionHelper().convert(
+//						e,
+//						"exception calling isAfterLast()"
+//				);
+//			}
+//		}
+//
+//		afterScrollOperation();
+//
+//		return more;
 	}
 
 	@Override
@@ -196,17 +205,19 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public void beforeFirst() {
-		try {
-			getResultSet().beforeFirst();
-		}
-		catch (SQLException e) {
-			throw getSession().getFactory().getSQLExceptionHelper().convert(
-					e,
-					"exception calling beforeFirst()"
-			);
-		}
-		currentRow = null;
-		currentPosition = 0;
+		throw new NotYetImplementedFor6Exception( getClass() );
+
+//		try {
+//			getResultSet().beforeFirst();
+//		}
+//		catch (SQLException e) {
+//			throw getSession().getFactory().getSQLExceptionHelper().convert(
+//					e,
+//					"exception calling beforeFirst()"
+//			);
+//		}
+//		currentRow = null;
+//		currentPosition = 0;
 	}
 
 	@Override
@@ -247,16 +258,16 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		return scroll( rowNumber - currentPosition );
 	}
 
-	private boolean isResultSetEmpty() {
-		try {
-			return currentPosition == 0 && !getResultSet().isBeforeFirst() && !getResultSet().isAfterLast();
-		}
-		catch (SQLException e) {
-			throw getSession().getFactory().getSQLExceptionHelper().convert(
-					e,
-					"Could not determine if resultset is empty due to exception calling isBeforeFirst or isAfterLast()"
-			);
-		}
-	}
+//	private boolean isResultSetEmpty() {
+//		try {
+//			return currentPosition == 0 && !getResultSet().isBeforeFirst() && !getResultSet().isAfterLast();
+//		}
+//		catch (SQLException e) {
+//			throw getSession().getFactory().getSQLExceptionHelper().convert(
+//					e,
+//					"Could not determine if resultset is empty due to exception calling isBeforeFirst or isAfterLast()"
+//			);
+//		}
+//	}
 
 }

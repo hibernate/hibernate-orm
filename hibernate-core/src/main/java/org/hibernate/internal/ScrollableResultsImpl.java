@@ -6,17 +6,16 @@
  */
 package org.hibernate.internal;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.Loader;
+import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.spi.JdbcValues;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
@@ -28,13 +27,20 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 	private R currentRow;
 
 	public ScrollableResultsImpl(
-			ResultSet rs,
-			PreparedStatement ps,
-			SharedSessionContractImplementor sess,
-			Loader loader,
-			QueryParameters queryParameters,
-			RowReader<R> rowReader) {
-		super( rs, ps, sess, loader, queryParameters, rowReader );
+			JdbcValues jdbcValues,
+			JdbcValuesSourceProcessingOptions processingOptions,
+			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			SharedSessionContractImplementor persistenceContext) {
+		super(
+				jdbcValues,
+				processingOptions,
+				jdbcValuesSourceProcessingState,
+				rowProcessingState,
+				rowReader,
+				persistenceContext
+		);
 	}
 
 	@Override
@@ -44,48 +50,60 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 
 	@Override
 	public boolean scroll(int i) {
-		try {
-			final boolean result = getResultSet().relative( i );
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using scroll()" );
-		}
+		throw new NotYetImplementedFor6Exception();
+
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		try {
+//			final boolean result = getResultSet().relative( i );
+//			prepareCurrentRow( result );
+//			return result;
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "could not advance using scroll()" );
+//		}
 	}
 
 	protected JDBCException convert(SQLException sqle, String message) {
-		return getSession().getFactory().getSQLExceptionHelper().convert( sqle, message );
+		return getPersistenceContext().getJdbcServices().getSqlExceptionHelper().convert( sqle, message );
 	}
 
 	@Override
 	public boolean first() {
-		try {
-			final boolean result = getResultSet().first();
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using first()" );
-		}
+		throw new NotYetImplementedFor6Exception();
+
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		try {
+//			final boolean result = getResultSet().first();
+//			prepareCurrentRow( result );
+//			return result;
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "could not advance using first()" );
+//		}
 	}
 
 	@Override
 	public boolean last() {
-		try {
-			final boolean result = getResultSet().last();
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using last()" );
-		}
+		throw new NotYetImplementedFor6Exception();
+
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		try {
+//			final boolean result = getResultSet().last();
+//			prepareCurrentRow( result );
+//			return result;
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "could not advance using last()" );
+//		}
 	}
 
 	@Override
 	public boolean next() {
 		try {
-			final boolean result = getResultSet().next();
+			final boolean result = getJdbcValues().next( getRowProcessingState() );
 			prepareCurrentRow( result );
 			return result;
 		}
@@ -96,114 +114,127 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 
 	@Override
 	public boolean previous() {
-		try {
-			final boolean result = getResultSet().previous();
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using previous()" );
-		}
+		throw new NotYetImplementedFor6Exception();
+
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		try {
+//			final boolean result = getResultSet().previous();
+//			prepareCurrentRow( result );
+//			return result;
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "could not advance using previous()" );
+//		}
 	}
 
 	@Override
 	public void afterLast() {
-		try {
-			getResultSet().afterLast();
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling afterLast()" );
-		}
+		throw new NotYetImplementedFor6Exception();
+
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		try {
+//			getResultSet().afterLast();
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "exception calling afterLast()" );
+//		}
 	}
 
 	@Override
 	public void beforeFirst() {
-		try {
-			getResultSet().beforeFirst();
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling beforeFirst()" );
-		}
+		throw new NotYetImplementedFor6Exception();
+
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		try {
+//			getResultSet().beforeFirst();
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "exception calling beforeFirst()" );
+//		}
 	}
 
 	@Override
 	public boolean isFirst() {
-		try {
-			return getResultSet().isFirst();
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling isFirst()" );
-		}
+		throw new NotYetImplementedFor6Exception();
+
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		try {
+//			return getResultSet().isFirst();
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "exception calling isFirst()" );
+//		}
 	}
 
 	@Override
 	public boolean isLast() {
-		try {
-			return getResultSet().isLast();
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling isLast()" );
-		}
+		throw new NotYetImplementedFor6Exception();
+
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		try {
+//			return getResultSet().isLast();
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "exception calling isLast()" );
+//		}
 	}
 
 	@Override
 	public int getRowNumber() throws HibernateException {
-		try {
-			return getResultSet().getRow() - 1;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "exception calling getRow()" );
-		}
+		throw new NotYetImplementedFor6Exception();
+
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		try {
+//			return getResultSet().getRow() - 1;
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "exception calling getRow()" );
+//		}
 	}
 
 	@Override
 	public boolean setRowNumber(int rowNumber) throws HibernateException {
-		if ( rowNumber >= 0 ) {
-			rowNumber++;
-		}
+		throw new NotYetImplementedFor6Exception();
 
-		try {
-			final boolean result = getResultSet().absolute( rowNumber );
-			prepareCurrentRow( result );
-			return result;
-		}
-		catch (SQLException sqle) {
-			throw convert( sqle, "could not advance using absolute()" );
-		}
+		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
+
+//		if ( rowNumber >= 0 ) {
+//			rowNumber++;
+//		}
+//
+//		try {
+//			final boolean result = getResultSet().absolute( rowNumber );
+//			prepareCurrentRow( result );
+//			return result;
+//		}
+//		catch (SQLException sqle) {
+//			throw convert( sqle, "could not advance using absolute()" );
+//		}
 	}
 
 	private void prepareCurrentRow(boolean underlyingScrollSuccessful) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		if ( !underlyingScrollSuccessful ) {
-//			currentRow = null;
-//			return;
-//		}
-//
-//		final PersistenceContext persistenceContext = getSession().getPersistenceContextInternal();
-//		persistenceContext.beforeLoad();
-//		try {
-//			final Object result = getLoader().loadSingleRow(
-//					getResultSet(),
-//					getSession(),
-//					getQueryParameters(),
-//					true
-//			);
-//			if ( result != null && result.getClass().isArray() ) {
-//				currentRow = (Object[]) result;
-//			}
-//			else {
-//				currentRow = new Object[] {result};
-//			}
-//
-//			if ( getHolderInstantiator() != null ) {
-//				currentRow = new Object[] { getHolderInstantiator().instantiate( currentRow ) };
-//			}
-//		}
-//		finally {
-//			persistenceContext.afterLoad();
-//		}
-//
-//		afterScrollOperation();
+		if ( !underlyingScrollSuccessful ) {
+			currentRow = null;
+			return;
+		}
+
+		try {
+			currentRow = getRowReader().readRow(
+					getRowProcessingState(),
+					getProcessingOptions()
+			);
+		}
+		catch (SQLException e) {
+			throw convert( e, "Unable to read row as part of ScrollableResult handling" );
+		}
+
+		afterScrollOperation();
 	}
 
 }

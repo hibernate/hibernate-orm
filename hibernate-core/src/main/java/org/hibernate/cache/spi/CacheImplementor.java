@@ -176,45 +176,6 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole);
 
 
-	/**
-	 * Get {@code UpdateTimestampsCache} instance managed by the {@code SessionFactory}.
-	 *
-	 * @deprecated Use {@link #getTimestampsCache} instead
-	 */
-	@Deprecated
-	default UpdateTimestampsCache getUpdateTimestampsCache() {
-		return getTimestampsCache();
-	}
-
-	/**
-	 * Get the default {@code QueryCache}.
-	 *
-	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
-	 */
-	@Deprecated
-	default QueryCache getQueryCache() {
-		return getDefaultQueryResultsCache();
-	}
-
-	/**
-	 * Get the default {@code QueryCache}.
-	 *
-	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
-	 */
-	@Deprecated
-	default QueryCache getDefaultQueryCache() {
-		return getDefaultQueryResultsCache();
-	}
-
-	/**
-	 * @deprecated Use {@link #getQueryResultsCache(String)} instead, but using unqualified name
-	 */
-	@Deprecated
-	default QueryCache getQueryCache(String regionName) throws HibernateException {
-		return getQueryResultsCache( unqualifyRegionName( regionName ) );
-	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Some new (default) support methods for the above deprecations
 	//		- themselves deprecated

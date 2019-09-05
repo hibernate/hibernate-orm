@@ -9,6 +9,9 @@ package org.hibernate.sql.results.spi;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.named.RowReaderMemento;
+
 /**
  * Coordinates the process of reading a single result values row
  *
@@ -46,4 +49,6 @@ public interface RowReader<R> {
 	 * Called at the end of processing all rows
 	 */
 	void finishUp(JdbcValuesSourceProcessingState context);
+
+	RowReaderMemento toMemento(SessionFactoryImplementor factory);
 }

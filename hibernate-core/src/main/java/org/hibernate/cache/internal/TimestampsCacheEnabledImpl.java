@@ -7,10 +7,11 @@
 package org.hibernate.cache.internal;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
+import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,6 +26,8 @@ import org.jboss.logging.Logger;
  */
 public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	private static final Logger log = Logger.getLogger( TimestampsCacheEnabledImpl.class );
+
+	public static final boolean DEBUG_ENABLED = log.isDebugEnabled();
 
 	private final TimestampsRegion timestampsRegion;
 
@@ -109,36 +112,65 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			String[] spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
-
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
-		final boolean stats = statistics.isStatisticsEnabled();
-		final boolean debugEnabled = log.isDebugEnabled();
 
 		for ( Serializable space : spaces ) {
-			final Long lastUpdate = getLastUpdateTimestampForSpace( space, session );
-			if ( lastUpdate == null ) {
-				// the last update timestamp for the given space was evicted from the
-				// cache or there have been no writes to it since startup
-				if ( stats ) {
-					statistics.updateTimestampsCacheMiss();
-				}
-			}
-			else {
-				if ( debugEnabled ) {
-					log.debugf(
-							"[%s] last update timestamp: %s",
-							space,
-							lastUpdate + ", result set timestamp: " + timestamp
-					);
-				}
-				if ( stats ) {
-					statistics.updateTimestampsCacheHit();
-				}
-				if ( lastUpdate >= timestamp ) {
-					return false;
-				}
+			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
+				return false;
 			}
 		}
+
+		return true;
+	}
+
+	private boolean isSpaceOutOfDate(
+			Serializable space,
+			Long timestamp,
+			SharedSessionContractImplementor session,
+			StatisticsImplementor statistics) {
+		final Long lastUpdate = getLastUpdateTimestampForSpace( space, session );
+		if ( lastUpdate == null ) {
+			// the last update timestamp for the given space was evicted from the
+			// cache or there have been no writes to it since startup
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateTimestampsCacheMiss();
+			}
+		}
+		else {
+			if ( DEBUG_ENABLED ) {
+				log.debugf(
+						"[%s] last update timestamp: %s",
+						space,
+						lastUpdate + ", result set timestamp: " + timestamp
+				);
+			}
+
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateTimestampsCacheHit();
+			}
+
+			//noinspection RedundantIfStatement
+			if ( lastUpdate >= timestamp ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isUpToDate(
+			Collection<String> spaces,
+			Long timestamp,
+			SharedSessionContractImplementor session) {
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+
+		for ( Serializable space : spaces ) {
+			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
+				return false;
+			}
+		}
+
 		return true;
 	}
 

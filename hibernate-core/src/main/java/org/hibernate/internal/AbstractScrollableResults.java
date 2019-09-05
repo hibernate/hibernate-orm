@@ -6,15 +6,13 @@
  */
 package org.hibernate.internal;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.Loader;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.spi.JdbcValues;
+import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
@@ -23,62 +21,30 @@ import org.hibernate.sql.results.spi.RowReader;
  * @author Steve Ebersole
  */
 public abstract class AbstractScrollableResults<R> implements ScrollableResultsImplementor<R> {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractScrollableResults.class );
-
-	private final ResultSet resultSet;
-	private final PreparedStatement ps;
-	private final SharedSessionContractImplementor session;
-	private final Loader loader;
-	private final QueryParameters queryParameters;
-
+	private final JdbcValues jdbcValues;
+	private final JdbcValuesSourceProcessingOptions processingOptions;
+	private final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState;
+	private final RowProcessingStateStandardImpl rowProcessingState;
 	private final RowReader<R> rowReader;
+	private final SharedSessionContractImplementor persistenceContext;
 
 	private boolean closed;
 
-	@SuppressWarnings("WeakerAccess")
-	protected AbstractScrollableResults(
-			ResultSet rs,
-			PreparedStatement ps,
-			SharedSessionContractImplementor sess,
-			Loader loader,
-			QueryParameters queryParameters,
-			RowReader<R> rowReader) {
-		this.resultSet = rs;
-		this.ps = ps;
-		this.session = sess;
-		this.loader = loader;
-		this.queryParameters = queryParameters;
+	public AbstractScrollableResults(
+			JdbcValues jdbcValues,
+			JdbcValuesSourceProcessingOptions processingOptions,
+			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			SharedSessionContractImplementor persistenceContext) {
+		this.jdbcValues = jdbcValues;
+		this.processingOptions = processingOptions;
+		this.jdbcValuesSourceProcessingState = jdbcValuesSourceProcessingState;
+		this.rowProcessingState = rowProcessingState;
 		this.rowReader = rowReader;
+		this.persistenceContext = persistenceContext;
 	}
 
-	protected abstract R getCurrentRow();
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Access to state fr sub-types
-
-	protected ResultSet getResultSet() {
-		return resultSet;
-	}
-
-	protected PreparedStatement getPs() {
-		return ps;
-	}
-
-	protected SharedSessionContractImplementor getSession() {
-		return session;
-	}
-
-	protected Loader getLoader() {
-		return loader;
-	}
-
-	protected QueryParameters getQueryParameters() {
-		return queryParameters;
-	}
-
-	protected RowReader<R> getRowReader() {
-		return rowReader;
-	}
 
 	@Override
 	public final R get() throws HibernateException {
@@ -88,13 +54,34 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 		return getCurrentRow();
 	}
 
-	protected void afterScrollOperation() {
-		session.afterScrollOperation();
+	protected abstract R getCurrentRow();
+
+	protected JdbcValues getJdbcValues() {
+		return jdbcValues;
 	}
 
-	@Override
-	public boolean isClosed() {
-		return this.closed;
+	protected JdbcValuesSourceProcessingOptions getProcessingOptions() {
+		return processingOptions;
+	}
+
+	protected JdbcValuesSourceProcessingStateStandardImpl getJdbcValuesSourceProcessingState() {
+		return jdbcValuesSourceProcessingState;
+	}
+
+	protected RowProcessingStateStandardImpl getRowProcessingState() {
+		return rowProcessingState;
+	}
+
+	protected RowReader<R> getRowReader() {
+		return rowReader;
+	}
+
+	protected SharedSessionContractImplementor getPersistenceContext() {
+		return persistenceContext;
+	}
+
+	protected void afterScrollOperation() {
+		getPersistenceContext().afterScrollOperation();
 	}
 
 	@Override
@@ -104,23 +91,14 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 			return;
 		}
 
-//		getJdbcValues().finishUp();
-//		getPersistenceContext().getJdbcCoordinator().afterStatementExecution();
-
-//		// not absolutely necessary, but does help with aggressive release
-//		//session.getJDBCContext().getConnectionManager().closeQueryStatement( ps, resultSet );
-//		session.getJdbcCoordinator().getResourceRegistry().release( ps );
-//		session.getJdbcCoordinator().afterStatementExecution();
-//		try {
-//			session.getPersistenceContext().getLoadContexts().cleanup( resultSet );
-//		}
-//		catch (Throwable ignore) {
-//			// ignore this error for now
-//			if ( LOG.isTraceEnabled() ) {
-//				LOG.tracev( "Exception trying to cleanup load context : {0}", ignore.getMessage() );
-//			}
-//		}
+		getJdbcValues().finishUp();
+		getPersistenceContext().getJdbcCoordinator().afterStatementExecution();
 
 		this.closed = true;
+	}
+
+	@Override
+	public boolean isClosed() {
+		return this.closed;
 	}
 }

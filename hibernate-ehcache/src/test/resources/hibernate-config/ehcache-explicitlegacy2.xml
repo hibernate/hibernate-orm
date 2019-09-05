@@ -15,6 +15,6 @@
 
     <!-- Query caches with legacy names -->
     <cache name="hibernate.test.org.hibernate.cache.internal.StandardQueryCache" maxElementsInMemory="10000" />
-    <cache name="hibernate.test.org.hibernate.cache.spi.UpdateTimestampsCache" maxElementsInMemory="10000" />
+    <cache name="hibernate.test.org.hibernate.cache.spi.TimestampsCache" maxElementsInMemory="10000" />
 
 </ehcache>

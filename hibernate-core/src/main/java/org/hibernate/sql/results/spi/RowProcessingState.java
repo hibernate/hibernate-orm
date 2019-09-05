@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -42,6 +43,8 @@ public interface RowProcessingState extends ExecutionContext {
 	 * from the ResultSet potentially multiple times.
 	 */
 	Object getJdbcValue(int position);
+
+	void registerNonExists(EntityFetch fetch);
 
 	/**
 	 * Callback at the end of processing the current "row"

@@ -2633,137 +2633,138 @@ public abstract class Loader {
 			final Set<Serializable> querySpaces,
 			final Type[] resultTypes) {
 
-		QueryResultsCache queryCache = factory.getCache().getQueryResultsCache( queryParameters.getCacheRegion() );
-
-		QueryKey key = generateQueryKey( session, queryParameters );
-
-		if ( querySpaces == null || querySpaces.size() == 0 ) {
-			LOG.tracev( "Unexpected querySpaces is {0}", ( querySpaces == null ? querySpaces : "empty" ) );
-		}
-		else {
-			LOG.tracev( "querySpaces is {0}", querySpaces );
-		}
-
-		List result = getResultFromQueryCache(
-				session,
-				queryParameters,
-				querySpaces,
-				resultTypes,
-				queryCache,
-				key
-		);
-
-		if ( result == null ) {
-			result = doList( session, queryParameters, key.getResultTransformer() );
-
-			putResultInQueryCache(
-					session,
-					queryParameters,
-					resultTypes,
-					queryCache,
-					key,
-					result
-			);
-		}
-
-		ResultTransformer resolvedTransformer = resolveResultTransformer( queryParameters.getResultTransformer() );
-		if ( resolvedTransformer != null ) {
-			result = (
-					areResultSetRowsTransformedImmediately() ?
-							key.getResultTransformer().retransformResults(
-									result,
-									getResultRowAliases(),
-									queryParameters.getResultTransformer(),
-									includeInResultRow()
-							) :
-							key.getResultTransformer().untransformToTuples(
-									result
-							)
-			);
-		}
-
-		return getResultList( result, queryParameters.getResultTransformer() );
+//		QueryResultsCache queryCache = factory.getCache().getQueryResultsCache( queryParameters.getCacheRegion() );
+//
+//		QueryKey key = generateQueryKey( session, queryParameters );
+//
+//		if ( querySpaces == null || querySpaces.size() == 0 ) {
+//			LOG.tracev( "Unexpected querySpaces is {0}", ( querySpaces == null ? querySpaces : "empty" ) );
+//		}
+//		else {
+//			LOG.tracev( "querySpaces is {0}", querySpaces );
+//		}
+//
+//		List result = getResultFromQueryCache(
+//				session,
+//				queryParameters,
+//				querySpaces,
+//				resultTypes,
+//				queryCache,
+//				key
+//		);
+//
+//		if ( result == null ) {
+//			result = doList( session, queryParameters, key.getResultTransformer() );
+//
+//			putResultInQueryCache(
+//					session,
+//					queryParameters,
+//					resultTypes,
+//					queryCache,
+//					key,
+//					result
+//			);
+//		}
+//
+//		ResultTransformer resolvedTransformer = resolveResultTransformer( queryParameters.getResultTransformer() );
+//		if ( resolvedTransformer != null ) {
+//			result = (
+//					areResultSetRowsTransformedImmediately() ?
+//							key.getResultTransformer().retransformResults(
+//									result,
+//									getResultRowAliases(),
+//									queryParameters.getResultTransformer(),
+//									includeInResultRow()
+//							) :
+//							key.getResultTransformer().untransformToTuples(
+//									result
+//							)
+//			);
+//		}
+//
+//		return getResultList( result, queryParameters.getResultTransformer() );
+		throw new UnsupportedOperationException(  );
 	}
 
-	private QueryKey generateQueryKey(
-			SharedSessionContractImplementor session,
-			QueryParameters queryParameters) {
-		return QueryKey.generateQueryKey(
-				getSQLString(),
-				queryParameters,
-				FilterKey.createFilterKeys( session.getLoadQueryInfluencers().getEnabledFilters() ),
-				session,
-				createCacheableResultTransformer( queryParameters )
-		);
-	}
-
-	private CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {
-		return CacheableResultTransformer.create(
-				queryParameters.getResultTransformer(),
-				getResultRowAliases(),
-				includeInResultRow()
-		);
-	}
-
-	private List getResultFromQueryCache(
-			final SharedSessionContractImplementor session,
-			final QueryParameters queryParameters,
-			final Set<Serializable> querySpaces,
-			final Type[] resultTypes,
-			final QueryResultsCache queryCache,
-			final QueryKey key) {
-		List result = null;
-
-		if ( session.getCacheMode().isGetEnabled() ) {
-			boolean isImmutableNaturalKeyLookup =
-					queryParameters.isNaturalKeyLookup() &&
-							resultTypes.length == 1 &&
-							resultTypes[0].isEntityType() &&
-							getEntityPersister( EntityType.class.cast( resultTypes[0] ) )
-									.getEntityMetamodel()
-									.hasImmutableNaturalId();
-
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
-			if ( queryParameters.isReadOnlyInitialized() ) {
-				// The read-only/modifiable mode for the query was explicitly set.
-				// Temporarily set the default read-only/modifiable setting to the query's setting.
-				persistenceContext.setDefaultReadOnly( queryParameters.isReadOnly() );
-			}
-			else {
-				// The read-only/modifiable setting for the query was not initialized.
-				// Use the default read-only/modifiable from the persistence context instead.
-				queryParameters.setReadOnly( persistenceContext.isDefaultReadOnly() );
-			}
-			try {
-				result = queryCache.get(
-						key,
-						querySpaces,
-						key.getResultTransformer().getCachedResultTypes( resultTypes ),
-						session
-				);
-			}
-			finally {
-				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
-			}
-
-			final StatisticsImplementor statistics = factory.getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				if ( result == null ) {
-					statistics.queryCacheMiss( getQueryIdentifier(), queryCache.getRegion().getName() );
-				}
-				else {
-					statistics.queryCacheHit( getQueryIdentifier(), queryCache.getRegion().getName() );
-				}
-			}
-		}
-
-		return result;
-	}
-
-	private EntityPersister getEntityPersister(EntityType entityType) {
-		return factory.getMetamodel().entityPersister( entityType.getAssociatedEntityName() );
-	}
+//	private QueryKey generateQueryKey(
+//			SharedSessionContractImplementor session,
+//			QueryParameters queryParameters) {
+//		return QueryKey.generateQueryKey(
+//				getSQLString(),
+//				queryParameters,
+//				FilterKey.createFilterKeys( session.getLoadQueryInfluencers().getEnabledFilters() ),
+//				session,
+//				createCacheableResultTransformer( queryParameters )
+//		);
+//	}
+//
+//	private CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {
+//		return CacheableResultTransformer.create(
+//				queryParameters.getResultTransformer(),
+//				getResultRowAliases(),
+//				includeInResultRow()
+//		);
+//	}
+//
+//	private List getResultFromQueryCache(
+//			final SharedSessionContractImplementor session,
+//			final QueryParameters queryParameters,
+//			final Set<Serializable> querySpaces,
+//			final Type[] resultTypes,
+//			final QueryResultsCache queryCache,
+//			final QueryKey key) {
+//		List result = null;
+//
+//		if ( session.getCacheMode().isGetEnabled() ) {
+//			boolean isImmutableNaturalKeyLookup =
+//					queryParameters.isNaturalKeyLookup() &&
+//							resultTypes.length == 1 &&
+//							resultTypes[0].isEntityType() &&
+//							getEntityPersister( EntityType.class.cast( resultTypes[0] ) )
+//									.getEntityMetamodel()
+//									.hasImmutableNaturalId();
+//
+//			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+//			boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
+//			if ( queryParameters.isReadOnlyInitialized() ) {
+//				// The read-only/modifiable mode for the query was explicitly set.
+//				// Temporarily set the default read-only/modifiable setting to the query's setting.
+//				persistenceContext.setDefaultReadOnly( queryParameters.isReadOnly() );
+//			}
+//			else {
+//				// The read-only/modifiable setting for the query was not initialized.
+//				// Use the default read-only/modifiable from the persistence context instead.
+//				queryParameters.setReadOnly( persistenceContext.isDefaultReadOnly() );
+//			}
+//			try {
+//				result = queryCache.get(
+//						key,
+//						querySpaces,
+//						key.getResultTransformer().getCachedResultTypes( resultTypes ),
+//						session
+//				);
+//			}
+//			finally {
+//				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
+//			}
+//
+//			final StatisticsImplementor statistics = factory.getStatistics();
+//			if ( statistics.isStatisticsEnabled() ) {
+//				if ( result == null ) {
+//					statistics.queryCacheMiss( getQueryIdentifier(), queryCache.getRegion().getName() );
+//				}
+//				else {
+//					statistics.queryCacheHit( getQueryIdentifier(), queryCache.getRegion().getName() );
+//				}
+//			}
+//		}
+//
+//		return result;
+//	}
+//
+//	private EntityPersister getEntityPersister(EntityType entityType) {
+//		return factory.getMetamodel().entityPersister( entityType.getAssociatedEntityName() );
+//	}
 
 	protected void putResultInQueryCache(
 			final SharedSessionContractImplementor session,
@@ -2772,18 +2773,20 @@ public abstract class Loader {
 			final QueryResultsCache queryCache,
 			final QueryKey key,
 			final List result) {
-		if ( session.getCacheMode().isPutEnabled() ) {
-			boolean put = queryCache.put(
-					key,
-					result,
-					key.getResultTransformer().getCachedResultTypes( resultTypes ),
-					session
-			);
-			final StatisticsImplementor statistics = factory.getStatistics();
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.queryCachePut( getQueryIdentifier(), queryCache.getRegion().getName() );
-			}
-		}
+//		if ( session.getCacheMode().isPutEnabled() ) {
+//			boolean put = queryCache.put(
+//					key,
+//					result,
+//					key.getResultTransformer().getCachedResultTypes( resultTypes ),
+//					session
+//			);
+//			final StatisticsImplementor statistics = factory.getStatistics();
+//			if ( put && statistics.isStatisticsEnabled() ) {
+//				statistics.queryCachePut( getQueryIdentifier(), queryCache.getRegion().getName() );
+//			}
+//		}
+
+		throw new UnsupportedOperationException(  );
 	}
 
 	/**
@@ -2874,70 +2877,71 @@ public abstract class Loader {
 			final Type[] returnTypes,
 			final RowReader rowReader,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		checkScrollability();
+		throw new UnsupportedOperationException(  );
 
-		final StatisticsImplementor statistics = getFactory().getStatistics();
-		final boolean stats = getQueryIdentifier() != null &&
-				statistics.isStatisticsEnabled();
-		long startTime = 0;
-		if ( stats ) {
-			startTime = System.nanoTime();
-		}
-
-		try {
-			// Don't use Collections#emptyList() here -- follow on locking potentially adds AfterLoadActions,
-			// so the list cannot be immutable.
-			final SqlStatementWrapper wrapper = executeQueryStatement(
-					queryParameters,
-					true,
-					new ArrayList<AfterLoadAction>(),
-					session
-			);
-			final ResultSet rs = wrapper.getResultSet();
-			final PreparedStatement st = (PreparedStatement) wrapper.getStatement();
-
-			if ( stats ) {
-				final long endTime = System.nanoTime();
-				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				statistics.queryExecuted(
-						getQueryIdentifier(),
-						0,
-						milliseconds
-				);
-			}
-
-			if ( needsFetchingScroll() ) {
-				//noinspection unchecked
-				return new FetchingScrollableResultsImpl(
-						rs,
-						st,
-						session,
-						this,
-						queryParameters,
-						rowReader
-				);
-			}
-			else {
-				//noinspection unchecked
-				return new ScrollableResultsImpl(
-						rs,
-						st,
-						session,
-						this,
-						queryParameters,
-						rowReader
-				);
-			}
-
-		}
-		catch (SQLException sqle) {
-			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
-					sqle,
-					"could not execute query using scroll",
-					getSQLString()
-			);
-		}
-
+//		checkScrollability();
+//
+//		final StatisticsImplementor statistics = getFactory().getStatistics();
+//		final boolean stats = getQueryIdentifier() != null &&
+//				statistics.isStatisticsEnabled();
+//		long startTime = 0;
+//		if ( stats ) {
+//			startTime = System.nanoTime();
+//		}
+//
+//		try {
+//			// Don't use Collections#emptyList() here -- follow on locking potentially adds AfterLoadActions,
+//			// so the list cannot be immutable.
+//			final SqlStatementWrapper wrapper = executeQueryStatement(
+//					queryParameters,
+//					true,
+//					new ArrayList<AfterLoadAction>(),
+//					session
+//			);
+//			final ResultSet rs = wrapper.getResultSet();
+//			final PreparedStatement st = (PreparedStatement) wrapper.getStatement();
+//
+//			if ( stats ) {
+//				final long endTime = System.nanoTime();
+//				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+//				statistics.queryExecuted(
+//						getQueryIdentifier(),
+//						0,
+//						milliseconds
+//				);
+//			}
+//
+//			if ( needsFetchingScroll() ) {
+//				//noinspection unchecked
+//				return new FetchingScrollableResultsImpl(
+//						rs,
+//						st,
+//						session,
+//						this,
+//						queryParameters,
+//						rowReader
+//				);
+//			}
+//			else {
+//				//noinspection unchecked
+//				return new ScrollableResultsImpl(
+//						rs,
+//						st,
+//						session,
+//						this,
+//						queryParameters,
+//						rowReader
+//				);
+//			}
+//
+//		}
+//		catch (SQLException sqle) {
+//			throw factory.getJdbcServices().getSqlExceptionHelper().convert(
+//					sqle,
+//					"could not execute query using scroll",
+//					getSQLString()
+//			);
+//		}
 	}
 
 	/**

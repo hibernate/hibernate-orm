@@ -16,7 +16,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.internal.util.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -171,35 +170,18 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				executionContext.getSession()
 		);
 
-//		try {
-//			// todo (6.0) : make these executors resolvable to allow plugging in custom ones.
-//			//		Dialect?
-//			return JdbcSelectExecutorStandardImpl.INSTANCE.list(
-//					jdbcSelect,
-//					jdbcParameterBindings,
-//					executionContext,
-//					rowTransformer
-//			);
-//		}
-//		finally {
-//			domainParameterXref.clearExpansions();
-//		}
-
-
-		throw new NotYetImplementedFor6Exception( getClass() );
+		try {
+			return executionContext.getSession().getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+					jdbcSelect,
+					jdbcParameterBindings,
+					executionContext,
+					rowTransformer
+			);
+		}
+		finally {
+			domainParameterXref.clearExpansions();
+		}
 	}
-
-//	private SqmSelectToSqlAstConverter getSqmSelectToSqlAstConverter(ExecutionContext executionContext) {
-//		// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
-//		return new SqmSelectToSqlAstConverter(
-//				executionContext.getQueryOptions(),
-//				domainParameterXref,
-//				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-//				executionContext.getLoadQueryInfluencers(),
-//				afterLoadAction -> {},
-//				executionContext.getSession().getFactory()
-//		);
-//	}
 
 	@Override
 	@SuppressWarnings("unchecked")

@@ -30,6 +30,9 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 			"org.hibernate.orm.cache"
 	);
 
+	boolean DEBUG_ENABLED = INSTANCE.isDebugEnabled();
+	boolean TRACE_ENABLED = INSTANCE.isTraceEnabled();
+
 	int NAMESPACE = 90001000;
 
 	@LogMessage(level = WARN)

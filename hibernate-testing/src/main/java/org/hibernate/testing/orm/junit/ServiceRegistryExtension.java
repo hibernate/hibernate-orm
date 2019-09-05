@@ -95,6 +95,10 @@ public class ServiceRegistryExtension
 
 	private static void configureServices(ServiceRegistry serviceRegistryAnn, StandardServiceRegistryBuilder ssrb) {
 		try {
+			for ( ServiceRegistry.Setting setting : serviceRegistryAnn.settings() ) {
+				ssrb.applySetting( setting.name(), setting.value() );
+			}
+
 			for ( Class<? extends ServiceContributor> contributorClass : serviceRegistryAnn.serviceContributors() ) {
 				final ServiceContributor serviceContributor = contributorClass.newInstance();
 				serviceContributor.contribute( ssrb );

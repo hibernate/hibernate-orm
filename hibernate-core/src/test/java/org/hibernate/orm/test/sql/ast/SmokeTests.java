@@ -6,19 +6,12 @@
  */
 package org.hibernate.orm.test.sql.ast;
 
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
-import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -26,7 +19,6 @@ import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -34,8 +26,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
-
-import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -84,15 +74,15 @@ public class SmokeTests {
 					);
 
 					assertThat( jdbcSelectOperation.getSql(), is( "select s1_0.name from mapping_simple_entity as s1_0" ) );
-
-					final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqmStatement );
-					final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> paramsXref = SqmUtil.generateJdbcParamsXref(
-							domainParameterXref,
-							() -> sqmInterpretation.getJdbcParamsBySqmParam()
-					);
-
-					// try to execute the Query...
-//					final List<String> names = query.list();
+				}
+		);
+	}
+	@Test
+	public void testSimpleHqlExecution(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<String> query = session.createQuery( "select e.name from SimpleEntity e", String.class );
+					query.list();
 				}
 		);
 	}

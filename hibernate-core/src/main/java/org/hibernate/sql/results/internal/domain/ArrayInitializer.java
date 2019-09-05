@@ -11,6 +11,7 @@ import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.CollectionInitializer;
+import org.hibernate.sql.results.spi.RowProcessingState;
 
 /**
  * @author Chris Cranford
@@ -51,6 +52,26 @@ public class ArrayInitializer implements CollectionInitializer {
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	@Override
+	public void resolveKey(RowProcessingState rowProcessingState) {
+
+	}
+
+	@Override
+	public void resolveInstance(RowProcessingState rowProcessingState) {
+
+	}
+
+	@Override
+	public void initializeInstance(RowProcessingState rowProcessingState) {
+
+	}
+
+	@Override
+	public void finishUpRow(RowProcessingState rowProcessingState) {
+
 	}
 
 	@Override

@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.internal;
 
+import java.util.Collection;
+
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -39,6 +41,15 @@ public class TimestampsCacheDisabledImpl implements TimestampsCache {
 	@Override
 	public boolean isUpToDate(
 			String[] spaces,
+			Long timestamp,
+			SharedSessionContractImplementor session) {
+		log.trace( "TimestampsRegionAccess#isUpToDate - disabled" );
+		return false;
+	}
+
+	@Override
+	public boolean isUpToDate(
+			Collection<String> spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
 		log.trace( "TimestampsRegionAccess#isUpToDate - disabled" );

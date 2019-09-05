@@ -67,4 +67,11 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 	public JavaTypeDescriptor<J> getAssembledJavaTypeDescriptor() {
 		return assembledJavaTypeDescriptor;
 	}
+
+	/**
+	 * Exposed for testing purposes
+	 */
+	public BasicValueConverter<J, ?> getValueConverter() {
+		return valueConverter;
+	}
 }

@@ -104,7 +104,8 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
-				valueConverter
+				valueConverter,
+				navigablePath
 		);
 	}
 

@@ -14,11 +14,9 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
@@ -30,7 +28,6 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
-import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
@@ -44,7 +41,7 @@ import org.hibernate.usertype.UserVersionType;
  */
 public class CustomType
 		extends AbstractType
-		implements IdentifierType, DiscriminatorType, VersionType, BasicType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
+		implements BasicType, IdentifierType, DiscriminatorType, VersionType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
 
 	private final UserType userType;
 	private final String[] registrationKeys;
@@ -90,13 +87,18 @@ public class CustomType
 	}
 
 	@Override
-	public String[] getRegistrationKeys() {
-		return registrationKeys;
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		return sqlTypeDescriptor;
 	}
 
 	@Override
 	public int[] sqlTypes(Mapping pi) {
 		return new int[] { sqlTypeDescriptor.getSqlType() };
+	}
+
+	@Override
+	public String[] getRegistrationKeys() {
+		return registrationKeys;
 	}
 
 	@Override
@@ -271,13 +273,13 @@ public class CustomType
 	@Override
 	@SuppressWarnings("unchecked")
 	public String toString(Object value) throws HibernateException {
-		if ( StringRepresentableType.class.isInstance( getUserType() ) ) {
+		if ( getUserType() instanceof StringRepresentableType ) {
 			return ( (StringRepresentableType) getUserType() ).toString( value );
 		}
 		if ( value == null ) {
 			return null;
 		}
-		if ( EnhancedUserType.class.isInstance( getUserType() ) ) {
+		if ( getUserType() instanceof EnhancedUserType ) {
 			//noinspection deprecation
 			return ( (EnhancedUserType) getUserType() ).toXMLString( value );
 		}
@@ -286,10 +288,10 @@ public class CustomType
 
 	@Override
 	public Object fromStringValue(String string) throws HibernateException {
-		if ( StringRepresentableType.class.isInstance( getUserType() ) ) {
+		if ( getUserType() instanceof StringRepresentableType ) {
 			return ( (StringRepresentableType) getUserType() ).fromStringValue( string );
 		}
-		if ( EnhancedUserType.class.isInstance( getUserType() ) ) {
+		if ( getUserType() instanceof EnhancedUserType ) {
 			//noinspection deprecation
 			return ( (EnhancedUserType) getUserType() ).fromXMLString( string );
 		}
@@ -305,7 +307,7 @@ public class CustomType
 
 	@Override
 	public boolean canDoSetting() {
-		if ( ProcedureParameterNamedBinder.class.isInstance( getUserType() ) ) {
+		if ( getUserType() instanceof ProcedureParameterNamedBinder ) {
 			return ((ProcedureParameterNamedBinder) getUserType() ).canDoSetting();
 		}
 		return false;
@@ -326,15 +328,10 @@ public class CustomType
 
 	@Override
 	public boolean canDoExtraction() {
-		if ( ProcedureParameterExtractionAware.class.isInstance( getUserType() ) ) {
+		if ( getUserType() instanceof ProcedureParameterExtractionAware ) {
 			return ((ProcedureParameterExtractionAware) getUserType() ).canDoExtraction();
 		}
 		return false;
-	}
-
-	@Override
-	public SqlTypeDescriptor getSqlTypeDescriptor() {
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

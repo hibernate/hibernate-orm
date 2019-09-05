@@ -90,6 +90,10 @@ public class EnumType<T extends Enum>
 		this.typeConfiguration = typeConfiguration;
 	}
 
+	public EnumValueConverter getEnumValueConverter() {
+		return enumValueConverter;
+	}
+
 	@Override
 	public void setParameterValues(Properties parameters) {
 		// IMPL NOTE: we handle 2 distinct cases here:

@@ -8,11 +8,11 @@ package org.hibernate.orm.test.sql.ast;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
+import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.sql.ast.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -27,6 +28,7 @@ import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.BasicResultAssembler;
 import org.hibernate.sql.results.internal.ScalarDomainResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -53,7 +55,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @SuppressWarnings("WeakerAccess")
 @DomainModel(
-		annotatedClasses = org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity.class
+		annotatedClasses = SimpleEntity.class
 )
 @ServiceRegistry(
 		settings = @ServiceRegistry.Setting(
@@ -67,7 +69,10 @@ public class SmokeTests {
 	public void testSimpleHqlInterpretation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<String> query = session.createQuery( "select e.name from SimpleEntity e", String.class );
+					final QueryImplementor<String> query = session.createQuery(
+							"select e.name from SimpleEntity e",
+							String.class
+					);
 					final HqlQueryImplementor<String> hqlQuery = (HqlQueryImplementor<String>) query;
 					//noinspection unchecked
 					final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();
@@ -105,6 +110,16 @@ public class SmokeTests {
 					assertThat( sqlSelection.getJdbcResultSetIndex(), is( 1 ) );
 					assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
 					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
+
+					final JdbcSelect jdbcSelectOperation = SqlAstSelectToJdbcSelectConverter.interpret(
+							sqlAst,
+							session.getSessionFactory()
+					);
+
+					assertThat(
+							jdbcSelectOperation.getSql(),
+							is( "select s1_0.name from mapping_simple_entity as s1_0" )
+					);
 				}
 		);
 	}
@@ -155,7 +170,7 @@ public class SmokeTests {
 					assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "s1_0" ) );
 
 					final SelectClause selectClause = sqlAst.getQuerySpec().getSelectClause();
-					assertThat( selectClause.getSqlSelections().size(), is( 1 ) ) ;
+					assertThat( selectClause.getSqlSelections().size(), is( 1 ) );
 
 					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( 0 );
 					assertThat( sqlSelection.getJdbcResultSetIndex(), is( 1 ) );
@@ -197,6 +212,17 @@ public class SmokeTests {
 					final BasicValueConverter valueConverter = ( (BasicResultAssembler) resultAssembler ).getValueConverter();
 					assertThat( valueConverter, notNullValue() );
 					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
+
+
+					final JdbcSelect jdbcSelectOperation = SqlAstSelectToJdbcSelectConverter.interpret(
+							sqlAst,
+							session.getSessionFactory()
+					);
+
+					assertThat(
+							jdbcSelectOperation.getSql(),
+							is( "select s1_0.gender from mapping_simple_entity as s1_0" )
+					);
 				}
 		);
 	}

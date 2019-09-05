@@ -9,9 +9,12 @@ package org.hibernate.metamodel.model.convert.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -81,5 +84,15 @@ public class NamedEnumValueConverter<E extends Enum> implements EnumValueConvert
 
 		this.valueExtractor = sqlTypeDescriptor.getExtractor( relationalTypeDescriptor );
 		this.valueBinder = sqlTypeDescriptor.getBinder( relationalTypeDescriptor );
+	}
+
+	@Override
+	public void writeValue(
+			PreparedStatement statement,
+			Enum value,
+			int position,
+			SharedSessionContractImplementor session) throws SQLException {
+		final String jdbcValue = value == null ? null : value.name();
+		valueBinder.bind( statement, jdbcValue, position, session );
 	}
 }

@@ -333,9 +333,8 @@ public class EnumType<T extends Enum>
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		verifyConfigured();
-//		enumValueConverter.writeValue( st, (Enum) value, index, session );
+		verifyConfigured();
+		enumValueConverter.writeValue( st, (Enum) value, index, session );
 	}
 
 	@Override

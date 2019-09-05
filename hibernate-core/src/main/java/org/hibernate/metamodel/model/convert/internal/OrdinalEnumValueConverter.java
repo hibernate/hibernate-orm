@@ -9,8 +9,11 @@ package org.hibernate.metamodel.model.convert.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -81,5 +84,13 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 
 		this.valueExtractor = sqlTypeDescriptor.getExtractor( relationalJavaDescriptor );
 		this.valueBinder = sqlTypeDescriptor.getBinder( relationalJavaDescriptor );
+	}
+
+	@Override
+	public void writeValue(
+			PreparedStatement statement, Enum value, int position, SharedSessionContractImplementor session)
+			throws SQLException {
+		final Integer jdbcValue = value == null ? null : value.ordinal();
+		valueBinder.bind( statement, jdbcValue, position, session );
 	}
 }

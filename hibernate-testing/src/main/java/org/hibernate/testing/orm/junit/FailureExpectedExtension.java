@@ -14,7 +14,6 @@ import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
-import org.junit.platform.commons.support.AnnotationSupport;
 
 import org.jboss.logging.Logger;
 
@@ -58,7 +57,8 @@ public class FailureExpectedExtension
 
 		log.debugf( "Evaluating context - %s [failureExpectedValidation = %s]", context.getDisplayName(), failureExpectedValidation );
 
-		if ( AnnotationSupport.findAnnotation( context.getElement().get(), FailureExpected.class ).isPresent() ) {
+		if ( TestingUtil.hasEffectiveAnnotation( context, FailureExpected.class )
+				|| TestingUtil.hasEffectiveAnnotation( context, FailureExpectedGroup.class ) ) {
 			// The test is marked as `FailureExpected`...
 			if ( failureExpectedValidation ) {
 				log.debugf( "Executing test marked with `@FailureExpected` for validation" );
@@ -82,7 +82,8 @@ public class FailureExpectedExtension
 	public void beforeEach(ExtensionContext context) {
 		log.tracef( "#beforeEach(%s)", context.getDisplayName() );
 
-		final boolean markedExpectedFailure = TestingUtil.hasEffectiveAnnotation( context, FailureExpected.class );
+		final boolean markedExpectedFailure = TestingUtil.hasEffectiveAnnotation( context, FailureExpected.class )
+				|| TestingUtil.hasEffectiveAnnotation( context, FailureExpectedGroup.class );
 
 		log.debugf( "Checking for @FailureExpected [%s] - %s", context.getDisplayName(), markedExpectedFailure );
 

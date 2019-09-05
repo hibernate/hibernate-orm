@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.convert.spi;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 
@@ -25,6 +26,7 @@ public interface EnumValueConverter<O extends Enum, R> extends BasicValueConvert
 
 	String toSqlLiteral(Object value);
 
+	@Remove
 	void writeValue(
 			PreparedStatement statement,
 			Enum value,

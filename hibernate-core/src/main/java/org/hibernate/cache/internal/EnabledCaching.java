@@ -67,8 +67,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private final TimestampsCache timestampsCache;
 
 	private final QueryResultsCache defaultQueryResultsCache;
-	// queryResultsCacheMap will contain defaultQueryResultsCache and "named" QueryResultsCaches
-	private final Map<String, QueryResultsCache> queryResultsCacheMap = new ConcurrentHashMap<>();
+	private final Map<String, QueryResultsCache> namedQueryResultsCacheMap = new ConcurrentHashMap<>();
 
 
 	private final Set<String> legacySecondLevelCacheNames = new LinkedHashSet<>();
@@ -99,8 +98,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 					queryResultsRegion,
 					timestampsCache
 			);
-			// Include defaultQueryResultsCache in queryResultsCacheMap.
-			queryResultsCacheMap.put( queryResultsRegion.getName(), defaultQueryResultsCache );
+			// defaultQueryResultsCache is not included in namedQueryResultsCacheMap.
 		}
 		else {
 			timestampsCache = new TimestampsCacheDisabledImpl();
@@ -212,14 +210,20 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	@Override
 	public Region getRegion(String regionName) {
 		// The Region in domainDataRegionMap has precedence over the
-		// QueryResultsCache in #queryResultsCacheMap
+		// QueryResultsCache in #namedQueryResultsCacheMap
 
 		final Region region = domainDataRegionMap.get( regionName );
 		if ( region != null ) {
 			return region;
 		}
+		else if ( !getSessionFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
+			return null;
+		}
+		else if ( defaultQueryResultsCache.getRegion().getName().equals( regionName ) ) {
+			return defaultQueryResultsCache.getRegion();
+		}
 		else {
-			final QueryResultsCache queryResultsCache = queryResultsCacheMap.get( regionName );
+			final QueryResultsCache queryResultsCache = namedQueryResultsCacheMap.get( regionName );
 			return queryResultsCache != null
 					? queryResultsCache.getRegion()
 					: null;
@@ -438,7 +442,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictQueryRegion(String regionName) {
-		final QueryResultsCache cache = queryResultsCacheMap.get( regionName );
+		final QueryResultsCache cache = getQueryResultsCache( regionName );
 		if ( cache == null ) {
 			return;
 		}
@@ -464,9 +468,11 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			LOG.debug( "Evicting cache of all query regions." );
 		}
 
-		// defaultQueryResultsCache is in queryResultsCacheMap so
-		// it will be evicted in this loop.
-		for ( QueryResultsCache cache : queryResultsCacheMap.values() ) {
+		// defaultQueryResultsCache is not in namedQueryResultsCacheMap so
+		// evict it separately.
+		evictQueryResultRegion( defaultQueryResultsCache );
+
+		for ( QueryResultsCache cache : namedQueryResultsCacheMap.values() ) {
 			evictQueryResultRegion( cache );
 		}
 	}
@@ -486,7 +492,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			return getDefaultQueryResultsCache();
 		}
 
-		final QueryResultsCache existing = queryResultsCacheMap.get( regionName );
+		final QueryResultsCache existing = namedQueryResultsCacheMap.get( regionName );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -500,15 +506,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			return null;
 		}
 
-		if ( defaultQueryResultsCache.getRegion().getName().equals( regionName ) ) {
-			// Only a *named* QueryResultsCache should be returned, so ignore defaultQueryResultsCache.
-			return null;
-		}
-		return queryResultsCacheMap.get( regionName );
+		// namedQueryResultsCacheMap does not include defaultQueryResultsCache
+		return namedQueryResultsCacheMap.get( regionName );
 	}
 
 	protected QueryResultsCache makeQueryResultsRegionAccess(String regionName) {
-		final QueryResultsCache regionAccess = queryResultsCacheMap.computeIfAbsent(
+		final QueryResultsCache regionAccess = namedQueryResultsCacheMap.computeIfAbsent(
 				regionName,
 				this::makeQueryResultsCache
 		);
@@ -541,7 +544,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public Set<String> getQueryCacheRegionNames() {
-		return queryResultsCacheMap.keySet();
+		return namedQueryResultsCacheMap.keySet();
 	}
 
 	@Override
@@ -556,7 +559,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			domainDataRegion.clear();
 		}
 
-		final QueryResultsCache queryResultsCache = queryResultsCacheMap.get( regionName );
+		final QueryResultsCache queryResultsCache = namedQueryResultsCacheMap.get( regionName );
 		if ( queryResultsCache != null ) {
 			queryResultsCache.getRegion().clear();
 		}
@@ -581,7 +584,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		for ( Region region : domainDataRegionMap.values() ) {
 			region.destroy();
 		}
-		for ( QueryResultsCache queryResultsCache : queryResultsCacheMap.values() ) {
+		for ( QueryResultsCache queryResultsCache : namedQueryResultsCacheMap.values() ) {
 			queryResultsCache.getRegion().destroy();
 		}
 	}

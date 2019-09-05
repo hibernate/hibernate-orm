@@ -57,7 +57,11 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * Get a cache Region by name. If there is both a {@link DomainDataRegion}
 	 * and a {@link QueryResultsRegion} with the specified name, then the
 	 * {@link DomainDataRegion} will be returned.
-	 *
+	 * <p/>
+	 * If Hibernate is configured for query result caching, and the {@code regionName}
+	 * is the name of the default {@link QueryResultsRegion}, then the default {@link QueryResultsRegion}
+	 * will be returned.
+	 * <p/>
 	 * @apiNote It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
@@ -66,18 +70,24 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * @return the {@link Region} or {@code null} if there is none with the specified name.
 	 *
 	 * @deprecated to access a {@link DomainDataRegion}, use {@link #getDomainDataRegion(String)};
-	 * to access a {@link QueryResultsRegion}, use {@link #getDefaultQueryResultsCache}.getRegion() or
-	 * {@link #getQueryResultsCacheStrictly(String)}.getRegion()
+	 * to access the default {@link QueryResultsRegion}, use {@link #getDefaultQueryResultsCache}.getRegion();
+	 * to access a named (non-default) {@link QueryResultsRegion}, use
+	 * {@link #getQueryResultsCacheStrictly(String)}.getRegion().
 	 */
 	@Deprecated
 	Region getRegion(String regionName);
 
 	/**
 	 * The unqualified name of all regions.  Intended for use with {@link #getRegion}
+	 * <p/>
+	 * If Hibernate is configured for query result caching, then the name of the
+	 * default {@link QueryResultsRegion} will be included in the returned Set.
 	 *
 	 * @since 5.3
 	 * @deprecated Use {@link #getDomainDataRegionNames} to get all {@link DomainDataRegion} names;
-	 * use {@link #getQueryCacheRegionNames()} to get all {@link QueryResultsRegion} names.
+	 * use {@link #getQueryCacheRegionNames()} to get all named (non-default) {@link DomainDataRegion}
+	 * names; use {@link #getDefaultQueryResultsCache()}.getRegion().getName() to get the name of
+	 * the default {@link QueryResultsRegion}.
 	 */
 	@Deprecated
 	Set<String> getCacheRegionNames();
@@ -103,8 +113,12 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	}
 
 	/**
-	 * The unqualified names of all {@link QueryResultsRegion} regions. Intended for use with
-	 * {@link #getQueryResultsCacheStrictly(String)}..
+	 * The unqualified names of all named (non-default) {@link QueryResultsRegion} regions. Intended for use with
+	 * {@link #getQueryResultsCacheStrictly(String)}.
+	 * <p/>
+	 * The name of the default {@link QueryResultsRegion} will not be included in the returned Set.
+	 * {@link #getDefaultQueryResultsCache()} should be used to get access to the default
+	 * {@link QueryResultsCache}.
 	 *
 	 * @since 5.3
 	 */
@@ -115,11 +129,6 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 			if ( queryResultsCache != null ) {
 				queryCacheRegionNames.add( queryResultsCache.getRegion().getName() );
 			}
-		}
-		// Add in the default QueryResultsRegion name, if there is one.
-		final QueryResultsCache defaultQueryResultsCache = getDefaultQueryResultsCache();
-		if ( defaultQueryResultsCache != null ) {
-			queryCacheRegionNames.add( defaultQueryResultsCache.getRegion().getName() );
 		}
 		return queryCacheRegionNames;
 	}
@@ -169,9 +178,13 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	/**
 	 * Get the named QueryResultRegionAccess but not creating one if it
 	 * does not already exist.  This is intended for use by statistics.
-	 *
+	 * <p/>
 	 * Will return {@code null} if Hibernate is not configured for query result
-	 * caching or if no such region (yet) exists
+	 * caching, if no such region (yet) exists, or if {@code regionName} is the
+	 * name of the default {@link QueryResultsRegion}.
+	 * <p/>
+	 * {@link #getDefaultQueryResultsCache()} should be used to get access to the default
+	 * {@link QueryResultsCache}.
 	 *
 	 * @since 5.3
 	 */
@@ -201,7 +214,10 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @return All cache region names
 	 *
-	 * @deprecated (since 5.3) Use {@link CacheImplementor#getCacheRegionNames()} instead
+	 * @deprecated (since 5.3) Use {@link #getDomainDataRegionNames} to get all {@link DomainDataRegion} names;
+	 * use {@link #getQueryCacheRegionNames()} to get all named (non-default) {@link DomainDataRegion}
+	 * names; use {@link #getDefaultQueryResultsCache()}.getRegion().getName() to get the name of
+	 * the default {@link QueryResultsRegion}.
 	 */
 	@Deprecated
 	String[] getSecondLevelCacheRegionNames();

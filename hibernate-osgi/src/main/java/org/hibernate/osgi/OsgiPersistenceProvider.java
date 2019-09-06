@@ -97,7 +97,8 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 			Thread.currentThread().setContextClassLoader(info.getClassLoader());
 			return Bootstrap.getEntityManagerFactoryBuilder( info, settings,
 					new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil ) ).build();
-		} finally {
+		}
+		finally {
 			Thread.currentThread().setContextClassLoader(prevCL);
 		}
 	}

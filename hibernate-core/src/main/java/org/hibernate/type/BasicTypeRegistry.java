@@ -31,6 +31,7 @@ public class BasicTypeRegistry implements Serializable {
 	private final TypeConfiguration typeConfiguration;
 
 	private final Map<SqlTypeDescriptor,Map<JavaTypeDescriptor<?>,BasicType<?>>> registryValues = new ConcurrentHashMap<>();
+	private boolean primed;
 
 	/**
 	 * TODO : analyze these sizing params; unfortunately this seems to be the only way to give a "concurrencyLevel"
@@ -41,6 +42,13 @@ public class BasicTypeRegistry implements Serializable {
 		this.typeConfiguration = typeConfiguration;
 	}
 
+	public boolean isPrimed() {
+		return primed;
+	}
+
+	public void primed() {
+		this.primed = true;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Access

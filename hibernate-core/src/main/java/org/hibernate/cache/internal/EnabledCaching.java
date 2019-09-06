@@ -584,6 +584,11 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		for ( Region region : domainDataRegionMap.values() ) {
 			region.destroy();
 		}
+
+		if ( defaultQueryResultsCache != null ) {
+			defaultQueryResultsCache.getRegion().destroy();
+		}
+
 		for ( QueryResultsCache queryResultsCache : namedQueryResultsCacheMap.values() ) {
 			queryResultsCache.getRegion().destroy();
 		}

@@ -102,7 +102,7 @@ public class H2Dialect extends Dialect {
 
 		if ( buildId >= 32 ) {
 			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
-			this.querySequenceString = "select * from information_schema.sequences";
+			this.querySequenceString = "select * from INFORMATION_SCHEMA.sequences";
 		}
 		else {
 			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;

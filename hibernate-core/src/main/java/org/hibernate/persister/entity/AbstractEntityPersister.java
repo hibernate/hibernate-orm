@@ -556,7 +556,7 @@ public abstract class AbstractEntityPersister
 			this.naturalIdRegionAccessStrategy = null;
 		}
 
-		this.entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext.getSessionFactory() );
+		this.entityMetamodel = new EntityMetamodel( persistentClass, this, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
 
 		if ( entityMetamodel.isMutable() ) {

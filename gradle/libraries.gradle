@@ -28,11 +28,11 @@ ext {
     geolatteVersion = '1.4.0'
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
-    wildflyVersion = '14.0.1.Final'
-    arquillianVersion = '1.4.0.Final'
+    wildflyVersion = '17.0.1.Final'
+    arquillianVersion = '1.4.1.Final'
     shrinkwrapVersion = '1.2.6'
     shrinkwrapDescriptorsVersion = '2.0.0'
-    wildflyArquillianContainerVersion = '2.1.1.Final'
+    wildflyArquillianContainerVersion = '2.2.0.Final'
 
     jodaTimeVersion = '2.3'
 

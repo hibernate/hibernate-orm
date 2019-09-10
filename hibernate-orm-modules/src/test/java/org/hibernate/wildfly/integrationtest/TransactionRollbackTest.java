@@ -12,6 +12,7 @@ import javax.persistence.PersistenceContext;
 
 import org.hibernate.Session;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.wildfly.model.Kryptonite;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

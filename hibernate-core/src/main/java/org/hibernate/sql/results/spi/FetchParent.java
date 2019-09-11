@@ -27,4 +27,6 @@ public interface FetchParent {
 	 * Retrieve the fetches owned by this fetch source.
 	 */
 	List<Fetch> getFetches();
+
+	Fetch findFetch(String fetchableName);
 }

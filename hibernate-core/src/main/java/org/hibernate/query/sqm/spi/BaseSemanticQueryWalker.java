@@ -481,6 +481,8 @@ public class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitTreatedPath(SqmTreatedPath sqmTreatedPath) {
+		// todo (6.0) : determine how to best handle TREAT
+		//		- see org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter.visitFetches
 		throw new NotYetImplementedFor6Exception();
 	}
 

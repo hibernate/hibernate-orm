@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
+import javax.persistence.Tuple;
 
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
@@ -25,6 +26,7 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
@@ -36,10 +38,10 @@ import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
@@ -48,6 +50,7 @@ import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
@@ -143,6 +146,9 @@ public class QuerySqmImpl<R>
 			SharedSessionContractImplementor producer) {
 		super( producer );
 
+		SqmUtil.verifyIsSelectStatement( sqmStatement );
+		checkQueryReturnType( (SqmSelectStatement<R>) sqmStatement, resultType, producer.getFactory() );
+
 		if ( resultType != null ) {
 			if ( sqmStatement instanceof SqmDmlStatement ) {
 				throw new IllegalArgumentException( "Non-select queries cannot be typed" );
@@ -163,6 +169,51 @@ public class QuerySqmImpl<R>
 		}
 
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+	}
+
+	private static <T> void checkQueryReturnType(SqmSelectStatement<T> sqm, Class<T> resultClass, SessionFactoryImplementor sessionFactory) {
+		if ( resultClass == null ) {
+			// nothing to check
+			return;
+		}
+
+		final List<SqmSelection> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+
+		if ( resultClass.isArray() ) {
+			// todo (6.0) : implement
+		}
+		else if ( Tuple.class.isAssignableFrom( resultClass ) ) {
+			// todo (6.0) : implement
+		}
+		else {
+			if ( selections.size() != 1 ) {
+				final String errorMessage = "Query result-type error - multiple selections: use Tuple or array";
+
+				if ( sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+					throw new IllegalArgumentException( errorMessage );
+				}
+				else {
+					throw new QueryTypeMismatchException( errorMessage );
+				}
+			}
+
+			final SqmSelection sqmSelection = selections.get( 0 );
+
+			if ( ! resultClass.isAssignableFrom( sqmSelection.getNodeType().getExpressableJavaTypeDescriptor().getJavaType() ) ) {
+				final String errorMessage = String.format(
+						"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
+						resultClass.getName(),
+						sqmSelection.getNodeType().getExpressableJavaTypeDescriptor().getJavaType().getName()
+				);
+
+				if ( sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+					throw new IllegalArgumentException( errorMessage );
+				}
+				else {
+					throw new QueryTypeMismatchException( errorMessage );
+				}
+			}
+		}
 	}
 
 	@Override
@@ -305,7 +356,6 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
 		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );

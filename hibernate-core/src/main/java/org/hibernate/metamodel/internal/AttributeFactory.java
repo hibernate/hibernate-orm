@@ -43,6 +43,7 @@ import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
 import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -289,6 +290,24 @@ public class AttributeFactory {
 		return getDeclarerEntityMetamodel( ownerType, context );
 	}
 
+	private static EntityPersister getDeclaringEntity(
+			AbstractIdentifiableType<?> ownerType,
+			MetadataContext metadataContext) {
+		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
+		if ( persistenceType == Type.PersistenceType.ENTITY ) {
+			return metadataContext.getMetamodel()
+					.getEntityDescriptor( ownerType.getTypeName() );
+		}
+		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS ) {
+			PersistentClass persistentClass =
+					metadataContext.getPersistentClassHostingProperties( (MappedSuperclassTypeImpl<?>) ownerType );
+			return metadataContext.getMetamodel()
+					.findEntityDescriptor( persistentClass.getClassName() );
+		}
+		else {
+			throw new AssertionFailure( "Cannot get the metamodel for PersistenceType: " + persistenceType );
+		}
+	}
 	private static EntityMetamodel getDeclarerEntityMetamodel(
 			AbstractIdentifiableType<?> ownerType,
 			MetadataContext metadataContext) {
@@ -609,7 +628,8 @@ public class AttributeFactory {
 		else if ( Type.PersistenceType.ENTITY == persistenceType
 				|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
 			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) ownerType;
-			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType, metadataContext );
+			final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
+			final EntityMetamodel entityMetamodel = declaringEntityMapping.getEntityMetamodel();
 			final String propertyName = property.getName();
 			final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
 			if ( index == null ) {
@@ -617,7 +637,7 @@ public class AttributeFactory {
 				return virtualIdentifierMemberResolver.resolveMember( attributeContext, metadataContext );
 			}
 			else {
-				final Getter getter = entityMetamodel.getTuplizer().getGetter( index );
+				final Getter getter = declaringEntityMapping.getRepresentationStrategy().resolvePropertyAccess( property ).getGetter();
 				return getter instanceof PropertyAccessMapImpl.GetterImpl
 						? new MapMember( propertyName, property.getType().getReturnedClass() )
 						: getter.getMember();
@@ -630,14 +650,17 @@ public class AttributeFactory {
 
 	private final MemberResolver identifierMemberResolver = (attributeContext, metadataContext) -> {
 		final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
-		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+		final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
+		final EntityMetamodel entityMetamodel = declaringEntityMapping.getEntityMetamodel();
+
 		if ( !attributeContext.getPropertyMapping().getName()
 				.equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
 			// this *should* indicate processing part of an IdClass...
 			return virtualIdentifierMemberResolver.resolveMember( attributeContext, metadataContext );
 		}
-		final Getter getter = entityMetamodel.getTuplizer().getIdentifierGetter();
-		if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
+
+		final Getter getter = declaringEntityMapping.getRepresentationStrategy().resolvePropertyAccess( attributeContext.getPropertyMapping() ).getGetter();
+		if ( getter instanceof PropertyAccessMapImpl.GetterImpl ) {
 			return new MapMember(
 					entityMetamodel.getIdentifierProperty().getName(),
 					entityMetamodel.getIdentifierProperty().getType().getReturnedClass()
@@ -654,14 +677,15 @@ public class AttributeFactory {
 				AttributeContext attributeContext,
 				MetadataContext metadataContext) {
 			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
-			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
+			final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
+			final EntityMetamodel entityMetamodel = declaringEntityMapping.getEntityMetamodel();
 			final String versionPropertyName = attributeContext.getPropertyMapping().getName();
 			if ( !versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {
 				// this should never happen, but to be safe...
 				throw new IllegalArgumentException( "Given property did not match declared version property" );
 			}
 
-			final Getter getter = entityMetamodel.getTuplizer().getVersionGetter();
+			final Getter getter = declaringEntityMapping.getRepresentationStrategy().resolvePropertyAccess( attributeContext.getPropertyMapping() ).getGetter();
 			if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
 				return new MapMember(
 						versionPropertyName,

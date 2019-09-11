@@ -8,6 +8,8 @@ package org.hibernate.metamodel;
 
 import java.util.Locale;
 
+import org.hibernate.EntityMode;
+
 /**
  * Enumeration of the built-in ways that Hibernate can represent the
  * application's domain model.
@@ -15,23 +17,31 @@ import java.util.Locale;
  * @author Steve Ebersole
  */
 public enum RepresentationMode {
-	POJO( "pojo" ),
-	MAP( "map", "dynamic-map" );
+	POJO( "pojo", EntityMode.POJO ),
+	MAP( "map", "dynamic-map", EntityMode.MAP );
 
 	private final String externalName;
 	private final String alternativeExternalName;
 
-	RepresentationMode(String externalName) {
-		this ( externalName, null );
+	private final EntityMode legacyEntityMode;
+
+	RepresentationMode(String externalName, EntityMode legacyEntityMode) {
+		this ( externalName, null, legacyEntityMode );
 	}
 
-	RepresentationMode(String externalName, String alternativeExternalName) {
+	RepresentationMode(String externalName, String alternativeExternalName, EntityMode legacyEntityMode) {
 		this.externalName = externalName;
 		this.alternativeExternalName = alternativeExternalName;
+		this.legacyEntityMode = legacyEntityMode;
 	}
 
 	public String getExternalName() {
 		return externalName;
+	}
+
+	@Deprecated
+	public EntityMode getLegacyEntityMode() {
+		return legacyEntityMode;
 	}
 
 	public static RepresentationMode fromExternalName(String externalName) {

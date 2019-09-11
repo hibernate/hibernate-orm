@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -57,4 +58,8 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 		return wrappedPath.getLhs();
 	}
 
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitTreatedPath( this );
+	}
 }

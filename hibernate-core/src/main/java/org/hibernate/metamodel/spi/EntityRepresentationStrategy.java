@@ -6,7 +6,11 @@
  */
 package org.hibernate.metamodel.spi;
 
+import java.util.function.Consumer;
+
+import org.hibernate.EntityNameResolver;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Specialization of ManagedTypeRepresentationStrategy for an entity type
@@ -18,10 +22,36 @@ public interface EntityRepresentationStrategy extends ManagedTypeRepresentationS
 	/**
 	 * Create a delegate capable of instantiating instances of the represented type.
 	 */
-	<J> Instantiator<J> getInstantiator();
+	Instantiator<?> getInstantiator();
 
 	/**
 	 * Create the delegate capable of producing proxies for the given entity
 	 */
 	ProxyFactory getProxyFactory();
+
+	default boolean isLifecycleImplementor() {
+		return false;
+	}
+
+	default boolean isBytecodeEnhanced() {
+		return false;
+	}
+
+	/**
+	 * The Java type descriptor for the concrete entity type
+	 */
+	JavaTypeDescriptor<?> getMappedJavaTypeDescriptor();
+
+	JavaTypeDescriptor<?> getProxyJavaTypeDescriptor();
+
+	/**
+	 * The Java type descriptor for the type returned when the entity is loaded
+	 */
+	default JavaTypeDescriptor<?> getLoadJavaTypeDescriptor() {
+		return getMappedJavaTypeDescriptor();
+	}
+
+	default void visitEntityNameResolvers(Consumer<EntityNameResolver> consumer) {
+		// byt default do nothing
+	}
 }

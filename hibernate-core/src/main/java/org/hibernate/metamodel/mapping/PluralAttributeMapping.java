@@ -11,7 +11,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeMapping extends AttributeMapping {
+public interface PluralAttributeMapping extends AttributeMapping, StateArrayContributorMapping {
 	CollectionPersister getCollectionDescriptor();
 
 	ModelPart getValueDescriptor();

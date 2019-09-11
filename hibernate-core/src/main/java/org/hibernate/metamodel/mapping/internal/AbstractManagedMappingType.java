@@ -61,4 +61,10 @@ public class AbstractManagedMappingType implements ManagedMappingType {
 			);
 		}
 	}
+
+	@Override
+	public boolean isTypeOrSuperType(ManagedMappingType targetType) {
+		// todo (6.0) : need to think through what this ought to indicate (if we allow it at all)
+		return targetType == this;
+	}
 }

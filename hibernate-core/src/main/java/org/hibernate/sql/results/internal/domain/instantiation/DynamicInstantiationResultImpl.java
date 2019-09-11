@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.sql.internal.instantiation;
+package org.hibernate.sql.results.internal.domain.instantiation;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -17,8 +17,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
-import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.DynamicInstantiationResult;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -27,8 +27,8 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class DynamicInstantiationResult<R> implements DomainResult<R> {
-	private static final Logger log = Logger.getLogger( DynamicInstantiationResult.class );
+public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationResult<R> {
+	private static final Logger log = Logger.getLogger( DynamicInstantiationResultImpl.class );
 
 	private final String resultVariable;
 
@@ -36,7 +36,7 @@ public class DynamicInstantiationResult<R> implements DomainResult<R> {
 	private final JavaTypeDescriptor<R> javaTypeDescriptor;
 	private final List<ArgumentDomainResult> argumentResults;
 
-	public DynamicInstantiationResult(
+	public DynamicInstantiationResultImpl(
 			String resultVariable,
 			DynamicInstantiationNature nature,
 			JavaTypeDescriptor<R> javaTypeDescriptor,

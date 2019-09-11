@@ -9,5 +9,6 @@ package org.hibernate.metamodel.mapping;
 /**
  * @author Steve Ebersole
  */
-public interface EntityVersionMapping extends SingularAttributeMapping, BasicValuedModelPart {
+public interface EntityVersionMapping extends SingularAttributeMapping,
+		StateArrayContributorMapping, BasicValuedModelPart {
 }

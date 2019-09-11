@@ -36,7 +36,10 @@ import org.hibernate.property.access.spi.Getter;
  * @see org.hibernate.tuple.component.ComponentTuplizer
  *
  * @author Steve Ebersole
+ *
+ * @deprecated See {@link org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy}
  */
+@Deprecated
 public interface Tuplizer {
 	/**
 	 * Extract the current values contained on the given entity.

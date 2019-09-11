@@ -6,14 +6,18 @@
  */
 package org.hibernate.type;
 
+import java.io.Serializable;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
+
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
-
-import java.io.Serializable;
-import java.util.Map;
 
 /**
  * Collection of convenience methods relating to operations across arrays of types...
@@ -28,6 +32,47 @@ public class TypeHelper {
 	 * Disallow instantiation
 	 */
 	private TypeHelper() {
+	}
+
+	public static final BiFunction<StateArrayContributorMapping,Object,Object> DEEP_COPY_VALUE_PRODUCER = (navigable, sourceValue) -> {
+		if ( sourceValue == LazyPropertyInitializer.UNFETCHED_PROPERTY
+				|| sourceValue == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+			return sourceValue;
+		}
+		else {
+			return navigable.getAttributeMetadataAccess().resolveAttributeMetadata( null ).getMutabilityPlan().deepCopy( sourceValue );
+		}
+	};
+
+	@SuppressWarnings("unchecked")
+	public static void deepCopy(
+			ManagedMappingType containerDescriptor,
+			Object[] source,
+			Object[] target,
+			Predicate<StateArrayContributorMapping> copyConditions) {
+		deepCopy(
+				containerDescriptor,
+				source,
+				target,
+				copyConditions,
+				DEEP_COPY_VALUE_PRODUCER
+		);
+	}
+
+	public static void deepCopy(
+			ManagedMappingType containerDescriptor,
+			Object[] source,
+			Object[] target,
+			Predicate<StateArrayContributorMapping> copyConditions,
+			BiFunction<StateArrayContributorMapping, Object, Object> targetValueProducer) {
+		containerDescriptor.visitStateArrayContributors(
+				contributor -> {
+					if ( copyConditions.test( contributor ) ) {
+						final int position = contributor.getStateArrayPosition();
+						target[position] = targetValueProducer.apply( contributor, source[position] );
+					}
+				}
+		);
 	}
 
 	/**

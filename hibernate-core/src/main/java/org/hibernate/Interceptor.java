@@ -9,6 +9,8 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
+import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.type.Type;
 
 /**
@@ -202,6 +204,7 @@ public interface Interceptor {
 			Object[] previousState,
 			String[] propertyNames,
 			Type[] types);
+
 	/**
 	 * Instantiate the entity class. Return <tt>null</tt> to indicate that Hibernate should use
 	 * the default constructor of the class. The identifier property of the returned instance
@@ -214,8 +217,23 @@ public interface Interceptor {
 	 * @return an instance of the class, or <tt>null</tt> to choose default behaviour
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @deprecated Use {@link #instantiate(String, EntityRepresentationStrategy, Object)} instead
 	 */
+	@Deprecated
 	Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException;
+
+	/**
+	 * Instantiate the entity. Return <tt>null</tt> to indicate that Hibernate should use
+	 * the default constructor of the class. The identifier property of the returned instance
+	 * should be initialized with the given identifier.
+	 */
+	default Object instantiate(
+			String entityName,
+			EntityRepresentationStrategy representationStrategy,
+			Object id) throws CallbackException {
+		return instantiate( entityName, representationStrategy.getMode().getLegacyEntityMode(), (Serializable) id );
+	}
 
 	/**
 	 * Get the entity name for a persistent or transient instance.

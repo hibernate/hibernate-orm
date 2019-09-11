@@ -10,5 +10,5 @@ package org.hibernate.persister.walking.spi;
  * @author Steve Ebersole
  */
 public interface EncapsulatedEntityIdentifierDefinition extends EntityIdentifierDefinition {
-	public AttributeDefinition getAttributeDefinition();
+	AttributeDefinition getAttributeDefinition();
 }

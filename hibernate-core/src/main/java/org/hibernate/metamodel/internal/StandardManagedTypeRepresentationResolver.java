@@ -33,7 +33,7 @@ public class StandardManagedTypeRepresentationResolver implements ManagedTypeRep
 //		RepresentationMode representation = bootDescriptor.getExplicitRepresentationMode();
 		RepresentationMode representation = null;
 		if ( representation == null ) {
-			if ( runtimeDescriptor.getMappedClass() == null ) {
+			if ( bootDescriptor.getMappedClass() == null ) {
 				representation = RepresentationMode.MAP;
 			}
 			else {
@@ -42,7 +42,7 @@ public class StandardManagedTypeRepresentationResolver implements ManagedTypeRep
 		}
 
 		if ( representation == RepresentationMode.MAP ) {
-			return new StandardMapEntityRepresentationStrategy( bootDescriptor, runtimeDescriptor, creationContext );
+			return new StandardMapEntityRepresentationStrategy( bootDescriptor, creationContext );
 		}
 		else {
 			// todo (6.0) : fix this
@@ -51,7 +51,7 @@ public class StandardManagedTypeRepresentationResolver implements ManagedTypeRep
 			//
 			//		instead, resolve ReflectionOptimizer once - here - and pass along to
 			//		StandardPojoRepresentationStrategy
-			return new StandardPojoEntityRepresentationStrategy( bootDescriptor, runtimeDescriptor, creationContext );
+			return new StandardPojoEntityRepresentationStrategy( bootDescriptor, creationContext );
 		}
 	}
 

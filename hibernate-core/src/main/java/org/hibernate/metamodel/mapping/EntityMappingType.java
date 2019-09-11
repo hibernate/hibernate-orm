@@ -25,44 +25,86 @@ public interface EntityMappingType extends ManagedMappingType {
 	 */
 	EntityPersister getEntityPersister();
 
-	EntityIdentifierMapping getIdentifierMapping();
-
-	EntityVersionMapping getVersionMapping();
-
 	default String getEntityName() {
 		return getEntityPersister().getEntityName();
 	}
 
+	EntityIdentifierMapping getIdentifierMapping();
+
+	EntityVersionMapping getVersionMapping();
+
+	NaturalIdMapping getNaturalIdMapping();
+
+	@Override
+	default boolean isTypeOrSuperType(ManagedMappingType targetType) {
+		if ( targetType instanceof EntityMappingType ) {
+			return isTypeOrSuperType( (EntityMappingType) targetType );
+		}
+
+		return false;
+	}
+
+	default boolean isTypeOrSuperType(EntityMappingType targetType) {
+		return targetType == this;
+	}
+
+	/**
+	 * Visit the mappings, but limited to just attributes defined
+	 * in the targetType or its super-type(s) if any.
+	 *
+	 * @apiNote Passing {@code null} indicates that subclasses should be included.  This
+	 * matches legacy non-TREAT behavior and meets the need for EntityGraph processing
+	 */
+	default void visitAttributeMappings(Consumer<AttributeMapping> action, EntityMappingType targetType) {
+		getAttributeMappings().forEach( action );
+	}
+
+	/**
+	 * Walk this type's attributes as well as its sub-type's
+	 */
+	default void visitSubTypeAttributeMappings(Consumer<AttributeMapping> action) {
+		// by default do nothing
+	}
+
+	/**
+	 * Walk this type's attributes as well as its super-type's
+	 */
+	default void visitSuperTypeAttributeMappings(Consumer<AttributeMapping> action) {
+		// by default do nothing
+	}
+
+
+	@Override
+	default void visitAttributeMappings(Consumer<AttributeMapping> action) {
+		visitAttributeMappings( action, null );
+	}
+
+	/**
+	 * Visit the mappings, but limited to just attributes defined
+	 * in the targetType or its super-type(s) if any.
+	 *
+	 * @apiNote Passing {@code null} indicates that subclasses should be included.  This
+	 * matches legacy non-TREAT behavior and meets the need for EntityGraph processing
+	 */
+	default void visitStateArrayContributors(Consumer<StateArrayContributorMapping> mappingConsumer, EntityMappingType targetType) {
+		visitAttributeMappings(
+				modelPart -> {
+					if ( modelPart instanceof StateArrayContributorMapping ) {
+						if ( targetType == null
+								|| ( (StateArrayContributorMapping) modelPart ).isDeclaredOnTypeOrSuperType( targetType ) ) {
+							mappingConsumer.accept( ( (StateArrayContributorMapping) modelPart ) );
+						}
+					}
+				},
+				targetType
+		);
+	}
+
+	@Override
+	default void visitStateArrayContributors(Consumer<StateArrayContributorMapping> mappingConsumer) {
+		visitStateArrayContributors( mappingConsumer, null );
+	}
+
 	// todo (6.0) : not sure we actually need this distinction at the mapping model level...
 
-//	/**
-//	 * For an entity, this form allows for Hibernate's "implicit treat" support -
-//	 * meaning it should find a sub-part whether defined on the entity, its
-//	 * super-type or even one of its sub-types.
-//	 *
-//	 * @see #findSubPartStrictly
-//	 */
-//	@Override
-//	ModelPart findSubPart(String name);
-//
-//	/**
-//	 * Same purpose as {@link #findSubPart} except that this form limits
-//	 * the search to just this type and its super types.
-//	 */
-//	ModelPart findSubPartStrictly(String name);
-//
-//	/**
-//	 * Like {@link #findSubPart}, this form visits all parts defined on the
-//	 * entity, its super-types and its sub-types.
-//	 *
-//	 * @see #findSubPartStrictly
-//	 */
-//	@Override
-//	void visitSubParts(Consumer<ModelPart> consumer);
-//
-//	/**
-//	 * Same purpose as {@link #visitSubParts} except that this form limits
-//	 * the visitation to just this type and its super types.
-//	 */
-//	void visitSubPartsStrictly(Consumer<ModelPart> action);
 }

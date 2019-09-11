@@ -48,9 +48,12 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -735,6 +738,21 @@ public class CustomPersister implements EntityPersister {
 
 	@Override
 	public EntityVersionMapping getVersionMapping() {
+		return null;
+	}
+
+	@Override
+	public NaturalIdMapping getNaturalIdMapping() {
+		return null;
+	}
+
+	@Override
+	public boolean isTypeOrSuperType(EntityMappingType targetType) {
+		return targetType == this;
+	}
+
+	@Override
+	public EntityRepresentationStrategy getRepresentationStrategy() {
 		return null;
 	}
 

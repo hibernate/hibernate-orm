@@ -38,6 +38,8 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
+import org.hibernate.metamodel.internal.StandardManagedTypeRepresentationResolver;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -76,6 +78,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class, ConverterDescriptor> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
+	private ManagedTypeRepresentationResolver representationStrategySelector;
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
@@ -109,6 +112,9 @@ public class BootstrapContextImpl implements BootstrapContext {
 				ArchiveDescriptorFactory.class,
 				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
 		);
+
+		this.representationStrategySelector = StandardManagedTypeRepresentationResolver.INSTANCE;
+
 		this.typeConfiguration = new TypeConfiguration();
 	}
 
@@ -236,6 +242,12 @@ public class BootstrapContextImpl implements BootstrapContext {
 			cacheRegionDefinitions.clear();
 		}
 	}
+
+	@Override
+	public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
+		return representationStrategySelector;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutations

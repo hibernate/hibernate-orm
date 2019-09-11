@@ -6,7 +6,10 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.type.BasicType;
 
 /**
@@ -15,9 +18,23 @@ import org.hibernate.type.BasicType;
 public class EntityVersionMappingImpl extends BasicValuedSingularAttributeMapping implements EntityVersionMapping {
 	public EntityVersionMappingImpl(
 			String attributeName,
+			int stateArrayPosition,
+			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			String containingTableExpression,
 			String mappedColumnExpression,
-			BasicType basicType) {
-		super( attributeName, containingTableExpression, mappedColumnExpression, null, basicType, basicType );
+			BasicType basicType,
+			ManagedMappingType declaringType) {
+		super(
+				attributeName,
+				stateArrayPosition,
+				attributeMetadataAccess,
+				FetchStrategy.IMMEDIATE_JOIN,
+				containingTableExpression,
+				mappedColumnExpression,
+				null,
+				basicType,
+				basicType,
+				declaringType
+		);
 	}
 }

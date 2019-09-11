@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -27,6 +28,8 @@ import org.hibernate.property.access.spi.PropertyAccess;
 @Incubating
 public interface ManagedTypeRepresentationStrategy {
 	RepresentationMode getMode();
+
+	ReflectionOptimizer getReflectionOptimizer();
 
 	/**
 	 * Create the property accessor object for the specified attribute

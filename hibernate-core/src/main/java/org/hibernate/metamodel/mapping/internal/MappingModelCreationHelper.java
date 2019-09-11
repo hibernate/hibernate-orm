@@ -9,12 +9,15 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.Clause;
@@ -26,6 +29,7 @@ import org.hibernate.sql.results.internal.ScalarDomainResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -44,7 +48,19 @@ public class MappingModelCreationHelper {
 			String pkColumnName,
 			BasicType idType,
 			MappingModelCreationProcess creationProcess) {
+		final PersistentClass bootEntityDescriptor = creationProcess.getCreationContext()
+				.getBootModel()
+				.getEntityBinding( entityPersister.getEntityName() );
+
+		final PropertyAccess propertyAccess = entityPersister.getRepresentationStrategy()
+				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
+
 		return new EntityIdentifierMapping() {
+			@Override
+			public PropertyAccess getPropertyAccess() {
+				return propertyAccess;
+			}
+
 			@Override
 			public MappingType getMappedTypeDescriptor() {
 				return ( (BasicType) entityPersister.getIdentifierType() ).getMappedTypeDescriptor();
@@ -84,8 +100,8 @@ public class MappingModelCreationHelper {
 						SqlExpressionResolver.createColumnReferenceKey( rootTable, pkColumnName ),
 						sqlAstProcessingState -> new ColumnReference(
 								pkColumnName,
-								rootTable,
-								( (BasicValuedModelPart) entityPersister.getIdentifierType() ).getJdbcMapping(),
+								tableGroup.resolveTableReference( rootTable ).getIdentificationVariable(),
+								( (BasicValuedMapping) entityPersister.getIdentifierType() ).getJdbcMapping(),
 								creationProcess.getCreationContext().getSessionFactory()
 						)
 				);
@@ -137,8 +153,25 @@ public class MappingModelCreationHelper {
 		};
 	}
 
-	public static EntityIdentifierMapping buildEncapsulatedCompositeIdentifierMapping(EntityPersister entityPersister) {
+	public static EntityIdentifierMapping buildEncapsulatedCompositeIdentifierMapping(
+			EntityPersister entityPersister,
+			String rootTableName,
+			String[] rootTableKeyColumnNames,
+			CompositeType cidType,
+			MappingModelCreationProcess creationProcess) {
+		final PersistentClass bootEntityDescriptor = creationProcess.getCreationContext()
+				.getBootModel()
+				.getEntityBinding( entityPersister.getEntityName() );
+
+		final PropertyAccess propertyAccess = entityPersister.getRepresentationStrategy()
+				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
+
 		return new EntityIdentifierMapping() {
+			@Override
+			public PropertyAccess getPropertyAccess() {
+				return propertyAccess;
+			}
+
 			@Override
 			public MappingType getMappedTypeDescriptor() {
 				return ( (BasicValuedModelPart) entityPersister.getIdentifierType() ).getMappedTypeDescriptor();
@@ -172,8 +205,25 @@ public class MappingModelCreationHelper {
 		};
 	}
 
-	public static EntityIdentifierMapping buildNonEncapsulatedCompositeIdentifierMapping(EntityPersister entityPersister) {
+	public static EntityIdentifierMapping buildNonEncapsulatedCompositeIdentifierMapping(
+			EntityPersister entityPersister,
+			String rootTableName,
+			String[] rootTableKeyColumnNames,
+			CompositeType cidType,
+			MappingModelCreationProcess creationProcess) {
+		final PersistentClass bootEntityDescriptor = creationProcess.getCreationContext()
+				.getBootModel()
+				.getEntityBinding( entityPersister.getEntityName() );
+
+		final PropertyAccess propertyAccess = entityPersister.getRepresentationStrategy()
+				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
+
 		return new EntityIdentifierMapping() {
+
+			@Override
+			public PropertyAccess getPropertyAccess() {
+				return propertyAccess;
+			}
 
 			@Override
 			public MappingType getMappedTypeDescriptor() {

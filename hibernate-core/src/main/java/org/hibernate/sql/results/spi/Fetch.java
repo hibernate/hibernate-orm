@@ -40,7 +40,7 @@ public interface Fetch {
 	/**
 	 * The value mapping being fetched
 	 */
-	ModelPart getFetchedMapping();
+	Fetchable getFetchedMapping();
 
 	/**
 	 * Get the property path to this fetch

@@ -8,6 +8,7 @@ package org.hibernate.sql.results.spi;
 
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 
 /**
@@ -18,10 +19,17 @@ public interface FetchableContainer extends ModelPartContainer {
 		return (Fetchable) findSubPart( name );
 	}
 
-	default void visitKeyFetchables(Consumer<Fetchable> fetchableConsumer) {
+	default void visitKeyFetchables(
+			Consumer<Fetchable> fetchableConsumer,
+			EntityMappingType treatTargetType) {
 		// by default, nothing to do
 	}
 
-	void visitFetchables(Consumer<Fetchable> fetchableConsumer);
+	default void visitFetchables(
+			Consumer<Fetchable> fetchableConsumer,
+			EntityMappingType treatTargetType) {
+		//noinspection unchecked
+		visitSubParts( (Consumer) fetchableConsumer );
+	}
 
 }

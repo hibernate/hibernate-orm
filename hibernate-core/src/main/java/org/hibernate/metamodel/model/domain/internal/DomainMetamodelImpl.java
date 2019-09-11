@@ -55,6 +55,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -206,6 +207,11 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 			public MetadataImplementor getBootModel() {
 				return bootModel;
 			}
+
+			@Override
+			public BootstrapContext getBootstrapContext() {
+				return bootstrapContext;
+			}
 		};
 
 
@@ -331,23 +337,16 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	private static void registerEntityNameResolvers(
 			EntityPersister persister,
 			Set<EntityNameResolver> entityNameResolvers) {
-		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
+		if ( persister.getRepresentationStrategy() == null ) {
 			return;
 		}
-		registerEntityNameResolvers( persister.getEntityMetamodel().getTuplizer(), entityNameResolvers );
+		registerEntityNameResolvers( persister.getRepresentationStrategy(), entityNameResolvers );
 	}
 
 	private static void registerEntityNameResolvers(
-			EntityTuplizer tuplizer,
+			EntityRepresentationStrategy representationStrategy,
 			Set<EntityNameResolver> entityNameResolvers) {
-		EntityNameResolver[] resolvers = tuplizer.getEntityNameResolvers();
-		if ( resolvers == null ) {
-			return;
-		}
-
-		for ( EntityNameResolver resolver : resolvers ) {
-			entityNameResolvers.add( resolver );
-		}
+		representationStrategy.visitEntityNameResolvers( entityNameResolvers::add );
 	}
 
 	@Override

@@ -8,11 +8,16 @@ package org.hibernate;
 
 import java.util.Locale;
 
+import org.hibernate.metamodel.RepresentationMode;
+
 /**
  * Defines the representation modes available for entities.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated See {@link RepresentationMode}
  */
+@Deprecated
 public enum EntityMode {
 	/**
 	 * The {@code pojo} entity mode describes an entity model made up of entity classes (loosely) following

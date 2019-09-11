@@ -21,6 +21,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -171,4 +172,6 @@ public interface BootstrapContext {
 	 * @todo verify this ^^
 	 */
 	void release();
+
+	ManagedTypeRepresentationResolver getRepresentationStrategySelector();
 }

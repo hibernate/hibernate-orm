@@ -15,6 +15,7 @@ import javax.persistence.AccessType;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -178,19 +179,21 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	// uses the first getter of the tupelizer for the assertions
 
 	private void assertAccessType(SessionFactoryImplementor factory, Class<?> classUnderTest, AccessType accessType) {
-		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-				.getEntityMetamodel()
-				.getTuplizer();
+		final Getter idGetter = factory.getDomainModel().findEntityDescriptor( classUnderTest.getName() )
+				.getIdentifierMapping()
+				.getPropertyAccess()
+				.getGetter();
+
 		if ( AccessType.FIELD.equals( accessType ) ) {
 			Assert.assertTrue(
 					"Field access was expected.",
-					tuplizer.getGetter( 0 ) instanceof GetterFieldImpl
+					idGetter instanceof GetterFieldImpl
 			);
 		}
 		else {
 			Assert.assertTrue(
 					"Property access was expected.",
-					tuplizer.getGetter( 0 ) instanceof GetterMethodImpl
+					idGetter instanceof GetterMethodImpl
 			);
 		}
 	}

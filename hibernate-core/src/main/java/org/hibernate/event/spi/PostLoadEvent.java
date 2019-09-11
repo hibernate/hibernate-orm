@@ -24,6 +24,12 @@ public class PostLoadEvent extends AbstractEvent {
 		super(session);
 	}
 
+	public void reset() {
+		entity = null;
+		id = null;
+		persister = null;
+	}
+
 	public Object getEntity() {
 		return entity;
 	}

@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.EntityInitializer;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
@@ -95,6 +96,30 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private void coordinateInitializers(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) {
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// todo (6.0) : we may want to split handling of initializers into specific sub-type handling
+		//		- meaning we'd have something like:
+
+//		for ( EntityInitializer initializer : entityInitializers ) {
+//			initializer.resolveKey( rowProcessingState );
+//		}
+//
+//		for ( EntityInitializer initializer : collectionInitializers ) {
+//			initializer.resolveKey( rowProcessingState );
+//		}
+//
+//		for ( Initializer initializer : entityInitializers ) {
+//			initializer.resolveInstance( rowProcessingState );
+//		}
+//
+//		for ( EntityInitializer initializer : collectionInitializers ) {
+//			initializer.resolveInstance( rowProcessingState );
+//		}
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// old
 
 		for ( Initializer initializer : initializers ) {
 			initializer.resolveKey( rowProcessingState );

@@ -8,6 +8,7 @@ package org.hibernate.proxy.map;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -31,7 +32,6 @@ public class MapProxyFactory implements ProxyFactory {
 			final Method setIdentifierMethod,
 			CompositeType componentIdType) throws HibernateException {
 		this.entityName = entityName;
-
 	}
 
 	@Override

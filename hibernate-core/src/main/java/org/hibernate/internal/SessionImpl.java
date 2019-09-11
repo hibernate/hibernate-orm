@@ -33,7 +33,6 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
-import javax.persistence.PessimisticLockScope;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TransactionRequiredException;
 
@@ -1377,7 +1376,7 @@ public final class SessionImpl
 		pulseTransactionCoordinator();
 		Object result = getInterceptor().instantiate(
 				persister.getEntityName(),
-				persister.getEntityMetamodel().getEntityMode(),
+				persister.getRepresentationStrategy(),
 				id
 		);
 		if ( result == null ) {

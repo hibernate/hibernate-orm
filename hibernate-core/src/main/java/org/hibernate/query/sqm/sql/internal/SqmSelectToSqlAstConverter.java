@@ -31,7 +31,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.internal.instantiation.DynamicInstantiation;
+import org.hibernate.sql.results.internal.domain.instantiation.DynamicInstantiation;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -161,6 +161,7 @@ public class SqmSelectToSqlAstConverter
 			try {
 				fetchDepth++;
 				final Fetch fetch = buildFetch( fetchParent, fetchable );
+
 				if ( fetch != null ) {
 					fetches.add( fetch );
 				}
@@ -170,8 +171,11 @@ public class SqmSelectToSqlAstConverter
 			}
 		};
 
-		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchableConsumer );
-		fetchParent.getReferencedMappingContainer().visitFetchables( fetchableConsumer );
+// todo (6.0) : determine how to best handle TREAT
+//		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchableConsumer, treatTargetType );
+//		fetchParent.getReferencedMappingContainer().visitFetchables( fetchableConsumer, treatTargetType );
+		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchableConsumer, null );
+		fetchParent.getReferencedMappingContainer().visitFetchables( fetchableConsumer, null );
 
 		return fetches;
 	}

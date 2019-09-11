@@ -6,13 +6,15 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
@@ -38,12 +40,16 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 
 	public BasicValuedSingularAttributeMapping(
 			String attributeName,
+			int stateArrayPosition,
+			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			FetchStrategy mappedFetchStrategy,
 			String tableExpression,
 			String mappedColumnExpression,
 			BasicValueConverter valueConverter,
 			BasicType basicType,
-			JdbcMapping jdbcMapping) {
-		super( attributeName, basicType );
+			JdbcMapping jdbcMapping,
+			ManagedMappingType declaringType) {
+		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchStrategy, basicType, declaringType );
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
 		this.valueConverter = valueConverter;
@@ -159,5 +165,10 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
 		action.accept( getJdbcMapping() );
+	}
+
+	@Override
+	public int getStateArrayPosition() {
+		return 0;
 	}
 }

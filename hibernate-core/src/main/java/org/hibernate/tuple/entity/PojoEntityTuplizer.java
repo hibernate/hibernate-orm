@@ -315,6 +315,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
+		// the fallback is to check class name which is exactly what we'd do here
 		return null;
 	}
 }

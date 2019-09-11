@@ -212,4 +212,10 @@ public final class CollectionHelper {
 	public static boolean isEmpty(Object[] objects) {
 		return objects == null || objects.length == 0;
 	}
+
+	public static <T> Set<T> setOf(T... values) {
+		final HashSet<T> set = new HashSet<>( determineProperSizing( values.length ) );
+		Collections.addAll( set, values );
+		return set;
+	}
 }

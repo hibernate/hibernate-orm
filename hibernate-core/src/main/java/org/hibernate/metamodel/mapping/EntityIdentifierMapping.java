@@ -6,9 +6,13 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.property.access.spi.PropertyAccess;
+
 /**
  * @author Steve Ebersole
  */
 public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 	String ROLE_LOCAL_NAME = "{id}";
+
+	PropertyAccess getPropertyAccess();
 }

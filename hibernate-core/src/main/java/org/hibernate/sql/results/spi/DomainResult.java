@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * QueryResult is distinctly different from a {@link Fetch} and so modeled as
  * completely separate hierarchy.
  *
- * @see ScalarResult
+ * @see ScalarDomainResult
  * @see DynamicInstantiationResult
  * @see EntityResult
  * @see CollectionResult

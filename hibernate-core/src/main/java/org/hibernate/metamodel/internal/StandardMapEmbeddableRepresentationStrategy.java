@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.internal;
 
+import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
@@ -30,6 +31,11 @@ public class StandardMapEmbeddableRepresentationStrategy implements EmbeddableRe
 	@Override
 	public RepresentationMode getMode() {
 		return RepresentationMode.MAP;
+	}
+
+	@Override
+	public ReflectionOptimizer getReflectionOptimizer() {
+		return null;
 	}
 
 	@Override

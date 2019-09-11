@@ -236,4 +236,24 @@ public class SmokeTests {
 				}
 		);
 	}
+
+	@Test
+	public void testSelectRootHqlExecution(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<SimpleEntity> query = session.createQuery( "select e from SimpleEntity e", SimpleEntity.class );
+					query.list();
+				}
+		);
+	}
+
+	@Test
+	public void testBadQueryResultType(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<Gender> query = session.createQuery( "select e from SimpleEntity e", Gender.class );
+					query.list();
+				}
+		);
+	}
 }

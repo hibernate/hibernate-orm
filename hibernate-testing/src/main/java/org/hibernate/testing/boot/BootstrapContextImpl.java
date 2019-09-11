@@ -25,6 +25,8 @@ import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
+import org.hibernate.metamodel.internal.StandardManagedTypeRepresentationResolver;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -142,5 +144,10 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public void release() {
 		delegate.release();
+	}
+
+	@Override
+	public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
+		return StandardManagedTypeRepresentationResolver.INSTANCE;
 	}
 }

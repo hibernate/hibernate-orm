@@ -13,4 +13,16 @@ package org.hibernate.metamodel.mapping;
  */
 public interface AttributeMapping extends ModelPart, ValueMapping {
 	String getAttributeName();
+
+	AttributeMetadataAccess getAttributeMetadataAccess();
+
+	ManagedMappingType getDeclaringType();
+
+	default boolean isDeclaredOnTypeOrSuperType(ManagedMappingType targetType) {
+		if ( getDeclaringType() instanceof EntityMappingType ) {
+			return ( (EntityMappingType) getDeclaringType() ).isTypeOrSuperType( targetType );
+		}
+
+		return false;
+	}
 }

@@ -64,5 +64,4 @@ public interface ProxyFactory {
 	 * proxy.
 	 */
 	HibernateProxy getProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
-
 }

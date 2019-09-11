@@ -18,7 +18,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.Instantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -30,11 +29,10 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 /**
  * @author Steve Ebersole
  */
-public class StandardPojoEmbeddableRepresentationStrategy
-		extends AbstractEmbeddableRepresentationStrategy
-		implements EmbeddableRepresentationStrategy {
+public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbeddableRepresentationStrategy {
 	private final StrategySelector strategySelector;
 
+	private final ReflectionOptimizer reflectionOptimizer;
 	private final Instantiator instantiator;
 
 	public StandardPojoEmbeddableRepresentationStrategy(
@@ -54,7 +52,7 @@ public class StandardPojoEmbeddableRepresentationStrategy
 				.getServiceRegistry()
 				.getService( StrategySelector.class );
 
-		final ReflectionOptimizer reflectionOptimizer = buildReflectionOptimizer( bootDescriptor, creationContext );
+		this.reflectionOptimizer = buildReflectionOptimizer( bootDescriptor, creationContext );
 
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			this.instantiator = new OptimizedPojoInstantiatorImpl<>( getEmbeddableJavaTypeDescriptor(), reflectionOptimizer );
@@ -62,6 +60,11 @@ public class StandardPojoEmbeddableRepresentationStrategy
 		else {
 			this.instantiator = new PojoInstantiatorImpl<>( getEmbeddableJavaTypeDescriptor() );
 		}
+	}
+
+	@Override
+	public ReflectionOptimizer getReflectionOptimizer() {
+		return reflectionOptimizer;
 	}
 
 	@Override

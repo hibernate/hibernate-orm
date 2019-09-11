@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.EntityNameResolver;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
@@ -22,6 +24,17 @@ import org.hibernate.metamodel.spi.Instantiator;
  * @author Steve Ebersole
  */
 public class DynamicMapInstantiator implements Instantiator<Map> {
+	public static final EntityNameResolver ENTITY_NAME_RESOLVER = entity -> {
+		if ( ! (entity instanceof Map) ) {
+			return null;
+		}
+		final String entityName = extractEmbeddedEntityName( (Map) entity );
+		if ( entityName == null ) {
+			throw new HibernateException( "Could not determine type of dynamic map entity" );
+		}
+		return entityName;
+	};
+
 	public static final String KEY = "$type$";
 
 	private final String roleName;
@@ -72,4 +85,42 @@ public class DynamicMapInstantiator implements Instantiator<Map> {
 			return false;
 		}
 	}
+
+	public static class BasicEntityNameResolver implements EntityNameResolver {
+		public static final BasicEntityNameResolver INSTANCE = new BasicEntityNameResolver();
+
+		@Override
+		public String resolveEntityName(Object entity) {
+			if ( ! (entity instanceof Map) ) {
+				return null;
+			}
+			final String entityName = extractEmbeddedEntityName( (Map) entity );
+			if ( entityName == null ) {
+				throw new HibernateException( "Could not determine type of dynamic map entity" );
+			}
+			return entityName;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return obj != null && getClass().equals( obj.getClass() );
+		}
+
+		@Override
+		public int hashCode() {
+			return getClass().hashCode();
+		}
+	}
+
+	public static String extractEmbeddedEntityName(Map entity) {
+		if ( entity == null ) {
+			return null;
+		}
+		final String entityName = (String) entity.get( KEY );
+		if ( entityName == null ) {
+			throw new HibernateException( "Could not determine type of dynamic map entity" );
+		}
+		return entityName;
+	}
+
 }

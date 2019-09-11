@@ -12,7 +12,10 @@ import org.hibernate.sql.SelectFragment;
  * operations required by the Hibernate Query Language
  *
  * @author Gavin King
+ *
+ * @deprecated See {@link org.hibernate.metamodel.mapping.Queryable}
  */
+@Deprecated
 public interface Queryable extends Loadable, PropertyMapping, Joinable {
 
 	/**

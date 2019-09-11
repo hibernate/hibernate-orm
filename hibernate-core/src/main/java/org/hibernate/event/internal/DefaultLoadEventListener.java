@@ -256,9 +256,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				.isEnhancementAsProxyEnabled();
 
 		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
-		final boolean entityHasHibernateProxyFactory = entityMetamodel
-				.getTuplizer()
-				.getProxyFactory() != null;
+		final boolean entityHasHibernateProxyFactory = persister.getRepresentationStrategy().getProxyFactory() != null;
 
 		// Check for the case where we can use the entity itself as a proxy
 		if ( options.isAllowProxyCreation()

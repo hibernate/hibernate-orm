@@ -31,7 +31,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public final class EntityKey implements Serializable {
 
-	private final Serializable identifier;
+	private final Object identifier;
 	private final int hashCode;
 	private final EntityPersister persister;
 
@@ -45,7 +45,7 @@ public final class EntityKey implements Serializable {
 	 * @param id The entity id
 	 * @param persister The entity persister
 	 */
-	public EntityKey(Serializable id, EntityPersister persister) {
+	public EntityKey(Object id, EntityPersister persister) {
 		this.persister = persister;
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier" );
@@ -66,8 +66,12 @@ public final class EntityKey implements Serializable {
 		return persister.isBatchLoadable();
 	}
 
-	public Serializable getIdentifier() {
+	public Object getIdentifierValue() {
 		return identifier;
+	}
+
+	public Serializable getIdentifier() {
+		return (Serializable) identifier;
 	}
 
 	public String getEntityName() {

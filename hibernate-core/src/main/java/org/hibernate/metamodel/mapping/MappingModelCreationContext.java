@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.DomainMetamodel;
@@ -22,4 +23,6 @@ public interface MappingModelCreationContext {
 	DomainMetamodel getDomainModel();
 
 	MetadataImplementor getBootModel();
+
+	BootstrapContext getBootstrapContext();
 }

@@ -28,7 +28,10 @@ import org.hibernate.tuple.Tuplizer;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated See {@link org.hibernate.metamodel.spi.EntityRepresentationStrategy}
  */
+@Deprecated
 public interface EntityTuplizer extends Tuplizer {
 	/**
 	 * Return the entity-mode handled by this tuplizer instance.

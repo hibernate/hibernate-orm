@@ -26,6 +26,13 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 		super(session);
 	}
 
+	public void reset() {
+		entity = null;
+		state = null;
+		id = null;
+		persister = null;
+	}
+
 	@Override
 	public Object getEntity() {
 		return entity;

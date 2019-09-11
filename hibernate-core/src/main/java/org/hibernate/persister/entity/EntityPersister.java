@@ -32,10 +32,12 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.spi.Loadable;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelCreationContext;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -77,7 +79,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends EntityDefinition, InFlightEntityMappingType, Loadable, RootTableGroupProducer {
+public interface EntityPersister extends EntityDefinition, EntityValuedModelPart, InFlightEntityMappingType, Loadable, RootTableGroupProducer {
 
 	/**
 	 * The property name of the "special" identifier property in HQL
@@ -850,7 +852,23 @@ public interface EntityPersister extends EntityDefinition, InFlightEntityMapping
 	 */
 	EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory);
 
+	EntityRepresentationStrategy getRepresentationStrategy();
+
+	@Override
+	default EntityMappingType getEntityMappingType() {
+		return this;
+	}
+
+	/**
+	 * @deprecated Use {@link #getRepresentationStrategy()}
+	 */
+	@Deprecated
 	EntityMode getEntityMode();
+
+	/**
+	 * @deprecated Use {@link #getRepresentationStrategy()}
+	 */
+	@Deprecated
 	EntityTuplizer getEntityTuplizer();
 
 	BytecodeEnhancementMetadata getInstrumentationMetadata();

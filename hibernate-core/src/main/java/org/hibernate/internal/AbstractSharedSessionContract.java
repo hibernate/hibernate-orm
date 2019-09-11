@@ -34,10 +34,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -645,12 +642,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
-		return getNativeQueryImplementor( sqlString, false );
+		return getNativeQueryImplementor( sqlString );
 	}
 
-	protected NativeQueryImplementor getNativeQueryImplementor(
-			String queryString,
-			boolean isOrdinalParameterZeroBased) {
+	protected NativeQueryImplementor getNativeQueryImplementor(String queryString) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();

@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 
 /**
@@ -16,10 +17,13 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	private final String name;
 
 	private final MappingType type;
+	private final ManagedMappingType declaringType;
 
-	public AbstractAttributeMapping(String name, MappingType type) {
+	@SuppressWarnings("WeakerAccess")
+	public AbstractAttributeMapping(String name, MappingType type, ManagedMappingType declaringType) {
 		this.name = name;
 		this.type = type;
+		this.declaringType = declaringType;
 	}
 
 	@Override
@@ -30,5 +34,10 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	@Override
 	public MappingType getMappedTypeDescriptor() {
 		return type;
+	}
+
+	@Override
+	public ManagedMappingType getDeclaringType() {
+		return declaringType;
 	}
 }

@@ -4,6 +4,43 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.12.Final (September 11th, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31784/tab/release-report-all-issues
+
+** Bug
+    * [HHH-12968] - Flush is not flushing inserts for inherited tables before a select within a transaction
+    * [HHH-12990] - JPA Model generator does not work in Java 9+
+    * [HHH-13128] - Missing jaxb-runtime dependency for hibernate-jpamodelgen
+    * [HHH-13580] - LocalTimeTest#writeThenNativeRead* and OffsetTimeTest#writeThenNativeRead* failing on MySQL
+    * [HHH-13581] - LocalTimeTest#writeThenRead* and OffsetTimeTest#writeThenRead* failing on MariaDB
+    * [HHH-13582] - LocalDateTest failures on MySQL
+    * [HHH-13590] - TransientObjectException merging a non-proxy association to a HibernateProxy
+    * [HHH-13592] - AutoFlushEvent#isFlushRequired is always false
+    * [HHH-13607] - Exception thrown while flushing uninitialized enhanced proxy with immutable natural ID
+    * [HHH-13611] - Restore EntityMetamodel constructor to take SessionFactoryImplementor argument instead of PersisterCreationContext.
+    * [HHH-13616] - Enable the hibernate-orm-modules test for JDK 11
+
+** Task
+    * [HHH-13007] - No longer use net.bytebuddy.experimental=true when testing on JDK11
+    * [HHH-13043] - Upgrade to JAXB 2.3
+    * [HHH-13271] - Javadoc build failures on JDK 12
+    * [HHH-13275] - Re-introduce usage of net.bytebuddy.experimental=true when testing on JDK > 11
+    * [HHH-13415] - Improve build compatibility with JDK11.0.3
+    * [HHH-13419] - Support building javadoc with JDK 11.0.3
+    * [HHH-13421] - Disable OSGi testing for JDK 11+
+    * [HHH-13504] - Upgrade ByteBuddy to 1.9.11
+    * [HHH-13605] - InstantTest, OffsetDateTimeTest, ZonedDateTimeTest fail for MariaDB on CI
+
+** Improvement
+    * [HHH-12946] - Include JAXB as a dependency as it's not provided by JDK 11
+    * [HHH-13022] - Make OSGi integration work on JDK11
+    * [HHH-13069] - Update the links to JBoss Nexus to use the direct repository over https
+    * [HHH-13127] - Document JAXB dependencies should be added for using hibernate-jpamodelgen in Eclipse IDE
+    * [HHH-13428] - Minor cleanup of build scripts
+
+
 Changes in 5.3.11.Final (August 15th, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

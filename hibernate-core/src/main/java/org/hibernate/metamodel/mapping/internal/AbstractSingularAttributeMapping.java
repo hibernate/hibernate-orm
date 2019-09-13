@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -28,14 +29,18 @@ public class AbstractSingularAttributeMapping
 		extends AbstractStateArrayContributorMapping
 		implements SingularAttributeMapping {
 
+	private final PropertyAccess propertyAccess;
+
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
 			MappingType type,
-			ManagedMappingType declaringType) {
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess) {
 		super( name, type, attributeMetadataAccess, mappedFetchStrategy, stateArrayPosition, declaringType );
+		this.propertyAccess = propertyAccess;
 	}
 
 	@Override
@@ -56,5 +61,10 @@ public class AbstractSingularAttributeMapping
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public PropertyAccess getPropertyAccess() {
+		return propertyAccess;
 	}
 }

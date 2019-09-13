@@ -112,6 +112,11 @@ public class SmokeTests {
 					);
 					List<SimpleEntity> simpleEntities = query.list();
 					assertThat( simpleEntities.size(), is( 1 ) );
+					SimpleEntity simpleEntity = simpleEntities.get( 0 );
+					assertThat( simpleEntity.getId(), is(1) );
+					assertThat( simpleEntity.getGender(), is(FEMALE) );
+					assertThat( simpleEntity.getGender2(), is(MALE) );
+					assertThat( simpleEntity.getName(), is("Fab") );
 				}
 		);
 	}

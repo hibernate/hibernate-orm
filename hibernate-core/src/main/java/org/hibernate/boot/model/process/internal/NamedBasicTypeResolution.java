@@ -36,7 +36,12 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 		this.basicType = basicType;
 
 		this.valueConverter = valueConverter;
-		this.mutabilityPlan = mutabilityPlan;
+		if ( mutabilityPlan == null ) {
+			this.mutabilityPlan = domainJtd.getMutabilityPlan();
+		}
+		else {
+			this.mutabilityPlan = mutabilityPlan;
+		}
 	}
 
 	@Override

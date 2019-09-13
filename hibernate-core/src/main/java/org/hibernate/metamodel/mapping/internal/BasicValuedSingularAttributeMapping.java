@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.Clause;
@@ -48,8 +49,9 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 			BasicValueConverter valueConverter,
 			BasicType basicType,
 			JdbcMapping jdbcMapping,
-			ManagedMappingType declaringType) {
-		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchStrategy, basicType, declaringType );
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess) {
+		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchStrategy, basicType, declaringType, propertyAccess );
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
 		this.valueConverter = valueConverter;

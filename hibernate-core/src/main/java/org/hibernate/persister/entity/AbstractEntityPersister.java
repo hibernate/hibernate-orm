@@ -92,6 +92,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -132,6 +133,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -5197,7 +5199,27 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-		getEntityTuplizer().afterInitialize( entity, session );
+		if ( entity instanceof PersistentAttributeInterceptable && getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
+			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
+					.extractLazyInterceptor( entity );
+			if ( interceptor == null || interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(
+						entity,
+						getIdentifier( entity, session ),
+						session
+				);
+			}
+			else {
+				if ( interceptor.getLinkedSession() == null ) {
+					interceptor.setSession( session );
+				}
+			}
+		}
+
+		// clear the fields that are marked as dirty in the dirtyness tracker
+		if ( entity instanceof SelfDirtinessTracker ) {
+			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
+		}
 	}
 
 	public String[] getPropertyNames() {
@@ -5273,15 +5295,15 @@ public abstract class AbstractEntityPersister
 			accessOptimizer.setPropertyValues( object, values );
 		}
 		else {
-			visitAttributeMappings(
-					attributeMapping -> {
-						final Setter setter = attributeMapping.getAttributeMetadataAccess()
-								.resolveAttributeMetadata( this )
-								.getPropertyAccess()
-								.getSetter();
-						setter.set( object, values, getFactory() );
-					}
-			);
+			int i = 0;
+			for ( Map.Entry<String, AttributeMapping> entries : declaredAttributeMappings.entrySet() ) {
+				AttributeMapping attributeMapping = entries.getValue();
+				final Setter setter = attributeMapping
+						.getPropertyAccess()
+						.getSetter();
+				setter.set( object, values[i], getFactory() );
+				i++;
+			}
 		}
 	}
 
@@ -5343,9 +5365,10 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
-		final Object entity = getRepresentationStrategy().getInstantiator().instantiate( session );
-		setIdentifier( entity, id, session );
-		return entity;
+		Object instance = getRepresentationStrategy().getInstantiator().instantiate( session );
+		identifierMapping.getPropertyAccess().getSetter().set( instance, id, factory );
+
+		return instance;
 	}
 
 	@Override
@@ -5396,23 +5419,24 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getPropertySpan();
 	}
 
-	public Object[] getPropertyValuesToInsert(
-			Object entity,
-			Map mergeMap,
-			SharedSessionContractImplementor session) throws HibernateException {
+	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session)
+			throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && accessOptimizer != null ) {
 			return accessOptimizer.getPropertyValues( entity );
 		}
 
-		final List<Object> values = new ArrayList<>();
-
-		visitAttributeMappings(
-				attributeMapping -> values.add(
-						attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( this ).getPropertyAccess().getGetter().getForInsert( entity, mergeMap, session )
-				)
-		);
-
-		return values.toArray();
+		final Object[] result = new Object[declaredAttributeMappings.size()];
+		int i = 0;
+		for ( Map.Entry<String, AttributeMapping> entries : declaredAttributeMappings.entrySet() ) {
+			AttributeMapping attributeMapping = entries.getValue();
+			result[i] = attributeMapping.getPropertyAccess().getGetter().getForInsert(
+					entity,
+					mergeMap,
+					session
+			);
+			i++;
+		}
+		return result;
 	}
 
 	protected boolean shouldGetAllProperties(Object entity) {
@@ -6240,6 +6264,8 @@ public abstract class AbstractEntityPersister
 					? new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT )
 					: FetchStrategy.IMMEDIATE_JOIN;
 
+			final PropertyAccess propertyAccess = getRepresentationStrategy()
+					.resolvePropertyAccess( bootProperty );
 			if ( valueConverter != null ) {
 				// we want to "decompose" the "type" into its various pieces as expected by the mapping
 				assert valueConverter.getRelationalJavaDescriptor() == resolution.getRelationalJavaDescriptor();
@@ -6249,6 +6275,7 @@ public abstract class AbstractEntityPersister
 						.getTypeConfiguration()
 						.getBasicTypeRegistry()
 						.resolve( valueConverter.getRelationalJavaDescriptor(), resolution.getRelationalSqlTypeDescriptor() );
+
 
 				return new BasicValuedSingularAttributeMapping(
 						attrName,
@@ -6260,7 +6287,8 @@ public abstract class AbstractEntityPersister
 						valueConverter,
 						mappingBasicType,
 						mappingBasicType.getJdbcMapping(),
-						declaringType
+						declaringType,
+						propertyAccess
 				);
 			}
 			else {
@@ -6274,7 +6302,8 @@ public abstract class AbstractEntityPersister
 						null,
 						(BasicType) attrType,
 						(BasicType) attrType,
-						declaringType
+						declaringType,
+						propertyAccess
 				);
 			}
 		}

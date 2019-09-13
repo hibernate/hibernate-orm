@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.property.access.spi.PropertyAccess;
+
 /**
  * Describes an attribute at the mapping model level.
  *
@@ -25,4 +27,6 @@ public interface AttributeMapping extends ModelPart, ValueMapping {
 
 		return false;
 	}
+
+	PropertyAccess getPropertyAccess();
 }

@@ -10,6 +10,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.BasicType;
 
 /**
@@ -23,7 +24,8 @@ public class EntityVersionMappingImpl extends BasicValuedSingularAttributeMappin
 			String containingTableExpression,
 			String mappedColumnExpression,
 			BasicType basicType,
-			ManagedMappingType declaringType) {
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess) {
 		super(
 				attributeName,
 				stateArrayPosition,
@@ -34,7 +36,8 @@ public class EntityVersionMappingImpl extends BasicValuedSingularAttributeMappin
 				null,
 				basicType,
 				basicType,
-				declaringType
+				declaringType,
+				propertyAccess
 		);
 	}
 }

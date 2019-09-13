@@ -204,6 +204,9 @@ tasks.withType( Test.class ).each { test ->
 	if ( project.name != 'hibernate-testing' ) {
 		test.dependsOn ':hibernate-testing:test'
 	}
+
+	// todo (6.0) : temporarily include just the new tests so we can publish SNAPSHOTS for others to use
+	test.include 'org/hibernate/orm/test/**'
 }
 
 sourceSets {

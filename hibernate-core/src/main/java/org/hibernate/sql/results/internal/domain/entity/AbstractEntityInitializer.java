@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
@@ -611,11 +612,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private void preLoad(RowProcessingState rowProcessingState) {
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 
-		final PreLoadEvent preLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPreLoadEvent();
-		preLoadEvent.reset();
+		if ( session instanceof EventSource ) {
+			final PreLoadEvent preLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPreLoadEvent();
+			assert preLoadEvent != null;
 
-		// Must occur after resolving identifiers!
-		if ( session.isEventSource() ) {
+			preLoadEvent.reset();
+
 			preLoadEvent.setEntity( entityInstance )
 					.setId( entityKey.getIdentifier() )
 					.setPersister( concreteDescriptor );
@@ -631,19 +633,25 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	private void postLoad(RowProcessingState rowProcessingState) {
-		final PostLoadEvent postLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPostLoadEvent();
-		postLoadEvent.reset();
+		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 
-		postLoadEvent.setEntity( entityInstance )
-				.setId( entityKey.getIdentifier() )
-				.setPersister( concreteDescriptor );
+		if ( session instanceof EventSource ) {
+			final PostLoadEvent postLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPostLoadEvent();
+			assert postLoadEvent != null;
 
-		final EventListenerGroup<PostLoadEventListener> listenerGroup = entityDescriptor.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.POST_LOAD );
-		for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostLoad( postLoadEvent );
+			postLoadEvent.reset();
+
+			postLoadEvent.setEntity( entityInstance )
+					.setId( entityKey.getIdentifier() )
+					.setPersister( concreteDescriptor );
+
+			final EventListenerGroup<PostLoadEventListener> listenerGroup = entityDescriptor.getFactory()
+					.getServiceRegistry()
+					.getService( EventListenerRegistry.class )
+					.getEventListenerGroup( EventType.POST_LOAD );
+			for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
+				listener.onPostLoad( postLoadEvent );
+			}
 		}
 	}
 

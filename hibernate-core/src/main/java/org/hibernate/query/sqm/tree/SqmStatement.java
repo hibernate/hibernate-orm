@@ -6,10 +6,15 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.hibernate.query.criteria.JpaQueryableCriteria;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 /**
@@ -19,5 +24,33 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
  */
 public interface SqmStatement<T> extends SqmQuery<T>, JpaQueryableCriteria<T>, SqmVisitableNode {
 	SqmQuerySource getQuerySource();
+
+	/**
+	 * Access to the (potentially still growing) collection of parameters for the statement.
+	 *
+	 */
 	Set<SqmParameter<?>> getSqmParameters();
+
+	ParameterResolutions resolveParameters();
+
+	interface ParameterResolutions {
+		ParameterResolutions EMPTY = new ParameterResolutions() {
+			@Override
+			public Set<SqmParameter<?>> getSqmParameters() {
+				return Collections.emptySet();
+			}
+
+			@Override
+			public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
+				return Collections.emptyMap();
+			}
+		};
+
+		static ParameterResolutions empty() {
+			return EMPTY;
+		}
+
+		Set<SqmParameter<?>> getSqmParameters();
+		Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions();
+	}
 }

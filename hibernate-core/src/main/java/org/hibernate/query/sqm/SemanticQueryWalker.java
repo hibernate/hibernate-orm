@@ -24,11 +24,12 @@ import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
@@ -179,7 +180,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitNamedParameterExpression(SqmNamedParameter<?> expression);
 
-	T visitCriteriaParameter(SqmCriteriaParameter<?> expression);
+	T visitJpaCriteriaParameter(JpaCriteriaParameter<?> expression);
 
 	T visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> expression);
 

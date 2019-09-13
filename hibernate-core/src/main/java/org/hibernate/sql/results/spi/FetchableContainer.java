@@ -15,10 +15,6 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
  * @author Steve Ebersole
  */
 public interface FetchableContainer extends ModelPartContainer {
-	default Fetchable findFetchable(String name) {
-		return (Fetchable) findSubPart( name );
-	}
-
 	default void visitKeyFetchables(
 			Consumer<Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
@@ -29,7 +25,7 @@ public interface FetchableContainer extends ModelPartContainer {
 			Consumer<Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
 		//noinspection unchecked
-		visitSubParts( (Consumer) fetchableConsumer );
+		visitSubParts( (Consumer) fetchableConsumer, treatTargetType );
 	}
 
 }

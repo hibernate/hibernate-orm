@@ -8,9 +8,13 @@ package org.hibernate.query.sqm.tree;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 
@@ -36,5 +40,20 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 	@Override
 	public Set<SqmParameter<?>> getSqmParameters() {
 		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
+	}
+
+	@Override
+	public ParameterResolutions resolveParameters() {
+		return new ParameterResolutions() {
+			@Override
+			public Set<SqmParameter<?>> getSqmParameters() {
+				return AbstractSqmStatement.this.getSqmParameters();
+			}
+
+			@Override
+			public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
+				return Collections.emptyMap();
+			}
+		};
 	}
 }

@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -36,7 +37,7 @@ public class AbstractManagedMappingType implements ManagedMappingType {
 	}
 
 	@Override
-	public ModelPart findSubPart(String name) {
+	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		if ( attributeMappings != null ) {
 			for ( AttributeMapping attributeMapping : attributeMappings ) {
 				if ( attributeMapping.getAttributeName().equals( name ) ) {
@@ -46,6 +47,12 @@ public class AbstractManagedMappingType implements ManagedMappingType {
 		}
 
 		return null;
+	}
+
+	@Override
+	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+		//noinspection unchecked
+		visitAttributeMappings( (Consumer) consumer );
 	}
 
 	@Override

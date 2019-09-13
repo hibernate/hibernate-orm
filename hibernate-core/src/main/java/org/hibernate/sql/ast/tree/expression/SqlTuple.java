@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -35,5 +37,27 @@ public class SqlTuple implements Expression {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitTuple( this );
+	}
+
+	public static class Builder {
+		private final MappingModelExpressable valueMapping;
+
+		private List<Expression> expressions;
+
+		public Builder(MappingModelExpressable valueMapping) {
+			this.valueMapping = valueMapping;
+		}
+
+		public void addSubExpression(Expression expression) {
+			if ( expressions == null ) {
+				expressions = new ArrayList<>();
+			}
+
+			expressions.add( expression );
+		}
+
+		public SqlTuple buildTuple() {
+			return new SqlTuple( expressions == null ? Collections.emptyList() : expressions, valueMapping );
+		}
 	}
 }

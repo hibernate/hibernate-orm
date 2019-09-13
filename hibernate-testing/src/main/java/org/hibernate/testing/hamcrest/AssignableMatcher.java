@@ -12,8 +12,8 @@ import org.hamcrest.Description;
 /**
  * @author Steve Ebersole
  */
-public class AssignableMatcher extends BaseMatcher<Class<?>> {
-	public static final AssignableMatcher assignableTo(Class<?> expected) {
+public class AssignableMatcher extends BaseMatcher<Class> {
+	public static AssignableMatcher assignableTo(Class expected) {
 		return new AssignableMatcher( expected );
 	}
 
@@ -25,7 +25,7 @@ public class AssignableMatcher extends BaseMatcher<Class<?>> {
 
 	@Override
 	public boolean matches(Object item) {
-		return expected.isAssignableFrom( item.getClass() );
+		return expected.isAssignableFrom( (Class) item );
 	}
 
 	@Override

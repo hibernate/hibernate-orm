@@ -18,6 +18,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.type.BasicType;
 
 /**
  * We classify literals different based on their source so that we can handle then differently
@@ -65,7 +66,12 @@ public abstract class AbstractLiteral<T>
 			int startPosition,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) throws SQLException {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		getType().getJdbcValueBinder().bind( statement, startPosition, value, executionContext );
+		//noinspection unchecked
+		( ( BasicType ) getExpressionType() ).getJdbcValueBinder().bind(
+				statement,
+				getValue(),
+				startPosition,
+				executionContext.getSession()
+		);
 	}
 }

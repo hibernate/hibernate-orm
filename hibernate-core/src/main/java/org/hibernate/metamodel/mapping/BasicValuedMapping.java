@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -23,5 +26,10 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressable {
 	@Override
 	default int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
 		return 1;
+	}
+
+	@Override
+	default List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+		return Collections.singletonList( getJdbcMapping() );
 	}
 }

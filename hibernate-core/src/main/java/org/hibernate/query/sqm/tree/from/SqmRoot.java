@@ -111,7 +111,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 
 	@Override
 	public Expression toSqlExpression(
-			SqmToSqlAstConverter walker,
+			Clause clause, SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
@@ -127,7 +127,8 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 						action,
 						Clause.IRRELEVANT,
 						typeConfiguration
-				)
+				),
+				entityDescriptor
 		);
 	}
 

@@ -105,7 +105,8 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 							action,
 							Clause.IRRELEVANT,
 							typeConfiguration
-					)
+					),
+					entityDescriptor
 			);
 		}
 		else if ( attributeType instanceof EmbeddableDomainType<?> ) {

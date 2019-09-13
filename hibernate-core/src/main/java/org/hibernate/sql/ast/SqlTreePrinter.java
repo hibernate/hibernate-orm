@@ -49,6 +49,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.spi.JdbcParameter;
 
 /**
  * @author Steve Ebersole
@@ -407,6 +408,11 @@ public class SqlTreePrinter implements SqlAstWalker {
 				"tuple",
 				() -> tuple.getExpressions().forEach( expr -> expr.accept( this ) )
 		);
+	}
+
+	@Override
+	public void visitParameter(JdbcParameter jdbcParameter) {
+		logNode( "parameter" );
 	}
 
 	@Override

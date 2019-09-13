@@ -784,7 +784,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			return namedNativeDescriptor.toQuery( this, resultSetMapping );
 		}
 
-		throw exceptionConverter.convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
+		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
 	}
 
 
@@ -885,7 +885,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			);
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -901,7 +901,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			);
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -917,7 +917,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			);
 		}
 		catch ( RuntimeException e ) {
-			throw exceptionConverter.convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 

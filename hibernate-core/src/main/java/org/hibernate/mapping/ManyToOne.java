@@ -39,7 +39,7 @@ public class ManyToOne extends ToOne {
 	}
 
 	public Type getType() throws MappingException {
-		if ( resolvedType != null ) {
+		if ( resolvedType == null ) {
 			resolvedType = MappingHelper.manyToOne(
 					getReferencedEntityName(),
 					isReferenceToPrimaryKey(),
@@ -51,7 +51,6 @@ public class ManyToOne extends ToOne {
 					isIgnoreNotFound(),
 					getBuildingContext()
 			);
-			assert resolvedType != null;
 		}
 
 		return resolvedType;

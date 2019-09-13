@@ -118,19 +118,11 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 
 	@Override
 	public CacheRetrieveMode getCacheRetrieveMode() {
-		if ( cacheRetrieveMode == null ) {
-			return CacheRetrieveMode.BYPASS;
-		}
-
 		return cacheRetrieveMode;
 	}
 
 	@Override
 	public CacheStoreMode getCacheStoreMode() {
-		if ( cacheStoreMode == null ) {
-			return CacheStoreMode.BYPASS;
-		}
-
 		return cacheStoreMode;
 	}
 

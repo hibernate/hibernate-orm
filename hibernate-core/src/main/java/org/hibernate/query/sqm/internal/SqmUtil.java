@@ -94,7 +94,6 @@ public class SqmUtil {
 
 			for ( SqmParameter sqmParam : sqmParams ) {
 				sqmParamMap.put( sqmParam, jdbcParameterBySqmParameterAccess.getJdbcParamsBySqmParam().get( sqmParam ) );
-				result.put( queryParam, sqmParamMap );
 
 				final List<SqmParameter> expansions = domainParameterXref.getExpansions( sqmParam );
 				if ( ! expansions.isEmpty() ) {

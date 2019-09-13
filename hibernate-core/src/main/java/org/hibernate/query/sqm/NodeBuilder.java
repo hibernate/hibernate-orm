@@ -37,6 +37,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
@@ -264,11 +265,16 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	@Override
 	<T> SqmExpression<T> nullLiteral(Class<T> resultClass);
 
+	/**
+	 * @implNote Notice that this returns a JPA parameter not the SqmParameter
+	 * @see JpaParameterExpression#
+	 *
+	 */
 	@Override
-	<T> SqmParameter<T> parameter(Class<T> paramClass);
+	<T> JpaParameterExpression<T> parameter(Class<T> paramClass);
 
 	@Override
-	<T> SqmParameter<T> parameter(Class<T> paramClass, String name);
+	<T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name);
 
 	@Override
 	SqmExpression<String> concat(Expression<String> x, Expression<String> y);

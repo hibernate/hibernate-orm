@@ -22,6 +22,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -47,6 +48,8 @@ import org.hibernate.sql.results.spi.RowTransformer;
 public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement sqm;
 	private final DomainParameterXref domainParameterXref;
+	private final SqmStatement.ParameterResolutions parameterResolutions;
+
 	private final RowTransformer<R> rowTransformer;
 
 	private JdbcSelect jdbcSelect;
@@ -60,6 +63,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
 		this.domainParameterXref = domainParameterXref;
+		this.parameterResolutions = sqm.resolveParameters();
 
 		this.rowTransformer = determineRowTransformer( sqm, resultType, queryOptions );
 
@@ -159,7 +163,10 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					executionContext.getSession().getFactory()
 			);
 
-			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref( domainParameterXref, () -> interpretation.getJdbcParamsBySqmParam() );
+			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+					domainParameterXref,
+					interpretation::getJdbcParamsBySqmParam
+			);
 		}
 
 

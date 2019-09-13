@@ -126,6 +126,16 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		return enumerationStyle;
 	}
 
+	@Override
+	public ConverterDescriptor getJpaAttributeConverterDescriptor() {
+		return attributeConverterDescriptor;
+	}
+
+	@Override
+	public void setJpaAttributeConverterDescriptor(ConverterDescriptor descriptor) {
+		this.attributeConverterDescriptor = descriptor;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Resolution

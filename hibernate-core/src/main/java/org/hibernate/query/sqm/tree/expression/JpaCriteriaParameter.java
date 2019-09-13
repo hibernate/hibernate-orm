@@ -10,6 +10,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -17,33 +18,35 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
- * SqmParameter created via JPA {@link javax.persistence.criteria.CriteriaBuilder}
+ * {@link JpaParameterExpression} created via JPA {@link javax.persistence.criteria.CriteriaBuilder}.
+ *
+ * Each occurence of a JpaParameterExpression results in a unique SqmParameter
  *
  * @see ParameterMetadata
  * @see NodeBuilder#parameter
  *
  * @author Steve Ebersole
  */
-public class SqmCriteriaParameter<T>
+public class JpaCriteriaParameter<T>
 		extends AbstractSqmExpression<T>
 		implements SqmParameter<T>, QueryParameterImplementor<T>, DomainResultProducer<T> {
 	private final String name;
-	private boolean allowMultiValuedBinding;
+	private boolean allowsMultiValuedBinding;
 
-	public SqmCriteriaParameter(
+	public JpaCriteriaParameter(
 			String name,
 			AllowableParameterType<T> type,
-			boolean allowMultiValuedBinding,
+			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		this.name = name;
-		this.allowMultiValuedBinding = allowMultiValuedBinding;
+		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
-	public SqmCriteriaParameter(
+	public JpaCriteriaParameter(
 			AllowableParameterType<T> type,
-			boolean allowMultiValuedBinding,
+			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
-		this( null, type, allowMultiValuedBinding, nodeBuilder );
+		this( null, type, allowsMultiValuedBinding, nodeBuilder );
 	}
 
 	@Override
@@ -58,23 +61,28 @@ public class SqmCriteriaParameter<T>
 	}
 
 	@Override
-	public boolean allowMultiValuedBinding() {
-		return allowMultiValuedBinding;
-	}
-
-	@Override
 	public boolean allowsMultiValuedBinding() {
-		return allowMultiValuedBinding;
+		return allowsMultiValuedBinding;
 	}
 
 	@Override
 	public void disallowMultiValuedBinding() {
-		allowMultiValuedBinding = false;
+		allowsMultiValuedBinding = false;
+	}
+
+	@Override
+	public boolean allowMultiValuedBinding() {
+		return allowsMultiValuedBinding();
+	}
+
+	@Override
+	public AllowableParameterType<T> getAnticipatedType() {
+		return getHibernateType();
 	}
 
 	@Override
 	public void applyAnticipatedType(AllowableParameterType type) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		super.internalApplyInferableType( type );
 	}
 
 	@Override
@@ -83,8 +91,13 @@ public class SqmCriteriaParameter<T>
 	}
 
 	@Override
-	public AllowableParameterType<T> getAnticipatedType() {
-		return this.getNodeType();
+	public SqmParameter<T> copy() {
+		return new JpaCriteriaParameter<>(
+				getName(),
+				getAnticipatedType(),
+				allowMultiValuedBinding(),
+				nodeBuilder()
+		);
 	}
 
 	@Override
@@ -98,23 +111,21 @@ public class SqmCriteriaParameter<T>
 	}
 
 	@Override
-	public SqmParameter<T> copy() {
-		return new SqmCriteriaParameter<>(
-				name,
-				this.getNodeType(),
-				allowMultiValuedBinding(),
-				nodeBuilder()
-		);
-	}
-
-	@Override
 	protected void internalApplyInferableType(SqmExpressable<?> newType) {
 		super.internalApplyInferableType( newType );
 	}
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitCriteriaParameter( this );
+		return walker.visitJpaCriteriaParameter( this );
+	}
+
+	public SqmJpaCriteriaParameterWrapper<T> makeSqmParameter() {
+		return new SqmJpaCriteriaParameterWrapper<>(
+				getHibernateType(),
+				this,
+				nodeBuilder()
+		);
 	}
 
 	@Override

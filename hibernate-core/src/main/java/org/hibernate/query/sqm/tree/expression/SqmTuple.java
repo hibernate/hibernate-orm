@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.SqmExpressionInterpretation;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -87,6 +88,7 @@ public class SqmTuple<T>
 
 	@Override
 	public Expression toSqlExpression(
+			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
 		final List<Expression> groupedSqlExpressions  = new ArrayList<>();
@@ -94,7 +96,7 @@ public class SqmTuple<T>
 		for ( SqmExpression groupedExpression : groupedExpressions ) {
 			final SqmExpressionInterpretation interpretation = (SqmExpressionInterpretation) groupedExpression.accept( walker );
 			final Expression sqlExpression = interpretation.toSqlExpression(
-					walker,
+					clause, walker,
 					sqlAstCreationState
 			);
 

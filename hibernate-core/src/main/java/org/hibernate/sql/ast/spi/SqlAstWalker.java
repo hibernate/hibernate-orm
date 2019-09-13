@@ -37,6 +37,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.exec.spi.JdbcParameter;
 
 /**
  * @author Steve Ebersole
@@ -86,7 +87,15 @@ public interface SqlAstWalker {
 
 	void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression);
 
-//	void visitGenericParameter(GenericParameter parameter);
+	void visitSelfRenderingExpression(SelfRenderingExpression expression);
+
+	void visitSqlSelectionExpression(SqlSelectionExpression expression);
+
+	void visitEntityTypeLiteral(EntityTypeLiteral expression);
+
+	void visitTuple(SqlTuple tuple);
+
+	void visitParameter(JdbcParameter jdbcParameter);
 
 	void visitQueryLiteral(QueryLiteral queryLiteral);
 
@@ -113,14 +122,6 @@ public interface SqlAstWalker {
 	void visitRelationalPredicate(ComparisonPredicate comparisonPredicate);
 
 	void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate);
-
-	void visitSelfRenderingExpression(SelfRenderingExpression expression);
-
-	void visitSqlSelectionExpression(SqlSelectionExpression expression);
-
-	void visitEntityTypeLiteral(EntityTypeLiteral expression);
-
-	void visitTuple(SqlTuple tuple);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

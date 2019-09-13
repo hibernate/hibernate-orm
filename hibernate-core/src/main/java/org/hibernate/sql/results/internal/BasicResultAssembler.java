@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
+import org.hibernate.Internal;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.SqlResultsLogger;
@@ -71,6 +72,7 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 	/**
 	 * Exposed for testing purposes
 	 */
+	@Internal
 	public BasicValueConverter<J, ?> getValueConverter() {
 		return valueConverter;
 	}

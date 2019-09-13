@@ -8,9 +8,12 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import javax.persistence.metamodel.Bindable;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -18,11 +21,16 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.type.BasicType;
 
 /**
  * Helper containing utilities useful for domain model handling
@@ -78,7 +86,7 @@ public class DomainModelHelper {
 			SessionFactoryImplementor sessionFactory) {
 		// Our EntityTypeImpl#getType impl returns the Hibernate entity-name
 		// which is exactly what we want
-		final String hibernateEntityName = entityType.getName();
+		final String hibernateEntityName = entityType.getHibernateEntityName();
 		return sessionFactory.getMetamodel().entityPersister( hibernateEntityName );
 	}
 
@@ -128,11 +136,55 @@ public class DomainModelHelper {
 			SqmTypedNode<?> sqmNode,
 			SqlAstCreationState creationState) {
 		if ( sqmNode instanceof SqmPath ) {
-			final SqmPath sqmPath = (SqmPath) sqmNode;
-
-			return creationState.getCreationContext().getDomainModel().resolveModelPart( sqmPath.getNavigablePath() );
+			return resolveSqmPath( (SqmPath) sqmNode, creationState );
 		}
 
-		return creationState.getCreationContext().getDomainModel().resolveMappingExpressable( sqmNode.getNodeType() );
+		final SqmExpressable<?> nodeType = sqmNode.getNodeType();
+		if ( nodeType instanceof BasicType ) {
+			return ( (BasicType) nodeType );
+		}
+
+		throw new NotYetImplementedFor6Exception( DomainModelHelper.class );
+	}
+
+	private static ModelPart resolveSqmPath(SqmPath<?> sqmPath, SqlAstCreationState creationState) {
+		final DomainMetamodel domainModel = creationState.getCreationContext().getDomainModel();
+
+		if ( sqmPath instanceof SqmTreatedPath ) {
+			final SqmTreatedPath treatedPath = (SqmTreatedPath) sqmPath;
+			final EntityDomainType treatTargetType = treatedPath.getTreatTarget();
+			return domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
+		}
+
+		// see if the LHS is treated
+		if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
+			final SqmTreatedPath treatedPath = (SqmTreatedPath) sqmPath.getLhs();
+			final EntityDomainType treatTargetType = treatedPath.getTreatTarget();
+			final EntityPersister container = domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
+
+			return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
+		}
+
+		final ModelPartContainer container = resolveLhs( sqmPath, creationState );
+		return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), null );
+	}
+
+	private static ModelPartContainer resolveLhs(SqmPath<?> sqmPath, SqlAstCreationState creationState) {
+		final SqmPath<?> lhs = sqmPath.getLhs();
+		final SqmPathSource<?> referencedPathSource = lhs.getReferencedPathSource();
+
+		if ( referencedPathSource instanceof EntityDomainType ) {
+			return resolveEntityPersister(  (EntityDomainType) referencedPathSource, creationState.getCreationContext().getSessionFactory() );
+		}
+		else if ( referencedPathSource instanceof SingularPersistentAttribute ) {
+			final SingularPersistentAttribute attribute = (SingularPersistentAttribute) referencedPathSource;
+			if ( attribute.getType() instanceof EntityDomainType ) {
+				return resolveEntityPersister(  (EntityDomainType) attribute.getType(), creationState.getCreationContext().getSessionFactory() );
+			}
+
+			throw new NotYetImplementedFor6Exception( "Support for composite sub-paths not yet implemented" );
+		}
+
+		throw new NotYetImplementedFor6Exception( );
 	}
 }

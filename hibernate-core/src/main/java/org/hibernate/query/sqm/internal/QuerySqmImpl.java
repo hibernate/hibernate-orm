@@ -159,12 +159,12 @@ public class QuerySqmImpl<R>
 		this.sqmStatement = sqmStatement;
 		this.resultType = resultType;
 
-		if ( sqmStatement.getSqmParameters().isEmpty() ) {
-			this.domainParameterXref = DomainParameterXref.empty();
+
+		this.domainParameterXref = DomainParameterXref.from( sqmStatement );
+		if ( ! domainParameterXref.hasParameters() ) {
 			this.parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
 		else {
-			this.domainParameterXref = DomainParameterXref.from( sqmStatement );
 			this.parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
 		}
 

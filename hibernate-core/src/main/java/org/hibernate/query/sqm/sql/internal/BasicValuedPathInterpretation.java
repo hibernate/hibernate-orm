@@ -10,8 +10,10 @@ import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
+import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -19,15 +21,14 @@ import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.results.internal.ScalarDomainResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -43,16 +44,37 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 		final SqmPath<?> lhs = sqmPath.getLhs();
 		assert lhs != null;
 
-		final BasicValuedModelPart mapping = (BasicValuedModelPart) DomainModelHelper.resolveMappingModelExpressable( sqmPath, sqlAstCreationState );
+		final DomainMetamodel domainModel = sqlAstCreationState.getCreationContext().getDomainModel();
 
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
+		final BasicValuedModelPart mapping;
 
-		// 1) "column info"
-		//		a) name
-		// 		b) JdbcMapping
+		mapping = determineModelPart( sqmPath, lhs, domainModel, sqlAstCreationState );
 
+		return new BasicValuedPathInterpretation<>(
+				sqmPath,
+				mapping,
+				sqlAstCreationState.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() )
+		);
+	}
 
-		return new BasicValuedPathInterpretation<>( sqmPath, mapping, tableGroup );
+	private static <T> BasicValuedModelPart determineModelPart(
+			SqmBasicValuedSimplePath<T> sqmPath,
+			SqmPath<?> lhs,
+			DomainMetamodel domainModel,
+			SqlAstCreationState sqlAstCreationState) {
+		if ( lhs.getReferencedPathSource().getSqmPathType() instanceof EntityDomainType ) {
+			final EntityDomainType entityDomainType = (EntityDomainType) lhs.getReferencedPathSource().getSqmPathType();
+			final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
+
+			if ( lhs instanceof SqmTreatedPath ) {
+				final EntityDomainType treatTargetType = ( (SqmTreatedPath) lhs ).getTreatTarget();
+				final EntityPersister treatTargetTypeMapping = domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
+
+				return (BasicValuedModelPart) entityDescriptor.findSubPart( sqmPath.getNavigablePath().getLocalName(), treatTargetTypeMapping );
+			}
+		}
+
+		return (BasicValuedModelPart) DomainModelHelper.resolveMappingModelExpressable( sqmPath, sqlAstCreationState );
 	}
 
 	private final SqmBasicValuedSimplePath<T> sqmPath;
@@ -109,7 +131,7 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 
 	@Override
 	public Expression toSqlExpression(
-			SqmToSqlAstConverter walker,
+			Clause clause, SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

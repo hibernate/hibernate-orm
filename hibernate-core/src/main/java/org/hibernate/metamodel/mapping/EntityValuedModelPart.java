@@ -23,14 +23,18 @@ import org.hibernate.type.spi.TypeConfiguration;
 public interface EntityValuedModelPart extends FetchableContainer {
 	EntityMappingType getEntityMappingType();
 
-	@Override
 	default ModelPart findSubPart(String name) {
-		return getEntityMappingType().findSubPart( name );
+		return getEntityMappingType().findSubPart( name, null );
 	}
 
 	@Override
-	default void visitSubParts(Consumer<ModelPart> consumer) {
-		getEntityMappingType().visitSubParts( consumer );
+	default ModelPart findSubPart(String name, EntityMappingType targetType) {
+		return getEntityMappingType().findSubPart( name, targetType );
+	}
+
+	@Override
+	default void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType targetType) {
+		getEntityMappingType().visitSubParts( consumer, targetType );
 	}
 
 	@Override

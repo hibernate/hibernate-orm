@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.query.criteria;
 
+import java.util.List;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -13,6 +15,10 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
+
+import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.sql.exec.spi.JdbcParameter;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -100,6 +106,8 @@ public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTest
 		final Root<BasicEntity> root = criteria.from( BasicEntity.class );
 
 		criteria.select( root );
+
+		Map<QueryParameterImplementor,Map<SqmParameter, List<JdbcParameter>>> parameterResolutionMap;
 
 		final ParameterExpression<Integer> param = criteriaBuilder.parameter( Integer.class );
 

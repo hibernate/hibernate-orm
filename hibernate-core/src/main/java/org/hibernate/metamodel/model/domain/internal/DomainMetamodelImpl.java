@@ -46,8 +46,6 @@ import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelCreationContext;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -65,7 +63,6 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -718,18 +715,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 		return results.toArray( new String[results.size()] );
 	}
 
-	@Override
-	public ModelPart resolveModelPart(NavigablePath navigablePath) {
-		if ( navigablePath.getParent() == null ) {
-			// the path should name an entity
-			return resolveAsEntity( navigablePath );
-		}
-		else {
-			final ModelPartContainer lhs = resolveParentModelPart( navigablePath.getParent() );
-			return lhs.findSubPart( navigablePath.getLocalName() );
-		}
-	}
-
 	private EntityMappingType resolveAsEntity(NavigablePath navigablePath) {
 		final String unqualifiedFullPath = navigablePath.getUnqualifiedFullPath();
 		final EntityPersister descriptor = findEntityDescriptor( unqualifiedFullPath );
@@ -739,14 +724,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 		}
 
 		return descriptor;
-	}
-
-	private ModelPartContainer resolveParentModelPart(NavigablePath parent) {
-		if ( parent.getParent() == null ) {
-			return resolveAsEntity( parent );
-		}
-
-		return (ModelPartContainer) resolveParentModelPart( parent.getParent() ).findSubPart( parent.getLocalName() );
 	}
 
 	@Override

@@ -69,7 +69,7 @@ import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
@@ -758,9 +758,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public <T> SqmCriteriaParameter<T> parameter(Class<T> paramClass) {
+	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass) {
 		//noinspection unchecked
-		return new SqmCriteriaParameter<>(
+		return new JpaCriteriaParameter<>(
 				getTypeConfiguration().standardBasicTypeForJavaType( paramClass ),
 				false,
 				this
@@ -768,9 +768,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 	}
 
 	@Override
-	public <T> SqmCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
+	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
 		//noinspection unchecked
-		return new SqmCriteriaParameter<>(
+		return new JpaCriteriaParameter<>(
 				name,
 				getTypeConfiguration().standardBasicTypeForJavaType( paramClass ),
 				false,

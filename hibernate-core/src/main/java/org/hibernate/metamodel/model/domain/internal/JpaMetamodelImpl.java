@@ -186,9 +186,9 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <X> EntityDomainType<X> entity(Class<X> cls) {
-		final EntityType<?> entityType = jpaEntityTypeMap.get( cls );
+		final EntityType<?> entityType = jpaEntityTypeMap.get( cls.getName() );
 		if ( entityType == null ) {
-			throw new IllegalArgumentException( "Not an entity: " + cls );
+			throw new IllegalArgumentException( "Not an entity: " + cls.getName() );
 		}
 		//noinspection unchecked
 		return (EntityDomainType<X>) entityType;

@@ -8,6 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import java.util.function.Consumer;
 
+import org.hibernate.Internal;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
@@ -81,6 +82,14 @@ public class ScalarDomainResultImpl<T> implements ScalarDomainResult<T> {
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	/**
+	 * For testing purposes only
+	 */
+	@Internal
+	public DomainResultAssembler<T> getAssembler() {
+		return assembler;
 	}
 
 	@Override

@@ -50,11 +50,8 @@ public interface DomainMetamodel {
 		return getJpaMetamodel().getTypeConfiguration();
 	}
 
-	/**
-	 * Used mainly from Query handling.  Resolves a NavigablePath to the
-	 * reference ModelPart
-	 */
-	ModelPart resolveModelPart(NavigablePath navigablePath);
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Mapping model
 
 	/**
 	 * todo (6.0) : POC!!!  Intended for use in SQM -> SQL translation

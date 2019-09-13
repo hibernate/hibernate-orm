@@ -1311,128 +1311,6 @@ public abstract class AbstractEntityPersister
 		return conjunction;
 	}
 
-	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		LOG.tracef( "#findSubPart(`%s`)", name );
-
-		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
-		if ( declaredAttribute != null ) {
-			return declaredAttribute;
-		}
-
-		if ( superMappingType != null ) {
-			final ModelPart superDefinedAttribute = superMappingType.findSubPart( name );
-			if ( superDefinedAttribute != null ) {
-				return superDefinedAttribute;
-			}
-		}
-
-		if ( subclassMappingTypes != null && ! subclassMappingTypes.isEmpty() ) {
-			for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
-				final ModelPart subDefinedAttribute = subMappingType.findSubPart( name );
-				if ( subDefinedAttribute != null ) {
-					return subDefinedAttribute;
-				}
-			}
-
-		}
-
-		return null;
-	}
-
-	@Override
-	public void visitSubParts(
-			Consumer<ModelPart> consumer,
-			EntityMappingType treatTargetType) {
-		consumer.accept( identifierMapping );
-
-		declaredAttributeMappings.values().forEach( consumer );
-	}
-
-	@Override
-	public Fetchable findFetchable(String name) {
-		final Fetchable declaredFetchable = (Fetchable) declaredAttributeMappings.get( name );
-		if ( declaredFetchable != null ) {
-			return declaredFetchable;
-		}
-
-		if ( superMappingType != null ) {
-			return superMappingType.findFetchable( name );
-		}
-
-		return null;
-	}
-
-	@Override
-	public void visitKeyFetchables(
-			Consumer<Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
-		if ( getIdentifierMapping() instanceof FetchableContainer ) {
-			// essentially means the entity has a composite id - ask the embeddable to visit its fetchables
-			//		- todo (6.0) : determine whether this should call `#visitFetchables` or `#visitKeyFetchables`
-			( (FetchableContainer) getIdentifierMapping() ).visitFetchables( fetchableConsumer, treatTargetType );
-		}
-
-		// otherwise, nothing to do
-	}
-
-	@Override
-	public void visitFetchables(
-			Consumer<Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
-		visitStateArrayContributors(
-				mapping -> {
-					if ( mapping.isDeclaredOnTypeOrSuperType( treatTargetType ) ) {
-						fetchableConsumer.accept( mapping );
-					}
-				},
-				treatTargetType
-		);
-	}
-
-	@Override
-	public void visitStateArrayContributors(
-			Consumer<StateArrayContributorMapping> mappingConsumer,
-			EntityMappingType targetType) {
-		visitAttributeMappings(
-				attributeMapping -> {
-					if ( attributeMapping instanceof StateArrayContributorMapping ) {
-						mappingConsumer.accept( (StateArrayContributorMapping) attributeMapping );
-					}
-				},
-				targetType
-		);
-	}
-
-	@Override
-	public void visitAttributeMappings(
-			Consumer<AttributeMapping> action,
-			EntityMappingType targetType) {
-		visitSuperTypeAttributeMappings( action );
-
-		declaredAttributeMappings.values().forEach( action );
-
-		if ( targetType == null ) {
-			visitSubTypeAttributeMappings( action );
-		}
-	}
-
-	@Override
-	public void visitSuperTypeAttributeMappings(Consumer<AttributeMapping> action) {
-		if ( superMappingType != null ) {
-			superMappingType.visitSuperTypeAttributeMappings( action );
-		}
-	}
-
-	@Override
-	public void visitSubTypeAttributeMappings(Consumer<AttributeMapping> action) {
-		if ( subclassMappingTypes != null ) {
-			subclassMappingTypes.values().forEach(
-					subclassMappingTypes -> subclassMappingTypes.visitSubTypeAttributeMappings( action )
-			);
-		}
-	}
-
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entry = persistenceContext.getEntry( entity );
@@ -5445,32 +5323,34 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Serializable getIdentifier(Object object) {
-		return getEntityTuplizer().getIdentifier( object, null );
+		return getIdentifier( object, null );
 	}
 
 	@Override
 	public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return getEntityTuplizer().getIdentifier( entity, session );
+		return (Serializable) getIdentifierMapping().getPropertyAccess().getGetter().get( entity );
 	}
 
 	@Override
 	public void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session) {
-		getEntityTuplizer().setIdentifier( entity, id, session );
+		getIdentifierMapping().getPropertyAccess().getSetter().set( entity, id, getFactory() );
 	}
 
 	@Override
 	public Object getVersion(Object object) {
-		return getEntityTuplizer().getVersion( object );
+		return getVersionMapping().getAttributeMetadataAccess().resolveAttributeMetadata( this ).getPropertyAccess().getGetter().get( object );
 	}
 
 	@Override
 	public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
-		return getEntityTuplizer().instantiate( id, session );
+		final Object entity = getRepresentationStrategy().getInstantiator().instantiate( session );
+		setIdentifier( entity, id, session );
+		return entity;
 	}
 
 	@Override
 	public boolean isInstance(Object object) {
-		return getEntityTuplizer().isInstance( object );
+		return getRepresentationStrategy().getInstantiator().isInstance( object, getFactory() );
 	}
 
 	@Override
@@ -5516,9 +5396,32 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getPropertySpan();
 	}
 
-	public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SharedSessionContractImplementor session)
-			throws HibernateException {
-		return getEntityTuplizer().getPropertyValuesToInsert( object, mergeMap, session );
+	public Object[] getPropertyValuesToInsert(
+			Object entity,
+			Map mergeMap,
+			SharedSessionContractImplementor session) throws HibernateException {
+		if ( shouldGetAllProperties( entity ) && accessOptimizer != null ) {
+			return accessOptimizer.getPropertyValues( entity );
+		}
+
+		final List<Object> values = new ArrayList<>();
+
+		visitAttributeMappings(
+				attributeMapping -> values.add(
+						attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( this ).getPropertyAccess().getGetter().getForInsert( entity, mergeMap, session )
+				)
+		);
+
+		return values.toArray();
+	}
+
+	protected boolean shouldGetAllProperties(Object entity) {
+		final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
+		if ( !bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
+			return true;
+		}
+
+		return !bytecodeEnhancementMetadata.hasUnFetchedAttributes( entity );
 	}
 
 	public void processInsertGeneratedProperties(
@@ -6116,40 +6019,6 @@ public abstract class AbstractEntityPersister
 
 	private SortedMap<String, AttributeMapping> declaredAttributeMappings = new TreeMap<>();
 
-	@Override
-	public void linkWithSuperType(MappingModelCreationProcess creationProcess) {
-		if ( getMappedSuperclass() == null ) {
-			return;
-		}
-
-		this.superMappingType = creationProcess.getEntityPersister( getMappedSuperclass() );
-		( (InFlightEntityMappingType) superMappingType ).linkWithSubType( this, creationProcess );
-	}
-
-	@Override
-	public void linkWithSubType(EntityMappingType sub, MappingModelCreationProcess creationProcess) {
-		subclassMappingTypes.put( sub.getEntityName(), sub );
-	}
-
-	@Override
-	public boolean isTypeOrSuperType(EntityMappingType targetType) {
-		if ( targetType == null ) {
-			// todo (6.0) : need to think through what this ought to indicate (if we allow it at all)
-			//		- see `org.hibernate.metamodel.mapping.internal.AbstractManagedMappingType#isTypeOrSuperType`
-			return true;
-		}
-
-		if ( targetType == this ) {
-			return true;
-		}
-
-		if ( superMappingType != null ) {
-			return superMappingType.isTypeOrSuperType( targetType );
-		}
-
-		return false;
-	}
-
 	private ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
 	@Override
@@ -6215,6 +6084,45 @@ public abstract class AbstractEntityPersister
 			accessOptimizer = null;
 		}
 	}
+
+	@Override
+	public void linkWithSuperType(MappingModelCreationProcess creationProcess) {
+		if ( getMappedSuperclass() == null ) {
+			return;
+		}
+
+		this.superMappingType = creationProcess.getEntityPersister( getMappedSuperclass() );
+		( (InFlightEntityMappingType) superMappingType ).linkWithSubType( this, creationProcess );
+	}
+
+	@Override
+	public void linkWithSubType(EntityMappingType sub, MappingModelCreationProcess creationProcess) {
+		if ( subclassMappingTypes == null ) {
+			//noinspection unchecked
+			subclassMappingTypes = new TreeMap();
+		}
+		subclassMappingTypes.put( sub.getEntityName(), sub );
+	}
+
+	@Override
+	public boolean isTypeOrSuperType(EntityMappingType targetType) {
+		if ( targetType == null ) {
+			// todo (6.0) : need to think through what this ought to indicate (if we allow it at all)
+			//		- see `org.hibernate.metamodel.mapping.internal.AbstractManagedMappingType#isTypeOrSuperType`
+			return true;
+		}
+
+		if ( targetType == this ) {
+			return true;
+		}
+
+		if ( superMappingType != null ) {
+			return superMappingType.isTypeOrSuperType( targetType );
+		}
+
+		return false;
+	}
+
 
 	private EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess) {
 		final Type idType = getIdentifierType();
@@ -6396,9 +6304,135 @@ public abstract class AbstractEntityPersister
 		return versionMapping;
 	}
 
+	private Collection<AttributeMapping> attributeMappings;
+
 	@Override
 	public Collection<AttributeMapping> getAttributeMappings() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		if ( attributeMappings == null ) {
+			attributeMappings = new ArrayList<>();
+
+			if ( superMappingType != null ) {
+				superMappingType.visitAttributeMappings(
+						attributeMappings::add,
+						// only walk up the hierarchy
+						superMappingType
+				);
+			}
+
+			attributeMappings.addAll( declaredAttributeMappings.values() );
+
+			// subclasses?  it depends on the usage
+		}
+
+		return attributeMappings;
+	}
+
+	@Override
+	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+		LOG.tracef( "#findSubPart(`%s`)", name );
+
+		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
+		if ( declaredAttribute != null ) {
+			return declaredAttribute;
+		}
+
+		if ( superMappingType != null ) {
+			final ModelPart superDefinedAttribute = superMappingType.findSubPart( name, superMappingType );
+			if ( superDefinedAttribute != null ) {
+				return superDefinedAttribute;
+			}
+		}
+
+		if ( subclassMappingTypes != null && ! subclassMappingTypes.isEmpty() ) {
+			for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
+				final ModelPart subDefinedAttribute = subMappingType.findSubPart( name, treatTargetType );
+				if ( subDefinedAttribute != null ) {
+					return subDefinedAttribute;
+				}
+			}
+
+		}
+
+		return null;
+	}
+
+	@Override
+	public void visitSubParts(
+			Consumer<ModelPart> consumer,
+			EntityMappingType treatTargetType) {
+		consumer.accept( identifierMapping );
+
+		declaredAttributeMappings.values().forEach( consumer );
+	}
+
+	@Override
+	public void visitKeyFetchables(
+			Consumer<Fetchable> fetchableConsumer,
+			EntityMappingType treatTargetType) {
+		if ( getIdentifierMapping() instanceof FetchableContainer ) {
+			// essentially means the entity has a composite id - ask the embeddable to visit its fetchables
+			//		- todo (6.0) : determine whether this should call `#visitFetchables` or `#visitKeyFetchables`
+			( (FetchableContainer) getIdentifierMapping() ).visitFetchables( fetchableConsumer, treatTargetType );
+		}
+
+		// otherwise, nothing to do
+	}
+
+	@Override
+	public void visitFetchables(
+			Consumer<Fetchable> fetchableConsumer,
+			EntityMappingType treatTargetType) {
+		visitStateArrayContributors(
+				mapping -> {
+					if ( mapping.isDeclaredOnTypeOrSuperType( treatTargetType ) ) {
+						fetchableConsumer.accept( mapping );
+					}
+				},
+				treatTargetType
+		);
+	}
+
+	@Override
+	public void visitStateArrayContributors(
+			Consumer<StateArrayContributorMapping> mappingConsumer,
+			EntityMappingType targetType) {
+		visitAttributeMappings(
+				attributeMapping -> {
+					if ( attributeMapping instanceof StateArrayContributorMapping ) {
+						mappingConsumer.accept( (StateArrayContributorMapping) attributeMapping );
+					}
+				},
+				targetType
+		);
+	}
+
+	@Override
+	public void visitAttributeMappings(
+			Consumer<AttributeMapping> action,
+			EntityMappingType targetType) {
+		visitSuperTypeAttributeMappings( action );
+
+		declaredAttributeMappings.values().forEach( action );
+
+		if ( targetType == null ) {
+			visitSubTypeAttributeMappings( action );
+		}
+	}
+
+	@Override
+	public void visitSuperTypeAttributeMappings(Consumer<AttributeMapping> action) {
+		if ( superMappingType != null ) {
+			superMappingType.visitSuperTypeAttributeMappings( action );
+		}
+	}
+
+	@Override
+	public void visitSubTypeAttributeMappings(Consumer<AttributeMapping> action) {
+		if ( subclassMappingTypes != null ) {
+			subclassMappingTypes.values().forEach(
+					subclassMappingTypes -> subclassMappingTypes.visitSubTypeAttributeMappings( action )
+			);
+		}
 	}
 
 

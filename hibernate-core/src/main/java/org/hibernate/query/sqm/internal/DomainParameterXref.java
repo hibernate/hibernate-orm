@@ -19,9 +19,9 @@ import org.hibernate.query.QueryLogger;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
@@ -65,25 +65,45 @@ public class DomainParameterXref {
 
 						return one.getPosition().compareTo( another.getPosition() );
 					}
-					else if ( o1 instanceof SqmCriteriaParameter ) {
-						if ( o1.getName() != null ) {
-							return o1.getName().compareTo( o2.getName() );
-						}
-						else {
+					else if ( o1 instanceof SqmJpaCriteriaParameterWrapper
+							&& o2 instanceof SqmJpaCriteriaParameterWrapper ) {
+//						final SqmJpaCriteriaParameterWrapper wrapper1 = (SqmJpaCriteriaParameterWrapper) o1;
+//						final SqmJpaCriteriaParameterWrapper wrapper2 = (SqmJpaCriteriaParameterWrapper) o2;
+//						if ( wrapper1.getJpaCriteriaParameter() == wrapper2.getJpaCriteriaParameter() ) {
+//							return 0;
+//						}
+//
+//						if ( o1.getName() != null ) {
+//							return o1.getName().compareTo( o2.getName() );
+//						}
+//						else {
 							return Integer.compare( o1.hashCode(), o2.hashCode() );
-						}
+//						}
 					}
 
 					throw new HibernateException( "Unexpected SqmParameter type for comparison : " + o1 + " & " + o2 );
 				}
 		);
 
-		for ( SqmParameter sqmParameter : sqmStatement.getSqmParameters() ) {
+		final SqmStatement.ParameterResolutions parameterResolutions = sqmStatement.resolveParameters();
+		if ( parameterResolutions.getSqmParameters().isEmpty() ) {
+			return empty();
+		}
+
+		for ( SqmParameter<?> sqmParameter : parameterResolutions.getSqmParameters() ) {
+			if ( sqmParameter instanceof JpaCriteriaParameter ) {
+				// see discussion on `SqmJpaCriteriaParameterWrapper#accept`
+				throw new UnsupportedOperationException(
+						"Unexpected JpaCriteriaParameter in SqmStatement#getSqmParameters.  Criteria parameters " +
+								"should be represented as SqmJpaCriteriaParameterWrapper references in this collection"
+				);
+			}
+
 			final QueryParameterImplementor<?> queryParameter = xrefMap.computeIfAbsent(
 					sqmParameter,
 					p -> {
-						if ( sqmParameter instanceof SqmCriteriaParameter ) {
-							return (SqmCriteriaParameter) sqmParameter;
+						if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper ) {
+							return ( (SqmJpaCriteriaParameterWrapper) sqmParameter ).getJpaCriteriaParameter();
 						}
 						else if ( sqmParameter.getName() != null ) {
 							return QueryParameterNamedImpl.fromSqm( sqmParameter );
@@ -114,19 +134,21 @@ public class DomainParameterXref {
 			queryParamBySqmParam.put( sqmParameter, queryParameter );
 		}
 
-		return new DomainParameterXref( sqmParamsByQueryParam, queryParamBySqmParam );
+		return new DomainParameterXref( sqmParamsByQueryParam, queryParamBySqmParam, parameterResolutions );
 	}
 
 	/**
 	 * Creates an "empty" (no param) xref
 	 */
 	public static DomainParameterXref empty() {
-		return new DomainParameterXref( Collections.emptyMap(), Collections.emptyMap() );
+		return new DomainParameterXref( Collections.emptyMap(), Collections.emptyMap(), SqmStatement.ParameterResolutions.empty() );
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Instance state
+
+	private final SqmStatement.ParameterResolutions parameterResolutions;
 
 	private final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam;
 	private final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam;
@@ -138,9 +160,11 @@ public class DomainParameterXref {
 	 */
 	public DomainParameterXref(
 			Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam,
-			Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam) {
+			Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam,
+			SqmStatement.ParameterResolutions parameterResolutions) {
 		this.sqmParamsByQueryParam = sqmParamsByQueryParam;
 		this.queryParamBySqmParam = queryParamBySqmParam;
+		this.parameterResolutions = parameterResolutions;
 	}
 
 	/**
@@ -165,17 +189,24 @@ public class DomainParameterXref {
 		return sqmParamsByQueryParam;
 	}
 
+	public SqmStatement.ParameterResolutions getParameterResolutions() {
+		return parameterResolutions;
+	}
+
 	public List<SqmParameter> getSqmParameters(QueryParameterImplementor<?> queryParameter) {
 		return sqmParamsByQueryParam.get( queryParameter );
 	}
 
 	public QueryParameterImplementor<?> getQueryParameter(SqmParameter sqmParameter) {
+		if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper ) {
+			return ( (SqmJpaCriteriaParameterWrapper) sqmParameter ).getJpaCriteriaParameter();
+		}
 		return queryParamBySqmParam.get( sqmParameter );
 	}
 
 	public void addCriteriaAdjustment(
 			QueryParameterImplementor<?> domainParam,
-			SqmCriteriaParameter originalSqmParameter,
+			JpaCriteriaParameter originalSqmParameter,
 			SqmParameter adjustment) {
 		QueryLogger.QUERY_LOGGER.debugf( "Adding JPA-param xref adjustment : %s", originalSqmParameter );
 		sqmParamsByQueryParam.get( domainParam ).add( adjustment );

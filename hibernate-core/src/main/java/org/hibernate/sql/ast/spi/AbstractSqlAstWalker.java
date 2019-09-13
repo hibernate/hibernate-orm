@@ -50,6 +50,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
+import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.results.internal.EmptySqlSelection;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
@@ -357,6 +358,14 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
 		appendSql( columnReference.renderSqlFragment( getSessionFactory() ) );
+	}
+
+	@Override
+	public void visitParameter(JdbcParameter jdbcParameter) {
+		appendSql( "?" );
+
+		parameterBinders.add( jdbcParameter.getParameterBinder() );
+		jdbcParameters.addParameter( jdbcParameter );
 	}
 
 	@Override
@@ -765,6 +774,7 @@ public abstract class AbstractSqlAstWalker
 				visitJdbcParameterBinder( queryLiteral );
 				break;
 			}
+			case AUTO:
 			case AS_PARAM_OUTSIDE_SELECT: {
 				if ( queryLiteral.isInSelect() ) {
 					renderAsLiteral( queryLiteral );

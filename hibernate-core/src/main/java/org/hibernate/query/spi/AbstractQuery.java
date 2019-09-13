@@ -815,7 +815,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@SuppressWarnings("WeakerAccess")
 	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
 		//noinspection unchecked
-		return (QueryParameterBinding) getQueryParameterBindings().getBinding( parameter );
+		return getQueryParameterBindings().getBinding( parameter );
 	}
 
 	@SuppressWarnings("WeakerAccess")

@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -33,6 +35,16 @@ public interface Bindable {
 		);
 
 		return value.get();
+	}
+
+	default List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+		final List<JdbcMapping> results = new ArrayList<>();
+		visitJdbcTypes(
+				results::add,
+				Clause.IRRELEVANT,
+				typeConfiguration
+		);
+		return results;
 	}
 
 	// todo (6.0) : why did I do 2 forms of JDBC-type visiting?  in-flight change?

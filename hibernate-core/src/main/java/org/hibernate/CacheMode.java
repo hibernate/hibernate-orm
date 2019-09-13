@@ -102,6 +102,10 @@ public enum CacheMode {
 	}
 
 	public static CacheMode fromJpaModes(CacheRetrieveMode retrieveMode, CacheStoreMode storeMode) {
+		if ( retrieveMode == null && storeMode == null ) {
+			return null;
+		}
+
 		if ( storeMode == null ) {
 			storeMode = CacheStoreMode.BYPASS;
 		}

@@ -39,6 +39,7 @@ import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmExpressionInterpretation;
+import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
@@ -46,13 +47,14 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -93,7 +95,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -112,6 +113,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
@@ -152,6 +154,8 @@ public abstract class BaseSqmToSqlAstConverter
 
 	private final DomainParameterXref domainParameterXref;
 	private final QueryParameterBindings domainParameterBindings;
+	private final Map<JpaCriteriaParameter<?>,Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
+
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 
@@ -176,6 +180,7 @@ public abstract class BaseSqmToSqlAstConverter
 		this.queryOptions = queryOptions;
 		this.domainParameterXref = domainParameterXref;
 		this.domainParameterBindings = domainParameterBindings;
+		this.jpaCriteriaParamResolutions = domainParameterXref.getParameterResolutions().getJpaCriteriaParamResolutions();
 		this.loadQueryInfluencers = loadQueryInfluencers;
 //		this.callback = callback;
 	}
@@ -382,6 +387,9 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// FROM clause
+
 	@Override
 	public Void visitFromClause(SqmFromClause sqmFromClause) {
 		currentClauseStack.push( Clause.FROM );
@@ -568,6 +576,10 @@ public abstract class BaseSqmToSqlAstConverter
 		throw new NotYetImplementedFor6Exception();
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqmPath
+
 	@Override
 	public SqmPathInterpretation<?> visitBasicValuedPath(SqmBasicValuedSimplePath<?> sqmPath) {
 		return BasicValuedPathInterpretation.from( sqmPath, this, this );
@@ -596,25 +608,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Expressions
+	// General expressions
 
 	@Override
 	public SqmExpressionInterpretation visitLiteral(SqmLiteral literal) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		final ExpressableType<?> expressableType = determineExpressableType( literal );
-//		if ( expressableType instanceof BasicValuedExpressableType<?> ) {
-//			return new QueryLiteral(
-//					literal.getLiteralValue(),
-//					( (BasicValuedExpressableType<?>) expressableType ).getSqlExpressableType( getTypeConfiguration() ),
-//					getCurrentClauseStack().getCurrent()
-//			);
-//		}
-//
-//		return new QueryLiteral(
-//				literal.getLiteralValue(),
-//				literal.getJdbcMapping().getSqlExpressableType( getTypeConfiguration() ),
-//				getCurrentClauseStack().getCurrent()
-//		);
+		return literal;
 	}
 
 	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam = new IdentityHashMap<>();
@@ -626,26 +624,25 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Expression visitNamedParameterExpression(SqmNamedParameter expression) {
+	public SqmExpressionInterpretation visitNamedParameterExpression(SqmNamedParameter expression) {
 		return consumeSqmParameter( expression );
 	}
 
 
-	private Expression consumeSqmParameter(SqmParameter sqmParameter) {
-		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
+	private SqmExpressionInterpretation consumeSqmParameter(SqmParameter sqmParameter) {
 		final MappingModelExpressable valueMapping = determineValueMapping( sqmParameter );
+		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
-		resolveSqmParameter( sqmParameter, valueMapping, jdbcParametersForSqm::add );
+		resolveSqmParameter(
+				sqmParameter,
+				valueMapping,
+				jdbcParametersForSqm::add
+		);
 
-		jdbcParameters.addParameters( jdbcParametersForSqm );
-		jdbcParamsBySqmParam.put( sqmParameter, jdbcParametersForSqm );
+		this.jdbcParameters.addParameters( jdbcParametersForSqm );
+		this.jdbcParamsBySqmParam.put( sqmParameter, jdbcParametersForSqm );
 
-		if ( jdbcParametersForSqm.size() > 1 ) {
-			return new SqlTuple( jdbcParametersForSqm, valueMapping );
-		}
-		else {
-			return jdbcParametersForSqm.get( 0 );
-		}
+		return new SqmParameterInterpretation( sqmParameter, jdbcParametersForSqm, valueMapping );
 	}
 
 	protected MappingModelExpressable<?> determineValueMapping(SqmExpression<?> sqmExpression) {
@@ -673,32 +670,11 @@ public abstract class BaseSqmToSqlAstConverter
 	);
 
 	private void resolveSqmParameter(SqmParameter expression, MappingModelExpressable valueMapping, Consumer<JdbcParameter> jdbcParameterConsumer) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		if ( valueMapping == null ) {
-//			final StandardJdbcParameterImpl jdbcParameter = new StandardJdbcParameterImpl(
-//					jdbcParameters.getJdbcParameters().size(),
-//					null,
-//					currentClauseStack.getCurrent(),
-//					getCreationContext().getDomainModel().getTypeConfiguration()
-//			);
-//
-//			jdbcParameterConsumer.accept( jdbcParameter );
-//		}
-//		else {
-//			expressableType.visitJdbcTypes(
-//					type -> {
-//						final StandardJdbcParameterImpl jdbcParameter = new StandardJdbcParameterImpl(
-//								jdbcParameters.getJdbcParameters().size(),
-//								type,
-//								currentClauseStack.getCurrent(),
-//								getCreationContext().getDomainModel().getTypeConfiguration()
-//						);
-//						jdbcParameterConsumer.accept( jdbcParameter );
-//					},
-//					currentClauseStack.getCurrent(),
-//					getCreationContext().getDomainModel().getTypeConfiguration()
-//			);
-//		}
+		valueMapping.visitJdbcTypes(
+				jdbcMapping -> jdbcParameterConsumer.accept( new JdbcParameterImpl( jdbcMapping ) ),
+				getCurrentClauseStack().getCurrent(),
+				getCreationContext().getDomainModel().getTypeConfiguration()
+		);
 	}
 
 	@Override
@@ -707,8 +683,17 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitCriteriaParameter(SqmCriteriaParameter expression) {
-		return consumeSqmParameter( expression );
+	public Object visitJpaCriteriaParameter(JpaCriteriaParameter<?> expression) {
+		if ( jpaCriteriaParamResolutions == null ) {
+			throw new IllegalStateException( "No JpaCriteriaParameter resolutions registered" );
+		}
+
+		final Supplier<SqmJpaCriteriaParameterWrapper<?>> supplier = jpaCriteriaParamResolutions.get( expression );
+		if ( supplier == null ) {
+			throw new IllegalStateException( "Criteria parameter [" + expression + "] not known to be a parameter of the processing tree" );
+		}
+
+		return consumeSqmParameter( supplier.get() );
 	}
 
 
@@ -1334,7 +1319,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 		final Expression lhs;
 		try {
-			lhs = (Expression) predicate.getLeftHandExpression().accept( this );
+			lhs = ( (SqmExpressionInterpretation) predicate.getLeftHandExpression().accept( this ) ).toSqlExpression(
+					getCurrentClauseStack().getCurrent(),
+					this,
+					this
+			);
 		}
 		finally {
 			inferableTypeAccessStack.pop();
@@ -1344,7 +1333,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 		final Expression rhs;
 		try {
-			rhs = (Expression) predicate.getRightHandExpression().accept( this );
+			rhs = ( (SqmExpressionInterpretation) predicate.getRightHandExpression().accept( this ) ).toSqlExpression(
+					getCurrentClauseStack().getCurrent(),
+					this,
+					this
+			);
 		}
 		finally {
 			inferableTypeAccessStack.pop();
@@ -1476,7 +1469,13 @@ public abstract class BaseSqmToSqlAstConverter
 								domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
 							}
 
-							inListPredicate.addExpression( consumeSqmParameter( sqmParamToConsume ) );
+							inListPredicate.addExpression(
+									consumeSqmParameter( sqmParamToConsume ).toSqlExpression(
+											getCurrentClauseStack().getCurrent(),
+											this,
+											this
+									)
+							);
 						}
 					}
 					finally {

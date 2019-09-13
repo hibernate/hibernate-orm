@@ -10,6 +10,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
@@ -24,7 +25,10 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 public interface SqmExpressionInterpretation<T> extends SqmSelectableInterpretation<T> {
 	SqmExpressable<T> getExpressableType();
 
-	default Expression toSqlExpression(SqmToSqlAstConverter walker, SqlAstCreationState sqlAstCreationState) {
+	default Expression toSqlExpression(
+			Clause clause,
+			SqmToSqlAstConverter walker,
+			SqlAstCreationState sqlAstCreationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

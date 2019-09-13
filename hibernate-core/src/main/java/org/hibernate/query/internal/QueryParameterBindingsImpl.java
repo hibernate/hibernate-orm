@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -14,6 +15,7 @@ import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -82,7 +84,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected QueryParameterBinding makeBinding(QueryParameterImplementor queryParameter) {
-		assert ! parameterBindingMap.containsKey( queryParameter );
+		if ( parameterBindingMap == null ) {
+			parameterBindingMap = new IdentityHashMap<>();
+		}
+		else {
+			assert ! parameterBindingMap.containsKey( queryParameter );
+		}
 
 		if ( ! parameterMetadata.containsReference( queryParameter ) ) {
 			throw new IllegalArgumentException(
@@ -105,18 +112,13 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@Override
 	public <P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
 		if ( parameterBindingMap == null ) {
-			return null;
+			//noinspection unchecked
+			return makeBinding( parameter );
 		}
 
 		QueryParameterBinding binding = parameterBindingMap.get( parameter );
 
 		if ( binding == null ) {
-			if ( ! parameterMetadata.containsReference( parameter ) ) {
-				throw new IllegalArgumentException(
-						"Could not resolve QueryParameter reference [" + parameter + "] to QueryParameterBinding"
-				);
-			}
-
 			binding = makeBinding( parameter );
 		}
 

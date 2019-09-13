@@ -14,6 +14,7 @@ import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
+ * The SQL AST from-clause node
  *
  * @author Steve Ebersole
  */

@@ -175,7 +175,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	Connection connection();
 
 	@Remove
-	default <@Remove T> NativeQuery<T> createSQLQuery(String queryString) {
+	default <T> NativeQuery<T> createSQLQuery(String queryString) {
 		return createNativeQuery( queryString );
 	}
 }

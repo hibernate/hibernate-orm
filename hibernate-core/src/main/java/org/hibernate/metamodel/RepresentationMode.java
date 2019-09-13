@@ -39,6 +39,9 @@ public enum RepresentationMode {
 		return externalName;
 	}
 
+	/**
+	 * @deprecated {@link EntityMode} is deprecated itself
+	 */
 	@Deprecated
 	public EntityMode getLegacyEntityMode() {
 		return legacyEntityMode;

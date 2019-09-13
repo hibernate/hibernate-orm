@@ -103,7 +103,6 @@ public class SmokeTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "Support for entity-values DomainResults not yet implemented")
 	public void testSelectEntityHqlExecution(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

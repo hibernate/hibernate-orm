@@ -4,7 +4,7 @@
 <server-provisioning xmlns="urn:wildfly:server-provisioning:1.1" copy-module-artifacts="true">
 	<feature-packs>
 		<feature-pack
-				groupId="org.hibernate"
+				groupId="org.hibernate.orm"
 				artifactId="hibernate-orm-jbossmodules"
 				version="${hibernate-orm.version}" />
 		<feature-pack

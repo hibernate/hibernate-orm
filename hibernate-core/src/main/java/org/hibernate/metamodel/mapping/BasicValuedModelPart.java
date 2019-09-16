@@ -7,11 +7,12 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.sql.results.spi.Fetchable;
 
 /**
  * @author Steve Ebersole
  */
-public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart {
+public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fetchable {
 	/**
 	 * The table expression (table name or subselect) that contains
 	 * the {@linkplain #getMappedColumnExpression mapped column}

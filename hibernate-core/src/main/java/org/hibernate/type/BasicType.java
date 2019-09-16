@@ -38,6 +38,11 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
+	default JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getMappedJavaTypeDescriptor();
+	}
+
+	@Override
 	default JdbcMapping getJdbcMapping() {
 		return this;
 	}

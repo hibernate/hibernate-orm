@@ -12,7 +12,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.NavigablePath;
@@ -31,15 +30,12 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.results.internal.BasicResultAssembler;
-import org.hibernate.sql.results.internal.ScalarDomainResultImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResultAssembler;
+import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
-import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -196,8 +192,8 @@ public class SmokeTests {
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
 					final DomainResult domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
-					assertThat( domainResult, instanceOf( ScalarDomainResultImpl.class ) );
-					final ScalarDomainResultImpl scalarDomainResult = (ScalarDomainResultImpl) domainResult;
+					assertThat( domainResult, instanceOf( BasicResultImpl.class ) );
+					final BasicResultImpl scalarDomainResult = (BasicResultImpl) domainResult;
 					assertThat( scalarDomainResult.getAssembler(), instanceOf( BasicResultAssembler.class ) );
 					final BasicResultAssembler<?> assembler = (BasicResultAssembler) scalarDomainResult.getAssembler();
 					assertThat( assembler.getValueConverter(), notNullValue() );
@@ -207,7 +203,7 @@ public class SmokeTests {
 							"e"
 					).append( "gender" );
 					assertThat( domainResult.getNavigablePath(), equalTo( expectedSelectedPath ) );
-					assertThat( domainResult, instanceOf( ScalarDomainResultImpl.class ) );
+					assertThat( domainResult, instanceOf( BasicResultImpl.class ) );
 
 					// ScalarDomainResultImpl creates and caches the assembler at its creation.
 					// this just gets access to that cached one

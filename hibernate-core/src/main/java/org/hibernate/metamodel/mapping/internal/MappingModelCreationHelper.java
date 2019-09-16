@@ -25,11 +25,12 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.internal.ScalarDomainResultImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -89,6 +90,11 @@ public class MappingModelCreationHelper {
 			}
 
 			@Override
+			public JavaTypeDescriptor getJavaTypeDescriptor() {
+				return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+			}
+
+			@Override
 			public <T> DomainResult<T> createDomainResult(
 					NavigablePath navigablePath,
 					TableGroup tableGroup,
@@ -113,7 +119,7 @@ public class MappingModelCreationHelper {
 				);
 
 				//noinspection unchecked
-				return new ScalarDomainResultImpl(
+				return new BasicResultImpl(
 						sqlSelection.getValuesArrayPosition(),
 						resultVariable,
 						entityPersister.getIdentifierMapping().getMappedTypeDescriptor().getMappedJavaTypeDescriptor()
@@ -178,6 +184,11 @@ public class MappingModelCreationHelper {
 			}
 
 			@Override
+			public JavaTypeDescriptor getJavaTypeDescriptor() {
+				return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+			}
+
+			@Override
 			public <T> DomainResult<T> createDomainResult(
 					NavigablePath navigablePath,
 					TableGroup tableGroup,
@@ -227,7 +238,12 @@ public class MappingModelCreationHelper {
 
 			@Override
 			public MappingType getMappedTypeDescriptor() {
-				return null;
+				return entityPersister;
+			}
+
+			@Override
+			public JavaTypeDescriptor getJavaTypeDescriptor() {
+				return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
 			}
 
 			@Override

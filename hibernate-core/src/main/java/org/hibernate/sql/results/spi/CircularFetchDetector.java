@@ -7,8 +7,9 @@
 package org.hibernate.sql.results.spi;
 
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.results.internal.domain.BiDirectionalFetchImpl;
+import org.hibernate.sql.results.internal.domain.RootBiDirectionalFetchImpl;
 
 /**
  * Maintains state while processing a Fetch graph to be able to detect
@@ -19,57 +20,36 @@ import org.hibernate.query.NavigablePath;
 public class CircularFetchDetector {
 
 	public Fetch findBiDirectionalFetch(FetchParent fetchParent, Fetchable fetchable) {
-		// bi-directional references are a special case that need special treatment.
-		//
-		// `p.address.resident.homeAddress
-		//
-		// what we mean is a fetch path like `a.parent.child.parent`.  here the terminal
-		// `parent` name is the same reference as its parent's (`a.parent.child`)
-		// parent's (a.parent`) path.
-		//
-		// In such a case we want to (mostly) reuse the "parent parent" path fetch
-		//
-		// see if we have such a case...
-
-		final NavigablePath parentParentPath = fetchParent.getNavigablePath().getParent();
-		if ( parentParentPath != null ) {
-			if ( fetchable.isCircular( fetchParent ) ) {
-				if ( fetchParent instanceof Fetch ) {
-					final FetchParent parentFetchParent = ( (Fetch) fetchParent ).getFetchParent();
-
-					// we do...
-					//
-					// in other words, the `Fetchable`'s `NavigablePath`, relative to its FetchParent here would
-					// be:
-					// 		a.parent.child.parent
-					//
-					// it's parentPath is `a.parent.child` so its parentParentPath is `a.parent`.  so this Fetchable's
-					// path is really the same reference as its parentParentPath.  This is a special case, handled here...
-
-					// first, this *should* mean we have already "seen" the Fetch generated parentParentPath.  So
-					// look up in the `navigablePathFetchMap` to get that Fetch
-
-					// and use it to create and register the "bi directional" form
-
-					final NavigablePath fetchableNavigablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
-
-//					return new BiDirectionalFetchImpl(
-//							parentFetchParent,
-//							fetchableNavigablePath
-//					);
-				}
-				else {
-//					return new RootBiDirectionalFetchImpl(
-//							new NavigablePath( fetchable.getJavaTypeDescriptor().getJavaType().getName() ),
-//							fetchable.getJavaTypeDescriptor(),
-//							new NavigablePath( fetchable.getNavigableName() )
-//					);
-				}
-			}
+		if ( ! fetchable.isCircular( fetchParent ) ) {
+			return null;
 		}
 
-//		return null;
+		assert fetchParent instanceof Fetch;
+		final Fetch fetchParentAsFetch = (Fetch) fetchParent;
 
-		throw new NotYetImplementedFor6Exception( getClass() );
+		final NavigablePath parentParentPath = fetchParent.getNavigablePath().getParent();
+		assert fetchParent.getNavigablePath().getParent() != null;
+
+		assert fetchParentAsFetch.getFetchParent().getNavigablePath().equals( parentParentPath );
+
+		if ( fetchParentAsFetch.getFetchParent() instanceof Fetch ) {
+			return new BiDirectionalFetchImpl(
+					fetchParent.getNavigablePath().append( fetchable.getFetchableName() ),
+					fetchParent,
+					fetchParentAsFetch
+			);
+		}
+		else {
+			assert fetchParentAsFetch instanceof EntityResult;
+
+			// note : the "`fetchParentAsFetch` is `RootBiDirectionalFetchImpl`" case would
+			// 		be handled in the `Fetch` block since `RootBiDirectionalFetchImpl` is a Fetch
+
+			return new RootBiDirectionalFetchImpl(
+					fetchParent.getNavigablePath().append( fetchable.getFetchableName() ),
+					fetchParent,
+					(EntityResult) fetchParentAsFetch
+			);
+		}
 	}
 }

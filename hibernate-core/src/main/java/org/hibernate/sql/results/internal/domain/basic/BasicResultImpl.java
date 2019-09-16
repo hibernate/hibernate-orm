@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.sql.results.internal;
+package org.hibernate.sql.results.internal.domain.basic;
 
 import java.util.function.Consumer;
 
@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class ScalarDomainResultImpl<T> implements ScalarDomainResult<T> {
+public class BasicResultImpl<T> implements ScalarDomainResult<T> {
 	private final String resultVariable;
 	private final JavaTypeDescriptor<T> javaTypeDescriptor;
 
@@ -28,14 +28,14 @@ public class ScalarDomainResultImpl<T> implements ScalarDomainResult<T> {
 
 	private final DomainResultAssembler<T> assembler;
 
-	public ScalarDomainResultImpl(
+	public BasicResultImpl(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
 			JavaTypeDescriptor<T> javaTypeDescriptor) {
 		this( jdbcValuesArrayPosition, resultVariable, javaTypeDescriptor, (NavigablePath) null );
 	}
 
-	public ScalarDomainResultImpl(
+	public BasicResultImpl(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
 			JavaTypeDescriptor<T> javaTypeDescriptor,
@@ -48,7 +48,7 @@ public class ScalarDomainResultImpl<T> implements ScalarDomainResult<T> {
 		this.assembler = new BasicResultAssembler<>( jdbcValuesArrayPosition, javaTypeDescriptor );
 	}
 
-	public ScalarDomainResultImpl(
+	public BasicResultImpl(
 			int valuesArrayPosition,
 			String resultVariable,
 			JavaTypeDescriptor<T> javaTypeDescriptor,
@@ -56,7 +56,7 @@ public class ScalarDomainResultImpl<T> implements ScalarDomainResult<T> {
 		this( valuesArrayPosition, resultVariable, javaTypeDescriptor, valueConverter, null );
 	}
 
-	public ScalarDomainResultImpl(
+	public BasicResultImpl(
 			int valuesArrayPosition,
 			String resultVariable,
 			JavaTypeDescriptor<T> javaTypeDescriptor,

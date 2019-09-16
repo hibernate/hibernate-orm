@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain;
 import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -17,7 +16,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface PersistentAttribute<D,J> extends Attribute<D,J>, ModelPart {
+public interface PersistentAttribute<D,J> extends Attribute<D,J> {
 	@Override
 	ManagedDomainType<D> getDeclaringType();
 

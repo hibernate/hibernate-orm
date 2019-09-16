@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal.domain;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
@@ -31,6 +32,11 @@ public abstract class AbstractFetchParent implements FetchParent {
 
 	protected void afterInitialize(DomainResultCreationState creationState) {
 		this.fetches = creationState.visitFetches( this );
+	}
+
+	@Override
+	public ManagedMappingType getReferencedMappingType() {
+		return (ManagedMappingType) fetchContainer;
 	}
 
 	@Override

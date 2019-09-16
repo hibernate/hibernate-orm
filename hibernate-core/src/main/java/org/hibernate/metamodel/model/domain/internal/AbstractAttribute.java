@@ -33,7 +33,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,J>, Serializable {
 	private final ManagedDomainType<D> declaringType;
 	private final String name;
-	private final JavaTypeDescriptor<J> attributeType;
+	private final JavaTypeDescriptor<J> attributeJtd;
 
 	private final AttributeClassification attributeClassification;
 
@@ -44,14 +44,14 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	protected AbstractAttribute(
 			ManagedDomainType<D> declaringType,
 			String name,
-			JavaTypeDescriptor<J> attributeType,
+			JavaTypeDescriptor<J> attributeJtd,
 			AttributeClassification attributeClassification,
 			SimpleDomainType<B> valueType,
 			Member member,
 			MetadataContext metadataContext) {
 		this.declaringType = declaringType;
 		this.name = name;
-		this.attributeType = attributeType;
+		this.attributeJtd = attributeJtd;
 		this.attributeClassification = attributeClassification;
 		this.valueType = valueType;
 		this.member = member;
@@ -64,7 +64,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 
 	@Override
 	public Class<J> getJavaType() {
-		return attributeType.getJavaType();
+		return attributeJtd.getJavaType();
 	}
 
 	public SimpleDomainType<B> getSqmPathType() {
@@ -73,7 +73,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 
 	@Override
 	public JavaTypeDescriptor<J> getAttributeJavaTypeDescriptor() {
-		return attributeType;
+		return attributeJtd;
 	}
 
 	@Override

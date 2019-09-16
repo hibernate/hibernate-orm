@@ -8,6 +8,7 @@ package org.hibernate.sql.results.spi;
 
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.query.NavigablePath;
 
 /**
@@ -17,6 +18,11 @@ import org.hibernate.query.NavigablePath;
  */
 public interface FetchParent {
 	FetchableContainer getReferencedMappingContainer();
+
+	/**
+	 * This parent's type
+	 */
+	ManagedMappingType getReferencedMappingType();
 
 	/**
 	 * Get the property path to this parent

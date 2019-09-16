@@ -6413,9 +6413,10 @@ public abstract class AbstractEntityPersister
 			EntityMappingType treatTargetType) {
 		visitStateArrayContributors(
 				mapping -> {
-					if ( mapping.isDeclaredOnTypeOrSuperType( treatTargetType ) ) {
+// treat limits are already handled in `#visitAttributeMappings` (called from `#visitStateArrayContributors`)
+//					if ( mapping.isDeclaredOnTypeOrSuperType( treatTargetType ) ) {
 						fetchableConsumer.accept( mapping );
-					}
+//					}
 				},
 				treatTargetType
 		);
@@ -6443,7 +6444,7 @@ public abstract class AbstractEntityPersister
 
 		declaredAttributeMappings.values().forEach( action );
 
-		if ( targetType == null ) {
+		if ( targetType == null || targetType.isTypeOrSuperType( this ) ) {
 			visitSubTypeAttributeMappings( action );
 		}
 	}

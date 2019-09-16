@@ -92,16 +92,16 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 			);
 		}
 
-		entityDescriptor.visitAttributeMappings(
-				mapping -> attributeDomainResults.add(
-						mapping.createDomainResult(
-								navigablePath.append( mapping.getAttributeName() ),
-								entityTableGroup,
-								null,
-								creationState
-						)
-				)
-		);
+//		entityDescriptor.visitAttributeMappings(
+//				mapping -> attributeDomainResults.add(
+//						mapping.createDomainResult(
+//								navigablePath.append( mapping.getAttributeName() ),
+//								entityTableGroup,
+//								null,
+//								creationState
+//						)
+//				)
+//		);
 
 		// todo (6.0) : handle other special navigables such as discriminator, row-id, tenant-id, etc
 	}

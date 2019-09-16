@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Describes a mapping of related to any part of the app's domain model - e.g.
@@ -25,6 +26,7 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
  * @author Steve Ebersole
  */
 public interface ModelPart extends MappingModelExpressable {
+	JavaTypeDescriptor getJavaTypeDescriptor();
 
 	/**
 	 * Create a DomainResult for a specific reference to this ModelPart.

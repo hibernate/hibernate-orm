@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -34,6 +35,11 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	@Override
 	public MappingType getMappedTypeDescriptor() {
 		return type;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
 	}
 
 	@Override

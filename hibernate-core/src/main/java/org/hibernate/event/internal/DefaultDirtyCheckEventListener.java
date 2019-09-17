@@ -7,6 +7,7 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
 import org.hibernate.internal.CoreLogging;
@@ -29,11 +30,12 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 	 * @throws HibernateException
 	 */
 	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException {
-		int oldSize = event.getSession().getActionQueue().numberOfCollectionRemovals();
+		final ActionQueue actionQueue = event.getSession().getActionQueue();
+		int oldSize = actionQueue.numberOfCollectionRemovals();
 
 		try {
 			flushEverythingToExecutions(event);
-			boolean wasNeeded = event.getSession().getActionQueue().hasAnyQueuedActions();
+			boolean wasNeeded = actionQueue.hasAnyQueuedActions();
 			if ( wasNeeded ) {
 				LOG.debug( "Session dirty" );
 			}
@@ -43,7 +45,7 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 			event.setDirty( wasNeeded );
 		}
 		finally {
-			event.getSession().getActionQueue().clearFromFlushNeededCheck( oldSize );
+			actionQueue.clearFromFlushNeededCheck( oldSize );
 		}
 	}
 }

@@ -23,6 +23,7 @@ import javax.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
@@ -34,7 +35,13 @@ import org.junit.runners.Parameterized;
  * Tests for storage of LocalDate properties.
  */
 @TestForIssue(jiraKey = "HHH-10371")
-@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA systematically returns the wrong date when the JVM default timezone is not UTC")
+@SkipForDialect(value = AbstractHANADialect.class,
+		comment = "HANA systematically returns the wrong date when the JVM default timezone is not UTC")
+@SkipForDialect(value = MySQL5Dialect.class,
+		comment = "HHH-13582: MySQL ConnectorJ 8.x returns the wrong date"
+				+ " when the JVM default timezone is different from the server timezone:"
+				+ " https://bugs.mysql.com/bug.php?id=91112"
+)
 public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDateTest.EntityWithLocalDate> {
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {
@@ -65,6 +72,16 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 								.add( 1900, 1, 1, ZONE_AMSTERDAM )
 								.add( 1600, 1, 1, ZONE_AMSTERDAM )
 				)
+				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
+				// It doesn't seem that any date at midnight can be affected by HHH-13379, but we add some tests just in case
+				// => Test the day of DST end
+				.add( 2018, 10, 28, ZONE_PARIS )
+				.add( 2018, 9, 30, ZONE_AUCKLAND )
+				.add( 2018, 5, 13, ZONE_SANTIAGO ) // DST end: 00:00 => 23:00 previous day
+				// => Also test the day of DST start
+				.add( 2018, 3, 25, ZONE_PARIS )
+				.add( 2018, 9, 30, ZONE_AUCKLAND )
+				.add( 2018, 8, 12, ZONE_SANTIAGO ) // DST start: 00:00 => 01:00
 				.build();
 	}
 

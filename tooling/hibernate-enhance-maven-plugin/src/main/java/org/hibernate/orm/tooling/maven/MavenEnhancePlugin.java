@@ -24,6 +24,7 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -85,8 +86,9 @@ public class MavenEnhancePlugin extends AbstractMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
+		final Log log = getLog();
 		if ( !shouldApply() ) {
-			getLog().warn( "Skipping Hibernate bytecode enhancement plugin execution since no feature is enabled" );
+			log.warn( "Skipping Hibernate bytecode enhancement plugin execution since no feature is enabled" );
 			return;
 		}
 
@@ -97,16 +99,16 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		// Perform a depth first search for sourceSet
 		File root = new File( this.dir );
 		if ( !root.exists() ) {
-			getLog().info( "Skipping Hibernate enhancement plugin execution since there is no classes dir " + dir );
+			log.info( "Skipping Hibernate enhancement plugin execution since there is no classes dir " + dir );
 			return;
 		}
 		walkDir( root );
 		if ( sourceSet.isEmpty() ) {
-			getLog().info( "Skipping Hibernate enhancement plugin execution since there are no classes to enhance on " + dir );
+			log.info( "Skipping Hibernate enhancement plugin execution since there are no classes to enhance on " + dir );
 			return;
 		}
 
-		getLog().info( "Starting Hibernate enhancement for classes on " + dir );
+		log.info( "Starting Hibernate enhancement for classes on " + dir );
 		final ClassLoader classLoader = toClassLoader( Collections.singletonList( new File( base ) ) );
 
 		EnhancementContext enhancementContext = new DefaultEnhancementContext() {
@@ -142,7 +144,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		};
 
 		if ( enableExtendedEnhancement ) {
-			getLog().warn( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
+			log.warn( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
 		}
 
 		final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
@@ -156,24 +158,28 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			}
 
 			writeOutEnhancedClass( enhancedBytecode, file );
-
-			getLog().info( "Successfully enhanced class [" + file + "]" );
+			if ( log.isDebugEnabled() ) {
+				log.debug( "Successfully enhanced class [" + file + "]" );
+			}
 		}
 	}
 
 	private ClassLoader toClassLoader(List<File> runtimeClasspath) throws MojoExecutionException {
-		List<URL> urls = new ArrayList<URL>();
+		List<URL> urls = new ArrayList<URL>( runtimeClasspath.size() );
+		final Log log = getLog();
 		for ( File file : runtimeClasspath ) {
 			try {
 				urls.add( file.toURI().toURL() );
-				getLog().debug( "Adding classpath entry for classes root " + file.getAbsolutePath() );
+				if ( log.isDebugEnabled() ) {
+					log.debug( "Adding classpath entry for classes root " + file.getAbsolutePath() );
+				}
 			}
 			catch (MalformedURLException e) {
 				String msg = "Unable to resolve classpath entry to URL: " + file.getAbsolutePath();
 				if ( failOnError ) {
 					throw new MojoExecutionException( msg, e );
 				}
-				getLog().warn( msg );
+				log.warn( msg );
 			}
 		}
 
@@ -185,14 +191,14 @@ public class MavenEnhancePlugin extends AbstractMojo {
 				if ( !Artifact.SCOPE_TEST.equals( a.getScope() ) ) {
 					try {
 						urls.add( a.getFile().toURI().toURL() );
-						getLog().debug( "Adding classpath entry for dependency " + a.getId() );
+						log.debug( "Adding classpath entry for dependency " + a.getId() );
 					}
 					catch (MalformedURLException e) {
 						String msg = "Unable to resolve URL for dependency " + a.getId() + " at " + a.getFile().getAbsolutePath();
 						if ( failOnError ) {
 							throw new MojoExecutionException( msg, e );
 						}
-						getLog().warn( msg );
+						log.warn( msg );
 					}
 				}
 			}

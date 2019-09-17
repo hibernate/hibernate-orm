@@ -45,7 +45,6 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -63,6 +62,10 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	private final String role;
 	private final String foreignKeyPropertyName;
+
+	// the need for the persister if very hot in many use cases: cache it in a field
+	// TODO initialize it at constructor time
+	private volatile CollectionPersister persister;
 
 	/**
 	 * @deprecated Use the other contructor
@@ -113,8 +116,12 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public final boolean isEqual(Object x, Object y) {
 		return x == y
-			|| ( x instanceof PersistentCollection && ( (PersistentCollection) x ).wasInitialized() && ( (PersistentCollection) x ).isWrapper( y ) )
-			|| ( y instanceof PersistentCollection && ( (PersistentCollection) y ).wasInitialized() && ( (PersistentCollection) y ).isWrapper( x ) );
+			|| ( x instanceof PersistentCollection && isEqual( (PersistentCollection) x, y ) )
+			|| ( y instanceof PersistentCollection && isEqual( (PersistentCollection) y, x ) );
+	}
+
+	private boolean isEqual(PersistentCollection x, Object y) {
+		return x.wasInitialized() && ( x.isWrapper( y ) || x.isDirectlyProvidedCollection( y ) );
 	}
 
 	@Override
@@ -316,11 +323,33 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The underlying collection persister
 	 */
 	private CollectionPersister getPersister(SharedSessionContractImplementor session) {
-		return getPersister( session.getFactory() );
+		CollectionPersister p = this.persister;
+		if ( p != null ) {
+			return p;
+		}
+		else {
+			return getPersister( session.getFactory() );
+		}
 	}
 
 	private CollectionPersister getPersister(SessionFactoryImplementor factory) {
-		return factory.getMetamodel().collectionPersister( role );
+		CollectionPersister p = this.persister;
+		if ( p != null ) {
+			return p;
+		}
+		else {
+			synchronized ( this ) {
+				p  = this.persister;
+				if ( p != null ) {
+					return p;
+				}
+				else {
+					p = factory.getMetamodel().collectionPersister( role );
+					this.persister = p;
+					return p;
+				}
+			}
+		}
 	}
 
 	@Override
@@ -433,8 +462,9 @@ public abstract class CollectionType extends AbstractType implements Association
 			ownerId = key;
 		}
 		else {
-			Type keyType = getPersister( session ).getKeyType();
-			EntityPersister ownerPersister = getPersister( session ).getOwnerEntityPersister();
+			final CollectionPersister persister = getPersister( session );
+			Type keyType = persister.getKeyType();
+			EntityPersister ownerPersister = persister.getOwnerEntityPersister();
 			// TODO: Fix this so it will work for non-POJO entity mode
 			Class ownerMappedClass = ownerPersister.getMappedClass();
 			if ( ownerMappedClass.isAssignableFrom( keyType.getReturnedClass() ) &&

@@ -1727,6 +1727,11 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
 
 	/**
+	 * Setting that logs query which executed slower than specified milliseconds. Default is 0 (disabled).
+	 */
+	String LOG_SLOW_QUERY = "hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS";
+
+	/**
 	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to opened Sessions.
 	 */
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
@@ -2055,4 +2060,19 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @since 5.4
 	 */
 	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
+
+	/**
+	 * <p>
+	 * When you use {@link javax.persistence.InheritanceType#JOINED} strategy for inheritance mapping and query
+	 * a value from an entity, all superclass tables are joined in the query regardless you need them. With
+	 * this setting set to true only superclass tables which are really needed are joined.
+	 * </p>
+	 * <p>
+	 * The default value is true.
+	 * </p>
+	 *
+	 * @since 5.4
+	 */
+	String OMIT_JOIN_OF_SUPERCLASS_TABLES = "hibernate.query.omit_join_of_superclass_tables";
+
 }

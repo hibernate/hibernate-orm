@@ -6,16 +6,14 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.io.Serializable;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import java.io.Serializable;
-import java.util.List;
-
-import org.apache.log4j.Logger;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.boot.MetadataSources;
@@ -23,9 +21,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.apache.log4j.Logger;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -57,8 +56,8 @@ public class ImplicitCompositeKeyJoinTest {
 				if ( command.toLowerCase().matches( "^create( (column|row))? table employee.+" ) ) {
 					final String[] columnsDefinition = getColumnsDefinition( command );
 
-					for ( int i = 0; i < columnsDefinition.length; i++ ) {
-						checkColumnSize( columnsDefinition[i] );
+					for ( String columnsDefinition1 : columnsDefinition ) {
+						checkColumnSize( columnsDefinition1 );
 					}
 					createTableEmployeeFound = true;
 				}

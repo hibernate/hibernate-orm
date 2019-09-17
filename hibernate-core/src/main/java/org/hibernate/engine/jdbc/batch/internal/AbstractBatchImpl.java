@@ -21,6 +21,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.resource.jdbc.ResourceRegistry;
 
 /**
  * Convenience base class for implementers of the Batch interface.
@@ -152,12 +153,14 @@ public abstract class AbstractBatchImpl implements Batch {
 	}
 
 	protected void releaseStatements() {
-		for ( PreparedStatement statement : getStatements().values() ) {
+		final LinkedHashMap<String, PreparedStatement> statements = getStatements();
+		final ResourceRegistry resourceRegistry = jdbcCoordinator.getResourceRegistry();
+		for ( PreparedStatement statement : statements.values() ) {
 			clearBatch( statement );
-			jdbcCoordinator.getResourceRegistry().release( statement );
-			jdbcCoordinator.afterStatementExecution();
+			resourceRegistry.release( statement );
 		}
-		getStatements().clear();
+		jdbcCoordinator.afterStatementExecution();
+		statements.clear();
 	}
 
 	protected void clearBatch(PreparedStatement statement) {

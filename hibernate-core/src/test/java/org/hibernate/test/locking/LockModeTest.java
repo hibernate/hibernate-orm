@@ -19,6 +19,8 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -60,6 +62,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	protected boolean isCleanupTestDataRequired(){return true;}
 
 	@Test
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	@SuppressWarnings( {"deprecation"})
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
@@ -75,6 +78,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testLegacyCriteria() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -92,6 +96,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testLegacyCriteriaAliasSpecific() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -108,6 +113,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {

@@ -143,8 +143,9 @@ public class TableBasedUpdateHandlerImpl
 						ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( updates[i], false );
 						if ( assignmentParameterSpecifications[i] != null ) {
 							int position = 1; // jdbc params are 1-based
-							for ( int x = 0; x < assignmentParameterSpecifications[i].length; x++ ) {
-								position += assignmentParameterSpecifications[i][x].bind( ps, queryParameters, session, position );
+							for ( ParameterSpecification assignmentParameterSpecification : assignmentParameterSpecifications[i] ) {
+								position += assignmentParameterSpecification
+										.bind( ps, queryParameters, session, position );
 							}
 							handleAddedParametersOnUpdate( ps, session, position );
 						}

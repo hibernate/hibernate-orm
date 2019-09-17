@@ -18,8 +18,10 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
@@ -27,6 +29,7 @@ import org.hibernate.test.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.test.util.SchemaUtil;
 
+import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +42,16 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  */
 public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
+
+	@After
+	public void cleanup() {
+		TransactionUtil.doInHibernate( this::sessionFactory, session ->{
+			for ( Person person : session.createQuery( "from Person", Person.class ).getResultList() ) {
+				session.delete( person );
+			}
+		} );
+	}
+
 	@Test
 	public void testSimple() throws Exception {
 		Person person = new Person();
@@ -145,6 +158,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
+	@SkipForDialect( value = SybaseDialect.class, comment = "skip for Sybase because (null = null) evaluates to true")
 	@FailureExpected(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedParameterOneNull() throws Exception {
 		Person person = new Person();
@@ -601,7 +615,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testDefaultCollectionTable() throws Exception {
 		//are the tables correct?
 		assertTrue( SchemaUtil.isTablePresent( "WealthyPerson_vacationHomes", metadata() ) );
-		assertTrue( SchemaUtil.isTablePresent( "WealthyPerson_legacyVacationHomes", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent( "WelPers_LegacyVacHomes", metadata() ) );
 		assertTrue( SchemaUtil.isTablePresent( "WelPers_VacHomes", metadata() ) );
 
 		//just to make sure, use the mapping

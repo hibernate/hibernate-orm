@@ -33,7 +33,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
@@ -128,8 +127,8 @@ public class EntityMetamodel implements Serializable {
 	public EntityMetamodel(
 			PersistentClass persistentClass,
 			EntityPersister persister,
-			final PersisterCreationContext creationContext) {
-		this.sessionFactory = creationContext.getSessionFactory();
+			SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
 
 		name = persistentClass.getEntityName();
 		rootName = persistentClass.getRootClass().getEntityName();
@@ -164,14 +163,7 @@ public class EntityMetamodel implements Serializable {
 					persistentClass,
 					idAttributeNames,
 					nonAggregatedCidMapper,
-					sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled(),
-					associatedEntityName -> {
-						final PersistentClass bootEntityDescriptor = creationContext.getMetadata().getEntityBinding( associatedEntityName );
-						if ( bootEntityDescriptor == null ) {
-							return false;
-						}
-						return bootEntityDescriptor.hasSubclasses();
-					}
+					sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled()
 			);
 		}
 		else {
@@ -234,14 +226,7 @@ public class EntityMetamodel implements Serializable {
 						sessionFactory,
 						i,
 						prop,
-						bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
-						associatedEntityName -> {
-							final PersistentClass bootEntityDescriptor = creationContext.getMetadata().getEntityBinding( associatedEntityName );
-							if ( bootEntityDescriptor == null ) {
-								return false;
-							}
-							return bootEntityDescriptor.hasSubclasses();
-						}
+						bytecodeEnhancementMetadata.isEnhancedForLazyLoading()
 				);
 			}
 
@@ -260,14 +245,7 @@ public class EntityMetamodel implements Serializable {
 			boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
-					sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled(),
-					associatedEntityName -> {
-						final PersistentClass bootEntityDescriptor = creationContext.getMetadata().getEntityBinding( associatedEntityName );
-						if ( bootEntityDescriptor == null ) {
-							return false;
-						}
-						return bootEntityDescriptor.hasSubclasses();
-					}
+					sessionFactory.getSessionFactoryOptions().isEnhancementAsProxyEnabled()
 			);
 
 			if ( lazy ) {
@@ -832,8 +810,8 @@ public class EntityMetamodel implements Serializable {
 		}
 		else if ( type.isComponentType() ) {
 			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
-			for ( int i = 0; i < subtypes.length; i++ ) {
-				if ( indicatesCollection( subtypes[i] ) ) {
+			for ( Type subtype : subtypes ) {
+					if ( indicatesCollection( subtype ) ) {
 					return true;
 				}
 			}

@@ -7,6 +7,7 @@
 package org.hibernate.resource.transaction.backend.jdbc.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.RollbackException;
 import javax.transaction.Status;
@@ -50,7 +51,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	private int timeOut = -1;
 
-	private final transient List<TransactionObserver> observers;
+	private transient List<TransactionObserver> observers = null;
 
 	/**
 	 * Construct a ResourceLocalTransactionCoordinatorImpl instance.  package-protected to ensure access goes through
@@ -62,7 +63,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
 			TransactionCoordinatorOwner owner,
 			JdbcResourceTransactionAccess jdbcResourceTransactionAccess) {
-		this.observers = new ArrayList<>();
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.jdbcResourceTransactionAccess = jdbcResourceTransactionAccess;
 		this.transactionCoordinatorOwner = owner;
@@ -81,7 +81,12 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	 * @return TransactionObserver
 	 */
 	private Iterable<TransactionObserver> observers() {
-		return new ArrayList<>( observers );
+		if ( observers == null || observers.isEmpty() ) {
+			return Collections.emptyList();
+		}
+		else {
+			return new ArrayList<>( observers );
+		}
 	}
 
 	@Override
@@ -203,12 +208,17 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	@Override
 	public void addObserver(TransactionObserver observer) {
+		if ( observers == null ) {
+			observers = new ArrayList<>( 6 );
+		}
 		observers.add( observer );
 	}
 
 	@Override
 	public void removeObserver(TransactionObserver observer) {
-		observers.remove( observer );
+		if ( observers != null ) {
+			observers.remove( observer );
+		}
 	}
 
 	/**

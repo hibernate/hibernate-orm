@@ -22,10 +22,12 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -191,7 +193,7 @@ class FromElementType {
 	}
 
 	private static String generateSuffix(int size, int k) {
-		return size == 1 ? "" : Integer.toString( k ) + '_';
+		return size == 1 ? "" : AliasConstantsHelper.get( k );
 	}
 
 	private void checkInitialized() {
@@ -369,6 +371,15 @@ class FromElementType {
 
 	public QueryableCollection getQueryableCollection() {
 		return queryableCollection;
+	}
+
+	public String getPropertyTableName(String propertyName) {
+		checkInitialized();
+		if ( this.persister != null ) {
+			AbstractEntityPersister aep = (AbstractEntityPersister) this.persister;
+			return aep.getPropertyTableName( propertyName );
+		}
+		return null;
 	}
 
 	/**

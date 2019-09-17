@@ -343,13 +343,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		final String[] propertyNames = getIdentifierPropertyNames();
 		List<String> columns = new ArrayList<>();
 		final boolean inSelect = getWalker().getStatementType() == HqlSqlTokenTypes.SELECT;
-		for ( int i = 0; i < propertyNames.length; i++ ) {
-			String[] propertyNameColumns = toColumns(
-					table, propertyNames[i],
-					inSelect
-			);
-			for ( int j = 0; j < propertyNameColumns.length; j++ ) {
-				columns.add( propertyNameColumns[j] );
+		for ( String propertyName : propertyNames ) {
+			String[] propertyNameColumns = toColumns( table, propertyName, inSelect );
+			for ( String propertyNameColumn : propertyNameColumns ) {
+				columns.add( propertyNameColumn );
 			}
 		}
 		return columns.toArray( new String[columns.size()] );
@@ -515,6 +512,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 
 	public Type getPropertyType(String propertyName, String propertyPath) {
 		return elementType.getPropertyType( propertyName, propertyPath );
+	}
+
+	public String getPropertyTableName(String propertyName) {
+		return elementType.getPropertyTableName( propertyName );
 	}
 
 	public String[] toColumns(String tableAlias, String path, boolean inSelect) {

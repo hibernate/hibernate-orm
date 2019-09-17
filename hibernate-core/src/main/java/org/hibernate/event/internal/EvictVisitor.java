@@ -67,7 +67,7 @@ public class EvictVisitor extends AbstractVisitor {
 
 	private void evictCollection(PersistentCollection collection) {
 		final PersistenceContext persistenceContext = getSession().getPersistenceContextInternal();
-		CollectionEntry ce = (CollectionEntry) persistenceContext.getCollectionEntries().remove(collection);
+		CollectionEntry ce = persistenceContext.removeCollectionEntry( collection );
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Evicting collection: %s",

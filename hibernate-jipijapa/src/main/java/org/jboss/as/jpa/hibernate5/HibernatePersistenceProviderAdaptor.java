@@ -108,7 +108,7 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
 
 		if ( Classification.NONE.equals( platform.defaultCacheClassification() ) ) {
 			if ( !SharedCacheMode.NONE.equals( pu.getSharedCacheMode() ) ) {
-				JPA_LOGGER.tracef( "second level cache is not supported in platform, ignoring shared cache mode" );
+				JPA_LOGGER.trace( "second level cache is not supported in platform, ignoring shared cache mode" );
 			}
 			pu.setSharedCacheMode( SharedCacheMode.NONE );
 		}
@@ -127,13 +127,15 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
 			JPA_LOGGER.tracef( "second level cache enabled for %s", pu.getScopedPersistenceUnitName() );
 		}
 		else {
-			JPA_LOGGER.tracef(
-					"second level cache disabled for %s, pu %s property = %s, pu.getSharedCacheMode = %s",
-					pu.getScopedPersistenceUnitName(),
-					AvailableSettings.JPA_SHARED_CACHE_MODE,
-					sharedCacheMode,
-					pu.getSharedCacheMode().toString()
-			);
+			if ( JPA_LOGGER.isTraceEnabled() ) {
+				JPA_LOGGER.tracef(
+						"second level cache disabled for %s, pu %s property = %s, pu.getSharedCacheMode = %s",
+						pu.getScopedPersistenceUnitName(),
+						AvailableSettings.JPA_SHARED_CACHE_MODE,
+						sharedCacheMode,
+						pu.getSharedCacheMode().toString()
+				);
+			}
 		}
 	}
 

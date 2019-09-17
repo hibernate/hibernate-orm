@@ -13,13 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
@@ -29,19 +23,40 @@ import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 
 /**
+ * Helps to track statements and resultsets which need being closed.
+ * This class is not threadsafe.
+ *
+ * Note regarding performance: we had evidence that allocating Iterators
+ * to implement the cleanup on each element recursively was the dominant
+ * resource cost, so we decided using "forEach" and lambdas in this case.
+ * However the forEach/lambda combination is able to dodge allocating
+ * Iterators on HashMap and ArrayList, but not on HashSet (at least on JDK8 and 11).
+ * Therefore some types which should ideally be modelled as a Set have
+ * been implemented using HashMap.
+ *
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
-public class ResourceRegistryStandardImpl implements ResourceRegistry {
+public final class ResourceRegistryStandardImpl implements ResourceRegistry {
+
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ResourceRegistryStandardImpl.class );
+
+	// Dummy value to associate with an Object in the backing Map when we use it as a set:
+	private static final Object PRESENT = new Object();
+
+	//Used instead of Collections.EMPTY_SET to avoid polymorhic calls on xref;
+	//Also, uses an HashMap as it were an HashSet, as technically we just need the Set semantics
+	//but in this case the overhead of HashSet is not negligible.
+	private static final HashMap<ResultSet,Object> EMPTY = new HashMap<ResultSet,Object>( 1, 0.2f );
 
 	private final JdbcObserver jdbcObserver;
 
-	private final Map<Statement, Set<ResultSet>> xref = new HashMap<Statement, Set<ResultSet>>();
-	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
+	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
+	private final HashMap<ResultSet,Object> unassociatedResultSets = new HashMap<ResultSet,Object>();
 
-	private List<Blob> blobs;
-	private List<Clob> clobs;
-	private List<NClob> nclobs;
+	private ArrayList<Blob> blobs;
+	private ArrayList<Clob> clobs;
+	private ArrayList<NClob> nclobs;
 
 	private Statement lastQuery;
 
@@ -67,7 +82,7 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void register(Statement statement, boolean cancelable) {
 		log.tracef( "Registering statement [%s]", statement );
 
-		Set<ResultSet> previousValue = xref.putIfAbsent( statement, Collections.EMPTY_SET );
+		HashMap<ResultSet,Object> previousValue = xref.putIfAbsent( statement, EMPTY );
 		if ( previousValue != null ) {
 			throw new HibernateException( "JDBC Statement already registered" );
 		}
@@ -81,18 +96,16 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void release(Statement statement) {
 		log.tracev( "Releasing statement [{0}]", statement );
 
-		// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-		// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
-		if ( log.isDebugEnabled() && !xref.containsKey( statement ) ) {
-			log.unregisteredStatement();
+		final HashMap<ResultSet,Object> resultSets = xref.remove( statement );
+		if ( resultSets != null ) {
+			closeAll( resultSets );
 		}
 		else {
-			final Set<ResultSet> resultSets = xref.get( statement );
-			if ( resultSets != null ) {
-				closeAll( resultSets );
-			}
-			xref.remove( statement );
+			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
+			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
+			log.unregisteredStatement();
 		}
+
 		close( statement );
 
 		if ( lastQuery == statement ) {
@@ -113,7 +126,7 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			final Set<ResultSet> resultSets = xref.get( statement );
+			final HashMap<ResultSet,Object> resultSets = xref.get( statement );
 			if ( resultSets == null ) {
 				log.unregisteredStatement();
 			}
@@ -125,24 +138,26 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		else {
-			final boolean removed = unassociatedResultSets.remove( resultSet );
-			if ( !removed ) {
+			final Object removed = unassociatedResultSets.remove( resultSet );
+			if ( removed == null ) {
 				log.unregisteredResultSetWithoutStatement();
 			}
-
 		}
 		close( resultSet );
 	}
 
-	protected void closeAll(Set<ResultSet> resultSets) {
-		for ( ResultSet resultSet : resultSets ) {
-			close( resultSet );
-		}
+	private static void closeAll(final HashMap<ResultSet,Object> resultSets) {
+		resultSets.forEach( (resultSet, o) -> close( resultSet ) );
 		resultSets.clear();
 	}
 
+	private static void releaseXref(final Statement s, final HashMap<ResultSet, Object> r) {
+		closeAll( r );
+		close( s );
+	}
+
 	@SuppressWarnings({"unchecked"})
-	public static void close(ResultSet resultSet) {
+	private static void close(final ResultSet resultSet) {
 		log.tracef( "Closing result set [%s]", resultSet );
 
 		try {
@@ -204,7 +219,7 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			Set<ResultSet> resultSets = xref.get( statement );
+			HashMap<ResultSet,Object> resultSets = xref.get( statement );
 
 			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
 			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
@@ -212,14 +227,14 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 				log.debug( "ResultSet statement was not registered (on register)" );
 			}
 
-			if ( resultSets == null || resultSets == Collections.EMPTY_SET ) {
-				resultSets = new HashSet<ResultSet>();
+			if ( resultSets == null || resultSets == EMPTY ) {
+				resultSets = new HashMap<ResultSet,Object>();
 				xref.put( statement, resultSets );
 			}
-			resultSets.add( resultSet );
+			resultSets.put( resultSet, PRESENT );
 		}
 		else {
-			unassociatedResultSets.add( resultSet );
+			unassociatedResultSets.put( resultSet, PRESENT );
 		}
 	}
 
@@ -305,62 +320,54 @@ public class ResourceRegistryStandardImpl implements ResourceRegistry {
 			jdbcObserver.jdbcReleaseRegistryResourcesStart();
 		}
 
-		for ( Map.Entry<Statement, Set<ResultSet>> entry : xref.entrySet() ) {
-			if ( entry.getValue() != null ) {
-				closeAll( entry.getValue() );
-			}
-			close( entry.getKey() );
-		}
+		xref.forEach( ResourceRegistryStandardImpl::releaseXref );
 		xref.clear();
 
 		closeAll( unassociatedResultSets );
 
 		if ( blobs != null ) {
-			for ( Blob blob : blobs ) {
+			blobs.forEach( blob -> {
 				try {
 					blob.free();
 				}
 				catch (SQLException e) {
 					log.debugf( "Unable to free JDBC Blob reference [%s]", e.getMessage() );
 				}
-			}
-			blobs.clear();
+			} );
+			//for these, it seems better to null the map rather than clear it:
+			blobs = null;
 		}
 
 		if ( clobs != null ) {
-			for ( Clob clob : clobs ) {
+			clobs.forEach( clob -> {
 				try {
 					clob.free();
 				}
 				catch (SQLException e) {
 					log.debugf( "Unable to free JDBC Clob reference [%s]", e.getMessage() );
 				}
-			}
-			clobs.clear();
+			} );
+			clobs = null;
 		}
 
 		if ( nclobs != null ) {
-			for ( NClob nclob : nclobs ) {
+			nclobs.forEach( nclob -> {
 				try {
 					nclob.free();
 				}
 				catch (SQLException e) {
 					log.debugf( "Unable to free JDBC NClob reference [%s]", e.getMessage() );
 				}
-			}
-			nclobs.clear();
-		}
-
-		if ( jdbcObserver != null )	{
-			jdbcObserver.jdbcReleaseRegistryResourcesEnd();
+			} );
+			nclobs = null;
 		}
 	}
 
-	private boolean hasRegistered(Map resource) {
+	private boolean hasRegistered(final HashMap resource) {
 		return resource != null && !resource.isEmpty();
 	}
 
-	private boolean hasRegistered(Collection resource) {
+	private boolean hasRegistered(final ArrayList resource) {
 		return resource != null && !resource.isEmpty();
 	}
 }

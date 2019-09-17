@@ -466,6 +466,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return true;
 	}
 
+	@Override
 	public String getPropertyTableName(String propertyName) {
 		//TODO: check this....
 		return getTableName();
@@ -483,4 +484,5 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new StaticFilterAliasGenerator( rootAlias );
 	}
+
 }

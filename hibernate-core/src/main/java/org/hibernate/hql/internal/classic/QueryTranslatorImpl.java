@@ -50,6 +50,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.BasicLoader;
+import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.param.ParameterBinder;
@@ -664,7 +665,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			//if ( !isName(name) ) throw new QueryException("unknown type: " + name);
 			persisters[i] = getEntityPersisterForName( name );
 			// TODO: cannot use generateSuffixes() - it handles the initial suffix differently.
-			suffixes[i] = ( size == 1 ) ? "" : Integer.toString( i ) + '_';
+			suffixes[i] = ( size == 1 ) ? "" : AliasConstantsHelper.get( i );
 			names[i] = name;
 			includeInSelect[i] = !entitiesToFetch.contains( name );
 			if ( includeInSelect[i] ) {
@@ -763,7 +764,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 		for ( int k = 0; k < size; k++ ) {
 			String name = (String) returnedTypes.get( k );
-			String suffix = size == 1 ? "" : Integer.toString( k ) + '_';
+			String suffix = size == 1 ? "" : AliasConstantsHelper.get( k );
 			sql.addSelectFragmentString( persisters[k].identifierSelectFragment( name, suffix ) );
 		}
 
@@ -788,7 +789,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	private void renderPropertiesSelect(QuerySelect sql) {
 		int size = returnedTypes.size();
 		for ( int k = 0; k < size; k++ ) {
-			String suffix = size == 1 ? "" : Integer.toString( k ) + '_';
+			String suffix = size == 1 ? "" : AliasConstantsHelper.get( k );
 			String name = (String) returnedTypes.get( k );
 			sql.addSelectFragmentString( persisters[k].propertySelectFragment( name, suffix, false ) );
 		}

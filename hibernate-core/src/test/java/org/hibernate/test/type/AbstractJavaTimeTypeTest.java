@@ -70,6 +70,8 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 	protected static final ZoneId ZONE_GMT = ZoneId.of( "GMT" );
 	protected static final ZoneId ZONE_OSLO = ZoneId.of( "Europe/Oslo" );
 	protected static final ZoneId ZONE_AMSTERDAM = ZoneId.of( "Europe/Amsterdam" );
+	protected static final ZoneId ZONE_AUCKLAND = ZoneId.of( "Pacific/Auckland" );
+	protected static final ZoneId ZONE_SANTIAGO = ZoneId.of( "America/Santiago" );
 
 	private final EnvironmentParameters env;
 
@@ -189,7 +191,7 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 	protected final void withDefaultTimeZone(Runnable runnable) {
 		TimeZone timeZoneBefore = TimeZone.getDefault();
-		TimeZone.setDefault( TimeZone.getTimeZone( env.defaultJvmTimeZone ) );
+		TimeZone.setDefault( toTimeZone( env.defaultJvmTimeZone ) );
 		/*
 		 * Run the code in a new thread, because some libraries (looking at you, h2 JDBC driver)
 		 * cache data dependent on the default timezone in thread local variables,
@@ -221,6 +223,23 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		}
 	}
 
+	private static TimeZone toTimeZone(ZoneId zoneId) {
+		String idString = zoneId.getId();
+		if ( idString.startsWith( "UTC+" ) || idString.startsWith( "UTC-" ) ) {
+			// Apparently TimeZone doesn't understand UTC+XXX nor UTC-XXX
+			// Using GMT+XXX or GMT-XXX as a fallback
+			idString = "GMT" + idString.substring( "UTC".length() );
+		}
+
+		TimeZone result = TimeZone.getTimeZone( idString );
+		if ( !idString.equals( result.getID() ) ) {
+			// If the timezone is not understood, getTimeZone returns GMT and the condition above is true
+			throw new IllegalStateException( "Attempting to test an unsupported timezone: " + zoneId );
+		}
+
+		return result;
+	}
+
 	protected final Class<? extends AbstractRemappingH2Dialect> getRemappingDialectClass() {
 		return env.remappingDialectClass;
 	}
@@ -243,6 +262,8 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 		private final List<Class<? extends AbstractRemappingH2Dialect>> remappingDialectClasses = new ArrayList<>();
 
+		private ZoneId forcedJdbcTimeZone = null;
+
 		protected AbstractParametersBuilder() {
 			dialect = determineDialect();
 			remappingDialectClasses.add( null ); // Always test without remapping
@@ -257,6 +278,18 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 			}
 			if ( !skip ) {
 				skippedIfDialectMatchesClasses.accept( thisAsS() );
+			}
+			return thisAsS();
+		}
+
+		public S withForcedJdbcTimezone(String zoneIdString, Consumer<S> contributor) {
+			ZoneId zoneId = ZoneId.of( zoneIdString );
+			this.forcedJdbcTimeZone = zoneId;
+			try {
+				contributor.accept( thisAsS() );
+			}
+			finally {
+				this.forcedJdbcTimeZone = null;
 			}
 			return thisAsS();
 		}
@@ -281,24 +314,26 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 				parameters.add(
 						new EnvironmentParameters(
 								defaultJvmTimeZone,
-								null,
+								forcedJdbcTimeZone,
 								remappingDialectClass
 						)
 				);
 				Collections.addAll( parameters, subClassParameters );
 				result.add( parameters.toArray() );
 			}
-			for ( ZoneId hibernateJdbcTimeZone : getHibernateJdbcTimeZonesToTest() ) {
-				List<Object> parameters = new ArrayList<>();
-				parameters.add(
-						new EnvironmentParameters(
-								defaultJvmTimeZone,
-								hibernateJdbcTimeZone,
-								null
-						)
-				);
-				Collections.addAll( parameters, subClassParameters );
-				result.add( parameters.toArray() );
+			if ( forcedJdbcTimeZone == null ) {
+				for ( ZoneId hibernateJdbcTimeZone : getHibernateJdbcTimeZonesToTest() ) {
+					List<Object> parameters = new ArrayList<>();
+					parameters.add(
+							new EnvironmentParameters(
+									defaultJvmTimeZone,
+									hibernateJdbcTimeZone,
+									null
+							)
+					);
+					Collections.addAll( parameters, subClassParameters );
+					result.add( parameters.toArray() );
+				}
 			}
 			return thisAsS();
 		}

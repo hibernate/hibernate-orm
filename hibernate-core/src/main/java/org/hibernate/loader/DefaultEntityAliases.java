@@ -9,6 +9,7 @@ package org.hibernate.loader;
 import java.util.Collections;
 import java.util.Map;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Loadable;
 
@@ -42,18 +43,31 @@ public class DefaultEntityAliases implements EntityAliases {
 			Map userProvidedAliases,
 			Loadable persister,
 			String suffix) {
-		this.suffix = suffix.intern();
-		this.userProvidedAliases = userProvidedAliases;
+		this( userProvidedAliases, persister, suffix, false );
+	}
 
+	public DefaultEntityAliases(Loadable persister, String suffix) {
+		this( Collections.EMPTY_MAP, persister, suffix, true );
+	}
+
+	private DefaultEntityAliases(
+			Map userProvidedAliases,
+			Loadable persister,
+			String suffix,
+			boolean interns) {
+		if ( interns ) {
+			this.suffix = suffix.intern();
+			this.rowIdAlias = (Loadable.ROWID_ALIAS + suffix).intern(); // TODO: not visible to the user!
+		}
+		else {
+			this.suffix = suffix;
+			this.rowIdAlias = (Loadable.ROWID_ALIAS + suffix);
+		}
+		this.userProvidedAliases = userProvidedAliases;
 		suffixedKeyColumns = determineKeyAlias( persister, suffix );
 		suffixedPropertyColumns = determinePropertyAliases( persister );
 		suffixedDiscriminatorColumn = determineDiscriminatorAlias( persister, suffix );
 		suffixedVersionColumn = determineVersionAlias( persister );
-		rowIdAlias = (Loadable.ROWID_ALIAS + suffix).intern(); // TODO: not visible to the user!
-	}
-
-	public DefaultEntityAliases(Loadable persister, String suffix) {
-		this( Collections.EMPTY_MAP, persister, suffix );
 	}
 
 	private String[] determineKeyAlias(Loadable persister, String suffix) {
@@ -68,9 +82,7 @@ public class DefaultEntityAliases implements EntityAliases {
 		else {
 			aliases = keyColumnsCandidates;
 		}
-		final String[] rtn = StringHelper.unquote( aliases, persister.getFactory().getDialect() );
-		intern( rtn );
-		return rtn;
+		return StringHelper.unquote( aliases, persister.getFactory().getDialect() );
 	}
 
 	private String[][] determinePropertyAliases(Loadable persister) {
@@ -122,17 +134,18 @@ public class DefaultEntityAliases implements EntityAliases {
 
 	@Override
 	public String[][] getSuffixedPropertyAliases(Loadable persister) {
-		final int size = persister.getPropertyNames().length;
+		final String[] propertyNames = persister.getPropertyNames();
+		final int size = propertyNames.length;
 		final String[][] suffixedPropertyAliases;
-		if (size > 0) {
+		if ( size > 0 ) {
 			suffixedPropertyAliases = new String[size][];
+			final Dialect dialect = persister.getFactory().getDialect();
 			for ( int j = 0; j < size; j++ ) {
 				suffixedPropertyAliases[j] = getUserProvidedAliases(
-						persister.getPropertyNames()[j],
+						propertyNames[j],
 						getPropertyAliases( persister, j )
 				);
-				suffixedPropertyAliases[j] = StringHelper.unquote( suffixedPropertyAliases[j], persister.getFactory().getDialect() );
-				intern( suffixedPropertyAliases[j] );
+				suffixedPropertyAliases[j] = StringHelper.unquote( suffixedPropertyAliases[j], dialect );
 			}
 		}
 		else {
@@ -171,9 +184,4 @@ public class DefaultEntityAliases implements EntityAliases {
 		return suffix;
 	}
 
-	private static void intern(String[] strings) {
-		for ( int i = 0; i < strings.length; i++ ) {
-			strings[i] = strings[i].intern();
-		}
-	}
 }

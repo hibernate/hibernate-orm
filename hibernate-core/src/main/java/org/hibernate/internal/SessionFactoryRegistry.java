@@ -155,7 +155,7 @@ public class SessionFactoryRegistry {
 		final SessionFactory sessionFactory = sessionFactoryMap.get( uuid );
 		if ( sessionFactory == null && LOG.isDebugEnabled() ) {
 			LOG.debugf( "Not found: %s", uuid );
-			LOG.debugf( sessionFactoryMap.toString() );
+			LOG.debug( sessionFactoryMap.toString() );
 		}
 		return sessionFactory;
 	}

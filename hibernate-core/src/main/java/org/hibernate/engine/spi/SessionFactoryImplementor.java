@@ -279,16 +279,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 *
 	 * @return The dialect
 	 *
-	 * @deprecated (since 5.2) instead, use this factory's {{@link #getServiceRegistry()}} ->
-	 * {@link JdbcServices#getDialect()}
+	 * @deprecated (since 5.2) instead, use {@link JdbcServices#getDialect()}
 	 */
 	@Deprecated
 	default Dialect getDialect() {
-		if ( getServiceRegistry() == null ) {
-			throw new IllegalStateException( "Cannot determine dialect because serviceRegistry is null." );
-		}
-
-		return getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		return getJdbcServices().getDialect();
 	}
 
 	/**
@@ -301,7 +296,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 */
 	@Deprecated
 	default SQLExceptionConverter getSQLExceptionConverter() {
-		return getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().getSqlExceptionConverter();
+		return getJdbcServices().getSqlExceptionHelper().getSqlExceptionConverter();
 	}
 
 	/**
@@ -314,7 +309,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 */
 	@Deprecated
 	default SqlExceptionHelper getSQLExceptionHelper() {
-		return getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper();
+		return getJdbcServices().getSqlExceptionHelper();
 	}
 
 	/**

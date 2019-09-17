@@ -6,19 +6,19 @@
  */
 package org.hibernate.stat.internal;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Manageable;
@@ -31,12 +31,18 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * Implementation of {@link org.hibernate.stat.Statistics} based on the {@link java.util.concurrent} package.
  *
  * @author Alex Snaps
+ * @author Sanne Grinovero
  */
 @SuppressWarnings({ "unchecked" })
 public class StatisticsImpl implements StatisticsImplementor, Service, Manageable {
+
 	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 
-	private final SessionFactoryImplementor sessionFactory;
+	private final MetamodelImplementor metamodel;
+	private final CacheImplementor cache;
+	private final String cacheRegionPrefix;
+	private final boolean secondLevelCacheEnabled;
+	private final boolean queryCacheEnabled;
 
 	private volatile boolean isStatisticsEnabled;
 	private volatile long startTime;
@@ -91,38 +97,37 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	private final LongAdder optimisticFailureCount = new LongAdder();
 
-	private final ConcurrentMap<String,EntityStatisticsImpl> entityStatsMap = new ConcurrentHashMap();
-	private final ConcurrentMap<String,NaturalIdStatisticsImpl> naturalIdQueryStatsMap = new ConcurrentHashMap();
-	private final ConcurrentMap<String,CollectionStatisticsImpl> collectionStatsMap = new ConcurrentHashMap();
+	private final StatsNamedContainer<EntityStatisticsImpl> entityStatsMap = new StatsNamedContainer();
+	private final StatsNamedContainer<NaturalIdStatisticsImpl> naturalIdQueryStatsMap = new StatsNamedContainer();
+	private final StatsNamedContainer<CollectionStatisticsImpl> collectionStatsMap = new StatsNamedContainer();
 
 	/**
 	 * Keyed by query string
 	 */
-	private final BoundedConcurrentHashMap<String, QueryStatisticsImpl> queryStatsMap;
+	private final StatsNamedContainer<QueryStatisticsImpl> queryStatsMap;
 
 	/**
 	 * Keyed by region name
 	 */
-	private final ConcurrentMap<String,CacheRegionStatisticsImpl> l2CacheStatsMap = new ConcurrentHashMap<>();
+	private final StatsNamedContainer<CacheRegionStatisticsImpl> l2CacheStatsMap = new StatsNamedContainer<>();
 
-	private final ConcurrentMap<String,DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new ConcurrentHashMap();
-
-
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public StatisticsImpl() {
-		this( null );
-	}
+	private final StatsNamedContainer<DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new StatsNamedContainer();
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
-		this.queryStatsMap = new BoundedConcurrentHashMap(
+		Objects.requireNonNull( sessionFactory );
+		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+		this.queryStatsMap = new StatsNamedContainer(
 				sessionFactory != null ?
-					sessionFactory.getSessionFactoryOptions().getQueryStatisticsMaxSize() :
+					sessionFactoryOptions.getQueryStatisticsMaxSize() :
 					Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE,
-				20,
-				BoundedConcurrentHashMap.Eviction.LRU
+				20
 		);
 		clear();
+		metamodel = sessionFactory.getMetamodel();
+		cache = sessionFactory.getCache();
+		cacheRegionPrefix = sessionFactoryOptions.getCacheRegionPrefix();
+		secondLevelCacheEnabled = sessionFactoryOptions.isSecondLevelCacheEnabled();
+		queryCacheEnabled = sessionFactoryOptions.isQueryCacheEnabled();
 	}
 
 	/**
@@ -212,23 +217,14 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getEntityNames() {
-		if ( sessionFactory == null ) {
-			return ArrayHelper.toStringArray( entityStatsMap.keySet() );
-		}
-		else {
-			return sessionFactory.getMetamodel().getAllEntityNames();
-		}
+		return metamodel.getAllEntityNames();
 	}
 
 	@Override
 	public EntityStatisticsImpl getEntityStatistics(String entityName) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
-		return entityStatsMap.computeIfAbsent(
+		return entityStatsMap.getOrCompute(
 				entityName,
-				s -> new EntityStatisticsImpl( sessionFactory.getMetamodel().entityPersister( entityName ) )
+				s -> new EntityStatisticsImpl( metamodel.entityPersister( s ) )
 		);
 	}
 
@@ -325,23 +321,14 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getCollectionRoleNames() {
-		if ( sessionFactory == null ) {
-			return ArrayHelper.toStringArray( collectionStatsMap.keySet() );
-		}
-		else {
-			return sessionFactory.getMetamodel().getAllCollectionRoles();
-		}
+		return metamodel.getAllCollectionRoles();
 	}
 
 	@Override
 	public CollectionStatisticsImpl getCollectionStatistics(String role) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
-		return collectionStatsMap.computeIfAbsent(
+		return collectionStatsMap.getOrCompute(
 				role,
-				s -> new CollectionStatisticsImpl( sessionFactory.getMetamodel().collectionPersister( role ) )
+				s -> new CollectionStatisticsImpl( metamodel.collectionPersister( s ) )
 		);
 	}
 
@@ -427,16 +414,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public NaturalIdStatisticsImpl getNaturalIdStatistics(String rootEntityName) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
-		return naturalIdQueryStatsMap.computeIfAbsent(
+		return naturalIdQueryStatsMap.getOrCompute(
 				rootEntityName,
 				s -> {
-					final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( rootEntityName );
+					final EntityPersister entityDescriptor = metamodel.entityPersister( s );
 					if ( !entityDescriptor.hasNaturalIdentifier() ) {
-						throw new IllegalArgumentException( "Given entity [" + rootEntityName + "] does not define natural-id" );
+						throw new IllegalArgumentException( "Given entity [" + s + "] does not define natural-id" );
 					}
 					return new NaturalIdStatisticsImpl( entityDescriptor );
 				}
@@ -445,11 +428,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public DeprecatedNaturalIdCacheStatisticsImpl getNaturalIdCacheStatistics(String regionName) {
-		return deprecatedNaturalIdStatsMap.computeIfAbsent(
-				sessionFactory.getCache().unqualifyRegionName( regionName ),
+		final String key = cache.unqualifyRegionName( regionName );
+		return deprecatedNaturalIdStatsMap.getOrCompute(
+				key,
 				unqualifiedRegionName -> new DeprecatedNaturalIdCacheStatisticsImpl(
 						unqualifiedRegionName,
-						sessionFactory.getCache().getNaturalIdAccessesInRegion( unqualifiedRegionName )
+						cache.getNaturalIdAccessesInRegion( unqualifiedRegionName )
 				)
 		);
 	}
@@ -528,10 +512,10 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementMissCount();
 	}
 
-	protected String qualify(String regionName) {
-		return sessionFactory.getSessionFactoryOptions().getCacheRegionPrefix() == null
+	private String qualify(final String regionName) {
+		return cacheRegionPrefix == null
 					? regionName
-					: sessionFactory.getSessionFactoryOptions().getCacheRegionPrefix() + '.' + regionName;
+					: cacheRegionPrefix + '.' + regionName;
 	}
 
 	@Override
@@ -550,7 +534,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			naturalIdQueryExecutionMaxTimeEntity = rootEntityName;
 		}
 
-		final EntityPersister rootEntityPersister = sessionFactory.getMetamodel().entityPersister( rootEntityName );
+		final EntityPersister rootEntityPersister = metamodel.entityPersister( rootEntityName );
 
 		getNaturalIdStatistics( rootEntityName ).queryExecuted( time );
 
@@ -572,31 +556,23 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getSecondLevelCacheRegionNames() {
-		if ( sessionFactory == null ) {
-			throw new IllegalStateException( "Statistics no longer associated with SessionFactory - cannot get (legacy) region names" );
-		}
-
-		return sessionFactory.getCache().getSecondLevelCacheRegionNames();
+		return cache.getSecondLevelCacheRegionNames();
 	}
 
 	@Override
 	public CacheRegionStatisticsImpl getDomainDataRegionStatistics(String regionName) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
-		return l2CacheStatsMap.computeIfAbsent(
+		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
-					final Region region = sessionFactory.getCache().getRegion( regionName );
+					final Region region = cache.getRegion( s );
 
 					if ( region == null ) {
-						throw new IllegalArgumentException( "Unknown cache region : " + regionName );
+						throw new IllegalArgumentException( "Unknown cache region : " + s );
 					}
 
 					if ( region instanceof QueryResultsRegion ) {
 						throw new IllegalArgumentException(
-								"Region name [" + regionName + "] referred to a query result region, not a domain data region"
+								"Region name [" + s + "] referred to a query result region, not a domain data region"
 						);
 					}
 
@@ -612,17 +588,13 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			return existing;
 		}
 
-		if ( sessionFactory == null ) {
-			return null;
-		}
-
-		final QueryResultsCache regionAccess = sessionFactory.getCache()
+		final QueryResultsCache regionAccess = cache
 				.getQueryResultsCacheStrictly( regionName );
 		if ( regionAccess == null ) {
 			return null;
 		}
 
-		return l2CacheStatsMap.computeIfAbsent(
+		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> new CacheRegionStatisticsImpl( regionAccess.getRegion() )
 		);
@@ -630,28 +602,24 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public CacheRegionStatisticsImpl getCacheRegionStatistics(String regionName) {
-		if ( sessionFactory == null ) {
+		if ( ! secondLevelCacheEnabled ) {
 			return null;
 		}
 
-		if ( ! sessionFactory.getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
-			return null;
-		}
-
-		return l2CacheStatsMap.computeIfAbsent(
+		return l2CacheStatsMap.getOrCompute(
 				regionName,
 				s -> {
-					Region region = sessionFactory.getCache().getRegion( regionName );
+					Region region = cache.getRegion( s );
 
 					if ( region == null ) {
 
-						if ( ! sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
+						if ( ! queryCacheEnabled ) {
 							return null;
 						}
 
 						// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
 						// NOTE that this method is deprecated
-						region = sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion();
+						region = cache.getQueryResultsCache( s ).getRegion();
 					}
 
 					return new CacheRegionStatisticsImpl( region );
@@ -661,10 +629,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public CacheRegionStatisticsImpl getSecondLevelCacheStatistics(String regionName) {
-		if ( sessionFactory == null ) {
-			return null;
-		}
-		return getCacheRegionStatistics( sessionFactory.getCache().unqualifyRegionName( regionName ) );
+		return getCacheRegionStatistics( cache.unqualifyRegionName( regionName ) );
 	}
 
 	@Override
@@ -718,14 +683,14 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getQueries() {
-		return ArrayHelper.toStringArray( queryStatsMap.keySet() );
+		return queryStatsMap.keysAsArray();
 	}
 
 	@Override
 	public QueryStatisticsImpl getQueryStatistics(String queryString) {
-		return queryStatsMap.computeIfAbsent(
+		return queryStatsMap.getOrCompute(
 				queryString,
-				s -> new QueryStatisticsImpl( queryString )
+				s -> new QueryStatisticsImpl( s )
 		);
 	}
 
@@ -761,13 +726,13 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public void queryExecuted(String hql, int rows, long time) {
-		LOG.hql(hql, time, (long) rows );
+		LOG.hql( hql, time, (long) rows );
 		queryExecutionCount.increment();
 
 		boolean isLongestQuery;
 		//noinspection StatementWithEmptyBody
 		for ( long old = queryExecutionMaxTime.get();
-				( isLongestQuery = time > old ) && ( !queryExecutionMaxTime.compareAndSet( old, time ) );
+				( isLongestQuery = time > old ) && ( ! queryExecutionMaxTime.compareAndSet( old, time ) );
 				old = queryExecutionMaxTime.get() ) {
 			// nothing to do here given the odd loop structure...
 		}
@@ -793,7 +758,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			getQueryStatistics( hql ).incrementCacheHitCount();
 		}
 	}
-
 
 	@Override
 	public void queryCacheMiss(String hql, String regionName) {
@@ -850,9 +814,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	private CacheRegionStatisticsImpl getQueryRegionStats(String regionName) {
-		return l2CacheStatsMap.computeIfAbsent(
+		return l2CacheStatsMap.getOrCompute(
 				regionName,
-				s -> new CacheRegionStatisticsImpl( sessionFactory.getCache().getQueryResultsCache( regionName ).getRegion() )
+				s -> new CacheRegionStatisticsImpl( cache.getQueryResultsCache( regionName ).getRegion() )
 		);
 	}
 

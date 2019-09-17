@@ -11,7 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +24,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.jdbc.ColumnNameCache;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -36,7 +37,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
-import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
@@ -82,24 +83,6 @@ public abstract class AbstractLoadPlanBasedLoader {
 			LoadQueryDetails loadQueryDetails,
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer) throws SQLException {
-		final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
-		return executeLoad(
-				session,
-				queryParameters,
-				loadQueryDetails,
-				returnProxies,
-				forcedResultTransformer,
-				afterLoadActions
-		);
-	}
-
-	protected List executeLoad(
-			SharedSessionContractImplementor session,
-			QueryParameters queryParameters,
-			LoadQueryDetails loadQueryDetails,
-			boolean returnProxies,
-			ResultTransformer forcedResultTransformer,
-			List<AfterLoadAction> afterLoadActions) throws SQLException {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
 		if ( queryParameters.isReadOnlyInitialized() ) {
@@ -118,7 +101,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 			final String sql = loadQueryDetails.getSqlStatement();
 			SqlStatementWrapper wrapper = null;
 			try {
-				wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
+				wrapper = executeQueryStatement( sql, queryParameters, false, session );
 				results = loadQueryDetails.getResultSetProcessor().extractResults(
 						wrapper.getResultSet(),
 						session,
@@ -132,17 +115,15 @@ public abstract class AbstractLoadPlanBasedLoader {
 						returnProxies,
 						queryParameters.isReadOnly(),
 						forcedResultTransformer,
-						afterLoadActions
+						Collections.EMPTY_LIST
 				);
 			}
 			finally {
 				if ( wrapper != null ) {
-					session.getJdbcCoordinator().getResourceRegistry().release(
-							wrapper.getResultSet(),
-							wrapper.getStatement()
-					);
-					session.getJdbcCoordinator().getResourceRegistry().release( wrapper.getStatement() );
-					session.getJdbcCoordinator().afterStatementExecution();
+					final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+					final ResourceRegistry resourceRegistry = jdbcCoordinator.getResourceRegistry();
+					resourceRegistry.release( wrapper.getStatement() );
+					jdbcCoordinator.afterStatementExecution();
 				}
 				persistenceContext.afterLoad();
 			}
@@ -156,18 +137,9 @@ public abstract class AbstractLoadPlanBasedLoader {
 	}
 
 	protected SqlStatementWrapper executeQueryStatement(
-			final QueryParameters queryParameters,
-			final boolean scroll,
-			List<AfterLoadAction> afterLoadActions,
-			final SharedSessionContractImplementor session) throws SQLException {
-		return executeQueryStatement( getStaticLoadQuery().getSqlStatement(), queryParameters, scroll, afterLoadActions, session );
-	}
-
-	protected SqlStatementWrapper executeQueryStatement(
 			String sqlStatement,
 			QueryParameters queryParameters,
 			boolean scroll,
-			List<AfterLoadAction> afterLoadActions,
 			SharedSessionContractImplementor session) throws SQLException {
 
 		// Processing query filters.

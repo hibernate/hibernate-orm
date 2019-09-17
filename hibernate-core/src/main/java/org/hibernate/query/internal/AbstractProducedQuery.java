@@ -1363,11 +1363,12 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			entityGraphHintedQueryPlan = null;
 		}
 		else {
+			final SharedSessionContractImplementor producer = getProducer();
 			entityGraphHintedQueryPlan = new HQLQueryPlan(
 					hql,
 					false,
-					getProducer().getLoadQueryInfluencers().getEnabledFilters(),
-					getProducer().getFactory(),
+					producer.getLoadQueryInfluencers().getEnabledFilters(),
+					producer.getFactory(),
 					entityGraphQueryHint
 			);
 		}

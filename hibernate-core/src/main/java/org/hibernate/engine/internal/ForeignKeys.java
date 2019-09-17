@@ -160,7 +160,7 @@ public final class ForeignKeys {
 			if ( isDelete &&
 					value == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
 					type.isEntityType() &&
-					!session.getPersistenceContextInternal().getNullifiableEntityKeys().isEmpty() ) {
+					!session.getPersistenceContextInternal().isNullifiableEntityKeysEmpty() ) {
 				// IMPLEMENTATION NOTE: If cascade-remove was mapped for the attribute,
 				// then value should have been initialized previously, when the remove operation was
 				// cascaded to the property (because CascadingAction.DELETE.performOnLazyProperty()

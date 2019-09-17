@@ -31,7 +31,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
 		if ( persistenceContext.getNumberOfManagedEntities() > 0 ||
-				persistenceContext.getCollectionEntries().size() > 0 ) {
+				persistenceContext.getCollectionEntriesSize() > 0 ) {
 
 			try {
 				source.getEventListenerManager().flushStart();

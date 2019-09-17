@@ -63,10 +63,6 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 		this.hadSubselectFetches = hadSubselectFetches;
 	}
 
-	public RowReader getRowReader() {
-		return rowReader;
-	}
-
 	@Override
 	public ScrollableResultSetProcessor toOnDemandForm() {
 		// todo : implement
@@ -86,13 +82,20 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 
 		handlePotentiallyEmptyCollectionRootReturns( loadPlan, queryParameters.getCollectionKeys(), resultSet, session );
 
+		final boolean traceEnabled = LOG.isTraceEnabled();
 		final int maxRows;
+		final List loadResults;
 		final RowSelection selection = queryParameters.getRowSelection();
 		if ( LimitHelper.hasMaxRows( selection ) ) {
 			maxRows = selection.getMaxRows();
-			LOG.tracef( "Limiting ResultSet processing to just %s rows", maxRows );
+			if ( traceEnabled ) {
+				LOG.tracef( "Limiting ResultSet processing to just %s rows", maxRows );
+			}
+			int sizeHint = maxRows < 50 ? maxRows : 50;
+			loadResults = new ArrayList( sizeHint );
 		}
 		else {
+			loadResults = new ArrayList();
 			maxRows = Integer.MAX_VALUE;
 		}
 
@@ -113,12 +116,14 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 				hadSubselectFetches
 		);
 
-		final List loadResults = new ArrayList();
-
-		LOG.trace( "Processing result set" );
+		if ( traceEnabled ) {
+			LOG.trace( "Processing result set" );
+		}
 		int count;
 		for ( count = 0; count < maxRows && resultSet.next(); count++ ) {
-			LOG.debugf( "Starting ResultSet row #%s", count );
+			if ( traceEnabled ) {
+				LOG.tracef( "Starting ResultSet row #%s", count );
+			}
 
 			Object logicalRow = rowReader.readRow( resultSet, context );
 
@@ -129,7 +134,9 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			context.finishUpRow();
 		}
 
-		LOG.tracev( "Done processing result set ({0} rows)", count );
+		if ( traceEnabled ) {
+			LOG.tracev( "Done processing result set ({0} rows)", count );
+		}
 
 		rowReader.finishUp( context, afterLoadActionList );
 		context.wrapUp();

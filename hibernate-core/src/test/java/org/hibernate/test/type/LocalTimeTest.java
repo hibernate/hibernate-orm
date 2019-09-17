@@ -15,6 +15,7 @@ import java.sql.Types;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -23,6 +24,7 @@ import javax.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
@@ -55,6 +57,18 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTest<LocalTime, LocalTime
 					monthWhenPersistedWithoutHibernate, dayWhenPersistedWithoutHibernate
 			);
 		}
+
+		@Override
+		protected Iterable<? extends ZoneId> getHibernateJdbcTimeZonesToTest() {
+			// The MariaDB Connector/J JDBC driver has a bug in ResultSet#getTime(int, Calendar)
+			// that prevents our explicit JDBC timezones from being recognized
+			// See https://hibernate.atlassian.net/browse/HHH-13581
+			// See https://jira.mariadb.org/browse/CONJ-724
+			if ( MariaDBDialect.class.isInstance( getDialect() ) ) {
+				return Collections.emptySet();
+			}
+			return super.getHibernateJdbcTimeZonesToTest();
+		}
 	}
 
 	@Parameterized.Parameters(name = "{1}:{2}:{3}.{4} (JDBC write date: {5}-{6}-{7}) {0}")
@@ -82,6 +96,14 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTest<LocalTime, LocalTime
 								.addPersistedWithoutHibernate( 1900, 1, 1, 0, 19, 31, 0, ZONE_AMSTERDAM )
 								.addPersistedWithoutHibernate( 1600, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
 				)
+				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
+				// It doesn't seem that any time on 1970-01-01 can be affected by HHH-13379, but we add some tests just in case
+				.add( 1, 0, 0, 0, ZONE_PARIS )
+				.add( 2, 0, 0, 0, ZONE_PARIS )
+				.add( 3, 0, 0, 0, ZONE_PARIS )
+				.add( 1, 0, 0, 0, ZONE_AUCKLAND )
+				.add( 2, 0, 0, 0, ZONE_AUCKLAND )
+				.add( 3, 0, 0, 0, ZONE_AUCKLAND )
 				.build();
 	}
 
@@ -167,12 +189,23 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTest<LocalTime, LocalTime
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
-		return resultSet.getTimestamp( columnIndex );
+		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
+			return resultSet.getTimestamp( columnIndex );
+		}
+		else {
+			return resultSet.getTime( columnIndex );
+		}
 	}
 
 	@Override
 	@Test
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA seems to return a java.sql.Timestamp instead of a java.sql.Time")
+	@SkipForDialect(value = MySQL5Dialect.class,
+			comment = "HHH-13580 MySQL seems to store the whole timestamp, not just the time,"
+					+ " which for some timezones results in a date other than 1970-01-01 being returned"
+					+ " (typically 1969-12-31), even though the time is always right."
+					+ " Since java.sql.Time holds the whole timestamp, not just the time,"
+					+ " its equals() method ends up returning false in this test.")
 	public void writeThenNativeRead() {
 		super.writeThenNativeRead();
 	}

@@ -62,8 +62,6 @@ public class JdbcCoordinatorTest {
 		when( sessionContext.getObserver() ).thenReturn( jdbcObserver );
 
 		JdbcServices jdbcServices = Mockito.mock( JdbcServices.class );
-		when( serviceRegistry.getService( eq( JdbcServices.class ) ) ).thenReturn(
-				jdbcServices );
 
 		ConfigurationService configurationService = Mockito.mock( ConfigurationService.class );
 		when( serviceRegistry.getService( eq( ConfigurationService.class ) ) ).thenReturn(
@@ -77,7 +75,8 @@ public class JdbcCoordinatorTest {
 
 		JdbcCoordinatorImpl jdbcCoordinator = new JdbcCoordinatorImpl(
 				null,
-				sessionOwner
+				sessionOwner,
+				jdbcServices
 		);
 
 		Batch currentBatch = Mockito.mock( Batch.class );

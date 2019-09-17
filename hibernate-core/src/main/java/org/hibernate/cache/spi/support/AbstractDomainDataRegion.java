@@ -7,8 +7,9 @@
 package org.hibernate.cache.spi.support;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
@@ -121,15 +122,16 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	private Map<NavigableRole, EntityDataAccess> generateEntityDataAccessMap(
 			DomainDataRegionConfig regionConfig) {
-		if ( regionConfig.getEntityCaching().isEmpty() ) {
+		final List<EntityDataCachingConfig> entityCaching = regionConfig.getEntityCaching();
+		if ( entityCaching.isEmpty() ) {
 			return Collections.emptyMap();
 		}
 
-		final Map<NavigableRole, EntityDataAccess> accessMap = new ConcurrentHashMap<>();
-		for ( EntityDataCachingConfig entityAccessConfig : regionConfig.getEntityCaching() ) {
-			accessMap.computeIfAbsent(
+		final Map<NavigableRole, EntityDataAccess> accessMap = new HashMap<>( entityCaching.size() );
+		for ( EntityDataCachingConfig entityAccessConfig : entityCaching ) {
+			accessMap.put(
 					entityAccessConfig.getNavigableRole(),
-					hierarchy -> generateEntityAccess( entityAccessConfig )
+					generateEntityAccess( entityAccessConfig )
 			);
 		}
 
@@ -137,15 +139,16 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	}
 
 	private Map<NavigableRole, NaturalIdDataAccess> generateNaturalIdDataAccessMap(DomainDataRegionConfig regionConfig) {
-		if ( regionConfig.getNaturalIdCaching().isEmpty() ) {
+		final List<NaturalIdDataCachingConfig> naturalIdCaching = regionConfig.getNaturalIdCaching();
+		if ( naturalIdCaching.isEmpty() ) {
 			return Collections.emptyMap();
 		}
 
-		final Map<NavigableRole, NaturalIdDataAccess> accessMap = new ConcurrentHashMap<>();
-		for ( NaturalIdDataCachingConfig naturalIdAccessConfig : regionConfig.getNaturalIdCaching() ) {
-			accessMap.computeIfAbsent(
+		final Map<NavigableRole, NaturalIdDataAccess> accessMap = new HashMap<>( naturalIdCaching.size() );
+		for ( NaturalIdDataCachingConfig naturalIdAccessConfig : naturalIdCaching ) {
+			accessMap.put(
 					naturalIdAccessConfig.getNavigableRole(),
-					hierarchy -> generateNaturalIdAccess( naturalIdAccessConfig )
+					generateNaturalIdAccess( naturalIdAccessConfig )
 			);
 		}
 
@@ -154,15 +157,16 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	private Map<NavigableRole, CollectionDataAccess> generateCollectionDataAccessMap(
 			DomainDataRegionConfig regionConfig) {
-		if ( regionConfig.getCollectionCaching().isEmpty() ) {
+		final List<CollectionDataCachingConfig> collectionCaching = regionConfig.getCollectionCaching();
+		if ( collectionCaching.isEmpty() ) {
 			return Collections.emptyMap();
 		}
 
-		final Map<NavigableRole, CollectionDataAccess> accessMap = new ConcurrentHashMap<>();
-		for ( CollectionDataCachingConfig cachingConfig : regionConfig.getCollectionCaching() ) {
-			accessMap.computeIfAbsent(
+		final Map<NavigableRole, CollectionDataAccess> accessMap = new HashMap<>( collectionCaching.size() );
+		for ( CollectionDataCachingConfig cachingConfig : collectionCaching ) {
+			accessMap.put(
 					cachingConfig.getNavigableRole(),
-					hierarchy -> generateCollectionAccess( cachingConfig )
+					generateCollectionAccess( cachingConfig )
 			);
 		}
 

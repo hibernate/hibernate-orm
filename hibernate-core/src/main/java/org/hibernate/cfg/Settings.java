@@ -76,7 +76,7 @@ public final class Settings {
 			LOG.debugf( "Check Nullability in Core (should be disabled when Bean Validation is on): %s", enabledDisabled( sessionFactoryOptions.isCheckNullability() ) );
 			LOG.debugf( "Allow initialization of lazy state outside session : %s", enabledDisabled( sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled() ) );
 
-			LOG.debugf( "Using BatchFetchStyle : %", sessionFactoryOptions.getBatchFetchStyle().name() );
+			LOG.debugf( "Using BatchFetchStyle : %s", sessionFactoryOptions.getBatchFetchStyle().name() );
 			LOG.debugf( "Default batch fetch size: %s", sessionFactoryOptions.getDefaultBatchFetchSize() );
 			LOG.debugf( "Maximum outer join fetch depth: %s", sessionFactoryOptions.getMaximumFetchDepth() );
 			LOG.debugf( "Default null ordering: %s", sessionFactoryOptions.getDefaultNullPrecedence() );
